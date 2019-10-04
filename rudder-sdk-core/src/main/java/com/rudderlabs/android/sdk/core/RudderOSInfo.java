@@ -5,8 +5,8 @@ import com.google.gson.annotations.SerializedName;
 import com.rudderlabs.android.sdk.core.BuildConfig;
 
 class RudderOSInfo {
-    @SerializedName("rl_name")
+    @SerializedName("name")
     private String name = "Android";
-    @SerializedName("rl_version")
+    @SerializedName("version")
     private String version = Build.VERSION.RELEASE;
 }

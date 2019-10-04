@@ -14,8 +14,12 @@ import static android.provider.Settings.Secure.ANDROID_ID;
 import static android.provider.Settings.System.getString;
 
 public class Utils {
+    public static  String getTimeZone() {
+        TimeZone timeZone = TimeZone.getDefault();
+        return timeZone.getID();
+    }
     public static String getTimeStamp() {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ", Locale.US);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
         formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
         return formatter.format(new Date());
     }

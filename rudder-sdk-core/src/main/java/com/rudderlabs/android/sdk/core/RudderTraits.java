@@ -3,37 +3,37 @@ package com.rudderlabs.android.sdk.core;
 import com.google.gson.annotations.SerializedName;
 
 public class RudderTraits {
-    @SerializedName("rl_anonymous_id")
+    @SerializedName("anonymousId")
     private String anonymousId;
-    @SerializedName("rl_address")
+    @SerializedName("address")
     private TraitsAddress address;
-    @SerializedName("rl_age")
+    @SerializedName("age")
     private String age;
-    @SerializedName("rl_birthday")
+    @SerializedName("birthday")
     private String birthday;
-    @SerializedName("rl_company")
+    @SerializedName("company")
     private TraitsCompany company;
-    @SerializedName("rl_createdat")
+    @SerializedName("createdat")
     private String createdAt;
-    @SerializedName("rl_description")
+    @SerializedName("description")
     private String description;
-    @SerializedName("rl_email")
+    @SerializedName("email")
     private String email;
-    @SerializedName("rl_firstname")
+    @SerializedName("firstname")
     private String firstName;
-    @SerializedName("rl_gender")
+    @SerializedName("gender")
     private String gender;
-    @SerializedName("rl_id")
+    @SerializedName("id")
     private String id;
-    @SerializedName("rl_lastname")
+    @SerializedName("lastname")
     private String lastName;
-    @SerializedName("rl_name")
+    @SerializedName("name")
     private String name;
-    @SerializedName("rl_phone")
+    @SerializedName("phone")
     private String phone;
-    @SerializedName("rl_title")
+    @SerializedName("title")
     private String title;
-    @SerializedName("rl_username")
+    @SerializedName("username")
     private String userName;
 
     RudderTraits(String anonymousId) {

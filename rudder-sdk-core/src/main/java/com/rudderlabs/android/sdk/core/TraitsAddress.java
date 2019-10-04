@@ -3,15 +3,15 @@ package com.rudderlabs.android.sdk.core;
 import com.google.gson.annotations.SerializedName;
 
 class TraitsAddress {
-    @SerializedName("rl_city")
+    @SerializedName("city")
     private String city;
-    @SerializedName("rl_country")
+    @SerializedName("country")
     private String country;
-    @SerializedName("rl_postalcode")
+    @SerializedName("postalcode")
     private String postalCode;
-    @SerializedName("rl_state")
+    @SerializedName("state")
     private String state;
-    @SerializedName("rl_street")
+    @SerializedName("street")
     private String street;
 
     TraitsAddress(String city, String country, String postalCode, String state, String street) {

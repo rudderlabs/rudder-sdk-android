@@ -8,26 +8,26 @@ import com.rudderlabs.android.sdk.core.util.Utils;
 import java.util.Locale;
 
 class RudderContext {
-    @SerializedName("rl_app")
+    @SerializedName("app")
     private RudderApp app;
-    @SerializedName("rl_traits")
+    @SerializedName("traits")
     private RudderTraits traits;
-    @SerializedName("rl_library")
+    @SerializedName("library")
     private RudderLibraryInfo libraryInfo;
-    @SerializedName("rl_os")
+    @SerializedName("os")
     private RudderOSInfo osInfo;
-    @SerializedName("rl_screen")
+    @SerializedName("screen")
     private RudderScreenInfo screenInfo;
-    @SerializedName("rl_user_agent")
+    @SerializedName("userAgent")
     private String userAgent;
-    @SerializedName("rl_locale")
+    @SerializedName("locale")
     private String locale = Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
-    @SerializedName("rl_device")
+    @SerializedName("device")
     private RudderDeviceInfo deviceInfo;
-    @SerializedName("rl_network")
+    @SerializedName("network")
     private RudderNetworkInfo networkInfo;
-    @SerializedName("rl_platform")
-    private String platform = "Android";
+    @SerializedName("timezone")
+    private String timezone = Utils.getTimeZone();
 
     private RudderContext() {
         // stop instantiating without application instance.

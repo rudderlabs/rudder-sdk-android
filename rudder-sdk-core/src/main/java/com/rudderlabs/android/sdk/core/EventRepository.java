@@ -179,7 +179,7 @@ class EventRepository {
             // append initial json token
             builder.append("{");
             // append sent_at time stamp
-            builder.append("\"sent_at\":\"").append(Utils.getTimeStamp()).append("\",");
+            builder.append("\"sentAt\":\"").append(Utils.getTimeStamp()).append("\",");
             // initiate batch array in the json
             builder.append("\"batch\": [");
             // loop through messages list and add in the builder
@@ -189,9 +189,9 @@ class EventRepository {
                 if (index != messages.size() - 1) builder.append(",");
             }
             // close batch array in the json
-            builder.append("],");
-            // add writeKey in the json
-            builder.append("\"writeKey\":\"").append(writeKey).append("\"");
+            builder.append("]");
+//            // add writeKey in the json
+//            builder.append("\"writeKey\":\"").append(writeKey).append("\"");
             // append closing token in the json
             builder.append("}");
             // finally return the entire payload
@@ -259,16 +259,16 @@ class EventRepository {
     /*
      * generic method for dumping all the events
      * */
-    void dump(RudderElement event) {
+    void dump(RudderMessage message) {
         if (this.integrationsMap == null) prepareIntegrations();
-        event.setIntegrations(this.integrationsMap);
+        message.setIntegrations(this.integrationsMap);
         for (String key : integrationOperationsMap.keySet()) {
             RudderIntegration integration = integrationOperationsMap.get(key);
             if (integration != null) {
-                integration.dump(event);
+                integration.dump(message);
             }
         }
-        String eventJson = new Gson().toJson(event);
+        String eventJson = new Gson().toJson(message);
         dump(eventJson);
     }
 

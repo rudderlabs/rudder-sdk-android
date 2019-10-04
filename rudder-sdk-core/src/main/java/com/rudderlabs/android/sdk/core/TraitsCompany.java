@@ -3,11 +3,11 @@ package com.rudderlabs.android.sdk.core;
 import com.google.gson.annotations.SerializedName;
 
 class TraitsCompany {
-    @SerializedName("rl_name")
+    @SerializedName("name")
     private String name;
-    @SerializedName("rl_id")
+    @SerializedName("id")
     private String id;
-    @SerializedName("rl_industry")
+    @SerializedName("industry")
     private String industry;
 
     TraitsCompany(String name, String id, String industry) {

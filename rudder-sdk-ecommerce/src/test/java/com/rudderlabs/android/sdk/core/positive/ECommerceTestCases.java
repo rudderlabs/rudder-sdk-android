@@ -3,7 +3,7 @@
 //
 //import com.rudderlabs.android.sdk.core.BaseTestCase;
 //import com.rudderlabs.android.sdk.core.RudderElement;
-//import com.rudderlabs.android.sdk.core.RudderElementBuilder;
+//import com.rudderlabs.android.sdk.core.RudderMessageBuilder;
 //import org.junit.Test;
 //
 //public class ECommerceTestCases extends BaseTestCase {
@@ -73,7 +73,7 @@
 //
 //    @Test /*PRODUCTS_SEARCHED*/
 //    public void testProductSearch() throws InterruptedException {
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PRODUCTS_SEARCHED.getValue())
 //                .setPropertyBuilder(new ECommercePropertyBuilder().addQuery("blue hotpants"))
@@ -85,7 +85,7 @@
 //
 //    @Test /*PRODUCT_LIST_VIEWED*/
 //    public void productListViewedTest() throws InterruptedException {
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PRODUCT_LIST_VIEWED.getValue())
 //                .setPropertyBuilder(
@@ -104,7 +104,7 @@
 //
 //    @Test /*PRODUCT_LIST_FILTERED*/
 //    public void testProductListFiltered() throws InterruptedException {
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PRODUCT_LIST_FILTERED.getValue())
 //                .setPropertyBuilder(
@@ -126,7 +126,7 @@
 //
 //    @Test /*PROMOTION_VIEWED*/
 //    public void testPromotionViewed() throws InterruptedException {
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PROMOTION_VIEWED.getValue())
 //                .setPropertyBuilder(new ECommercePropertyBuilder().addPromotion(dummyPromotion))
@@ -138,7 +138,7 @@
 //
 //    @Test /*PROMOTION_CLICKED*/
 //    public void promotionClickedTest() throws InterruptedException {
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PROMOTION_CLICKED.getValue())
 //                .setPropertyBuilder(new ECommercePropertyBuilder().addPromotion(dummyPromotion))
@@ -150,7 +150,7 @@
 //
 //    @Test /*PRODUCT_CLICKED*/
 //    public void productClickedTest() throws InterruptedException {
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PRODUCT_CLICKED.getValue())
 //                .setPropertyBuilder(
@@ -165,7 +165,7 @@
 //
 //    @Test /*PRODUCT_VIEWED*/
 //    public void productViewedTest() throws InterruptedException {
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PRODUCT_VIEWED.getValue())
 //                .setPropertyBuilder(
@@ -179,7 +179,7 @@
 //
 //    @Test /*PRODUCT_ADDED*/
 //    public void productAddedTest() throws InterruptedException {
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PRODUCT_ADDED.getValue())
 //                .setProperty(
@@ -196,7 +196,7 @@
 //
 //    @Test /*PRODUCT_REMOVED*/
 //    public void productRemovedTest() throws InterruptedException {
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PRODUCT_REMOVED.getValue())
 //                .setProperty(
@@ -219,7 +219,7 @@
 //    public void cartViewedTest() throws InterruptedException {
 //        ECommerceCartBuilder builder = ECommerceCartBuilder.instance();
 //        createCart(builder);
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.CART_VIEWED.getValue())
 //                .setProperty(builder.buildCartProperty())
@@ -235,7 +235,7 @@
 //        createCart(builder);
 //        createOrder(builder);
 //        builder.startCheckout("50314b8e9bcf000000000000");
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.CHECKOUT_STARTED.getValue())
 //                .setProperty(builder.buildOrderProperty())
@@ -252,7 +252,7 @@
 //        createOrder(builder);
 //        builder.startCheckout("50314b8e9bcf000000000000");
 //        builder.updateCheckout(2, "Fedex", "Visa");
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.CHECKOUT_STEP_VIEWED.getValue())
 //                .setProperty(builder.buildCheckoutProperty())
@@ -269,7 +269,7 @@
 //        createOrder(builder);
 //        builder.startCheckout("50314b8e9bcf000000000000");
 //        builder.updateCheckout(2, "Fedex", "Visa");
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.CHECKOUT_STEP_COMPLETED.getValue())
 //                .setProperty(builder.buildCheckoutProperty())
@@ -286,7 +286,7 @@
 //        createOrder(builder);
 //        builder.startCheckout("50314b8e9bcf000000000000");
 //        builder.updateCheckout(2, "Fedex", "Visa");
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PAYMENT_INFO_ENTERED.getValue())
 //                .setProperty(builder.buildCheckoutProperty())
@@ -302,7 +302,7 @@
 //        createCart(builder);
 //        createOrder(builder);
 //        updateOrder(builder);
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.ORDER_UPDATED.getValue())
 //                .setProperty(builder.buildOrderProperty())
@@ -318,7 +318,7 @@
 //        createCart(builder);
 //        createOrder(builder);
 //        updateOrder(builder);
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.ORDER_COMPLETED.getValue())
 //                .setProperty(builder.buildOrderProperty())
@@ -334,7 +334,7 @@
 //        createCart(builder);
 //        createOrder(builder);
 //        builder.processFullRefund();
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.ORDER_REFUNDED.getValue())
 //                .setProperty(builder.buildForFullRefund())
@@ -350,7 +350,7 @@
 //        createCart(builder);
 //        createOrder(builder);
 //        builder.processPartialRefund(dummyProduct, dummyProduct);
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.ORDER_REFUNDED.getValue())
 //                .setProperty(builder.buildForPartialReturn(30, "USD"))
@@ -367,7 +367,7 @@
 //        createOrder(builder);
 //        builder.startCheckout("50314b8e9bcf000000000000");
 //        updateOrder(builder);
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.ORDER_CANCELLED.getValue())
 //                .setProperty(builder.buildOrderProperty())
@@ -383,7 +383,7 @@
 //        createCart(builder);
 //        createOrder(builder);
 //        builder.addCoupon("may_deals_2016");
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.COUPON_ENTERED.getValue())
 //                .setProperty(builder.buildCouponProperty())
@@ -400,7 +400,7 @@
 //        createOrder(builder);
 //        builder.addCoupon("may_deals_2016");
 //        builder.applyCoupon("May Deals 2016", 23.32f);
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.COUPON_APPLIED.getValue())
 //                .setProperty(builder.buildCouponProperty())
@@ -418,7 +418,7 @@
 //        builder.addCoupon("may_deals_2016");
 //        builder.applyCoupon("May Deals 2016", 23.32f);
 //        builder.couponDenied("Coupon expired");
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.COUPON_DENIED.getValue())
 //                .setProperty(builder.buildCouponProperty())
@@ -436,7 +436,7 @@
 //        builder.addCoupon("may_deals_2016");
 //        builder.applyCoupon("May Deals 2016", 23.32f);
 //        builder.removeCoupon();
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.COUPON_REMOVED.getValue())
 //                .setProperty(builder.buildCouponProperty())
@@ -451,7 +451,7 @@
 //        ECommerceCartBuilder builder = ECommerceCartBuilder.instance();
 //        builder.createWishList("skdjsidjsdkdj29j", "Loved Games");
 //        builder.addProductToWishList(dummyProduct);
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PRODUCT_ADDED_TO_WISH_LIST.getValue())
 //                .setProperty(builder.buildForWishList())
@@ -469,7 +469,7 @@
 //        builder.addProductToWishList(dummyProduct);
 //        builder.addProductToWishList(dummyProduct);
 //        builder.removeProductFromWishList(dummyProduct);
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PRODUCT_REMOVED_FROM_WISH_LIST.getValue())
 //                .setProperty(builder.buildForWishList())
@@ -486,7 +486,7 @@
 //        builder.addProductToWishList(dummyProduct);
 //        builder.createCart("skdjsidjsdkdj29j");
 //        builder.addWishListProductToCart();
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.WISH_LIST_PRODUCT_ADDED_TO_CART.getValue())
 //                .setProperty(builder.buildForWishListCart())
@@ -498,7 +498,7 @@
 //
 //    @Test /*PRODUCT_SHARED*/
 //    public void productSharedTest() throws InterruptedException {
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PRODUCT_SHARED.getValue())
 //                .setProperty(ECommerceCartBuilder.instance().buildForProductShare(
@@ -522,7 +522,7 @@
 //                "Hey, check out this item",
 //                "friend@gmail.com"
 //        );
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.CART_SHARED.getValue())
 //                .setProperty(property)
@@ -541,7 +541,7 @@
 //                "I love this product",
 //                "5"
 //        );
-//        RudderElement event = new RudderElementBuilder()
+//        RudderElement event = new RudderMessageBuilder()
 //                .setChannel("Test Channel")
 //                .setEvent(ECommerceEvents.PRODUCT_REVIEWED.getValue())
 //                .setProperty(property)

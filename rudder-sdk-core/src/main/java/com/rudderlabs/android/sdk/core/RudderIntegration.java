@@ -7,19 +7,19 @@ public abstract class RudderIntegration<T> {
         String key();
     }
 
-    public void identify(RudderElement identify) {
+    public void identify(RudderMessage identify) {
     }
 
-    public void group(RudderElement group) {
+    public void group(RudderMessage group) {
     }
 
-    public void track(RudderElement track) {
+    public void track(RudderMessage track) {
     }
 
-    public void alias(RudderElement alias) {
+    public void alias(RudderMessage alias) {
     }
 
-    public void screen(RudderElement screen) {
+    public void screen(RudderMessage screen) {
     }
 
     public void flush() {
@@ -28,7 +28,7 @@ public abstract class RudderIntegration<T> {
     public void reset() {
     }
 
-    public void dump(RudderElement element) {
+    public void dump(RudderMessage element) {
 
     }
 

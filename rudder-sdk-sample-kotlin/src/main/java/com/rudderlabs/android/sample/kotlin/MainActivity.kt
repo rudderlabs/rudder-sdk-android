@@ -1,8 +1,9 @@
 package com.rudderlabs.android.sample.kotlin
 
 import android.os.Bundle
+import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
-import com.rudderlabs.android.sdk.core.RudderElementBuilder
+import com.rudderlabs.android.sdk.core.RudderMessageBuilder
 import com.rudderlabs.android.sdk.core.TrackPropertyBuilder
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -12,46 +13,51 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        btn.setOnClickListener {
-            MainApplication.rudderClient.track(
-                RudderElementBuilder()
-                    .setEventName("level_up")
-                    .setProperty(
-                        TrackPropertyBuilder()
-                            .setCategory("test_category")
-                            .build()
-                    )
-                    .setUserId("test_user_id")
-            )
+//        btn.setOnClickListener {
+//            count += 1
+//            textView.text = "Count: $count"
+//        }
+//
+//        rst.setOnClickListener {
+//            count = 0
+//            textView.text = "Count: "
+//        }
 
-            MainApplication.rudderClient.track(
-                RudderElementBuilder()
-                    .setEventName("daily_rewards_claim")
-                    .setProperty(
-                        TrackPropertyBuilder()
-                            .setCategory("test_category")
-                            .build()
-                    )
-                    .setUserId("test_user_id")
-            )
+        Handler().postDelayed(this::sendEvents, 2000)
+    }
 
-            MainApplication.rudderClient.track(
-                RudderElementBuilder()
-                    .setEventName("revenue")
-                    .setProperty(
-                        TrackPropertyBuilder()
-                            .setCategory("test_category")
-                            .build()
-                    )
-                    .setUserId("test_user_id")
-            )
-            count += 1
-            textView.text = "Count: $count"
-        }
+    private fun sendEvents() {
+        MainApplication.rudderClient.track(
+            RudderMessageBuilder()
+                .setEventName("level_up")
+                .setProperty(
+                    TrackPropertyBuilder()
+                        .setCategory("test_category")
+                        .build()
+                )
+                .setUserId("test_user_id")
+        )
 
-        rst.setOnClickListener {
-            count = 0
-            textView.text = "Count: "
-        }
+        MainApplication.rudderClient.track(
+            RudderMessageBuilder()
+                .setEventName("daily_rewards_claim")
+                .setProperty(
+                    TrackPropertyBuilder()
+                        .setCategory("test_category")
+                        .build()
+                )
+                .setUserId("test_user_id")
+        )
+
+        MainApplication.rudderClient.track(
+            RudderMessageBuilder()
+                .setEventName("revenue")
+                .setProperty(
+                    TrackPropertyBuilder()
+                        .setCategory("test_category")
+                        .build()
+                )
+                .setUserId("test_user_id")
+        )
     }
 }

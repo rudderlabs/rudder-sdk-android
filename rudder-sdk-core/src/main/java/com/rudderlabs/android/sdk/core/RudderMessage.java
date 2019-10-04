@@ -5,33 +5,33 @@ import com.rudderlabs.android.sdk.core.util.Utils;
 
 import java.util.*;
 
-class RudderMessage {
-    @SerializedName("rl_message_id")
+public class RudderMessage {
+    @SerializedName("messageId")
     private String messageId = String.format(Locale.US, "%d-%s", System.currentTimeMillis(), UUID.randomUUID().toString());
-    @SerializedName("rl_channel")
-    private String channel = "android-sdk";
-    @SerializedName("rl_context")
+    @SerializedName("channel")
+    private String channel = "mobile";
+    @SerializedName("context")
     private RudderContext context;
-    @SerializedName("rl_type")
+    @SerializedName("type")
     private String type;
-    @SerializedName("rl_action")
+    @SerializedName("action")
     private String action;
-    @SerializedName("rl_timestamp")
+    @SerializedName("timestamp")
     private String timestamp = Utils.getTimeStamp();
-    @SerializedName("rl_anonymous_id")
+    @SerializedName("anonymousId")
     private String anonymousId;
-    @SerializedName("rl_user_id")
+    @SerializedName("userId")
     private String userId;
-    @SerializedName("rl_event")
+    @SerializedName("event")
     private String event;
-    @SerializedName("rl_properties")
+    @SerializedName("properties")
     private Map<String, Object> properties;
-    @SerializedName("rl_user_properties")
+    @SerializedName("userProperties")
     private Map<String, Object> userProperties;
-    @SerializedName("rl_integrations")
+    @SerializedName("integrations")
     private Map<String, Boolean> integrations = new HashMap<>();
-    @SerializedName("rl_destination_props")
-    private Map<String, Map> destinationProps = new HashMap<>();
+    @SerializedName("destinationProps")
+    private Map<String, Map> destinationProps = null;
 
     RudderMessage() {
         context = RudderElementCache.getCachedContext();
@@ -42,7 +42,7 @@ class RudderMessage {
         if (property != null) this.properties = property.getMap();
     }
 
-    void setUserProperties(RudderUserProperty userProperty) {
+    void setUserProperty(RudderUserProperty userProperty) {
         this.userProperties = userProperty.getMap();
     }
 
@@ -62,20 +62,24 @@ class RudderMessage {
         this.context.updateTraits(traits);
     }
 
-    String getEventName() {
+    public String getEventName() {
         return event;
     }
 
-    Map<String, Object> getProperties() {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
     void addIntegrationProps(String integrationKey, boolean isEnabled, Map props) {
         integrations.put(integrationKey, isEnabled);
-        if (isEnabled) destinationProps.put(integrationKey, props);
+
+        if (isEnabled) {
+            if (destinationProps == null) destinationProps = new HashMap<>();
+            destinationProps.put(integrationKey, props);
+        }
     }
 
-    String getType() {
+    public String getType() {
         return type;
     }
 
@@ -83,7 +87,7 @@ class RudderMessage {
         return action;
     }
 
-    Map<String, Object> getUserProperties() {
+    public Map<String, Object> getUserProperties() {
         return userProperties;
     }
 

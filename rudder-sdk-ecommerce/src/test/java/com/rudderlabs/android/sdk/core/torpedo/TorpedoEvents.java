@@ -2,8 +2,7 @@ package com.rudderlabs.android.sdk.core.torpedo;
 
 import com.rudderlabs.android.sdk.core.BaseTestCase;
 import com.rudderlabs.android.sdk.core.RudderException;
-import com.rudderlabs.android.sdk.core.RudderElement;
-import com.rudderlabs.android.sdk.core.RudderElementBuilder;
+import com.rudderlabs.android.sdk.core.RudderMessageBuilder;
 import com.rudderlabs.android.sdk.core.RudderProperty;
 import com.rudderlabs.android.sdk.core.TrackPropertyBuilder;
 import org.junit.Test;
@@ -33,7 +32,7 @@ public class TorpedoEvents extends BaseTestCase {
             property.setProperty("total_payments", 34053);
             property.setProperty("start_date", "2018-11-07");
             property.setProperty("versionSessionCount", 99);
-            RudderElement rudderElement = new RudderElementBuilder().setEventName("unverified_revenue").setProperty(property).build();
+            RudderElement rudderElement = new RudderMessageBuilder().setEventName("unverified_revenue").setProperty(property).build();
 //            rudderElement.addIntegration(RudderIntegrationPlatform.AMPLITUDE);
             rudderClient.track(rudderElement);
             rudderClient.flush();

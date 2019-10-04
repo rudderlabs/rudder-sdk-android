@@ -2,15 +2,11 @@ package com.rudderlabs.android.sdk.core;
 
 import android.app.Application;
 import android.content.Context;
-import android.os.Debug;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.rudderlabs.android.sdk.core.util.Utils;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /*
  * Primary class to be used in client
@@ -26,7 +22,7 @@ public class RudderClient {
      * private constructor
      * */
     protected RudderClient() {
-        // prevent constructor initialization
+        // prmessage constructor initialization
     }
 
     /*
@@ -86,22 +82,22 @@ public class RudderClient {
     }
 
     /*
-     * API to log events with only basic objects instead of RudderObjects
+     * API to log messages with only basic objects instead of RudderObjects
      *
      * ideally to be called from Unity plugin
      * */
     public static void logEvent(
             String type,
-            String eventName,
+            String messageName,
             String userId,
-            String eventPropertiesJson,
+            String messagePropertiesJson,
             String userPropertiesJson,
             String integrationsJson
     ) {
-        RudderElement element = new RudderElementBuilder()
-                .setEventName(eventName)
+        RudderMessage element = new RudderMessageBuilder()
+                .setEventName(messageName)
                 .setUserId(userId)
-                .setProperty(Utils.convertToMap(eventPropertiesJson))
+                .setProperty(Utils.convertToMap(messagePropertiesJson))
                 .setUserProperty(Utils.convertToMap(userPropertiesJson))
                 .build();
         element.setIntegrations(Utils.convertToMap(integrationsJson));
@@ -161,56 +157,56 @@ public class RudderClient {
     }
 
     /*
-     * method for `track` events
+     * method for `track` messages
      * */
-    public void track(RudderElementBuilder builder) {
+    public void track(RudderMessageBuilder builder) {
         track(builder.build());
     }
 
-    public void track(RudderElement event) {
-        event.setType(MessageType.TRACK);
-        repository.dump(event);
+    public void track(RudderMessage message) {
+        message.setType(MessageType.TRACK);
+        repository.dump(message);
     }
 
     /*
-     * method for `screen` events
+     * method for `screen` messages
      * */
-    public void screen(RudderElementBuilder builder) {
+    public void screen(RudderMessageBuilder builder) {
         screen(builder.build());
     }
 
-    public void screen(final RudderElement event) {
-        event.setType(MessageType.SCREEN);
-        repository.dump(event);
+    public void screen(final RudderMessage message) {
+         message.setType(MessageType.SCREEN);
+        repository.dump(message);
     }
 
     /*
-     * method for `page` events
+     * method for `page` messages
      * */
-    public void page(RudderElementBuilder builder) {
+    public void page(RudderMessageBuilder builder) {
         page(builder.build());
     }
 
-    public void page(final RudderElement event) {
-        event.setType(MessageType.PAGE);
-        repository.dump(event);
+    public void page(final RudderMessage message) {
+        message.setType(MessageType.PAGE);
+        repository.dump(message);
     }
 
     /*
-     * method for `identify` events
+     * method for `identify` messages
      * */
-    public void identify(final RudderElement event) {
-        repository.dump(event);
+    public void identify(final RudderMessage message) {
+        repository.dump(message);
     }
 
     public void identify(RudderTraits traits) {
-        RudderElement event = new RudderElementBuilder()
+        RudderMessage message = new RudderMessageBuilder()
                 .setEventName(MessageType.IDENTIFY)
                 .setUserId(traits.getId())
                 .build();
-        event.identifyWithTraits(traits);
-        event.setType(MessageType.IDENTIFY);
-        identify(event);
+        message.updateTraits(traits);
+        message.setType(MessageType.IDENTIFY);
+        identify(message);
     }
 
     public void identify(RudderTraitsBuilder builder) {

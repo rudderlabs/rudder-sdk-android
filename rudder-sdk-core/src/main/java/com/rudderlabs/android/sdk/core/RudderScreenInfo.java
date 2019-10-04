@@ -8,11 +8,11 @@ import android.view.WindowManager;
 import com.google.gson.annotations.SerializedName;
 
 class RudderScreenInfo {
-    @SerializedName("rl_density")
+    @SerializedName("density")
     private int density;
-    @SerializedName("rl_width")
+    @SerializedName("width")
     private int width;
-    @SerializedName("rl_height")
+    @SerializedName("height")
     private int height;
 
     RudderScreenInfo(Application application) {
