@@ -67,6 +67,14 @@ public class RudderMessageBuilder {
         return this;
     }
 
+    // TODO:  need to figure out to use it as integrations
+    private RudderOption option;
+
+    public RudderMessageBuilder setRudderOption(RudderOption option) {
+        this.option = option;
+        return this;
+    }
+
     public RudderMessage build() {
         RudderMessage event = new RudderMessage();
         if (this.userId != null) event.setUserId(this.userId);
