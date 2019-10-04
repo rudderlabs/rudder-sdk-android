@@ -6,6 +6,8 @@ import android.text.TextUtils;
 
 import com.rudderlabs.android.sdk.core.util.Utils;
 
+import java.util.List;
+
 /*
  * Primary class to be used in client
  * */
