@@ -285,4 +285,21 @@ class EventRepository {
                 this.integrationsMap.put(destination.destinationDefinition.definitionName, destination.isDestinationEnabled);
         }
     }
+
+    void reset() {
+        dbManager.deleteAllEvents();
+    }
+
+    <T> void onIntegrationReady(String key, RudderClient.Callback<T> callback) {
+        // TODO:
+    }
+
+
+    public void shutdown() {
+
+    }
+
+    public void optOut() {
+        // TODO:  decide optout functionality and restrictions
+    }
 }

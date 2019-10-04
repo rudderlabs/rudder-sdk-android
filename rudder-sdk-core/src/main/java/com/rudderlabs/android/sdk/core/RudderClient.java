@@ -2,6 +2,8 @@ package com.rudderlabs.android.sdk.core;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Build;
+import android.telecom.Call;
 import android.text.TextUtils;
 
 import com.rudderlabs.android.sdk.core.util.Utils;
@@ -22,7 +24,7 @@ public class RudderClient {
      * private constructor
      * */
     protected RudderClient() {
-        // prmessage constructor initialization
+        // message constructor initialization
     }
 
     /*
@@ -152,6 +154,22 @@ public class RudderClient {
         return instance;
     }
 
+    /*
+     * segment equivalent API
+     * */
+    public static RudderClient with(Context context) throws RudderException {
+        if (context == null) {
+            throw new RudderException("Context must not be null");
+        }
+
+        if (instance == null) {
+            String writeKey = Utils.getWriteKeyFromStrings(context);
+            return getInstance(context, writeKey);
+        }
+
+        return instance;
+    }
+
     public Application getApplication() {
         return application;
     }
@@ -169,15 +187,60 @@ public class RudderClient {
     }
 
     /*
+     * segment equivalent API
+     * */
+    public void track(String event) {
+        track(new RudderMessageBuilder().setEventName(event).build());
+    }
+
+    public void track(String event, RudderProperty property) {
+        track(new RudderMessageBuilder().setEventName(event).setProperty(property).build());
+    }
+
+    public void track(String event, RudderProperty property, RudderOption option) {
+        track(new RudderMessageBuilder()
+                .setEventName(event)
+                .setProperty(property)
+                .setRudderOption(option)
+                .build());
+    }
+
+    /*
      * method for `screen` messages
      * */
     public void screen(RudderMessageBuilder builder) {
         screen(builder.build());
     }
 
-    public void screen(final RudderMessage message) {
-         message.setType(MessageType.SCREEN);
+    public void screen(RudderMessage message) {
+        message.setType(MessageType.SCREEN);
         repository.dump(message);
+    }
+
+    /*
+     * segment equivalent API
+     * */
+    public void screen(String event) {
+        screen(new RudderMessageBuilder().setEventName(event).build());
+    }
+
+    public void screen(String event, RudderProperty property) {
+        screen(new RudderMessageBuilder().setEventName(event).setProperty(property).build());
+    }
+
+    public void screen(String event, String category, RudderProperty property, RudderOption option) {
+        if (property == null) property = new RudderProperty();
+        property.setProperty("category", category);
+
+        screen(new RudderMessageBuilder().setEventName(event).setProperty(property).setRudderOption(option).build());
+    }
+
+    public void screen(String event, RudderProperty property, RudderOption option) {
+        screen(new RudderMessageBuilder()
+                .setEventName(event)
+                .setProperty(property)
+                .setRudderOption(option)
+                .build());
     }
 
     /*
@@ -195,21 +258,131 @@ public class RudderClient {
     /*
      * method for `identify` messages
      * */
-    public void identify(final RudderMessage message) {
+    public void identify(RudderMessage message) {
         repository.dump(message);
     }
 
-    public void identify(RudderTraits traits) {
+    public void identify(RudderTraits traits, RudderOption option) {
         RudderMessage message = new RudderMessageBuilder()
                 .setEventName(MessageType.IDENTIFY)
                 .setUserId(traits.getId())
+                .setRudderOption(option)
                 .build();
         message.updateTraits(traits);
         message.setType(MessageType.IDENTIFY);
         identify(message);
     }
 
+    public void identify(RudderTraits traits) {
+        identify(traits, null);
+    }
+
     public void identify(RudderTraitsBuilder builder) {
         identify(builder.build());
+    }
+
+    public void identify(String userId) {
+        identify(new RudderTraitsBuilder().setId(userId));
+    }
+
+    /*
+     * segment equivalent API
+     * */
+    public void alias(String event) {
+        alias(event, null);
+    }
+
+    public void alias(String event, RudderOption option) {
+        // TODO:  yet to be decided
+    }
+
+    public void group(String groupId) {
+        group(groupId, null);
+    }
+
+    public void group(String groupId, RudderTraits traits) {
+        group(groupId, traits, null);
+    }
+
+    public void group(String groupId, RudderTraits traits, RudderOption option) {
+        // TODO:  yet to be decided
+    }
+
+    /*
+     * segment equivalent API
+     * */
+    public static void setSingletonInstance(RudderClient _instance) {
+        if (_instance != null) instance = _instance;
+    }
+
+    public RudderContext getRudderContext() {
+        return  RudderElementCache.getCachedContext();
+    }
+
+    public EventRepository getSnapShot() {
+        return repository;
+    }
+
+    public void reset() {
+        repository.reset();
+    }
+
+    public void optOut() {
+        repository.optOut();
+    }
+
+    public <T> void onIntegrationReady(String key, Callback<T> callback) {
+        repository.onIntegrationReady(key, callback);
+    }
+
+    public interface Callback<T> {
+        void onReady(T instance);
+    }
+
+    public void shutdown() {
+        repository.shutdown();
+    }
+
+    /*
+     * segment equivalent API
+     * */
+    public static class Builder {
+        private Application application;
+        private String writeKey;
+
+        public Builder(Context context, String writeKey) {
+            this.application = (Application) context.getApplicationContext();
+            this.writeKey = writeKey;
+        }
+
+        private boolean trackLifecycleEvents = false;
+
+        public Builder trackApplicationLifecycleEvents() {
+            this.trackLifecycleEvents = true;
+            return this;
+        }
+
+        private boolean recordScreenViews = false;
+
+        public Builder recordScreenViews() {
+            this.recordScreenViews = true;
+            return this;
+        }
+
+        private RudderConfig config;
+
+        public Builder withRudderConfig(RudderConfig config) {
+            this.config = config;
+            return this;
+        }
+
+        public Builder withRudderConfigBuilder(RudderConfigBuilder builder) throws RudderException {
+            this.config = builder.build();
+            return this;
+        }
+
+        public RudderClient build() throws RudderException {
+            return getInstance(this.application, this.writeKey, this.config);
+        }
     }
 }

@@ -155,4 +155,15 @@ class DBPersistentManager extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
         // basically do nothing
     }
+
+    public void deleteAllEvents() {
+        SQLiteDatabase database = getWritableDatabase();
+        if (database.isOpen()) {
+            // remove events
+            database.execSQL(String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME));
+        } else {
+            RudderLogger.logError("DBPersistentManager: clearEventsFromDB: database is not " +
+                    "writable");
+        }
+    }
 }
