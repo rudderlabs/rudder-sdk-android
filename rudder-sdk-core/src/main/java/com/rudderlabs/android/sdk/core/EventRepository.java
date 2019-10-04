@@ -294,7 +294,6 @@ class EventRepository {
         // TODO:
     }
 
-
     public void shutdown() {
 
     }
