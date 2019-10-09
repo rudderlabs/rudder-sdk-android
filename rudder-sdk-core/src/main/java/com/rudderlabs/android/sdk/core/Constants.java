@@ -4,9 +4,6 @@ package com.rudderlabs.android.sdk.core;
  * Default value holder class
  * */
 public class Constants {
-    public static final String RUDDER_WRITE_KEY_STRING = "rudder_write_key";
-
-    static final String CONFIG_BACKEND_URL = "https://api.rudderlabs.com/source-config?write_key=";
     // default base url or rudder-backend-server
     static final String BASE_URL = "https://api.rudderlabs.com";
     // default flush queue size for the events to be flushed to server

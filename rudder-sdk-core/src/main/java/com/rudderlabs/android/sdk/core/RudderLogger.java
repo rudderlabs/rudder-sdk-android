@@ -3,20 +3,27 @@ package com.rudderlabs.android.sdk.core;
 import android.util.Log;
 
 /*
-* Logger class for RudderClient library
-* */
+ * Logger class for RudderClient library
+ * */
 public class RudderLogger {
     private static int logLevel = RudderLogLevel.INFO;
     private static final String TAG = "RudderSDK";
 
     static void init(int l) {
         if (l > RudderLogLevel.DEBUG) l = RudderLogLevel.DEBUG;
+        else if (l < RudderLogLevel.NONE) l = RudderLogLevel.NONE;
         logLevel = l;
     }
 
     static void logError(Throwable throwable) {
         if (logLevel >= RudderLogLevel.ERROR) {
             Log.e(TAG, "Error: ", throwable);
+        }
+    }
+
+    static void logError(Exception ex) {
+        if (logLevel >= RudderLogLevel.ERROR) {
+            Log.e(TAG, "Error: ", ex.getCause());
         }
     }
 

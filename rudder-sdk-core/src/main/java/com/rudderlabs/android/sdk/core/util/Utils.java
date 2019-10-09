@@ -47,12 +47,6 @@ public class Utils {
         return UUID.randomUUID().toString();
     }
 
-    public static Map<String, Object> convertToMap(Object object) {
-        Gson gson = new Gson();
-        return gson.fromJson(gson.toJson(object), new TypeToken<Map<String, Object>>() {
-        }.getType());
-    }
-
     public static Map<String, Object> convertToMap(String json) {
         return new Gson().fromJson(json, new TypeToken<Map<String, Object>>() {
         }.getType());
@@ -62,7 +56,7 @@ public class Utils {
         int id = context.getResources().getIdentifier(
                 context.getPackageName(),
                 "string",
-                Constants.RUDDER_WRITE_KEY_STRING
+                "rudder_write_key"
         );
         if (id != 0) {
             return context.getResources().getString(id);

@@ -24,7 +24,6 @@ import java.util.Map;
  * */
 class EventRepository {
     private RudderConfig config;
-    private String writeKey;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
     private Map<String, Object> integrationsMap;
@@ -33,16 +32,16 @@ class EventRepository {
     /*
      * constructor to be called from RudderClient internally.
      * -- tasks to be performed
-     * 1. set the values of writeKey, config
+     * 1. persist the value of config
      * 2. initiate RudderElementCache
      * 3. initiate DBPersistentManager for SQLite operations
      * 4. initiate RudderServerConfigManager
      * 5. start processor thread
+     * 6. initiate factories
      * */
     EventRepository(Application _application, String _writeKey, RudderConfig _config) {
         // 1. set the values of writeKey, config
         this.config = _config;
-        this.writeKey = _writeKey;
 
         try {
             // 2. initiate RudderElementCache
@@ -60,9 +59,6 @@ class EventRepository {
 
             // 6. initiate factories
             this.initiateFactories(_config);
-
-            // 7. get advertising id
-//            "ADVERTISING ID: " +
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
@@ -142,8 +138,8 @@ class EventRepository {
                             if (payload != null) {
                                 // send payload to server if it is not null
                                 String response = flushEventsToServer(payload);
-                                System.out.println("response: " + response);
-                                System.out.println("eventcount: " + messages.size());
+                                RudderLogger.logInfo("ServerResponse: " + response);
+                                RudderLogger.logInfo("EventCount: " + messages.size());
                                 // if success received from server
                                 if (response != null && response.equalsIgnoreCase("OK")) {
                                     // remove events from DB
@@ -207,7 +203,7 @@ class EventRepository {
      * */
     private String flushEventsToServer(String payload) throws IOException {
         // get endPointUrl form config object
-        String endPointUri = config.getEndPointUri() + "hello";
+        String endPointUri = config.getEndPointUri() + "v1/batch";
 
         // create url object
         URL url = new URL(endPointUri);
@@ -250,7 +246,7 @@ class EventRepository {
                 res = bis.read();
             }
             // finally return response when reading from server is completed
-            System.out.println("ServerError: " + baos.toString());
+            RudderLogger.logError("ServerError: " + baos.toString());
 
             return null;
         }

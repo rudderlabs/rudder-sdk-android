@@ -27,7 +27,7 @@ public class RudderMessageBuilder {
         return this;
     }
 
-    public RudderMessageBuilder setProperty(RudderPropertyBuilder builder) throws RudderException {
+    public RudderMessageBuilder setProperty(RudderPropertyBuilder builder) {
         this.property = builder.build();
         return this;
     }

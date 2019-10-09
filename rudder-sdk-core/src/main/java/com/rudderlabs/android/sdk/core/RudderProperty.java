@@ -1,5 +1,6 @@
 package com.rudderlabs.android.sdk.core;
 
+import com.google.gson.Gson;
 import com.rudderlabs.android.sdk.core.util.Utils;
 
 import java.util.HashMap;
@@ -29,6 +30,6 @@ public class RudderProperty {
     }
 
     public void setProperty(Object property) {
-        setProperty(Utils.convertToMap(property));
+        setProperty(Utils.convertToMap(new Gson().toJson(property)));
     }
 }

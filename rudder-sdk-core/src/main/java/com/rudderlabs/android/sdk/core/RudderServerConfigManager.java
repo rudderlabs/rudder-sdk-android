@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.nfc.Tag;
+import android.os.Handler;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -27,8 +28,6 @@ class RudderServerConfigManager {
     private static SharedPreferences preferences;
     private static RudderServerConfig serverConfig;
 
-    private static final String TAG = "RudderSDK";
-
     static RudderServerConfigManager getInstance(Application _application, String _writeKey) {
         if (instance == null) instance = new RudderServerConfigManager(_application, _writeKey);
         return instance;
@@ -49,7 +48,7 @@ class RudderServerConfigManager {
         if (lastUpdatedTime == -1) return true;
 
         long currentTime = System.currentTimeMillis();
-        return (currentTime - lastUpdatedTime) > (24 * 60 * 60 * 10000);
+        return (currentTime - lastUpdatedTime) > (24 * 60 * 60 * 1000);
     }
 
     private RudderServerConfig retrieveConfig() {
@@ -62,50 +61,69 @@ class RudderServerConfigManager {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    String configUrl = Constants.CONFIG_BACKEND_URL + _writeKey;
-                    // create url object
-                    URL url = new URL(configUrl);
-                    // get connection object
-                    HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
-                    // set request method
-                    httpConnection.setRequestMethod("GET");
-                    // create connection
-                    httpConnection.connect();
-                    if (httpConnection.getResponseCode() == 200) {
-                        // get input stream from connection to get output from the server
-                        BufferedInputStream bis = new BufferedInputStream(httpConnection.getInputStream());
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        int res = bis.read();
-                        // read response from the server
-                        while (res != -1) {
-                            baos.write((byte) res);
-                            res = bis.read();
-                        }
+                boolean isDone = false;
+                int retryCount = 0, retryTimeOut = 10;
+                while (!isDone || retryCount <= 3) {
+                    try {
+                        String configUrl = String.format("https://api.rudderlabs.com/source-config?write_key=%s", _writeKey);
+                        // create url object
+                        URL url = new URL(configUrl);
+                        // get connection object
+                        HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+                        // set request method
+                        httpConnection.setRequestMethod("GET");
+                        // create connection
+                        httpConnection.connect();
+                        if (httpConnection.getResponseCode() == 200) {
+                            // get input stream from connection to get output from the server
+                            BufferedInputStream bis = new BufferedInputStream(httpConnection.getInputStream());
+                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                            int res = bis.read();
+                            // read response from the server
+                            while (res != -1) {
+                                baos.write((byte) res);
+                                res = bis.read();
+                            }
 
-                        String configJson = baos.toString();
-                        // save config for future use
-                        preferences.edit()
-                                .putLong("server_update_time", System.currentTimeMillis())
-                                .putString("server_config", configJson)
-                                .apply();
+                            String configJson = baos.toString();
+                            // save config for future use
+                            preferences.edit()
+                                    .putLong("server_update_time", System.currentTimeMillis())
+                                    .putString("server_config", configJson)
+                                    .apply();
 
-                        // update server config as well
-                        serverConfig = new Gson().fromJson(configJson, RudderServerConfig.class);
-                    } else {
-                        BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        int res = bis.read();
-                        // read response from the server
-                        while (res != -1) {
-                            baos.write((byte) res);
-                            res = bis.read();
+                            // update server config as well
+                            serverConfig = new Gson().fromJson(configJson, RudderServerConfig.class);
+
+                            // reset retry count
+                            isDone = true;
+                        } else {
+                            BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
+                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                            int res = bis.read();
+                            // read response from the server
+                            while (res != -1) {
+                                baos.write((byte) res);
+                                res = bis.read();
+                            }
+                            RudderLogger.logError("ServerError for FetchingConfig: " + baos.toString());
+                            RudderLogger.logInfo("Retrying to download in " + retryTimeOut + "s");
+
+                            retryCount += 1;
+                            Thread.sleep(retryCount * retryTimeOut * 1000);
                         }
-                        Log.e(TAG, "ServerError for FetchingConfig: " + baos.toString());
+                    } catch (Exception ex) {
+                        RudderLogger.logError(ex);
+                        RudderLogger.logInfo("Retrying to download in " + retryTimeOut + "s");
+                        retryCount += 1;
+                        try {
+                            Thread.sleep(retryCount * retryTimeOut * 1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
                 }
+
             }
         }).start();
     }

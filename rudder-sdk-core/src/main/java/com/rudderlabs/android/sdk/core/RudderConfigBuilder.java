@@ -34,12 +34,14 @@ public class RudderConfigBuilder {
 
     private String endPointUri = Constants.BASE_URL;
 
-    public RudderConfigBuilder withEndPointUri(String endPointUri) throws RudderException {
+    public RudderConfigBuilder withEndPointUri(String endPointUri) {
         if (TextUtils.isEmpty(endPointUri)) {
-            throw new RudderException("endPointUri can not be null or empty");
+            RudderLogger.logError(new RudderException("endPointUri can not be null or empty. Set to default"));
+            return this;
         }
         if (!URLUtil.isValidUrl(endPointUri)) {
-            throw new RudderException("malformed endPointUri");
+            RudderLogger.logError(new RudderException("Malformed endPointUri. Set to default"));
+            return this;
         }
         this.endPointUri = endPointUri;
         return this;
@@ -47,9 +49,10 @@ public class RudderConfigBuilder {
 
     private int flushQueueSize = Constants.FLUSH_QUEUE_SIZE;
 
-    public RudderConfigBuilder withFlushQueueSize(int flushQueueSize) throws RudderException {
+    public RudderConfigBuilder withFlushQueueSize(int flushQueueSize) {
         if (flushQueueSize < 1 || flushQueueSize > 100) {
-            throw new RudderException("flushQueueSize is out of range. Min: 1, Max: 100");
+            RudderLogger.logError(new RudderException("flushQueueSize is out of range. Min: 1, Max: 100. Set to default"));
+            return this;
         }
         this.flushQueueSize = flushQueueSize;
         return this;
@@ -83,7 +86,7 @@ public class RudderConfigBuilder {
         return this;
     }
 
-    public RudderConfig build() throws RudderException {
+    public RudderConfig build() {
         return new RudderConfig(this.endPointUri, this.flushQueueSize, this.dbThresholdCount, this.sleepTimeout, this.isDebug ? RudderLogger.RudderLogLevel.DEBUG : logLevel, this.factories);
     }
 }

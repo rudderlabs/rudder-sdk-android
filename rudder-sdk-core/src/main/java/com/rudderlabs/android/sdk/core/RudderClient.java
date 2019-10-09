@@ -2,13 +2,9 @@ package com.rudderlabs.android.sdk.core;
 
 import android.app.Application;
 import android.content.Context;
-import android.os.Build;
-import android.telecom.Call;
 import android.text.TextUtils;
 
 import com.rudderlabs.android.sdk.core.util.Utils;
-
-import java.util.List;
 
 /*
  * Primary class to be used in client
@@ -23,95 +19,15 @@ public class RudderClient {
     /*
      * private constructor
      * */
-    protected RudderClient() {
+    private RudderClient() {
         // message constructor initialization
-    }
-
-    /*
-     * API for getting instance for RudderClient with primitive types.
-     *
-     * ideally to be called from Unity plugin
-     * */
-    public static void initiateInstance(
-            Context context,
-            String writeKey,
-            String endPointUri,
-            int flushQueueSize,
-            int dbCountThreshold,
-            int sleepTimeout,
-            boolean isDebug
-    ) {
-        initiateInstance(context, writeKey, endPointUri, flushQueueSize, dbCountThreshold, sleepTimeout, isDebug, null);
-    }
-
-    public static void initiateInstance(
-            Context context,
-            String writeKey,
-            String endPointUri,
-            int flushQueueSize,
-            int dbCountThreshold,
-            int sleepTimeout,
-            boolean isDebug,
-            List<RudderIntegration.Factory> factories
-    ) {
-        try {
-            if (instance == null) {
-                RudderConfigBuilder configBuilder = new RudderConfigBuilder()
-                        .withEndPointUri(endPointUri)
-                        .withFlushQueueSize(flushQueueSize)
-                        .withDbThresholdCount(dbCountThreshold)
-                        .withSleepCount(sleepTimeout)
-                        .withDebug(isDebug);
-
-                if (factories != null) configBuilder.withFactories(factories);
-
-                application = (Application) context.getApplicationContext();
-                instance = getInstance(application, writeKey, configBuilder.build());
-            }
-        } catch (Exception e) {
-            RudderLogger.logError(e.getCause());
-        }
-    }
-
-    /*
-     * API to get the instance. It can return null if not initialized.
-     * to be called after `initiateInstance` is called
-     *
-     * ideally to be called for testing Unity plugin
-     * */
-    public static RudderClient getInstance() {
-        return instance;
-    }
-
-    /*
-     * API to log messages with only basic objects instead of RudderObjects
-     *
-     * ideally to be called from Unity plugin
-     * */
-    public static void logEvent(
-            String type,
-            String messageName,
-            String userId,
-            String messagePropertiesJson,
-            String userPropertiesJson,
-            String integrationsJson
-    ) {
-        RudderMessage element = new RudderMessageBuilder()
-                .setEventName(messageName)
-                .setUserId(userId)
-                .setProperty(Utils.convertToMap(messagePropertiesJson))
-                .setUserProperty(Utils.convertToMap(userPropertiesJson))
-                .build();
-        element.setIntegrations(Utils.convertToMap(integrationsJson));
-        element.setType(type);
-        repository.dump(element);
     }
 
     /*
      * API for getting instance of RudderClient with context and writeKey (bare minimum
      * requirements)
      * */
-    public static RudderClient getInstance(Context context, String writeKey) throws RudderException {
+    public static RudderClient getInstance(Context context, String writeKey) {
         return getInstance(context, writeKey, new RudderConfig());
     }
 
@@ -119,51 +35,77 @@ public class RudderClient {
      * API for getting instance of RudderClient with config
      * */
     public static RudderClient getInstance(Context context, String writeKey,
-                                           RudderConfigBuilder builder) throws RudderException {
+                                           RudderConfigBuilder builder) {
         return getInstance(context, writeKey, builder.build());
     }
 
     /*
      * API for getting instance of RudderClient with config
      * */
-    public static RudderClient getInstance(Context context, String writeKey, RudderConfig config)
-            throws RudderException {
+    public static RudderClient getInstance(Context context, String writeKey, RudderConfig config) {
         // check if instance is already initiated
         if (instance == null) {
             // assert context is not null
             if (context == null) {
-                throw new RudderException("context can not be null");
+                RudderLogger.logError(new RudderException("context can not be null"));
             }
             // assert writeKey is not null or empty
             if (TextUtils.isEmpty(writeKey)) {
-                throw new RudderException("WriteKey can not be null or empty");
+                RudderLogger.logError(new RudderException("writeKey can not be null or empty"));
             }
             // assert config is not null
             if (config == null) {
-                throw new RudderException("config can not be null");
+                config = new RudderConfig();
+            } else {
+                if (TextUtils.isEmpty(config.getEndPointUri())) {
+                    config.setEndPointUri(Constants.BASE_URL);
+                }
+                if (config.getFlushQueueSize() < 0 || config.getFlushQueueSize() > 100) {
+                    config.setFlushQueueSize(Constants.FLUSH_QUEUE_SIZE);
+                }
+                if (config.getDbCountThreshold() < 0) {
+                    config.setDbCountThreshold(Constants.DB_COUNT_THRESHOLD);
+                }
+                // assure sleepTimeOut never goes below 10s
+                if (config.getSleepTimeOut() < 10) {
+                    config.setSleepTimeOut(10);
+                }
             }
 
-            application = (Application) context.getApplicationContext();
+            // get application from provided context
+            if (context != null) {
+                application = (Application) context.getApplicationContext();
+            }
             // initiate RudderClient instance
             instance = new RudderClient();
-            // get application context from provided context
-            Application application = (Application) context.getApplicationContext();
             // initiate EventRepository class
-            repository = new EventRepository(application, writeKey, config);
+            if (application != null && writeKey != null) {
+                repository = new EventRepository(application, writeKey, config);
+            }
         }
+        return instance;
+    }
+
+    /*
+    * package private api to be used in EventRepository
+    * */
+    static RudderClient getInstance() {
         return instance;
     }
 
     /*
      * segment equivalent API
      * */
-    public static RudderClient with(Context context) throws RudderException {
+    public static RudderClient with(Context context) {
         if (context == null) {
-            throw new RudderException("Context must not be null");
+            RudderLogger.logError(new RudderException("Context must not be null"));
         }
 
         if (instance == null) {
-            String writeKey = Utils.getWriteKeyFromStrings(context);
+            String writeKey = null;
+            if (context != null) {
+                writeKey = Utils.getWriteKeyFromStrings(context);
+            }
             return getInstance(context, writeKey);
         }
 
@@ -183,7 +125,7 @@ public class RudderClient {
 
     public void track(RudderMessage message) {
         message.setType(MessageType.TRACK);
-        repository.dump(message);
+        if (repository != null) repository.dump(message);
     }
 
     /*
@@ -214,7 +156,7 @@ public class RudderClient {
 
     public void screen(RudderMessage message) {
         message.setType(MessageType.SCREEN);
-        repository.dump(message);
+        if (repository != null) repository.dump(message);
     }
 
     /*
@@ -252,14 +194,14 @@ public class RudderClient {
 
     public void page(final RudderMessage message) {
         message.setType(MessageType.PAGE);
-        repository.dump(message);
+        if (repository != null) repository.dump(message);
     }
 
     /*
      * method for `identify` messages
      * */
     public void identify(RudderMessage message) {
-        repository.dump(message);
+        if (repository != null) repository.dump(message);
     }
 
     public void identify(RudderTraits traits, RudderOption option) {
@@ -316,7 +258,7 @@ public class RudderClient {
     }
 
     public RudderContext getRudderContext() {
-        return  RudderElementCache.getCachedContext();
+        return RudderElementCache.getCachedContext();
     }
 
     public EventRepository getSnapShot() {
@@ -324,15 +266,15 @@ public class RudderClient {
     }
 
     public void reset() {
-        repository.reset();
+        if (repository != null) repository.reset();
     }
 
     public void optOut() {
-        repository.optOut();
+        if (repository != null) repository.optOut();
     }
 
     public <T> void onIntegrationReady(String key, Callback<T> callback) {
-        repository.onIntegrationReady(key, callback);
+        if (repository != null) repository.onIntegrationReady(key, callback);
     }
 
     public interface Callback<T> {
@@ -340,7 +282,7 @@ public class RudderClient {
     }
 
     public void shutdown() {
-        repository.shutdown();
+        if (repository != null) repository.shutdown();
     }
 
     /*
@@ -376,12 +318,12 @@ public class RudderClient {
             return this;
         }
 
-        public Builder withRudderConfigBuilder(RudderConfigBuilder builder) throws RudderException {
+        public Builder withRudderConfigBuilder(RudderConfigBuilder builder) {
             this.config = builder.build();
             return this;
         }
 
-        public RudderClient build() throws RudderException {
+        public RudderClient build() {
             return getInstance(this.application, this.writeKey, this.config);
         }
     }

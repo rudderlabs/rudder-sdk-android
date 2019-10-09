@@ -1,1 +1,1 @@
-include ':rudder-sdk-sample-kotlin', ':rudder-sdk-core', ':rudder-sdk-ecommerce', ':rudder-sdk-adjust-integration'
+include ':rudder-sdk-sample-kotlin', ':rudder-sdk-core', ':rudder-sdk-adjust-integration'
