@@ -67,6 +67,7 @@ class EventRepository {
     private void initiateFactories(final RudderConfig _config) {
         // initiate factory initialization after 10s
         // let the factories capture everything they want to capture
+        if (_config.getFactories() == null || _config.getFactories().isEmpty()) return;
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
