@@ -2,13 +2,9 @@ package com.rudderlabs.android.sdk.core;
 
 import android.app.Application;
 import android.content.Context;
-import android.os.Build;
-import android.telecom.Call;
 import android.text.TextUtils;
 
 import com.rudderlabs.android.sdk.core.util.Utils;
-
-import java.util.List;
 
 /*
  * Primary class to be used in client
@@ -119,13 +115,16 @@ public class RudderClient {
     /*
      * segment equivalent API
      * */
-    public static RudderClient with(Context context) throws RudderException {
+    public static RudderClient with(Context context) {
         if (context == null) {
-            throw new RudderException("Context must not be null");
+            RudderLogger.logError(new RudderException("Context must not be null"));
         }
 
         if (instance == null) {
-            String writeKey = Utils.getWriteKeyFromStrings(context);
+            String writeKey = null;
+            if (context != null) {
+                writeKey = Utils.getWriteKeyFromStrings(context);
+            }
             return getInstance(context, writeKey);
         }
 

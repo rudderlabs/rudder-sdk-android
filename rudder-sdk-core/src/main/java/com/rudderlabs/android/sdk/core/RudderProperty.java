@@ -42,4 +42,8 @@ public class RudderProperty {
     public void putCurrency(String currency) {
         map.put("currency", currency);
     }
+
+    public void setProperty(Object property) {
+        setProperty(Utils.convertToMap(new Gson().toJson(property)));
+    }
 }
