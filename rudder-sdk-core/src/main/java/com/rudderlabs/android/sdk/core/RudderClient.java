@@ -236,7 +236,7 @@ public class RudderClient {
 
     public void screen(String event, String category, RudderProperty property, RudderOption option) {
         if (property == null) property = new RudderProperty();
-        property.setProperty("category", category);
+        property.put("category", category);
 
         screen(new RudderMessageBuilder().setEventName(event).setProperty(property).setRudderOption(option).build());
     }
