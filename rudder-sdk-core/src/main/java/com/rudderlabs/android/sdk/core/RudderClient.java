@@ -117,7 +117,7 @@ public class RudderClient {
      * */
     public static RudderClient with(Context context) {
         if (context == null) {
-            RudderLogger.logError(new RudderException("Context must not be null"));
+            RudderLogger.logError("Context must not be null");
         }
 
         if (instance == null) {
