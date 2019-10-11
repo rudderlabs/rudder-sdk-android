@@ -172,7 +172,7 @@ public class RudderClient {
 
     public void screen(String event, String category, RudderProperty property, RudderOption option) {
         if (property == null) property = new RudderProperty();
-        property.setProperty("category", category);
+        property.put("category", category);
 
         screen(new RudderMessageBuilder().setEventName(event).setProperty(property).setRudderOption(option).build());
     }
@@ -227,6 +227,11 @@ public class RudderClient {
         identify(new RudderTraitsBuilder().setId(userId));
     }
 
+    public void identify(String userId, RudderTraits traits, RudderOption option) {
+        traits.putId(userId);
+        identify(traits, option);
+    }
+
     /*
      * segment equivalent API
      * */
@@ -273,12 +278,12 @@ public class RudderClient {
         if (repository != null) repository.optOut();
     }
 
-    public <T> void onIntegrationReady(String key, Callback<T> callback) {
+    public <T> void onIntegrationReady(String key, Callback callback) {
         if (repository != null) repository.onIntegrationReady(key, callback);
     }
 
-    public interface Callback<T> {
-        void onReady(T instance);
+    public interface Callback {
+        void onReady(Object instance);
     }
 
     public void shutdown() {
@@ -333,6 +338,12 @@ public class RudderClient {
 
         public Builder withRudderConfigBuilder(RudderConfig.Builder builder) {
             this.config = builder.build();
+            return this;
+        }
+
+        private int logLevel;
+        public Builder logLevel(int logLevel) {
+            this.logLevel = logLevel;
             return this;
         }
 

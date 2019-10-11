@@ -33,8 +33,8 @@ public class RudderMessageBuilder {
     }
 
     public RudderMessageBuilder setProperty(Map<String, Object> map) {
-        property = new RudderProperty();
-        property.setProperty(map);
+        if (this.property == null) property = new RudderProperty();
+        property.putValue(map);
         return this;
     }
 
@@ -47,7 +47,7 @@ public class RudderMessageBuilder {
 
     public RudderMessageBuilder setUserProperty(Map<String, Object> map) {
         this.userProperty = new RudderUserProperty();
-        userProperty.setProperty(map);
+        userProperty.putValue(map);
         return this;
     }
 

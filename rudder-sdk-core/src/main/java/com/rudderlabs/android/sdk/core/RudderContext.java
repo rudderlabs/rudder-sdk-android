@@ -2,16 +2,18 @@ package com.rudderlabs.android.sdk.core;
 
 import android.app.Application;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.rudderlabs.android.sdk.core.util.Utils;
 
 import java.util.Locale;
+import java.util.Map;
 
 class RudderContext {
     @SerializedName("app")
     private RudderApp app;
     @SerializedName("traits")
-    private RudderTraits traits;
+    private Map<String, Object> traits;
     @SerializedName("library")
     private RudderLibraryInfo libraryInfo;
     @SerializedName("os")
@@ -38,7 +40,8 @@ class RudderContext {
         String deviceId = Utils.getDeviceId(application);
 
         this.app = new RudderApp(application);
-        this.traits = new RudderTraits(deviceId);
+        RudderTraits traits = new RudderTraits(deviceId);
+        this.traits = Utils.convertToMap(new Gson().toJson(traits));
         this.screenInfo = new RudderScreenInfo(application);
         this.userAgent = System.getProperty("http.agent");
         this.deviceInfo = new RudderDeviceInfo(deviceId);
@@ -48,11 +51,9 @@ class RudderContext {
     }
 
     void updateTraits(RudderTraits traits) {
-        this.traits = traits;
-    }
-
-    public RudderTraits getTraits() {
-        return traits;
+        Map<String, Object> traitsMap = Utils.convertToMap(new Gson().toJson(traits));
+        traitsMap.putAll(traits.getExtras());
+        this.traits = traitsMap;
     }
 
     public String getDeviceId() {

@@ -91,10 +91,6 @@ public class RudderMessage {
         return userProperties;
     }
 
-    RudderTraits getTraits() {
-        return context.getTraits();
-    }
-
     void setIntegrations(Map<String, Object> integrations) {
         if (integrations == null) {
             return;

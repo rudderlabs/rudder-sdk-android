@@ -150,7 +150,7 @@ public class RudderTraitsBuilder {
 
     public RudderTraits build() {
         return new RudderTraits(
-                new TraitsAddress(
+                new RudderTraits.Address(
                         this.city,
                         this.country,
                         this.postalCode,
@@ -159,7 +159,7 @@ public class RudderTraitsBuilder {
                 ),
                 this.age,
                 this.birthDay,
-                new TraitsCompany(
+                new RudderTraits.Company(
                         this.companyName,
                         this.companyId,
                         this.industry

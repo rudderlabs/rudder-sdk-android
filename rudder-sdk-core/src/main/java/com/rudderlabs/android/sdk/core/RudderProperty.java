@@ -9,27 +9,37 @@ import java.util.Map;
 public class RudderProperty {
     private Map<String, Object> map = new HashMap<>();
 
-    public Object getProperty(String key) {
-        return map.containsKey(key) ? map.get(key) : null;
-    }
-
-    public void setProperty(String key, Object value) {
-        map.put(key, value);
+    Map<String, Object> getMap() {
+        return map;
     }
 
     public boolean hasProperty(String key) {
         return map.containsKey(key);
     }
 
-    Map<String, Object> getMap() {
-        return map;
+    public Object getProperty(String key) {
+        return map.containsKey(key) ? map.get(key) : null;
     }
 
-    public void setProperty(Map<String, Object> map) {
+    public void put(String key, Object value) {
+        map.put(key, value);
+    }
+
+    public RudderProperty putValue(String key, Object value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public RudderProperty putValue(Map<String, Object> map) {
         if (map != null) this.map.putAll(map);
+        return this;
     }
 
-    public void setProperty(Object property) {
-        setProperty(Utils.convertToMap(new Gson().toJson(property)));
+    public void putRevenue(double revenue) {
+        map.put("revenue", revenue);
+    }
+
+    public void putCurrency(String currency) {
+        map.put("currency", currency);
     }
 }

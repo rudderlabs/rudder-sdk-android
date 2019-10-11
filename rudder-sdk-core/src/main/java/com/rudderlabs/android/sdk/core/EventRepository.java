@@ -287,7 +287,7 @@ class EventRepository {
         dbManager.deleteAllEvents();
     }
 
-    <T> void onIntegrationReady(String key, RudderClient.Callback<T> callback) {
+    void onIntegrationReady(String key, RudderClient.Callback callback) {
         // TODO:
     }
 

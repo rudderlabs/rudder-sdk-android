@@ -16,7 +16,7 @@ public class ScreenPropertyBuilder extends RudderPropertyBuilder {
         if (TextUtils.isEmpty(name)) {
             RudderLogger.logError("name can not be empty");
         } else {
-            property.setProperty("name", name);
+            property.put("name", name);
         }
         return property;
     }

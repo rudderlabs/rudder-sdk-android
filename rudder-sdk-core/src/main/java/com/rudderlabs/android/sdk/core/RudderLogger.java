@@ -51,11 +51,12 @@ public class RudderLogger {
         }
     }
 
-    static class RudderLogLevel {
-        static final int DEBUG = 4;
-        static final int INFO = 3;
-        static final int WARN = 2;
-        static final int ERROR = 1;
-        static final int NONE = 0;
+    public static class RudderLogLevel {
+        public static final int VERBOSE = 5;
+        public static final int DEBUG = 4;
+        public static final int INFO = 3;
+        public static final int WARN = 2;
+        public static final int ERROR = 1;
+        public static final int NONE = 0;
     }
 }
