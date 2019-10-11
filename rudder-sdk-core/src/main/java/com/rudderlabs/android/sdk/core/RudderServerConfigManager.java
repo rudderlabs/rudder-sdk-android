@@ -119,7 +119,7 @@ class RudderServerConfigManager {
                         try {
                             Thread.sleep(retryCount * retryTimeOut * 1000);
                         } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            RudderLogger.logError(e);
                         }
                     }
                 }

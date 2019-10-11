@@ -3,6 +3,7 @@ package com.rudderlabs.android.sdk.core;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
+
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -16,12 +17,8 @@ public class BaseTestCase {
 
     @Before
     public void setup() throws InterruptedException {
-        try {
-            Context context = ApplicationProvider.getApplicationContext();
-            rudderClient = RudderClient.getInstance(context, TEST_WRITE_KEY, new RudderConfigBuilder().withDebug(true));
-            Thread.sleep(1000);
-        } catch (RudderException e) {
-            e.printStackTrace();
-        }
+        Context context = ApplicationProvider.getApplicationContext();
+        rudderClient = RudderClient.getInstance(context, TEST_WRITE_KEY, new RudderConfig.Builder().withDebug(true));
+        Thread.sleep(1000);
     }
 }

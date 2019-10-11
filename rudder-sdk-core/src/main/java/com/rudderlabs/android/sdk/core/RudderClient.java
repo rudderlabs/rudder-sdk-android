@@ -35,7 +35,7 @@ public class RudderClient {
      * API for getting instance of RudderClient with config
      * */
     public static RudderClient getInstance(Context context, String writeKey,
-                                           RudderConfigBuilder builder) {
+                                           RudderConfig.Builder builder) {
         return getInstance(context, writeKey, builder.build());
     }
 
@@ -47,11 +47,11 @@ public class RudderClient {
         if (instance == null) {
             // assert context is not null
             if (context == null) {
-                RudderLogger.logError(new RudderException("context can not be null"));
+                RudderLogger.logError("context can not be null");
             }
             // assert writeKey is not null or empty
             if (TextUtils.isEmpty(writeKey)) {
-                RudderLogger.logError(new RudderException("writeKey can not be null or empty"));
+                RudderLogger.logError("writeKey can not be null or empty");
             }
             // assert config is not null
             if (config == null) {
@@ -87,8 +87,8 @@ public class RudderClient {
     }
 
     /*
-    * package private api to be used in EventRepository
-    * */
+     * package private api to be used in EventRepository
+     * */
     static RudderClient getInstance() {
         return instance;
     }
@@ -98,7 +98,7 @@ public class RudderClient {
      * */
     public static RudderClient with(Context context) {
         if (context == null) {
-            RudderLogger.logError(new RudderException("Context must not be null"));
+            RudderLogger.logError("Context must not be null");
         }
 
         if (instance == null) {
@@ -293,6 +293,19 @@ public class RudderClient {
         private String writeKey;
 
         public Builder(Context context, String writeKey) {
+            if (context == null) {
+                RudderLogger.logError("context can not be null");
+                return;
+            }
+
+            if (TextUtils.isEmpty(writeKey)) {
+                writeKey = Utils.getWriteKeyFromStrings(context);
+            }
+
+            if (TextUtils.isEmpty(writeKey)) {
+                RudderLogger.logError("writeKey can not be null or empty");
+                return;
+            }
             this.application = (Application) context.getApplicationContext();
             this.writeKey = writeKey;
         }
@@ -318,7 +331,7 @@ public class RudderClient {
             return this;
         }
 
-        public Builder withRudderConfigBuilder(RudderConfigBuilder builder) {
+        public Builder withRudderConfigBuilder(RudderConfig.Builder builder) {
             this.config = builder.build();
             return this;
         }

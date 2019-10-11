@@ -28,7 +28,7 @@ public class TrackPropertyBuilder extends RudderPropertyBuilder {
     public RudderProperty build() {
         RudderProperty property = new RudderProperty();
         if (TextUtils.isEmpty(category)) {
-            RudderLogger.logError(new RudderException("category can not be null or empty"));
+            RudderLogger.logError("category can not be null or empty");
         } else {
             property.setProperty("category", this.category);
             property.setProperty("label", this.label);

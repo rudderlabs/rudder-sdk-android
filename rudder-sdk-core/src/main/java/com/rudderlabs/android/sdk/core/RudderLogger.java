@@ -39,7 +39,7 @@ public class RudderLogger {
         }
     }
 
-    public static void logInfo(String message) {
+    static void logInfo(String message) {
         if (logLevel >= RudderLogLevel.INFO) {
             Log.i(TAG, "Info: " + message);
         }

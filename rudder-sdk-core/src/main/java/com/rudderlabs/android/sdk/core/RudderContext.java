@@ -25,7 +25,7 @@ class RudderContext {
     @SerializedName("device")
     private RudderDeviceInfo deviceInfo;
     @SerializedName("network")
-    private RudderNetworkInfo networkInfo;
+    private RudderNetwork networkInfo;
     @SerializedName("timezone")
     private String timezone = Utils.getTimeZone();
 
@@ -42,7 +42,7 @@ class RudderContext {
         this.screenInfo = new RudderScreenInfo(application);
         this.userAgent = System.getProperty("http.agent");
         this.deviceInfo = new RudderDeviceInfo(deviceId);
-        this.networkInfo = new RudderNetworkInfo(application);
+        this.networkInfo = new RudderNetwork(application);
         this.osInfo = new RudderOSInfo();
         this.libraryInfo = new RudderLibraryInfo();
     }

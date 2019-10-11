@@ -1,7 +1,6 @@
 package com.rudderlabs.android.sdk.core.torpedo;
 
 import com.rudderlabs.android.sdk.core.BaseTestCase;
-import com.rudderlabs.android.sdk.core.RudderException;
 import com.rudderlabs.android.sdk.core.RudderMessageBuilder;
 import com.rudderlabs.android.sdk.core.RudderProperty;
 import com.rudderlabs.android.sdk.core.TrackPropertyBuilder;

@@ -11,7 +11,7 @@ import com.google.gson.annotations.SerializedName;
 
 import static android.content.Context.TELEPHONY_SERVICE;
 
-class RudderNetworkInfo {
+class RudderNetwork {
     @SerializedName("carrier")
     private String carrier;
     @SerializedName("wifi")
@@ -21,7 +21,7 @@ class RudderNetworkInfo {
     @SerializedName("cellular")
     private boolean isCellularEnabled = false;
 
-    RudderNetworkInfo(Application application) {
+    RudderNetwork(Application application) {
         try {
             // carrier name
             TelephonyManager telephonyManager = (TelephonyManager) application.getSystemService(TELEPHONY_SERVICE);

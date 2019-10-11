@@ -5,7 +5,7 @@ import com.rudderlabs.android.sdk.core.RudderMessageBuilder;
 import com.rudderlabs.android.sdk.core.RudderException;
 import com.rudderlabs.android.sdk.core.RudderUserProperty;
 
-public class RudderECommerceClient extends RudderClient {
+public class RudderECommerceClient {
 
     public void track(ECommercePropertyBuilder builder) throws RudderException {
         track(builder, null, null);

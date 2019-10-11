@@ -75,7 +75,7 @@ class EventRepository {
                 if (config == null) return;
 
                 // get destinations from server
-                List<RudderServerDestination> destinations = configManager.getConfig().source.destinations;
+                List<RudderServerDestination> destinations = config.source.destinations;
                 // create a map for ease of handling
                 Map<String, RudderServerDestination> destinationMap = new HashMap<>();
                 for (RudderServerDestination destination : destinations)

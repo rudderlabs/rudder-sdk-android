@@ -53,7 +53,7 @@ public class PagePropertyBuilder extends RudderPropertyBuilder {
     public RudderProperty build() {
         RudderProperty property = new RudderProperty();
         if (TextUtils.isEmpty(url)) {
-            RudderLogger.logError(new RudderException("url can not be null or empty"));
+            RudderLogger.logError("url can not be null or empty");
         } else {
             property.setProperty("title", this.title);
             property.setProperty("url", this.url);
