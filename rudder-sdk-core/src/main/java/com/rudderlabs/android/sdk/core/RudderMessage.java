@@ -16,7 +16,7 @@ public class RudderMessage {
     private String type;
     @SerializedName("action")
     private String action;
-    @SerializedName("timestamp")
+    @SerializedName("originalTimestamp")
     private String timestamp = Utils.getTimeStamp();
     @SerializedName("anonymousId")
     private String anonymousId;
