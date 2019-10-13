@@ -171,17 +171,24 @@ class EventRepository {
      * */
     private String getPayloadFromMessages(ArrayList<String> messages) {
         try {
+            String sentAtTimestamp = Utils.getTimeStamp();
             // get string builder
             StringBuilder builder = new StringBuilder();
             // append initial json token
             builder.append("{");
             // append sent_at time stamp
-            builder.append("\"sentAt\":\"").append(Utils.getTimeStamp()).append("\",");
+            builder.append("\"sentAt\":\"").append(sentAtTimestamp).append("\",");
             // initiate batch array in the json
             builder.append("\"batch\": [");
             // loop through messages list and add in the builder
             for (int index = 0; index < messages.size(); index++) {
-                builder.append(messages.get(index));
+                String message = messages.get(index);
+                // strip last ending object character
+                message = message.substring(0, message.length() - 1);
+                // add sentAt time stamp
+                message = String.format("%s,\"sentAt\":\"%s\"}", message, sentAtTimestamp);
+                // finally add message string to builder
+                builder.append(message);
                 // if not last item in the list, add a ","
                 if (index != messages.size() - 1) builder.append(",");
             }
