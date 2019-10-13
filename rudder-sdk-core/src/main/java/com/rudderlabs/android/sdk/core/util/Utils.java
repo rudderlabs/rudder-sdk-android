@@ -31,6 +31,11 @@ public class Utils {
         return formatter.format(new Date());
     }
 
+    public static String toDateString(Date date) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        return formatter.format(date);
+    }
+
     public static String getDeviceId(Application application) {
         if (Build.VERSION.SDK_INT >= 17) {
             String androidId = getString(application.getContentResolver(), ANDROID_ID);

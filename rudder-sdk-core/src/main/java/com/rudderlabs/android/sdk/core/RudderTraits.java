@@ -2,7 +2,9 @@ package com.rudderlabs.android.sdk.core;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.rudderlabs.android.sdk.core.util.Utils;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,6 +89,10 @@ public class RudderTraits {
 
     public void putBirthday(String birthday) {
         this.birthday = birthday;
+    }
+
+    public void putBirthday(Date birthday) {
+        this.birthday = Utils.toDateString(birthday);
     }
 
     public void putCompany(Company company) {
