@@ -112,6 +112,25 @@ public class RudderClient {
         return instance;
     }
 
+    /*
+     * segment equivalent API
+     * */
+    public static RudderClient with(Context context) {
+        if (context == null) {
+            RudderLogger.logError("Context must not be null");
+        }
+
+        if (instance == null) {
+            String writeKey = null;
+            if (context != null) {
+                writeKey = Utils.getWriteKeyFromStrings(context);
+            }
+            return getInstance(context, writeKey);
+        }
+
+        return instance;
+    }
+
     public Application getApplication() {
         return application;
     }
@@ -148,6 +167,25 @@ public class RudderClient {
     }
 
     /*
+     * segment equivalent API
+     * */
+    public void track(String event) {
+        track(new RudderMessageBuilder().setEventName(event).build());
+    }
+
+    public void track(String event, RudderProperty property) {
+        track(new RudderMessageBuilder().setEventName(event).setProperty(property).build());
+    }
+
+    public void track(String event, RudderProperty property, RudderOption option) {
+        track(new RudderMessageBuilder()
+                .setEventName(event)
+                .setProperty(property)
+                .setRudderOption(option)
+                .build());
+    }
+
+    /*
      * method for `screen` messages
      * */
     public void screen(RudderMessageBuilder builder) {
@@ -157,6 +195,32 @@ public class RudderClient {
     public void screen(RudderMessage message) {
         message.setType(MessageType.SCREEN);
         if (repository != null) repository.dump(message);
+    }
+
+    /*
+     * segment equivalent API
+     * */
+    public void screen(String event) {
+        screen(new RudderMessageBuilder().setEventName(event).build());
+    }
+
+    public void screen(String event, RudderProperty property) {
+        screen(new RudderMessageBuilder().setEventName(event).setProperty(property).build());
+    }
+
+    public void screen(String event, String category, RudderProperty property, RudderOption option) {
+        if (property == null) property = new RudderProperty();
+        property.put("category", category);
+
+        screen(new RudderMessageBuilder().setEventName(event).setProperty(property).setRudderOption(option).build());
+    }
+
+    public void screen(String event, RudderProperty property, RudderOption option) {
+        screen(new RudderMessageBuilder()
+                .setEventName(event)
+                .setProperty(property)
+                .setRudderOption(option)
+                .build());
     }
 
     /*

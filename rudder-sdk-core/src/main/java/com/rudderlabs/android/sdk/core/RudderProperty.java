@@ -1,8 +1,5 @@
 package com.rudderlabs.android.sdk.core;
 
-import com.google.gson.Gson;
-import com.rudderlabs.android.sdk.core.util.Utils;
-
 import java.util.HashMap;
 import java.util.Map;
 
