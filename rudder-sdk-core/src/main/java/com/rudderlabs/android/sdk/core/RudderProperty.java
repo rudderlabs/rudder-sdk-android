@@ -1,8 +1,5 @@
 package com.rudderlabs.android.sdk.core;
 
-import com.google.gson.Gson;
-import com.rudderlabs.android.sdk.core.util.Utils;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,10 +34,6 @@ public class RudderProperty {
 
     public void putRevenue(double revenue) {
         map.put("revenue", revenue);
-    }
-
-    public void putCurrency(String currency) {
-        map.put("currency", currency);
     }
 
     public void putCurrency(String currency) {

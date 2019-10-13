@@ -9,7 +9,7 @@ class MainApplication : Application() {
     companion object {
         //        private const val WRITE_KEY = "1R3JbxsqWZlbYjJlBxf0ZNWZOH6"
         private const val WRITE_KEY = "1R3JbxsqWZlbYjJlBxf0ZNWZOH6"
-        private const val END_POINT_URI = "https://3f7592bb.ngrok.io"
+        private const val END_POINT_URI = "https://95d625b4.ngrok.io"
         lateinit var rudderClient: RudderClient
     }
 
