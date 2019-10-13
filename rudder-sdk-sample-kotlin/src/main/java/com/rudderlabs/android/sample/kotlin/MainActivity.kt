@@ -27,16 +27,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sendEvents() {
-MainApplication.rudderClient.track(
-    RudderMessageBuilder()
-        .setEventName("level_up")
-        .setProperty(
-            TrackPropertyBuilder()
-                .setCategory("test_category")
-                .build()
+        MainApplication.rudderClient.track(
+            RudderMessageBuilder()
+                .setEventName("level_up")
+                .setProperty(
+                    TrackPropertyBuilder()
+                        .setCategory("test_category")
+                        .build()
+                )
+                .setUserId("test_user_id")
         )
-        .setUserId("test_user_id")
-)
 
         MainApplication.rudderClient.track(
             RudderMessageBuilder()

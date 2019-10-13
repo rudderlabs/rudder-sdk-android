@@ -19,8 +19,9 @@ val rudderClient: RudderClient = RudderClient.getInstance(
     this,
     WRITE_KEY,
     RudderConfig.Builder()
-        .withEndPointUri(END_POINT_URI)
-        .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
+                .withEndPointUri(END_POINT_URI)
+                .withLogLevel(4)
+//                .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
         .build()
 )
     }

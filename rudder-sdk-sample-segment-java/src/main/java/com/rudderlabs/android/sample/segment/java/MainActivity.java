@@ -37,13 +37,10 @@ public class MainActivity extends AppCompatActivity {
 
         RudderClient.with(this).identify("some_user_id", traits, null);
 
-String customEvent = "some_custom_event";
-String propertyKey = "some_property_key";
-String propertyValue = "some_property_value";
-RudderClient.with(this).track(
-        customEvent,
-        new RudderProperty().putValue(propertyKey, propertyValue)
-);
+        String customEvent = "some_custom_event";
+        String propertyKey = "some_property_key";
+        String propertyValue = "some_property_value";
+        RudderClient.with(this).track(customEvent, new RudderProperty().putValue(propertyKey, propertyValue));
 
         RudderProperty purchaseProperties = new RudderProperty();
         purchaseProperties.put("property_key", "property_value");
