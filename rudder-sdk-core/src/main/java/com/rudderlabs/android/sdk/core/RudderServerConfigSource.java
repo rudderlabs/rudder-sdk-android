@@ -5,8 +5,6 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 class RudderServerConfigSource {
-    @SerializedName("config")
-    String config;
     @SerializedName("id")
     String sourceId;
     @SerializedName("name")
