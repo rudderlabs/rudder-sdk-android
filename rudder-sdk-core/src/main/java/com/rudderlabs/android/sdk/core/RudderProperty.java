@@ -23,7 +23,11 @@ public class RudderProperty {
     }
 
     public RudderProperty putValue(String key, Object value) {
-        map.put(key, value);
+        if (value instanceof RudderProperty) {
+            this.map.put(key, ((RudderProperty) value).getMap());
+        } else {
+            map.put(key, value);
+        }
         return this;
     }
 

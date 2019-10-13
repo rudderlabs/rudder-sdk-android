@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         RudderTraits traits = new RudderTraits();
-        traits.putBirthday("2019-09-09");
+        traits.putBirthday(new Date());
         traits.putEmail("abc@123.com");
         traits.putFirstName("First");
         traits.putLastName("Last");

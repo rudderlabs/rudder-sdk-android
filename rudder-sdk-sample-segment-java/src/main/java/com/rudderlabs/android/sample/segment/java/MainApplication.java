@@ -9,8 +9,8 @@ import com.rudderlabs.android.sdk.core.RudderLogger;
 public class MainApplication extends Application {
     private static MainApplication instance;
     private static RudderClient rudderClient;
-    private static final String writeKey = "1R3JbxsqWZlbYjJlBxf0ZNWZOH6";
-    private static final String endPointUrl = "https://25506725.ngrok.io";
+    private static final String writeKey = "1S0ibSaDlBDkaQuHLi9feJqIUBN";
+    private static final String endPointUrl = "https://0aae0ad7.ngrok.io";
 
     @Override
     public void onCreate() {
@@ -29,6 +29,8 @@ public class MainApplication extends Application {
 
             }
         });
+
+        RudderClient.setSingletonInstance(rudderClient);
     }
 
     public static RudderClient getRudderClient() {

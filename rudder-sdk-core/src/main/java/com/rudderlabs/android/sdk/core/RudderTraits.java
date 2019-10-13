@@ -8,9 +8,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class RudderTraits {
     @SerializedName("anonymousId")
     private String anonymousId;
@@ -92,6 +89,10 @@ public class RudderTraits {
 
     public void putBirthday(String birthday) {
         this.birthday = birthday;
+    }
+
+    public void putBirthday(Date birthday) {
+        this.birthday = Utils.toDateString(birthday);
     }
 
     public void putCompany(Company company) {
