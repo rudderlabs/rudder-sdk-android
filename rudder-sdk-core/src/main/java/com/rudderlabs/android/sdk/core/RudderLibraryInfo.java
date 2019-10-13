@@ -4,8 +4,8 @@ import com.google.gson.annotations.SerializedName;
 import com.rudderlabs.android.sdk.core.BuildConfig;
 
 class RudderLibraryInfo {
-    @SerializedName("rl_name")
-    private String name = BuildConfig.APPLICATION_ID;
-    @SerializedName("rl_version")
+    @SerializedName("name")
+    private String name = BuildConfig.LIBRARY_PACKAGE_NAME;
+    @SerializedName("version")
     private String version = BuildConfig.VERSION_NAME;
 }

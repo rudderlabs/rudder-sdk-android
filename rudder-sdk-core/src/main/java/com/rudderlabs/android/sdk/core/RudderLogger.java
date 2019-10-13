@@ -3,20 +3,27 @@ package com.rudderlabs.android.sdk.core;
 import android.util.Log;
 
 /*
-* Logger class for RudderClient library
-* */
+ * Logger class for RudderClient library
+ * */
 public class RudderLogger {
     private static int logLevel = RudderLogLevel.INFO;
     private static final String TAG = "RudderSDK";
 
     static void init(int l) {
         if (l > RudderLogLevel.DEBUG) l = RudderLogLevel.DEBUG;
+        else if (l < RudderLogLevel.NONE) l = RudderLogLevel.NONE;
         logLevel = l;
     }
 
     static void logError(Throwable throwable) {
         if (logLevel >= RudderLogLevel.ERROR) {
             Log.e(TAG, "Error: ", throwable);
+        }
+    }
+
+    static void logError(Exception ex) {
+        if (logLevel >= RudderLogLevel.ERROR) {
+            Log.e(TAG, "Error: ", ex.getCause());
         }
     }
 
@@ -32,7 +39,7 @@ public class RudderLogger {
         }
     }
 
-    public static void logInfo(String message) {
+    static void logInfo(String message) {
         if (logLevel >= RudderLogLevel.INFO) {
             Log.i(TAG, "Info: " + message);
         }
@@ -44,11 +51,12 @@ public class RudderLogger {
         }
     }
 
-    static class RudderLogLevel {
-        static final int DEBUG = 4;
-        static final int INFO = 3;
-        static final int WARN = 2;
-        static final int ERROR = 1;
-        static final int NONE = 0;
+    public static class RudderLogLevel {
+        public static final int VERBOSE = 5;
+        public static final int DEBUG = 4;
+        public static final int INFO = 3;
+        public static final int WARN = 2;
+        public static final int ERROR = 1;
+        public static final int NONE = 0;
     }
 }

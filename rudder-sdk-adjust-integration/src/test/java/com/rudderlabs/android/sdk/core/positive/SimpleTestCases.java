@@ -41,7 +41,7 @@ public class SimpleTestCases extends BaseTestCase {
     public void testSimpleTrackEvent() throws InterruptedException {
         // track event
         try {
-            RudderElement pageViewEvent = new RudderElementBuilder()
+            RudderElement pageViewEvent = new RudderMessageBuilder()
                     .setEventName("Test Track")
                     .setProperty(new TrackPropertyBuilder()
                             .setCategory("Test Category")
@@ -60,7 +60,7 @@ public class SimpleTestCases extends BaseTestCase {
     public void testSimplePageViewEvent() throws InterruptedException {
         // page view event
         try {
-            RudderElement pageViewEvent = new RudderElementBuilder()
+            RudderElement pageViewEvent = new RudderMessageBuilder()
                     .setProperty(new PagePropertyBuilder()
                             .setUrl("http://jsonviewer.stack.hu")
                             .setKeywords("Test")
@@ -83,7 +83,7 @@ public class SimpleTestCases extends BaseTestCase {
     public void testSimpleScreenViewEvent() throws InterruptedException {
         // screen view event
         try {
-            RudderElement screenViewEvent = new RudderElementBuilder()
+            RudderElement screenViewEvent = new RudderMessageBuilder()
                     .setProperty(new ScreenPropertyBuilder()
                             .setScreenName("Test Screen"))
                     .build();

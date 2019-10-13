@@ -1,10 +1,11 @@
 package com.rudderlabs.android.sdk.core;
 
 import android.text.TextUtils;
+
 /*
-* Builder for event type "page"
-* - `url` is a mandatory field for page events
-* */
+ * Builder for event type "page"
+ * - `url` is a mandatory field for page events
+ * */
 public class PagePropertyBuilder extends RudderPropertyBuilder {
     private String title;
 
@@ -49,19 +50,18 @@ public class PagePropertyBuilder extends RudderPropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() throws RudderException {
-        if (TextUtils.isEmpty(url)) {
-            throw new RudderException("url can not be null or empty");
-        }
-
+    public RudderProperty build() {
         RudderProperty property = new RudderProperty();
-        property.setProperty("title", this.title);
-        property.setProperty("url", this.url);
-        property.setProperty("path", this.path);
-        property.setProperty("referrer", this.referrer);
-        property.setProperty("search", this.search);
-        property.setProperty("keywords", this.keywords);
-
+        if (TextUtils.isEmpty(url)) {
+            RudderLogger.logError("url can not be null or empty");
+        } else {
+            property.put("title", this.title);
+            property.put("url", this.url);
+            property.put("path", this.path);
+            property.put("referrer", this.referrer);
+            property.put("search", this.search);
+            property.put("keywords", this.keywords);
+        }
         return property;
     }
 }

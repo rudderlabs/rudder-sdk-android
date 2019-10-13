@@ -24,7 +24,6 @@ import java.util.Map;
  * */
 class EventRepository {
     private RudderConfig config;
-    private String writeKey;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
     private Map<String, Object> integrationsMap;
@@ -33,16 +32,16 @@ class EventRepository {
     /*
      * constructor to be called from RudderClient internally.
      * -- tasks to be performed
-     * 1. set the values of writeKey, config
+     * 1. persist the value of config
      * 2. initiate RudderElementCache
      * 3. initiate DBPersistentManager for SQLite operations
      * 4. initiate RudderServerConfigManager
      * 5. start processor thread
+     * 6. initiate factories
      * */
     EventRepository(Application _application, String _writeKey, RudderConfig _config) {
         // 1. set the values of writeKey, config
         this.config = _config;
-        this.writeKey = _writeKey;
 
         try {
             // 2. initiate RudderElementCache
@@ -60,9 +59,6 @@ class EventRepository {
 
             // 6. initiate factories
             this.initiateFactories(_config);
-
-            // 7. get advertising id
-//            "ADVERTISING ID: " +
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
@@ -71,6 +67,7 @@ class EventRepository {
     private void initiateFactories(final RudderConfig _config) {
         // initiate factory initialization after 10s
         // let the factories capture everything they want to capture
+        if (_config.getFactories() == null || _config.getFactories().isEmpty()) return;
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -78,7 +75,7 @@ class EventRepository {
                 if (config == null) return;
 
                 // get destinations from server
-                List<RudderServerDestination> destinations = configManager.getConfig().source.destinations;
+                List<RudderServerDestination> destinations = config.source.destinations;
                 // create a map for ease of handling
                 Map<String, RudderServerDestination> destinationMap = new HashMap<>();
                 for (RudderServerDestination destination : destinations)
@@ -142,8 +139,8 @@ class EventRepository {
                             if (payload != null) {
                                 // send payload to server if it is not null
                                 String response = flushEventsToServer(payload);
-                                System.out.println("response: " + response);
-                                System.out.println("eventcount: " + messages.size());
+                                RudderLogger.logInfo("ServerResponse: " + response);
+                                RudderLogger.logInfo("EventCount: " + messages.size());
                                 // if success received from server
                                 if (response != null && response.equalsIgnoreCase("OK")) {
                                     // remove events from DB
@@ -179,7 +176,7 @@ class EventRepository {
             // append initial json token
             builder.append("{");
             // append sent_at time stamp
-            builder.append("\"sent_at\":\"").append(Utils.getTimeStamp()).append("\",");
+            builder.append("\"sentAt\":\"").append(Utils.getTimeStamp()).append("\",");
             // initiate batch array in the json
             builder.append("\"batch\": [");
             // loop through messages list and add in the builder
@@ -189,9 +186,9 @@ class EventRepository {
                 if (index != messages.size() - 1) builder.append(",");
             }
             // close batch array in the json
-            builder.append("],");
-            // add writeKey in the json
-            builder.append("\"writeKey\":\"").append(writeKey).append("\"");
+            builder.append("]");
+//            // add writeKey in the json
+//            builder.append("\"writeKey\":\"").append(writeKey).append("\"");
             // append closing token in the json
             builder.append("}");
             // finally return the entire payload
@@ -207,7 +204,7 @@ class EventRepository {
      * */
     private String flushEventsToServer(String payload) throws IOException {
         // get endPointUrl form config object
-        String endPointUri = config.getEndPointUri() + "hello";
+        String endPointUri = config.getEndPointUri() + "v1/batch";
 
         // create url object
         URL url = new URL(endPointUri);
@@ -250,7 +247,7 @@ class EventRepository {
                 res = bis.read();
             }
             // finally return response when reading from server is completed
-            System.out.println("ServerError: " + baos.toString());
+            RudderLogger.logError("ServerError: " + baos.toString());
 
             return null;
         }
@@ -259,16 +256,16 @@ class EventRepository {
     /*
      * generic method for dumping all the events
      * */
-    void dump(RudderElement event) {
+    void dump(RudderMessage message) {
         if (this.integrationsMap == null) prepareIntegrations();
-        event.setIntegrations(this.integrationsMap);
+        message.setIntegrations(this.integrationsMap);
         for (String key : integrationOperationsMap.keySet()) {
             RudderIntegration integration = integrationOperationsMap.get(key);
             if (integration != null) {
-                integration.dump(event);
+                integration.dump(message);
             }
         }
-        String eventJson = new Gson().toJson(event);
+        String eventJson = new Gson().toJson(message);
         dump(eventJson);
     }
 
@@ -284,5 +281,21 @@ class EventRepository {
             if (!this.integrationsMap.containsKey(destination.destinationDefinition.definitionName))
                 this.integrationsMap.put(destination.destinationDefinition.definitionName, destination.isDestinationEnabled);
         }
+    }
+
+    void reset() {
+        dbManager.deleteAllEvents();
+    }
+
+    void onIntegrationReady(String key, RudderClient.Callback callback) {
+        // TODO:
+    }
+
+    public void shutdown() {
+
+    }
+
+    public void optOut() {
+        // TODO:  decide optout functionality and restrictions
     }
 }

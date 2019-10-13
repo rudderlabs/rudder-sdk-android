@@ -1,21 +1,32 @@
 package com.rudderlabs.android.sdk.core.util;
 
 import android.app.Application;
+import android.content.Context;
 import android.os.Build;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.rudderlabs.android.sdk.core.Constants;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.UUID;
 
 import static android.provider.Settings.Secure.ANDROID_ID;
 import static android.provider.Settings.System.getString;
 
 public class Utils {
+    public static String getTimeZone() {
+        TimeZone timeZone = TimeZone.getDefault();
+        return timeZone.getID();
+    }
+
     public static String getTimeStamp() {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ", Locale.US);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
         formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
         return formatter.format(new Date());
     }
@@ -36,14 +47,21 @@ public class Utils {
         return UUID.randomUUID().toString();
     }
 
-    public static Map<String, Object> convertToMap(Object object) {
-        Gson gson = new Gson();
-        return gson.fromJson(gson.toJson(object), new TypeToken<Map<String, Object>>() {
-        }.getType());
-    }
-
     public static Map<String, Object> convertToMap(String json) {
         return new Gson().fromJson(json, new TypeToken<Map<String, Object>>() {
         }.getType());
+    }
+
+    public static String getWriteKeyFromStrings(Context context) {
+        int id = context.getResources().getIdentifier(
+                context.getPackageName(),
+                "string",
+                "rudder_write_key"
+        );
+        if (id != 0) {
+            return context.getResources().getString(id);
+        } else {
+            return null;
+        }
     }
 }

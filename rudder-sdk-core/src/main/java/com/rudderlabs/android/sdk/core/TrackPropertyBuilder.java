@@ -25,16 +25,15 @@ public class TrackPropertyBuilder extends RudderPropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() throws RudderException {
-        if (TextUtils.isEmpty(category)) {
-            throw new RudderException("category can not be null or empty");
-        }
-
+    public RudderProperty build() {
         RudderProperty property = new RudderProperty();
-        property.setProperty("category", this.category);
-        property.setProperty("label", this.label);
-        property.setProperty("value", this.value);
-
+        if (TextUtils.isEmpty(category)) {
+            RudderLogger.logError("category can not be null or empty");
+        } else {
+            property.putValue("category", this.category);
+            property.putValue("label", this.label);
+            property.putValue("value", this.value);
+        }
         return property;
     }
 }

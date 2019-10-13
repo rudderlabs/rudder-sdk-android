@@ -11,12 +11,13 @@ public class ScreenPropertyBuilder extends RudderPropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() throws RudderException {
-        if (TextUtils.isEmpty(name)) {
-            throw new RudderException("name can not be empty");
-        }
+    public RudderProperty build() {
         RudderProperty property = new RudderProperty();
-        property.setProperty("name", name);
+        if (TextUtils.isEmpty(name)) {
+            RudderLogger.logError("name can not be empty");
+        } else {
+            property.put("name", name);
+        }
         return property;
     }
 }

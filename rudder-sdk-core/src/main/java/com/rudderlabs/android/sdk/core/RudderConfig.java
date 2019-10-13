@@ -4,6 +4,7 @@ import android.text.TextUtils;
 import android.webkit.URLUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /*
@@ -26,35 +27,57 @@ public class RudderConfig {
     private List<RudderIntegration.Factory> factories;
 
     // internal constructor for creating instance with default values
-    RudderConfig() throws RudderException {
+    RudderConfig() {
         this(Constants.BASE_URL, Constants.FLUSH_QUEUE_SIZE, Constants.DB_COUNT_THRESHOLD, Constants.SLEEP_TIMEOUT, RudderLogger.RudderLogLevel.ERROR, null);
     }
 
-    // internal constructor to be used along with RudderConfigBuilder
-    RudderConfig(String endPointUri, int flushQueueSize, int dbCountThreshold, int sleepTimeOut, int logLevel, List<RudderIntegration.Factory> factories) throws RudderException {
+    // internal constructor to be used along with Builder
+    RudderConfig(String endPointUri, int flushQueueSize, int dbCountThreshold, int sleepTimeOut, int logLevel, List<RudderIntegration.Factory> factories) {
         RudderLogger.init(logLevel);
+
         if (TextUtils.isEmpty(endPointUri)) {
-            throw new RudderException("endPointUri can not be null or empty");
+            RudderLogger.logError("endPointUri can not be null or empty. Set to default.");
+            this.endPointUri = Constants.BASE_URL;
+        } else if (!URLUtil.isValidUrl(endPointUri)) {
+            RudderLogger.logError("Malformed endPointUri. Set to default");
+            this.endPointUri = Constants.BASE_URL;
+        } else {
+            // check if endpoint uri is formatted correctly
+            if (!endPointUri.endsWith("/")) endPointUri += "/";
+            this.endPointUri = endPointUri;
         }
-        if (!URLUtil.isValidUrl(endPointUri)) {
-            throw new RudderException("malformed endPointUri");
-        }
-        // check if endpoint uri is formatted correctly
-        if (!endPointUri.endsWith("/")) endPointUri += "/";
-        this.endPointUri = endPointUri;
+
         if (flushQueueSize < 1 || flushQueueSize > 100) {
-            throw new RudderException("flushQueueSize is out of range. Min: 1, Max: 100");
+            RudderLogger.logError("flushQueueSize is out of range. Min: 1, Max: 100. Set to default");
+            this.flushQueueSize = Constants.FLUSH_QUEUE_SIZE;
+        } else {
+            this.flushQueueSize = flushQueueSize;
         }
-        this.flushQueueSize = flushQueueSize;
+
         this.logLevel = logLevel;
-        this.dbCountThreshold = dbCountThreshold;
-        this.sleepTimeOut = sleepTimeOut;
-        this.factories = factories;
+
+        if (dbCountThreshold < 0) {
+            RudderLogger.logError("invalid dbCountThreshold");
+            this.dbCountThreshold = Constants.DB_COUNT_THRESHOLD;
+        } else {
+            this.dbCountThreshold = dbCountThreshold;
+        }
+
+        if (sleepTimeOut < 10) {
+            RudderLogger.logError("invalid sleepTimeOut");
+            this.sleepTimeOut = Constants.SLEEP_TIMEOUT;
+        } else {
+            this.sleepTimeOut = sleepTimeOut;
+        }
+
+        if (factories != null && !factories.isEmpty()) {
+            this.factories = factories;
+        }
     }
 
     /*
-    * getters
-    * */
+     * getters
+     * */
     public String getEndPointUri() {
         return endPointUri;
     }
@@ -77,5 +100,106 @@ public class RudderConfig {
 
     public List<RudderIntegration.Factory> getFactories() {
         return factories;
+    }
+
+    void setEndPointUri(String endPointUri) {
+        this.endPointUri = endPointUri;
+    }
+
+    void setFlushQueueSize(int flushQueueSize) {
+        this.flushQueueSize = flushQueueSize;
+    }
+
+    void setDbCountThreshold(int dbCountThreshold) {
+        this.dbCountThreshold = dbCountThreshold;
+    }
+
+    void setSleepTimeOut(int sleepTimeOut) {
+        this.sleepTimeOut = sleepTimeOut;
+    }
+
+    void setLogLevel(int logLevel) {
+        this.logLevel = logLevel;
+    }
+
+    void setFactories(List<RudderIntegration.Factory> factories) {
+        this.factories = factories;
+    }
+
+    public static class Builder {
+        private List<RudderIntegration.Factory> factories = new ArrayList<>();
+
+        public Builder withFactory(RudderIntegration.Factory factory) {
+            this.factories.add(factory);
+            return this;
+        }
+
+        public Builder withFactories(List<RudderIntegration.Factory> factories) {
+            this.factories.addAll(factories);
+            return this;
+        }
+
+        public Builder withFactories(RudderIntegration.Factory... factories) {
+            Collections.addAll(this.factories, factories);
+            return this;
+        }
+
+        private String endPointUri = Constants.BASE_URL;
+
+        public Builder withEndPointUri(String endPointUri) {
+            if (TextUtils.isEmpty(endPointUri)) {
+                RudderLogger.logError("endPointUri can not be null or empty. Set to default");
+                return this;
+            }
+            if (!URLUtil.isValidUrl(endPointUri)) {
+                RudderLogger.logError("Malformed endPointUri. Set to default");
+                return this;
+            }
+            this.endPointUri = endPointUri;
+            return this;
+        }
+
+        private int flushQueueSize = Constants.FLUSH_QUEUE_SIZE;
+
+        public Builder withFlushQueueSize(int flushQueueSize) {
+            if (flushQueueSize < 1 || flushQueueSize > 100) {
+                RudderLogger.logError("flushQueueSize is out of range. Min: 1, Max: 100. Set to default");
+                return this;
+            }
+            this.flushQueueSize = flushQueueSize;
+            return this;
+        }
+
+        private boolean isDebug = false;
+
+        public Builder withDebug(boolean isDebug) {
+            this.isDebug = isDebug;
+            return this;
+        }
+
+        private int logLevel = RudderLogger.RudderLogLevel.NONE;
+
+        public Builder withLogLevel(int logLevel) {
+            this.logLevel = logLevel;
+            return this;
+        }
+
+        private int dbThresholdCount = Constants.DB_COUNT_THRESHOLD;
+
+        public Builder withDbThresholdCount(int dbThresholdCount) {
+            this.dbThresholdCount = dbThresholdCount;
+            return this;
+        }
+
+        private int sleepTimeout = Constants.SLEEP_TIMEOUT;
+
+        public Builder withSleepCount(int sleepCount) {
+            this.sleepTimeout = sleepCount;
+            return this;
+        }
+
+        public RudderConfig build() {
+            return new RudderConfig(this.endPointUri, this.flushQueueSize, this.dbThresholdCount, this.sleepTimeout, this.isDebug ? RudderLogger.RudderLogLevel.DEBUG : logLevel, this.factories);
+        }
     }
 }

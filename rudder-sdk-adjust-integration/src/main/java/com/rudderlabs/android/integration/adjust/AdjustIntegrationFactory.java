@@ -6,8 +6,8 @@ import com.adjust.sdk.AdjustEvent;
 import com.adjust.sdk.AdjustInstance;
 import com.adjust.sdk.LogLevel;
 import com.rudderlabs.android.sdk.core.RudderClient;
-import com.rudderlabs.android.sdk.core.RudderElement;
 import com.rudderlabs.android.sdk.core.RudderIntegration;
+import com.rudderlabs.android.sdk.core.RudderMessage;
 
 import java.util.HashMap;
 import java.util.List;
@@ -59,7 +59,7 @@ public class AdjustIntegrationFactory extends RudderIntegration<AdjustInstance> 
         this.adjust.onCreate(adjustConfig);
     }
 
-    private void processRudderEvent(RudderElement element) {
+    private void processRudderEvent(RudderMessage element) {
         String eventToken = null;
         if (eventMap.containsKey(element.getEventName())) {
             eventToken = eventMap.get(element.getEventName());
@@ -94,27 +94,27 @@ public class AdjustIntegrationFactory extends RudderIntegration<AdjustInstance> 
     }
 
     @Override
-    public void track(RudderElement track) {
+    public void track(RudderMessage track) {
         processRudderEvent(track);
     }
 
     @Override
-    public void identify(RudderElement identify) {
+    public void identify(RudderMessage identify) {
         processRudderEvent(identify);
     }
 
     @Override
-    public void group(RudderElement group) {
+    public void group(RudderMessage group) {
         processRudderEvent(group);
     }
 
     @Override
-    public void alias(RudderElement alias) {
+    public void alias(RudderMessage alias) {
         processRudderEvent(alias);
     }
 
     @Override
-    public void screen(RudderElement screen) {
+    public void screen(RudderMessage screen) {
         processRudderEvent(screen);
     }
 
@@ -129,7 +129,7 @@ public class AdjustIntegrationFactory extends RudderIntegration<AdjustInstance> 
     }
 
     @Override
-    public void dump(RudderElement element) {
+    public void dump(RudderMessage element) {
         processRudderEvent(element);
     }
 

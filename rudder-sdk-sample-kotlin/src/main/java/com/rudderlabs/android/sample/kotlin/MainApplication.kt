@@ -1,15 +1,14 @@
 package com.rudderlabs.android.sample.kotlin
 
 import android.app.Application
-import com.rudderlabs.android.integration.adjust.AdjustIntegrationFactory
 import com.rudderlabs.android.sdk.core.RudderClient
-import com.rudderlabs.android.sdk.core.RudderConfigBuilder
+import com.rudderlabs.android.sdk.core.RudderConfig
 
 class MainApplication : Application() {
     companion object {
 //        private const val WRITE_KEY = "1R3JbxsqWZlbYjJlBxf0ZNWZOH6"
         private const val WRITE_KEY = "1R3JbxsqWZlbYjJlBxf0ZNWZOH6"
-        private const val END_POINT_URI = "https://95d625b4.ngrok.io"
+        private const val END_POINT_URI = "https://5c40a958.ngrok.io"
         lateinit var rudderClient: RudderClient
     }
 
@@ -18,9 +17,10 @@ class MainApplication : Application() {
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,
-            RudderConfigBuilder()
+            RudderConfig.Builder()
                 .withEndPointUri(END_POINT_URI)
-                .withFactory(AdjustIntegrationFactory.FACTORY)
+                .withLogLevel(4)
+//                .withFactory(AdjustIntegrationFactory.FACTORY)
                 .build()
         )
     }
