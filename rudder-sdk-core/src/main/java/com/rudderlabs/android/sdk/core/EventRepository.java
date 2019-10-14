@@ -2,6 +2,7 @@ package com.rudderlabs.android.sdk.core;
 
 import android.app.Application;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Base64;
 
 import com.google.gson.Gson;
@@ -217,6 +218,11 @@ class EventRepository {
      * flush events payload to server and return response as String
      * */
     private String flushEventsToServer(String payload) throws IOException {
+        if (TextUtils.isEmpty(this.authHeaderString)) {
+            RudderLogger.logError("WriteKey was not correct. Aborting flush to server");
+            return null;
+        }
+
         // get endPointUrl form config object
         String endPointUri = config.getEndPointUri() + "v1/batch";
 

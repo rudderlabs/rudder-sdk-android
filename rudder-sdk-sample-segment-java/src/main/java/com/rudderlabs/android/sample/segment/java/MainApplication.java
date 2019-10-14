@@ -10,7 +10,8 @@ public class MainApplication extends Application {
     private static MainApplication instance;
     private static RudderClient rudderClient;
     private static final String writeKey = "1S0ibSaDlBDkaQuHLi9feJqIUBN";
-    private static final String endPointUrl = "https://0aae0ad7.ngrok.io";
+//    private static final String endPointUrl = "https://0aae0ad7.ngrok.io";
+    private static final String endPointUrl = "https://torpedo.dev.rudderlabs.com/";
 
     @Override
     public void onCreate() {
@@ -20,7 +21,10 @@ public class MainApplication extends Application {
 
         rudderClient = new RudderClient.Builder(this, writeKey)
                 .logLevel(RudderLogger.RudderLogLevel.VERBOSE)
-                .withRudderConfig(new RudderConfig.Builder().withEndPointUri(endPointUrl).build())
+                .withRudderConfig(new RudderConfig.Builder()
+                        .withEndPointUri(endPointUrl)
+                        .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
+                        .build())
                 .build();
 
         RudderClient.with(this).onIntegrationReady("SOME_KEY", new RudderClient.Callback() {

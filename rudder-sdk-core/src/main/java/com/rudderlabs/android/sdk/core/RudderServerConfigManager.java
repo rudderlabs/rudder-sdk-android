@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.nfc.Tag;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 
@@ -59,6 +60,9 @@ class RudderServerConfigManager {
     }
 
     private void downloadConfig(final String _writeKey) {
+        // don't try to download anything if writeKey is not valid
+        if (TextUtils.isEmpty(_writeKey)) return;
+
         new Thread(new Runnable() {
             @Override
             public void run() {
