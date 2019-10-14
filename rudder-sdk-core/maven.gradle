@@ -11,7 +11,7 @@ ext {
     siteUrl = 'https://github.com/rudderlabs/rudder-sdk-android'
     gitUrl = 'https://github.com/rudderlabs/rudder-sdk-android.git'
 
-    libraryVersion = '0.3'
+    libraryVersion = '0.5'
 
     developerId = 'arnabp-rudder'
     developerName = 'Arnab Pal'
@@ -21,7 +21,6 @@ ext {
     licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
     allLicenses = ["Apache-2.0"]
 }
-
 
 group = publishedGroupId
 version = libraryVersion

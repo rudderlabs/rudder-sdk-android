@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.nfc.Tag;
 import android.os.Handler;
+import android.util.Base64;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -72,6 +73,9 @@ class RudderServerConfigManager {
                         HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
                         // set request method
                         httpConnection.setRequestMethod("GET");
+                        httpConnection.setRequestProperty("Authorization",
+                                "Basic " + Base64.encodeToString(
+                                        (_writeKey + ":").getBytes("UTF-8"), Base64.DEFAULT));
                         // create connection
                         httpConnection.connect();
                         if (httpConnection.getResponseCode() == 200) {
