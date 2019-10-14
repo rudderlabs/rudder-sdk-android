@@ -2,6 +2,8 @@ package com.rudderlabs.android.sdk.core;
 
 import android.app.Application;
 import android.os.Handler;
+import android.text.TextUtils;
+import android.util.Base64;
 
 import com.google.gson.Gson;
 import com.rudderlabs.android.sdk.core.util.Utils;
@@ -11,7 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Array;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -23,6 +25,7 @@ import java.util.Map;
  * utility class for event processing
  * */
 class EventRepository {
+    private String authHeaderString;
     private RudderConfig config;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
@@ -41,6 +44,11 @@ class EventRepository {
      * */
     EventRepository(Application _application, String _writeKey, RudderConfig _config) {
         // 1. set the values of writeKey, config
+        try {
+            this.authHeaderString = Base64.encodeToString((_writeKey + ":").getBytes("UTF-8"), Base64.DEFAULT);
+        } catch (UnsupportedEncodingException ex) {
+            RudderLogger.logError(ex);
+        }
         this.config = _config;
 
         try {
@@ -210,6 +218,11 @@ class EventRepository {
      * flush events payload to server and return response as String
      * */
     private String flushEventsToServer(String payload) throws IOException {
+        if (TextUtils.isEmpty(this.authHeaderString)) {
+            RudderLogger.logError("WriteKey was not correct. Aborting flush to server");
+            return null;
+        }
+
         // get endPointUrl form config object
         String endPointUri = config.getEndPointUri() + "v1/batch";
 
@@ -221,6 +234,7 @@ class EventRepository {
         httpConnection.setDoOutput(true);
         //  set content type for network request
         httpConnection.setRequestProperty("Content-Type", "application/json");
+        httpConnection.setRequestProperty("Authorization", "Basic " + this.authHeaderString);
         // set request method
         httpConnection.setRequestMethod("POST");
         // get output stream and write payload content

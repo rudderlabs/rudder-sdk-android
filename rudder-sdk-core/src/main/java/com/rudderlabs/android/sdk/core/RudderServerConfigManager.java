@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.nfc.Tag;
 import android.os.Handler;
+import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -58,6 +60,9 @@ class RudderServerConfigManager {
     }
 
     private void downloadConfig(final String _writeKey) {
+        // don't try to download anything if writeKey is not valid
+        if (TextUtils.isEmpty(_writeKey)) return;
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -72,6 +77,9 @@ class RudderServerConfigManager {
                         HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
                         // set request method
                         httpConnection.setRequestMethod("GET");
+                        httpConnection.setRequestProperty("Authorization",
+                                "Basic " + Base64.encodeToString(
+                                        (_writeKey + ":").getBytes("UTF-8"), Base64.DEFAULT));
                         // create connection
                         httpConnection.connect();
                         if (httpConnection.getResponseCode() == 200) {

@@ -10,7 +10,7 @@ public class RudderLogger {
     private static final String TAG = "RudderSDK";
 
     static void init(int l) {
-        if (l > RudderLogLevel.DEBUG) l = RudderLogLevel.DEBUG;
+        if (l > RudderLogLevel.VERBOSE) l = RudderLogLevel.VERBOSE;
         else if (l < RudderLogLevel.NONE) l = RudderLogLevel.NONE;
         logLevel = l;
     }
