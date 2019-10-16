@@ -10,7 +10,7 @@ Rudder is a platform for collecting, storing and routing customer event data to 
 
 Released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-# Getting Started with Android SDK
+## Getting Started with Android SDK
 
 1. Add these lines to your ```app/build.gradle```
 ```
@@ -25,7 +25,7 @@ repositories {
 implementation 'com.rudderlabs.android.sdk:rudder-sdk-core:0.5'
 ```
 
-# Initialize ```RudderClient```
+## Initialize ```RudderClient```
 ```
 val rudderClient: RudderClient = RudderClient.getInstance(
     this,
@@ -43,7 +43,7 @@ builder.logLevel(RudderLogger.RudderLogLevel.VERBOSE);
 RudderClient.setSingletonInstance(builder.build());
 ```
 
-# Send Events
+## Send Events
 ```
 rudderClient.track(
     RudderMessageBuilder()
