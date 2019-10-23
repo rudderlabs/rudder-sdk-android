@@ -162,19 +162,24 @@ public class RudderClient {
     /*
      * segment equivalent API
      * */
-    public void screen(String event) {
-        screen(new RudderMessageBuilder().setEventName(event).build());
+    public void screen(String screenName) {
+        RudderProperty property = new RudderProperty();
+        property.put("name", screenName);
+        screen(new RudderMessageBuilder().setEventName(screenName).setProperty(property).build());
     }
 
-    public void screen(String event, RudderProperty property) {
-        screen(new RudderMessageBuilder().setEventName(event).setProperty(property).build());
+    public void screen(String screenName, RudderProperty property) {
+        if (property == null) property = new RudderProperty();
+        property.put("name", screenName);
+        screen(new RudderMessageBuilder().setEventName(screenName).setProperty(property).build());
     }
 
-    public void screen(String event, String category, RudderProperty property, RudderOption option) {
+    public void screen(String screenName, String category, RudderProperty property, RudderOption option) {
         if (property == null) property = new RudderProperty();
         property.put("category", category);
+        property.put("name", screenName);
 
-        screen(new RudderMessageBuilder().setEventName(event).setProperty(property).setRudderOption(option).build());
+        screen(new RudderMessageBuilder().setEventName(screenName).setProperty(property).setRudderOption(option).build());
     }
 
     public void screen(String event, RudderProperty property, RudderOption option) {
@@ -342,6 +347,7 @@ public class RudderClient {
         }
 
         private int logLevel;
+
         public Builder logLevel(int logLevel) {
             this.logLevel = logLevel;
             return this;

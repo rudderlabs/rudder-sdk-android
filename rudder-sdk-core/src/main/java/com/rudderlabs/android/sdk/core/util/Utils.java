@@ -7,7 +7,6 @@ import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.rudderlabs.android.sdk.core.Constants;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
