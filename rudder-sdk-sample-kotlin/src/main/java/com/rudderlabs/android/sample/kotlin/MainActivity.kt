@@ -5,7 +5,6 @@ import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import com.rudderlabs.android.sdk.core.RudderMessageBuilder
 import com.rudderlabs.android.sdk.core.TrackPropertyBuilder
-import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     private var count = 0
