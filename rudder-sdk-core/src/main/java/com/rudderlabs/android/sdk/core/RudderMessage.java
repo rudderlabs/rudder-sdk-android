@@ -91,6 +91,10 @@ public class RudderMessage {
         return userProperties;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
     void setIntegrations(Map<String, Object> integrations) {
         if (integrations == null) {
             return;

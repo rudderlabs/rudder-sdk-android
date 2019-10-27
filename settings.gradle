@@ -1,1 +1,1 @@
-include ':rudder-sdk-sample-kotlin', ':rudder-sdk-core', ':rudder-sdk-sample-segment-java'
+include ':rudder-sdk-sample-kotlin', ':rudder-sdk-core', ':rudder-sdk-sample-segment-java', ':rudder-integration-dummy-impl'

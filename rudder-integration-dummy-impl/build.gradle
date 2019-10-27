@@ -34,6 +34,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    compileOnly project(':rudder-sdk-core')
     implementation 'com.google.code.gson:gson:2.8.6'
 
     testImplementation 'com.android.support.test:rules:1.0.2'
@@ -41,5 +42,3 @@ dependencies {
     testImplementation "org.robolectric:robolectric:4.3"
     testImplementation "androidx.test:core-ktx:1.2.0"
 }
-
-apply from: './maven.gradle'
