@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /*
  * utility class for event processing
@@ -31,6 +32,8 @@ class EventRepository {
     private RudderServerConfigManager configManager;
     private Map<String, Object> integrationsMap;
     private Map<String, RudderIntegration> integrationOperationsMap = new HashMap<>();
+    private final ArrayList<RudderMessage> eventReplayMessage = new ArrayList<>();
+    private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
 
     /*
      * constructor to be called from RudderClient internally.
@@ -66,42 +69,83 @@ class EventRepository {
             processorThread.start();
 
             // 6. initiate factories
-            this.initiateFactories(_config);
+            this.initiateFactories();
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
     }
 
-    private void initiateFactories(final RudderConfig _config) {
+    private boolean isFactoryInitialized = false;
+
+    private void initiateFactories() {
         // initiate factory initialization after 10s
         // let the factories capture everything they want to capture
-        if (_config.getFactories() == null || _config.getFactories().isEmpty()) return;
-        new Handler().postDelayed(new Runnable() {
+        if (config == null || config.getFactories() == null || config.getFactories().isEmpty()) {
+            RudderLogger.logInfo("No native SDK factory is found");
+            isFactoryInitialized = true;
+            return;
+        }
+        // initiate factories if client is initialized properly
+        final RudderClient client = RudderClient.getInstance();
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                RudderServerConfig config = configManager.getConfig();
-                if (config == null) return;
+                try {
+                    int retryCount = 0;
+                    while (!isFactoryInitialized && retryCount <= 5) {
+                        RudderServerConfig serverConfig = configManager.getConfig();
 
-                // get destinations from server
-                List<RudderServerDestination> destinations = config.source.destinations;
-                // create a map for ease of handling
-                Map<String, RudderServerDestination> destinationMap = new HashMap<>();
-                for (RudderServerDestination destination : destinations)
-                    destinationMap.put(destination.destinationDefinition.definitionName, destination);
-                // check the factories integrated
-                for (RudderIntegration.Factory factory : _config.getFactories()) {
-                    // if factory is present in the config
-                    if (destinationMap.containsKey(factory.key())) {
-                        RudderServerDestination destination = destinationMap.get(factory.key());
-                        // initiate factory if destination is enabled from the dashboard
-                        if (destination != null && destination.isDestinationEnabled) {
-                            Object destinationConfig = destination.destinationConfig;
-                            integrationOperationsMap.put(factory.key(), factory.create(destinationConfig, RudderClient.getInstance()));
+                        if (serverConfig != null && serverConfig.source != null && serverConfig.source.destinations != null) {
+                            List<RudderServerDestination> destinations = serverConfig.source.destinations;
+
+                            if (destinations.isEmpty()) {
+                                RudderLogger.logInfo("No native SDK factory is found");
+                            } else {
+                                Map<String, RudderServerDestination> destinationMap = new HashMap<>();
+                                for (RudderServerDestination destination : destinations)
+                                    destinationMap.put(destination.destinationDefinition.definitionName, destination);
+
+                                for (RudderIntegration.Factory factory : config.getFactories()) {
+                                    // if factory is present in the config
+                                    if (destinationMap.containsKey(factory.key())) {
+                                        RudderServerDestination destination = destinationMap.get(factory.key());
+                                        // initiate factory if destination is enabled from the dashboard
+                                        if (destination != null && destination.isDestinationEnabled) {
+                                            Object destinationConfig = destination.destinationConfig;
+                                            RudderIntegration<?> nativeOp = factory.create(destinationConfig, client);
+                                            integrationOperationsMap.put(factory.key(), nativeOp);
+                                            if (integrationCallbacks.containsKey(factory.key())) {
+                                                Object nativeInstance = nativeOp.getUnderlyingInstance();
+                                                RudderClient.Callback callback = integrationCallbacks.get(factory.key());
+                                                if (nativeInstance != null && callback != null)
+                                                    callback.onReady(nativeInstance);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            isFactoryInitialized = true;
+                            synchronized (eventReplayMessage) {
+                                ArrayList<RudderMessage> tempList = new ArrayList<>(eventReplayMessage);
+                                if (!tempList.isEmpty()) {
+                                    for (RudderMessage message : tempList)
+                                        makeFactoryDump(message);
+                                }
+                                eventReplayMessage.clear();
+                            }
+                        } else {
+                            retryCount += 1;
+                            RudderLogger.logDebug("server config is null. retrying in 10s. retry count: " + retryCount);
+                            Thread.sleep(10000);
                         }
                     }
+                } catch (Exception ex) {
+                    RudderLogger.logError(ex);
+                    ex.printStackTrace();
                 }
             }
-        }, 10000);
+        }).start();
     }
 
     private Runnable getProcessorRunnable() {
@@ -278,16 +322,24 @@ class EventRepository {
      * generic method for dumping all the events
      * */
     void dump(RudderMessage message) {
-        if (this.integrationsMap == null) prepareIntegrations();
-        message.setIntegrations(this.integrationsMap);
-        for (String key : integrationOperationsMap.keySet()) {
-            RudderIntegration integration = integrationOperationsMap.get(key);
-            if (integration != null) {
-                integration.dump(message);
-            }
-        }
+        makeFactoryDump(message);
         String eventJson = new Gson().toJson(message);
         dump(eventJson);
+    }
+
+    void makeFactoryDump(RudderMessage message) {
+        if (isFactoryInitialized) {
+            if (this.integrationsMap == null) prepareIntegrations();
+            message.setIntegrations(this.integrationsMap);
+            for (String key : integrationOperationsMap.keySet()) {
+                RudderIntegration integration = integrationOperationsMap.get(key);
+                if (integration != null) {
+                    integration.dump(message);
+                }
+            }
+        } else {
+            eventReplayMessage.add(message);
+        }
     }
 
     void dump(String eventJson) {
@@ -309,7 +361,7 @@ class EventRepository {
     }
 
     void onIntegrationReady(String key, RudderClient.Callback callback) {
-        // TODO:
+        integrationCallbacks.put(key, callback);
     }
 
     public void shutdown() {
