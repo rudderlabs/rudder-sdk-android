@@ -22,13 +22,16 @@ import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
 class RudderServerConfigManager {
     private static RudderServerConfigManager instance;
     private static SharedPreferences preferences;
     private static RudderServerConfig serverConfig;
+    private Map<String, Object> integrationsMap = null;
 
     static RudderServerConfigManager getInstance(Application _application, String _writeKey) {
         if (instance == null) instance = new RudderServerConfigManager(_application, _writeKey);
@@ -46,7 +49,7 @@ class RudderServerConfigManager {
 
     // update config if it is older than an day
     private boolean isServerConfigOutDated() {
-        long lastUpdatedTime = preferences.getLong("server_update_time", -1);
+        long lastUpdatedTime = preferences.getLong("rl_server_update_time", -1);
         if (lastUpdatedTime == -1) return true;
 
         long currentTime = System.currentTimeMillis();
@@ -54,7 +57,7 @@ class RudderServerConfigManager {
     }
 
     private RudderServerConfig retrieveConfig() {
-        String configJson = preferences.getString("server_config", null);
+        String configJson = preferences.getString("rl_server_config", null);
         if (configJson == null) return null;
         return new Gson().fromJson(configJson, RudderServerConfig.class);
     }
@@ -96,8 +99,8 @@ class RudderServerConfigManager {
                             String configJson = baos.toString();
                             // save config for future use
                             preferences.edit()
-                                    .putLong("server_update_time", System.currentTimeMillis())
-                                    .putString("server_config", configJson)
+                                    .putLong("rl_server_update_time", System.currentTimeMillis())
+                                    .putString("rl_server_config", configJson)
                                     .apply();
 
                             // update server config as well
@@ -139,5 +142,16 @@ class RudderServerConfigManager {
     RudderServerConfig getConfig() {
         if (serverConfig == null) serverConfig = retrieveConfig();
         return serverConfig;
+    }
+
+    Map<String, Object> getIntegrations() {
+        if (integrationsMap == null) {
+            this.integrationsMap = new HashMap<>();
+            for (RudderServerDestination destination : serverConfig.source.destinations) {
+                if (!this.integrationsMap.containsKey(destination.destinationDefinition.definitionName))
+                    this.integrationsMap.put(destination.destinationDefinition.definitionName, destination.isDestinationEnabled);
+            }
+        }
+        return this.integrationsMap;
     }
 }

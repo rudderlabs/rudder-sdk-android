@@ -1,7 +1,6 @@
 package com.rudderlabs.android.sdk.core;
 
 import android.app.Application;
-import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Base64;
 
@@ -20,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /*
  * utility class for event processing
@@ -30,7 +28,6 @@ class EventRepository {
     private RudderConfig config;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
-    private Map<String, Object> integrationsMap;
     private Map<String, RudderIntegration> integrationOperationsMap = new HashMap<>();
     private final ArrayList<RudderMessage> eventReplayMessage = new ArrayList<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
@@ -136,7 +133,7 @@ class EventRepository {
                             }
                         } else {
                             retryCount += 1;
-                            RudderLogger.logDebug("server config is null. retrying in 10s. retry count: " + retryCount);
+                            RudderLogger.logDebug("In retry count: " + retryCount);
                             Thread.sleep(10000);
                         }
                     }
@@ -246,8 +243,6 @@ class EventRepository {
             }
             // close batch array in the json
             builder.append("]");
-//            // add writeKey in the json
-//            builder.append("\"writeKey\":\"").append(writeKey).append("\"");
             // append closing token in the json
             builder.append("}");
             // finally return the entire payload
@@ -324,13 +319,12 @@ class EventRepository {
     void dump(RudderMessage message) {
         makeFactoryDump(message);
         String eventJson = new Gson().toJson(message);
-        dump(eventJson);
+        dbManager.saveEvent(eventJson);
     }
 
-    void makeFactoryDump(RudderMessage message) {
+    private void makeFactoryDump(RudderMessage message) {
         if (isFactoryInitialized) {
-            if (this.integrationsMap == null) prepareIntegrations();
-            message.setIntegrations(this.integrationsMap);
+            message.setIntegrations(prepareIntegrations());
             for (String key : integrationOperationsMap.keySet()) {
                 RudderIntegration integration = integrationOperationsMap.get(key);
                 if (integration != null) {
@@ -342,17 +336,13 @@ class EventRepository {
         }
     }
 
-    void dump(String eventJson) {
-        dbManager.saveEvent(eventJson);
-    }
-
-    private void prepareIntegrations() {
-        if (this.configManager.getConfig() == null) return;
-
-        this.integrationsMap = new HashMap<>();
-        for (RudderServerDestination destination : this.configManager.getConfig().source.destinations) {
-            if (!this.integrationsMap.containsKey(destination.destinationDefinition.definitionName))
-                this.integrationsMap.put(destination.destinationDefinition.definitionName, destination.isDestinationEnabled);
+    private Map<String, Object> prepareIntegrations() {
+        if (this.configManager.getConfig() == null) {
+            Map<String, Object> integrationPlaceholder = new HashMap<>();
+            integrationPlaceholder.put("All", true);
+            return integrationPlaceholder;
+        } else {
+            return this.configManager.getIntegrations();
         }
     }
 
