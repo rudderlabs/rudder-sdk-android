@@ -96,9 +96,7 @@ public class RudderMessage {
     }
 
     void setIntegrations(Map<String, Object> integrations) {
-        if (integrations == null) {
-            return;
-        }
+        if (integrations == null) return;
         for (String key : integrations.keySet()) {
             this.integrations.put(key, (Boolean) integrations.get(key));
         }
