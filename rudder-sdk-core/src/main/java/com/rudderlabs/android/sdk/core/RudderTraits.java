@@ -79,75 +79,92 @@ public class RudderTraits {
         return extras;
     }
 
-    public void putAddress(Address address) {
+    public RudderTraits putAddress(Address address) {
         this.address = address;
+        return this;
     }
 
-    public void putAge(String age) {
+    public RudderTraits putAge(String age) {
         this.age = age;
+        return this;
     }
 
-    public void putBirthday(String birthday) {
+    public RudderTraits putBirthday(String birthday) {
         this.birthday = birthday;
+        return this;
     }
 
-    public void putBirthday(Date birthday) {
+    public RudderTraits putBirthday(Date birthday) {
         this.birthday = Utils.toDateString(birthday);
+        return this;
     }
 
-    public void putCompany(Company company) {
+    public RudderTraits putCompany(Company company) {
         this.company = company;
+        return this;
     }
 
-    public void putCreatedAt(String createdAt) {
+    public RudderTraits putCreatedAt(String createdAt) {
         this.createdAt = createdAt;
+        return this;
     }
 
-    public void putDescription(String description) {
+    public RudderTraits putDescription(String description) {
         this.description = description;
+        return this;
     }
 
-    public void putEmail(String email) {
+    public RudderTraits putEmail(String email) {
         this.email = email;
+        return this;
     }
 
-    public void putFirstName(String firstName) {
+    public RudderTraits putFirstName(String firstName) {
         this.firstName = firstName;
+        return this;
     }
 
-    public void putGender(String gender) {
+    public RudderTraits putGender(String gender) {
         this.gender = gender;
+        return this;
     }
 
-    public void putId(String id) {
+    public RudderTraits putId(String id) {
         this.id = id;
+        return this;
     }
 
-    public void putLastName(String lastName) {
+    public RudderTraits putLastName(String lastName) {
         this.lastName = lastName;
+        return this;
     }
 
-    public void putName(String name) {
+    public RudderTraits putName(String name) {
         this.name = name;
+        return this;
     }
 
-    public void putPhone(String phone) {
+    public RudderTraits putPhone(String phone) {
         this.phone = phone;
+        return this;
     }
 
-    public void putTitle(String title) {
+    public RudderTraits putTitle(String title) {
         this.title = title;
+        return this;
     }
 
-    public void putUserName(String userName) {
+    public RudderTraits putUserName(String userName) {
         this.userName = userName;
+        return this;
     }
 
-    public void put(String key, Object value) {
+    public RudderTraits put(String key, Object value) {
         if (this.extras == null) {
             this.extras = new HashMap<>();
         }
         this.extras.put(key, value);
+        return this;
     }
 
     public static class Address {
@@ -165,27 +182,32 @@ public class RudderTraits {
         public Address() {
         }
 
-        public void putCity(String city) {
+        public Address putCity(String city) {
             this.city = city;
+            return this;
         }
 
-        public void putCountry(String country) {
+        public Address putCountry(String country) {
             this.country = country;
+            return this;
         }
 
-        public void putPostalCode(String postalCode) {
+        public Address putPostalCode(String postalCode) {
             this.postalCode = postalCode;
+            return this;
         }
 
-        public void putState(String state) {
+        public Address putState(String state) {
             this.state = state;
+            return this;
         }
 
-        public void putStreet(String street) {
+        public Address putStreet(String street) {
             this.street = street;
+            return this;
         }
 
-        Address(String city, String country, String postalCode, String state, String street) {
+        public Address(String city, String country, String postalCode, String state, String street) {
             this.city = city;
             this.country = country;
             this.postalCode = postalCode;
@@ -206,6 +228,21 @@ public class RudderTraits {
             this.name = name;
             this.id = id;
             this.industry = industry;
+        }
+
+        public Company putName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Company putId(String id) {
+            this.id = id;
+            return this;
+        }
+
+        public Company putIndustry(String industry) {
+            this.industry = industry;
+            return this;
         }
     }
 }

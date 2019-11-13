@@ -5,11 +5,12 @@ import com.rudderlabs.android.integration.dummy.DummyGAIntegrationImpl
 import com.rudderlabs.android.sdk.core.RudderClient
 import com.rudderlabs.android.sdk.core.RudderConfig
 import com.rudderlabs.android.sdk.core.RudderLogger
+import com.rudderlabs.android.sdk.core.RudderMessageBuilder
 
 class MainApplication : Application() {
     companion object {
         private const val WRITE_KEY = "1SuZEl2bawQm274slpZs9y6NdCi"
-        private const val END_POINT_URI = "https://14ac62d0.ngrok.io"
+        private const val END_POINT_URI = "https://f9eb4965.ngrok.io"
         lateinit var rudderClient: RudderClient
     }
 
@@ -23,5 +24,7 @@ class MainApplication : Application() {
                 .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
                 .build()
         )
+
+
     }
 }

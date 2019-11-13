@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.rudderlabs.android.sdk.core.util.Utils;
 
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -51,8 +52,11 @@ class RudderContext {
     }
 
     void updateTraits(RudderTraits traits) {
+        if (traits == null) return;
+
         Map<String, Object> traitsMap = Utils.convertToMap(new Gson().toJson(traits));
-        traitsMap.putAll(traits.getExtras());
+        if (traits.getExtras() != null) traitsMap.putAll(traits.getExtras());
+
         this.traits = traitsMap;
     }
 
