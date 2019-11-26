@@ -45,7 +45,7 @@ public class RudderLogger {
         }
     }
 
-    public static void logDebug(String message) {
+    static void logDebug(String message) {
         if (logLevel >= RudderLogLevel.DEBUG) {
             Log.d(TAG, "Debug: " + message);
         }

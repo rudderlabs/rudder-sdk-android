@@ -17,7 +17,7 @@ class RudderDeviceInfo {
         this.deviceId = deviceId;
     }
 
-    public String getDeviceId() {
+    String getDeviceId() {
         return deviceId;
     }
 }

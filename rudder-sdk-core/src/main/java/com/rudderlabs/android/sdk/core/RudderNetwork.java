@@ -47,7 +47,7 @@ class RudderNetwork {
                 }
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            RudderLogger.logError(ex);
         }
     }
 }

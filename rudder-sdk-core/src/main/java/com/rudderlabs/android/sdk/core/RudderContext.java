@@ -60,7 +60,7 @@ class RudderContext {
         this.traits = traitsMap;
     }
 
-    public String getDeviceId() {
+    String getDeviceId() {
         return deviceInfo.getDeviceId();
     }
 }

@@ -13,20 +13,22 @@ import java.util.Map;
 public class MainApplication extends Application {
     private static MainApplication instance;
     private static RudderClient rudderClient;
-    private static final String writeKey = "1R3JbxsqWZlbYjJlBxf0ZNWZOH6";
-    private static final String endPointUrl = "https://2f0d770f.ngrok.io";
+    private static final String writeKey = "1TSRSskqa15PG7F89tkwEbl5Td8";
+    private static final String endPointUrl = "https://938d3ad5.ngrok.io";
 
     @Override
     public void onCreate() {
         super.onCreate();
 
+        RudderConfig config = new RudderConfig.Builder()
+                .withEndPointUri(endPointUrl)
+                .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
+                .build();
+
         instance = this;
 
         rudderClient = new RudderClient.Builder(this, writeKey)
-                .withRudderConfig(new RudderConfig.Builder()
-                        .withEndPointUri(endPointUrl)
-                        .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
-                        .build())
+                .withRudderConfig(config)
                 .build();
 
         RudderClient.with(this).onIntegrationReady("SOME_KEY", new RudderClient.Callback() {

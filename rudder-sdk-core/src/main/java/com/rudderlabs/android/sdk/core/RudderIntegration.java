@@ -32,6 +32,9 @@ public abstract class RudderIntegration<T> {
 
     }
 
+    /**
+     * @return Instance of the initiated SDK
+     */
     public T getUnderlyingInstance() {
         return null;
     }
