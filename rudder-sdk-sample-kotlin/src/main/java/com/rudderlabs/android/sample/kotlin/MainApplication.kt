@@ -24,7 +24,5 @@ class MainApplication : Application() {
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .build()
         )
-
-
     }
 }

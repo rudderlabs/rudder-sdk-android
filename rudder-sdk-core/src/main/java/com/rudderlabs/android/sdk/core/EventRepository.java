@@ -38,7 +38,7 @@ class EventRepository {
     /*
      * constructor to be called from RudderClient internally.
      * -- tasks to be performed
-     * 1. persist the value of config
+     * 1. set the values of writeKey, config
      * 2. initiate RudderElementCache
      * 3. initiate DBPersistentManager for SQLite operations
      * 4. initiate RudderServerConfigManager

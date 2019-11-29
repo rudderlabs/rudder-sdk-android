@@ -9,9 +9,9 @@ import androidx.annotation.Nullable;
 
 import com.rudderlabs.android.sdk.core.util.Utils;
 
-/*
+/* *
  * Primary class to be used in client
- * */
+ */
 public class RudderClient {
     // singleton instance
     private static RudderClient instance;
