@@ -73,7 +73,9 @@ public class RudderMessage {
     }
 
     /**
-     * @return Properties for the event as a Map<String, Object>
+     * Get the properties back as set to the event
+     *
+     * @return Map of String-Object
      */
     @Nullable
     public Map<String, Object> getProperties() {
@@ -102,7 +104,9 @@ public class RudderMessage {
     }
 
     /**
-     * @return User properties for the event as Map<String, Object>
+     * Get your User properties for the event
+     *
+     * @return Map of String-Object
      */
     @Nullable
     public Map<String, Object> getUserProperties() {
