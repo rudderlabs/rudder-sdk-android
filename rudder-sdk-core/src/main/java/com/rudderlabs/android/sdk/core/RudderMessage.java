@@ -1,5 +1,7 @@
 package com.rudderlabs.android.sdk.core;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.annotations.SerializedName;
 import com.rudderlabs.android.sdk.core.util.Utils;
 
@@ -50,11 +52,11 @@ public class RudderMessage {
         this.type = type;
     }
 
-    public void setUserId(String userId) {
+    void setUserId(String userId) {
         this.userId = userId;
     }
 
-    public void setEventName(String eventName) {
+    void setEventName(String eventName) {
         this.event = eventName;
     }
 
@@ -62,10 +64,18 @@ public class RudderMessage {
         this.context.updateTraits(traits);
     }
 
+    /**
+     * @return Name of the event tracked
+     */
+    @Nullable
     public String getEventName() {
         return event;
     }
 
+    /**
+     * @return Properties for the event as a Map<String, Object>
+     */
+    @Nullable
     public Map<String, Object> getProperties() {
         return properties;
     }
@@ -79,6 +89,10 @@ public class RudderMessage {
         }
     }
 
+    /**
+     * @return Type of event (track, identify, screen)
+     */
+    @Nullable
     public String getType() {
         return type;
     }
@@ -87,10 +101,18 @@ public class RudderMessage {
         return action;
     }
 
+    /**
+     * @return User properties for the event as Map<String, Object>
+     */
+    @Nullable
     public Map<String, Object> getUserProperties() {
         return userProperties;
     }
 
+    /**
+     * @return User ID for the event
+     */
+    @Nullable
     public String getUserId() {
         return userId;
     }
