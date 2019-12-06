@@ -4,6 +4,8 @@ package com.rudderlabs.android.sdk.core;
  * Default value holder class
  * */
 class Constants {
+    // how often config should be fetched from the server (in hours) (2 hrs by default)
+    static final int CONFIG_REFRESH_INTERVAL = 2;
     // default base url or rudder-backend-server
     static final String BASE_URL = "https://api.rudderlabs.com";
     // default flush queue size for the events to be flushed to server
@@ -14,4 +16,6 @@ class Constants {
     // if events are registered and flushQueueSize is not reached
     // events will be flushed to server after sleepTimeOut seconds
     static final int SLEEP_TIMEOUT = 10;
+    // config-plane url to get the config for the writeKey
+    static final String CONFIG_PLANE_URL = "https://api.rudderlabs.com/";
 }
