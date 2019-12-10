@@ -400,7 +400,6 @@ public class RudderClient {
      */
     public void reset() {
         RudderElementCache.reset();
-        RudderElementCache.reset();
         if (repository != null) repository.reset();
     }
 
