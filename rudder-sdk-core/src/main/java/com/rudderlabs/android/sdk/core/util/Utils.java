@@ -19,6 +19,12 @@ import static android.provider.Settings.Secure.ANDROID_ID;
 import static android.provider.Settings.System.getString;
 
 public class Utils {
+    public static final int MIN_CONFIG_REFRESH_INTERVAL = 1;
+    public static final int MAX_CONFIG_REFRESH_INTERVAL = 24;
+    public static final int MIN_SLEEP_TIMEOUT = 10;
+    public static final int MIN_FLUSH_QUEUE_SIZE = 1;
+    public static final int MAX_FLUSH_QUEUE_SIZE = 100;
+
     public static String getTimeZone() {
         TimeZone timeZone = TimeZone.getDefault();
         return timeZone.getID();

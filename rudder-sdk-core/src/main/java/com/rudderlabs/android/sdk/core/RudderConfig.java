@@ -6,6 +6,8 @@ import android.webkit.URLUtil;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.rudderlabs.android.sdk.core.util.Utils;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,13 +30,14 @@ public class RudderConfig {
     private int dbCountThreshold;
     private int sleepTimeOut;
     private int logLevel;
+    private int configRefreshInterval;
     private List<RudderIntegration.Factory> factories;
 
     RudderConfig() {
-        this(Constants.BASE_URL, Constants.FLUSH_QUEUE_SIZE, Constants.DB_COUNT_THRESHOLD, Constants.SLEEP_TIMEOUT, RudderLogger.RudderLogLevel.ERROR, null);
+        this(Constants.BASE_URL, Constants.FLUSH_QUEUE_SIZE, Constants.DB_COUNT_THRESHOLD, Constants.SLEEP_TIMEOUT, RudderLogger.RudderLogLevel.ERROR, Constants.CONFIG_REFRESH_INTERVAL, null);
     }
 
-    private RudderConfig(String endPointUri, int flushQueueSize, int dbCountThreshold, int sleepTimeOut, int logLevel, List<RudderIntegration.Factory> factories) {
+    private RudderConfig(String endPointUri, int flushQueueSize, int dbCountThreshold, int sleepTimeOut, int logLevel, int configRefreshInterval, List<RudderIntegration.Factory> factories) {
         RudderLogger.init(logLevel);
 
         if (TextUtils.isEmpty(endPointUri)) {
@@ -48,7 +51,7 @@ public class RudderConfig {
             this.endPointUri = endPointUri;
         }
 
-        if (flushQueueSize < 1 || flushQueueSize > 100) {
+        if (flushQueueSize < Utils.MIN_FLUSH_QUEUE_SIZE || flushQueueSize > Utils.MAX_FLUSH_QUEUE_SIZE) {
             RudderLogger.logError("flushQueueSize is out of range. Min: 1, Max: 100. Set to default");
             this.flushQueueSize = Constants.FLUSH_QUEUE_SIZE;
         } else {
@@ -58,14 +61,22 @@ public class RudderConfig {
         this.logLevel = logLevel;
 
         if (dbCountThreshold < 0) {
-            RudderLogger.logError("invalid dbCountThreshold");
+            RudderLogger.logError("invalid dbCountThreshold. Set to default");
             this.dbCountThreshold = Constants.DB_COUNT_THRESHOLD;
         } else {
             this.dbCountThreshold = dbCountThreshold;
         }
 
-        if (sleepTimeOut < 10) {
-            RudderLogger.logError("invalid sleepTimeOut");
+        if (configRefreshInterval > Utils.MAX_CONFIG_REFRESH_INTERVAL) {
+            this.configRefreshInterval = Utils.MAX_CONFIG_REFRESH_INTERVAL;
+        } else if (configRefreshInterval < Utils.MIN_CONFIG_REFRESH_INTERVAL) {
+            this.configRefreshInterval = Utils.MIN_CONFIG_REFRESH_INTERVAL;
+        } else {
+            this.configRefreshInterval = configRefreshInterval;
+        }
+
+        if (sleepTimeOut < Utils.MIN_SLEEP_TIMEOUT) {
+            RudderLogger.logError("invalid sleepTimeOut. Set to default");
             this.sleepTimeOut = Constants.SLEEP_TIMEOUT;
         } else {
             this.sleepTimeOut = sleepTimeOut;
@@ -91,7 +102,6 @@ public class RudderConfig {
         return flushQueueSize;
     }
 
-
     /**
      * @return dbCountThreshold (# of events to be kept in DB before deleting older events)
      */
@@ -106,12 +116,18 @@ public class RudderConfig {
         return sleepTimeOut;
     }
 
-
     /**
      * @return logLevel (how much log we generate from the SDK)
      */
     public int getLogLevel() {
         return logLevel;
+    }
+
+    /**
+     * @return configRefreshInterval (how often the server config should be fetched from the server)
+     */
+    public int getConfigRefreshInterval() {
+        return configRefreshInterval;
     }
 
     /**
@@ -226,10 +242,9 @@ public class RudderConfig {
         private boolean isDebug = false;
 
         /**
-         * @deprecated  Use withLogLevel(int logLevel) instead
-         *
          * @param isDebug Set it true to initialize SDK in debug mode
          * @return RudderConfig.Builder
+         * @deprecated Use withLogLevel(int logLevel) instead
          */
         @Deprecated
         public Builder withDebug(boolean isDebug) {
@@ -271,13 +286,26 @@ public class RudderConfig {
             return this;
         }
 
+        private int configRefreshInterval = Constants.CONFIG_REFRESH_INTERVAL;
+
+        /**
+         * @param configRefreshInterval How often you want to fetch the config from the server.
+         *                              Min : 1 hr
+         *                              Max : 24 hrs
+         * @return RudderConfig.Builder
+         */
+        public Builder withConfigRefreshInterval(int configRefreshInterval) {
+            this.configRefreshInterval = configRefreshInterval;
+            return this;
+        }
+
         /**
          * Finalize your config building
          *
          * @return RudderConfig
          */
         public RudderConfig build() {
-            return new RudderConfig(this.endPointUri, this.flushQueueSize, this.dbThresholdCount, this.sleepTimeout, this.isDebug ? RudderLogger.RudderLogLevel.DEBUG : logLevel, this.factories);
+            return new RudderConfig(this.endPointUri, this.flushQueueSize, this.dbThresholdCount, this.sleepTimeout, this.isDebug ? RudderLogger.RudderLogLevel.DEBUG : logLevel, this.configRefreshInterval, this.factories);
         }
     }
 }
