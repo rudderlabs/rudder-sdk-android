@@ -6,6 +6,8 @@ import android.webkit.URLUtil;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.rudderlabs.android.sdk.core.util.Utils;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -49,7 +51,7 @@ public class RudderConfig {
             this.endPointUri = endPointUri;
         }
 
-        if (flushQueueSize < 1 || flushQueueSize > 100) {
+        if (flushQueueSize < Utils.MIN_FLUSH_QUEUE_SIZE || flushQueueSize > Utils.MAX_FLUSH_QUEUE_SIZE) {
             RudderLogger.logError("flushQueueSize is out of range. Min: 1, Max: 100. Set to default");
             this.flushQueueSize = Constants.FLUSH_QUEUE_SIZE;
         } else {
@@ -59,22 +61,22 @@ public class RudderConfig {
         this.logLevel = logLevel;
 
         if (dbCountThreshold < 0) {
-            RudderLogger.logError("invalid dbCountThreshold");
+            RudderLogger.logError("invalid dbCountThreshold. Set to default");
             this.dbCountThreshold = Constants.DB_COUNT_THRESHOLD;
         } else {
             this.dbCountThreshold = dbCountThreshold;
         }
 
-        if (configRefreshInterval > 24) {
-            this.configRefreshInterval = 24;
-        } else if (configRefreshInterval < 1) {
-            this.configRefreshInterval = 1;
+        if (configRefreshInterval > Utils.MAX_CONFIG_REFRESH_INTERVAL) {
+            this.configRefreshInterval = Utils.MAX_CONFIG_REFRESH_INTERVAL;
+        } else if (configRefreshInterval < Utils.MIN_CONFIG_REFRESH_INTERVAL) {
+            this.configRefreshInterval = Utils.MIN_CONFIG_REFRESH_INTERVAL;
         } else {
             this.configRefreshInterval = configRefreshInterval;
         }
 
-        if (sleepTimeOut < 10) {
-            RudderLogger.logError("invalid sleepTimeOut");
+        if (sleepTimeOut < Utils.MIN_SLEEP_TIMEOUT) {
+            RudderLogger.logError("invalid sleepTimeOut. Set to default");
             this.sleepTimeOut = Constants.SLEEP_TIMEOUT;
         } else {
             this.sleepTimeOut = sleepTimeOut;

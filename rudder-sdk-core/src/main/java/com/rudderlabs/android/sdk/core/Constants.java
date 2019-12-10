@@ -17,5 +17,5 @@ class Constants {
     // events will be flushed to server after sleepTimeOut seconds
     static final int SLEEP_TIMEOUT = 10;
     // config-plane url to get the config for the writeKey
-    static final String CONFIG_PLANE_URL = "https://api.rudderlabs.com/";
+    static final String CONFIG_PLANE_URL = "https://api.rudderlabs.com";
 }
