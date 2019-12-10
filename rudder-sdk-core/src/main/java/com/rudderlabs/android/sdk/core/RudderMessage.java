@@ -1,7 +1,12 @@
 package com.rudderlabs.android.sdk.core;
 
+import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
+
 import androidx.annotation.Nullable;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.rudderlabs.android.sdk.core.util.Utils;
 
@@ -38,6 +43,10 @@ public class RudderMessage {
     RudderMessage() {
         context = RudderElementCache.getCachedContext();
         this.anonymousId = context.getDeviceId();
+
+        Map<String, Object> traits = context.getTraits();
+        if (traits != null && traits.containsKey("id"))
+            this.userId = String.valueOf(traits.get("id"));
     }
 
     void setProperty(RudderProperty property) {
@@ -126,5 +135,9 @@ public class RudderMessage {
         for (String key : integrations.keySet()) {
             this.integrations.put(key, (Boolean) integrations.get(key));
         }
+    }
+
+    Map<String, Object> getTraits() {
+        return this.context.getTraits();
     }
 }

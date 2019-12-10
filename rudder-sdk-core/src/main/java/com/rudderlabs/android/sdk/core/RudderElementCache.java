@@ -2,9 +2,11 @@ package com.rudderlabs.android.sdk.core;
 
 import android.app.Application;
 
+import java.util.Map;
+
 /*
-* RudderContext is populated once and cached through out the lifecycle
-* */
+ * RudderContext is populated once and cached through out the lifecycle
+ * */
 class RudderElementCache {
     private static RudderContext cachedContext;
 
@@ -21,6 +23,22 @@ class RudderElementCache {
 
     static RudderContext getCachedContext() {
         return cachedContext;
+    }
+
+    static void reset() {
+        cachedContext.updateTraits(null);
+    }
+
+    static void persistTraits() {
+        cachedContext.persistTraits();
+    }
+
+    static void updateTraits(Map<String, Object> traits) {
+        cachedContext.updateTraitsMap(traits);
+    }
+
+    static void resetTraits() {
+        cachedContext.updateTraits(null);
     }
 }
 
