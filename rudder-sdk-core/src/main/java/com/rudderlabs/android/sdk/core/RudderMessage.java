@@ -1,16 +1,14 @@
 package com.rudderlabs.android.sdk.core;
 
-import android.app.Application;
-import android.content.Context;
-import android.content.SharedPreferences;
-
 import androidx.annotation.Nullable;
 
-import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.rudderlabs.android.sdk.core.util.Utils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
 public class RudderMessage {
     @SerializedName("messageId")

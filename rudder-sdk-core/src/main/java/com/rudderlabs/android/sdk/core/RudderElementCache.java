@@ -36,9 +36,5 @@ class RudderElementCache {
     static void updateTraits(Map<String, Object> traits) {
         cachedContext.updateTraitsMap(traits);
     }
-
-    static void resetTraits() {
-        cachedContext.updateTraits(null);
-    }
 }
 

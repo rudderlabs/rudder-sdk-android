@@ -35,6 +35,8 @@ class EventRepository {
     private final ArrayList<RudderMessage> eventReplayMessage = new ArrayList<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
 
+    private boolean initiated = false;
+
     /*
      * constructor to be called from RudderClient internally.
      * -- tasks to be performed
@@ -78,6 +80,8 @@ class EventRepository {
             // 6. initiate factories
             RudderLogger.logDebug("EventRepository: constructor: Initiating factories");
             this.initiateFactories();
+
+            this.initiated = true;
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
@@ -349,6 +353,8 @@ class EventRepository {
      * generic method for dumping all the events
      * */
     void dump(@NonNull RudderMessage message) {
+        if (!initiated) return;
+
         makeFactoryDump(message);
         String eventJson = new Gson().toJson(message);
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
