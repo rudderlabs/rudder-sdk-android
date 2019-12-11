@@ -5,7 +5,10 @@ import androidx.annotation.Nullable;
 import com.google.gson.annotations.SerializedName;
 import com.rudderlabs.android.sdk.core.util.Utils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
 public class RudderMessage {
     @SerializedName("messageId")
@@ -38,6 +41,10 @@ public class RudderMessage {
     RudderMessage() {
         context = RudderElementCache.getCachedContext();
         this.anonymousId = context.getDeviceId();
+
+        Map<String, Object> traits = context.getTraits();
+        if (traits != null && traits.containsKey("id"))
+            this.userId = String.valueOf(traits.get("id"));
     }
 
     void setProperty(RudderProperty property) {
@@ -126,5 +133,9 @@ public class RudderMessage {
         for (String key : integrations.keySet()) {
             this.integrations.put(key, (Boolean) integrations.get(key));
         }
+    }
+
+    Map<String, Object> getTraits() {
+        return this.context.getTraits();
     }
 }

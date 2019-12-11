@@ -90,11 +90,11 @@ public class RudderClient {
             }
 
             // get application from provided context
-            if (context != null) {
-                application = (Application) context.getApplicationContext();
-            }
+            application = (Application) context.getApplicationContext();
+
             // initiate RudderClient instance
             instance = new RudderClient();
+
             // initiate EventRepository class
             if (application != null && writeKey != null) {
                 repository = new EventRepository(application, writeKey, config);
@@ -276,6 +276,14 @@ public class RudderClient {
      * @param message instance of RudderMessage
      */
     public void identify(@NonNull RudderMessage message) {
+        // update cached traits and persist
+        RudderElementCache.updateTraits(message.getTraits());
+        RudderElementCache.persistTraits();
+
+        // set message type to identify
+        message.setType(MessageType.IDENTIFY);
+
+        // dump to repository
         if (repository != null) repository.dump(message);
     }
 
@@ -294,7 +302,6 @@ public class RudderClient {
                 .setRudderOption(option)
                 .build();
         message.updateTraits(traits);
-        message.setType(MessageType.IDENTIFY);
         identify(message);
     }
 
@@ -392,13 +399,14 @@ public class RudderClient {
      * Reset SDK
      */
     public void reset() {
+        RudderElementCache.reset();
         if (repository != null) repository.reset();
     }
 
     /**
      * Register Native SDK callback for custom implementation
      *
-     * @param key Native SDK key like Google Analytics, Amplitude, Adjust
+     * @param key      Native SDK key like Google Analytics, Amplitude, Adjust
      * @param callback RudderClient.Callback object
      */
     public void onIntegrationReady(String key, Callback callback) {

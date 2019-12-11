@@ -10,6 +10,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.rudderlabs.android.sdk.core.util.Utils;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -43,7 +44,7 @@ class RudderServerConfigManager {
     }
 
     private RudderServerConfigManager(Application _application, String _writeKey, RudderConfig _config) {
-        preferences = _application.getSharedPreferences("rl_prefs", Context.MODE_PRIVATE);
+        preferences = _application.getSharedPreferences(Utils.RUDDER_PREFS, Context.MODE_PRIVATE);
         serverConfig = retrieveConfig();
         rudderConfig = _config;
         boolean isConfigOutdated = isServerConfigOutDated();
@@ -62,7 +63,7 @@ class RudderServerConfigManager {
 
     // update config if it is older than an day
     private boolean isServerConfigOutDated() {
-        long lastUpdatedTime = preferences.getLong("rl_server_update_time", -1);
+        long lastUpdatedTime = preferences.getLong(Utils.RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY, -1);
         RudderLogger.logDebug(String.format(Locale.US, "Last updated config time: %d", lastUpdatedTime));
         RudderLogger.logDebug(String.format(Locale.US, "ServerConfigInterval: %d", rudderConfig.getConfigRefreshInterval()));
         if (lastUpdatedTime == -1) return true;
@@ -72,7 +73,7 @@ class RudderServerConfigManager {
     }
 
     private RudderServerConfig retrieveConfig() {
-        String configJson = preferences.getString("rl_server_config", null);
+        String configJson = preferences.getString(Utils.RUDDER_SERVER_CONFIG_KEY, null);
         RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: retrieveConfig: configJson: %s", configJson));
         if (configJson == null) return null;
         return new Gson().fromJson(configJson, RudderServerConfig.class);
@@ -117,8 +118,8 @@ class RudderServerConfigManager {
                             RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configJson: %s", configJson));
                             // save config for future use
                             preferences.edit()
-                                    .putLong("rl_server_update_time", System.currentTimeMillis())
-                                    .putString("rl_server_config", configJson)
+                                    .putLong(Utils.RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY, System.currentTimeMillis())
+                                    .putString(Utils.RUDDER_SERVER_CONFIG_KEY, configJson)
                                     .apply();
 
                             // update server config as well

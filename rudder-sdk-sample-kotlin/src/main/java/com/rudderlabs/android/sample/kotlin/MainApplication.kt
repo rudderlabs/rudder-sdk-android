@@ -11,20 +11,9 @@ class MainApplication : Application() {
     companion object {
         private const val WRITE_KEY = "1TSRSskqa15PG7F89tkwEbl5Td8"
         private const val END_POINT_URI = "https://664970a4.ngrok.io"
-        lateinit var rudderClient: RudderClient
     }
 
     override fun onCreate() {
         super.onCreate()
-        rudderClient = RudderClient.getInstance(
-            this,
-            WRITE_KEY,
-            RudderConfig.Builder()
-                .withEndPointUri(END_POINT_URI)
-                .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
-                .build()
-        )
-
-
     }
 }
