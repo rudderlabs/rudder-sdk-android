@@ -7,40 +7,24 @@ import com.rudderlabs.android.sdk.core.*
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
-    private var rudderClient: RudderClient? = null
-
     private var count = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        initBtn.setOnClickListener {
-            rudderClient = RudderClient.getInstance(
-                this,
-                writeKey.text.toString(),
-                RudderConfig.Builder()
-                    .withEndPointUri(endPointUrl.text.toString())
-                    .withLogLevel(
-                        when (BuildConfig.DEBUG) {
-                            true -> RudderLogger.RudderLogLevel.DEBUG
-                            false -> RudderLogger.RudderLogLevel.NONE
-                        }
-                    )
-                    .build()
-            );
-        }
+        val rudderClient = MainApplication.rudderClient
 
         trackBtn.setOnClickListener {
             if (rudderClient == null) return@setOnClickListener
 
-            rudderClient!!.track("some_test_event")
+            rudderClient.track("some_test_event")
         }
 
         screenBtn.setOnClickListener {
             if (rudderClient == null) return@setOnClickListener
 
-            rudderClient!!.screen(this.localClassName)
+            rudderClient.screen(this.localClassName)
         }
 
         identifyBtn.setOnClickListener {
@@ -58,7 +42,7 @@ class MainActivity : AppCompatActivity() {
                 .put("userId", userId.text.toString())
                 .put("some_test_key", "some_test_value")
 
-            rudderClient!!.identify(
+            rudderClient.identify(
                 "some_user_id",
                 traits,
                 null
@@ -68,7 +52,7 @@ class MainActivity : AppCompatActivity() {
         resetBtn.setOnClickListener {
             if (rudderClient == null) return@setOnClickListener
 
-            rudderClient!!.reset()
+            rudderClient.reset()
         }
     }
 

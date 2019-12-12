@@ -25,6 +25,7 @@
                 android:id="@+id/writeKey"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:hint="writeKey"
                 android:text="@string/write_key" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -38,6 +39,7 @@
                 android:id="@+id/endPointUrl"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:hint="endPointUrl"
                 android:text="@string/end_point_url" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -54,13 +56,6 @@
                 android:hint="userId"
                 android:text="some_user_id" />
         </com.google.android.material.textfield.TextInputLayout>
-
-        <Button
-            android:id="@+id/initBtn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:text="initialize" />
 
         <Button
             android:id="@+id/trackBtn"

@@ -70,12 +70,12 @@ class RudderContext {
     void updateTraits(RudderTraits traits) {
         // if traits is null reset the traits to a new one with only anonymousId
         if (traits == null) {
-            this.traits = Utils.convertToMap(new Gson().toJson(new RudderTraits(this.getDeviceId())));
+            traits = new RudderTraits(this.getDeviceId());
         }
 
         // convert the whole traits to map and take care of the extras
         Map<String, Object> traitsMap = Utils.convertToMap(new Gson().toJson(traits));
-        if (traits != null && traits.getExtras() != null) traitsMap.putAll(traits.getExtras());
+        if (traits.getExtras() != null) traitsMap.putAll(traits.getExtras());
 
         // update traits object here
         this.traits = traitsMap;
