@@ -1,10 +1,16 @@
 package com.rudderlabs.android.sdk.core;
 
+import android.app.Activity;
 import android.app.Application;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.rudderlabs.android.sdk.core.util.Utils;
@@ -26,11 +32,12 @@ import java.util.Map;
 /*
  * utility class for event processing
  * */
-class EventRepository {
+class EventRepository implements Application.ActivityLifecycleCallbacks {
     private String authHeaderString;
     private RudderConfig config;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
+    private RudderPreferenceManager preferenceManager;
     private Map<String, RudderIntegration> integrationOperationsMap = new HashMap<>();
     private final ArrayList<RudderMessage> eventReplayMessage = new ArrayList<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
@@ -77,13 +84,57 @@ class EventRepository {
             Thread processorThread = new Thread(getProcessorRunnable());
             processorThread.start();
 
+            this.initiated = true;
+
             // 6. initiate factories
             RudderLogger.logDebug("EventRepository: constructor: Initiating factories");
             this.initiateFactories();
 
-            this.initiated = true;
+            // initiate RudderPreferenceManager and check for lifeCycleEvents
+            preferenceManager = RudderPreferenceManager.getInstance(_application);
+            this.checkApplicationUpdateStatus(_application);
+            if (config.isTrackLifecycleEvents()) {
+                _application.registerActivityLifecycleCallbacks(this);
+            }
+
+
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
+        }
+    }
+
+    private void checkApplicationUpdateStatus(Application application) {
+        try {
+            int previousVersionCode = preferenceManager.getBuildVersionCode();
+            RudderLogger.logDebug("Previous Installed Version: " + previousVersionCode);
+            String packageName = application.getPackageName();
+            PackageManager packageManager = application.getPackageManager();
+            PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
+            int versionCode;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                versionCode = (int) packageInfo.getLongVersionCode();
+            } else {
+                versionCode = packageInfo.versionCode;
+            }
+            RudderLogger.logDebug("Current Installed Version: " + versionCode);
+
+            if (previousVersionCode == -1) {
+                // application was not installed previously, Application Installed events
+                RudderLogger.logDebug("Tracking Application Installed");
+                preferenceManager.saveBuildVersionCode(versionCode);
+                RudderMessage message = new RudderMessageBuilder().setEventName("Application Installed").build();
+                message.setType(MessageType.TRACK);
+                dump(message);
+            } else if (previousVersionCode != versionCode) {
+                // application updated
+                RudderLogger.logDebug("Tracking Application Updated");
+                preferenceManager.saveBuildVersionCode(versionCode);
+                RudderMessage message = new RudderMessageBuilder().setEventName("Application Updated").build();
+                message.setType(MessageType.TRACK);
+                dump(message);
+            }
+        } catch (PackageManager.NameNotFoundException ex) {
+            RudderLogger.logError(ex);
         }
     }
 
@@ -404,5 +455,57 @@ class EventRepository {
 
     void optOut() {
         // TODO:  decide optout functionality and restrictions
+    }
+
+    @Override
+    public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
+
+    }
+
+    @Override
+    public void onActivityStarted(@NonNull Activity activity) {
+
+    }
+
+    private int noOfActivities;
+
+    @Override
+    public void onActivityResumed(@NonNull Activity activity) {
+        if (this.config.isTrackLifecycleEvents()) {
+            noOfActivities += 1;
+            if (noOfActivities == 1) {
+                // no previous activity present. Application Opened
+                RudderMessage message = new RudderMessageBuilder().setEventName("Application Opened").build();
+                message.setType(MessageType.TRACK);
+                this.dump(message);
+            }
+        }
+    }
+
+    @Override
+    public void onActivityPaused(@NonNull Activity activity) {
+
+    }
+
+    @Override
+    public void onActivityStopped(@NonNull Activity activity) {
+        if (this.config.isTrackLifecycleEvents()) {
+            noOfActivities -= 1;
+            if (noOfActivities == 0) {
+                RudderMessage message = new RudderMessageBuilder().setEventName("Application Backgrounded").build();
+                message.setType(MessageType.TRACK);
+                this.dump(message);
+            }
+        }
+    }
+
+    @Override
+    public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle bundle) {
+
+    }
+
+    @Override
+    public void onActivityDestroyed(@NonNull Activity activity) {
+
     }
 }

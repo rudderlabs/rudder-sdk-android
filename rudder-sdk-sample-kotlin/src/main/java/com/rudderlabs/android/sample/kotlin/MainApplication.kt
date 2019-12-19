@@ -11,7 +11,7 @@ import com.rudderlabs.android.sdk.core.RudderMessageBuilder
 class MainApplication : Application() {
     companion object {
         private const val WRITE_KEY = "1TSRSskqa15PG7F89tkwEbl5Td8"
-        private const val END_POINT_URI = "https://664970a4.ngrok.io"
+        private const val END_POINT_URI = "https://365a346b.ngrok.io"
         var rudderClient: RudderClient? = null
     }
 
@@ -32,6 +32,7 @@ class MainApplication : Application() {
                         false -> RudderLogger.RudderLogLevel.NONE
                     }
                 )
+                .withTrackLifecycleEvents(true)
                 .build()
         ); }
 }

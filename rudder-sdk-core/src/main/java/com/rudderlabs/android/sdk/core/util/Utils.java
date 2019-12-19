@@ -27,12 +27,6 @@ public class Utils {
     public static final int MIN_FLUSH_QUEUE_SIZE = 1;
     public static final int MAX_FLUSH_QUEUE_SIZE = 100;
 
-    // keys
-    public static final String RUDDER_PREFS = "rl_prefs";
-    public static final String RUDDER_SERVER_CONFIG_KEY = "rl_server_config";
-    public static final String RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY = "rl_server_last_updated";
-    public static final String RUDDER_TRAITS_KEY = "rl_traits";
-
     public static String getTimeZone() {
         TimeZone timeZone = TimeZone.getDefault();
         return timeZone.getID();

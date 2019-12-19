@@ -31,13 +31,35 @@ public class RudderConfig {
     private int sleepTimeOut;
     private int logLevel;
     private int configRefreshInterval;
+    private boolean trackLifecycleEvents;
+    private boolean recordScreenViews;
     private List<RudderIntegration.Factory> factories;
 
     RudderConfig() {
-        this(Constants.BASE_URL, Constants.FLUSH_QUEUE_SIZE, Constants.DB_COUNT_THRESHOLD, Constants.SLEEP_TIMEOUT, RudderLogger.RudderLogLevel.ERROR, Constants.CONFIG_REFRESH_INTERVAL, null);
+        this(
+                Constants.BASE_URL,
+                Constants.FLUSH_QUEUE_SIZE,
+                Constants.DB_COUNT_THRESHOLD,
+                Constants.SLEEP_TIMEOUT,
+                RudderLogger.RudderLogLevel.ERROR,
+                Constants.CONFIG_REFRESH_INTERVAL,
+                Constants.TRACK_LIFECYCLE_EVENTS,
+                Constants.RECORD_SCREEN_VIEWS,
+                null
+        );
     }
 
-    private RudderConfig(String endPointUri, int flushQueueSize, int dbCountThreshold, int sleepTimeOut, int logLevel, int configRefreshInterval, List<RudderIntegration.Factory> factories) {
+    private RudderConfig(
+            String endPointUri,
+            int flushQueueSize,
+            int dbCountThreshold,
+            int sleepTimeOut,
+            int logLevel,
+            int configRefreshInterval,
+            boolean trackLifecycleEvents,
+            boolean recordScreenViews,
+            List<RudderIntegration.Factory> factories
+    ) {
         RudderLogger.init(logLevel);
 
         if (TextUtils.isEmpty(endPointUri)) {
@@ -81,6 +103,9 @@ public class RudderConfig {
         } else {
             this.sleepTimeOut = sleepTimeOut;
         }
+
+        this.trackLifecycleEvents = trackLifecycleEvents;
+        this.recordScreenViews = recordScreenViews;
 
         if (factories != null && !factories.isEmpty()) {
             this.factories = factories;
@@ -128,6 +153,21 @@ public class RudderConfig {
      */
     public int getConfigRefreshInterval() {
         return configRefreshInterval;
+    }
+
+    /**
+     * @return trackLifecycleEvents (whether we are tracking the Application lifecycle events except
+     * "Application Installed" and "Application Updated"
+     */
+    public boolean isTrackLifecycleEvents() {
+        return trackLifecycleEvents;
+    }
+
+    /**
+     * @return recordScreenViews (whether we are recording the screen views automatically)
+     */
+    public boolean isRecordScreenViews() {
+        return recordScreenViews;
     }
 
     /**
@@ -299,13 +339,45 @@ public class RudderConfig {
             return this;
         }
 
+        private boolean recordScreenViews = Constants.RECORD_SCREEN_VIEWS;
+
+        /**
+         * @param shouldRecordScreenViews Whether we should record screen views automatically
+         * @return RudderConfig.Builder
+         */
+        public Builder withRecordScreenViews(boolean shouldRecordScreenViews) {
+            this.recordScreenViews = shouldRecordScreenViews;
+            return this;
+        }
+
+        private boolean trackLifecycleEvents = Constants.TRACK_LIFECYCLE_EVENTS;
+
+        /**
+         * @param shouldTrackLifecycleEvents Whether we should track Application lifecycle events automatically
+         *                                   "Application Installed" and "Application Updated" will always be tracked
+         * @return RudderConfig.Builder
+         */
+        public Builder withTrackLifecycleEvents(boolean shouldTrackLifecycleEvents) {
+            this.trackLifecycleEvents = shouldTrackLifecycleEvents;
+            return  this;
+        }
+
         /**
          * Finalize your config building
          *
          * @return RudderConfig
          */
         public RudderConfig build() {
-            return new RudderConfig(this.endPointUri, this.flushQueueSize, this.dbThresholdCount, this.sleepTimeout, this.isDebug ? RudderLogger.RudderLogLevel.DEBUG : logLevel, this.configRefreshInterval, this.factories);
+            return new RudderConfig(
+                    this.endPointUri,
+                    this.flushQueueSize,
+                    this.dbThresholdCount,
+                    this.sleepTimeout,
+                    this.isDebug ? RudderLogger.RudderLogLevel.DEBUG : logLevel,
+                    this.configRefreshInterval,
+                    this.trackLifecycleEvents,
+                    this.recordScreenViews,
+                    this.factories);
         }
     }
 }
