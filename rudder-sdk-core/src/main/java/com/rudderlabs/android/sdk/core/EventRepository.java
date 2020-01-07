@@ -127,7 +127,7 @@ class EventRepository {
                                         if (destination != null && destination.isDestinationEnabled) {
                                             Object destinationConfig = destination.destinationConfig;
                                             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: Initiating %s native SDK factory", key));
-                                            RudderIntegration<?> nativeOp = factory.create(destinationConfig, client);
+                                            RudderIntegration<?> nativeOp = factory.create(destinationConfig, client, config);
                                             RudderLogger.logInfo(String.format(Locale.US, "EventRepository: initiateFactories: Initiated %s native SDK factory", key));
                                             integrationOperationsMap.put(key, nativeOp);
                                             if (integrationCallbacks.containsKey(key)) {

@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class DummyGAIntegrationImpl extends RudderIntegration<DummyGAIntegration> {
     private DummyGAIntegration integration;
-    static final String DUMMY_KEY = "AM";
+    static final String DUMMY_KEY = "Adjust";
     static final String DUMMY_DISPLAY_NAME = "Dummy AM Integration";
     private static final String DUMMY_TYPE = "type";
 
