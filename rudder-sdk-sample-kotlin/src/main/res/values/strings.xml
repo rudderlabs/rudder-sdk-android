@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">RudderAndroidClient</string>
-    <string name="end_point_url">https://f063e183.ngrok.io</string>
+    <string name="end_point_url">https://c94d7782.ngrok.io</string>
     <string name="write_key">1TSRSskqa15PG7F89tkwEbl5Td8</string>
 </resources>
