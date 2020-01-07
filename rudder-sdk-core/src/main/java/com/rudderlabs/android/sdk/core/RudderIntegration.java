@@ -2,35 +2,14 @@ package com.rudderlabs.android.sdk.core;
 
 public abstract class RudderIntegration<T> {
     public interface Factory {
-        RudderIntegration<?> create(Object settings, RudderClient client);
+        RudderIntegration<?> create(Object settings, RudderClient client, RudderConfig config);
 
         String key();
     }
 
-    public void identify(RudderMessage identify) {
-    }
+    public abstract void reset();
 
-    public void group(RudderMessage group) {
-    }
-
-    public void track(RudderMessage track) {
-    }
-
-    public void alias(RudderMessage alias) {
-    }
-
-    public void screen(RudderMessage screen) {
-    }
-
-    public void flush() {
-    }
-
-    public void reset() {
-    }
-
-    public void dump(RudderMessage element) {
-
-    }
+    public abstract void dump(RudderMessage element);
 
     /**
      * @return Instance of the initiated SDK
