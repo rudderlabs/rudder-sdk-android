@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.lang.ref.SoftReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import java.util.Map;
  * */
 class EventRepository {
     private String authHeaderString;
+    private String anonymousIdHeaderString;
     private RudderConfig config;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
@@ -50,9 +52,9 @@ class EventRepository {
     EventRepository(Application _application, String _writeKey, RudderConfig _config) {
         // 1. set the values of writeKey, config
         try {
-            RudderLogger.logDebug(String.format("EventRepository: constructor: writeKey: %s", _writeKey));
+            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: writeKey: %s", _writeKey));
             this.authHeaderString = Base64.encodeToString((String.format(Locale.US, "%s:", _writeKey)).getBytes("UTF-8"), Base64.DEFAULT);
-            RudderLogger.logDebug(String.format("EventRepository: constructor: authHeaderString: %s", this.authHeaderString));
+            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: authHeaderString: %s", this.authHeaderString));
         } catch (UnsupportedEncodingException ex) {
             RudderLogger.logError(ex);
         }
@@ -63,6 +65,11 @@ class EventRepository {
             // 2. initiate RudderElementCache
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
             RudderElementCache.initiate(_application);
+
+            String anonymousId = RudderElementCache.getCachedContext().getDeviceId();
+            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousId: %s", anonymousId));
+            this.anonymousIdHeaderString = Base64.encodeToString(anonymousId.getBytes("UTF-8"), Base64.DEFAULT);
+            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousIdHeaderString: %s", this.anonymousIdHeaderString));
 
             // 3. initiate DBPersistentManager for SQLite operations
             RudderLogger.logDebug("EventRepository: constructor: Initiating DBPersistentManager");
@@ -309,7 +316,10 @@ class EventRepository {
         httpConnection.setDoOutput(true);
         //  set content type for network request
         httpConnection.setRequestProperty("Content-Type", "application/json");
-        httpConnection.setRequestProperty("Authorization", "Basic " + this.authHeaderString);
+        // set authorization header
+        httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", this.authHeaderString));
+        // set anonymousId header for definitive routing
+        httpConnection.setRequestProperty("AnonymousId", this.anonymousIdHeaderString);
         // set request method
         httpConnection.setRequestMethod("POST");
         // get output stream and write payload content
@@ -344,7 +354,7 @@ class EventRepository {
             }
             // finally return response when reading from server is completed
             RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + baos.toString());
-
+            // return null as request made is not successful
             return null;
         }
     }

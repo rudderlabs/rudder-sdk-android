@@ -14,22 +14,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val rudderClient = MainApplication.rudderClient
-
-        trackBtn.setOnClickListener {
-            if (rudderClient == null) return@setOnClickListener
-
-            rudderClient.track("some_test_event")
-        }
-
-        screenBtn.setOnClickListener {
-            if (rudderClient == null) return@setOnClickListener
-
-            rudderClient.screen(this.localClassName)
-        }
-
-        identifyBtn.setOnClickListener {
-            if (rudderClient == null) return@setOnClickListener
-
+        rudderClient?.let {
+            // track call without traits
+            it.track("some_test_event")
+            // screen call without traits
+            it.screen(this.localClassName)
             val traits: RudderTraits = RudderTraits()
                 .putAddress(
                     RudderTraits.Address()
@@ -41,55 +30,27 @@ class MainActivity : AppCompatActivity() {
                 )
                 .put("userId", userId.text.toString())
                 .put("some_test_key", "some_test_value")
+            // identify call
+            it.identify("some_user_id", traits, null)
+            // track call with traits
+            it.track("some_test_event_identified")
+        }
 
-            rudderClient.identify(
-                "some_user_id",
-                traits,
-                null
-            )
+        trackBtn.setOnClickListener {
+            if (rudderClient == null) return@setOnClickListener
+        }
+
+        screenBtn.setOnClickListener {
+            if (rudderClient == null) return@setOnClickListener
+        }
+
+        identifyBtn.setOnClickListener {
+            if (rudderClient == null) return@setOnClickListener
         }
 
         resetBtn.setOnClickListener {
             if (rudderClient == null) return@setOnClickListener
-
             rudderClient.reset()
         }
     }
-
-//    private fun sendEvents() {
-//        MainApplication.rudderClient.track(
-//            RudderMessageBuilder()
-//                .setEventName("level_up")
-//                .setProperty(
-//                    TrackPropertyBuilder()
-//                        .setCategory("test_category")
-//                        .build()
-//                )
-//                .setUserId("test_user_id")
-//        )
-//
-//        MainApplication.rudderClient.track(
-//            RudderMessageBuilder()
-//                .setEventName("daily_rewards_claim")
-//                .setProperty(
-//                    TrackPropertyBuilder()
-//                        .setCategory("test_category")
-//                        .build()
-//                )
-//                .setUserId("test_user_id")
-//        )
-//
-//        MainApplication.rudderClient.track(
-//            RudderMessageBuilder()
-//                .setEventName("revenue")
-//                .setProperty(
-//                    TrackPropertyBuilder()
-//                        .setCategory("test_category")
-//                        .build()
-//                )
-//                .setUserId("test_user_id")
-//        )
-//
-//
-//    }
 }
