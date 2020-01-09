@@ -13,21 +13,19 @@ import java.util.Map;
 public class MainApplication extends Application {
     private static MainApplication instance;
     private static RudderClient rudderClient;
-    private static final String writeKey = "1TSRSskqa15PG7F89tkwEbl5Td8";
-    private static final String endPointUrl = "https://938d3ad5.ngrok.io";
 
     @Override
     public void onCreate() {
         super.onCreate();
 
         RudderConfig config = new RudderConfig.Builder()
-                .withEndPointUri(endPointUrl)
+                .withEndPointUri(BuildConfig.END_POINT_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .build();
 
         instance = this;
 
-        rudderClient = new RudderClient.Builder(this, writeKey)
+        rudderClient = new RudderClient.Builder(this, BuildConfig.WRITE_KEY)
                 .withRudderConfig(config)
                 .build();
 
@@ -42,13 +40,13 @@ public class MainApplication extends Application {
 
         RudderClient client = RudderClient.getInstance(
                 this,
-                writeKey,
+                BuildConfig.WRITE_KEY,
                 new RudderConfig.Builder()
-                        .withEndPointUri(endPointUrl)
+                        .withEndPointUri(BuildConfig.END_POINT_URL)
                         .build()
         );
 
-        Map<String,Object> properties = new HashMap<>();
+        Map<String, Object> properties = new HashMap<>();
         properties.put("test_key_1", "test_value_1");
         Map<String, String> childProperties = new HashMap<>();
         childProperties.put("test_child_key_1", "test_child_value_1");
