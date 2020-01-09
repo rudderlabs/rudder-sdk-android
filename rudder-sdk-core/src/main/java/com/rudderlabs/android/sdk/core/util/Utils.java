@@ -9,7 +9,9 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
@@ -67,6 +69,11 @@ public class Utils {
 
     public static Map<String, Object> convertToMap(String json) {
         return new Gson().fromJson(json, new TypeToken<Map<String, Object>>() {
+        }.getType());
+    }
+
+    public static List<Map<String, Object>> convertToList(String json) {
+        return new Gson().fromJson(json, new TypeToken<List<Map<String, Object>>>() {
         }.getType());
     }
 
