@@ -29,7 +29,7 @@ public class RudderTraits {
     private String firstName;
     @SerializedName("gender")
     private String gender;
-    @SerializedName("id")
+    @SerializedName("userId")
     private String id;
     @SerializedName("lastname")
     private String lastName;

@@ -4,3 +4,6 @@
 .gradle/
 .idea/
 local.properties
+**/.project
+**/.settings
+**/.classpath

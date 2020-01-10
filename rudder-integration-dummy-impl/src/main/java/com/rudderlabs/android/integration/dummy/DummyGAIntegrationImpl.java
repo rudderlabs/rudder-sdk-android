@@ -2,6 +2,7 @@ package com.rudderlabs.android.integration.dummy;
 
 import com.google.gson.Gson;
 import com.rudderlabs.android.sdk.core.RudderClient;
+import com.rudderlabs.android.sdk.core.RudderConfig;
 import com.rudderlabs.android.sdk.core.RudderIntegration;
 import com.rudderlabs.android.sdk.core.RudderMessage;
 
@@ -12,13 +13,13 @@ import java.util.Map;
 
 public class DummyGAIntegrationImpl extends RudderIntegration<DummyGAIntegration> {
     private DummyGAIntegration integration;
-    static final String DUMMY_KEY = "AM";
+    static final String DUMMY_KEY = "Adjust";
     static final String DUMMY_DISPLAY_NAME = "Dummy AM Integration";
     private static final String DUMMY_TYPE = "type";
 
     public static Factory FACTORY = new Factory() {
         @Override
-        public RudderIntegration<?> create(Object settings, RudderClient client) {
+        public RudderIntegration<?> create(Object settings, RudderClient client, RudderConfig config) {
             return new DummyGAIntegrationImpl(settings, client);
         }
 
@@ -35,38 +36,8 @@ public class DummyGAIntegrationImpl extends RudderIntegration<DummyGAIntegration
     }
 
     @Override
-    public void identify(RudderMessage identify) {
-        dump(identify);
-    }
-
-    @Override
-    public void group(RudderMessage group) {
-        dump(group);
-    }
-
-    @Override
-    public void track(RudderMessage track) {
-        dump(track);
-    }
-
-    @Override
-    public void alias(RudderMessage alias) {
-        dump(alias);
-    }
-
-    @Override
-    public void screen(RudderMessage screen) {
-        dump(screen);
-    }
-
-    @Override
-    public void flush() {
-        super.flush();
-    }
-
-    @Override
     public void reset() {
-        super.reset();
+        // nothing to do
     }
 
     @Override
