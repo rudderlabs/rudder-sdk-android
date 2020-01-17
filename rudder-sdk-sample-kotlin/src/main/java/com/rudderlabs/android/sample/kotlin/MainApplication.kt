@@ -27,6 +27,7 @@ class MainApplication : Application() {
                         false -> RudderLogger.RudderLogLevel.NONE
                     }
                 )
+                .withTrackLifecycleEvents(true)
                 .build()
         ); }
 }

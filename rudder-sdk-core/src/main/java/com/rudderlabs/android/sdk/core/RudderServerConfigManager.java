@@ -1,36 +1,22 @@
 package com.rudderlabs.android.sdk.core;
 
 import android.app.Application;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.nfc.Tag;
-import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Log;
 
 import com.google.gson.Gson;
-import com.rudderlabs.android.sdk.core.util.Utils;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.ProtocolException;
 import java.net.URL;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TimeZone;
 
 class RudderServerConfigManager {
+    private static RudderPreferenceManager preferenceManger;
     private static RudderServerConfigManager instance;
-    private static SharedPreferences preferences;
     private static RudderServerConfig serverConfig;
     private static RudderConfig rudderConfig;
     private Map<String, Object> integrationsMap = null;
@@ -44,7 +30,7 @@ class RudderServerConfigManager {
     }
 
     private RudderServerConfigManager(Application _application, String _writeKey, RudderConfig _config) {
-        preferences = _application.getSharedPreferences(Utils.RUDDER_PREFS, Context.MODE_PRIVATE);
+        preferenceManger = RudderPreferenceManager.getInstance(_application);
         serverConfig = retrieveConfig();
         rudderConfig = _config;
         boolean isConfigOutdated = isServerConfigOutDated();
@@ -63,7 +49,7 @@ class RudderServerConfigManager {
 
     // update config if it is older than an day
     private boolean isServerConfigOutDated() {
-        long lastUpdatedTime = preferences.getLong(Utils.RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY, -1);
+        long lastUpdatedTime = preferenceManger.getLastUpdatedTime();
         RudderLogger.logDebug(String.format(Locale.US, "Last updated config time: %d", lastUpdatedTime));
         RudderLogger.logDebug(String.format(Locale.US, "ServerConfigInterval: %d", rudderConfig.getConfigRefreshInterval()));
         if (lastUpdatedTime == -1) return true;
@@ -73,7 +59,7 @@ class RudderServerConfigManager {
     }
 
     private RudderServerConfig retrieveConfig() {
-        String configJson = preferences.getString(Utils.RUDDER_SERVER_CONFIG_KEY, null);
+        String configJson = preferenceManger.getConfigJson();
         RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: retrieveConfig: configJson: %s", configJson));
         if (configJson == null) return null;
         return new Gson().fromJson(configJson, RudderServerConfig.class);
@@ -117,10 +103,8 @@ class RudderServerConfigManager {
                             String configJson = baos.toString();
                             RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configJson: %s", configJson));
                             // save config for future use
-                            preferences.edit()
-                                    .putLong(Utils.RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY, System.currentTimeMillis())
-                                    .putString(Utils.RUDDER_SERVER_CONFIG_KEY, configJson)
-                                    .apply();
+                            preferenceManger.updateLastUpdatedTime();
+                            preferenceManger.saveConfigJson(configJson);
 
                             // update server config as well
                             serverConfig = new Gson().fromJson(configJson, RudderServerConfig.class);
