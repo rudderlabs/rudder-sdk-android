@@ -43,8 +43,9 @@ public class RudderMessage {
         this.anonymousId = context.getDeviceId();
 
         Map<String, Object> traits = context.getTraits();
-        if (traits != null && traits.containsKey("id"))
+        if (traits != null && traits.containsKey("id")) {
             this.userId = String.valueOf(traits.get("id"));
+        }
     }
 
     void setProperty(RudderProperty property) {
