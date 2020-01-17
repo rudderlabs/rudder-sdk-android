@@ -474,13 +474,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
-
-    }
-
-    private int noOfActivities;
-
-    @Override
-    public void onActivityResumed(@NonNull Activity activity) {
         if (this.config.isTrackLifecycleEvents()) {
             noOfActivities += 1;
             if (noOfActivities == 1) {
@@ -490,6 +483,13 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 this.dump(message);
             }
         }
+    }
+
+    private int noOfActivities;
+
+    @Override
+    public void onActivityResumed(@NonNull Activity activity) {
+
     }
 
     @Override
