@@ -22,9 +22,7 @@ public class RudderLogger {
     }
 
     static void logError(Exception ex) {
-        if (logLevel >= RudderLogLevel.ERROR) {
-            Log.e(TAG, "Error: ", ex.getCause());
-        }
+        logError(ex.getMessage());
     }
 
     static void logError(String message) {

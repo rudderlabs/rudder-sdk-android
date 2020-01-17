@@ -349,65 +349,70 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     /*
      * flush events payload to server and return response as String
      * */
-    private String flushEventsToServer(String payload) throws IOException {
-        if (TextUtils.isEmpty(this.authHeaderString)) {
-            RudderLogger.logError("EventRepository: flushEventsToServer: WriteKey was not correct. Aborting flush to server");
-            return null;
-        }
-
-        // get endPointUrl form config object
-        String endPointUri = config.getEndPointUri() + "v1/batch";
-        RudderLogger.logDebug("EventRepository: flushEventsToServer: endPointRepository: " + endPointUri);
-
-        // create url object
-        URL url = new URL(endPointUri);
-        // get connection object
-        HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
-        // set connection object to return output
-        httpConnection.setDoOutput(true);
-        //  set content type for network request
-        httpConnection.setRequestProperty("Content-Type", "application/json");
-        // set authorization header
-        httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", this.authHeaderString));
-        // set anonymousId header for definitive routing
-        httpConnection.setRequestProperty("AnonymousId", this.anonymousIdHeaderString);
-        // set request method
-        httpConnection.setRequestMethod("POST");
-        // get output stream and write payload content
-        OutputStream os = httpConnection.getOutputStream();
-        OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
-        osw.write(payload);
-        osw.flush();
-        osw.close();
-        os.close();
-        // create connection
-        httpConnection.connect();
-        // get input stream from connection to get output from the server
-        if (httpConnection.getResponseCode() == 200) {
-            BufferedInputStream bis = new BufferedInputStream(httpConnection.getInputStream());
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            int res = bis.read();
-            // read response from the server
-            while (res != -1) {
-                baos.write((byte) res);
-                res = bis.read();
+    private String flushEventsToServer(String payload) {
+        try {
+            if (TextUtils.isEmpty(this.authHeaderString)) {
+                RudderLogger.logError("EventRepository: flushEventsToServer: WriteKey was not correct. Aborting flush to server");
+                return null;
             }
-            // finally return response when reading from server is completed
-            return baos.toString();
-        } else {
-            BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            int res = bis.read();
-            // read response from the server
-            while (res != -1) {
-                baos.write((byte) res);
-                res = bis.read();
+
+            // get endPointUrl form config object
+            String endPointUri = config.getEndPointUri() + "v1/batch";
+            RudderLogger.logDebug("EventRepository: flushEventsToServer: endPointRepository: " + endPointUri);
+
+            // create url object
+            URL url = new URL(endPointUri);
+            // get connection object
+            HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+            // set connection object to return output
+            httpConnection.setDoOutput(true);
+            //  set content type for network request
+            httpConnection.setRequestProperty("Content-Type", "application/json");
+            // set authorization header
+            httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", this.authHeaderString));
+            // set anonymousId header for definitive routing
+            httpConnection.setRequestProperty("AnonymousId", this.anonymousIdHeaderString);
+            // set request method
+            httpConnection.setRequestMethod("POST");
+            // get output stream and write payload content
+            OutputStream os = httpConnection.getOutputStream();
+            OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
+            osw.write(payload);
+            osw.flush();
+            osw.close();
+            os.close();
+            // create connection
+            httpConnection.connect();
+            // get input stream from connection to get output from the server
+            if (httpConnection.getResponseCode() == 200) {
+                BufferedInputStream bis = new BufferedInputStream(httpConnection.getInputStream());
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                int res = bis.read();
+                // read response from the server
+                while (res != -1) {
+                    baos.write((byte) res);
+                    res = bis.read();
+                }
+                // finally return response when reading from server is completed
+                return baos.toString();
+            } else {
+                BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                int res = bis.read();
+                // read response from the server
+                while (res != -1) {
+                    baos.write((byte) res);
+                    res = bis.read();
+                }
+                // finally return response when reading from server is completed
+                RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + baos.toString());
+                // return null as request made is not successful
+                return null;
             }
-            // finally return response when reading from server is completed
-            RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + baos.toString());
-            // return null as request made is not successful
-            return null;
+        } catch (Exception ex) {
+            RudderLogger.logError(ex);
         }
+        return null;
     }
 
     /*
