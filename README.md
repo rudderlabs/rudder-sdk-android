@@ -1,4 +1,4 @@
-[ ![Download](https://api.bintray.com/packages/rudderlabs-bintray/rudder-sdk-android-core/rudder-sdk-android-core/images/download.svg?version=0.1.4) ](https://bintray.com/rudderlabs-bintray/rudder-sdk-android-core/rudder-sdk-android-core/0.1.4/link)
+[ ![Download](https://api.bintray.com/packages/rudderstack/rudderstack/rudder-sdk-android-core/images/download.svg?version=0.1.4) ](https://bintray.com/rudderstack/rudderstack/rudder-sdk-android-core/0.1.4/link)
 
 # What is Rudder?
 
@@ -22,7 +22,7 @@ repositories {
 ```
 2. Add the dependency under ```dependencies```
 ```
-implementation 'com.rudderlabs.android.sdk:rudder-sdk-core:0.1.4'
+implementation 'com.rudderstack.android.sdk:core:+'
 ```
 
 ## Initialize ```RudderClient```
@@ -67,10 +67,8 @@ RudderClient.with(this).track(
 );
 ```
 
-For more detailed documentation check [here](https://docs.rudderlabs.com/sdk-integration-guide/getting-started-with-android-sdk)
+For more detailed documentation check [here](https://docs.rudderstack.com/sdk-integration-guide/getting-started-with-android-sdk)
 
 # Coming Soon
 
-1. Native platform SDK integration support
-2. More documentation
-3. More destination support
+1. More destination support

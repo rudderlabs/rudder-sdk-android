@@ -1,12 +1,12 @@
 ext {
     bintrayRepo = 'rudderstack'
-    bintrayName = 'rudder-sdk-android-core'
+    bintrayName = 'core'
 
-    publishedGroupId = 'com.rudderlabs.android.sdk'
+    publishedGroupId = 'com.rudderstack.android.sdk'
     libraryName = 'RudderAndroidSdkCore'
     artifact = 'rudder-sdk-core'
 
-    libraryDescription = 'Android SDK for Rudderstack. Steer your customer data'
+    libraryDescription = 'Android SDK for RudderStack. Steer your customer data.'
 
     siteUrl = 'https://github.com/rudderlabs/rudder-sdk-android'
     gitUrl = 'https://github.com/rudderlabs/rudder-sdk-android.git'
