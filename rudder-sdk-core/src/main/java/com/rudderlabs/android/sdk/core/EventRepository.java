@@ -17,11 +17,9 @@ import com.rudderlabs.android.sdk.core.util.Utils;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.lang.ref.SoftReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -445,18 +443,25 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     }
 
     private Map<String, Object> prepareIntegrations() {
-//        if (this.configManager.getConfig() == null) {
         Map<String, Object> integrationPlaceholder = new HashMap<>();
         integrationPlaceholder.put("All", true);
         return integrationPlaceholder;
-//        } else {
-//            return this.configManager.getIntegrations();
-//        }
     }
 
     void reset() {
         RudderLogger.logDebug("EventRepository: reset: resetting the SDK");
-        dbManager.deleteAllEvents();
+        if (isFactoryInitialized) {
+            RudderLogger.logDebug("EventRepository: resetting native SDKs");
+            for (String key : integrationOperationsMap.keySet()) {
+                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: reset for %s", key));
+                RudderIntegration integration = integrationOperationsMap.get(key);
+                if (integration != null) {
+                    integration.reset();
+                }
+            }
+        } else {
+            RudderLogger.logDebug("EventRepository: reset: factories are not initialized. ignored");
+        }
     }
 
     void onIntegrationReady(String key, RudderClient.Callback callback) {

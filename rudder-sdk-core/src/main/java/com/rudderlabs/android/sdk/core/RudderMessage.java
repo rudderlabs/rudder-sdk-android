@@ -139,4 +139,11 @@ public class RudderMessage {
     Map<String, Object> getTraits() {
         return this.context.getTraits();
     }
+
+    /**
+     * @return Anonymous ID of the user
+     */
+    public String getAnonymousId() {
+        return anonymousId;
+    }
 }
