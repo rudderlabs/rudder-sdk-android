@@ -1,9 +1,6 @@
 package com.rudderstack.android.sdk.core.ecomm;
 
-import android.os.Build;
-
 import com.google.gson.annotations.SerializedName;
-import com.rudderstack.android.sdk.core.BuildConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -4,8 +4,8 @@ import android.app.Application;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
+
 import com.google.gson.annotations.SerializedName;
-import com.rudderstack.android.sdk.core.RudderLogger;
 
 class RudderApp {
     @SerializedName("build")

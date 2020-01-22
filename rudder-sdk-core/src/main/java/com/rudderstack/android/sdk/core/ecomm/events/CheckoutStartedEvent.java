@@ -2,7 +2,6 @@ package com.rudderstack.android.sdk.core.ecomm.events;
 
 import com.google.gson.Gson;
 import com.rudderstack.android.sdk.core.RudderProperty;
-import com.rudderstack.android.sdk.core.ecomm.ECommerceCheckout;
 import com.rudderstack.android.sdk.core.ecomm.ECommerceEvents;
 import com.rudderstack.android.sdk.core.ecomm.ECommerceOrder;
 import com.rudderstack.android.sdk.core.ecomm.ECommercePropertyBuilder;

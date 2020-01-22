@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.rudderstack.android.sdk.core.RudderClient;
 import com.rudderstack.android.sdk.core.RudderProperty;
 import com.rudderstack.android.sdk.core.RudderTraits;
+import com.rudderstack.android.sdk.core.ecomm.events.ProductAddedToCartEvent;
 
 import java.util.Date;
 
@@ -55,5 +56,7 @@ public class MainActivity extends AppCompatActivity {
                         .putValue("content", "Organic Content Title")
                         .putValue("ad_creative", "Red Hello World Ad")
                         .putValue("ad_group", "Red Ones")));
+
+
     }
 }

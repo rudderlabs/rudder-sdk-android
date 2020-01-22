@@ -20,6 +20,9 @@ import java.util.Locale;
  * - dbCountThreshold -> maximum number of events to be persisted in local DB
  * - sleepTimeOut -> timeout for automatic flushing since last successful flush
  * - logLevel -> level of logging for debugging
+ * - configRefreshInterval -> time in hours as interval of downloading config from config server
+ * - trackLifecycleEvents -> whether track lifecycle events automatically
+ * - recordScreenViews -> whether we should record screen views automatically
  *
  * default values are set at Constants file
  *

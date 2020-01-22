@@ -8,8 +8,6 @@ import com.rudderstack.android.sdk.core.ecomm.ECommerceParamNames;
 import com.rudderstack.android.sdk.core.ecomm.ECommerceProduct;
 import com.rudderstack.android.sdk.core.ecomm.ECommercePropertyBuilder;
 
-import org.w3c.dom.Text;
-
 public class ProductReviewedEvent extends ECommercePropertyBuilder {
     private ECommerceProduct product;
 
