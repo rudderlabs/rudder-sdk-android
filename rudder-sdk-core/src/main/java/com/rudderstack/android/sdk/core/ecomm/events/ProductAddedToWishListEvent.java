@@ -35,7 +35,7 @@ public class ProductAddedToWishListEvent extends ECommercePropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() {
+    public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.wishList != null) {
             property.put(ECommerceParamNames.WISHLIST_ID, this.wishList.getWishListId());

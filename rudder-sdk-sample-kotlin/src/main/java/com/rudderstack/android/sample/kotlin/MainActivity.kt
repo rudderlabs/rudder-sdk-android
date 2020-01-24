@@ -1,9 +1,9 @@
 package com.rudderstack.android.sample.kotlin
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_main.*
+import com.rudderstack.android.sdk.core.ecomm.*
+import com.rudderstack.android.sdk.core.ecomm.events.ProductSearchedEvent
 
 class MainActivity : AppCompatActivity() {
     private var count = 0
@@ -13,47 +13,114 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val rudderClient = MainApplication.rudderClient
-//        rudderClient?.let {
-//            // track call without traits
-//            it.track("some_test_event")
-//            // screen call without traits
-//            it.screen(this.localClassName)
-//            val traits: RudderTraits = RudderTraits()
-//                .putAddress(
-//                    RudderTraits.Address()
-//                        .putCity("some_city")
-//                        .putCountry("some_country")
-//                        .putPostalCode("123456")
-//                        .putState("some_state")
-//                        .putStreet("some_street")
-//                )
-//                .put("userId", userId.text.toString())
-//                .put("some_test_key", "some_test_value")
-//            // identify call
-//            it.identify("some_user_id", traits, null)
-//            // track call with traits
-//            it.track("some_test_event_identified")
+
+        // ECommerce Product
+        val productA = ECommerceProduct.Builder()
+            .withProductId("some_product_id_a")
+            .withSku("some_product_sku_a")
+            .withCategory("some_category")
+            .withName("Product Name A")
+            .withBrand("Product Brand A")
+            .withVariant("Product Variant A")
+            .withPrice(2.99f)
+            .withCurrency("USD")
+            .withQuantity(1f)
+            .withCoupon("some_coupon")
+            .withPosition(1)
+            .withUrl("https://product.com/productA")
+            .withImageUrl("https://product.com/productA.jpg")
+            .build()
+
+        val productB = ECommerceProduct.Builder()
+            .withProductId("some_product_id_b")
+            .withSku("some_product_sku_b")
+            .withCurrency("USD")
+            .withPrice(3.99f)
+            .withName("Some Product Name B")
+            .withQuantity(1f)
+            .build()
+
+        val productC = ECommerceProduct.Builder()
+            .withProductId("some_product_id_c")
+            .withSku("some_product_sku_c")
+            .withCurrency("USD")
+            .withPrice(4.99f)
+            .withName("Some Product Name C")
+            .withQuantity(1f)
+            .build()
+
+        // ECommerce WishList
+        val wishList = ECommerceWishList.Builder()
+            .withWishListId("some_wish_list_id")
+            .withWishListName("Some Wish List Name")
+            .build()
+
+        // ECommerce Cart
+        val cart = ECommerceCart.Builder()
+            .withCartId("some_cart_id")
+            .withProduct(productA)
+            .withProduct(productB)
+            .withProduct(productC)
+            .build()
+
+        // ECommerce Order
+        val order = ECommerceOrder.Builder()
+            .withOrderId("some_order_id")
+            .withAffiliation("some_order_affiliation")
+            .withCoupon("some_coupon")
+            .withCurrency("USD")
+            .withDiscount(1.49f)
+            .withProducts(productA, productB, productC)
+            .withRevenue(10.99f)
+            .withShippingCost(2.49f)
+            .withTax(1.49f)
+            .withTotal(12.99f)
+            .withValue(10.49f)
+            .build()
+
+        // ECommerce Checkout event
+        val checkout = ECommerceCheckout.Builder()
+            .withCheckoutId("some_checkout_id")
+            .withOrderId("some_order_id")
+            .withPaymentMethod("Visa")
+            .withShippingMethod("FedEx")
+            .withStep(1)
+            .build()
+
+val productSearchedEvent = ProductSearchedEvent()
+    .withQuery("blue hotpants")
+rudderClient?.track(
+    productSearchedEvent.event(),
+    productSearchedEvent.properties()
+)
+
+
+//        val cartSharedEvent = CartSharedEvent()
+//            .withCart(cart)
+//            .withSocialChannel("facebook")
+//            .withShareMessage("some share message")
+//            .withRecipient("friend@rudderstack.com")
+//        rudderClient?.track(cartSharedEvent.event(), cartSharedEvent.properties())
+//
+//        navigate_to_first.setOnClickListener {
+//            startActivity(Intent(this, FirstActivity::class.java))
 //        }
-
-        navigate_to_first.setOnClickListener {
-            startActivity(Intent(this, FirstActivity::class.java))
-        }
-
-        trackBtn.setOnClickListener {
-            if (rudderClient == null) return@setOnClickListener
-        }
-
-        screenBtn.setOnClickListener {
-            if (rudderClient == null) return@setOnClickListener
-        }
-
-        identifyBtn.setOnClickListener {
-            if (rudderClient == null) return@setOnClickListener
-        }
-
-        resetBtn.setOnClickListener {
-            if (rudderClient == null) return@setOnClickListener
-            rudderClient.reset()
-        }
+//
+//        trackBtn.setOnClickListener {
+//            if (rudderClient == null) return@setOnClickListener
+//        }
+//
+//        screenBtn.setOnClickListener {
+//            if (rudderClient == null) return@setOnClickListener
+//        }
+//
+//        identifyBtn.setOnClickListener {
+//            if (rudderClient == null) return@setOnClickListener
+//        }
+//
+//        resetBtn.setOnClickListener {
+//            if (rudderClient == null) return@setOnClickListener
+//            rudderClient.reset()
+//        }
     }
 }

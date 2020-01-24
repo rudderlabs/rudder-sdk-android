@@ -26,7 +26,7 @@ public class OrderCompletedEvent extends ECommercePropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() {
+    public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.order != null)
             property.putValue(Utils.convertToMap(new Gson().toJson(this.order)));

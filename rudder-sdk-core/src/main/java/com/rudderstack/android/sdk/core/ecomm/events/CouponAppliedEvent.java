@@ -25,7 +25,7 @@ public class CouponAppliedEvent extends ECommercePropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() {
+    public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.coupon != null) {
             property.put(ECommerceParamNames.COUPON_ID, this.coupon.getCouponId());

@@ -48,7 +48,7 @@ public class ProductReviewedEvent extends ECommercePropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() {
+    public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.product != null) {
             property.put(ECommerceParamNames.PRODUCT_ID, this.product.getProductId());
@@ -56,7 +56,7 @@ public class ProductReviewedEvent extends ECommercePropertyBuilder {
         if (!TextUtils.isEmpty(this.reviewId)) {
             property.put(ECommerceParamNames.REVIEW_ID, this.reviewId);
         }
-        if (!TextUtils.isEmpty(reviewBody)) {
+        if (!TextUtils.isEmpty(this.reviewBody)) {
             property.put(ECommerceParamNames.REVIEW_BODY, this.reviewBody);
         }
         property.put(ECommerceParamNames.RATING, this.rating);

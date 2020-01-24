@@ -26,7 +26,7 @@ public class CartViewedEvent extends ECommercePropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() {
+    public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         property.putValue(Utils.convertToMap(new Gson().toJson(this.cart)));
         return property;

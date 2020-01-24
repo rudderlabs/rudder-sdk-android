@@ -59,7 +59,7 @@ public class OrderRefundedEvent extends ECommercePropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() {
+    public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.order != null) {
             property.put(ECommerceParamNames.ORDER_ID, this.order.getOrderId());

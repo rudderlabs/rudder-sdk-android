@@ -51,7 +51,7 @@ public class CartSharedEvent extends ECommercePropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() {
+    public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
 
         property.put(ECommerceParamNames.CART_ID, this.cart.getCartId());

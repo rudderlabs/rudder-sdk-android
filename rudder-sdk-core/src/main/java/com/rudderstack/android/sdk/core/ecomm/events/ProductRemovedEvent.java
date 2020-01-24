@@ -26,7 +26,7 @@ public class ProductRemovedEvent extends ECommercePropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() {
+    public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.product != null) {
             property.putValue(Utils.convertToMap(new Gson().toJson(this.product)));

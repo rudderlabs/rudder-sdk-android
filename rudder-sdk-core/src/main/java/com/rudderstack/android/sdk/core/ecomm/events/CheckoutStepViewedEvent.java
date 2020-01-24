@@ -26,7 +26,7 @@ public class CheckoutStepViewedEvent extends ECommercePropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() {
+    public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.checkout != null) {
             property.putValue(Utils.convertToMap(new Gson().toJson(this.checkout)));

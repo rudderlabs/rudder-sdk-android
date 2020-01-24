@@ -61,7 +61,7 @@ public class ProductListViewedEvent extends ECommercePropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() {
+    public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (!TextUtils.isEmpty(listId)) {
             property.put(ECommerceParamNames.LIST_ID, this.listId);

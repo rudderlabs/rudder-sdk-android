@@ -162,7 +162,7 @@ public class ProductListFilteredEvent extends ECommercePropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() {
+    public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
 
         if (!TextUtils.isEmpty(this.listId)) {

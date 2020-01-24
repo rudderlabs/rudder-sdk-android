@@ -14,7 +14,7 @@ public class ProductSearchedEvent extends ECommercePropertyBuilder {
     }
 
     @Override
-    public RudderProperty build() {
+    public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.query != null && !this.query.isEmpty())
             property.put(ECommerceParamNames.QUERY, query);
