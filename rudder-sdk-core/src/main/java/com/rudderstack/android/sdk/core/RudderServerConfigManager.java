@@ -69,7 +69,7 @@ class RudderServerConfigManager {
         // don't try to download anything if writeKey is not valid
         if (TextUtils.isEmpty(_writeKey)) return;
 
-        new Thread(new Runnable() {
+        Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 boolean isDone = false;
@@ -139,9 +139,10 @@ class RudderServerConfigManager {
                         }
                     }
                 }
-
             }
-        }).start();
+        });
+        RudderLogger.logVerbose("Download Thread Id:" + thread.getId());
+        thread.start();
     }
 
     RudderServerConfig getConfig() {

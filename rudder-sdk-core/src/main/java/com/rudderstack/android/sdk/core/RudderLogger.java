@@ -49,6 +49,12 @@ public class RudderLogger {
         }
     }
 
+    static void logVerbose(String message) {
+        if (logLevel >= RudderLogLevel.VERBOSE) {
+            Log.v(TAG, "Verbose: " + message);
+        }
+    }
+
     public static class RudderLogLevel {
         public static final int VERBOSE = 5;
         public static final int DEBUG = 4;

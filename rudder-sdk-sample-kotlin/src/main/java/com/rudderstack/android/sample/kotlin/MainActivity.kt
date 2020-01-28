@@ -2,8 +2,9 @@ package com.rudderstack.android.sample.kotlin
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.rudderstack.android.sdk.core.RudderMessageBuilder
 import com.rudderstack.android.sdk.core.ecomm.*
-import com.rudderstack.android.sdk.core.ecomm.events.ProductSearchedEvent
+
 
 class MainActivity : AppCompatActivity() {
     private var count = 0
@@ -13,6 +14,23 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val rudderClient = MainApplication.rudderClient
+
+
+        val properties: MutableMap<String, Any> = HashMap()
+        properties["test_key_1"] = "test_value_1"
+
+        val childProperties: MutableMap<String, String> = HashMap()
+        childProperties["test_child_key_1"] = "test_child_value_1"
+        properties["test_key_2"] = childProperties
+        properties["category"] = "test_category"
+
+        rudderClient!!.track(
+            RudderMessageBuilder()
+                .setEventName("vedantuWebSite_test")
+                .setUserId("test_user_id")
+                .setProperty(properties)
+                .build()
+        )
 
         // ECommerce Product
         val productA = ECommerceProduct.Builder()
@@ -87,12 +105,14 @@ class MainActivity : AppCompatActivity() {
             .withStep(1)
             .build()
 
-val productSearchedEvent = ProductSearchedEvent()
-    .withQuery("blue hotpants")
-rudderClient?.track(
-    productSearchedEvent.event(),
-    productSearchedEvent.properties()
-)
+//val productSearchedEvent = ProductSearchedEvent()
+//    .withQuery("blue hotpants")
+//rudderClient?.track(
+//    productSearchedEvent.event(),
+//    productSearchedEvent.properties()
+//)
+
+//        rudderClient?.track("some_test_event")
 
 
 //        val cartSharedEvent = CartSharedEvent()

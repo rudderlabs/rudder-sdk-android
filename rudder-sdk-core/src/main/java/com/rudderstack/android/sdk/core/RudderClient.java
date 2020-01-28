@@ -23,7 +23,7 @@ public class RudderClient {
      * private constructor
      * */
     private RudderClient() {
-        // message constructor initialization
+        RudderLogger.logVerbose("RudderClient: constructor invoked.");
     }
 
 
@@ -31,7 +31,7 @@ public class RudderClient {
      * API for getting RudderClient instance with bare minimum
      *
      * @param context  Your Application context
-     * @param writeKey Your Android WriteKey from RudderStack dashboard 
+     * @param writeKey Your Android WriteKey from RudderStack dashboard
      * @return RudderClient instance to be used further
      */
     @NonNull
@@ -44,7 +44,7 @@ public class RudderClient {
      * RudderConfig.Builder
      *
      * @param context  Application context
-     * @param writeKey Your Android WriteKey from RudderStack dashboard 
+     * @param writeKey Your Android WriteKey from RudderStack dashboard
      * @param builder  Instance of RudderConfig.Builder for customised settings
      * @return RudderClient instance to be used further
      */
@@ -58,7 +58,7 @@ public class RudderClient {
      * RudderConfig.Builder
      *
      * @param context  Application context
-     * @param writeKey Your Android WriteKey from RudderStack dashboard 
+     * @param writeKey Your Android WriteKey from RudderStack dashboard
      * @param config   Instance of RudderConfig for customised settings
      * @return RudderClient instance to be used further
      */
@@ -66,25 +66,32 @@ public class RudderClient {
     public static RudderClient getInstance(@NonNull Context context, @Nullable String writeKey, @Nullable RudderConfig config) {
         // check if instance is already initiated
         if (instance == null) {
+            RudderLogger.logVerbose("getInstance: instance null. creating instance");
             // assert writeKey is not null or empty
             if (TextUtils.isEmpty(writeKey)) {
                 RudderLogger.logError("RudderClient: getInstance: writeKey can not be null or empty");
             }
             // assert config is not null
             if (config == null) {
+                RudderLogger.logVerbose("getInstance: config null. creating default config");
                 config = new RudderConfig();
             } else {
+                RudderLogger.logVerbose("getInstance: config present. using config.");
                 if (TextUtils.isEmpty(config.getEndPointUri())) {
+                    RudderLogger.logVerbose("getInstance: EndPointUri is blank or null. using default.");
                     config.setEndPointUri(Constants.BASE_URL);
                 }
                 if (config.getFlushQueueSize() < 0 || config.getFlushQueueSize() > 100) {
+                    RudderLogger.logVerbose("getInstance: FlushQueueSize is wrong. using default.");
                     config.setFlushQueueSize(Constants.FLUSH_QUEUE_SIZE);
                 }
                 if (config.getDbCountThreshold() < 0) {
+                    RudderLogger.logVerbose("getInstance: DbCountThreshold is wrong. using default.");
                     config.setDbCountThreshold(Constants.DB_COUNT_THRESHOLD);
                 }
                 // assure sleepTimeOut never goes below 10s
                 if (config.getSleepTimeOut() < 10) {
+                    RudderLogger.logVerbose("getInstance: SleepTimeOut is wrong. using default.");
                     config.setSleepTimeOut(10);
                 }
             }
@@ -97,6 +104,7 @@ public class RudderClient {
 
             // initiate EventRepository class
             if (application != null && writeKey != null) {
+                RudderLogger.logVerbose("getInstance: creating EventRepository.");
                 repository = new EventRepository(application, writeKey, config);
             }
         }
@@ -444,7 +452,7 @@ public class RudderClient {
 
         /**
          * @param context  Your Application context
-         * @param writeKey Your Android WriteKey from RudderStack dashboard 
+         * @param writeKey Your Android WriteKey from RudderStack dashboard
          */
         public Builder(Context context, String writeKey) {
             if (context == null) {
