@@ -21,7 +21,7 @@ class MainApplication : Application() {
             this,
             "1TSRSskqa15PG7F89tkwEbl5Td8",
             RudderConfig.Builder()
-                .withEndPointUri("https://a638edbb.ngrok.io")
+                .withEndPointUri("https://974913eb.ngrok.io")
                 .withLogLevel(
                     when (BuildConfig.DEBUG) {
                         true -> RudderLogger.RudderLogLevel.VERBOSE

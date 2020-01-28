@@ -105,15 +105,13 @@ class MainActivity : AppCompatActivity() {
             .withStep(1)
             .build()
 
-//val productSearchedEvent = ProductSearchedEvent()
-//    .withQuery("blue hotpants")
-//rudderClient?.track(
-//    productSearchedEvent.event(),
-//    productSearchedEvent.properties()
-//)
-
-//        rudderClient?.track("some_test_event")
-
+        //val productSearchedEvent = ProductSearchedEvent()
+        //    .withQuery("blue hotpants")
+        //rudderClient?.track(
+        //    productSearchedEvent.event(),
+        //    productSearchedEvent.properties()
+        //)
+        //        rudderClient?.track("some_test_event")
 
 //        val cartSharedEvent = CartSharedEvent()
 //            .withCart(cart)

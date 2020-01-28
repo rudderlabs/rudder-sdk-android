@@ -14,10 +14,11 @@ import com.rudderstack.android.sdk.core.util.Utils;
  * */
 public class RudderClient {
     // singleton instance
-    private static RudderClient instance;
+    private static RudderClient _instance;
     // repository instance
-    private static EventRepository repository;
-    private static Application application;
+    private static EventRepository _repository;
+    private static Application _application;
+    private static String _writeKey;
 
     /*
      * private constructor
@@ -65,11 +66,13 @@ public class RudderClient {
     @NonNull
     public static RudderClient getInstance(@NonNull Context context, @Nullable String writeKey, @Nullable RudderConfig config) {
         // check if instance is already initiated
-        if (instance == null) {
+        if (_instance == null) {
             RudderLogger.logVerbose("getInstance: instance null. creating instance");
             // assert writeKey is not null or empty
             if (TextUtils.isEmpty(writeKey)) {
                 RudderLogger.logError("RudderClient: getInstance: writeKey can not be null or empty");
+            } else {
+                _writeKey = writeKey;
             }
             // assert config is not null
             if (config == null) {
@@ -97,18 +100,17 @@ public class RudderClient {
             }
 
             // get application from provided context
-            application = (Application) context.getApplicationContext();
+            _application = (Application) context.getApplicationContext();
 
             // initiate RudderClient instance
-            instance = new RudderClient();
+            _instance = new RudderClient();
 
             // initiate EventRepository class
-            if (application != null && writeKey != null) {
-                RudderLogger.logVerbose("getInstance: creating EventRepository.");
-                repository = new EventRepository(application, writeKey, config);
+            if (_application != null && writeKey != null) {
+                _repository = new EventRepository(_application, config);
             }
         }
-        return instance;
+        return _instance;
     }
 
     /*
@@ -116,7 +118,7 @@ public class RudderClient {
      * */
     @Nullable
     static RudderClient getInstance() {
-        return instance;
+        return _instance;
     }
 
     /**
@@ -129,12 +131,12 @@ public class RudderClient {
      */
     @NonNull
     public static RudderClient with(@NonNull Context context) {
-        if (instance == null) {
-            String writeKey = null;
+        if (_instance == null) {
+            String writeKey;
             writeKey = Utils.getWriteKeyFromStrings(context);
             return getInstance(context, writeKey);
         }
-        return instance;
+        return _instance;
     }
 
     /**
@@ -142,7 +144,14 @@ public class RudderClient {
      */
     @Nullable
     public Application getApplication() {
-        return application;
+        return _application;
+    }
+
+    /**
+     * @return Configured writeKey of the SDK
+     */
+    static String getWriteKey() {
+        return _writeKey;
     }
 
     /**
@@ -161,7 +170,7 @@ public class RudderClient {
      */
     public void track(@NonNull RudderMessage message) {
         message.setType(MessageType.TRACK);
-        if (repository != null) repository.dump(message);
+        if (_repository != null) _repository.dump(message);
     }
 
     /**
@@ -220,7 +229,7 @@ public class RudderClient {
      */
     public void screen(@NonNull RudderMessage message) {
         message.setType(MessageType.SCREEN);
-        if (repository != null) repository.dump(message);
+        if (_repository != null) _repository.dump(message);
     }
 
     /**
@@ -292,7 +301,7 @@ public class RudderClient {
         message.setType(MessageType.IDENTIFY);
 
         // dump to repository
-        if (repository != null) repository.dump(message);
+        if (_repository != null) _repository.dump(message);
     }
 
     /**
@@ -383,10 +392,10 @@ public class RudderClient {
      *
      * <b>Segment compatible API</b>
      *
-     * @param _instance RudderClient instance
+     * @param instance RudderClient instance
      */
-    public static void setSingletonInstance(@NonNull RudderClient _instance) {
-        instance = _instance;
+    public static void setSingletonInstance(@NonNull RudderClient instance) {
+        _instance = instance;
     }
 
     /**
@@ -408,7 +417,7 @@ public class RudderClient {
      */
     public void reset() {
         RudderElementCache.reset();
-        if (repository != null) repository.reset();
+        if (_repository != null) _repository.reset();
     }
 
     /**
@@ -418,11 +427,11 @@ public class RudderClient {
      * @param callback RudderClient.Callback object
      */
     public void onIntegrationReady(String key, Callback callback) {
-        if (repository != null) repository.onIntegrationReady(key, callback);
+        if (_repository != null) _repository.onIntegrationReady(key, callback);
     }
 
     public void optOut() {
-        if (repository != null) repository.optOut();
+        if (_repository != null) _repository.optOut();
     }
 
     /**
@@ -433,7 +442,7 @@ public class RudderClient {
     }
 
     public void shutdown() {
-        if (repository != null) repository.shutdown();
+        if (_repository != null) _repository.shutdown();
     }
 
     /*
@@ -500,6 +509,9 @@ public class RudderClient {
          * @return get your builder back
          */
         public Builder withRudderConfig(RudderConfig config) {
+            if (this.config != null) {
+                RudderLogger.logWarn("Overriding previous config");
+            }
             this.config = config;
             return this;
         }
@@ -509,7 +521,21 @@ public class RudderClient {
          * @return get your builder back
          */
         public Builder withRudderConfigBuilder(RudderConfig.Builder builder) {
+            if (this.config != null) {
+                RudderLogger.logWarn("Overriding previous config");
+            }
             this.config = builder.build();
+            return this;
+        }
+
+        private String endPointUri;
+
+        /**
+         * @param endPointUri Your data plane url
+         * @return get your builder back
+         */
+        public Builder withEndPointUri(String endPointUri) {
+            this.endPointUri = endPointUri;
             return this;
         }
 
@@ -535,6 +561,15 @@ public class RudderClient {
          * @return build your RudderClient to be used
          */
         public RudderClient build() {
+            if (this.config == null) {
+                this.config = new RudderConfig();
+            }
+            if (!TextUtils.isEmpty(this.endPointUri)) {
+                this.config.setEndPointUri(endPointUri);
+            }
+            this.config.setLogLevel(logLevel);
+            this.config.setTrackLifecycleEvents(trackLifecycleEvents);
+            this.config.setRecordScreenViews(recordScreenViews);
             return getInstance(this.application, this.writeKey, this.config);
         }
     }

@@ -21,26 +21,26 @@ class RudderServerConfigManager {
     private static RudderConfig rudderConfig;
     private Map<String, Object> integrationsMap = null;
 
-    static RudderServerConfigManager getInstance(Application _application, String _writeKey, RudderConfig config) {
+    static RudderServerConfigManager getInstance(Application _application, RudderConfig config) {
         if (instance == null) {
             RudderLogger.logDebug("Creating RudderServerConfigManager instance");
-            instance = new RudderServerConfigManager(_application, _writeKey, config);
+            instance = new RudderServerConfigManager(_application, config);
         }
         return instance;
     }
 
-    private RudderServerConfigManager(Application _application, String _writeKey, RudderConfig _config) {
+    private RudderServerConfigManager(Application _application, RudderConfig _config) {
         preferenceManger = RudderPreferenceManager.getInstance(_application);
         serverConfig = retrieveConfig();
         rudderConfig = _config;
         boolean isConfigOutdated = isServerConfigOutDated();
         if (serverConfig == null) {
             RudderLogger.logDebug("Server config is not present in preference storage. downloading config");
-            downloadConfig(_writeKey);
+            downloadConfig();
         } else {
             if (isConfigOutdated) {
                 RudderLogger.logDebug("Server config is outdated. downloading config again");
-                downloadConfig(_writeKey);
+                downloadConfig();
             } else {
                 RudderLogger.logDebug("Server config found. Using existing config");
             }
@@ -65,9 +65,9 @@ class RudderServerConfigManager {
         return new Gson().fromJson(configJson, RudderServerConfig.class);
     }
 
-    private void downloadConfig(final String _writeKey) {
+    private void downloadConfig() {
         // don't try to download anything if writeKey is not valid
-        if (TextUtils.isEmpty(_writeKey)) return;
+        if (TextUtils.isEmpty(RudderClient.getWriteKey())) return;
 
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -76,7 +76,7 @@ class RudderServerConfigManager {
                 int retryCount = 0, retryTimeOut = 10;
                 while (!isDone && retryCount <= 3) {
                     try {
-                        String configUrl = Constants.CONFIG_PLANE_URL + "/sourceConfig";
+                        String configUrl = String.format(Locale.US, "%s/sourceConfig?writeKey=%s&fingerPrint=%s", Constants.CONFIG_PLANE_URL, RudderClient.getWriteKey(), preferenceManger.getRudderStatsFingerPrint());
                         RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configUrl: %s", configUrl));
                         // create url object
                         URL url = new URL(configUrl);
@@ -85,7 +85,7 @@ class RudderServerConfigManager {
                         // set request method
                         httpConnection.setRequestMethod("GET");
                         // add basic auth_header
-                        httpConnection.setRequestProperty("Authorization", "Basic " + Base64.encodeToString((_writeKey + ":").getBytes("UTF-8"), Base64.DEFAULT));
+                        httpConnection.setRequestProperty("Authorization", "Basic " + Base64.encodeToString((RudderClient.getWriteKey() + ":").getBytes("UTF-8"), Base64.DEFAULT));
                         // create connection
                         httpConnection.connect();
                         RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: response status code: %d", httpConnection.getResponseCode()));

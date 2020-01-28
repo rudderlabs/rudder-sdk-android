@@ -201,6 +201,18 @@ public class RudderConfig {
         this.logLevel = logLevel;
     }
 
+    void setConfigRefreshInterval(int configRefreshInterval) {
+        this.configRefreshInterval = configRefreshInterval;
+    }
+    
+    void setTrackLifecycleEvents(boolean trackLifecycleEvents) {
+        this.trackLifecycleEvents = trackLifecycleEvents;
+    }
+
+    void setRecordScreenViews(boolean recordScreenViews) {
+        this.recordScreenViews = recordScreenViews;
+    }
+
     void setFactories(List<RudderIntegration.Factory> factories) {
         this.factories = factories;
     }
@@ -362,7 +374,7 @@ public class RudderConfig {
          */
         public Builder withTrackLifecycleEvents(boolean shouldTrackLifecycleEvents) {
             this.trackLifecycleEvents = shouldTrackLifecycleEvents;
-            return  this;
+            return this;
         }
 
         /**

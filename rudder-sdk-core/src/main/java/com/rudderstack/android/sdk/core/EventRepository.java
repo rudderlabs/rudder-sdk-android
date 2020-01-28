@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 
 /*
  * utility class for event processing
@@ -41,6 +42,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private Map<String, RudderIntegration> integrationOperationsMap = new HashMap<>();
     private final ArrayList<RudderMessage> eventReplayMessage = new ArrayList<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
+    private MetricsStatsManager statsManager;
 
     private boolean initiated = false;
 
@@ -54,11 +56,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * 5. start processor thread
      * 6. initiate factories
      * */
-    EventRepository(Application _application, String _writeKey, RudderConfig _config) {
+    EventRepository(Application _application, RudderConfig _config) {
         // 1. set the values of writeKey, config
         try {
-            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: writeKey: %s", _writeKey));
-            this.authHeaderString = Base64.encodeToString((String.format(Locale.US, "%s:", _writeKey)).getBytes("UTF-8"), Base64.DEFAULT);
+            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: writeKey: %s", RudderClient.getWriteKey()));
+            this.authHeaderString = Base64.encodeToString((String.format(Locale.US, "%s:", RudderClient.getWriteKey())).getBytes("UTF-8"), Base64.DEFAULT);
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: authHeaderString: %s", this.authHeaderString));
         } catch (UnsupportedEncodingException ex) {
             RudderLogger.logError(ex);
@@ -67,6 +69,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         RudderLogger.logDebug(String.format("EventRepository: constructor: %s", this.config.toString()));
 
         try {
+            // initiate MetricsManager
+            statsManager = MetricsStatsManager.getInstance(_application);
+
             // 2. initiate RudderElementCache
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
             RudderElementCache.initiate(_application);
@@ -82,7 +87,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
             // 4. initiate RudderServerConfigManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
-            this.configManager = RudderServerConfigManager.getInstance(_application, _writeKey, _config);
+            this.configManager = RudderServerConfigManager.getInstance(_application, _config);
 
             // 5. start processor thread
             RudderLogger.logDebug("EventRepository: constructor: Starting Processor thread");
@@ -101,8 +106,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             if (config.isTrackLifecycleEvents()) {
                 _application.registerActivityLifecycleCallbacks(this);
             }
-
-
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
@@ -240,6 +243,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 ArrayList<Integer> messageIds = new ArrayList<>();
                 ArrayList<String> messages = new ArrayList<>();
 
+                // keep a count of errors
+                int errorCount = 0;
+
                 while (true) {
                     try {
                         // clear lists for reuse
@@ -278,21 +284,43 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                 RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: ServerResponse: %s", response));
                                 RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: EventCount: %d", messages.size()));
                                 // if success received from server
-                                if (response != null && response.equalsIgnoreCase("OK")) {
-                                    // remove events from DB
-                                    dbManager.clearEventsFromDB(messageIds);
-                                    // reset sleep count to indicate successful flush
-                                    sleepCount = 0;
+                                if (response != null) {
+                                    // data-plane response if 200
+                                    if (response.equalsIgnoreCase("OK")) {
+                                        // data-plane is successful
+                                        // remove events from DB
+                                        RudderLogger.logVerbose("Data-plane request successful. Clearing events");
+                                        dbManager.clearEventsFromDB(messageIds);
+                                        // reset sleep count to indicate successful flush
+                                        sleepCount = 0;
+                                        // error processing
+                                        errorCount = 0;
+                                    }
+                                } else {
+                                    // data plane is not successful
+                                    RudderLogger.logVerbose("Data-plane request unsuccessful. Starting backing off");
+                                    errorCount += 1;
                                 }
                             }
                         }
                         // increment sleepCount to track total elapsed seconds
                         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
                         sleepCount += 1;
-                        // retry entire logic in 1 second
-                        Thread.sleep(1000);
+                        // retry entire logic in ~1 second
+                        int randomSleep = new Random().nextInt(1000);
+                        RudderLogger.logVerbose("Random Sleep amount: " + randomSleep);
+                        if (errorCount == 0) {
+                            RudderLogger.logVerbose("No data-plane error. Normal Mode");
+                            Thread.sleep(1000 + randomSleep);
+                        } else {
+                            // for the first error, try in the next second. then increase
+                            RudderLogger.logVerbose("Data-plane error. Backoff Mode. ErrorCount: " + errorCount);
+                            Thread.sleep((errorCount * 1000) + randomSleep);
+                        }
                     } catch (Exception ex) {
                         RudderLogger.logError(ex);
+                        // for any kind of exception, start backing off.
+                        errorCount += 1;
                     }
                 }
             }

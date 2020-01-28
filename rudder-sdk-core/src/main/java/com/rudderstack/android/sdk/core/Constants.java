@@ -23,4 +23,6 @@ class Constants {
     static final boolean TRACK_LIFECYCLE_EVENTS = true;
     // whether we should record screen views automatically
     static final boolean RECORD_SCREEN_VIEWS = false;
+    // stats config CDN
+    static final String STATS_CONFIG_URL_TEMPLATE = "";
 }

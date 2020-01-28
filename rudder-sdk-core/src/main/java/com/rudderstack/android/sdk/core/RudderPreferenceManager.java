@@ -4,6 +4,8 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.UUID;
+
 class RudderPreferenceManager {
     // keys
     private static final String RUDDER_PREFS = "rl_prefs";
@@ -11,6 +13,7 @@ class RudderPreferenceManager {
     private static final String RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY = "rl_server_last_updated";
     private static final String RUDDER_TRAITS_KEY = "rl_traits";
     private static final String RUDDER_APPLICATION_INFO_KEY = "rl_application_info_key";
+    private static final String RUDDER_STATS_FINGER_PRINT = "rl_stats_finger_print";
 
     private static SharedPreferences preferences;
     private static RudderPreferenceManager instance;
@@ -55,5 +58,15 @@ class RudderPreferenceManager {
 
     void saveBuildVersionCode(int versionCode) {
         preferences.edit().putInt(RUDDER_APPLICATION_INFO_KEY, versionCode).apply();
+    }
+
+    String getRudderStatsFingerPrint() {
+        String fingerPrint = preferences.getString(RUDDER_STATS_FINGER_PRINT, null);
+        if (fingerPrint == null) {
+            // if fingerprint is not present, create and persist
+            fingerPrint = UUID.randomUUID().toString();
+            preferences.edit().putString(RUDDER_STATS_FINGER_PRINT, fingerPrint).apply();
+        }
+        return fingerPrint;
     }
 }
