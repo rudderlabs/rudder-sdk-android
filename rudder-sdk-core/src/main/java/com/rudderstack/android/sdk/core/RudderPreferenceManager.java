@@ -14,6 +14,8 @@ class RudderPreferenceManager {
     private static final String RUDDER_TRAITS_KEY = "rl_traits";
     private static final String RUDDER_APPLICATION_INFO_KEY = "rl_application_info_key";
     private static final String RUDDER_STATS_FINGER_PRINT = "rl_stats_finger_print";
+    private static final String RUDDER_STATS_CONFIG_JSON = "rl_stats_config_json";
+    private static final String RUDDER_STATS_BEGIN_TIME = "rl_stats_begin_time";
 
     private static SharedPreferences preferences;
     private static RudderPreferenceManager instance;
@@ -69,4 +71,26 @@ class RudderPreferenceManager {
         }
         return fingerPrint;
     }
+
+    void persistStatsConfigJson(String statsConfigJson) {
+        preferences.edit().putString(RUDDER_STATS_CONFIG_JSON, statsConfigJson).apply();
+    }
+
+    String getStatsConfigJson() {
+        return preferences.getString(RUDDER_STATS_CONFIG_JSON, null);
+    }
+
+    long getStatsBeginTime() {
+        long beginTime = preferences.getLong(RUDDER_STATS_BEGIN_TIME, -1);
+        if (beginTime == -1) {
+            beginTime = System.currentTimeMillis();
+            updateRudderStatsBeginTime(beginTime);
+        }
+        return beginTime;
+    }
+
+    void updateRudderStatsBeginTime(long timestamp) {
+        preferences.edit().putLong(RUDDER_STATS_BEGIN_TIME, timestamp).apply();
+    }
+
 }

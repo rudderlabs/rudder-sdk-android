@@ -100,4 +100,12 @@ class RudderContext {
     String getDeviceId() {
         return deviceInfo.getDeviceId();
     }
+
+    RudderOSInfo getOsInfo() {
+        return osInfo;
+    }
+
+    RudderLibraryInfo getLibraryInfo() {
+        return libraryInfo;
+    }
 }

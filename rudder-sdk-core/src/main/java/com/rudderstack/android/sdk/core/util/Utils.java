@@ -15,6 +15,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static android.provider.Settings.Secure.ANDROID_ID;
 import static android.provider.Settings.System.getString;
@@ -27,6 +28,9 @@ public class Utils {
     public static final int MIN_SLEEP_TIMEOUT = 10;
     public static final int MIN_FLUSH_QUEUE_SIZE = 1;
     public static final int MAX_FLUSH_QUEUE_SIZE = 100;
+    public static final int STATS_DELAY_COUNT = 10;
+    public static final TimeUnit STATS_DELAY_TIME_UNIT = TimeUnit.SECONDS;
+    public static final boolean METRICS_ENABLED = true;
 
     public static String getTimeZone() {
         TimeZone timeZone = TimeZone.getDefault();
@@ -81,5 +85,43 @@ public class Utils {
         } else {
             return null;
         }
+    }
+
+    public static int computeMax(List<Integer> list) {
+        if (list == null || list.isEmpty()) return -1;
+        return list.get(list.size() - 1);
+    }
+
+    public static int computeMin(List<Integer> list) {
+        if (list == null || list.isEmpty()) return -1;
+        return list.get(0);
+    }
+
+    public static int computeMedian(List<Integer> list) {
+        if (list == null || list.isEmpty()) return -1;
+        int count = list.size();
+        if (count % 2 != 0) {
+            return list.get(count / 2);
+        } else {
+            return (list.get((count - 1) / 2) + list.get(count / 2)) / 2;
+        }
+    }
+
+    public static float computeAverage(List<Integer> list) {
+        if (list == null || list.isEmpty()) return -1;
+        int sum = 0;
+        for (Integer val : list) {
+            sum += val;
+        }
+        return sum / (float) list.size();
+    }
+
+    public static double computeDeviation(List<Integer> list, float mean) {
+        if (list == null || list.isEmpty()) return -1;
+        float sum = 0;
+        for (Integer val : list) {
+            sum += Math.pow((val - mean), 2);
+        }
+        return Math.sqrt(sum / list.size());
     }
 }

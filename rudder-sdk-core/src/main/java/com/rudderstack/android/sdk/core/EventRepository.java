@@ -6,8 +6,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Base64;
+import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,13 +15,6 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +26,6 @@ import java.util.Random;
  * utility class for event processing
  * */
 class EventRepository implements Application.ActivityLifecycleCallbacks {
-    private String authHeaderString;
     private String anonymousIdHeaderString;
     private RudderConfig config;
     private DBPersistentManager dbManager;
@@ -43,6 +35,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private final ArrayList<RudderMessage> eventReplayMessage = new ArrayList<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
     private MetricsStatsManager statsManager;
+    private RudderHttpClient rudderHttpClient;
 
     private boolean initiated = false;
 
@@ -58,23 +51,20 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * */
     EventRepository(Application _application, RudderConfig _config) {
         // 1. set the values of writeKey, config
-        try {
-            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: writeKey: %s", RudderClient.getWriteKey()));
-            this.authHeaderString = Base64.encodeToString((String.format(Locale.US, "%s:", RudderClient.getWriteKey())).getBytes("UTF-8"), Base64.DEFAULT);
-            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: authHeaderString: %s", this.authHeaderString));
-        } catch (UnsupportedEncodingException ex) {
-            RudderLogger.logError(ex);
-        }
         this.config = _config;
         RudderLogger.logDebug(String.format("EventRepository: constructor: %s", this.config.toString()));
 
         try {
             // initiate MetricsManager
-            statsManager = MetricsStatsManager.getInstance(_application);
+
+            // initiate httpclient
+            rudderHttpClient = RudderHttpClient.getInstance();
 
             // 2. initiate RudderElementCache
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
             RudderElementCache.initiate(_application);
+
+            statsManager = MetricsStatsManager.getInstance(_application);
 
             String anonymousId = RudderElementCache.getCachedContext().getDeviceId();
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousId: %s", anonymousId));
@@ -239,19 +229,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // initiate sleepCount
                 int sleepCount = 0;
 
-                // initiate lists for messageId and message
-                ArrayList<Integer> messageIds = new ArrayList<>();
-                ArrayList<String> messages = new ArrayList<>();
-
                 // keep a count of errors
                 int errorCount = 0;
 
                 while (true) {
                     try {
-                        // clear lists for reuse
-                        messageIds.clear();
-                        messages.clear();
-
                         // get current record count from db
                         int recordCount = dbManager.getDBRecordCount();
                         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: DBRecordCount: %d", recordCount));
@@ -259,30 +241,34 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         if (recordCount > config.getDbCountThreshold()) {
                             // fetch extra old events
                             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: OldRecordCount: %d", (recordCount - config.getDbCountThreshold())));
-                            dbManager.fetchEventsFromDB(messageIds, messages, recordCount - config.getDbCountThreshold());
+                            SparseArray<String> events = dbManager.fetchEventsFromDB(recordCount - config.getDbCountThreshold());
                             // remove events
-                            dbManager.clearEventsFromDB(messageIds);
-                            // clear lists for reuse
-                            messageIds.clear();
-                            messages.clear();
+                            dbManager.clearEventsFromDB(events);
                         }
 
                         // fetch enough events to form a batch
                         RudderLogger.logDebug("Fetching events to flush to sever");
-                        dbManager.fetchEventsFromDB(messageIds, messages, config.getFlushQueueSize());
+                        SparseArray<String> events = dbManager.fetchEventsFromDB(config.getFlushQueueSize());
                         // if there are enough events to form a batch and flush to server
                         // OR
                         // sleepTimeOut seconds has elapsed since last successful flush and
                         // we have at least one event to flush to server
-                        if (messages.size() >= config.getFlushQueueSize() || (!messages.isEmpty() && sleepCount >= config.getSleepTimeOut())) {
+                        if (events.size() >= config.getFlushQueueSize() || (!(events.size() == 0) && sleepCount >= config.getSleepTimeOut())) {
                             // form payload JSON form the list of messages
-                            String payload = getPayloadFromMessages(messages);
+                            String payload = getPayloadFromMessages(events);
                             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: payload: %s", payload));
                             if (payload != null) {
                                 // send payload to server if it is not null
+                                long requestStartTime = System.currentTimeMillis();
                                 String response = flushEventsToServer(payload);
+                                long requestEndTime = System.currentTimeMillis();
+
+                                if (statsManager.isEnabled()) {
+                                    dbManager.recordDataPlaneRequest(events.size(), response != null ? 1 : 0, (requestEndTime - requestStartTime));
+                                }
+
                                 RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: ServerResponse: %s", response));
-                                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: EventCount: %d", messages.size()));
+                                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: EventCount: %d", events.size()));
                                 // if success received from server
                                 if (response != null) {
                                     // data-plane response if 200
@@ -290,7 +276,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                         // data-plane is successful
                                         // remove events from DB
                                         RudderLogger.logVerbose("Data-plane request successful. Clearing events");
-                                        dbManager.clearEventsFromDB(messageIds);
+                                        dbManager.clearEventsFromDB(events);
                                         // reset sleep count to indicate successful flush
                                         sleepCount = 0;
                                         // error processing
@@ -333,7 +319,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * of deserialization and forming the payload object and creating the json string
      * again from the object
      * */
-    private String getPayloadFromMessages(ArrayList<String> messages) {
+    private String getPayloadFromMessages(SparseArray<String> messages) {
         try {
             RudderLogger.logDebug("EventRepository: getPayloadFromMessages: recordCount: " + messages.size());
             String sentAtTimestamp = Utils.getTimeStamp();
@@ -348,7 +334,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             builder.append("\"batch\": [");
             // loop through messages list and add in the builder
             for (int index = 0; index < messages.size(); index++) {
-                String message = messages.get(index);
+                String message = messages.valueAt(index);
                 // strip last ending object character
                 message = message.substring(0, message.length() - 1);
                 // add sentAt time stamp
@@ -376,69 +362,13 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * flush events payload to server and return response as String
      * */
     private String flushEventsToServer(String payload) {
-        try {
-            if (TextUtils.isEmpty(this.authHeaderString)) {
-                RudderLogger.logError("EventRepository: flushEventsToServer: WriteKey was not correct. Aborting flush to server");
-                return null;
-            }
-
-            // get endPointUrl form config object
-            String endPointUri = config.getEndPointUri() + "v1/batch";
-            RudderLogger.logDebug("EventRepository: flushEventsToServer: endPointRepository: " + endPointUri);
-
-            // create url object
-            URL url = new URL(endPointUri);
-            // get connection object
-            HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
-            // set connection object to return output
-            httpConnection.setDoOutput(true);
-            //  set content type for network request
-            httpConnection.setRequestProperty("Content-Type", "application/json");
-            // set authorization header
-            httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", this.authHeaderString));
-            // set anonymousId header for definitive routing
-            httpConnection.setRequestProperty("AnonymousId", this.anonymousIdHeaderString);
-            // set request method
-            httpConnection.setRequestMethod("POST");
-            // get output stream and write payload content
-            OutputStream os = httpConnection.getOutputStream();
-            OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
-            osw.write(payload);
-            osw.flush();
-            osw.close();
-            os.close();
-            // create connection
-            httpConnection.connect();
-            // get input stream from connection to get output from the server
-            if (httpConnection.getResponseCode() == 200) {
-                BufferedInputStream bis = new BufferedInputStream(httpConnection.getInputStream());
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                int res = bis.read();
-                // read response from the server
-                while (res != -1) {
-                    baos.write((byte) res);
-                    res = bis.read();
-                }
-                // finally return response when reading from server is completed
-                return baos.toString();
-            } else {
-                BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                int res = bis.read();
-                // read response from the server
-                while (res != -1) {
-                    baos.write((byte) res);
-                    res = bis.read();
-                }
-                // finally return response when reading from server is completed
-                RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + baos.toString());
-                // return null as request made is not successful
-                return null;
-            }
-        } catch (Exception ex) {
-            RudderLogger.logError(ex);
-        }
-        return null;
+        // get endPointUrl form config object
+        String endPointUri = config.getEndPointUri() + "v1/batch";
+        RudderLogger.logDebug("EventRepository: flushEventsToServer: endPointRepository: " + endPointUri);
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        headers.put("AnonymousId", this.anonymousIdHeaderString);
+        return rudderHttpClient.post(endPointUri, payload, headers);
     }
 
     /*
@@ -447,10 +377,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     void dump(@NonNull RudderMessage message) {
         if (!initiated) return;
 
-        makeFactoryDump(message);
         String eventJson = new Gson().toJson(message);
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
-        dbManager.saveEvent(eventJson);
+        dbManager.saveEvent(eventJson, statsManager.isEnabled());
+        makeFactoryDump(message);
     }
 
     private void makeFactoryDump(RudderMessage message) {
