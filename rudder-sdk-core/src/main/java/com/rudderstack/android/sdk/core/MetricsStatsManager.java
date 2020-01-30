@@ -83,7 +83,7 @@ class MetricsStatsManager {
                     }
                     isFirstRun = false;
                 }
-                if (metricsConfig.isEnabled()) {
+                if (metricsConfig != null && metricsConfig.isEnabled()) {
                     fetchLastMetrics();
                     flushRequestsToServer();
                 } else {
@@ -106,36 +106,36 @@ class MetricsStatsManager {
                 List<Integer> list = this.dbPersistentManager.getStats(stats.getQuerySql());
                 if (list != null && !list.isEmpty()) {
                     logRequest = true;
-                    params.put(stats.getParamPrefix() + "Max", String.valueOf(Utils.computeMax(list)));
-                    params.put(stats.getParamPrefix() + "Min", String.valueOf(Utils.computeMin(list)));
-                    params.put(stats.getParamPrefix() + "Med", String.valueOf(Utils.computeMedian(list)));
+                    params.put("pr_" + stats.getParamPrefix() + "Max", String.valueOf(Utils.computeMax(list)));
+                    params.put("pr_" + stats.getParamPrefix() + "Min", String.valueOf(Utils.computeMin(list)));
+                    params.put("pr_" + stats.getParamPrefix() + "Med", String.valueOf(Utils.computeMedian(list)));
                     float mean = Utils.computeAverage(list);
-                    params.put(stats.getParamPrefix() + "Avg", String.valueOf(mean));
-                    params.put(stats.getParamPrefix() + "Sd", String.valueOf(Utils.computeDeviation(list, mean)));
+                    params.put("pr_" + stats.getParamPrefix() + "Avg", String.valueOf(mean));
+                    params.put("pr_" + stats.getParamPrefix() + "Sd", String.valueOf(Utils.computeDeviation(list, mean)));
                 }
             }
         }
         int retryCountConfigPlane = dbPersistentManager.getRetryCountConfigPlane();
         if (retryCountConfigPlane > 0) {
             logRequest = true;
-            params.put("retryCountConfigPlane", String.valueOf(retryCountConfigPlane));
+            params.put("pr_retryCountConfigPlane", String.valueOf(retryCountConfigPlane));
         }
         int retryCountDataPlane = dbPersistentManager.getRetryCountDataPlane();
         if (retryCountDataPlane > 0) {
             logRequest = true;
-            params.put("retryCountDataPlane", String.valueOf(retryCountDataPlane));
+            params.put("pr_retryCountDataPlane", String.valueOf(retryCountDataPlane));
         }
 
         if (logRequest) {
             params.put("writeKey", metricsConfig.getWriteKey());
             RudderContext context = RudderElementCache.getCachedContext();
-            params.put("os", context.getOsInfo().getName());
-            params.put("version", context.getOsInfo().getVersion());
-            params.put("sdk", context.getLibraryInfo().getVersion());
-            params.put("begin", String.valueOf(preferenceManager.getStatsBeginTime()));
+            params.put("c_os", context.getOsInfo().getName());
+            params.put("c_version", context.getOsInfo().getVersion());
+            params.put("c_sdk", context.getLibraryInfo().getVersion());
+            params.put("c_begin", String.valueOf(preferenceManager.getStatsBeginTime()));
             long statsEndTime = System.currentTimeMillis();
-            params.put("end", String.valueOf(statsEndTime));
-            params.put("fingerprint", preferenceManager.getRudderStatsFingerPrint());
+            params.put("c_end", String.valueOf(statsEndTime));
+            params.put("c_fingerprint", preferenceManager.getRudderStatsFingerPrint());
 
             StringBuilder queryBuilder = new StringBuilder();
             for (String key : params.keySet()) {
@@ -183,12 +183,7 @@ class MetricsStatsManager {
 
     private void parseConfigJson(String json) {
         if (!TextUtils.isEmpty(json)) {
-            boolean enabled = metricsConfig != null && metricsConfig.isEnabled();
             metricsConfig = new Gson().fromJson(json, MetricsConfig.class);
-            // enabled before, but not disabled from server. delete all pending requests
-            if (enabled && !metricsConfig.isEnabled()) {
-                dbPersistentManager.deleteAllMetricsRequest();
-            }
         }
     }
 
