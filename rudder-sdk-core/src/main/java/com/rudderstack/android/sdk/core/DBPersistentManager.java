@@ -314,6 +314,10 @@ class DBPersistentManager extends SQLiteOpenHelper {
         deleteTableData(METRICS_DATA_PLANE_TABLE_NAME);
     }
 
+    void deleteAllMetricsRequest() {
+        deleteTableData(METRICS_REQUEST_TABLE_NAME);
+    }
+
     private void deleteTableData(String tableName) {
         SQLiteDatabase database = getWritableDatabase();
         if (database.isOpen()) {
@@ -321,9 +325,9 @@ class DBPersistentManager extends SQLiteOpenHelper {
             String clearDBSQL = String.format(Locale.US, "DELETE FROM %s", tableName);
             RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: deleteAllEvents: clearDBSQL: %s", clearDBSQL));
             database.execSQL(clearDBSQL);
-            RudderLogger.logInfo("DBPersistentManager: deleteAllEvents: deleted all events");
+            RudderLogger.logInfo("DBPersistentManager: deleteTableData: " + tableName);
         } else {
-            RudderLogger.logError("DBPersistentManager: deleteAllEvents: database is not writable");
+            RudderLogger.logError("DBPersistentManager: deleteTableData: database is not writable");
         }
     }
 }

@@ -83,14 +83,17 @@ class MetricsStatsManager {
                     }
                     isFirstRun = false;
                 }
-                if (!metricsConfig.isEnabled()) {
+                if (metricsConfig.isEnabled()) {
+                    fetchLastMetrics();
+                    flushRequestsToServer();
+                } else {
                     RudderLogger.logVerbose("MetricsStatsManager: logging is not enabled. shutting down service");
+                    dbPersistentManager.deleteAllMetrics();
+                    dbPersistentManager.deleteAllMetricsRequest();
                     if (executorService != null && !executorService.isShutdown()) {
                         executorService.shutdownNow();
                     }
                 }
-                fetchLastMetrics();
-                flushRequestsToServer();
             }
         };
     }
@@ -113,12 +116,12 @@ class MetricsStatsManager {
             }
         }
         int retryCountConfigPlane = dbPersistentManager.getRetryCountConfigPlane();
-        if (retryCountConfigPlane > -1) {
+        if (retryCountConfigPlane > 0) {
             logRequest = true;
             params.put("retryCountConfigPlane", String.valueOf(retryCountConfigPlane));
         }
         int retryCountDataPlane = dbPersistentManager.getRetryCountDataPlane();
-        if (retryCountDataPlane > -1) {
+        if (retryCountDataPlane > 0) {
             logRequest = true;
             params.put("retryCountDataPlane", String.valueOf(retryCountDataPlane));
         }
@@ -149,19 +152,22 @@ class MetricsStatsManager {
     }
 
     private void flushRequestsToServer() {
-        SparseArray<String> requests = dbPersistentManager.getMetricsRequests();
-        if (requests.size() > 0) {
-            StringBuilder builder = new StringBuilder();
-            for (int index = 0; index < requests.size(); index++) {
-                String response = rudderHttpClient.get(String.format(Locale.US, "%s&timestamp=%d", requests.valueAt(index), System.currentTimeMillis()), null);
-                if (response.equalsIgnoreCase("OK")) {
-                    builder.append(requests.keyAt(index));
+        // do not send metrics if it is not configured in server config
+        if (metricsConfig != null && metricsConfig.isEnabled()) {
+            SparseArray<String> requests = dbPersistentManager.getMetricsRequests();
+            if (requests.size() > 0) {
+                StringBuilder builder = new StringBuilder();
+                for (int index = 0; index < requests.size(); index++) {
+                    String response = rudderHttpClient.get(String.format(Locale.US, "%s&timestamp=%d", requests.valueAt(index), System.currentTimeMillis()), null);
+                    if (response.equalsIgnoreCase("OK")) {
+                        builder.append(requests.keyAt(index));
+                    }
+                    builder.append(",");
                 }
-                builder.append(",");
+                // remove last "," character
+                builder.deleteCharAt(builder.length() - 1);
+                dbPersistentManager.clearMetricsRequestFromDB(builder.toString());
             }
-            // remove last "," character
-            builder.deleteCharAt(builder.length() - 1);
-            dbPersistentManager.clearMetricsRequestFromDB(builder.toString());
         }
     }
 
@@ -177,7 +183,12 @@ class MetricsStatsManager {
 
     private void parseConfigJson(String json) {
         if (!TextUtils.isEmpty(json)) {
+            boolean enabled = metricsConfig != null && metricsConfig.isEnabled();
             metricsConfig = new Gson().fromJson(json, MetricsConfig.class);
+            // enabled before, but not disabled from server. delete all pending requests
+            if (enabled && !metricsConfig.isEnabled()) {
+                dbPersistentManager.deleteAllMetricsRequest();
+            }
         }
     }
 

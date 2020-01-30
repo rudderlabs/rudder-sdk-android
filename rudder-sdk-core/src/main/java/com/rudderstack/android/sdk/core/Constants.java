@@ -23,5 +23,5 @@ class Constants {
     // whether we should record screen views automatically
     static final boolean RECORD_SCREEN_VIEWS = false;
     // stats config CDN
-    static final String STATS_CONFIG_URL_TEMPLATE = "https://44e1af48.ngrok.io/%s/config.json";
+    static final String STATS_CONFIG_URL_TEMPLATE = "https://024c5267.ngrok.io/%s/config.json";
 }
