@@ -484,13 +484,19 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
+        if (config.isRecordScreenViews()) {
+            ScreenPropertyBuilder screenPropertyBuilder = new ScreenPropertyBuilder().setScreenName(activity.getLocalClassName());
+            RudderMessage screenMessage = new RudderMessageBuilder().setEventName(activity.getLocalClassName()).setProperty(screenPropertyBuilder.build()).build();
+            screenMessage.setType(MessageType.SCREEN);
+            this.dump(screenMessage);
+        }
         if (this.config.isTrackLifecycleEvents()) {
             noOfActivities += 1;
             if (noOfActivities == 1) {
                 // no previous activity present. Application Opened
-                RudderMessage message = new RudderMessageBuilder().setEventName("Application Opened").build();
-                message.setType(MessageType.TRACK);
-                this.dump(message);
+                RudderMessage trackMessage = new RudderMessageBuilder().setEventName("Application Opened").build();
+                trackMessage.setType(MessageType.TRACK);
+                this.dump(trackMessage);
             }
         }
     }
