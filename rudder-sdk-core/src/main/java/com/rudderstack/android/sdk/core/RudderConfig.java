@@ -205,6 +205,18 @@ public class RudderConfig {
         this.factories = factories;
     }
 
+    void setConfigRefreshInterval(int configRefreshInterval) {
+        this.configRefreshInterval = configRefreshInterval;
+    }
+
+    void setTrackLifecycleEvents(boolean trackLifecycleEvents) {
+        this.trackLifecycleEvents = trackLifecycleEvents;
+    }
+
+    void setRecordScreenViews(boolean recordScreenViews) {
+        this.recordScreenViews = recordScreenViews;
+    }
+
     /**
      * @return custom toString implementation for RudderConfig
      */

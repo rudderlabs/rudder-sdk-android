@@ -457,19 +457,22 @@ public class RudderClient {
         public Builder(Context context, String writeKey) {
             if (context == null) {
                 RudderLogger.logError("context can not be null");
-                return;
             }
 
             if (TextUtils.isEmpty(writeKey)) {
                 RudderLogger.logDebug("WriteKey is not specified in constructor. looking for string file");
-                writeKey = Utils.getWriteKeyFromStrings(context);
+                if (context != null) {
+                    writeKey = Utils.getWriteKeyFromStrings(context);
+                }
             }
 
             if (TextUtils.isEmpty(writeKey)) {
                 RudderLogger.logError("WriteKey can not be null or empty");
-                return;
             }
-            this.application = (Application) context.getApplicationContext();
+
+            if (context != null) {
+                this.application = (Application) context.getApplicationContext();
+            }
             this.writeKey = writeKey;
         }
 
@@ -479,7 +482,10 @@ public class RudderClient {
          * @return get your builder back
          */
         public Builder trackApplicationLifecycleEvents() {
-            this.trackLifecycleEvents = true;
+            if (this.config == null) {
+                this.config = new RudderConfig();
+            }
+            this.config.setTrackLifecycleEvents(true);
             return this;
         }
 
@@ -489,7 +495,10 @@ public class RudderClient {
          * @return get your builder back
          */
         public Builder recordScreenViews() {
-            this.recordScreenViews = true;
+            if (this.config == null) {
+                this.config = new RudderConfig();
+            }
+            this.config.setRecordScreenViews(true);
             return this;
         }
 
@@ -500,6 +509,9 @@ public class RudderClient {
          * @return get your builder back
          */
         public Builder withRudderConfig(RudderConfig config) {
+            if (this.config != null) {
+                RudderLogger.logWarn("RudderClient: Builder: replacing old config");
+            }
             this.config = config;
             return this;
         }
@@ -509,6 +521,9 @@ public class RudderClient {
          * @return get your builder back
          */
         public Builder withRudderConfigBuilder(RudderConfig.Builder builder) {
+            if (this.config != null) {
+                RudderLogger.logWarn("RudderClient: Builder: replacing old config");
+            }
             this.config = builder.build();
             return this;
         }
@@ -527,14 +542,25 @@ public class RudderClient {
          * @return get your builder back
          */
         public Builder logLevel(int logLevel) {
-            this.logLevel = logLevel;
+            if (this.config == null) {
+                this.config = new RudderConfig();
+            }
+            this.config.setLogLevel(logLevel);
             return this;
         }
 
         /**
          * @return build your RudderClient to be used
          */
-        public RudderClient build() {
+        public @Nullable RudderClient build() {
+            if (this.application == null) {
+                RudderLogger.logError("Context is null. Aborting initialization. Returning null Client");
+                return null;
+            }
+            if (TextUtils.isEmpty(this.writeKey)) {
+                RudderLogger.logError("writeKey is null. Aborting initialization. Returning null Client");
+                return null;
+            }
             return getInstance(this.application, this.writeKey, this.config);
         }
     }
