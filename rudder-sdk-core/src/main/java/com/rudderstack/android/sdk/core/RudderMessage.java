@@ -136,7 +136,7 @@ public class RudderMessage {
         }
     }
 
-    Map<String, Object> getTraits() {
+    public Map<String, Object> getTraits() {
         return this.context.getTraits();
     }
 
