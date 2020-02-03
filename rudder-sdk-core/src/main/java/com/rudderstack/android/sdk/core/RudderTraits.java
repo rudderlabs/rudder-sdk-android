@@ -31,6 +31,8 @@ public class RudderTraits {
     private String gender;
     @SerializedName("userId")
     private String id;
+    @SerializedName("id")
+    private String oldId;
     @SerializedName("lastname")
     private String lastName;
     @SerializedName("name")
@@ -64,6 +66,7 @@ public class RudderTraits {
         this.firstName = firstName;
         this.gender = gender;
         this.id = id;
+        this.oldId = id;
         this.lastName = lastName;
         this.name = name;
         this.phone = phone;
@@ -131,6 +134,7 @@ public class RudderTraits {
 
     public RudderTraits putId(String id) {
         this.id = id;
+        this.oldId = id;
         return this;
     }
 
