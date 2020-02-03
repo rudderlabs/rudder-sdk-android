@@ -4,7 +4,7 @@ ext {
 
     publishedGroupId = 'com.rudderstack.android.sdk'
     libraryName = 'RudderAndroidSdkCore'
-    artifact = 'rudder-sdk-core'
+    artifact = 'core'
 
     libraryDescription = 'Android SDK for RudderStack. Steer your customer data.'
 
