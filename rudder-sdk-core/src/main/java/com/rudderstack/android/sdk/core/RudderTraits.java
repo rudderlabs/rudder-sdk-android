@@ -46,6 +46,120 @@ public class RudderTraits {
     @Expose(serialize = false)
     private transient Map<String, Object> extras;
 
+    private static final String ANONYMOUSID_KEY = "anonymousid";
+    private static final String ADDRESS_KEY = "address";
+    private static final String AGE_KEY = "age";
+    private static final String BIRTHDAY_KEY = "birthday";
+    private static final String COMPANY_KEY = "company";
+    private static final String CREATEDAT_KEY = "createdat";
+    private static final String DESCRIPTION_KEY = "description";
+    private static final String EMAIL_KEY = "email";
+    private static final String FIRSTNAME_KEY = "firstname";
+    private static final String GENDER_KEY = "gender";
+    private static final String USERID_KEY = "userid";
+    private static final String LASTNAME_KEY = "lastname";
+    private static final String NAME_KEY = "name";
+    private static final String PHONE_KEY = "phone";
+    private static final String TITLE_KEY = "title";
+    private static final String USERNAME_KEY = "username";
+
+    public static String getAnonymousId(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(ANONYMOUSID_KEY))
+            return (String)traitsMap.get(ANONYMOUSID_KEY);
+        return null;
+    }
+
+    public static String getAddress(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(ADDRESS_KEY))
+            return (String)traitsMap.get(ADDRESS_KEY);
+        return null;
+    }
+
+    public static String getAge(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(AGE_KEY))
+            return (String)traitsMap.get(AGE_KEY);
+        return null;
+    }
+
+    public static String getBirthday(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(BIRTHDAY_KEY))
+            return (String)traitsMap.get(BIRTHDAY_KEY);
+        return null;
+    }
+
+    public static String getCompany(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(COMPANY_KEY))
+            return (String)traitsMap.get(COMPANY_KEY);
+        return null;
+    }
+
+    public static String getCreatedAt(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(CREATEDAT_KEY))
+            return (String)traitsMap.get(CREATEDAT_KEY);
+        return null;
+    }
+
+    public static String getDescription(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(DESCRIPTION_KEY))
+            return (String)traitsMap.get(DESCRIPTION_KEY);
+        return null;
+    }
+
+    public static String getFirstname(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(FIRSTNAME_KEY))
+            return (String)traitsMap.get(FIRSTNAME_KEY);
+        return null;
+    }
+
+    public static String getEmail(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(EMAIL_KEY))
+            return (String)traitsMap.get(EMAIL_KEY);
+        return null;
+    }
+
+    public static String getGender(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(GENDER_KEY))
+            return (String)traitsMap.get(GENDER_KEY);
+        return null;
+    }
+
+    public static String getUserid(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(USERID_KEY))
+            return (String)traitsMap.get(USERID_KEY);
+        return null;
+    }
+
+    public static String getLastname(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(LASTNAME_KEY))
+            return (String)traitsMap.get(LASTNAME_KEY);
+        return null;
+    }
+
+    public static String getName(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(NAME_KEY))
+            return (String)traitsMap.get(NAME_KEY);
+        return null;
+    }
+
+    public static String getPhone(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(PHONE_KEY))
+            return (String)traitsMap.get(PHONE_KEY);
+        return null;
+    }
+
+    public static String getTitle(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(TITLE_KEY))
+            return (String)traitsMap.get(TITLE_KEY);
+        return null;
+    }
+
+    public static String getUsername(Map<String, Object> traitsMap) {
+        if(traitsMap != null & traitsMap.containsKey(USERNAME_KEY))
+            return (String)traitsMap.get(USERNAME_KEY);
+        return null;
+    }
+
+
     public RudderTraits() {
         RudderContext rudderContext = RudderElementCache.getCachedContext();
         if (rudderContext != null) this.anonymousId = rudderContext.getDeviceId();
@@ -183,6 +297,26 @@ public class RudderTraits {
         @SerializedName("street")
         private String street;
 
+        public String getCity() {
+            return city;
+        }
+
+        public String getCountry() {
+            return country;
+        }
+
+        public String getPostalCode() {
+            return postalCode;
+        }
+
+        public String getState() {
+            return state;
+        }
+
+        public String getStreet() {
+            return street;
+        }
+
         public Address() {
         }
 
@@ -217,6 +351,11 @@ public class RudderTraits {
             this.postalCode = postalCode;
             this.state = state;
             this.street = street;
+        }
+        
+        public static Address fromString(String address){
+            Address add = new Gson().fromJson(address,Address.class);
+            return add;
         }
     }
 

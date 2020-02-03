@@ -8,6 +8,7 @@ import android.text.TextUtils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -42,6 +43,15 @@ public class Utils {
     public static String toDateString(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         return formatter.format(date);
+    }
+
+    public static Date dateFromString(String date) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        try {
+            return formatter.parse(date);
+        } catch (ParseException e) {
+            return null;
+        }
     }
 
     public static String getDeviceId(Application application) {
