@@ -13,9 +13,6 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
-Properties localProperties = new Properties()
-localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
-
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
@@ -26,9 +23,6 @@ android {
         versionCode 4
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
-        buildConfigField('String', 'WRITE_KEY', localProperties.getProperty("writeKey"))
-        buildConfigField('String', 'END_POINT_URL', localProperties.getProperty("endPointUrl"))
     }
     buildTypes {
         release {

@@ -11,7 +11,9 @@ import com.rudderstack.android.sdk.core.RudderLogger
 class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
-        val TAG = "MainApplication"
+        const val TAG = "MainApplication"
+        const val END_POINT_URL = ""
+        const val WRITE_KEY = ""
     }
 
     override fun onCreate() {
@@ -19,15 +21,10 @@ class MainApplication : Application() {
 
         rudderClient = RudderClient.getInstance(
             this,
-            "1TSRSskqa15PG7F89tkwEbl5Td8",
+            WRITE_KEY,
             RudderConfig.Builder()
-                .withEndPointUri("https://a638edbb.ngrok.io")
-                .withLogLevel(
-                    when (BuildConfig.DEBUG) {
-                        true -> RudderLogger.RudderLogLevel.VERBOSE
-                        false -> RudderLogger.RudderLogLevel.NONE
-                    }
-                )
+                .withEndPointUri(END_POINT_URL)
+                .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withTrackLifecycleEvents(true)
                 .build()
         )

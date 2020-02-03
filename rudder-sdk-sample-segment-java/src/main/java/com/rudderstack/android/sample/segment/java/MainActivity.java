@@ -8,7 +8,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.rudderstack.android.sdk.core.RudderClient;
 import com.rudderstack.android.sdk.core.RudderProperty;
 import com.rudderstack.android.sdk.core.RudderTraits;
-import com.rudderstack.android.sdk.core.ecomm.events.ProductAddedToCartEvent;
 
 import java.util.Date;
 
@@ -29,10 +28,10 @@ public class MainActivity extends AppCompatActivity {
         address.putCity("City");
         address.putCountry("USA");
         traits.putAddress(address);
-        traits.put("boolean", new Boolean(true));
-        traits.put("integer", new Integer(50));
-        traits.put("float", new Float(120.4));
-        traits.put("long", new Long(1234L));
+        traits.put("boolean", true);
+        traits.put("integer", 50);
+        traits.put("float", 120.4f);
+        traits.put("long", 1234L);
         traits.put("string", "hello");
         traits.put("date", new Date(System.currentTimeMillis()));
 

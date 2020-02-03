@@ -14,18 +14,21 @@ public class MainApplication extends Application {
     private static MainApplication instance;
     private static RudderClient rudderClient;
 
+    private static final String END_POINT_URL = "";
+    private static final String WRITE_KEY = "";
+
     @Override
     public void onCreate() {
         super.onCreate();
 
         RudderConfig config = new RudderConfig.Builder()
-                .withEndPointUri(BuildConfig.END_POINT_URL)
+                .withEndPointUri(END_POINT_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .build();
 
         instance = this;
 
-        rudderClient = new RudderClient.Builder(this, BuildConfig.WRITE_KEY)
+        rudderClient = new RudderClient.Builder(this, WRITE_KEY)
                 .withRudderConfig(config)
                 .build();
 
@@ -40,9 +43,9 @@ public class MainApplication extends Application {
 
         RudderClient client = RudderClient.getInstance(
                 this,
-                BuildConfig.WRITE_KEY,
+                WRITE_KEY,
                 new RudderConfig.Builder()
-                        .withEndPointUri(BuildConfig.END_POINT_URL)
+                        .withEndPointUri(END_POINT_URL)
                         .build()
         );
 
@@ -51,13 +54,15 @@ public class MainApplication extends Application {
         Map<String, String> childProperties = new HashMap<>();
         childProperties.put("test_child_key_1", "test_child_value_1");
         properties.put("test_key_2", childProperties);
-        rudderClient.track(
-                new RudderMessageBuilder()
-                        .setEventName("test_track_event")
-                        .setUserId("test_user_id")
-                        .setProperty(properties)
-                        .build()
-        );
+        if (rudderClient != null) {
+            rudderClient.track(
+                    new RudderMessageBuilder()
+                            .setEventName("test_track_event")
+                            .setUserId("test_user_id")
+                            .setProperty(properties)
+                            .build()
+            );
+        }
     }
 
     public static RudderClient getRudderClient() {

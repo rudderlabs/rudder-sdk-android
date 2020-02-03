@@ -15,7 +15,6 @@ class MainActivity : AppCompatActivity() {
 
         val rudderClient = MainApplication.rudderClient
 
-
         val properties: MutableMap<String, Any> = HashMap()
         properties["test_key_1"] = "test_value_1"
 
@@ -104,43 +103,5 @@ class MainActivity : AppCompatActivity() {
             .withShippingMethod("FedEx")
             .withStep(1)
             .build()
-
-//val productSearchedEvent = ProductSearchedEvent()
-//    .withQuery("blue hotpants")
-//rudderClient?.track(
-//    productSearchedEvent.event(),
-//    productSearchedEvent.properties()
-//)
-
-//        rudderClient?.track("some_test_event")
-
-
-//        val cartSharedEvent = CartSharedEvent()
-//            .withCart(cart)
-//            .withSocialChannel("facebook")
-//            .withShareMessage("some share message")
-//            .withRecipient("friend@rudderstack.com")
-//        rudderClient?.track(cartSharedEvent.event(), cartSharedEvent.properties())
-//
-//        navigate_to_first.setOnClickListener {
-//            startActivity(Intent(this, FirstActivity::class.java))
-//        }
-//
-//        trackBtn.setOnClickListener {
-//            if (rudderClient == null) return@setOnClickListener
-//        }
-//
-//        screenBtn.setOnClickListener {
-//            if (rudderClient == null) return@setOnClickListener
-//        }
-//
-//        identifyBtn.setOnClickListener {
-//            if (rudderClient == null) return@setOnClickListener
-//        }
-//
-//        resetBtn.setOnClickListener {
-//            if (rudderClient == null) return@setOnClickListener
-//            rudderClient.reset()
-//        }
     }
 }
