@@ -10,6 +10,12 @@ public class ScreenPropertyBuilder extends RudderPropertyBuilder {
         return this;
     }
 
+    private boolean isAutomatic = false;
+    ScreenPropertyBuilder isAtomatic(boolean isAutomatic) {
+        this.isAutomatic = isAutomatic;
+        return this;
+    }
+
     @Override
     public RudderProperty build() {
         RudderProperty property = new RudderProperty();
@@ -18,6 +24,7 @@ public class ScreenPropertyBuilder extends RudderPropertyBuilder {
         } else {
             property.put("name", name);
         }
+        property.put("automatic", isAutomatic);
         return property;
     }
 }
