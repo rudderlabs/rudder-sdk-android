@@ -45,15 +45,6 @@ public class Utils {
         return formatter.format(date);
     }
 
-    public static Date dateFromString(String date) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-        try {
-            return formatter.parse(date);
-        } catch (ParseException e) {
-            return null;
-        }
-    }
-
     public static String getDeviceId(Application application) {
         if (Build.VERSION.SDK_INT >= 17) {
             String androidId = getString(application.getContentResolver(), ANDROID_ID);

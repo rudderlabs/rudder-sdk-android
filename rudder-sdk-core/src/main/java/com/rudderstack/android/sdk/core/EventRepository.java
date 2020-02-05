@@ -464,6 +464,21 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
+    void flush(){
+        if (isFactoryInitialized) {
+            RudderLogger.logDebug("EventRepository: flush native SDKs");
+            for (String key : integrationOperationsMap.keySet()) {
+                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush for %s", key));
+                RudderIntegration integration = integrationOperationsMap.get(key);
+                if (integration != null) {
+                    integration.flush();
+                }
+            }
+        }
+
+        //TODO: add flush to rudder data plane
+    }
+
     void onIntegrationReady(String key, RudderClient.Callback callback) {
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: onIntegrationReady: callback registered for %s", key));
         integrationCallbacks.put(key, callback);

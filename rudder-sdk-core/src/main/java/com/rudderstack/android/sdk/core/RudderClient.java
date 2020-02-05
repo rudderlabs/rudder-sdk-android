@@ -412,6 +412,13 @@ public class RudderClient {
     }
 
     /**
+     * Flush Events
+     */
+    public void flush() {
+        if (repository != null) repository.flush();
+    }
+
+    /**
      * Register Native SDK callback for custom implementation
      *
      * @param key      Native SDK key like Google Analytics, Amplitude, Adjust
