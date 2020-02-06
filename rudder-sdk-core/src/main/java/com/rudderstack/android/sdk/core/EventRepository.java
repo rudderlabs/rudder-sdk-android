@@ -98,7 +98,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             // initiate RudderPreferenceManager and check for lifeCycleEvents
             preferenceManager = RudderPreferenceManager.getInstance(_application);
             this.checkApplicationUpdateStatus(_application);
-            if (config.isTrackLifecycleEvents()) {
+            if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
                 _application.registerActivityLifecycleCallbacks(this);
             }
 
@@ -326,6 +326,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // add sentAt time stamp
                 message = String.format("%s,\"sentAt\":\"%s\"}", message, sentAtTimestamp);
                 // finally add message string to builder
+                // finally add message string to builder
                 builder.append(message);
                 // if not last item in the list, add a ","
                 if (index != messages.size() - 1) {
@@ -475,8 +476,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
             }
         }
-
-        //TODO: add flush to rudder data plane
     }
 
     void onIntegrationReady(String key, RudderClient.Callback callback) {
@@ -500,7 +499,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
         if (config.isRecordScreenViews()) {
-            ScreenPropertyBuilder screenPropertyBuilder = new ScreenPropertyBuilder().setScreenName(activity.getLocalClassName());
+            ScreenPropertyBuilder screenPropertyBuilder = new ScreenPropertyBuilder().setScreenName(activity.getLocalClassName()).isAtomatic(true);
             RudderMessage screenMessage = new RudderMessageBuilder().setEventName(activity.getLocalClassName()).setProperty(screenPropertyBuilder.build()).build();
             screenMessage.setType(MessageType.SCREEN);
             this.dump(screenMessage);
