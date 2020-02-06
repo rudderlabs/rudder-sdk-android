@@ -1,4 +1,4 @@
-[ ![Download](https://api.bintray.com/packages/rudderlabs-bintray/rudder-sdk-android-core/rudder-sdk-android-core/images/download.svg?version=0.1.4) ](https://bintray.com/rudderlabs-bintray/rudder-sdk-android-core/rudder-sdk-android-core/0.1.4/link)
+[ ![Download](https://api.bintray.com/packages/rudderstack/rudderstack/core/images/download.svg?version=1.0-beta-01) ](https://bintray.com/rudderstack/rudderstack/core/1.0-beta-01/link)
 
 # What is Rudder?
 
@@ -16,13 +16,13 @@ Released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 ```
 repositories {
   maven {
-    jcenter()
+  	url  "https://dl.bintray.com/rudderstack/rudderstack"
   }
 }
 ```
 2. Add the dependency under ```dependencies```
 ```
-implementation 'com.rudderlabs.android.sdk:rudder-sdk-core:0.1.4'
+implementation 'com.rudderstack.android.sdk:core:1.0-beta-01'
 ```
 
 ## Initialize ```RudderClient```
@@ -36,7 +36,7 @@ val rudderClient: RudderClient = RudderClient.getInstance(
         .build()
 )
 ```
-or (compatible with existing segment code)
+or (compatible with existing Segment code)
 ```
 RudderClient.Builder builder = new RudderClient.Builder(this, WRITE_KEY);
 builder.logLevel(RudderLogger.RudderLogLevel.VERBOSE);
@@ -56,7 +56,7 @@ rudderClient.track(
         .setUserId("test_user_id")
 )
 ```
-or (compatible with existing segment instrumentation code)
+or (compatible with existing Segment instrumentation code)
 ```
 String customEvent = "some_custom_event";
 String propertyKey = "some_property_key";
@@ -67,10 +67,9 @@ RudderClient.with(this).track(
 );
 ```
 
-For more detailed documentation check [here](https://docs.rudderlabs.com/sdk-integration-guide/getting-started-with-android-sdk)
+For more detailed documentation check [here](https://docs.rudderstack.com/sdk-integration-guide/getting-started-with-android-sdk)
 
 # Coming Soon
-
-1. Native platform SDK integration support
-2. More documentation
-3. More destination support
+1. Install attribution support using ```referrer``` API. 
+2. Option to opt-out from tracking any Analytics Event.
+3. RudderOption implementation for custom destination support.
