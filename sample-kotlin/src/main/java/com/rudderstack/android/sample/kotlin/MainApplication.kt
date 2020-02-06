@@ -12,8 +12,8 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val END_POINT_URL = ""
-        const val WRITE_KEY = ""
+        const val END_POINT_URL = "https://7cfa36c2.ngrok.io"
+        const val WRITE_KEY = "1TSRSskqa15PG7F89tkwEbl5Td8"
     }
 
     override fun onCreate() {

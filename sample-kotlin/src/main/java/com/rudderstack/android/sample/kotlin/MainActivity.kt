@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
 
         val rudderClient = MainApplication.rudderClient
 
-        val properties: MutableMap<String, Any> = HashMap()
+        val properties: MutableMap<String, Any> = mutableMapOf()
         properties["test_key_1"] = "test_value_1"
 
         val childProperties: MutableMap<String, String> = HashMap()
