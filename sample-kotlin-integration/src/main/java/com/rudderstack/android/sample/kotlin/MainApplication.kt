@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
+import com.rudderstack.android.integration.dummy.FirebaseIntegrationFactory
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
@@ -26,6 +27,7 @@ class MainApplication : Application() {
                 .withEndPointUri(END_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withConfigPlaneUrl(END_URL)
+                .withFactory(FirebaseIntegrationFactory.FACTORY)
                 .withTrackLifecycleEvents(true)
                 .withRecordScreenViews(true)
                 .build()
