@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 include ':sample-kotlin', ':core', ':sample-segment-java', ':integration-dummy-impl'
+=======
+include 'sample-kotlin', ':core', ':sample-segment-java', ':dummy-impl'
+>>>>>>> c3618ae4d11da8c56cfb6b225d169d8d5b903eed
