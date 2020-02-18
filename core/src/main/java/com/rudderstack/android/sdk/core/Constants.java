@@ -18,7 +18,6 @@ class Constants {
     static final int SLEEP_TIMEOUT = 10;
     // config-plane url to get the config for the writeKey
     static final String CONFIG_PLANE_URL = "https://api.rudderlabs.com";
-//    static final String CONFIG_PLANE_URL = "https://f7572250.ngrok.io";
     // whether we should trackLifecycle events
     static final boolean TRACK_LIFECYCLE_EVENTS = true;
     // whether we should record screen views automatically

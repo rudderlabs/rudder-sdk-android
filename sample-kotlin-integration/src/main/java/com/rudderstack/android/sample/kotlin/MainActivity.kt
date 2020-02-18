@@ -103,7 +103,5 @@ class MainActivity : AppCompatActivity() {
             .withShippingMethod("FedEx")
             .withStep(1)
             .build()
-
-        rudderClient.identify("test_user_id")
     }
 }

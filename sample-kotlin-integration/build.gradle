@@ -17,7 +17,7 @@ android {
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
     defaultConfig {
-        applicationId "com.rudderstack.sample.android"
+        applicationId "com.rudderstack.integration.test.firebase"
         minSdkVersion 16
         targetSdkVersion 29
         versionCode 4

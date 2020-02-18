@@ -15,17 +15,17 @@ public class RudderLogger {
         logLevel = l;
     }
 
-    static void logError(Throwable throwable) {
+    public static void logError(Throwable throwable) {
         if (logLevel >= RudderLogLevel.ERROR) {
             Log.e(TAG, "Error: ", throwable);
         }
     }
 
-    static void logError(Exception ex) {
+    public  static void logError(Exception ex) {
         logError(ex.getMessage());
     }
 
-    static void logError(String message) {
+    public static void logError(String message) {
         if (logLevel >= RudderLogLevel.ERROR) {
             Log.e(TAG, "Error: " + message);
         }
@@ -37,19 +37,19 @@ public class RudderLogger {
         }
     }
 
-    static void logInfo(String message) {
+    public static void logInfo(String message) {
         if (logLevel >= RudderLogLevel.INFO) {
             Log.i(TAG, "Info: " + message);
         }
     }
 
-    static void logDebug(String message) {
+    public static void logDebug(String message) {
         if (logLevel >= RudderLogLevel.DEBUG) {
             Log.d(TAG, "Debug: " + message);
         }
     }
 
-    static void logVerbose(String message) {
+    public static void logVerbose(String message) {
         if (logLevel >= RudderLogLevel.VERBOSE) {
             Log.v(TAG, "Verbose: " + message);
         }
