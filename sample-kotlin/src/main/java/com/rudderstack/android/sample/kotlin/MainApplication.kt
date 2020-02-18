@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
+import com.rudderstack.android.integration.dummy.FirebaseIntegrationFactory
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
@@ -12,7 +13,7 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val END_POINT_URL = "https://7cfa36c2.ngrok.io"
+        const val END_URL = "https://cd740f82.ngrok.io"
         const val WRITE_KEY = "1TSRSskqa15PG7F89tkwEbl5Td8"
     }
 
@@ -23,9 +24,12 @@ class MainApplication : Application() {
             this,
             WRITE_KEY,
             RudderConfig.Builder()
-                .withEndPointUri(END_POINT_URL)
+                .withEndPointUri(END_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
+                .withConfigPlaneUrl(END_URL)
+                .withFactory(FirebaseIntegrationFactory.FACTORY)
                 .withTrackLifecycleEvents(true)
+                .withRecordScreenViews(true)
                 .build()
         )
 

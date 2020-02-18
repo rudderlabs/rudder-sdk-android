@@ -30,6 +30,7 @@ dependencies {
 
     compileOnly project(':core')
     implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.firebase:firebase-analytics:17.2.2'
 
     testImplementation 'com.android.support.test:rules:1.0.2'
     testImplementation 'com.android.support.test:runner:1.0.2'

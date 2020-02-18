@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
 
         rudderClient!!.track(
             RudderMessageBuilder()
-                .setEventName("vedantuWebSite_test")
+                .setEventName("WebSite_test")
                 .setUserId("test_user_id")
                 .setProperty(properties)
                 .build()

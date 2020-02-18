@@ -36,6 +36,7 @@ public class RudderConfig {
     private int configRefreshInterval;
     private boolean trackLifecycleEvents;
     private boolean recordScreenViews;
+    private String configPlaneUrl;
     private List<RudderIntegration.Factory> factories;
 
     RudderConfig() {
@@ -48,6 +49,7 @@ public class RudderConfig {
                 Constants.CONFIG_REFRESH_INTERVAL,
                 Constants.TRACK_LIFECYCLE_EVENTS,
                 Constants.RECORD_SCREEN_VIEWS,
+                Constants.CONFIG_PLANE_URL,
                 null
         );
     }
@@ -61,6 +63,7 @@ public class RudderConfig {
             int configRefreshInterval,
             boolean trackLifecycleEvents,
             boolean recordScreenViews,
+            String configPlaneUrl,
             List<RudderIntegration.Factory> factories
     ) {
         RudderLogger.init(logLevel);
@@ -112,6 +115,17 @@ public class RudderConfig {
 
         if (factories != null && !factories.isEmpty()) {
             this.factories = factories;
+        }
+
+        if (TextUtils.isEmpty(configPlaneUrl)) {
+            RudderLogger.logError("configPlaneUrl can not be null or empty. Set to default.");
+            this.configPlaneUrl = Constants.CONFIG_PLANE_URL;
+        } else if (!URLUtil.isValidUrl(configPlaneUrl)) {
+            RudderLogger.logError("Malformed configPlaneUrl. Set to default");
+            this.configPlaneUrl = Constants.CONFIG_PLANE_URL;
+        } else {
+            if (!configPlaneUrl.endsWith("/")) configPlaneUrl += "/";
+            this.configPlaneUrl = configPlaneUrl;
         }
     }
 
@@ -181,6 +195,13 @@ public class RudderConfig {
         return factories;
     }
 
+    /**
+     * @return configPlaneUrl (Link to your hosted version of source-config)
+     */
+    public String getConfigPlaneUrl() {
+        return configPlaneUrl;
+    }
+
     void setEndPointUri(String endPointUri) {
         this.endPointUri = endPointUri;
     }
@@ -215,6 +236,10 @@ public class RudderConfig {
 
     void setRecordScreenViews(boolean recordScreenViews) {
         this.recordScreenViews = recordScreenViews;
+    }
+
+    void setConfigPlaneUrl(String configPlaneUrl) {
+        this.configPlaneUrl = configPlaneUrl;
     }
 
     /**
@@ -374,7 +399,18 @@ public class RudderConfig {
          */
         public Builder withTrackLifecycleEvents(boolean shouldTrackLifecycleEvents) {
             this.trackLifecycleEvents = shouldTrackLifecycleEvents;
-            return  this;
+            return this;
+        }
+
+        private String configPlaneUrl = Constants.CONFIG_PLANE_URL;
+
+        /**
+         * @param configPlaneUrl Your hosted version of sourceConfig
+         * @return RudderConfig.Builder
+         */
+        public Builder withConfigPlaneUrl(String configPlaneUrl) {
+            this.configPlaneUrl = configPlaneUrl;
+            return this;
         }
 
         /**
@@ -392,7 +428,9 @@ public class RudderConfig {
                     this.configRefreshInterval,
                     this.trackLifecycleEvents,
                     this.recordScreenViews,
-                    this.factories);
+                    this.configPlaneUrl,
+                    this.factories
+            );
         }
     }
 }
