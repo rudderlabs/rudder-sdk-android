@@ -11,6 +11,8 @@ public abstract class RudderIntegration<T> {
 
     public abstract void dump(RudderMessage element);
 
+    public void flush() {
+    }
     /**
      * @return Instance of the initiated SDK
      */
