@@ -9,7 +9,7 @@ import com.rudderstack.android.sdk.core.util.Utils;
 import java.util.Locale;
 import java.util.Map;
 
-class RudderContext {
+public class RudderContext {
     @SerializedName("app")
     private RudderApp app;
     @SerializedName("traits")
@@ -89,7 +89,7 @@ class RudderContext {
         }
     }
 
-    Map<String, Object> getTraits() {
+    public Map<String, Object> getTraits() {
         return traits;
     }
 
