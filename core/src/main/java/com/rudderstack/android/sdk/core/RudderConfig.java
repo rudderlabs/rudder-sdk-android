@@ -28,7 +28,7 @@ import java.util.Locale;
  *
  * */
 public class RudderConfig {
-    private String endPointUri;
+    private String dataPlaneUrl;
     private int flushQueueSize;
     private int dbCountThreshold;
     private int sleepTimeOut;
@@ -36,12 +36,12 @@ public class RudderConfig {
     private int configRefreshInterval;
     private boolean trackLifecycleEvents;
     private boolean recordScreenViews;
-    private String configPlaneUrl;
+    private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
 
     RudderConfig() {
         this(
-                Constants.BASE_URL,
+                Constants.DATA_PLANE_URL,
                 Constants.FLUSH_QUEUE_SIZE,
                 Constants.DB_COUNT_THRESHOLD,
                 Constants.SLEEP_TIMEOUT,
@@ -49,13 +49,13 @@ public class RudderConfig {
                 Constants.CONFIG_REFRESH_INTERVAL,
                 Constants.TRACK_LIFECYCLE_EVENTS,
                 Constants.RECORD_SCREEN_VIEWS,
-                Constants.CONFIG_PLANE_URL,
+                Constants.CONTROL_PLANE_URL,
                 null
         );
     }
 
     private RudderConfig(
-            String endPointUri,
+            String dataPlaneUrl,
             int flushQueueSize,
             int dbCountThreshold,
             int sleepTimeOut,
@@ -63,20 +63,20 @@ public class RudderConfig {
             int configRefreshInterval,
             boolean trackLifecycleEvents,
             boolean recordScreenViews,
-            String configPlaneUrl,
+            String controlPlaneUrl,
             List<RudderIntegration.Factory> factories
     ) {
         RudderLogger.init(logLevel);
 
-        if (TextUtils.isEmpty(endPointUri)) {
+        if (TextUtils.isEmpty(dataPlaneUrl)) {
             RudderLogger.logError("endPointUri can not be null or empty. Set to default.");
-            this.endPointUri = Constants.BASE_URL;
-        } else if (!URLUtil.isValidUrl(endPointUri)) {
+            this.dataPlaneUrl = Constants.DATA_PLANE_URL;
+        } else if (!URLUtil.isValidUrl(dataPlaneUrl)) {
             RudderLogger.logError("Malformed endPointUri. Set to default");
-            this.endPointUri = Constants.BASE_URL;
+            this.dataPlaneUrl = Constants.DATA_PLANE_URL;
         } else {
-            if (!endPointUri.endsWith("/")) endPointUri += "/";
-            this.endPointUri = endPointUri;
+            if (!dataPlaneUrl.endsWith("/")) dataPlaneUrl += "/";
+            this.dataPlaneUrl = dataPlaneUrl;
         }
 
         if (flushQueueSize < Utils.MIN_FLUSH_QUEUE_SIZE || flushQueueSize > Utils.MAX_FLUSH_QUEUE_SIZE) {
@@ -117,24 +117,32 @@ public class RudderConfig {
             this.factories = factories;
         }
 
-        if (TextUtils.isEmpty(configPlaneUrl)) {
+        if (TextUtils.isEmpty(controlPlaneUrl)) {
             RudderLogger.logError("configPlaneUrl can not be null or empty. Set to default.");
-            this.configPlaneUrl = Constants.CONFIG_PLANE_URL;
-        } else if (!URLUtil.isValidUrl(configPlaneUrl)) {
+            this.controlPlaneUrl = Constants.CONTROL_PLANE_URL;
+        } else if (!URLUtil.isValidUrl(controlPlaneUrl)) {
             RudderLogger.logError("Malformed configPlaneUrl. Set to default");
-            this.configPlaneUrl = Constants.CONFIG_PLANE_URL;
+            this.controlPlaneUrl = Constants.CONTROL_PLANE_URL;
         } else {
-            if (!configPlaneUrl.endsWith("/")) configPlaneUrl += "/";
-            this.configPlaneUrl = configPlaneUrl;
+            if (!controlPlaneUrl.endsWith("/")) controlPlaneUrl += "/";
+            this.controlPlaneUrl = controlPlaneUrl;
         }
     }
 
     /**
      * @return endPointUrl (your data-plane url)
+     * @deprecated use getDataPlaneUrl()
      */
     @NonNull
     public String getEndPointUri() {
-        return endPointUri;
+        return dataPlaneUrl;
+    }
+
+    /**
+     * @return dataPlaneUrl (your data-plane url)
+     */
+    public String getDataPlaneUrl() {
+        return dataPlaneUrl;
     }
 
     /**
@@ -197,13 +205,25 @@ public class RudderConfig {
 
     /**
      * @return configPlaneUrl (Link to your hosted version of source-config)
+     * @deprecated use getControlPlaneUrl()
      */
     public String getConfigPlaneUrl() {
-        return configPlaneUrl;
+        return controlPlaneUrl;
     }
 
-    void setEndPointUri(String endPointUri) {
-        this.endPointUri = endPointUri;
+    /**
+     * @return controlPlaneUrl (Link to your hosted version of source-config)
+     */
+    public String getControlPlaneUrl() {
+        return controlPlaneUrl;
+    }
+
+    void setDataPlaneUrl(String dataPlaneUrl) {
+        this.dataPlaneUrl = dataPlaneUrl;
+    }
+
+    void setControlPlaneUrl(String controlPlaneUrl) {
+        this.controlPlaneUrl = controlPlaneUrl;
     }
 
     void setFlushQueueSize(int flushQueueSize) {
@@ -238,17 +258,13 @@ public class RudderConfig {
         this.recordScreenViews = recordScreenViews;
     }
 
-    void setConfigPlaneUrl(String configPlaneUrl) {
-        this.configPlaneUrl = configPlaneUrl;
-    }
-
     /**
      * @return custom toString implementation for RudderConfig
      */
     @Override
     @NonNull
     public String toString() {
-        return String.format(Locale.US, "RudderConfig: endPointUrl:%s | flushQueueSize: %d | dbCountThreshold: %d | sleepTimeOut: %d | logLevel: %d", endPointUri, flushQueueSize, dbCountThreshold, sleepTimeOut, logLevel);
+        return String.format(Locale.US, "RudderConfig: endPointUrl:%s | flushQueueSize: %d | dbCountThreshold: %d | sleepTimeOut: %d | logLevel: %d", dataPlaneUrl, flushQueueSize, dbCountThreshold, sleepTimeOut, logLevel);
     }
 
 
@@ -285,11 +301,12 @@ public class RudderConfig {
             return this;
         }
 
-        private String endPointUri = Constants.BASE_URL;
+        private String dataPlaneUrl = Constants.DATA_PLANE_URL;
 
         /**
          * @param endPointUri Your data-plane Url
          * @return RudderConfig.Builder
+         * @deprecated use withDataPlaneUrl(String dataPlaneUrl)
          */
         public Builder withEndPointUri(@NonNull String endPointUri) {
             if (TextUtils.isEmpty(endPointUri)) {
@@ -300,7 +317,24 @@ public class RudderConfig {
                 RudderLogger.logError("Malformed endPointUri. Set to default");
                 return this;
             }
-            this.endPointUri = endPointUri;
+            this.dataPlaneUrl = endPointUri;
+            return this;
+        }
+
+        /**
+         * @param dataPlaneUrl Your data-plane Url
+         * @return RudderConfig.Builder
+         */
+        public Builder withDataPlaneUrl(@NonNull String dataPlaneUrl) {
+            if (TextUtils.isEmpty(dataPlaneUrl)) {
+                RudderLogger.logError("endPointUri can not be null or empty. Set to default");
+                return this;
+            }
+            if (!URLUtil.isValidUrl(dataPlaneUrl)) {
+                RudderLogger.logError("Malformed endPointUri. Set to default");
+                return this;
+            }
+            this.dataPlaneUrl = dataPlaneUrl;
             return this;
         }
 
@@ -402,14 +436,24 @@ public class RudderConfig {
             return this;
         }
 
-        private String configPlaneUrl = Constants.CONFIG_PLANE_URL;
+        private String controlPlaneUrl = Constants.CONTROL_PLANE_URL;
 
         /**
          * @param configPlaneUrl Your hosted version of sourceConfig
          * @return RudderConfig.Builder
+         * @deprecated use withControlPlaneUrl(String controlPlaneUrl)
          */
         public Builder withConfigPlaneUrl(String configPlaneUrl) {
-            this.configPlaneUrl = configPlaneUrl;
+            this.controlPlaneUrl = configPlaneUrl;
+            return this;
+        }
+
+        /**
+         * @param controlPlaneUrl Your hosted version of sourceConfig
+         * @return RudderConfig.Builder
+         */
+        public Builder withControlPlaneUrl(String controlPlaneUrl) {
+            this.controlPlaneUrl = controlPlaneUrl;
             return this;
         }
 
@@ -420,7 +464,7 @@ public class RudderConfig {
          */
         public RudderConfig build() {
             return new RudderConfig(
-                    this.endPointUri,
+                    this.dataPlaneUrl,
                     this.flushQueueSize,
                     this.dbThresholdCount,
                     this.sleepTimeout,
@@ -428,7 +472,7 @@ public class RudderConfig {
                     this.configRefreshInterval,
                     this.trackLifecycleEvents,
                     this.recordScreenViews,
-                    this.configPlaneUrl,
+                    this.controlPlaneUrl,
                     this.factories
             );
         }

@@ -356,7 +356,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             }
 
             // get endPointUrl form config object
-            String endPointUri = config.getEndPointUri() + "v1/batch";
+            String endPointUri = config.getDataPlaneUrl() + "v1/batch";
             RudderLogger.logDebug("EventRepository: flushEventsToServer: endPointRepository: " + endPointUri);
 
             // create url object
