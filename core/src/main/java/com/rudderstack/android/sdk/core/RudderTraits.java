@@ -71,8 +71,8 @@ public class RudderTraits {
      * @return anonymousId String
      */
     public static String getAnonymousId(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(ANONYMOUSID_KEY))
-            return (String)traitsMap.get(ANONYMOUSID_KEY);
+        if (traitsMap != null & traitsMap.containsKey(ANONYMOUSID_KEY))
+            return (String) traitsMap.get(ANONYMOUSID_KEY);
         return null;
     }
 
@@ -83,8 +83,8 @@ public class RudderTraits {
      * @return address String
      */
     public static String getAddress(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(ADDRESS_KEY))
-            return (String)traitsMap.get(ADDRESS_KEY);
+        if (traitsMap != null & traitsMap.containsKey(ADDRESS_KEY))
+            return new Gson().toJson(traitsMap.get(ADDRESS_KEY));
         return null;
     }
 
@@ -95,8 +95,8 @@ public class RudderTraits {
      * @return age String
      */
     public static String getAge(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(AGE_KEY))
-            return (String)traitsMap.get(AGE_KEY);
+        if (traitsMap != null & traitsMap.containsKey(AGE_KEY))
+            return (String) traitsMap.get(AGE_KEY);
         return null;
     }
 
@@ -107,8 +107,8 @@ public class RudderTraits {
      * @return birthday String
      */
     public static String getBirthday(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(BIRTHDAY_KEY))
-            return (String)traitsMap.get(BIRTHDAY_KEY);
+        if (traitsMap != null & traitsMap.containsKey(BIRTHDAY_KEY))
+            return (String) traitsMap.get(BIRTHDAY_KEY);
         return null;
     }
 
@@ -119,8 +119,8 @@ public class RudderTraits {
      * @return company String
      */
     public static String getCompany(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(COMPANY_KEY))
-            return (String)traitsMap.get(COMPANY_KEY);
+        if (traitsMap != null & traitsMap.containsKey(COMPANY_KEY))
+            return (String) traitsMap.get(COMPANY_KEY);
         return null;
     }
 
@@ -131,8 +131,8 @@ public class RudderTraits {
      * @return created_at String
      */
     public static String getCreatedAt(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(CREATEDAT_KEY))
-            return (String)traitsMap.get(CREATEDAT_KEY);
+        if (traitsMap != null & traitsMap.containsKey(CREATEDAT_KEY))
+            return (String) traitsMap.get(CREATEDAT_KEY);
         return null;
     }
 
@@ -143,8 +143,8 @@ public class RudderTraits {
      * @return description String
      */
     public static String getDescription(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(DESCRIPTION_KEY))
-            return (String)traitsMap.get(DESCRIPTION_KEY);
+        if (traitsMap != null & traitsMap.containsKey(DESCRIPTION_KEY))
+            return (String) traitsMap.get(DESCRIPTION_KEY);
         return null;
     }
 
@@ -155,8 +155,8 @@ public class RudderTraits {
      * @return firstName String
      */
     public static String getFirstname(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(FIRSTNAME_KEY))
-            return (String)traitsMap.get(FIRSTNAME_KEY);
+        if (traitsMap != null & traitsMap.containsKey(FIRSTNAME_KEY))
+            return (String) traitsMap.get(FIRSTNAME_KEY);
         return null;
     }
 
@@ -167,8 +167,8 @@ public class RudderTraits {
      * @return email String
      */
     public static String getEmail(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(EMAIL_KEY))
-            return (String)traitsMap.get(EMAIL_KEY);
+        if (traitsMap != null & traitsMap.containsKey(EMAIL_KEY))
+            return (String) traitsMap.get(EMAIL_KEY);
         return null;
     }
 
@@ -179,8 +179,8 @@ public class RudderTraits {
      * @return gender String
      */
     public static String getGender(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(GENDER_KEY))
-            return (String)traitsMap.get(GENDER_KEY);
+        if (traitsMap != null & traitsMap.containsKey(GENDER_KEY))
+            return (String) traitsMap.get(GENDER_KEY);
         return null;
     }
 
@@ -191,8 +191,8 @@ public class RudderTraits {
      * @return userId String
      */
     public static String getUserid(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(USERID_KEY))
-            return (String)traitsMap.get(USERID_KEY);
+        if (traitsMap != null & traitsMap.containsKey(USERID_KEY))
+            return (String) traitsMap.get(USERID_KEY);
         return null;
     }
 
@@ -203,8 +203,8 @@ public class RudderTraits {
      * @return lastName String
      */
     public static String getLastname(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(LASTNAME_KEY))
-            return (String)traitsMap.get(LASTNAME_KEY);
+        if (traitsMap != null & traitsMap.containsKey(LASTNAME_KEY))
+            return (String) traitsMap.get(LASTNAME_KEY);
         return null;
     }
 
@@ -215,8 +215,8 @@ public class RudderTraits {
      * @return name String
      */
     public static String getName(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(NAME_KEY))
-            return (String)traitsMap.get(NAME_KEY);
+        if (traitsMap != null & traitsMap.containsKey(NAME_KEY))
+            return (String) traitsMap.get(NAME_KEY);
         return null;
     }
 
@@ -227,8 +227,8 @@ public class RudderTraits {
      * @return phone String
      */
     public static String getPhone(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(PHONE_KEY))
-            return (String)traitsMap.get(PHONE_KEY);
+        if (traitsMap != null & traitsMap.containsKey(PHONE_KEY))
+            return (String) traitsMap.get(PHONE_KEY);
         return null;
     }
 
@@ -239,8 +239,8 @@ public class RudderTraits {
      * @return title String
      */
     public static String getTitle(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(TITLE_KEY))
-            return (String)traitsMap.get(TITLE_KEY);
+        if (traitsMap != null & traitsMap.containsKey(TITLE_KEY))
+            return (String) traitsMap.get(TITLE_KEY);
         return null;
     }
 
@@ -251,8 +251,8 @@ public class RudderTraits {
      * @return userName String
      */
     public static String getUsername(Map<String, Object> traitsMap) {
-        if(traitsMap != null & traitsMap.containsKey(USERNAME_KEY))
-            return (String)traitsMap.get(USERNAME_KEY);
+        if (traitsMap != null & traitsMap.containsKey(USERNAME_KEY))
+            return (String) traitsMap.get(USERNAME_KEY);
         return null;
     }
 
@@ -278,21 +278,21 @@ public class RudderTraits {
     /**
      * Initialise RudderTraits
      *
-     * @param address Address
-     * @param age String
-     * @param birthday String
-     * @param company String
-     * @param createdAt String
+     * @param address     Address
+     * @param age         String
+     * @param birthday    String
+     * @param company     String
+     * @param createdAt   String
      * @param description String
-     * @param email String
-     * @param firstName String
-     * @param gender String
-     * @param id String
-     * @param lastName String
-     * @param name String
-     * @param phone String
+     * @param email       String
+     * @param firstName   String
+     * @param gender      String
+     * @param id          String
+     * @param lastName    String
+     * @param name        String
+     * @param phone       String
      * @param title
-     * @param userName String
+     * @param userName    String
      */
     public RudderTraits(Address address, String age, String birthday, Company company, String createdAt, String description, String email, String firstName, String gender, String id, String lastName, String name, String phone, String title, String userName) {
         this.anonymousId = RudderElementCache.getCachedContext().getDeviceId();
@@ -513,7 +513,7 @@ public class RudderTraits {
     /**
      * put generic key value pairs
      *
-     * @param key String
+     * @param key   String
      * @param value Object
      * @return traits RudderTraits
      */
@@ -644,11 +644,12 @@ public class RudderTraits {
 
         /**
          * constructor
-         * @param city String
-         * @param country String
+         *
+         * @param city       String
+         * @param country    String
          * @param postalCode String
-         * @param state String
-         * @param street String
+         * @param state      String
+         * @param street     String
          */
         public Address(String city, String country, String postalCode, String state, String street) {
             this.city = city;
@@ -664,9 +665,8 @@ public class RudderTraits {
          * @param address
          * @return address Address
          */
-        public static Address fromString(String address){
-            Address add = new Gson().fromJson(address,Address.class);
-            return add;
+        public static Address fromString(String address) {
+            return new Gson().fromJson(address, Address.class);
         }
     }
 
@@ -681,8 +681,8 @@ public class RudderTraits {
         /**
          * constructor
          *
-         * @param name String
-         * @param id String
+         * @param name     String
+         * @param id       String
          * @param industry String
          */
         Company(String name, String id, String industry) {
@@ -706,7 +706,7 @@ public class RudderTraits {
          * put company Id
          *
          * @param id String
-         * @return  company Company
+         * @return company Company
          */
         public Company putId(String id) {
             this.id = id;
