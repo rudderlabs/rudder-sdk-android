@@ -108,6 +108,35 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
+    private void makeBatch(ArrayList<Integer> messageIds, ArrayList<String> messages) {
+        ArrayList<Integer> batchMessageIds = new ArrayList<Integer>();
+        ArrayList<String> batchMessages = new ArrayList<String>();
+        int runningBatchSize = 0;
+        int i=0;
+        while(i < messages.size()) {
+            try {
+                runningBatchSize += messages.get(i).getBytes("UTF-8").length;
+
+                if (runningBatchSize > Utils.MAX_BATCH_SIZE)
+                    break;
+
+                batchMessageIds.add(messageIds.get(i));
+                batchMessages.add(messages.get(i));
+                i++;
+            } catch (UnsupportedEncodingException ex) {
+                RudderLogger.logError(ex);
+            }
+        }
+        if (i == messages.size()) {
+            // as the batch size is lower than MAX_BATCH_SIZE
+            return;
+        } else {
+            // retaining the batch events (and removing other events)
+            messageIds.retainAll(batchMessageIds);
+            messages.retainAll(batchMessages);
+        }
+    }
+
     private void checkApplicationUpdateStatus(Application application) {
         try {
             int previousVersionCode = preferenceManager.getBuildVersionCode();
@@ -270,6 +299,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         // we have at least one event to flush to server
                         if (messages.size() >= config.getFlushQueueSize() || (!messages.isEmpty() && sleepCount >= config.getSleepTimeOut())) {
                             // form payload JSON form the list of messages
+                            RudderLogger.logInfo("before/////////"+messageIds.size());
+                            makeBatch(messageIds, messages);
+                            RudderLogger.logInfo("after/////////"+messageIds.size());
                             String payload = getPayloadFromMessages(messages);
                             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: payload: %s", payload));
                             if (payload != null) {
