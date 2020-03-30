@@ -127,10 +127,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 RudderLogger.logError(ex);
             }
         }
-        if (i == messages.size()) {
-            // as the batch size is lower than MAX_BATCH_SIZE
-            return;
-        } else {
+        if (runningBatchSize > Utils.MAX_BATCH_SIZE) {
             // retaining the batch events (and removing other events)
             messageIds.retainAll(batchMessageIds);
             messages.retainAll(batchMessages);
@@ -298,10 +295,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         // sleepTimeOut seconds has elapsed since last successful flush and
                         // we have at least one event to flush to server
                         if (messages.size() >= config.getFlushQueueSize() || (!messages.isEmpty() && sleepCount >= config.getSleepTimeOut())) {
-                            // form payload JSON form the list of messages
-                            RudderLogger.logInfo("before/////////"+messageIds.size());
+                            // make event batch
                             makeBatch(messageIds, messages);
-                            RudderLogger.logInfo("after/////////"+messageIds.size());
+                            // form payload JSON form the list of messages
                             String payload = getPayloadFromMessages(messages);
                             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: payload: %s", payload));
                             if (payload != null) {
