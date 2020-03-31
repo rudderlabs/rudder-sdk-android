@@ -108,6 +108,21 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
+    private int getUTF8Length(String message) {
+        int utf8Length;
+        try {
+            utf8Length = message.getBytes("UTF-8").length;
+        } catch (UnsupportedEncodingException ex) {
+            RudderLogger.logError(ex);
+            utf8Length = -1;
+        }
+        return utf8Length;
+    }
+
+    private int getUTF8Length(StringBuilder message) {
+        return getUTF8Length(message.toString());
+    }
+
     private void makeBatch(ArrayList<Integer> messageIds, ArrayList<String> messages) {
         ArrayList<Integer> batchMessageIds = new ArrayList<Integer>();
         ArrayList<String> batchMessages = new ArrayList<String>();
@@ -296,9 +311,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         // we have at least one event to flush to server
                         if (messages.size() >= config.getFlushQueueSize() || (!messages.isEmpty() && sleepCount >= config.getSleepTimeOut())) {
                             // make event batch
-                            makeBatch(messageIds, messages);
+//                            makeBatch(messageIds, messages);
                             // form payload JSON form the list of messages
-                            String payload = getPayloadFromMessages(messages);
+                            String payload = getPayloadFromMessages(messageIds, messages);
                             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: payload: %s", payload));
                             if (payload != null) {
                                 // send payload to server if it is not null
@@ -333,11 +348,14 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * of deserialization and forming the payload object and creating the json string
      * again from the object
      * */
-    private String getPayloadFromMessages(ArrayList<String> messages) {
+    private String getPayloadFromMessages(ArrayList<Integer> messageIds, ArrayList<String> messages) {
         try {
             RudderLogger.logDebug("EventRepository: getPayloadFromMessages: recordCount: " + messages.size());
             String sentAtTimestamp = Utils.getTimeStamp();
             RudderLogger.logDebug("EventRepository: getPayloadFromMessages: sentAtTimestamp: " + sentAtTimestamp);
+            // initialize ArrayLists to store current batch
+            ArrayList<Integer> batchMessageIds = new ArrayList<Integer>();
+            ArrayList<String> batchMessages = new ArrayList<String>();
             // get string builder
             StringBuilder builder = new StringBuilder();
             // append initial json token
@@ -346,25 +364,43 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             builder.append("\"sentAt\":\"").append(sentAtTimestamp).append("\",");
             // initiate batch array in the json
             builder.append("\"batch\": [");
+            int totalBatchSize = getUTF8Length(builder);
+            int messageSize;
             // loop through messages list and add in the builder
             for (int index = 0; index < messages.size(); index++) {
                 String message = messages.get(index);
                 // strip last ending object character
                 message = message.substring(0, message.length() - 1);
                 // add sentAt time stamp
-                message = String.format("%s,\"sentAt\":\"%s\"}", message, sentAtTimestamp);
-                // finally add message string to builder
+                message = String.format("%s,\"sentAt\":\"%s\"},", message, sentAtTimestamp);
+                // add message size to batch size
+                messageSize = getUTF8Length(message);
+                if (messageSize == -1) {
+                    // skip message if there has been an encoding error while getting length
+                    continue;
+                }
+                totalBatchSize += messageSize;
+                // check batch size
+                if (totalBatchSize > Utils.MAX_BATCH_SIZE-2)
+                    break;
                 // finally add message string to builder
                 builder.append(message);
-                // if not last item in the list, add a ","
-                if (index != messages.size() - 1) {
-                    builder.append(",");
-                }
+                // add message to batch ArrayLists
+                batchMessages.add(messages.get(index));
+                batchMessageIds.add(messageIds.get(index));
+            }
+            if (builder.charAt(builder.length() -1) == ',') {
+                // remove trailing ','
+                builder.deleteCharAt(builder.length()-1);
+                // TODO decide if we should remove length of , also
             }
             // close batch array in the json
             builder.append("]");
             // append closing token in the json
             builder.append("}");
+            // retain all events belonging to the batch
+            messageIds.retainAll(batchMessageIds);
+            messages.retainAll(batchMessages);
             // finally return the entire payload
             return builder.toString();
         } catch (Exception ex) {
@@ -450,6 +486,15 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
         makeFactoryDump(message);
         String eventJson = new Gson().toJson(message);
+        try {
+            if (eventJson.getBytes("UTF-8").length > Utils.MAX_EVENT_SIZE) {
+                RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)",
+                        Utils.MAX_EVENT_SIZE));
+                return;
+            }
+        } catch (UnsupportedEncodingException ex) {
+            RudderLogger.logError(ex);
+        }
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
         dbManager.saveEvent(eventJson);
     }

@@ -39,16 +39,6 @@ class DBPersistentManager extends SQLiteOpenHelper {
      * save individual messages to DB
      * */
     void saveEvent(String messageJson) {
-        try {
-            if (messageJson.getBytes("UTF-8").length > Utils.MAX_EVENT_SIZE) {
-                RudderLogger.logError(String.format(Locale.US, "DBPersistentManager: saveEvent: Event size exceeds the maximum permitted event size(%d)",
-                        Utils.MAX_EVENT_SIZE));
-                return;
-            }
-        } catch (UnsupportedEncodingException ex) {
-            RudderLogger.logError(ex);
-        }
-
         SQLiteDatabase database = getWritableDatabase();
         if (database.isOpen()) {
             String saveEventSQL = String.format(Locale.US, "INSERT INTO %s (%s, %s) VALUES ('%s', %d)",
