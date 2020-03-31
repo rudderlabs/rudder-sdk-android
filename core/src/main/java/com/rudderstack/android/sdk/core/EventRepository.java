@@ -123,32 +123,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         return getUTF8Length(message.toString());
     }
 
-    private void makeBatch(ArrayList<Integer> messageIds, ArrayList<String> messages) {
-        ArrayList<Integer> batchMessageIds = new ArrayList<Integer>();
-        ArrayList<String> batchMessages = new ArrayList<String>();
-        int runningBatchSize = 0;
-        int i=0;
-        while(i < messages.size()) {
-            try {
-                runningBatchSize += messages.get(i).getBytes("UTF-8").length;
-
-                if (runningBatchSize > Utils.MAX_BATCH_SIZE)
-                    break;
-
-                batchMessageIds.add(messageIds.get(i));
-                batchMessages.add(messages.get(i));
-                i++;
-            } catch (UnsupportedEncodingException ex) {
-                RudderLogger.logError(ex);
-            }
-        }
-        if (runningBatchSize > Utils.MAX_BATCH_SIZE) {
-            // retaining the batch events (and removing other events)
-            messageIds.retainAll(batchMessageIds);
-            messages.retainAll(batchMessages);
-        }
-    }
-
     private void checkApplicationUpdateStatus(Application application) {
         try {
             int previousVersionCode = preferenceManager.getBuildVersionCode();
@@ -310,8 +284,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         // sleepTimeOut seconds has elapsed since last successful flush and
                         // we have at least one event to flush to server
                         if (messages.size() >= config.getFlushQueueSize() || (!messages.isEmpty() && sleepCount >= config.getSleepTimeOut())) {
-                            // make event batch
-//                            makeBatch(messageIds, messages);
                             // form payload JSON form the list of messages
                             String payload = getPayloadFromMessages(messageIds, messages);
                             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: payload: %s", payload));

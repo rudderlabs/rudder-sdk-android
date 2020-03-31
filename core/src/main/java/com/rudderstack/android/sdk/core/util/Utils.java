@@ -28,8 +28,8 @@ public class Utils {
     public static final int MIN_SLEEP_TIMEOUT = 10;
     public static final int MIN_FLUSH_QUEUE_SIZE = 1;
     public static final int MAX_FLUSH_QUEUE_SIZE = 100;
-    public static final int MAX_EVENT_SIZE = 2000;
-    public static final int MAX_BATCH_SIZE = 5000;
+    public static final int MAX_EVENT_SIZE = 2 * 1024;
+    public static final int MAX_BATCH_SIZE = 5 * 1024;
 
     public static String getTimeZone() {
         TimeZone timeZone = TimeZone.getDefault();
