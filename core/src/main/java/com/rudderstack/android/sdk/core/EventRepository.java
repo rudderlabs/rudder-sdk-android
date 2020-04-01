@@ -312,7 +312,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug("EventRepository: getPayloadFromMessages: sentAtTimestamp: " + sentAtTimestamp);
             // initialize ArrayLists to store current batch
             ArrayList<Integer> batchMessageIds = new ArrayList<>();
-            ArrayList<String> batchMessages = new ArrayList<>();
             // get string builder
             StringBuilder builder = new StringBuilder();
             // append initial json token
@@ -341,7 +340,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // finally add message string to builder
                 builder.append(message);
                 // add message to batch ArrayLists
-                batchMessages.add(messages.get(index));
                 batchMessageIds.add(messageIds.get(index));
             }
             if (builder.charAt(builder.length() - 1) == ',') {
@@ -354,7 +352,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             builder.append("}");
             // retain all events belonging to the batch
             messageIds.retainAll(batchMessageIds);
-            messages.retainAll(batchMessages);
             // finally return the entire payload
             return builder.toString();
         } catch (Exception ex) {
