@@ -272,11 +272,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             // form payload JSON form the list of messages
                             String payload = getPayloadFromMessages(messageIds, messages);
                             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: payload: %s", payload));
+                            RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: EventCount: %d", messageIds.size()));
                             if (payload != null) {
                                 // send payload to server if it is not null
                                 String response = flushEventsToServer(payload);
                                 RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: ServerResponse: %s", response));
-                                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: EventCount: %d", messages.size()));
                                 // if success received from server
                                 if (response != null && response.equalsIgnoreCase("OK")) {
                                     // remove events from DB
