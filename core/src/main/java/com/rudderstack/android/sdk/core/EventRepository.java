@@ -32,6 +32,7 @@ import java.util.Map;
  * utility class for event processing
  * */
 class EventRepository implements Application.ActivityLifecycleCallbacks {
+    private final ArrayList<RudderMessage> eventReplayMessage = new ArrayList<>();
     private String authHeaderString;
     private String anonymousIdHeaderString;
     private RudderConfig config;
@@ -39,10 +40,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private RudderServerConfigManager configManager;
     private RudderPreferenceManager preferenceManager;
     private Map<String, RudderIntegration> integrationOperationsMap = new HashMap<>();
-    private final ArrayList<RudderMessage> eventReplayMessage = new ArrayList<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
 
     private boolean initiated = false;
+    private boolean isFactoryInitialized = false;
+    private int noOfActivities;
 
     /*
      * constructor to be called from RudderClient internally.
@@ -142,8 +144,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logError(ex);
         }
     }
-
-    private boolean isFactoryInitialized = false;
 
     private void initiateFactories() {
         // initiate factory initialization after 10s
@@ -311,8 +311,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             String sentAtTimestamp = Utils.getTimeStamp();
             RudderLogger.logDebug("EventRepository: getPayloadFromMessages: sentAtTimestamp: " + sentAtTimestamp);
             // initialize ArrayLists to store current batch
-            ArrayList<Integer> batchMessageIds = new ArrayList<Integer>();
-            ArrayList<String> batchMessages = new ArrayList<String>();
+            ArrayList<Integer> batchMessageIds = new ArrayList<>();
+            ArrayList<String> batchMessages = new ArrayList<>();
             // get string builder
             StringBuilder builder = new StringBuilder();
             // append initial json token
@@ -321,7 +321,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             builder.append("\"sentAt\":\"").append(sentAtTimestamp).append("\",");
             // initiate batch array in the json
             builder.append("\"batch\": [");
-            int totalBatchSize = Utils.getUTF8Length(builder);
+            int totalBatchSize = Utils.getUTF8Length(builder) + 2; // we add 2 characters at the end
             int messageSize;
             // loop through messages list and add in the builder
             for (int index = 0; index < messages.size(); index++) {
@@ -334,18 +334,19 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 messageSize = Utils.getUTF8Length(message);
                 totalBatchSize += messageSize;
                 // check batch size
-                if (totalBatchSize > Utils.MAX_BATCH_SIZE-2)
+                if (totalBatchSize >= Utils.MAX_BATCH_SIZE) {
+                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: getPayloadFromMessages: MAX_BATCH_SIZE reached at index: %d | Total: %d", index, totalBatchSize));
                     break;
+                }
                 // finally add message string to builder
                 builder.append(message);
                 // add message to batch ArrayLists
                 batchMessages.add(messages.get(index));
                 batchMessageIds.add(messageIds.get(index));
             }
-            if (builder.charAt(builder.length() -1) == ',') {
+            if (builder.charAt(builder.length() - 1) == ',') {
                 // remove trailing ','
-                builder.deleteCharAt(builder.length()-1);
-                // TODO decide if we should remove length of , also
+                builder.deleteCharAt(builder.length() - 1);
             }
             // close batch array in the json
             builder.append("]");
@@ -373,11 +374,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             }
 
             // get endPointUrl form config object
-            String endPointUri = config.getDataPlaneUrl() + "v1/batch";
-            RudderLogger.logDebug("EventRepository: flushEventsToServer: endPointRepository: " + endPointUri);
+            String dataPlaneEndPoint = config.getDataPlaneUrl() + "v1/batch";
+            RudderLogger.logDebug("EventRepository: flushEventsToServer: dataPlaneEndPoint: " + dataPlaneEndPoint);
 
             // create url object
-            URL url = new URL(endPointUri);
+            URL url = new URL(dataPlaneEndPoint);
             // get connection object
             HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
             // set connection object to return output
@@ -440,13 +441,13 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         makeFactoryDump(message);
         String eventJson = new Gson().toJson(message);
 
+        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
+
         if (Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE) {
-            RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)",
-                    Utils.MAX_EVENT_SIZE));
+            RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
             return;
         }
 
-        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
         dbManager.saveEvent(eventJson);
     }
 
@@ -489,7 +490,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
-    void flush(){
+    void flush() {
         if (isFactoryInitialized) {
             RudderLogger.logDebug("EventRepository: flush native SDKs");
             for (String key : integrationOperationsMap.keySet()) {
@@ -538,8 +539,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             }
         }
     }
-
-    private int noOfActivities;
 
     @Override
     public void onActivityResumed(@NonNull Activity activity) {
