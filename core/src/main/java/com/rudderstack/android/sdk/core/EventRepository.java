@@ -108,21 +108,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
-    private int getUTF8Length(String message) {
-        int utf8Length;
-        try {
-            utf8Length = message.getBytes("UTF-8").length;
-        } catch (UnsupportedEncodingException ex) {
-            RudderLogger.logError(ex);
-            utf8Length = -1;
-        }
-        return utf8Length;
-    }
-
-    private int getUTF8Length(StringBuilder message) {
-        return getUTF8Length(message.toString());
-    }
-
     private void checkApplicationUpdateStatus(Application application) {
         try {
             int previousVersionCode = preferenceManager.getBuildVersionCode();
@@ -336,7 +321,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             builder.append("\"sentAt\":\"").append(sentAtTimestamp).append("\",");
             // initiate batch array in the json
             builder.append("\"batch\": [");
-            int totalBatchSize = getUTF8Length(builder);
+            int totalBatchSize = Utils.getUTF8Length(builder);
             int messageSize;
             // loop through messages list and add in the builder
             for (int index = 0; index < messages.size(); index++) {
@@ -346,11 +331,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // add sentAt time stamp
                 message = String.format("%s,\"sentAt\":\"%s\"},", message, sentAtTimestamp);
                 // add message size to batch size
-                messageSize = getUTF8Length(message);
-                if (messageSize == -1) {
-                    // skip message if there has been an encoding error while getting length
-                    continue;
-                }
+                messageSize = Utils.getUTF8Length(message);
                 totalBatchSize += messageSize;
                 // check batch size
                 if (totalBatchSize > Utils.MAX_BATCH_SIZE-2)
@@ -458,15 +439,13 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
         makeFactoryDump(message);
         String eventJson = new Gson().toJson(message);
-        try {
-            if (eventJson.getBytes("UTF-8").length > Utils.MAX_EVENT_SIZE) {
-                RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)",
-                        Utils.MAX_EVENT_SIZE));
-                return;
-            }
-        } catch (UnsupportedEncodingException ex) {
-            RudderLogger.logError(ex);
+
+        if (Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE) {
+            RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)",
+                    Utils.MAX_EVENT_SIZE));
+            return;
         }
+
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
         dbManager.saveEvent(eventJson);
     }
