@@ -34,6 +34,8 @@ class MainApplication : Application() {
                 .build()
         )
 
+        rudderClient!!.rudderContext.putDeviceToken("some_device_token")
+
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityPaused(p0: Activity) {
                 Log.d(TAG, "onActivityPaused ${p0.localClassName}")

@@ -100,4 +100,8 @@ public class RudderContext {
     String getDeviceId() {
         return deviceInfo.getDeviceId();
     }
+
+    public void putDeviceToken(String token) {
+        this.deviceInfo.setToken(token);
+    }
 }
