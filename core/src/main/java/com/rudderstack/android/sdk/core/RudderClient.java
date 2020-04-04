@@ -79,7 +79,7 @@ public class RudderClient {
                 RudderLogger.logVerbose("getInstance: config present. using config.");
                 if (TextUtils.isEmpty(config.getDataPlaneUrl())) {
                     RudderLogger.logVerbose("getInstance: EndPointUri is blank or null. using default.");
-                    config.setEndPointUri(Constants.DATA_PLANE_URL);
+                    config.setDataPlaneUrl(Constants.DATA_PLANE_URL);
                 }
                 if (config.getFlushQueueSize() < 0 || config.getFlushQueueSize() > 100) {
                     RudderLogger.logVerbose("getInstance: FlushQueueSize is wrong. using default.");

@@ -281,7 +281,7 @@ public class RudderTraits {
      * @param address     Address
      * @param age         String
      * @param birthday    String
-     * @param company     String
+     * @param company     Company
      * @param createdAt   String
      * @param description String
      * @param email       String
@@ -525,7 +525,6 @@ public class RudderTraits {
         return this;
     }
 
-
     public static class Address {
         @SerializedName("city")
         private String city;
@@ -585,7 +584,6 @@ public class RudderTraits {
 
         public Address() {
         }
-
 
         /**
          * put city
@@ -662,7 +660,7 @@ public class RudderTraits {
         /**
          * make address from String
          *
-         * @param address
+         * @param address String
          * @return address Address
          */
         public static Address fromString(String address) {

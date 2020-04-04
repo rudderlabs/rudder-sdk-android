@@ -23,6 +23,7 @@ import java.util.Locale;
  * - configRefreshInterval -> time in hours as interval of downloading config from config server
  * - trackLifecycleEvents -> whether track lifecycle events automatically
  * - recordScreenViews -> whether we should record screen views automatically
+ * - controlPlaneUrl -> link to self-hosted sourceConfig
  *
  * default values are set at Constants file
  *
