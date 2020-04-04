@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
+import com.rudderstack.android.integration.dummy.DummyGAIntegrationImpl
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
 import com.rudderstack.android.sdk.core.RudderClient
@@ -12,8 +13,8 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://cd740f82.ngrok.io"
-        const val CONTROL_PLANE_URL = "https://cd740f82.ngrok.io"
+        const val DATA_PLANE_URL = "https://6984b76e.ngrok.io"
+        const val CONTROL_PLANE_URL = "https://6984b76e.ngrok.io"
         const val WRITE_KEY = "1TSRSskqa15PG7F89tkwEbl5Td8"
     }
 
@@ -29,6 +30,7 @@ class MainApplication : Application() {
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withTrackLifecycleEvents(true)
                 .withRecordScreenViews(true)
+                .withFactory(DummyGAIntegrationImpl.FACTORY)
                 .build()
         )
 

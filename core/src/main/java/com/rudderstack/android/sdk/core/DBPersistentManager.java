@@ -59,6 +59,21 @@ class DBPersistentManager extends SQLiteOpenHelper {
         clearEventsFromDB(messageIds);
     }
 
+    /**
+     * flush the events from the database
+     */
+    void flushEvents() {
+        SQLiteDatabase database = getWritableDatabase();
+        if (database.isOpen()) {
+            String deleteSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
+            RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: flushEvents: deleteSQL: %s", deleteSQL));
+            database.execSQL(deleteSQL);
+            RudderLogger.logInfo("DBPersistentManager: flushEvents: Messages deleted from DB");
+        } else {
+            RudderLogger.logError("DBPersistentManager: flushEvents: database is not writable");
+        }
+    }
+
     /*
      * remove selected events from persistence database storage
      * */
