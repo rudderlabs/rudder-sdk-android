@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
-import com.rudderstack.android.integration.dummy.FirebaseIntegrationFactory
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
@@ -24,15 +23,14 @@ class MainApplication : Application() {
             this,
             WRITE_KEY,
             RudderConfig.Builder()
-                .withEndPointUri(END_URL)
+                .withDataPlaneUrl(END_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
-                .withConfigPlaneUrl(END_URL)
-                .withFactory(FirebaseIntegrationFactory.FACTORY)
+                .withControlPlaneUrl(END_URL)
                 .withTrackLifecycleEvents(true)
                 .withRecordScreenViews(true)
                 .build()
         )
-        rudderClient.rudderContext.putDeviceToken("Some_device_token")
+        rudderClient!!.rudderContext.putDeviceToken("Some_device_token")
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityPaused(p0: Activity) {
