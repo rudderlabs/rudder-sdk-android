@@ -42,7 +42,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private Map<String, RudderIntegration> integrationOperationsMap = new HashMap<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
 
-    private boolean initiated = false;
+    private boolean isSDKInitialized = false;
+    private boolean isSDKEnabled = true;
     private boolean isFactoryInitialized = false;
     private int noOfActivities;
 
@@ -87,15 +88,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             this.configManager = RudderServerConfigManager.getInstance(_application, _writeKey, _config);
 
             // 5. start processor thread
-            RudderLogger.logDebug("EventRepository: constructor: Starting Processor thread");
-            Thread processorThread = new Thread(getProcessorRunnable());
-            processorThread.start();
-
-            this.initiated = true;
-
-            // 6. initiate factories
-            RudderLogger.logDebug("EventRepository: constructor: Initiating factories");
-            this.initiateFactories();
+            RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
+            this.initiateSDK();
 
             // initiate RudderPreferenceManager and check for lifeCycleEvents
             preferenceManager = RudderPreferenceManager.getInstance(_application);
@@ -103,11 +97,52 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
                 _application.registerActivityLifecycleCallbacks(this);
             }
-
-
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
+    }
+
+    private void initiateSDK() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int retryCount = 0;
+                    while (!isSDKInitialized && retryCount <= 5) {
+                        RudderServerConfig serverConfig = configManager.getConfig();
+                        if (serverConfig != null) {
+                            // initiate processor
+                            isSDKEnabled = serverConfig.source.isSourceEnabled;
+                            if (isSDKEnabled) {
+                                RudderLogger.logDebug("EventRepository: initiateSDK: Initiating processor");
+                                Thread processorThread = new Thread(getProcessorRunnable());
+                                processorThread.start();
+
+                                // initiate factories
+                                if (serverConfig.source.destinations != null) {
+                                    initiateFactories(serverConfig.source.destinations);
+                                } else {
+                                    RudderLogger.logDebug("EventRepository: initiateSDK: No native SDKs are found");
+                                }
+                            } else {
+                                RudderLogger.logDebug("EventRepository: initiateSDK: source is disabled in the dashboard");
+                                RudderLogger.logDebug("Flushing persisted events");
+                                dbManager.flushEvents();
+                            }
+
+                            isSDKInitialized = true;
+
+                        } else {
+                            retryCount += 1;
+                            RudderLogger.logDebug("EventRepository: initiateFactories: retry count: " + retryCount);
+                            Thread.sleep(10000);
+                        }
+                    }
+                } catch (Exception ex) {
+                    RudderLogger.logError(ex);
+                }
+            }
+        }).start();
     }
 
     private void checkApplicationUpdateStatus(Application application) {
@@ -145,7 +180,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
-    private void initiateFactories() {
+    private void initiateFactories(List<RudderServerDestination> destinations) {
         // initiate factory initialization after 10s
         // let the factories capture everything they want to capture
         if (config == null || config.getFactories() == null || config.getFactories().isEmpty()) {
@@ -154,79 +189,56 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             return;
         }
         // initiate factories if client is initialized properly
-        final RudderClient client = RudderClient.getInstance();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    int retryCount = 0;
-                    while (!isFactoryInitialized && retryCount <= 5) {
-                        RudderServerConfig serverConfig = configManager.getConfig();
+        if (destinations.isEmpty()) {
+            RudderLogger.logInfo("EventRepository: initiateFactories: No destination found in the config");
+        } else {
+            Map<String, RudderServerDestination> destinationConfigMap = new HashMap<>();
+            for (RudderServerDestination destination : destinations) {
+                destinationConfigMap.put(destination.destinationDefinition.displayName, destination);
+            }
 
-                        if (serverConfig != null && serverConfig.source != null && serverConfig.source.destinations != null) {
-                            List<RudderServerDestination> destinations = serverConfig.source.destinations;
-
-                            if (destinations.isEmpty()) {
-                                RudderLogger.logInfo("EventRepository: initiateFactories: No destination found in the config");
+            for (RudderIntegration.Factory factory : config.getFactories()) {
+                // if factory is present in the config
+                String key = factory.key();
+                if (destinationConfigMap.containsKey(key)) {
+                    RudderServerDestination destination = destinationConfigMap.get(key);
+                    // initiate factory if destination is enabled from the dashboard
+                    if (destination != null && destination.isDestinationEnabled) {
+                        Object destinationConfig = destination.destinationConfig;
+                        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: Initiating %s native SDK factory", key));
+                        RudderIntegration<?> nativeOp = factory.create(destinationConfig, RudderClient.getInstance(), config);
+                        RudderLogger.logInfo(String.format(Locale.US, "EventRepository: initiateFactories: Initiated %s native SDK factory", key));
+                        integrationOperationsMap.put(key, nativeOp);
+                        if (integrationCallbacks.containsKey(key)) {
+                            Object nativeInstance = nativeOp.getUnderlyingInstance();
+                            RudderClient.Callback callback = integrationCallbacks.get(key);
+                            if (nativeInstance != null && callback != null) {
+                                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: initiateFactories: Callback for %s factory invoked", key));
+                                callback.onReady(nativeInstance);
                             } else {
-                                Map<String, RudderServerDestination> destinationConfigMap = new HashMap<>();
-                                for (RudderServerDestination destination : destinations) {
-                                    destinationConfigMap.put(destination.destinationDefinition.displayName, destination);
-                                }
-
-                                for (RudderIntegration.Factory factory : config.getFactories()) {
-                                    // if factory is present in the config
-                                    String key = factory.key();
-                                    if (destinationConfigMap.containsKey(key)) {
-                                        RudderServerDestination destination = destinationConfigMap.get(key);
-                                        // initiate factory if destination is enabled from the dashboard
-                                        if (destination != null && destination.isDestinationEnabled) {
-                                            Object destinationConfig = destination.destinationConfig;
-                                            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: Initiating %s native SDK factory", key));
-                                            RudderIntegration<?> nativeOp = factory.create(destinationConfig, client, config);
-                                            RudderLogger.logInfo(String.format(Locale.US, "EventRepository: initiateFactories: Initiated %s native SDK factory", key));
-                                            integrationOperationsMap.put(key, nativeOp);
-                                            if (integrationCallbacks.containsKey(key)) {
-                                                Object nativeInstance = nativeOp.getUnderlyingInstance();
-                                                RudderClient.Callback callback = integrationCallbacks.get(key);
-                                                if (nativeInstance != null && callback != null) {
-                                                    RudderLogger.logInfo(String.format(Locale.US, "EventRepository: initiateFactories: Callback for %s factory invoked", key));
-                                                    callback.onReady(nativeInstance);
-                                                } else {
-                                                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: Callback for %s factory is null", key));
-                                                }
-                                            }
-                                        } else {
-                                            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: destination was null or not enabled for %s", key));
-                                        }
-                                    } else {
-                                        RudderLogger.logInfo(String.format(Locale.US, "EventRepository: initiateFactories: %s is not present in configMap", key));
-                                    }
-                                }
+                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: Callback for %s factory is null", key));
                             }
-
-                            isFactoryInitialized = true;
-                            synchronized (eventReplayMessage) {
-                                RudderLogger.logDebug("EventRepository: initiateFactories: replaying old messages with factory");
-                                ArrayList<RudderMessage> tempList = new ArrayList<>(eventReplayMessage);
-                                if (!tempList.isEmpty()) {
-                                    for (RudderMessage message : tempList) {
-                                        makeFactoryDump(message);
-                                    }
-                                }
-                                eventReplayMessage.clear();
-                            }
-                        } else {
-                            retryCount += 1;
-                            RudderLogger.logDebug("EventRepository: initiateFactories: retry count: " + retryCount);
-                            Thread.sleep(10000);
                         }
+                    } else {
+                        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: destination was null or not enabled for %s", key));
                     }
-                } catch (Exception ex) {
-                    RudderLogger.logError(ex);
+                } else {
+                    RudderLogger.logInfo(String.format(Locale.US, "EventRepository: initiateFactories: %s is not present in configMap", key));
                 }
             }
-        }).start();
+        }
+
+        isFactoryInitialized = true;
+        synchronized (eventReplayMessage) {
+            RudderLogger.logDebug("EventRepository: initiateFactories: replaying old messages with factory");
+            ArrayList<RudderMessage> tempList = new ArrayList<>(eventReplayMessage);
+            if (!tempList.isEmpty()) {
+                for (RudderMessage message : tempList) {
+                    makeFactoryDump(message);
+                }
+            }
+            eventReplayMessage.clear();
+        }
     }
 
     private Runnable getProcessorRunnable() {
@@ -433,18 +445,15 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * generic method for dumping all the events
      * */
     void dump(@NonNull RudderMessage message) {
-        if (!initiated) return;
+        if (!isSDKEnabled) return;
 
         makeFactoryDump(message);
         String eventJson = new Gson().toJson(message);
-
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
-
         if (Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE) {
             RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
             return;
         }
-
         dbManager.saveEvent(eventJson);
     }
 

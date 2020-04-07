@@ -32,6 +32,7 @@ class MainApplication : Application() {
                 .withRecordScreenViews(true)
                 .build()
         )
+        rudderClient.rudderContext.putDeviceToken("Some_device_token")
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityPaused(p0: Activity) {
