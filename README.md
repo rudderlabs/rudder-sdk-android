@@ -1,5 +1,3 @@
-[ ![Download](https://api.bintray.com/packages/rudderstack/rudderstack/core/images/download.svg?version=1.0.1-beta.1) ](https://bintray.com/rudderstack/rudderstack/core/1.0.1-beta.1/link)
-
 # What is Rudder?
 
 **Short answer:** 
@@ -20,7 +18,7 @@ repositories {
 ```
 2. Add the dependency under ```dependencies```
 ```
-implementation 'com.rudderstack.android.sdk:core:1.0.1-beta.1'
+implementation 'com.rudderstack.android.sdk:core:1.0.1-beta.3'
 ```
 
 ## Initialize ```RudderClient```
@@ -29,7 +27,7 @@ val rudderClient: RudderClient = RudderClient.getInstance(
     this,
     <WRITE_KEY>,
     RudderConfig.Builder()
-        .withEndPointUri(<END_POINT_URI>)
+        .withDataPlaneUrl(<DATA_PLANE_URL>)
         .build()
 )
 ```
