@@ -1,6 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
 import android.os.Build;
+
 import com.google.gson.annotations.SerializedName;
 
 class RudderDeviceInfo {
@@ -14,6 +15,8 @@ class RudderDeviceInfo {
     private String name = Build.DEVICE;
     @SerializedName("type")
     private String type = "android";
+    @SerializedName("token")
+    private String token;
 
     RudderDeviceInfo(String deviceId) {
         this.deviceId = deviceId;
@@ -21,5 +24,9 @@ class RudderDeviceInfo {
 
     String getDeviceId() {
         return deviceId;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

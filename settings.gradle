@@ -1,1 +1,1 @@
-include ':sample-kotlin', ':core', ':sample-segment-java', ':integration-dummy-impl'
+include ':sample-kotlin', ':core', ':sample-segment-java', ':sample-kotlin-integration', ':dummy-impl'

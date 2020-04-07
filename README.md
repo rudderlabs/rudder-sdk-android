@@ -1,5 +1,3 @@
-[ ![Download](https://api.bintray.com/packages/rudderstack/rudderstack/core/images/download.svg?version=1.0) ](https://bintray.com/rudderstack/rudderstack/core/1.0/link)
-
 # What is Rudder?
 
 **Short answer:** 
@@ -15,31 +13,27 @@ Released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 1. Add these lines to your ```app/build.gradle```
 ```
 repositories {
-  maven {
-  	url  "https://dl.bintray.com/rudderstack/rudderstack"
-  }
+  maven { url  "https://dl.bintray.com/rudderstack/rudderstack" }
 }
 ```
 2. Add the dependency under ```dependencies```
 ```
-implementation 'com.rudderstack.android.sdk:core:1.0'
+implementation 'com.rudderstack.android.sdk:core:1.0.1'
 ```
 
 ## Initialize ```RudderClient```
 ```
 val rudderClient: RudderClient = RudderClient.getInstance(
     this,
-    WRITE_KEY,
+    <WRITE_KEY>,
     RudderConfig.Builder()
-        .withEndPointUri(END_POINT_URI)
-        .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
+        .withDataPlaneUrl(<DATA_PLANE_URL>)
         .build()
 )
 ```
 or (compatible with existing Segment code)
 ```
-RudderClient.Builder builder = new RudderClient.Builder(this, WRITE_KEY);
-builder.logLevel(RudderLogger.RudderLogLevel.VERBOSE);
+RudderClient.Builder builder = new RudderClient.Builder(this, <WRITE_KEY>);
 RudderClient.setSingletonInstance(builder.build());
 ```
 
@@ -67,9 +61,7 @@ RudderClient.with(this).track(
 );
 ```
 
-For more detailed documentation check [here](https://docs.rudderstack.com/sdk-integration-guide/getting-started-with-android-sdk)
+For more detailed documentation check [the documentation page](https://docs.rudderstack.com/sdk-integration-guide/getting-started-with-android-sdk).
 
-# Coming Soon
-1. Install attribution support using ```referrer``` API. 
-2. Option to opt-out from tracking any Analytics Event.
-3. RudderOption implementation for custom destination support.
+## Contact Us
+If you come across any issues while configuring or using RudderStack, please feel free to [contact us](https://rudderstack.com/contact/) or start a conversation on our [Discord](https://discordapp.com/invite/xNEdEGw) channel. We will be happy to help you.

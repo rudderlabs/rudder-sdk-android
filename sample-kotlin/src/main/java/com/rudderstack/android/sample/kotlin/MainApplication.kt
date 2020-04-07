@@ -4,15 +4,17 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
-import com.rudderstack.android.sdk.core.RudderClient
+import com.rudderstack.android.integration.dummy.DummyGAIntegrationImpl
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
+import com.rudderstack.android.sdk.core.RudderClient
 
 class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val END_POINT_URL = "https://7cfa36c2.ngrok.io"
+        const val DATA_PLANE_URL = "https://6984b76e.ngrok.io"
+        const val CONTROL_PLANE_URL = "https://6984b76e.ngrok.io"
         const val WRITE_KEY = "1TSRSskqa15PG7F89tkwEbl5Td8"
     }
 
@@ -23,11 +25,16 @@ class MainApplication : Application() {
             this,
             WRITE_KEY,
             RudderConfig.Builder()
-                .withEndPointUri(END_POINT_URL)
+                .withDataPlaneUrl(DATA_PLANE_URL)
+                .withControlPlaneUrl(CONTROL_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withTrackLifecycleEvents(true)
+                .withRecordScreenViews(true)
+                .withFactory(DummyGAIntegrationImpl.FACTORY)
                 .build()
         )
+
+        rudderClient!!.rudderContext.putDeviceToken("some_device_token")
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityPaused(p0: Activity) {

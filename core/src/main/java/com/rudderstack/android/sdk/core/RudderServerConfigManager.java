@@ -76,7 +76,7 @@ class RudderServerConfigManager {
                 int retryCount = 0, retryTimeOut = 10;
                 while (!isDone && retryCount <= 3) {
                     try {
-                        String configUrl = Constants.CONFIG_PLANE_URL + "/sourceConfig";
+                        String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig";
                         RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configUrl: %s", configUrl));
                         // create url object
                         URL url = new URL(configUrl);
