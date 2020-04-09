@@ -377,11 +377,32 @@ public class RudderClient {
     public void alias(String newId, RudderOption option) {
         // TODO:  yet to be decided
         Map<String,Object> traits = getRudderContext().getTraits();
+
+
+
         if(traits.containsKey("userId")) {
-            alias(new RudderMessageBuilder().setUserId(newId).setRudderOption(option).setPreviousId(traits.get("userId").toString()).build());
+            RudderTraits rudderTraits= new RudderTraits();
+            rudderTraits.putId(newId);
+           // alias(new RudderMessageBuilder().setUserId(newId).setRudderOption(option).setPreviousId(traits.get("userId").toString()).build());
+            RudderMessage message = new RudderMessageBuilder()
+                    .setUserId(newId)
+                    .setPreviousId(traits.get("userId").toString())
+                    .setRudderOption(option)
+                    .build();
+            message.updateTraits(rudderTraits);
+            alias(message);
         }
         else{
-            alias(new RudderMessageBuilder().setUserId(newId).setRudderOption(option).setPreviousId(traits.get("id").toString()).build());
+            RudderTraits rudderTraits= new RudderTraits();
+            rudderTraits.putId(newId);
+        //    alias(new RudderMessageBuilder().setUserId(newId).setRudderOption(option).setPreviousId(traits.get("id").toString()).build());
+            RudderMessage message = new RudderMessageBuilder()
+                    .setUserId(newId)
+                    .setPreviousId(traits.get("id").toString())
+                    .setRudderOption(option)
+                    .build();
+            message.updateTraits(rudderTraits);
+            alias(message);
         }
     }
 
