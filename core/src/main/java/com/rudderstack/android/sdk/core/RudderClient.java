@@ -9,6 +9,8 @@ import androidx.annotation.Nullable;
 
 import com.rudderstack.android.sdk.core.util.Utils;
 
+import java.util.Map;
+
 /*
  * Primary class to be used in client
  * */
@@ -351,6 +353,7 @@ public class RudderClient {
      * @param traits Other user properties using RudderTraits class
      * @param option Extra options using RudderOption class
      */
+
     public void identify(@NonNull String userId, @Nullable RudderTraits traits, @Nullable RudderOption option) {
         // create new traits object from cache if supplied traits is null
         if (traits == null) traits = new RudderTraits();
@@ -358,12 +361,38 @@ public class RudderClient {
         identify(traits, option);
     }
 
-    public void alias(String event) {
-        alias(event, null);
+     //ALIAS
+
+    public void alias(@NonNull RudderMessageBuilder builder) {
+        alias(builder.build());
+    }
+    public void alias(@NonNull RudderMessage message) {
+        message.setType(MessageType.ALIAS);
+        if (repository != null) repository.dump(message);
+    }
+    public void alias(String newId) {
+        alias(newId, null);
     }
 
-    public void alias(String event, RudderOption option) {
+    public void alias(String newId, RudderOption option) {
         // TODO:  yet to be decided
+        Map<String,Object> traits = getRudderContext().getTraits();
+        if(traits.containsKey("userId")) {
+            alias(new RudderMessageBuilder().setUserId(newId).setRudderOption(option).setPreviousId(traits.get("userId").toString()).build());
+        }
+        else{
+            alias(new RudderMessageBuilder().setUserId(newId).setRudderOption(option).setPreviousId(traits.get("id").toString()).build());
+        }
+    }
+
+    //GROUP
+
+    public void group(RudderMessageBuilder builder){
+        group(builder.build());
+    }
+    public void group(RudderMessage message){
+        message.setType(MessageType.GROUP);
+        if(repository!=null) repository.dump(message);
     }
 
     public void group(String groupId) {
@@ -376,6 +405,8 @@ public class RudderClient {
 
     public void group(String groupId, RudderTraits traits, RudderOption option) {
         // TODO:  yet to be decided
+
+
     }
 
     /**

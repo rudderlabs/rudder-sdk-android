@@ -37,6 +37,10 @@ public class RudderMessage {
     private Map<String, Boolean> integrations = new HashMap<>();
     @SerializedName("destinationProps")
     private Map<String, Map> destinationProps = null;
+    @SerializedName("previousId")
+    private String previousId;
+
+
 
     RudderMessage() {
         context = RudderElementCache.getCachedContext();
@@ -48,6 +52,9 @@ public class RudderMessage {
         }
     }
 
+    void setPreviousId(String previousId){
+        this.previousId = previousId;
+    }
     void setProperty(RudderProperty property) {
         if (property != null) this.properties = property.getMap();
     }
@@ -71,6 +78,8 @@ public class RudderMessage {
     void updateTraits(RudderTraits traits) {
         this.context.updateTraits(traits);
     }
+
+
 
     /**
      * @return Name of the event tracked

@@ -6,6 +6,19 @@ import java.util.Map;
  * builder for RudderElement (alias RudderEvent)
  * */
 public class RudderMessageBuilder {
+
+    private String groupId = null;
+    public RudderMessageBuilder setGroupId(String groupId){
+        this.groupId = groupId;
+        return this;
+    }
+
+    private String previousId = null;
+    public RudderMessageBuilder setPreviousId(String previousId) {
+         this.previousId = previousId;
+         return this;
+    }
+
     private String eventName = null;
 
     public RudderMessageBuilder setEventName(String eventName) {
@@ -65,6 +78,8 @@ public class RudderMessageBuilder {
         if (this.eventName != null) event.setEventName(this.eventName);
         if (this.property != null) event.setProperty(this.property);
         if (this.userProperty != null) event.setUserProperty(this.userProperty);
+        if (this.previousId != null) event.setPreviousId(this.previousId);
+
         return event;
     }
 }
