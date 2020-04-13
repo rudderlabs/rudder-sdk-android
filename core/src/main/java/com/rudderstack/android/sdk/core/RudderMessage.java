@@ -2,6 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 import androidx.annotation.Nullable;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.rudderstack.android.sdk.core.util.Utils;
 
@@ -39,7 +40,10 @@ public class RudderMessage {
     private Map<String, Map> destinationProps = null;
     @SerializedName("previousId")
     private String previousId;
-
+    @SerializedName("traits")
+    private  RudderTraits traits;
+    @SerializedName("groupId")
+    private  String groupId;
 
 
     RudderMessage() {
@@ -54,6 +58,13 @@ public class RudderMessage {
 
     void setPreviousId(String previousId){
         this.previousId = previousId;
+    }
+
+    void setGroupId(String groupId){
+        this.groupId = groupId;
+    }
+    void setGroupTraits(RudderTraits groupTraits){
+        this.traits = groupTraits;
     }
     void setProperty(RudderProperty property) {
         if (property != null) this.properties = property.getMap();

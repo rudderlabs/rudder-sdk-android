@@ -426,7 +426,12 @@ public class RudderClient {
 
     public void group(String groupId, RudderTraits traits, RudderOption option) {
         // TODO:  yet to be decided
-
+     RudderMessage message = new RudderMessageBuilder()
+             .setGroupId(groupId)
+             .setGroupTraits(traits)
+             .setRudderOption(option)
+             .build();
+     group(message);
 
     }
 

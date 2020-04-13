@@ -115,6 +115,7 @@ class MainActivity : AppCompatActivity() {
                 .putName("Ruchira"),
             null
         )
-        rudderClient!!.alias("test_new_id")
+       // rudderClient!!.alias("test_new_id")
+        rudderClient!!.group("GroupRuchira",RudderTraits().putAge("24").putName("Group Ruchira").putPhone("1234567891"));
     }
 }
