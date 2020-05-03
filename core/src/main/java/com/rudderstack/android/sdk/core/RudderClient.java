@@ -9,6 +9,8 @@ import androidx.annotation.Nullable;
 
 import com.rudderstack.android.sdk.core.util.Utils;
 
+import java.util.Map;
+
 /*
  * Primary class to be used in client
  * */
@@ -358,24 +360,133 @@ public class RudderClient {
         identify(traits, option);
     }
 
-    public void alias(String event) {
-        alias(event, null);
+    //ALIAS
+
+    /**
+     * Alias call
+     *
+     * @param builder RudderMessage.Builder
+     */
+    public void alias(@NonNull RudderMessageBuilder builder) {
+        alias(builder.build());
     }
 
-    public void alias(String event, RudderOption option) {
-        // TODO:  yet to be decided
+    /**
+     * Alias call
+     *
+     * @param message RudderMessage
+     */
+    void alias(@NonNull RudderMessage message) {
+        message.setType(MessageType.ALIAS);
+        if (repository != null) repository.dump(message);
     }
 
-    public void group(String groupId) {
+    /**
+     * Alias call
+     *
+     * <b>Segment compatible API</b>
+     *
+     * @param newId New userId for the user
+     */
+    public void alias(String newId) {
+        alias(newId, null);
+    }
+
+    /**
+     * Alias call
+     *
+     * <b>Segment compatible API</b>
+     *
+     * @param newId  New userId for the user
+     * @param option RudderOptions for this event
+     */
+    public void alias(@NonNull String newId, @Nullable RudderOption option) {
+        Map<String, Object> traits = getRudderContext().getTraits();
+        RudderMessageBuilder builder = new RudderMessageBuilder()
+                .setUserId(newId)
+                .setRudderOption(option);
+
+        String prevUserId = null;
+        if (traits.containsKey("userId")) {
+            prevUserId = (String) traits.get("userId");
+        } else if (traits.containsKey("id")) {
+            prevUserId = (String) traits.get("id");
+        }
+        if (prevUserId != null) {
+            builder.setPreviousId(prevUserId);
+        }
+        traits.put("userId", newId);
+        traits.put("id", newId);
+        RudderMessage message = builder.build();
+        message.updateTraits(traits);
+
+        RudderElementCache.updateTraits(traits);
+        RudderElementCache.persistTraits();
+
+        alias(message);
+    }
+
+    // GROUP CALLS
+
+    /**
+     * Add the user to a group
+     *
+     * @param builder RudderMessageBuilder
+     */
+    public void group(@NonNull RudderMessageBuilder builder) {
+        group(builder.build());
+    }
+
+    /**
+     * Add the user to a group
+     *
+     * @param message RudderMessage
+     */
+    public void group(@NonNull RudderMessage message) {
+        message.setType(MessageType.GROUP);
+        if (repository != null) repository.dump(message);
+    }
+
+    /**
+     * Add the user to a group
+     *
+     * <b>Segment compatible API</b>
+     *
+     * @param groupId Group ID you want your user to attach to
+     */
+    public void group(@NonNull String groupId) {
         group(groupId, null);
     }
 
-    public void group(String groupId, RudderTraits traits) {
+    /**
+     * Add the user to a group
+     *
+     * <b>Segment compatible API</b>
+     *
+     * @param groupId Group ID you want your user to attach to
+     * @param traits  Traits of the group
+     */
+    public void group(@NonNull String groupId, @Nullable RudderTraits traits) {
         group(groupId, traits, null);
     }
 
-    public void group(String groupId, RudderTraits traits, RudderOption option) {
-        // TODO:  yet to be decided
+    /**
+     * Add the user to a group
+     *
+     * <b>Segment compatible API</b>
+     *
+     * @param groupId Group ID you want your user to attach to
+     * @param traits  Traits of the group
+     * @param option  Options for this group call
+     */
+    public void group(@NonNull String groupId, @Nullable RudderTraits traits, @Nullable RudderOption option) {
+        RudderMessage message = new RudderMessageBuilder()
+                .setGroupId(groupId)
+                .setGroupTraits(traits)
+                .setRudderOption(option)
+                .build();
+        group(message);
+
     }
 
     /**
@@ -397,11 +508,6 @@ public class RudderClient {
     public RudderContext getRudderContext() {
         return RudderElementCache.getCachedContext();
     }
-
-
-//    public EventRepository getSnapShot() {
-//        return repository;
-//    }
 
     /**
      * Reset SDK
@@ -559,7 +665,8 @@ public class RudderClient {
         /**
          * @return build your RudderClient to be used
          */
-        public @Nullable RudderClient build() {
+        public @Nullable
+        RudderClient build() {
             if (this.application == null) {
                 RudderLogger.logError("Context is null. Aborting initialization. Returning null Client");
                 return null;

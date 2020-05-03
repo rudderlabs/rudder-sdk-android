@@ -2,6 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 import androidx.annotation.Nullable;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.rudderstack.android.sdk.core.util.Utils;
 
@@ -37,6 +38,12 @@ public class RudderMessage {
     private Map<String, Boolean> integrations = new HashMap<>();
     @SerializedName("destinationProps")
     private Map<String, Map> destinationProps = null;
+    @SerializedName("previousId")
+    private String previousId;
+    @SerializedName("traits")
+    private RudderTraits traits;
+    @SerializedName("groupId")
+    private String groupId;
 
     RudderMessage() {
         context = RudderElementCache.getCachedContext();
@@ -46,6 +53,18 @@ public class RudderMessage {
         if (traits != null && traits.containsKey("id")) {
             this.userId = String.valueOf(traits.get("id"));
         }
+    }
+
+    void setPreviousId(String previousId) {
+        this.previousId = previousId;
+    }
+
+    void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
+
+    void setGroupTraits(RudderTraits groupTraits) {
+        this.traits = groupTraits;
     }
 
     void setProperty(RudderProperty property) {
@@ -70,6 +89,10 @@ public class RudderMessage {
 
     void updateTraits(RudderTraits traits) {
         this.context.updateTraits(traits);
+    }
+
+    void updateTraits(Map<String, Object> traits) {
+        this.context.updateTraitsMap(traits);
     }
 
     /**
@@ -100,7 +123,7 @@ public class RudderMessage {
     }
 
     /**
-     * @return Type of event (track, identify, screen)
+     * @return Type of event (track, identify, screen, group, alias)
      */
     @Nullable
     public String getType() {
