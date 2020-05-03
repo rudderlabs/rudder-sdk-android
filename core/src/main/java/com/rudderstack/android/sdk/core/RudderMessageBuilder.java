@@ -9,22 +9,23 @@ public class RudderMessageBuilder {
 
     private String groupId = null;
 
-    public RudderMessageBuilder setGroupId(String groupId){
+    public RudderMessageBuilder setGroupId(String groupId) {
         this.groupId = groupId;
         return this;
     }
 
     private RudderTraits groupTraits = null;
 
-    public RudderMessageBuilder setGroupTraits(RudderTraits groupTraits){
+    public RudderMessageBuilder setGroupTraits(RudderTraits groupTraits) {
         this.groupTraits = groupTraits;
         return this;
     }
 
     private String previousId = null;
+
     public RudderMessageBuilder setPreviousId(String previousId) {
-         this.previousId = previousId;
-         return this;
+        this.previousId = previousId;
+        return this;
     }
 
     private String eventName = null;
@@ -87,8 +88,8 @@ public class RudderMessageBuilder {
         if (this.property != null) event.setProperty(this.property);
         if (this.userProperty != null) event.setUserProperty(this.userProperty);
         if (this.previousId != null) event.setPreviousId(this.previousId);
-        if(this.groupId != null) event.setGroupId(this.groupId);
-        if(this.groupTraits != null) event.setGroupTraits(this.groupTraits);
+        if (this.groupId != null) event.setGroupId(this.groupId);
+        if (this.groupTraits != null) event.setGroupTraits(this.groupTraits);
 
         return event;
     }

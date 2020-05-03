@@ -41,10 +41,9 @@ public class RudderMessage {
     @SerializedName("previousId")
     private String previousId;
     @SerializedName("traits")
-    private  RudderTraits traits;
+    private RudderTraits traits;
     @SerializedName("groupId")
-    private  String groupId;
-
+    private String groupId;
 
     RudderMessage() {
         context = RudderElementCache.getCachedContext();
@@ -56,16 +55,18 @@ public class RudderMessage {
         }
     }
 
-    void setPreviousId(String previousId){
+    void setPreviousId(String previousId) {
         this.previousId = previousId;
     }
 
-    void setGroupId(String groupId){
+    void setGroupId(String groupId) {
         this.groupId = groupId;
     }
-    void setGroupTraits(RudderTraits groupTraits){
+
+    void setGroupTraits(RudderTraits groupTraits) {
         this.traits = groupTraits;
     }
+
     void setProperty(RudderProperty property) {
         if (property != null) this.properties = property.getMap();
     }
@@ -90,7 +91,9 @@ public class RudderMessage {
         this.context.updateTraits(traits);
     }
 
-
+    void updateTraits(Map<String, Object> traits) {
+        this.context.updateTraitsMap(traits);
+    }
 
     /**
      * @return Name of the event tracked
@@ -120,7 +123,7 @@ public class RudderMessage {
     }
 
     /**
-     * @return Type of event (track, identify, screen)
+     * @return Type of event (track, identify, screen, group, alias)
      */
     @Nullable
     public String getType() {
