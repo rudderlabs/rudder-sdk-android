@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         rudderClient.alias("test_new_id")
-        
+
         rudderClient.group(
             "sample_group_id",
             RudderTraits().putAge("24")
