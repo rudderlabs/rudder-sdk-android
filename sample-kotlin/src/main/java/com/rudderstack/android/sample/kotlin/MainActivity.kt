@@ -16,25 +16,33 @@ class MainActivity : AppCompatActivity() {
 
         val rudderClient = MainApplication.rudderClient
 
-        rudderClient!!.identify(
-            "test_user_id",
-            RudderTraits()
-                .putAddress(
-                    RudderTraits.Address().putCity("kolkata").putCountry("india")
-                        .putStreet("new alipore")
-                )
-                .putAge("24")
-                .putName("Ruchira"),
-            null
-        )
+        Thread(Runnable {
+            // simulate load
+            for(index in 1..1000) {
+                rudderClient!!.track("dummy_event_${index}")
+                Thread.sleep(10)
+            }
+        }).start()
 
-        rudderClient.alias("test_new_id")
-
-        rudderClient.group(
-            "sample_group_id",
-            RudderTraits().putAge("24")
-                .putName("Test Group Name")
-                .putPhone("1234567891")
-        );
+//        rudderClient!!.identify(
+//            "test_user_id",
+//            RudderTraits()
+//                .putAddress(
+//                    RudderTraits.Address().putCity("kolkata").putCountry("india")
+//                        .putStreet("new alipore")
+//                )
+//                .putAge("24")
+//                .putName("Ruchira"),
+//            null
+//        )
+//
+//        rudderClient.alias("test_new_id")
+//
+//        rudderClient.group(
+//            "sample_group_id",
+//            RudderTraits().putAge("24")
+//                .putName("Test Group Name")
+//                .putPhone("1234567891")
+//        );
     }
 }

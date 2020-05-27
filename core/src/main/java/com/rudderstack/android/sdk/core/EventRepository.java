@@ -23,6 +23,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -32,7 +33,7 @@ import java.util.Map;
  * utility class for event processing
  * */
 class EventRepository implements Application.ActivityLifecycleCallbacks {
-    private final ArrayList<RudderMessage> eventReplayMessage = new ArrayList<>();
+    private final List<RudderMessage> eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
     private String authHeaderString;
     private String anonymousIdHeaderString;
     private RudderConfig config;
@@ -44,7 +45,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
-    private boolean isFactoryInitialized = false;
+    private boolean isFactoryInitialized;
     private int noOfActivities;
 
     /*
@@ -93,8 +94,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
             // initiate RudderPreferenceManager and check for lifeCycleEvents
             preferenceManager = RudderPreferenceManager.getInstance(_application);
-            this.checkApplicationUpdateStatus(_application);
             if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
+                this.checkApplicationUpdateStatus(_application);
                 _application.registerActivityLifecycleCallbacks(this);
             }
         } catch (Exception ex) {
@@ -228,17 +229,17 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             }
         }
 
-        isFactoryInitialized = true;
-        synchronized (eventReplayMessage) {
-            RudderLogger.logDebug("EventRepository: initiateFactories: replaying old messages with factory");
-            ArrayList<RudderMessage> tempList = new ArrayList<>(eventReplayMessage);
-            if (!tempList.isEmpty()) {
-                for (RudderMessage message : tempList) {
-                    makeFactoryDump(message);
+        synchronized (eventReplayMessageQueue) {
+            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: replaying old messages with factory. Count: %d", eventReplayMessageQueue.size()));
+            if (!eventReplayMessageQueue.isEmpty()) {
+                for (RudderMessage message : eventReplayMessageQueue) {
+                    makeFactoryDump(message, true);
                 }
             }
-            eventReplayMessage.clear();
+            isFactoryInitialized = true;
+            eventReplayMessageQueue.clear();
         }
+
     }
 
     private Runnable getProcessorRunnable() {
@@ -447,9 +448,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     void dump(@NonNull RudderMessage message) {
         if (!isSDKEnabled) return;
 
-        makeFactoryDump(message);
+        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: eventName: %s", message.getEventName()));
+
+        makeFactoryDump(message, false);
         String eventJson = new Gson().toJson(message);
-        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
+        RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
         if (Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE) {
             RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
             return;
@@ -457,20 +460,22 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         dbManager.saveEvent(eventJson);
     }
 
-    private void makeFactoryDump(RudderMessage message) {
-        if (isFactoryInitialized) {
-            RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
-            message.setIntegrations(prepareIntegrations());
-            for (String key : integrationOperationsMap.keySet()) {
-                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                RudderIntegration integration = integrationOperationsMap.get(key);
-                if (integration != null) {
-                    integration.dump(message);
+    private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
+        synchronized (eventReplayMessageQueue) {
+            if (isFactoryInitialized || fromHistory) {
+                RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
+                message.setIntegrations(prepareIntegrations());
+                for (String key : integrationOperationsMap.keySet()) {
+                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                    RudderIntegration integration = integrationOperationsMap.get(key);
+                    if (integration != null) {
+                        integration.dump(message);
+                    }
                 }
+            } else {
+                RudderLogger.logDebug("EventRepository: makeFactoryDump: factories are not initialized. dumping to replay queue");
+                eventReplayMessageQueue.add(message);
             }
-        } else {
-            RudderLogger.logDebug("EventRepository: makeFactoryDump: factories are not initialized. dumping to replay queue");
-            eventReplayMessage.add(message);
         }
     }
 
