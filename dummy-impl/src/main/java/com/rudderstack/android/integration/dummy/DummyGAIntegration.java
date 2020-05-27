@@ -19,7 +19,7 @@ public class DummyGAIntegration {
     public static DummyGAIntegration getInstance(Context context, String key) {
         try {
             // to simulate initialization time
-            Thread.sleep(400);
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
