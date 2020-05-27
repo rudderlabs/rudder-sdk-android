@@ -23,6 +23,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -32,7 +33,7 @@ import java.util.Map;
  * utility class for event processing
  * */
 class EventRepository implements Application.ActivityLifecycleCallbacks {
-    private final ArrayList<RudderMessage> eventReplayMessage = new ArrayList<>();
+    private final List<RudderMessage> eventReplayMessage = Collections.synchronizedList(new ArrayList<RudderMessage>());
     private String authHeaderString;
     private String anonymousIdHeaderString;
     private RudderConfig config;
