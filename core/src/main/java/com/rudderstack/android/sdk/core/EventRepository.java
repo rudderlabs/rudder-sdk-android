@@ -28,13 +28,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
  * utility class for event processing
  * */
 class EventRepository implements Application.ActivityLifecycleCallbacks {
-    private final List<RudderMessage> eventReplayMessage = Collections.synchronizedList(new ArrayList<RudderMessage>());
+    private final List<RudderMessage> eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
     private String authHeaderString;
     private String anonymousIdHeaderString;
     private RudderConfig config;
@@ -231,15 +230,15 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
 
 //        ArrayList<RudderMessage> tempList = new ArrayList<>(eventReplayMessage);
-        synchronized(eventReplayMessage) {
-            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: replaying old messages with factory. Count: %d", eventReplayMessage.size()));
-            if (!eventReplayMessage.isEmpty()) {
-                for (RudderMessage message : eventReplayMessage) {
+        synchronized(eventReplayMessageQueue) {
+            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: replaying old messages with factory. Count: %d", eventReplayMessageQueue.size()));
+            if (!eventReplayMessageQueue.isEmpty()) {
+                for (RudderMessage message : eventReplayMessageQueue) {
                     makeFactoryDump(message, true);
                 }
             }
             isFactoryInitialized = true;
-            eventReplayMessage.clear();
+            eventReplayMessageQueue.clear();
         }
 
     }
@@ -475,7 +474,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             }
         } else {
             RudderLogger.logDebug("EventRepository: makeFactoryDump: factories are not initialized. dumping to replay queue");
-            eventReplayMessage.add(message);
+            eventReplayMessageQueue.add(message);
         }
     }
 
