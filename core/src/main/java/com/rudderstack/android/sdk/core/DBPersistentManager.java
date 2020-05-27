@@ -28,7 +28,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
     private void createSchema(SQLiteDatabase db) {
         String createSchemaSQL = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS '%s' ('%s' INTEGER PRIMARY KEY AUTOINCREMENT, '%s' TEXT NOT NULL, '%s' INTEGER NOT NULL)",
                 EVENTS_TABLE_NAME, MESSAGE_ID, MESSAGE, UPDATED);
-        RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: createSchema: createSchemaSQL: %s", createSchemaSQL));
+        RudderLogger.logVerbose(String.format(Locale.US, "DBPersistentManager: createSchema: createSchemaSQL: %s", createSchemaSQL));
         db.execSQL(createSchemaSQL);
         RudderLogger.logInfo("DBPersistentManager: createSchema: DB Schema created");
     }
@@ -41,7 +41,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         if (database.isOpen()) {
             String saveEventSQL = String.format(Locale.US, "INSERT INTO %s (%s, %s) VALUES ('%s', %d)",
                     EVENTS_TABLE_NAME, MESSAGE, UPDATED, messageJson.replaceAll("'", "\\\\\'"), System.currentTimeMillis());
-            RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: saveEvent: saveEventSQL: %s", saveEventSQL));
+            RudderLogger.logVerbose(String.format(Locale.US, "DBPersistentManager: saveEvent: saveEventSQL: %s", saveEventSQL));
             database.execSQL(saveEventSQL);
             RudderLogger.logInfo("DBPersistentManager: saveEvent: Event saved to DB");
         } else {
@@ -66,7 +66,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         SQLiteDatabase database = getWritableDatabase();
         if (database.isOpen()) {
             String deleteSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
-            RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: flushEvents: deleteSQL: %s", deleteSQL));
+            RudderLogger.logVerbose(String.format(Locale.US, "DBPersistentManager: flushEvents: deleteSQL: %s", deleteSQL));
             database.execSQL(deleteSQL);
             RudderLogger.logInfo("DBPersistentManager: flushEvents: Messages deleted from DB");
         } else {
@@ -93,7 +93,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
             // remove events
             String deleteSQL = String.format(Locale.US, "DELETE FROM %s WHERE %s IN (%s)",
                     EVENTS_TABLE_NAME, MESSAGE_ID, builder.toString());
-            RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: clearEventsFromDB: deleteSQL: %s", deleteSQL));
+            RudderLogger.logVerbose(String.format(Locale.US, "DBPersistentManager: clearEventsFromDB: deleteSQL: %s", deleteSQL));
             database.execSQL(deleteSQL);
             RudderLogger.logInfo("DBPersistentManager: clearEventsFromDB: Messages deleted from DB");
         } else {
@@ -113,7 +113,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         SQLiteDatabase database = getReadableDatabase();
         if (database.isOpen()) {
             String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC LIMIT %d", EVENTS_TABLE_NAME, UPDATED, count);
-            RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchEventsFromDB: selectSQL: %s", selectSQL));
+            RudderLogger.logVerbose(String.format(Locale.US, "DBPersistentManager: fetchEventsFromDB: selectSQL: %s", selectSQL));
             Cursor cursor = database.rawQuery(selectSQL, null);
             if (cursor.moveToFirst()) {
                 RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: fetched messages from DB");
@@ -139,7 +139,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         SQLiteDatabase database = getReadableDatabase();
         if (database.isOpen()) {
             String countSQL = String.format(Locale.US, "SELECT count(*) FROM %s;", EVENTS_TABLE_NAME);
-            RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: getDBRecordCount: countSQL: %s", countSQL));
+            RudderLogger.logVerbose(String.format(Locale.US, "DBPersistentManager: getDBRecordCount: countSQL: %s", countSQL));
             Cursor cursor = database.rawQuery(countSQL, null);
             if (cursor.moveToFirst()) {
                 RudderLogger.logInfo("DBPersistentManager: getDBRecordCount: fetched count from DB");
@@ -190,7 +190,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         if (database.isOpen()) {
             // remove events
             String clearDBSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
-            RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: deleteAllEvents: clearDBSQL: %s", clearDBSQL));
+            RudderLogger.logVerbose(String.format(Locale.US, "DBPersistentManager: deleteAllEvents: clearDBSQL: %s", clearDBSQL));
             database.execSQL(clearDBSQL);
             RudderLogger.logInfo("DBPersistentManager: deleteAllEvents: deleted all events");
         } else {

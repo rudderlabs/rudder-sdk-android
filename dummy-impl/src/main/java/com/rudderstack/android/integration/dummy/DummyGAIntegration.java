@@ -17,6 +17,12 @@ public class DummyGAIntegration {
     }
 
     public static DummyGAIntegration getInstance(Context context, String key) {
+        try {
+            // to simulate initialization time
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         if (instance == null) {
             instance = new DummyGAIntegration(context, key);
 

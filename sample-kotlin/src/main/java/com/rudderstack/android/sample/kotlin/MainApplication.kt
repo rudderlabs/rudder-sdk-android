@@ -14,8 +14,7 @@ class MainApplication : Application() {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
         const val DATA_PLANE_URL = "https://8dbdd6d4.ngrok.io"
-        const val CONTROL_PLANE_URL = "https://986733ed.ngrok.io"
-        const val WRITE_KEY = "1ZOVzjHRL0Vpk627qpkmcIYLrv3"
+        const val WRITE_KEY = "1cUwRjfFRXvsSSSop6NvDjlyRI7"
     }
 
     override fun onCreate() {
@@ -26,9 +25,9 @@ class MainApplication : Application() {
             WRITE_KEY,
             RudderConfig.Builder()
                 .withDataPlaneUrl(DATA_PLANE_URL)
-                .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
-                .withTrackLifecycleEvents(true)
-                .withRecordScreenViews(true)
+                .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
+                .withTrackLifecycleEvents(false)
+                .withRecordScreenViews(false)
                 .withFactory(DummyGAIntegrationImpl.FACTORY)
                 .build()
         )
@@ -63,7 +62,6 @@ class MainApplication : Application() {
             override fun onActivityResumed(p0: Activity) {
                 Log.d(TAG, "onActivityResumed ${p0.localClassName}")
             }
-
         })
     }
 
