@@ -230,16 +230,14 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
 
         isFactoryInitialized = true;
-        synchronized (eventReplayMessage) {
-            RudderLogger.logDebug("EventRepository: initiateFactories: replaying old messages with factory");
-            ArrayList<RudderMessage> tempList = new ArrayList<>(eventReplayMessage);
-            if (!tempList.isEmpty()) {
-                for (RudderMessage message : tempList) {
-                    makeFactoryDump(message);
-                }
+        RudderLogger.logDebug("EventRepository: initiateFactories: replaying old messages with factory");
+        ArrayList<RudderMessage> tempList = new ArrayList<>(eventReplayMessage);
+        if (!tempList.isEmpty()) {
+            for (RudderMessage message : tempList) {
+                makeFactoryDump(message);
             }
-            eventReplayMessage.clear();
         }
+        eventReplayMessage.clear();
     }
 
     private Runnable getProcessorRunnable() {
