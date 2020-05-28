@@ -3,6 +3,7 @@ package com.rudderstack.android.sample.kotlin
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.rudderstack.android.sdk.core.RudderMessageBuilder
+import com.rudderstack.android.sdk.core.RudderOption
 import com.rudderstack.android.sdk.core.RudderTraits
 import com.rudderstack.android.sdk.core.ecomm.*
 
@@ -25,7 +26,7 @@ class MainActivity : AppCompatActivity() {
                 )
                 .putAge("24")
                 .putName("Ruchira"),
-            null
+            RudderOption().setIntegration("GA",false)
         )
 
         rudderClient.alias("test_new_id")

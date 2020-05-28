@@ -461,6 +461,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (isFactoryInitialized) {
             RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
             message.setIntegrations(prepareIntegrations());
+            message.setIntegrations(message.getRudderOption());
             for (String key : integrationOperationsMap.keySet()) {
                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
                 RudderIntegration integration = integrationOperationsMap.get(key);

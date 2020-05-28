@@ -202,7 +202,7 @@ public class RudderClient {
         track(new RudderMessageBuilder()
                 .setEventName(event)
                 .setProperty(property)
-                .setRudderOption(option)
+                .setRudderOption(option.integrations())
                 .build());
     }
 
@@ -262,7 +262,7 @@ public class RudderClient {
         if (property == null) property = new RudderProperty();
         property.put("category", category);
         property.put("name", screenName);
-        screen(new RudderMessageBuilder().setEventName(screenName).setProperty(property).setRudderOption(option).build());
+        screen(new RudderMessageBuilder().setEventName(screenName).setProperty(property).setRudderOption(option.integrations()).build());
     }
 
     /**
@@ -276,7 +276,7 @@ public class RudderClient {
         screen(new RudderMessageBuilder()
                 .setEventName(screenName)
                 .setProperty(property)
-                .setRudderOption(option)
+                .setRudderOption(option.integrations())
                 .build());
     }
 
@@ -309,7 +309,7 @@ public class RudderClient {
         RudderMessage message = new RudderMessageBuilder()
                 .setEventName(MessageType.IDENTIFY)
                 .setUserId(traits.getId())
-                .setRudderOption(option)
+                .setRudderOption(option.integrations())
                 .build();
         message.updateTraits(traits);
         identify(message);
@@ -404,7 +404,7 @@ public class RudderClient {
         Map<String, Object> traits = getRudderContext().getTraits();
         RudderMessageBuilder builder = new RudderMessageBuilder()
                 .setUserId(newId)
-                .setRudderOption(option);
+                .setRudderOption(option.integrations());
 
         String prevUserId = null;
         if (traits.containsKey("userId")) {
@@ -483,7 +483,7 @@ public class RudderClient {
         RudderMessage message = new RudderMessageBuilder()
                 .setGroupId(groupId)
                 .setGroupTraits(traits)
-                .setRudderOption(option)
+                .setRudderOption(option.integrations())
                 .build();
         group(message);
 

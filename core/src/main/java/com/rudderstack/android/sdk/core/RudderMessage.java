@@ -44,6 +44,8 @@ public class RudderMessage {
     private RudderTraits traits;
     @SerializedName("groupId")
     private String groupId;
+    @SerializedName("option")
+    private Map<String, Object> option;
 
     RudderMessage() {
         context = RudderElementCache.getCachedContext();
@@ -85,6 +87,10 @@ public class RudderMessage {
 
     void setEventName(String eventName) {
         this.event = eventName;
+    }
+
+    void setRudderOption(Map<String, Object> option) {
+        this.option = option;
     }
 
     void updateTraits(RudderTraits traits) {
@@ -133,7 +139,9 @@ public class RudderMessage {
     String getAction() {
         return action;
     }
-
+ public Map<String, Object> getRudderOption() {
+        return option;
+ }
     /**
      * Get your User properties for the event
      *

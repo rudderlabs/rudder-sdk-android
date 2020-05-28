@@ -74,10 +74,10 @@ public class RudderMessageBuilder {
     }
 
     // TODO:  need to figure out to use it as integrations
-    private RudderOption option;
+    private Map<String, Object> option;
 
-    public RudderMessageBuilder setRudderOption(RudderOption option) {
-        this.option = option;
+    public RudderMessageBuilder setRudderOption(Map<String, Object> option) {
+        this.option.putAll(option);
         return this;
     }
 
@@ -90,6 +90,7 @@ public class RudderMessageBuilder {
         if (this.previousId != null) event.setPreviousId(this.previousId);
         if (this.groupId != null) event.setGroupId(this.groupId);
         if (this.groupTraits != null) event.setGroupTraits(this.groupTraits);
+        if (this.option != null) event.setRudderOption(this.option);
 
         return event;
     }
