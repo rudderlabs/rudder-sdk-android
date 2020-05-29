@@ -29,13 +29,14 @@ class MainActivity : AppCompatActivity() {
             RudderOption().setIntegration("GA",false)
         )
 
-        rudderClient.alias("test_new_id")
+        rudderClient.alias("test_new_id",  RudderOption().setIntegration("GA",false))
         
         rudderClient.group(
             "sample_group_id",
             RudderTraits().putAge("24")
                 .putName("Test Group Name")
-                .putPhone("1234567891")
+                .putPhone("1234567891"),
+            RudderOption().setIntegration("GA",false)
         );
     }
 }

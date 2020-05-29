@@ -35,7 +35,7 @@ public class RudderMessage {
     @SerializedName("userProperties")
     private Map<String, Object> userProperties;
     @SerializedName("integrations")
-    private Map<String, Boolean> integrations = new HashMap<>();
+    private Map<String, Object> integrations = new HashMap<>();
     @SerializedName("destinationProps")
     private Map<String, Map> destinationProps = null;
     @SerializedName("previousId")
@@ -45,7 +45,7 @@ public class RudderMessage {
     @SerializedName("groupId")
     private String groupId;
     @SerializedName("option")
-    private Map<String, Object> option;
+    private  transient Map<String, Object> option;
 
     RudderMessage() {
         context = RudderElementCache.getCachedContext();
@@ -163,7 +163,7 @@ public class RudderMessage {
     void setIntegrations(Map<String, Object> integrations) {
         if (integrations == null) return;
         for (String key : integrations.keySet()) {
-            this.integrations.put(key, (Boolean) integrations.get(key));
+            this.integrations.put(key,  integrations.get(key));
         }
     }
 
