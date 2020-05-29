@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val rudderClient = MainApplication.rudderClient
-
+       var input = mapOf("Ruchira" to "Moitra")
         rudderClient!!.identify(
             "test_user_id",
             RudderTraits()
@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
                 )
                 .putAge("24")
                 .putName("Ruchira"),
-            RudderOption().setIntegration("GA",false)
+            RudderOption().setIntegrationOptions("GA",input)
         )
 
         rudderClient.alias("test_new_id",  RudderOption().setIntegration("GA",false))
