@@ -83,6 +83,15 @@ public class RudderMessageBuilder {
         return this;
     }
 
+    private Map<String, Object> contextOption;
+
+    public RudderMessageBuilder setContextOption(Map<String, Object> contextOption) {
+        this.contextOption = new LinkedHashMap<String,Object>();
+        this.contextOption.putAll(contextOption);
+        return this;
+    }
+
+
     public RudderMessage build() {
         RudderMessage event = new RudderMessage();
         if (this.userId != null) event.setUserId(this.userId);
@@ -93,6 +102,7 @@ public class RudderMessageBuilder {
         if (this.groupId != null) event.setGroupId(this.groupId);
         if (this.groupTraits != null) event.setGroupTraits(this.groupTraits);
         if (this.option != null) event.setRudderOption(this.option);
+        if (this.contextOption != null) event.setContextOption(this.contextOption);
 
         return event;
     }
