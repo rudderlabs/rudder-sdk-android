@@ -538,6 +538,29 @@ public class RudderTraits {
         private String street;
 
         /**
+         *  default public constructor
+         */
+        public Address() {
+        }
+
+        /**
+         * constructor
+         *
+         * @param city       String
+         * @param country    String
+         * @param postalCode String
+         * @param state      String
+         * @param street     String
+         */
+        public Address(String city, String country, String postalCode, String state, String street) {
+            this.city = city;
+            this.country = country;
+            this.postalCode = postalCode;
+            this.state = state;
+            this.street = street;
+        }
+
+        /**
          * get city
          *
          * @return city String
@@ -580,9 +603,6 @@ public class RudderTraits {
          */
         public String getStreet() {
             return street;
-        }
-
-        public Address() {
         }
 
         /**
@@ -641,23 +661,6 @@ public class RudderTraits {
         }
 
         /**
-         * constructor
-         *
-         * @param city       String
-         * @param country    String
-         * @param postalCode String
-         * @param state      String
-         * @param street     String
-         */
-        public Address(String city, String country, String postalCode, String state, String street) {
-            this.city = city;
-            this.country = country;
-            this.postalCode = postalCode;
-            this.state = state;
-            this.street = street;
-        }
-
-        /**
          * make address from String
          *
          * @param address String
@@ -675,6 +678,12 @@ public class RudderTraits {
         private String id;
         @SerializedName("industry")
         private String industry;
+
+        /**
+         *  default public constructor
+         */
+        public Company() {
+        }
 
         /**
          * constructor
