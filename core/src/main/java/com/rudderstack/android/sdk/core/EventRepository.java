@@ -20,9 +20,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -192,6 +194,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (destinations.isEmpty()) {
             RudderLogger.logInfo("EventRepository: initiateFactories: No destination found in the config");
         } else {
+            System.out.println("Ruchira destination");
+            System.out.println(Arrays.toString(destinations.toArray()));
             Map<String, RudderServerDestination> destinationConfigMap = new HashMap<>();
             for (RudderServerDestination destination : destinations) {
                 destinationConfigMap.put(destination.destinationDefinition.displayName, destination);
@@ -199,6 +203,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
             for (RudderIntegration.Factory factory : config.getFactories()) {
                 // if factory is present in the config
+
                 String key = factory.key();
                 if (destinationConfigMap.containsKey(key)) {
                     RudderServerDestination destination = destinationConfigMap.get(key);
@@ -460,14 +465,43 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private void makeFactoryDump(RudderMessage message) {
         if (isFactoryInitialized) {
             RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
-            message.setIntegrations(prepareIntegrations());
             message.setIntegrations(message.getRudderOption());
             message.setIntegrations(message.getContextOption());
+            if (message.getIntegrations().get("All") != null && message.getIntegrations().get("All").equals(false)) {
+
+            } else {
+                message.setIntegrations(prepareIntegrations());
+            }
+
+
+            System.out.println(integrationOperationsMap);
             for (String key : integrationOperationsMap.keySet()) {
                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                RudderIntegration integration = integrationOperationsMap.get(key);
-                if (integration != null) {
-                    integration.dump(message);
+                for (String keyIntegrate : message.getIntegrations().keySet()) {
+                    System.out.println(keyIntegrate);
+                    System.out.println(message.getIntegrations().get(keyIntegrate));
+                    if (message.getIntegrations().get("All").equals(true)) {
+                        if (message.getIntegrations().get(keyIntegrate).equals(false) && keyIntegrate.equals(key)) {
+
+                        } else {
+                            RudderIntegration integration = integrationOperationsMap.get(key);
+                            System.out.println(("inside integration map"));
+                            System.out.println(integration.toString());
+                            if (integration != null) {
+                                integration.dump(message);
+                            }
+                        }
+                    } else {
+                        if (message.getIntegrations().get(keyIntegrate).equals(true) && keyIntegrate.equals(key)) {
+                            RudderIntegration integration = integrationOperationsMap.get(key);
+                            System.out.println(("inside integration map"));
+                            System.out.println(integration.toString());
+                            if (integration != null) {
+                                integration.dump(message);
+                            }
+                        }
+                    }
+
                 }
             }
         } else {

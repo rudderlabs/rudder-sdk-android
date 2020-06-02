@@ -176,7 +176,9 @@ public class RudderMessage {
             this.integrations.put(key,  integrations.get(key));
         }
     }
-
+  public Map<String, Object> getIntegrations(){
+        return integrations;
+  }
     public Map<String, Object> getTraits() {
         return this.context.getTraits();
     }

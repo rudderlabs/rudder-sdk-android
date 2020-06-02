@@ -26,10 +26,12 @@ class MainActivity : AppCompatActivity() {
                 )
                 .putAge("24")
                 .putName("Ruchira"),
-            RudderOption().setIntegrationOptions("GA",input)
+            RudderOption().setIntegration("Bugsnag",true)
+                .setIntegration("All",false)
         )
 
-        rudderClient.alias("test_new_id",  RudderOption().setIntegration("GA",false))
+        rudderClient.alias("test_new_id",  RudderOption().setIntegration("Bugsnag",false)
+            .setIntegration("All",false))
 
 
         
@@ -38,7 +40,8 @@ class MainActivity : AppCompatActivity() {
             RudderTraits().putAge("24")
                 .putName("Test Group Name")
                 .putPhone("1234567891"),
-            RudderOption().putContext("S3",false)
+            RudderOption().putContext("Adjust",true)
+
         );
     }
 }
