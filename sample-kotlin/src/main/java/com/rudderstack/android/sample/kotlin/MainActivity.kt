@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val rudderClient = MainApplication.rudderClient
-       var input = mapOf("Ruchira" to "Moitra")
+        var input = mapOf("Ruchira" to "Moitra")
         rudderClient!!.identify(
             "test_user_id",
             RudderTraits()
@@ -26,21 +26,23 @@ class MainActivity : AppCompatActivity() {
                 )
                 .putAge("24")
                 .putName("Ruchira"),
-            RudderOption().setIntegration("Bugsnag",true)
-                .setIntegration("All",false)
+            RudderOption().setIntegration("Bugsnag", true)
+                .setIntegration("All", false)
         )
 
-        rudderClient.alias("test_new_id",  RudderOption().setIntegration("Bugsnag",false)
-            .setIntegration("All",false))
+        rudderClient.alias(
+            "test_new_id", RudderOption().setIntegration("Bugsnag", false)
+                .setIntegration("All", false)
+        )
 
 
-        
+
         rudderClient.group(
             "sample_group_id",
             RudderTraits().putAge("24")
                 .putName("Test Group Name")
                 .putPhone("1234567891"),
-            RudderOption().putContext("Adjust",true)
+            RudderOption().putContext("Adjust", true)
 
         );
     }
