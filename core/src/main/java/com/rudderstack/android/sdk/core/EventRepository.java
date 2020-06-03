@@ -194,8 +194,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (destinations.isEmpty()) {
             RudderLogger.logInfo("EventRepository: initiateFactories: No destination found in the config");
         } else {
-            System.out.println("Ruchira destination");
-            System.out.println(Arrays.toString(destinations.toArray()));
             Map<String, RudderServerDestination> destinationConfigMap = new HashMap<>();
             for (RudderServerDestination destination : destinations) {
                 destinationConfigMap.put(destination.destinationDefinition.displayName, destination);
@@ -472,21 +470,14 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             } else {
                 message.setIntegrations(prepareIntegrations());
             }
-
-
-            System.out.println(integrationOperationsMap);
             for (String key : integrationOperationsMap.keySet()) {
                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
                 for (String keyIntegrate : message.getIntegrations().keySet()) {
-                    System.out.println(keyIntegrate);
-                    System.out.println(message.getIntegrations().get(keyIntegrate));
                     if (message.getIntegrations().get("All").equals(true)) {
                         if (message.getIntegrations().get(keyIntegrate).equals(false) && keyIntegrate.equals(key)) {
 
                         } else {
                             RudderIntegration integration = integrationOperationsMap.get(key);
-                            System.out.println(("inside integration map"));
-                            System.out.println(integration.toString());
                             if (integration != null) {
                                 integration.dump(message);
                             }
@@ -494,8 +485,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     } else {
                         if (message.getIntegrations().get(keyIntegrate).equals(true) && keyIntegrate.equals(key)) {
                             RudderIntegration integration = integrationOperationsMap.get(key);
-                            System.out.println(("inside integration map"));
-                            System.out.println(integration.toString());
                             if (integration != null) {
                                 integration.dump(message);
                             }

@@ -200,15 +200,12 @@ public class RudderClient {
      */
     public void track(@NonNull String event, @Nullable RudderProperty property, @Nullable RudderOption option) {
         if (option != null) {
-            Map<String, Object> traitsContext = getRudderContext().getTraits();
-            for (Map.Entry<String, Object> pair : option.context().entrySet()) {
-                traitsContext.put(pair.getKey(), pair.getValue());
-            }
+
             track(new RudderMessageBuilder()
                     .setEventName(event)
                     .setProperty(property)
                     .setRudderOption(option.integrations())
-                    .setContextOption(traitsContext)
+                    .setContextOption(option.context())
                     .build());
         } else {
             track(new RudderMessageBuilder()
@@ -273,14 +270,10 @@ public class RudderClient {
     public void screen(@NonNull String screenName, @NonNull String category, @Nullable RudderProperty property, @Nullable RudderOption option) {
 
         if (option != null) {
-            Map<String, Object> traitsContext = getRudderContext().getTraits();
-            for (Map.Entry<String, Object> pair : option.context().entrySet()) {
-                traitsContext.put(pair.getKey(), pair.getValue());
-            }
             if (property == null) property = new RudderProperty();
             property.put("category", category);
             property.put("name", screenName);
-            screen(new RudderMessageBuilder().setEventName(screenName).setProperty(property).setRudderOption(option.integrations()).setContextOption(traitsContext).build());
+            screen(new RudderMessageBuilder().setEventName(screenName).setProperty(property).setRudderOption(option.integrations()).setContextOption(option.context()).build());
         } else {
             if (property == null) property = new RudderProperty();
             property.put("category", category);
@@ -298,15 +291,12 @@ public class RudderClient {
      */
     public void screen(@NonNull String screenName, @Nullable RudderProperty property, @Nullable RudderOption option) {
         if (option != null) {
-            Map<String, Object> traitsContext = getRudderContext().getTraits();
-            for (Map.Entry<String, Object> pair : option.context().entrySet()) {
-                traitsContext.put(pair.getKey(), pair.getValue());
-            }
+
             screen(new RudderMessageBuilder()
                     .setEventName(screenName)
                     .setProperty(property)
                     .setRudderOption(option.integrations())
-                    .setContextOption(traitsContext)
+                    .setContextOption(option.context())
                     .build());
         } else {
             screen(new RudderMessageBuilder()
@@ -344,15 +334,11 @@ public class RudderClient {
     public void identify(@NonNull RudderTraits traits, @Nullable RudderOption option) {
         RudderMessage message;
         if (option != null) {
-            Map<String, Object> traitsContext = getRudderContext().getTraits();
-            for (Map.Entry<String, Object> pair : option.context().entrySet()) {
-                traitsContext.put(pair.getKey(), pair.getValue());
-            }
             message = new RudderMessageBuilder()
                     .setEventName(MessageType.IDENTIFY)
                     .setUserId(traits.getId())
                     .setRudderOption(option.integrations())
-                    .setContextOption(traitsContext)
+                    .setContextOption(option.context())
                     .build();
         } else {
             message = new RudderMessageBuilder()
@@ -460,7 +446,7 @@ public class RudderClient {
             builder = new RudderMessageBuilder()
                     .setUserId(newId)
                     .setRudderOption(option.integrations())
-                    .setContextOption(traits);
+                    .setContextOption(option.context());
         } else {
             builder = new RudderMessageBuilder()
                     .setUserId(newId);
@@ -542,15 +528,12 @@ public class RudderClient {
     public void group(@NonNull String groupId, @Nullable RudderTraits traits, @Nullable RudderOption option) {
         RudderMessage message;
         if (option != null) {
-            Map<String, Object> traitsContext = getRudderContext().getTraits();
-            for (Map.Entry<String, Object> pair : option.context().entrySet()) {
-                traitsContext.put(pair.getKey(), pair.getValue());
-            }
+
             message = new RudderMessageBuilder()
                     .setGroupId(groupId)
                     .setGroupTraits(traits)
                     .setRudderOption(option.integrations())
-                    .setContextOption(traitsContext)
+                    .setContextOption(option.context())
                     .build();
         } else {
             message = new RudderMessageBuilder()

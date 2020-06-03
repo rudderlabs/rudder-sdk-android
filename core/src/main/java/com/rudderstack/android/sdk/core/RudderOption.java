@@ -6,8 +6,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RudderOption {
 
-    private final Map<String, Object> integrations;
-    private final Map<String, Object> context;
+    private Map<String, Object> integrations;
+    private Map<String, Object> context;
 
     public static final String ALL_INTEGRATIONS_KEY = "All";
 
