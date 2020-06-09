@@ -2,9 +2,6 @@ package com.rudderstack.android.sample.kotlin
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.rudderstack.android.sdk.core.RudderMessageBuilder
-import com.rudderstack.android.sdk.core.RudderTraits
-import com.rudderstack.android.sdk.core.ecomm.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -15,10 +12,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val rudderClient = MainApplication.rudderClient
+        val sqLiteHelper = MainApplication.sqLiteHelper
 
         Thread(Runnable {
             // simulate load
-            for(index in 1..1000) {
+            for (index in 1..100) {
+                sqLiteHelper!!.saveEvent("dummy_event_${index}")
                 rudderClient!!.track("dummy_event_${index}")
                 Thread.sleep(10)
             }

@@ -12,6 +12,8 @@ import java.util.Locale;
 /*
  * Helper class for SQLite operations
  * */
+
+// error handling needs to be implemented
 class DBPersistentManager extends SQLiteOpenHelper {
     // SQLite database file name
     private static final String DB_NAME = "rl_persistence.db";

@@ -132,7 +132,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             }
 
                             isSDKInitialized = true;
-
                         } else {
                             retryCount += 1;
                             RudderLogger.logDebug("EventRepository: initiateFactories: retry count: " + retryCount);
@@ -193,6 +192,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (destinations.isEmpty()) {
             RudderLogger.logInfo("EventRepository: initiateFactories: No destination found in the config");
         } else {
+            // check for multiple destinations
             Map<String, RudderServerDestination> destinationConfigMap = new HashMap<>();
             for (RudderServerDestination destination : destinations) {
                 destinationConfigMap.put(destination.destinationDefinition.displayName, destination);

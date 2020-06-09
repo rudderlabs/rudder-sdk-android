@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
-import com.rudderstack.android.integration.dummy.DummyGAIntegrationImpl
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
 import com.rudderstack.android.sdk.core.RudderClient
@@ -12,9 +11,10 @@ import com.rudderstack.android.sdk.core.RudderClient
 class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
+        var sqLiteHelper: SQLiteHelper? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://8dbdd6d4.ngrok.io"
-        const val WRITE_KEY = "1cUwRjfFRXvsSSSop6NvDjlyRI7"
+        const val DATA_PLANE_URL = "https://hosted.rudderlabs.com"
+        const val WRITE_KEY = "1cZKYwoLsDiMaw9WUvxLsG8GDc8"
     }
 
     override fun onCreate() {
@@ -26,13 +26,16 @@ class MainApplication : Application() {
             RudderConfig.Builder()
                 .withDataPlaneUrl(DATA_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
-                .withTrackLifecycleEvents(false)
-                .withRecordScreenViews(false)
-                .withFactory(DummyGAIntegrationImpl.FACTORY)
+                .withTrackLifecycleEvents(true)
+                .withRecordScreenViews(true)
                 .build()
         )
 
+        sqLiteHelper = SQLiteHelper(this);
+
         rudderClient!!.rudderContext.putDeviceToken("some_device_token")
+
+
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityPaused(p0: Activity) {
