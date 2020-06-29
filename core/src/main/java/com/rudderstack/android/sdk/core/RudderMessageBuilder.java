@@ -77,21 +77,17 @@ public class RudderMessageBuilder {
 
     // TODO:  need to figure out to use it as integrations
     private Map<String, Object> option;
-
-    public RudderMessageBuilder setRudderOption(Map<String, Object> option) {
-        this.option = new HashMap<String,Object>();
-        this.option.putAll(option);
-        return this;
-    }
-
     private Map<String, Object> contextOption;
 
-    public RudderMessageBuilder setContextOption(Map<String, Object> contextOption) {
-        this.contextOption = new HashMap<String,Object>();
-        this.contextOption.putAll(contextOption);
+    public  RudderMessageBuilder setOption(RudderOption option){
+        if(option!=null) {
+            this.contextOption = new HashMap<String, Object>();
+            this.contextOption.putAll(option.context());
+            this.option = new HashMap<String, Object>();
+            this.option.putAll(option.integrations());
+        }
         return this;
     }
-
 
     public RudderMessage build() {
         RudderMessage event = new RudderMessage();

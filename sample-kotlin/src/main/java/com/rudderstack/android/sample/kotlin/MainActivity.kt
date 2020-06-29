@@ -20,8 +20,6 @@ class MainActivity : AppCompatActivity() {
 
         rudderClient!!.identify(
             "test_user_id"
-
-
         )
 
         rudderClient.alias(
