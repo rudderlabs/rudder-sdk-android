@@ -31,7 +31,6 @@ class MainApplication : Application() {
                 .withTrackLifecycleEvents(true)
                 .withRecordScreenViews(true)
                 .withFactory(DummyGAIntegrationImpl.FACTORY)
-                .withDefaultOptions(input)
                 .build()
         )
 

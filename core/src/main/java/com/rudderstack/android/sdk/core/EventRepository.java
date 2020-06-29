@@ -462,54 +462,67 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private void makeFactoryDump(RudderMessage message) {
         if (isFactoryInitialized) {
             RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
-            if(message.getRudderOption() == null){
+            if (message.getRudderOption() == null) {
                 message.setIntegrations(config.getDefaultOptions());
-            }else{
+            } else {
                 message.setIntegrations(message.getRudderOption());
             }
-            if(message.getContextOption() == null){
+            if (message.getContextOption() == null) {
                 message.setIntegrations(config.getDefaultOptions());
-            }else{
+            } else {
                 message.setIntegrations(message.getContextOption());
             }
 
-
-            Map<String,Object> messageIntegration = message.getIntegrations();
-            if(messageIntegration != null) {
+            boolean check = false;
+            Map<String, Object> messageIntegration = message.getIntegrations();
+            if (messageIntegration != null) {
                 if (!(messageIntegration.get("All") != null && messageIntegration.get("All").equals(false))) {
                     message.setIntegrations(prepareIntegrations());
                 }
             }
-                for (String key : integrationOperationsMap.keySet()) {
-                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                    if(messageIntegration!=null){
-                    for (String keyIntegrate :messageIntegration.keySet()) {
+            for (String key : integrationOperationsMap.keySet()) {
+                if (messageIntegration != null) {
+                    for (String keyIntegrate : messageIntegration.keySet()) {
                         if (messageIntegration.get("All").equals(true)) {
                             if (!(messageIntegration.get(keyIntegrate).equals(false) && keyIntegrate.equals(key))) {
                                 RudderIntegration integration = integrationOperationsMap.get(key);
                                 if (integration != null) {
-                                    integration.dump(message);
+                                    check = true;
                                 }
+
+                            } else {
+                                check = false;
                             }
                         } else {
                             if (messageIntegration.get(keyIntegrate).equals(true) && keyIntegrate.equals(key)) {
                                 RudderIntegration integration = integrationOperationsMap.get(key);
                                 if (integration != null) {
-                                    integration.dump(message);
+                                    check = true;
                                 }
+                            } else {
+                                check = false;
                             }
                         }
 
                     }
 
-                }else {
-                        RudderIntegration integration = integrationOperationsMap.get(key);
-                        if (integration != null) {
-                            integration.dump(message);
-                        }
+                } else {
+                    RudderIntegration integration = integrationOperationsMap.get(key);
+                    if (integration != null) {
+                        check = true;
                     }
                 }
+            }
+            for (String key : integrationOperationsMap.keySet()) {
+                if (check == true) {
+                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                    RudderIntegration integration = integrationOperationsMap.get(key);
+                    if (integration != null) {
+                        integration.dump(message);
 
+                    }
+                }
+            }
         } else {
             RudderLogger.logDebug("EventRepository: makeFactoryDump: factories are not initialized. dumping to replay queue");
             eventReplayMessage.add(message);
