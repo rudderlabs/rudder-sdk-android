@@ -449,7 +449,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * */
     void dump(@NonNull RudderMessage message) {
         if (!isSDKEnabled) return;
-
         makeFactoryDump(message);
         String eventJson = new Gson().toJson(message);
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
@@ -463,36 +462,54 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private void makeFactoryDump(RudderMessage message) {
         if (isFactoryInitialized) {
             RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
-            message.setIntegrations(message.getRudderOption());
-            message.setIntegrations(message.getContextOption());
-            if (message.getIntegrations().get("All") != null && message.getIntegrations().get("All").equals(false)) {
-
-            } else {
-                message.setIntegrations(prepareIntegrations());
+            if(message.getRudderOption() == null){
+                message.setIntegrations(config.getDefaultOptions());
+            }else{
+                message.setIntegrations(message.getRudderOption());
             }
-            for (String key : integrationOperationsMap.keySet()) {
-                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                for (String keyIntegrate : message.getIntegrations().keySet()) {
-                    if (message.getIntegrations().get("All").equals(true)) {
-                        if (message.getIntegrations().get(keyIntegrate).equals(false) && keyIntegrate.equals(key)) {
+            if(message.getContextOption() == null){
+                message.setIntegrations(config.getDefaultOptions());
+            }else{
+                message.setIntegrations(message.getContextOption());
+            }
 
-                        } else {
-                            RudderIntegration integration = integrationOperationsMap.get(key);
-                            if (integration != null) {
-                                integration.dump(message);
-                            }
-                        }
-                    } else {
-                        if (message.getIntegrations().get(keyIntegrate).equals(true) && keyIntegrate.equals(key)) {
-                            RudderIntegration integration = integrationOperationsMap.get(key);
-                            if (integration != null) {
-                                integration.dump(message);
-                            }
-                        }
-                    }
 
+            Map<String,Object> messageIntegration = message.getIntegrations();
+            if(messageIntegration != null) {
+                if (!(messageIntegration.get("All") != null && messageIntegration.get("All").equals(false))) {
+                    message.setIntegrations(prepareIntegrations());
                 }
             }
+                for (String key : integrationOperationsMap.keySet()) {
+                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                    if(messageIntegration!=null){
+                    for (String keyIntegrate :messageIntegration.keySet()) {
+                        if (messageIntegration.get("All").equals(true)) {
+                            if (!(messageIntegration.get(keyIntegrate).equals(false) && keyIntegrate.equals(key))) {
+                                RudderIntegration integration = integrationOperationsMap.get(key);
+                                if (integration != null) {
+                                    integration.dump(message);
+                                }
+                            }
+                        } else {
+                            if (messageIntegration.get(keyIntegrate).equals(true) && keyIntegrate.equals(key)) {
+                                RudderIntegration integration = integrationOperationsMap.get(key);
+                                if (integration != null) {
+                                    integration.dump(message);
+                                }
+                            }
+                        }
+
+                    }
+
+                }else {
+                        RudderIntegration integration = integrationOperationsMap.get(key);
+                        if (integration != null) {
+                            integration.dump(message);
+                        }
+                    }
+                }
+
         } else {
             RudderLogger.logDebug("EventRepository: makeFactoryDump: factories are not initialized. dumping to replay queue");
             eventReplayMessage.add(message);

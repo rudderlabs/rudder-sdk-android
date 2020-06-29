@@ -1,5 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -78,7 +79,7 @@ public class RudderMessageBuilder {
     private Map<String, Object> option;
 
     public RudderMessageBuilder setRudderOption(Map<String, Object> option) {
-        this.option = new LinkedHashMap<String,Object>();
+        this.option = new HashMap<String,Object>();
         this.option.putAll(option);
         return this;
     }
@@ -86,7 +87,7 @@ public class RudderMessageBuilder {
     private Map<String, Object> contextOption;
 
     public RudderMessageBuilder setContextOption(Map<String, Object> contextOption) {
-        this.contextOption = new LinkedHashMap<String,Object>();
+        this.contextOption = new HashMap<String,Object>();
         this.contextOption.putAll(contextOption);
         return this;
     }

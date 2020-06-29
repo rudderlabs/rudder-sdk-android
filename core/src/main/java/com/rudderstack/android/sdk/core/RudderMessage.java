@@ -35,7 +35,7 @@ public class RudderMessage {
     @SerializedName("userProperties")
     private Map<String, Object> userProperties;
     @SerializedName("integrations")
-    private Map<String, Object> integrations = new HashMap<>();
+    private Map<String, Object> integrations = null;
     @SerializedName("destinationProps")
     private Map<String, Map> destinationProps = null;
     @SerializedName("previousId")
@@ -126,6 +126,8 @@ public class RudderMessage {
     }
 
     void addIntegrationProps(String integrationKey, boolean isEnabled, Map props) {
+        if(integrations == null)
+            integrations = new HashMap<>();
         integrations.put(integrationKey, isEnabled);
 
         if (isEnabled) {
@@ -175,6 +177,9 @@ public class RudderMessage {
     void setIntegrations(Map<String, Object> integrations) {
         if (integrations == null) return;
         for (String key : integrations.keySet()) {
+            if(this.integrations == null)
+                this.integrations = new HashMap<>();
+
             this.integrations.put(key, integrations.get(key));
         }
     }

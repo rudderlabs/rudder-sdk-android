@@ -46,6 +46,7 @@ public class DummyGAIntegrationImpl extends RudderIntegration<DummyGAIntegration
             String eventName = message.getEventName();
             String eventType = message.getType();
             String userId = message.getUserId();
+            System.out.println();
             Map<String, Object> eventProps = message.getProperties();
             String eventJson = new Gson().toJson(eventProps);
             System.out.println("eventJson: " + eventJson);

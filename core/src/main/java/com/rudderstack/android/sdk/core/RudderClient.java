@@ -96,6 +96,8 @@ public class RudderClient {
                     RudderLogger.logVerbose("getInstance: SleepTimeOut is wrong. using default.");
                     config.setSleepTimeOut(10);
                 }
+
+               // config.setDefaultOptions();
             }
 
             // get application from provided context
@@ -199,7 +201,8 @@ public class RudderClient {
      * @param option   Options related to this track call
      */
     public void track(@NonNull String event, @Nullable RudderProperty property, @Nullable RudderOption option) {
-        if (option != null) {
+        if (option == null) {
+
 
             track(new RudderMessageBuilder()
                     .setEventName(event)
@@ -208,6 +211,7 @@ public class RudderClient {
                     .setContextOption(option.context())
                     .build());
         } else {
+
             track(new RudderMessageBuilder()
                     .setEventName(event)
                     .setProperty(property)

@@ -1,5 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,11 +33,11 @@ public class RudderOption {
     }
 
     public Map<String, Object> integrations() {
-        return new LinkedHashMap<>(integrations);
+        return new HashMap<>(integrations);
     }
 
     public Map<String, Object> context() {
-        return new LinkedHashMap<>(context);
+        return new HashMap<>(context);
     }
 
 }

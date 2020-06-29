@@ -17,17 +17,11 @@ class MainActivity : AppCompatActivity() {
 
         val rudderClient = MainApplication.rudderClient
         var input = mapOf("Ruchira" to "Moitra")
+
         rudderClient!!.identify(
-            "test_user_id",
-            RudderTraits()
-                .putAddress(
-                    RudderTraits.Address().putCity("kolkata").putCountry("india")
-                        .putStreet("new alipore")
-                )
-                .putAge("24")
-                .putName("Ruchira"),
-            RudderOption().setIntegration("abc", true)
-                .setIntegration("All", false)
+            "test_user_id"
+
+
         )
 
         rudderClient.alias(
@@ -46,5 +40,6 @@ class MainActivity : AppCompatActivity() {
                 .putContext("Adjust1", true)
 
         );
+
     }
 }

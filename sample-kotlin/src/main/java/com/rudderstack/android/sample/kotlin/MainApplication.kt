@@ -13,14 +13,14 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://bcfaca576812.ngrok.io"
-        const val CONTROL_PLANE_URL = "https://bcfaca576812.ngrok.io"
+        const val DATA_PLANE_URL = "https://a5212e397c0a.ngrok.io"
+        const val CONTROL_PLANE_URL = "https://a5212e397c0a.ngrok.io "
         const val WRITE_KEY = "1bt0vcThjsXCUngMjgTFB62xAyg"
     }
 
     override fun onCreate() {
         super.onCreate()
-
+        var input = mapOf("ga" to false)
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,
@@ -31,6 +31,7 @@ class MainApplication : Application() {
                 .withTrackLifecycleEvents(true)
                 .withRecordScreenViews(true)
                 .withFactory(DummyGAIntegrationImpl.FACTORY)
+                .withDefaultOptions(input)
                 .build()
         )
 
