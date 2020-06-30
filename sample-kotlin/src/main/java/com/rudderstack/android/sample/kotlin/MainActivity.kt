@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         rudderClient!!.track(
             "Example Track Event 3",
             RudderProperty().putValue("prop_2", "Example track property 2"),
-            RudderOption().setIntegration("All", false).setIntegration("Bugsnag", true)
+            RudderOption().setIntegration("All", true).setIntegration("Bugsnag", false)
         )
         rudderClient!!.track(
             "Example Track Event 4",

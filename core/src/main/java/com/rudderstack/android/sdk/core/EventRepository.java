@@ -503,23 +503,20 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                 check = false;
                             }
                         }
-
                     }
-
                 } else {
                     RudderIntegration integration = integrationOperationsMap.get(key);
                     if (integration != null) {
                         check = true;
                     }
                 }
-            }
-            for (String key : integrationOperationsMap.keySet()) {
+                System.out.println("Checking for event" + message.getEventName());
                 if (check == true) {
                     RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                    System.out.println("Checking for event" + message.getEventName());
                     RudderIntegration integration = integrationOperationsMap.get(key);
                     if (integration != null) {
                         integration.dump(message);
-
                     }
                 }
             }

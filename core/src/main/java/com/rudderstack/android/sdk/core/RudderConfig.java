@@ -499,7 +499,8 @@ public class RudderConfig {
                     this.trackLifecycleEvents,
                     this.recordScreenViews,
                     this.controlPlaneUrl,
-                    this.factories,this.defaultOptions
+                    this.factories,
+                    this.defaultOptions
             );
         }
     }
