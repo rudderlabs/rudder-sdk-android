@@ -63,5 +63,17 @@ RudderClient.with(this).track(
 
 For more detailed documentation check [the documentation page](https://docs.rudderstack.com/sdk-integration-guide/getting-started-with-android-sdk).
 
+## Register your callbacks
+For device mode destinations- You can register callbacks, which will be executed after the nativeSDK has been successfully initialized.Use the `onIntegrationReady` method to register your callback.The following snippet shows an example:
+```
+rudderClient.onIntegrationReady("Lotame") {
+  var nativeSDK  = (it as LotameIntegration)
+  // your custom code
+}
+```
+The variable `it` contains the intialized nativeSDK object.
+Note: The method `onIntegrationReady` accepts two arguments- the integration name(eg. "Lotame") and the callback.  
+  
+[Registering Lotame's onSync callback](https://github.com/rudderlabs/rudder-integration-lotame-android#register-your-onsync-callback) shows one more example of registering a callback using `onIntegrationReady`.
 ## Contact Us
 If you come across any issues while configuring or using RudderStack, please feel free to [contact us](https://rudderstack.com/contact/) or start a conversation on our [Discord](https://discordapp.com/invite/xNEdEGw) channel. We will be happy to help you.
