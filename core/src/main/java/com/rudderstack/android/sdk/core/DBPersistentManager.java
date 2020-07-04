@@ -42,7 +42,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
     void saveEvent(String messageJson) {
         try {
             SQLiteDatabase database = getWritableDatabase();
-            if (database.isOpen() && database.isDatabaseIntegrityOk()) {
+            if (database.isOpen()) {
                 String saveEventSQL = String.format(Locale.US, "INSERT INTO %s (%s, %s) VALUES ('%s', %d)",
                         EVENTS_TABLE_NAME, MESSAGE, UPDATED, messageJson.replaceAll("'", "\\\\\'"), System.currentTimeMillis());
                 RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: saveEvent: saveEventSQL: %s", saveEventSQL));
