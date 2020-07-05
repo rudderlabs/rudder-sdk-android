@@ -9,20 +9,6 @@ import java.util.Map;
  * */
 public class RudderMessageBuilder {
 
-    private String groupId = null;
-
-    public RudderMessageBuilder setGroupId(String groupId) {
-        this.groupId = groupId;
-        return this;
-    }
-
-    private RudderTraits groupTraits = null;
-
-    public RudderMessageBuilder setGroupTraits(RudderTraits groupTraits) {
-        this.groupTraits = groupTraits;
-        return this;
-    }
-
     private String previousId = null;
 
     public RudderMessageBuilder setPreviousId(String previousId) {
@@ -39,6 +25,12 @@ public class RudderMessageBuilder {
 
     private String userId = null;
 
+    /**
+     * @param userId Developer identification
+     * @return Builder instance
+     *
+     * @deprecated : use identify method instead
+     */
     public RudderMessageBuilder setUserId(String userId) {
         this.userId = userId;
         return this;
@@ -75,32 +67,65 @@ public class RudderMessageBuilder {
         return this;
     }
 
+    private String groupId = null;
+
+    public RudderMessageBuilder setGroupId(String groupId) {
+        this.groupId = groupId;
+        return this;
+    }
+
+    private RudderTraits groupTraits = null;
+
+    public RudderMessageBuilder setGroupTraits(RudderTraits groupTraits) {
+        this.groupTraits = groupTraits;
+        return this;
+    }
+
     // TODO:  need to figure out to use it as integrations
     private Map<String, Object> option;
     private Map<String, Object> contextOption;
 
-    public  RudderMessageBuilder setOption(RudderOption option){
-        if(option!=null) {
-            this.contextOption = new HashMap<String, Object>();
+    public RudderMessageBuilder setOption(RudderOption option) {
+        if (option != null) {
+            this.contextOption = new HashMap<>();
             this.contextOption.putAll(option.context());
-            this.option = new HashMap<String, Object>();
+            this.option = new HashMap<>();
             this.option.putAll(option.integrations());
         }
         return this;
     }
 
     public RudderMessage build() {
-        RudderMessage event = new RudderMessage();
-        if (this.userId != null) event.setUserId(this.userId);
-        if (this.eventName != null) event.setEventName(this.eventName);
-        if (this.property != null) event.setProperty(this.property);
-        if (this.userProperty != null) event.setUserProperty(this.userProperty);
-        if (this.previousId != null) event.setPreviousId(this.previousId);
-        if (this.groupId != null) event.setGroupId(this.groupId);
-        if (this.groupTraits != null) event.setGroupTraits(this.groupTraits);
-        if (this.option != null) event.setRudderOption(this.option);
-        if (this.contextOption != null) event.setContextOption(this.contextOption);
+        RudderMessage message = new RudderMessage();
 
-        return event;
+        if (this.userId != null) {
+            message.setUserId(this.userId);
+        }
+        if (this.eventName != null) {
+            message.setEventName(this.eventName);
+        }
+        if (this.property != null) {
+            message.setProperty(this.property);
+        }
+        if (this.userProperty != null) {
+            message.setUserProperty(this.userProperty);
+        }
+        if (this.previousId != null) {
+            message.setPreviousId(this.previousId);
+        }
+        if (this.groupId != null) {
+            message.setGroupId(this.groupId);
+        }
+        if (this.groupTraits != null) {
+            message.setGroupTraits(this.groupTraits);
+        }
+        if (this.option != null) {
+            message.setRudderOption(this.option);
+        }
+        if (this.contextOption != null) {
+            message.setContextOption(this.contextOption);
+        }
+
+        return message;
     }
 }

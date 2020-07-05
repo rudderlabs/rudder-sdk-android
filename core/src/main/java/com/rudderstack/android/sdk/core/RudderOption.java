@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RudderOption {
-
     private Map<String, Object> integrations;
     private Map<String, Object> context;
 
@@ -39,5 +38,4 @@ public class RudderOption {
     public Map<String, Object> context() {
         return new HashMap<>(context);
     }
-
 }

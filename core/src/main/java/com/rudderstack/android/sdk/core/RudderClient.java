@@ -422,9 +422,12 @@ public class RudderClient {
         } else if (traits.containsKey("id")) {
             prevUserId = (String) traits.get("id");
         }
-        if (prevUserId != null) {
-            builder.setPreviousId(prevUserId);
+        if (prevUserId == null) {
+            // set previousId to anonymousId if userId is not present
+            prevUserId = RudderElementCache.getCachedContext().getDeviceId();
         }
+
+        builder.setPreviousId(prevUserId);
         traits.put("userId", newId);
         traits.put("id", newId);
         RudderMessage message = builder.build();
@@ -497,7 +500,6 @@ public class RudderClient {
                 .setOption(option)
                 .build();
         group(message);
-
     }
 
     /**

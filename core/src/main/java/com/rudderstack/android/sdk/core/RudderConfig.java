@@ -40,8 +40,7 @@ public class RudderConfig {
     private boolean recordScreenViews;
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
-    private Map<String,Object> defaultOptions;
-
+    private Map<String, Object> defaultOptions;
 
     RudderConfig() {
         this(
@@ -70,10 +69,9 @@ public class RudderConfig {
             boolean recordScreenViews,
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
-            Map<String,Object> defaultOptions
+            Map<String, Object> defaultOptions
     ) {
         RudderLogger.init(logLevel);
-        this.defaultOptions = defaultOptions;
         if (TextUtils.isEmpty(dataPlaneUrl)) {
             RudderLogger.logError("endPointUri can not be null or empty. Set to default.");
             this.dataPlaneUrl = Constants.DATA_PLANE_URL;
@@ -103,10 +101,11 @@ public class RudderConfig {
 
         if (configRefreshInterval > Utils.MAX_CONFIG_REFRESH_INTERVAL) {
             this.configRefreshInterval = Utils.MAX_CONFIG_REFRESH_INTERVAL;
-        } else if (configRefreshInterval < Utils.MIN_CONFIG_REFRESH_INTERVAL) {
-            this.configRefreshInterval = Utils.MIN_CONFIG_REFRESH_INTERVAL;
         } else {
-            this.configRefreshInterval = configRefreshInterval;
+            this.configRefreshInterval = Math.max(
+                    configRefreshInterval,
+                    Utils.MIN_CONFIG_REFRESH_INTERVAL
+            );
         }
 
         if (sleepTimeOut < Utils.MIN_SLEEP_TIMEOUT) {
@@ -133,6 +132,7 @@ public class RudderConfig {
             if (!controlPlaneUrl.endsWith("/")) controlPlaneUrl += "/";
             this.controlPlaneUrl = controlPlaneUrl;
         }
+        this.defaultOptions = defaultOptions;
     }
 
     /**
@@ -161,7 +161,7 @@ public class RudderConfig {
     /**
      * @return defaultOptions
      */
-    public Map<String,Object> getDefaultOptions() {
+    public Map<String, Object> getDefaultOptions() {
         return defaultOptions;
     }
 
@@ -243,7 +243,7 @@ public class RudderConfig {
         this.flushQueueSize = flushQueueSize;
     }
 
-    void setDefaultOptions(Map<String ,Object> defaultOptions) {
+    void setDefaultOptions(Map<String, Object> defaultOptions) {
         this.defaultOptions = defaultOptions;
     }
 
@@ -370,9 +370,10 @@ public class RudderConfig {
             return this;
         }
 
-        private Map<String,Object> defaultOptions = null;
-        public Builder withDefaultOptions (Map<String,Object> defaultOptions){
-            if(defaultOptions == null ){
+        private Map<String, Object> defaultOptions = null;
+
+        public Builder withDefaultOptions(Map<String, Object> defaultOptions) {
+            if (defaultOptions == null) {
                 RudderLogger.logError("Default options cannot be null");
             }
             this.defaultOptions = defaultOptions;

@@ -448,7 +448,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * generic method for dumping all the events
      * */
     void dump(@NonNull RudderMessage message) {
-        if (!isSDKEnabled) return;
+        if (!isSDKEnabled) return; // source is not enabled on the control-plane
+
         makeFactoryDump(message);
         String eventJson = new Gson().toJson(message);
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
@@ -489,7 +490,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                 if (integration != null) {
                                     check = true;
                                 }
-
                             } else {
                                 check = false;
                             }
