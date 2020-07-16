@@ -8,6 +8,8 @@ import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
+
 
 public class RudderContext {
     @SerializedName("app")
@@ -30,6 +32,8 @@ public class RudderContext {
     private RudderNetwork networkInfo;
     @SerializedName("timezone")
     private String timezone = Utils.getTimeZone();
+    @SerializedName("anonymousId")
+    private String anonymousId;
 
     private RudderContext() {
         // stop instantiating without application instance.
@@ -39,14 +43,18 @@ public class RudderContext {
     RudderContext(Application application) {
         String deviceId = Utils.getDeviceId(application);
 
+
         this.app = new RudderApp(application);
 
         // get saved traits from prefs. if not present create new one and save
+
         RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
-        String traitsJson = preferenceManger.getTraits();
+        preferenceManger.saveAnonymousId(preferenceManger.getAnonymousId());
+        this.anonymousId = preferenceManger.getAnonymousId();
+                String traitsJson = preferenceManger.getTraits();
         RudderLogger.logDebug(String.format(Locale.US, "Traits from persistence storage%s", traitsJson));
         if (traitsJson == null) {
-            RudderTraits traits = new RudderTraits(deviceId);
+            RudderTraits traits = new RudderTraits(anonymousId);
             this.traits = Utils.convertToMap(new Gson().toJson(traits));
             this.persistTraits();
             RudderLogger.logDebug("New traits has been saved");
@@ -63,10 +71,11 @@ public class RudderContext {
         this.libraryInfo = new RudderLibraryInfo();
     }
 
+
     void updateTraits(RudderTraits traits) {
         // if traits is null reset the traits to a new one with only anonymousId
         if (traits == null) {
-            traits = new RudderTraits(this.getDeviceId());
+            traits = new RudderTraits(this.getAnonymousId());
         }
 
         // convert the whole traits to map and take care of the extras
@@ -83,6 +92,7 @@ public class RudderContext {
             if (RudderClient.getInstance() != null && RudderClient.getInstance().getApplication() != null) {
                 RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getInstance().getApplication());
                 preferenceManger.saveTraits(new Gson().toJson(this.traits));
+
             }
         } catch (NullPointerException ex) {
             RudderLogger.logError(ex);
@@ -100,7 +110,12 @@ public class RudderContext {
     String getDeviceId() {
         return deviceInfo.getDeviceId();
     }
+   String getAnonymousId(){
 
+
+       return this.anonymousId;
+
+   }
     public void putDeviceToken(String token) {
         this.deviceInfo.setToken(token);
     }

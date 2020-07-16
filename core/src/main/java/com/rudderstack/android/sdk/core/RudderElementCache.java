@@ -3,6 +3,7 @@ package com.rudderstack.android.sdk.core;
 import android.app.Application;
 
 import java.util.Map;
+import java.util.UUID;
 
 /*
  * RudderContext is populated once and cached through out the lifecycle
@@ -18,6 +19,10 @@ class RudderElementCache {
         if (cachedContext == null) {
             RudderLogger.logDebug("RudderElementCache: initiating RudderContext");
             cachedContext = new RudderContext(application);
+            if(cachedContext.getAnonymousId() == null) {
+                RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
+                preferenceManger.saveAnonymousId(UUID.randomUUID().toString());
+            }
         }
     }
 

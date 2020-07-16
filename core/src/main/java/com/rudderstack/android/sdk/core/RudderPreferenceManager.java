@@ -4,6 +4,8 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.UUID;
+
 class RudderPreferenceManager {
     // keys
     private static final String RUDDER_PREFS = "rl_prefs";
@@ -11,6 +13,7 @@ class RudderPreferenceManager {
     private static final String RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY = "rl_server_last_updated";
     private static final String RUDDER_TRAITS_KEY = "rl_traits";
     private static final String RUDDER_APPLICATION_INFO_KEY = "rl_application_info_key";
+    private static final String RUDDER_ANONYMOUS_ID = "rl_anonymous_id";
 
     private static SharedPreferences preferences;
     private static RudderPreferenceManager instance;
@@ -43,6 +46,16 @@ class RudderPreferenceManager {
 
     String getTraits() {
         return preferences.getString(RUDDER_TRAITS_KEY, null);
+    }
+
+    String getAnonymousId() {
+        return preferences.getString(RUDDER_ANONYMOUS_ID,null);
+    }
+
+    void saveAnonymousId(String anonymousId){
+
+        preferences.edit().putString(RUDDER_ANONYMOUS_ID,anonymousId).apply();
+
     }
 
     void saveTraits(String traitsJson) {
