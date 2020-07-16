@@ -409,8 +409,8 @@ public class RudderClient {
         String prevUserId = null;
         if (traits.containsKey("userId")) {
             prevUserId = (String) traits.get("userId");
-        } else if (traits.containsKey("id")) {
-            prevUserId = (String) traits.get("id");
+        } else if (traits.containsKey("anonymousId")) {
+            prevUserId = (String) traits.get("anonymousId");
         }
         if (prevUserId != null) {
             builder.setPreviousId(prevUserId);
