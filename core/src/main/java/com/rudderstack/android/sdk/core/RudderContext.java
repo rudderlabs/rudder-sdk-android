@@ -51,8 +51,9 @@ public class RudderContext {
         RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
         preferenceManger.saveAnonymousId(preferenceManger.getAnonymousId());
         this.anonymousId = preferenceManger.getAnonymousId();
-                String traitsJson = preferenceManger.getTraits();
+        String traitsJson = preferenceManger.getTraits();
         RudderLogger.logDebug(String.format(Locale.US, "Traits from persistence storage%s", traitsJson));
+        RudderLogger.logDebug(("This is anonymous ID" + preferenceManger.getAnonymousId()));
         if (traitsJson == null) {
             RudderTraits traits = new RudderTraits(anonymousId);
             this.traits = Utils.convertToMap(new Gson().toJson(traits));
@@ -75,7 +76,9 @@ public class RudderContext {
     void updateTraits(RudderTraits traits) {
         // if traits is null reset the traits to a new one with only anonymousId
         if (traits == null) {
-            traits = new RudderTraits(this.getAnonymousId());
+            RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getInstance().getApplication());
+            this.anonymousId = preferenceManger.getAnonymousId();
+            traits = new RudderTraits(this.anonymousId);
         }
 
         // convert the whole traits to map and take care of the extras
@@ -92,7 +95,7 @@ public class RudderContext {
             if (RudderClient.getInstance() != null && RudderClient.getInstance().getApplication() != null) {
                 RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getInstance().getApplication());
                 preferenceManger.saveTraits(new Gson().toJson(this.traits));
-
+                preferenceManger.saveAnonymousId(preferenceManger.getAnonymousId());
             }
         } catch (NullPointerException ex) {
             RudderLogger.logError(ex);
@@ -110,12 +113,12 @@ public class RudderContext {
     String getDeviceId() {
         return deviceInfo.getDeviceId();
     }
-   String getAnonymousId(){
 
+    String getAnonymousId() {
+        return this.anonymousId;
 
-       return this.anonymousId;
+    }
 
-   }
     public void putDeviceToken(String token) {
         this.deviceInfo.setToken(token);
     }

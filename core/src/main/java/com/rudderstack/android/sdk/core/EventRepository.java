@@ -76,8 +76,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             preferenceManager = RudderPreferenceManager.getInstance(_application);
             String anonymousId;
             RudderLogger.logDebug(RudderElementCache.getCachedContext().getAnonymousId());
-            if(RudderElementCache.getCachedContext().getAnonymousId() == null)
-            anonymousId = preferenceManager.getAnonymousId();
+            if (RudderElementCache.getCachedContext().getAnonymousId() == null)
+                anonymousId = preferenceManager.getAnonymousId();
             else
                 anonymousId = RudderElementCache.getCachedContext().getAnonymousId();
 

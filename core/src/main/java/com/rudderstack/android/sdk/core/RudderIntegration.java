@@ -13,6 +13,7 @@ public abstract class RudderIntegration<T> {
 
     public void flush() {
     }
+
     /**
      * @return Instance of the initiated SDK
      */

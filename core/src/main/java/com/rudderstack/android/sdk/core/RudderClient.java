@@ -513,7 +513,7 @@ public class RudderClient {
      * Reset SDK
      */
     public void reset() {
-        RudderElementCache.reset();
+        RudderElementCache.reset(application);
         if (repository != null) repository.reset();
     }
 

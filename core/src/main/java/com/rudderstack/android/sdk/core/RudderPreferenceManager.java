@@ -49,12 +49,12 @@ class RudderPreferenceManager {
     }
 
     String getAnonymousId() {
-        return preferences.getString(RUDDER_ANONYMOUS_ID,null);
+        return preferences.getString(RUDDER_ANONYMOUS_ID, null);
     }
 
-    void saveAnonymousId(String anonymousId){
+    void saveAnonymousId(String anonymousId) {
 
-        preferences.edit().putString(RUDDER_ANONYMOUS_ID,anonymousId).apply();
+        preferences.edit().putString(RUDDER_ANONYMOUS_ID, anonymousId).apply();
 
     }
 
