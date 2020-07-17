@@ -3,7 +3,6 @@ package com.rudderstack.android.sdk.core;
 import android.app.Application;
 
 import java.util.Map;
-import java.util.UUID;
 
 /*
  * RudderContext is populated once and cached through out the lifecycle
