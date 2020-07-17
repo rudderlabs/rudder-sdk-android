@@ -406,10 +406,12 @@ public class RudderClient {
                 .setUserId(newId)
                 .setRudderOption(option);
 
-        String prevUserId = null;
+        String prevUserId;
         if (traits.containsKey("userId")) {
             prevUserId = (String) traits.get("userId");
-        } else if (traits.containsKey("anonymousId")) {
+        } else if (traits.containsKey("id")) {
+            prevUserId = (String) traits.get("id");
+        } else {
             prevUserId = (String) traits.get("anonymousId");
         }
         if (prevUserId != null) {

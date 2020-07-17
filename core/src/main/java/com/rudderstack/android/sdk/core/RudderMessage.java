@@ -47,7 +47,8 @@ public class RudderMessage {
 
     RudderMessage() {
         context = RudderElementCache.getCachedContext();
-        this.anonymousId = context.getAnonymousId();
+        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getInstance().getApplication());
+        this.anonymousId = preferenceManger.getAnonymousId();
 
         Map<String, Object> traits = context.getTraits();
         if (traits != null && traits.containsKey("id")) {

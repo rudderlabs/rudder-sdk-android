@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val rudderClient = MainApplication.rudderClient
-        //    rudderClient!!.reset();
+         //rudderClient!!.reset();
         rudderClient!!.identify(
             "test_user_id",
             RudderTraits()
