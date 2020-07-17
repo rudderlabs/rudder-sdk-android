@@ -7,8 +7,12 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.gson.Gson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
+import org.json.JSONObject;
+
+import java.util.HashMap;
 import java.util.Map;
 
 /*
@@ -286,16 +290,33 @@ public class RudderClient {
      * @param message instance of RudderMessage
      */
     public void identify(@NonNull RudderMessage message) {
-        // update cached traits and persist
-        RudderElementCache.updateTraits(message.getTraits());
-        RudderElementCache.persistTraits();
-
-        // set message type to identify
         message.setType(MessageType.IDENTIFY);
+        Map<String, Object> currentTraits = message.getTraits();
+        RudderPreferenceManager preferenceManager = RudderPreferenceManager.getInstance(application);
+        String oldTraitsString = preferenceManager.getTraits();
+        JSONObject oldTraits = null;
+        String oldUserId = null;
+        try {
+            oldTraits = new JSONObject(oldTraitsString);
+            if (oldTraits.has("userId"))
+                oldUserId = oldTraits.get("userId").toString();
+        } catch (Exception e) {
+            RudderLogger.logError("Error in parsing traits" + e);
+        }
+        if (!(currentTraits.get("userId").equals(oldUserId))) {
+            this.reset();
+            String newAnonId = preferenceManager.getAnonymousId();
+            message.setAnonymousId(newAnonId);
+            currentTraits.put("anonymousId", newAnonId);
+        }
+        RudderElementCache.updateTraits(currentTraits);
+        RudderElementCache.persistTraits();
 
         // dump to repository
         if (repository != null) repository.dump(message);
+
     }
+
 
     /**
      * Identify your user

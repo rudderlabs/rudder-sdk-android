@@ -72,8 +72,7 @@ public class RudderContext {
     void updateTraits(RudderTraits traits) {
         // if traits is null reset the traits to a new one with only anonymousId
         if (traits == null) {
-            RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getInstance().getApplication());
-            traits = new RudderTraits(preferenceManger.getAnonymousId());
+            traits = new RudderTraits();
         }
 
         // convert the whole traits to map and take care of the extras
@@ -88,7 +87,7 @@ public class RudderContext {
         // persist updated traits to sharedPreference
         try {
             if (RudderClient.getInstance() != null && RudderClient.getInstance().getApplication() != null) {
-                RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getInstance().getApplication());
+                RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance();
                 preferenceManger.saveTraits(new Gson().toJson(this.traits));
                 preferenceManger.getAnonymousId();
             }

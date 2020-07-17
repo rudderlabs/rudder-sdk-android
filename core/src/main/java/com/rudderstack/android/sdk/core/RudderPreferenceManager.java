@@ -28,6 +28,12 @@ class RudderPreferenceManager {
         return instance;
     }
 
+    static  RudderPreferenceManager getInstance(){
+        if (instance == null) instance = new RudderPreferenceManager(RudderClient.getInstance().getApplication());
+
+        return instance;
+    }
+
     long getLastUpdatedTime() {
         return preferences.getLong(RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY, -1);
     }
@@ -52,8 +58,9 @@ class RudderPreferenceManager {
         String anonymousId = preferences.getString(RUDDER_ANONYMOUS_ID, null);
         if (anonymousId == null) {
             preferences.edit().putString(RUDDER_ANONYMOUS_ID, UUID.randomUUID().toString()).apply();
+           // anonymousId = preferences.getString(RUDDER_ANONYMOUS_ID, null);
         }
-        return preferences.getString(RUDDER_ANONYMOUS_ID, null);
+        return anonymousId;
     }
 
     void resetAnonymousId() {

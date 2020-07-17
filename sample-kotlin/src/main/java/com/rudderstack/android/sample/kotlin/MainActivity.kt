@@ -15,7 +15,19 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val rudderClient = MainApplication.rudderClient
-         //rudderClient!!.reset();
+        rudderClient!!.identify(
+            "test_user_id_1",
+            RudderTraits()
+                .putAddress(
+                    RudderTraits.Address().putCity("kolkata").putCountry("india")
+                        .putStreet("new alipore")
+                )
+                .putAge("24")
+                .putName("Ruchira"),
+            null
+        )
+        rudderClient.track("Tracking for test_user_id_1")
+       //  rudderClient!!.reset();
         rudderClient!!.identify(
             "test_user_id",
             RudderTraits()
@@ -28,13 +40,21 @@ class MainActivity : AppCompatActivity() {
             null
         )
 
-        rudderClient.alias("test_new_id")
+        rudderClient.track("Tracking for test_user_id")
+        rudderClient.track("Tracking for test_user_id")
+        rudderClient.track("Tracking for test_user_id")
 
-        rudderClient.group(
-            "sample_group_id",
-            RudderTraits().putAge("24")
-                .putName("Test Group Name")
-                .putPhone("1234567891")
-        );
+        rudderClient!!.identify(
+            "test_user_id_1",
+            RudderTraits()
+                .putAddress(
+                    RudderTraits.Address().putCity("kolkata").putCountry("india")
+                        .putStreet("new alipore")
+                )
+                .putAge("24")
+                .putName("Ruchira"),
+            null
+        )
+        rudderClient.track("Tracking for test_user_id_1")
     }
 }

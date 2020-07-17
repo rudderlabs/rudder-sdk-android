@@ -261,20 +261,11 @@ public class RudderTraits {
      * constructor
      */
     public RudderTraits() {
-        RudderContext rudderContext = RudderElementCache.getCachedContext();
-        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getInstance().getApplication());
-        if (rudderContext != null) this.anonymousId = preferenceManger.getAnonymousId();
+        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance();
+        this.anonymousId = preferenceManger.getAnonymousId();
     }
 
 
-    /**
-     * constructor
-     *
-     * @param anonymousId String
-     */
-    RudderTraits(String anonymousId) {
-        this.anonymousId = anonymousId;
-    }
 
     /**
      * Initialise RudderTraits
@@ -296,7 +287,7 @@ public class RudderTraits {
      * @param userName    String
      */
     public RudderTraits(Address address, String age, String birthday, Company company, String createdAt, String description, String email, String firstName, String gender, String id, String lastName, String name, String phone, String title, String userName) {
-        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getInstance().getApplication());
+        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance();
         this.anonymousId =preferenceManger.getAnonymousId();
         this.address = address;
         this.age = age;

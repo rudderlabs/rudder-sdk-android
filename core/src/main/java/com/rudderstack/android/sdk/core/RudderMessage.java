@@ -47,7 +47,7 @@ public class RudderMessage {
 
     RudderMessage() {
         context = RudderElementCache.getCachedContext();
-        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getInstance().getApplication());
+        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance();
         this.anonymousId = preferenceManger.getAnonymousId();
 
         Map<String, Object> traits = context.getTraits();
@@ -55,7 +55,9 @@ public class RudderMessage {
             this.userId = String.valueOf(traits.get("id"));
         }
     }
-
+ void setAnonymousId(String anonymousId) {
+        this.anonymousId = anonymousId;
+ }
     void setPreviousId(String previousId) {
         this.previousId = previousId;
     }
@@ -162,12 +164,5 @@ public class RudderMessage {
 
     public Map<String, Object> getTraits() {
         return this.context.getTraits();
-    }
-
-    /**
-     * @return Anonymous ID of the user
-     */
-    public String getAnonymousId() {
-        return anonymousId;
     }
 }
