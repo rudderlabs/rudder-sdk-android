@@ -314,9 +314,7 @@ public class RudderClient {
 
         // dump to repository
         if (repository != null) repository.dump(message);
-
     }
-
 
     /**
      * Identify your user

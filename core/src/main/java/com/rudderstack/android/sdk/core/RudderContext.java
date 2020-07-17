@@ -8,8 +8,6 @@ import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
-
 
 public class RudderContext {
     @SerializedName("app")
@@ -42,11 +40,9 @@ public class RudderContext {
     RudderContext(Application application) {
         String deviceId = Utils.getDeviceId(application);
 
-
         this.app = new RudderApp(application);
 
         // get saved traits from prefs. if not present create new one and save
-
         RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
         String traitsJson = preferenceManger.getTraits();
         RudderLogger.logDebug(String.format(Locale.US, "Traits from persistence storage%s", traitsJson));
@@ -67,7 +63,6 @@ public class RudderContext {
         this.osInfo = new RudderOSInfo();
         this.libraryInfo = new RudderLibraryInfo();
     }
-
 
     void updateTraits(RudderTraits traits) {
         // if traits is null reset the traits to a new one with only anonymousId
@@ -107,7 +102,6 @@ public class RudderContext {
     String getDeviceId() {
         return deviceInfo.getDeviceId();
     }
-
 
     public void putDeviceToken(String token) {
         this.deviceInfo.setToken(token);

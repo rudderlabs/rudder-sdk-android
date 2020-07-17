@@ -92,7 +92,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             this.initiateSDK();
 
             // initiate RudderPreferenceManager and check for lifeCycleEvents
-
             this.checkApplicationUpdateStatus(_application);
             if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
                 _application.registerActivityLifecycleCallbacks(this);
