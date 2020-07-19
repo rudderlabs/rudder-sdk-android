@@ -57,7 +57,7 @@ public class RudderTraits {
     private static final String EMAIL_KEY = "email";
     private static final String FIRSTNAME_KEY = "firstname";
     private static final String GENDER_KEY = "gender";
-    private static final String USERID_KEY = "userid";
+    private static final String USERID_KEY = "userId";
     private static final String LASTNAME_KEY = "lastname";
     private static final String NAME_KEY = "name";
     private static final String PHONE_KEY = "phone";

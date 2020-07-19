@@ -73,7 +73,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             // 2. initiate RudderElementCache
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
             RudderElementCache.initiate(_application);
-            preferenceManager = RudderPreferenceManager.getInstance(_application);
+
+            // initiate RudderPreferenceManager
+            preferenceManager = RudderPreferenceManager.getInstance();
+
             String anonymousId = preferenceManager.getAnonymousId();
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousId: %s", anonymousId));
             this.anonymousIdHeaderString = Base64.encodeToString(anonymousId.getBytes("UTF-8"), Base64.DEFAULT);
@@ -91,7 +94,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
             this.initiateSDK();
 
-            // initiate RudderPreferenceManager and check for lifeCycleEvents
+            // check for lifeCycleEvents
             this.checkApplicationUpdateStatus(_application);
             if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
                 _application.registerActivityLifecycleCallbacks(this);

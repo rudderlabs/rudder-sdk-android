@@ -43,7 +43,7 @@ public class RudderContext {
         this.app = new RudderApp(application);
 
         // get saved traits from prefs. if not present create new one and save
-        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
+        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance();
         String traitsJson = preferenceManger.getTraits();
         RudderLogger.logDebug(String.format(Locale.US, "Traits from persistence storage%s", traitsJson));
         if (traitsJson == null) {

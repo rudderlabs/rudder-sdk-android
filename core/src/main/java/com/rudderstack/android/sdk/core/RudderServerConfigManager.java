@@ -30,7 +30,7 @@ class RudderServerConfigManager {
     }
 
     private RudderServerConfigManager(Application _application, String _writeKey, RudderConfig _config) {
-        preferenceManger = RudderPreferenceManager.getInstance(_application);
+        preferenceManger = RudderPreferenceManager.getInstance();
         serverConfig = retrieveConfig();
         rudderConfig = _config;
         boolean isConfigOutdated = isServerConfigOutDated();

@@ -155,6 +155,8 @@ public class RudderClient {
      * Track your event using RudderMessageBuilder
      *
      * @param builder instance of RudderMessageBuilder
+     *
+     * @deprecated this will no longer be supported and will be removed
      */
     public void track(@NonNull RudderMessageBuilder builder) {
         track(builder.build());
@@ -164,6 +166,8 @@ public class RudderClient {
      * Track your event using RudderMessage
      *
      * @param message RudderMessage you want to track. Use RudderMessageBuilder to create the message object
+     *
+     * @deprecated this will no longer be supported and will be moved for internal use ONLY
      */
     public void track(@NonNull RudderMessage message) {
         message.setType(MessageType.TRACK);
@@ -214,6 +218,8 @@ public class RudderClient {
      * Record screen view with RudderMessageBuilder
      *
      * @param builder instance of RudderMessageBuilder
+     *
+     * @deprecated this will no longer be supported and will be removed
      */
     public void screen(@NonNull RudderMessageBuilder builder) {
         screen(builder.build());
@@ -223,6 +229,8 @@ public class RudderClient {
      * Record screen view with RudderMessage
      *
      * @param message instance of RudderMessage
+     *
+     * @deprecated this will no longer be supported and will be moved for internal use ONLY
      */
     public void screen(@NonNull RudderMessage message) {
         message.setType(MessageType.SCREEN);
@@ -288,29 +296,32 @@ public class RudderClient {
      * Identify your user
      *
      * @param message instance of RudderMessage
+     *
+     * @deprecated this will no longer be supported and will be moved for internal use ONLY
      */
     public void identify(@NonNull RudderMessage message) {
+        RudderPreferenceManager preferenceManager = RudderPreferenceManager.getInstance();
+        String oldUserId = preferenceManager.getUserId();
+        String currentUserId = Utils.getUserIdFromTraitsMap(message.getTraits());
+
+        if (currentUserId != null && !currentUserId.equals(oldUserId)) {
+          this.reset();
+
+          // update anonymousId in messaage and traits
+          String newAnonId = preferenceManager.getAnonymousId();
+          message.setAnonymousId(newAnonId);
+          currentTraits.put("anonymousId", newAnonId);
+          message.updateTraitsMap(currentTraits);
+        }
+
+        // set the type to identify
         message.setType(MessageType.IDENTIFY);
-        Map<String, Object> currentTraits = message.getTraits();
-        RudderPreferenceManager preferenceManager = RudderPreferenceManager.getInstance(application);
-        String oldTraitsString = preferenceManager.getTraits();
-        JSONObject oldTraits = null;
-        String oldUserId = null;
-        try {
-            oldTraits = new JSONObject(oldTraitsString);
-            if (oldTraits.has("userId"))
-                oldUserId = oldTraits.get("userId").toString();
-        } catch (Exception e) {
-            RudderLogger.logError("Error in parsing traits" + e);
-        }
-        if (!(currentTraits.get("userId").equals(oldUserId))) {
-            this.reset();
-            String newAnonId = preferenceManager.getAnonymousId();
-            message.setAnonymousId(newAnonId);
-            currentTraits.put("anonymousId", newAnonId);
-        }
+
+        // update cached traits and persist
         RudderElementCache.updateTraits(currentTraits);
         RudderElementCache.persistTraits();
+        // persist the userId
+        preferenceManager.setUserId(currentUserId);
 
         // dump to repository
         if (repository != null) repository.dump(message);
@@ -385,6 +396,8 @@ public class RudderClient {
      * Alias call
      *
      * @param builder RudderMessage.Builder
+     *
+     * @deprecated this will no longer be supported and will be removed
      */
     public void alias(@NonNull RudderMessageBuilder builder) {
         alias(builder.build());
@@ -420,27 +433,30 @@ public class RudderClient {
      * @param option RudderOptions for this event
      */
     public void alias(@NonNull String newId, @Nullable RudderOption option) {
-        Map<String, Object> traits = getRudderContext().getTraits();
         RudderMessageBuilder builder = new RudderMessageBuilder()
                 .setUserId(newId)
                 .setRudderOption(option);
 
-        String prevUserId;
-        if (traits.containsKey("userId")) {
-            prevUserId = (String) traits.get("userId");
-        } else if (traits.containsKey("id")) {
-            prevUserId = (String) traits.get("id");
-        } else {
-            prevUserId = (String) traits.get("anonymousId");
+        // get the previousId from persisted storage
+        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance();
+        String prevUserId = preferenceManger.getUserId();
+        if (prevUserId == null) {
+          prevUserId = preferenceManger.getAnonymousId();
         }
-        if (prevUserId != null) {
-            builder.setPreviousId(prevUserId);
-        }
+        builder.setPreviousId(prevUserId);
+
+        // construct the message
+        RudderMessage message = builder.build();
+
+        // get previous version of the traits
+        Map<String, Object> traits = message.getTraits();
+        // update the userId under the traits and and finally update the traits to the message
         traits.put("userId", newId);
         traits.put("id", newId);
-        RudderMessage message = builder.build();
         message.updateTraits(traits);
 
+        // persist new information
+        RudderPreferenceManager.getInstance().setUserId(newId);
         RudderElementCache.updateTraits(traits);
         RudderElementCache.persistTraits();
 
@@ -453,6 +469,8 @@ public class RudderClient {
      * Add the user to a group
      *
      * @param builder RudderMessageBuilder
+     *
+     * @deprecated this will no longer be supported and will be removed
      */
     public void group(@NonNull RudderMessageBuilder builder) {
         group(builder.build());
@@ -535,7 +553,9 @@ public class RudderClient {
      */
     public void reset() {
         RudderElementCache.reset(application);
-        if (repository != null) repository.reset();
+        if (repository != null) {
+
+        } repository.reset();
     }
 
     /**
