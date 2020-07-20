@@ -26,7 +26,7 @@ class RudderPreferenceManager {
     }
 
     // access
-    static RudderPreferenceManager.getInstance() {
+    static RudderPreferenceManager getInstance() {
         if (instance == null) {
           instance = new RudderPreferenceManager();
         }

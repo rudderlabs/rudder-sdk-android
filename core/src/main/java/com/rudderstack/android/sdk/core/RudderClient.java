@@ -303,7 +303,7 @@ public class RudderClient {
         RudderPreferenceManager preferenceManager = RudderPreferenceManager.getInstance();
         String oldUserId = preferenceManager.getUserId();
         String currentUserId = Utils.getUserIdFromTraitsMap(message.getTraits());
-
+        Map<String, Object> currentTraits = message.getTraits();
         if (currentUserId != null && !currentUserId.equals(oldUserId)) {
           this.reset();
 
@@ -311,7 +311,7 @@ public class RudderClient {
           String newAnonId = preferenceManager.getAnonymousId();
           message.setAnonymousId(newAnonId);
           currentTraits.put("anonymousId", newAnonId);
-          message.updateTraitsMap(currentTraits);
+          message.updateTraits(currentTraits);
         }
 
         // set the type to identify
