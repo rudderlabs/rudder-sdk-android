@@ -18,6 +18,8 @@ class RudderElementCache {
         if (cachedContext == null) {
             RudderLogger.logDebug("RudderElementCache: initiating RudderContext");
             cachedContext = new RudderContext(application);
+                RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance();
+                preferenceManger.getAnonymousId();
         }
     }
 
@@ -25,7 +27,8 @@ class RudderElementCache {
         return cachedContext;
     }
 
-    static void reset() {
+    static void reset(Application application) {
+        RudderPreferenceManager.getInstance().resetAnonymousId();
         cachedContext.updateTraits(null);
         persistTraits();
     }

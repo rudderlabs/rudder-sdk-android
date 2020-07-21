@@ -31,6 +31,7 @@ public class RudderContext {
     @SerializedName("timezone")
     private String timezone = Utils.getTimeZone();
 
+
     private RudderContext() {
         // stop instantiating without application instance.
         // cachedContext is used every time, once initialized
@@ -42,11 +43,11 @@ public class RudderContext {
         this.app = new RudderApp(application);
 
         // get saved traits from prefs. if not present create new one and save
-        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
+        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance();
         String traitsJson = preferenceManger.getTraits();
         RudderLogger.logDebug(String.format(Locale.US, "Traits from persistence storage%s", traitsJson));
         if (traitsJson == null) {
-            RudderTraits traits = new RudderTraits(deviceId);
+            RudderTraits traits = new RudderTraits();
             this.traits = Utils.convertToMap(new Gson().toJson(traits));
             this.persistTraits();
             RudderLogger.logDebug("New traits has been saved");
@@ -66,7 +67,7 @@ public class RudderContext {
     void updateTraits(RudderTraits traits) {
         // if traits is null reset the traits to a new one with only anonymousId
         if (traits == null) {
-            traits = new RudderTraits(this.getDeviceId());
+            traits = new RudderTraits();
         }
 
         // convert the whole traits to map and take care of the extras
@@ -81,8 +82,9 @@ public class RudderContext {
         // persist updated traits to sharedPreference
         try {
             if (RudderClient.getInstance() != null && RudderClient.getInstance().getApplication() != null) {
-                RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getInstance().getApplication());
+                RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance();
                 preferenceManger.saveTraits(new Gson().toJson(this.traits));
+                preferenceManger.getAnonymousId();
             }
         } catch (NullPointerException ex) {
             RudderLogger.logError(ex);

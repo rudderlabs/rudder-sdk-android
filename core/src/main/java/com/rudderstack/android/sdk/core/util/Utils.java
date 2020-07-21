@@ -102,4 +102,13 @@ public class Utils {
     public static int getUTF8Length(StringBuilder message) {
         return getUTF8Length(message.toString());
     }
+
+    public static String getUserIdFromTraitsMap(Map<String, Object> traitsMap) {
+      if (traitsMap.containsKey("userId")) {
+        return (String) traitsMap.get("userId");
+      } else if (traitsMap.containsKey("id")) {
+        return (String) traitsMap.get("id");
+      }
+      return null;
+    }
 }

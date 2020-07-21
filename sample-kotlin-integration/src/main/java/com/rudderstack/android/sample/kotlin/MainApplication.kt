@@ -12,7 +12,7 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val END_URL = "https://cd740f82.ngrok.io"
+        const val END_URL = "https://d791a39b5465.ngrok.io"
         const val WRITE_KEY = "1TSRSskqa15PG7F89tkwEbl5Td8"
     }
 

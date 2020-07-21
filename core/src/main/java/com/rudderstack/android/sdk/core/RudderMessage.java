@@ -11,6 +11,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * RudderMessage
+ *
+ * @deprecated This will me moved for internal use only
+ */
 public class RudderMessage {
     @SerializedName("messageId")
     private String messageId = String.format(Locale.US, "%d-%s", System.currentTimeMillis(), UUID.randomUUID().toString());
@@ -46,13 +51,15 @@ public class RudderMessage {
     private String groupId;
 
     RudderMessage() {
-        context = RudderElementCache.getCachedContext();
-        this.anonymousId = context.getDeviceId();
+        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance();
 
-        Map<String, Object> traits = context.getTraits();
-        if (traits != null && traits.containsKey("id")) {
-            this.userId = String.valueOf(traits.get("id"));
-        }
+        this.context = RudderElementCache.getCachedContext();
+        this.anonymousId = preferenceManger.getAnonymousId();
+        this.userId = preferenceManger.getUserId();
+    }
+
+    void setAnonymousId(String anonymousId) {
+      this.anonymousId = anonymousId;
     }
 
     void setPreviousId(String previousId) {
@@ -161,12 +168,5 @@ public class RudderMessage {
 
     public Map<String, Object> getTraits() {
         return this.context.getTraits();
-    }
-
-    /**
-     * @return Anonymous ID of the user
-     */
-    public String getAnonymousId() {
-        return anonymousId;
     }
 }

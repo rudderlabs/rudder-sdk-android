@@ -2,9 +2,11 @@ package com.rudderstack.android.sdk.core;
 
 import java.util.Map;
 
-/*
- * builder for RudderElement (alias RudderEvent)
- * */
+/**
+ * RudderMessageBuilder
+ *
+ * @deprecated This will me moved for internal use only
+ */
 public class RudderMessageBuilder {
 
     private String groupId = null;

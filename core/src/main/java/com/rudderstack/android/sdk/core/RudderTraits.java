@@ -57,7 +57,7 @@ public class RudderTraits {
     private static final String EMAIL_KEY = "email";
     private static final String FIRSTNAME_KEY = "firstname";
     private static final String GENDER_KEY = "gender";
-    private static final String USERID_KEY = "userid";
+    private static final String USERID_KEY = "userId";
     private static final String LASTNAME_KEY = "lastname";
     private static final String NAME_KEY = "name";
     private static final String PHONE_KEY = "phone";
@@ -261,19 +261,11 @@ public class RudderTraits {
      * constructor
      */
     public RudderTraits() {
-        RudderContext rudderContext = RudderElementCache.getCachedContext();
-        if (rudderContext != null) this.anonymousId = rudderContext.getDeviceId();
+        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance();
+        this.anonymousId = preferenceManger.getAnonymousId();
     }
 
 
-    /**
-     * constructor
-     *
-     * @param anonymousId String
-     */
-    RudderTraits(String anonymousId) {
-        this.anonymousId = anonymousId;
-    }
 
     /**
      * Initialise RudderTraits
@@ -295,7 +287,8 @@ public class RudderTraits {
      * @param userName    String
      */
     public RudderTraits(Address address, String age, String birthday, Company company, String createdAt, String description, String email, String firstName, String gender, String id, String lastName, String name, String phone, String title, String userName) {
-        this.anonymousId = RudderElementCache.getCachedContext().getDeviceId();
+        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance();
+        this.anonymousId =preferenceManger.getAnonymousId();
         this.address = address;
         this.age = age;
         this.birthday = birthday;
