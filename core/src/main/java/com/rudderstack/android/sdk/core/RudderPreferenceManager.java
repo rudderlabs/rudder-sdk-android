@@ -75,6 +75,7 @@ class RudderPreferenceManager {
         String anonymousId = preferences.getString(RUDDER_ANONYMOUS_ID, null);
         if (anonymousId == null) {
             preferences.edit().putString(RUDDER_ANONYMOUS_ID, UUID.randomUUID().toString()).apply();
+            anonymousId =  preferences.getString(RUDDER_ANONYMOUS_ID, null);
         }
         return anonymousId;
     }
