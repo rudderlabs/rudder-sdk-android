@@ -9,32 +9,74 @@ public class RudderOption {
     private Map<String, Object> integrations;
     private Map<String, Object> context;
 
-    public static final String ALL_INTEGRATIONS_KEY = "All";
+    private static final String ALL_INTEGRATIONS_KEY = "All";
 
+    /*
+     * constructor
+     * */
     public RudderOption() {
-        integrations = new ConcurrentHashMap<>();
-        context = new ConcurrentHashMap<>();
+        this.integrations = new ConcurrentHashMap<>();
+        this.context = new ConcurrentHashMap<>();
     }
 
-    public RudderOption setIntegration(String integrationKey, boolean enabled) {
-        integrations.put(integrationKey, enabled);
+    /**
+     * API for enabling a particular integration
+     *
+     * @param integrationKey Name of the integration
+     * @param enabled Whether the integration is enabled
+     *
+     * @return RudderOption instance to be used further
+     */
+    @NonNull
+    public RudderOption setIntegration(@NonNull String integrationKey, boolean enabled) {
+        this.integrations.put(integrationKey, enabled);
         return this;
     }
 
-    public RudderOption setIntegrationOptions(String integrationKey, Map<String, Object> options) {
-        integrations.put(integrationKey, options);
+    /**
+     * API for passing extra options for a particular integration
+     *
+     * @param integrationKey Name of the integration
+     * @param options Extra options you want to pass for this integration
+     *
+     * @return RudderOption instance to be used further
+     */
+    @NonNull
+    public RudderOption setIntegrationOptions(@NonNull String integrationKey, @NonNull Map<String, Object> options) {
+        this.integrations.put(integrationKey, options);
         return this;
     }
 
-    public RudderOption putContext(String key, Object value) {
-        context.put(key, value);
+    /**
+     * API for passing extra values for the context
+     *
+     * @param key Name of the property
+     * @param value Value for the property for the integration
+     *
+     * @return RudderOption instance to be used further
+     */
+    @NonNull
+    public RudderOption putContext(@NonNull String key, @NonNull Object value) {
+        this.context.put(key, value);
         return this;
     }
 
+    /**
+     * Get the list of integrations passed  along with RudderOption
+     *
+     * @return List of integrations passed with RudderOption
+     */
+    @NonNull
     public Map<String, Object> integrations() {
         return new HashMap<>(integrations);
     }
 
+    /**
+     * Get the context passed  along with RudderOption
+     *
+     * @return List of integrations passed with RudderOption
+     */
+    @NonNull
     public Map<String, Object> context() {
         return new HashMap<>(context);
     }

@@ -44,8 +44,9 @@ public class RudderMessage {
     private String groupId;
 
     // Helper variables. Not exposed in serialized event
-    private transient Map<String, Object> option;
-    private transient Map<String, Object> contextOption;
+    private transient RudderOption rudderOption;
+    // private transient Map<String, Object> option;
+    // private transient Map<String, Object> contextOption;
 
     RudderMessage() {
         context = RudderElementCache.getCachedContext();
@@ -94,13 +95,17 @@ public class RudderMessage {
         this.event = eventName;
     }
 
-    void setRudderOption(Map<String, Object> option) {
-        this.option = option;
+    void setRudderOption(RudderOption rudderOption) {
+      this.rudderOption = rudderOption;
     }
 
-    void setContextOption(Map<String, Object> contextOption) {
-        this.contextOption = contextOption;
-    }
+    // void setRudderOption(Map<String, Object> option) {
+    //     this.option = option;
+    // }
+
+    // void setContextOption(Map<String, Object> contextOption) {
+    //     this.contextOption = contextOption;
+    // }
 
     void updateTraits(RudderTraits traits) {
         this.context.updateTraits(traits);
@@ -140,24 +145,24 @@ public class RudderMessage {
         return action;
     }
 
-    @Nullable
-    public Map<String, Object> getRudderOption() {
-        return option;
-    }
+    // @Nullable
+    // public Map<String, Object> getRudderOption() {
+    //     return option;
+    // }
 
-    public Map<String, Object> getContextOption() {
-        return contextOption;
-    }
+    // public Map<String, Object> getContextOption() {
+    //     return contextOption;
+    // }
 
     /**
      * Get your User properties for the event
      *
      * @return Map of String-Object
      */
-    @Nullable
-    public Map<String, Object> getUserProperties() {
-        return userProperties;
-    }
+    // @Nullable
+    // public Map<String, Object> getUserProperties() {
+    //     return userProperties;
+    // }
 
     /**
      * @return User ID for the event
@@ -177,11 +182,17 @@ public class RudderMessage {
         }
     }
 
+    /**
+     * @return integrations for the message
+     */
     @Nullable
     public Map<String, Object> getIntegrations() {
         return integrations;
     }
 
+    /**
+     * @return Traits passed with this message
+     */
     @Nullable
     public Map<String, Object> getTraits() {
         return this.context.getTraits();

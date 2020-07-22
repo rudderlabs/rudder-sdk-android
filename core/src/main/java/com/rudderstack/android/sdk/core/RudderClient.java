@@ -198,7 +198,7 @@ public class RudderClient {
      *
      * @param event    Name of the event you want to track
      * @param property RudderProperty object you want to pass with the track call
-     * @param option   Options related to this track call
+     * @param option   RudderOption object  related to this track call
      */
     public void track(@NonNull String event, @Nullable RudderProperty property, @Nullable RudderOption option) {
         track(new RudderMessageBuilder()
@@ -258,7 +258,7 @@ public class RudderClient {
      * @param screenName Name of the screen
      * @param category   Name of the category of the screen
      * @param property   RudderProperty object you want to pass with the screen call
-     * @param option     Options related to this screen call
+     * @param option   RudderOption object  related to this screen call
      */
     public void screen(@NonNull String screenName, @NonNull String category, @Nullable RudderProperty property, @Nullable RudderOption option) {
         if (property == null) property = new RudderProperty();
@@ -273,7 +273,7 @@ public class RudderClient {
      *
      * @param screenName Name of the screen
      * @param property   RudderProperty object you want to pass with the screen call
-     * @param option     Options related to this screen call
+     * @param option   RudderOption object  related to this screen call
      */
     public void screen(@NonNull String screenName, @Nullable RudderProperty property, @Nullable RudderOption option) {
 
@@ -362,7 +362,9 @@ public class RudderClient {
      */
     public void identify(@NonNull String userId, @Nullable RudderTraits traits, @Nullable RudderOption option) {
         // create new traits object from cache if supplied traits is null
-        if (traits == null) traits = new RudderTraits();
+        if (traits == null) {
+          traits = new RudderTraits();
+        }
         traits.putId(userId);
         identify(traits, option);
     }
