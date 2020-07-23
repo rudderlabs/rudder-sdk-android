@@ -1,6 +1,9 @@
 package com.rudderstack.android.sdk.core;
 
 import android.app.Application;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.provider.Settings;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
@@ -8,6 +11,8 @@ import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Locale;
 import java.util.Map;
+
+import static com.rudderstack.android.sdk.core.util.Utils.isOnClassPath;
 
 public class RudderContext {
     @SerializedName("app")
@@ -104,4 +109,80 @@ public class RudderContext {
     public void putDeviceToken(String token) {
         this.deviceInfo.setToken(token);
     }
+
+    void updateDeviceWithAdId() {
+        if (isOnClassPath("com.google.android.gms.ads.identifier.AdvertisingIdClient")) {
+            // This needs to be done each time since the settings may have been updated.
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        boolean available = getGooglePlayServicesAdvertisingID();
+                        if (!available) {
+                            available = getAmazonFireAdvertisingID();
+                        }
+                        if (!available) {
+                            RudderLogger.logDebug("Unable to collect advertising ID from Amazon Fire OS and Google Play Services.");
+                        }
+                    } catch (Exception e) {
+                        RudderLogger.logError("Unable to collect advertising ID from Google Play Services or Amazon Fire OS.");
+                    }
+                }
+            }).start();
+        } else {
+            RudderLogger.logDebug(
+                    "Not collecting advertising ID because "
+                            + "com.google.android.gms.ads.identifier.AdvertisingIdClient "
+                            + "was not found on the classpath.");
+        }
+    }
+
+    private boolean getGooglePlayServicesAdvertisingID() throws Exception {
+        if (RudderClient.getInstance() == null || RudderClient.getInstance().getApplication() == null) {
+            return false;
+        }
+
+        Object advertisingInfo = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient")
+                .getMethod("getAdvertisingIdInfo", Context.class).invoke(null, RudderClient.getInstance().getApplication());
+
+        if (advertisingInfo == null) {
+            return false;
+        }
+
+        Boolean isLimitAdTrackingEnabled = (Boolean) advertisingInfo.getClass()
+                .getMethod("isLimitAdTrackingEnabled").invoke(advertisingInfo);
+
+        if (isLimitAdTrackingEnabled == null || isLimitAdTrackingEnabled) {
+            RudderLogger.logDebug("Not collecting advertising ID because isLimitAdTrackingEnabled (Google Play Services) is true.");
+            this.deviceInfo.setAdTrackingEnabled(false);
+            return false;
+        }
+
+        this.deviceInfo.setAdvertisingId((String) advertisingInfo.getClass().getMethod("getId").invoke(advertisingInfo));
+        this.deviceInfo.setAdTrackingEnabled(true);
+
+        return true;
+    }
+
+    private boolean getAmazonFireAdvertisingID() throws Exception {
+        if (RudderClient.getInstance() == null || RudderClient.getInstance().getApplication() == null) {
+            return false;
+        }
+
+        ContentResolver contentResolver = RudderClient.getInstance().getApplication().getContentResolver();
+
+        boolean limitAdTracking = Settings.Secure.getInt(contentResolver, "limit_ad_tracking") != 0;
+
+        if (limitAdTracking) {
+            RudderLogger.logDebug("Not collecting advertising ID because limit_ad_tracking (Amazon Fire OS) is true.");
+            this.deviceInfo.setAdTrackingEnabled(false);
+            return false;
+        }
+
+        this.deviceInfo.setAdvertisingId(Settings.Secure.getString(contentResolver, "advertising_id"));
+        this.deviceInfo.setAdTrackingEnabled(true);
+
+        return true;
+    }
+
 }
