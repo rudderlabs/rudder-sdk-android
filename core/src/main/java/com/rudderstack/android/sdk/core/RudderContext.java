@@ -125,7 +125,7 @@ public class RudderContext {
                             RudderLogger.logDebug("Unable to collect advertising ID from Amazon Fire OS and Google Play Services.");
                         }
                     } catch (Exception e) {
-                        RudderLogger.logError("Unable to collect advertising ID from Google Play Services.");
+                        RudderLogger.logError("Unable to collect advertising ID from Google Play Services or Amazon Fire OS.");
                     }
                 }
             }).start();
