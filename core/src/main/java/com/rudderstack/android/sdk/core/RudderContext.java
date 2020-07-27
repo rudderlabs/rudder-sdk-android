@@ -185,4 +185,9 @@ public class RudderContext {
         return true;
     }
 
+    public String getAdvertisingId() {
+        if (this.deviceInfo == null) { return null; }
+        return this.deviceInfo.getAdvertisingId();
+    }
+
 }
