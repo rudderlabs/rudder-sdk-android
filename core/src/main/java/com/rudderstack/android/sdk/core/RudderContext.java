@@ -5,6 +5,8 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.provider.Settings;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.rudderstack.android.sdk.core.util.Utils;
@@ -185,11 +187,19 @@ public class RudderContext {
         return true;
     }
 
-    public String getAdvertisingId() {
+    /**
+     * Getter method for Advertising ID
+     * @return The Advertising ID if available, returns null otherwise.
+     */
+    public @Nullable String getAdvertisingId() {
         if (this.deviceInfo == null) { return null; }
         return this.deviceInfo.getAdvertisingId();
     }
 
+    /**
+     * Getter method for Ad Tracking Status.
+     * @return true or false, depending on whether ad tracking is enabled or disabled.
+     */
     public boolean isAdTrackingEnabled() {
         if (this.deviceInfo == null) { return false; }
         return this.deviceInfo.isAdTrackingEnabled();
