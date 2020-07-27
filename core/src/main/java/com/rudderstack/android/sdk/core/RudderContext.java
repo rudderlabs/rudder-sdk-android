@@ -195,7 +195,7 @@ public class RudderContext {
         if (this.deviceInfo == null) { return null; }
         return this.deviceInfo.getAdvertisingId();
     }
-
+@Nullable public String get...
     /**
      * Getter method for Ad Tracking Status.
      * @return true or false, depending on whether ad tracking is enabled or disabled.
