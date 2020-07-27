@@ -51,4 +51,8 @@ class RudderDeviceInfo {
     String getAdvertisingId() {
         return this.advertisingId;
     }
+
+    boolean isAdTrackingEnabled() {
+        return this.adTrackingEnabled;
+    }
 }

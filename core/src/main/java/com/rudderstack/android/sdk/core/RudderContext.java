@@ -190,4 +190,9 @@ public class RudderContext {
         return this.deviceInfo.getAdvertisingId();
     }
 
+    public boolean isAdTrackingEnabled() {
+        if (this.deviceInfo == null) { return false; }
+        return this.deviceInfo.isAdTrackingEnabled();
+    }
+
 }
