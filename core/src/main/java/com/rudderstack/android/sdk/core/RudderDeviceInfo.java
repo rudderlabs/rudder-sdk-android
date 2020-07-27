@@ -47,4 +47,12 @@ class RudderDeviceInfo {
     void setAdvertisingId(String advertisingId) {
         this.advertisingId = advertisingId;
     }
+
+    String getAdvertisingId() {
+        return this.advertisingId;
+    }
+
+    boolean isAdTrackingEnabled() {
+        return this.adTrackingEnabled;
+    }
 }
