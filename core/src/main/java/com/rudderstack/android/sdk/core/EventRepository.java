@@ -104,12 +104,14 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     }
 
     private void initiateSDK() {
+
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    int retryCount = 0;
+                    int retryCount = 0,retryTimeOut =10;
                     while (!isSDKInitialized && retryCount <= 5) {
+                         int receivedError = configManager.getError();
                         RudderServerConfig serverConfig = configManager.getConfig();
                         if (serverConfig != null) {
                             // initiate processor
@@ -132,10 +134,14 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             }
 
                             isSDKInitialized = true;
-                        } else {
+                        } else if(receivedError == 1) {
+                            retryCount = 6;
+                            RudderLogger.logError("WRONG WRITEKEY");
+                        }else{
                             retryCount += 1;
                             RudderLogger.logDebug("EventRepository: initiateFactories: retry count: " + retryCount);
-                            Thread.sleep(10000);
+                            RudderLogger.logInfo("Retrying in " + retryTimeOut + "s");
+                            Thread.sleep(retryCount *retryTimeOut * 1000);
                         }
                     }
                 } catch (Exception ex) {
