@@ -25,7 +25,6 @@ class MainApplication : Application() {
             this,
             WRITE_KEY,
             RudderConfig.Builder()
-                .withDataPlaneUrl(DATA_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withTrackLifecycleEvents(true)
                 .withRecordScreenViews(true)
