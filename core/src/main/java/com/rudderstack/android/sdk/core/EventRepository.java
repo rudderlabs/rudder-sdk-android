@@ -110,11 +110,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 try {
                     int retryCount = 0;
                     while (!isSDKInitialized && retryCount <= 5) {
+                        Utils.NetworkResponses receivedError = configManager.getError();
                         RudderServerConfig serverConfig = configManager.getConfig();
                         if (serverConfig != null) {
-                            // initiate processor
                             isSDKEnabled = serverConfig.source.isSourceEnabled;
                             if (isSDKEnabled) {
+                                // initiate processor
                                 RudderLogger.logDebug("EventRepository: initiateSDK: Initiating processor");
                                 Thread processorThread = new Thread(getProcessorRunnable());
                                 processorThread.start();
@@ -132,10 +133,14 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             }
 
                             isSDKInitialized = true;
+                        } else if (receivedError == Utils.NetworkResponses.WRITE_KEY_ERROR) {
+                            RudderLogger.logError("WRONG WRITE_KEY");
+                            break;
                         } else {
                             retryCount += 1;
                             RudderLogger.logDebug("EventRepository: initiateFactories: retry count: " + retryCount);
-                            Thread.sleep(10000);
+                            RudderLogger.logInfo("Retrying in " + retryCount + "s");
+                            Thread.sleep(retryCount * 1000);
                         }
                     }
                 } catch (Exception ex) {
@@ -248,6 +253,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             public void run() {
                 // initiate sleepCount
                 int sleepCount = 0;
+                Utils.NetworkResponses networkResponse = Utils.NetworkResponses.SUCCESS;
 
                 // initiate lists for messageId and message
                 ArrayList<Integer> messageIds = new ArrayList<>();
@@ -288,10 +294,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: EventCount: %d", messageIds.size()));
                             if (payload != null) {
                                 // send payload to server if it is not null
-                                String response = flushEventsToServer(payload);
-                                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: ServerResponse: %s", response));
+                                networkResponse = flushEventsToServer(payload);
+                                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: ServerResponse: %s", networkResponse));
                                 // if success received from server
-                                if (response != null && response.equalsIgnoreCase("OK")) {
+                                if (networkResponse == Utils.NetworkResponses.SUCCESS) {
                                     // remove events from DB
                                     dbManager.clearEventsFromDB(messageIds);
                                     // reset sleep count to indicate successful flush
@@ -300,10 +306,18 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             }
                         }
                         // increment sleepCount to track total elapsed seconds
-                        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
                         sleepCount += 1;
-                        // retry entire logic in 1 second
-                        Thread.sleep(1000);
+                        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
+                        if (networkResponse == Utils.NetworkResponses.WRITE_KEY_ERROR) {
+                            RudderLogger.logInfo("Wrong WriteKey. Aborting");
+                            break;
+                        } else if (networkResponse == Utils.NetworkResponses.ERROR) {
+                            RudderLogger.logInfo("Retrying in " + sleepCount + "s");
+                            Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000);
+                        } else {
+                            // retry entire logic in 1 second
+                            Thread.sleep(1000);
+                        }
                     } catch (Exception ex) {
                         RudderLogger.logError(ex);
                     }
@@ -376,7 +390,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     /*
      * flush events payload to server and return response as String
      * */
-    private String flushEventsToServer(String payload) {
+    private Utils.NetworkResponses flushEventsToServer(String payload) {
         try {
             if (TextUtils.isEmpty(this.authHeaderString)) {
                 RudderLogger.logError("EventRepository: flushEventsToServer: WriteKey was not correct. Aborting flush to server");
@@ -421,7 +435,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     res = bis.read();
                 }
                 // finally return response when reading from server is completed
-                return baos.toString();
+                if (baos.toString().equalsIgnoreCase("OK")) {
+                    return Utils.NetworkResponses.SUCCESS;
+                }
             } else {
                 BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -432,14 +448,17 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     res = bis.read();
                 }
                 // finally return response when reading from server is completed
-                RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + baos.toString());
+                String errorResp = baos.toString();
+                RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + errorResp);
                 // return null as request made is not successful
-                return null;
+                if (errorResp.toLowerCase().contains("invalid write key")) {
+                    return Utils.NetworkResponses.WRITE_KEY_ERROR;
+                }
             }
         } catch (Exception ex) {
             RudderLogger.logError(ex);
         }
-        return null;
+        return Utils.NetworkResponses.ERROR;
     }
 
     /*

@@ -11,8 +11,10 @@ import com.rudderstack.android.sdk.core.RudderClient
 class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
-        const val DATA_PLANE_URL = "https://7203f5894e2f.ngrok.io"
-        const val WRITE_KEY = "1cZKYwoLsDiMaw9WUvxLsG8GDc8"
+        const val TAG = "MainApplication"
+        const val DATA_PLANE_URL = "https://9dc068247951.ngrok.io"
+        const val CONTROL_PLANE_URL = "https://986733ed.ngrok.io"
+        const val WRITE_KEY = "1cGJAn3VgQByqQsU5yhWtsK5nwx"
     }
 
     override fun onCreate() {

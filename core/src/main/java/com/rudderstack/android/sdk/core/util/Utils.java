@@ -111,4 +111,10 @@ public class Utils {
             return false;
         }
     }
+
+    public enum NetworkResponses {
+        SUCCESS,
+        ERROR,
+        WRITE_KEY_ERROR
+    }
 }
