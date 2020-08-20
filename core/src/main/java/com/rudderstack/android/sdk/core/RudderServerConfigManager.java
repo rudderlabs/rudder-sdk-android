@@ -5,6 +5,7 @@ import android.text.TextUtils;
 import android.util.Base64;
 
 import com.google.gson.Gson;
+import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -20,7 +21,7 @@ class RudderServerConfigManager {
     private static RudderServerConfig serverConfig;
     private static RudderConfig rudderConfig;
     private Map<String, Object> integrationsMap = null;
-    private int receivedError = 0;
+    private Utils.NetworkResponses receivedError = Utils.NetworkResponses.SUCCESS;
 
     static RudderServerConfigManager getInstance(Application _application, String _writeKey, RudderConfig config) {
         if (instance == null) {
@@ -68,7 +69,7 @@ class RudderServerConfigManager {
 
     private void downloadConfig(final String _writeKey) {
         // don't try to download anything if writeKey is not valid
-        if (TextUtils.isEmpty(_writeKey)) {receivedError = 1; return;}
+        if (TextUtils.isEmpty(_writeKey)) {receivedError = Utils.NetworkResponses.WRITEKEYERROR; return;}
 
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -125,13 +126,13 @@ class RudderServerConfigManager {
                             }
                             RudderLogger.logError("ServerError for FetchingConfig: " + baos.toString());
                             if(baos.toString().equals("{\"message\":\"Invalid write key\"}")){
-                                receivedError = 1;
+                                receivedError = Utils.NetworkResponses.WRITEKEYERROR;
                                 return;
                             }
                             RudderLogger.logInfo("Retrying to download in " + retryTimeOut + "s");
 
                             retryCount += 1;
-                            receivedError = 2;
+                            receivedError = Utils.NetworkResponses.ERROR;
                             Thread.sleep(retryCount * retryTimeOut * 1000);
                         }
                     } catch (Exception ex) {
@@ -156,7 +157,7 @@ class RudderServerConfigManager {
         return serverConfig;
     }
 
-    int getError(){
+    Utils.NetworkResponses getError(){
         // if received error is 1 : wrong write key or empty write key (400 error)
         // if received error is 2 : any error with status code != 200 and except wrong/empty write key
         // if received error is 0 : no error
