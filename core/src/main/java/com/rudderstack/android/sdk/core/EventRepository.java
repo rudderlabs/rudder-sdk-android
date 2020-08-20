@@ -253,8 +253,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             @Override
             public void run() {
                 // initiate sleepCount
-                int sleepCount = 0;
-
+                int sleepCount = 0,retryTimeOut =10;
+                Utils.NetworkResponses errResp = Utils.NetworkResponses.SUCCESS;
                 // initiate lists for messageId and message
                 ArrayList<Integer> messageIds = new ArrayList<>();
                 ArrayList<String> messages = new ArrayList<>();
@@ -294,22 +294,29 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: EventCount: %d", messageIds.size()));
                             if (payload != null) {
                                 // send payload to server if it is not null
-                                String response = flushEventsToServer(payload);
+                                Utils.NetworkResponses response = flushEventsToServer(payload);
                                 RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: ServerResponse: %s", response));
                                 // if success received from server
-                                if (response != null && response.equalsIgnoreCase("OK")) {
+                                if (response == Utils.NetworkResponses.SUCCESS) {
                                     // remove events from DB
                                     dbManager.clearEventsFromDB(messageIds);
                                     // reset sleep count to indicate successful flush
                                     sleepCount = 0;
+                                }else if(response == Utils.NetworkResponses.ERROR){
+                                    errResp = Utils.NetworkResponses.ERROR;
                                 }
                             }
                         }
                         // increment sleepCount to track total elapsed seconds
                         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
                         sleepCount += 1;
-                        // retry entire logic in 1 second
-                        Thread.sleep(1000);
+                        if(errResp == Utils.NetworkResponses.ERROR){
+                            RudderLogger.logInfo("Retrying in " + sleepCount * retryTimeOut + "s");
+                            Thread.sleep(sleepCount *retryTimeOut * 1000);
+                        }else {
+                            // retry entire logic in 1 second
+                            Thread.sleep(1000);
+                        }
                     } catch (Exception ex) {
                         RudderLogger.logError(ex);
                     }
@@ -382,7 +389,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     /*
      * flush events payload to server and return response as String
      * */
-    private String flushEventsToServer(String payload) {
+    private Utils.NetworkResponses flushEventsToServer(String payload) {
         try {
             if (TextUtils.isEmpty(this.authHeaderString)) {
                 RudderLogger.logError("EventRepository: flushEventsToServer: WriteKey was not correct. Aborting flush to server");
@@ -427,7 +434,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     res = bis.read();
                 }
                 // finally return response when reading from server is completed
-                return baos.toString();
+                if (baos.toString().equalsIgnoreCase("OK")){
+                    return Utils.NetworkResponses.SUCCESS;
+                }
             } else {
                 BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -440,7 +449,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // finally return response when reading from server is completed
                 RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + baos.toString());
                 // return null as request made is not successful
-                return null;
+                return Utils.NetworkResponses.ERROR;
             }
         } catch (Exception ex) {
             RudderLogger.logError(ex);
