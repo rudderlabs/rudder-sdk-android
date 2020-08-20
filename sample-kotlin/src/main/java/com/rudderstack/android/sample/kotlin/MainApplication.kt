@@ -15,7 +15,7 @@ class MainApplication : Application() {
         const val TAG = "MainApplication"
         const val DATA_PLANE_URL = "https://8dbdd6d4.ngrok.io"
         const val CONTROL_PLANE_URL = "https://986733ed.ngrok.io"
-        const val WRITE_KEY = "1ZOVzjHRL0Vpk627qpkmcIYLrv3"
+        const val WRITE_KEY = "1fG4PQTMJpujRfSmAhgv3IcN9Cb"
     }
 
     override fun onCreate() {
