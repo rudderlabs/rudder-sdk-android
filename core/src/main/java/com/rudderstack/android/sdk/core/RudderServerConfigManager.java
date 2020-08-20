@@ -69,7 +69,10 @@ class RudderServerConfigManager {
 
     private void downloadConfig(final String _writeKey) {
         // don't try to download anything if writeKey is not valid
-        if (TextUtils.isEmpty(_writeKey)) {receivedError = Utils.NetworkResponses.WRITEKEYERROR; return;}
+        if (TextUtils.isEmpty(_writeKey)) {
+            receivedError = Utils.NetworkResponses.WRITE_KEY_ERROR;
+            return;
+        }
 
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -125,8 +128,14 @@ class RudderServerConfigManager {
                                 res = bis.read();
                             }
                             RudderLogger.logError("ServerError for FetchingConfig: " + baos.toString());
-                            if(baos.toString().equals("{\"message\":\"Invalid write key\"}")){
-                                receivedError = Utils.NetworkResponses.WRITEKEYERROR;
+//                            if (httpConnection.getResponseCode() == 400) {
+//                                receivedError = Utils.NetworkResponses.WRITE_KEY_ERROR;
+//                                return;
+//                            }
+
+                            // TODO : change the logic based on a defined API response or responseCode
+                            if (baos.toString().equals("{\"message\":\"Invalid write key\"}")) {
+                                receivedError = Utils.NetworkResponses.WRITE_KEY_ERROR;
                                 return;
                             }
                             RudderLogger.logInfo("Retrying to download in " + retryTimeOut + "s");
@@ -157,10 +166,7 @@ class RudderServerConfigManager {
         return serverConfig;
     }
 
-    Utils.NetworkResponses getError(){
-        // if received error is 1 : wrong write key or empty write key (400 error)
-        // if received error is 2 : any error with status code != 200 and except wrong/empty write key
-        // if received error is 0 : no error
+    Utils.NetworkResponses getError() {
         return receivedError;
     }
 
