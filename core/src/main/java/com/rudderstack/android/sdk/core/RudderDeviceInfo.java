@@ -20,7 +20,7 @@ class RudderDeviceInfo {
     @SerializedName("name")
     private String name = Build.DEVICE;
     @SerializedName("type")
-    private String type = "android";
+    private String type = "Android";
     @SerializedName("token")
     private String token;
     @SerializedName("adTrackingEnabled")
