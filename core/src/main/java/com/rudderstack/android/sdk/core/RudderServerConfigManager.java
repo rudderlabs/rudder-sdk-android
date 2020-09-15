@@ -5,6 +5,7 @@ import android.text.TextUtils;
 import android.util.Base64;
 
 import com.google.gson.Gson;
+import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -20,6 +21,7 @@ class RudderServerConfigManager {
     private static RudderServerConfig serverConfig;
     private static RudderConfig rudderConfig;
     private Map<String, Object> integrationsMap = null;
+    private Utils.NetworkResponses receivedError = Utils.NetworkResponses.SUCCESS;
 
     static RudderServerConfigManager getInstance(Application _application, String _writeKey, RudderConfig config) {
         if (instance == null) {
@@ -67,7 +69,10 @@ class RudderServerConfigManager {
 
     private void downloadConfig(final String _writeKey) {
         // don't try to download anything if writeKey is not valid
-        if (TextUtils.isEmpty(_writeKey)) return;
+        if (TextUtils.isEmpty(_writeKey)) {
+            receivedError = Utils.NetworkResponses.WRITE_KEY_ERROR;
+            return;
+        }
 
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -123,9 +128,20 @@ class RudderServerConfigManager {
                                 res = bis.read();
                             }
                             RudderLogger.logError("ServerError for FetchingConfig: " + baos.toString());
+//                            if (httpConnection.getResponseCode() == 400) {
+//                                receivedError = Utils.NetworkResponses.WRITE_KEY_ERROR;
+//                                return;
+//                            }
+
+                            // TODO : change the logic based on a defined API response or responseCode
+                            if (baos.toString().equals("{\"message\":\"Invalid write key\"}")) {
+                                receivedError = Utils.NetworkResponses.WRITE_KEY_ERROR;
+                                return;
+                            }
                             RudderLogger.logInfo("Retrying to download in " + retryTimeOut + "s");
 
                             retryCount += 1;
+                            receivedError = Utils.NetworkResponses.ERROR;
                             Thread.sleep(retryCount * retryTimeOut * 1000);
                         }
                     } catch (Exception ex) {
@@ -148,6 +164,10 @@ class RudderServerConfigManager {
     RudderServerConfig getConfig() {
         if (serverConfig == null) serverConfig = retrieveConfig();
         return serverConfig;
+    }
+
+    Utils.NetworkResponses getError() {
+        return receivedError;
     }
 
     Map<String, Object> getIntegrations() {

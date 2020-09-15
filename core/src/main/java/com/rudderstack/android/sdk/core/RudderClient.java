@@ -119,7 +119,7 @@ public class RudderClient {
      * package private api to be used in EventRepository
      * */
     @Nullable
-    static RudderClient getInstance() {
+    public static RudderClient getInstance() {
         return instance;
     }
 

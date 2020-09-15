@@ -13,7 +13,11 @@ import java.util.Map;
 
 public class DummyGAIntegrationImpl extends RudderIntegration<DummyGAIntegration> {
     private DummyGAIntegration integration;
+<<<<<<< HEAD
     static final String DUMMY_KEY = "Bugsnag";
+=======
+    static final String DUMMY_KEY = "Firebase";
+>>>>>>> origin/master
     static final String DUMMY_DISPLAY_NAME = "Dummy AM Integration";
     private static final String DUMMY_TYPE = "type";
 

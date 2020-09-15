@@ -5,7 +5,7 @@ package com.rudderstack.android.sdk.core;
  * */
 class Constants {
     // how often config should be fetched from the server (in hours) (2 hrs by default)
-    static final int CONFIG_REFRESH_INTERVAL = 2;
+    static final int CONFIG_REFRESH_INTERVAL = 2; // probably change it to 1 hr, or every time
     // default base url or rudder-backend-server
     static final String DATA_PLANE_URL = "https://hosted.rudderlabs.com";
     // default flush queue size for the events to be flushed to server

@@ -18,6 +18,7 @@ class RudderElementCache {
         if (cachedContext == null) {
             RudderLogger.logDebug("RudderElementCache: initiating RudderContext");
             cachedContext = new RudderContext(application);
+            cachedContext.updateDeviceWithAdId();
         }
     }
 

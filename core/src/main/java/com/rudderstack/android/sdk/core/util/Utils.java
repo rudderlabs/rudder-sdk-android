@@ -102,4 +102,19 @@ public class Utils {
     public static int getUTF8Length(StringBuilder message) {
         return getUTF8Length(message.toString());
     }
+
+    public static boolean isOnClassPath(String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    public enum NetworkResponses {
+        SUCCESS,
+        ERROR,
+        WRITE_KEY_ERROR
+    }
 }

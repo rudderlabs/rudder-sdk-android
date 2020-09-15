@@ -1,12 +1,16 @@
 package com.rudderstack.android.sample.kotlin
 
 import android.os.Bundle
+import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
+<<<<<<< HEAD
 import com.rudderstack.android.sdk.core.RudderMessageBuilder
 import com.rudderstack.android.sdk.core.RudderOption
 import com.rudderstack.android.sdk.core.RudderProperty
 import com.rudderstack.android.sdk.core.RudderTraits
 import com.rudderstack.android.sdk.core.ecomm.*
+=======
+>>>>>>> origin/master
 
 
 class MainActivity : AppCompatActivity() {
