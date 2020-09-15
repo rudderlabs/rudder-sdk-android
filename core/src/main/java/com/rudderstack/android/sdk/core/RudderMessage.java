@@ -1,8 +1,8 @@
 package com.rudderstack.android.sdk.core;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.rudderstack.android.sdk.core.util.Utils;
 
@@ -35,9 +35,7 @@ public class RudderMessage {
     @SerializedName("userProperties")
     private Map<String, Object> userProperties;
     @SerializedName("integrations")
-    private Map<String, Boolean> integrations = new HashMap<>();
-    @SerializedName("destinationProps")
-    private Map<String, Map> destinationProps = null;
+    private Map<String, Object> integrations = null;
     @SerializedName("previousId")
     private String previousId;
     @SerializedName("traits")
@@ -45,13 +43,23 @@ public class RudderMessage {
     @SerializedName("groupId")
     private String groupId;
 
+    // Helper variables. Not exposed in serialized event
+    private transient RudderOption rudderOption;
+    // private transient Map<String, Object> option;
+    // private transient Map<String, Object> contextOption;
+
     RudderMessage() {
         context = RudderElementCache.getCachedContext();
         this.anonymousId = context.getDeviceId();
 
         Map<String, Object> traits = context.getTraits();
-        if (traits != null && traits.containsKey("id")) {
-            this.userId = String.valueOf(traits.get("id"));
+        // get the userId from the persisted traits (if present)
+        if (traits != null) {
+            if (traits.containsKey("userId")) {
+                this.userId = String.valueOf(traits.get("userId"));
+            } else if (traits.containsKey("id")) {
+                this.userId = String.valueOf(traits.get("id"));
+            }
         }
     }
 
@@ -87,6 +95,18 @@ public class RudderMessage {
         this.event = eventName;
     }
 
+    void setRudderOption(RudderOption rudderOption) {
+      this.rudderOption = rudderOption;
+    }
+
+    // void setRudderOption(Map<String, Object> option) {
+    //     this.option = option;
+    // }
+
+    // void setContextOption(Map<String, Object> contextOption) {
+    //     this.contextOption = contextOption;
+    // }
+
     void updateTraits(RudderTraits traits) {
         this.context.updateTraits(traits);
     }
@@ -113,15 +133,6 @@ public class RudderMessage {
         return properties;
     }
 
-    void addIntegrationProps(String integrationKey, boolean isEnabled, Map props) {
-        integrations.put(integrationKey, isEnabled);
-
-        if (isEnabled) {
-            if (destinationProps == null) destinationProps = new HashMap<>();
-            destinationProps.put(integrationKey, props);
-        }
-    }
-
     /**
      * @return Type of event (track, identify, screen, group, alias)
      */
@@ -134,15 +145,24 @@ public class RudderMessage {
         return action;
     }
 
+    // @Nullable
+    // public Map<String, Object> getRudderOption() {
+    //     return option;
+    // }
+
+    // public Map<String, Object> getContextOption() {
+    //     return contextOption;
+    // }
+
     /**
      * Get your User properties for the event
      *
      * @return Map of String-Object
      */
-    @Nullable
-    public Map<String, Object> getUserProperties() {
-        return userProperties;
-    }
+    // @Nullable
+    // public Map<String, Object> getUserProperties() {
+    //     return userProperties;
+    // }
 
     /**
      * @return User ID for the event
@@ -152,13 +172,28 @@ public class RudderMessage {
         return userId;
     }
 
-    void setIntegrations(Map<String, Object> integrations) {
-        if (integrations == null) return;
+    // set both default options and event options
+    void setIntegrations(@NonNull Map<String, Object> integrations) {
+        if (this.integrations == null) {
+            this.integrations = new HashMap<>();
+        }
         for (String key : integrations.keySet()) {
-            this.integrations.put(key, (Boolean) integrations.get(key));
+            this.integrations.put(key, integrations.get(key));
         }
     }
 
+    /**
+     * @return integrations for the message
+     */
+    @Nullable
+    public Map<String, Object> getIntegrations() {
+        return integrations;
+    }
+
+    /**
+     * @return Traits passed with this message
+     */
+    @Nullable
     public Map<String, Object> getTraits() {
         return this.context.getTraits();
     }
@@ -166,6 +201,7 @@ public class RudderMessage {
     /**
      * @return Anonymous ID of the user
      */
+    @NonNull
     public String getAnonymousId() {
         return anonymousId;
     }

@@ -96,6 +96,8 @@ public class RudderClient {
                     RudderLogger.logVerbose("getInstance: SleepTimeOut is wrong. using default.");
                     config.setSleepTimeOut(10);
                 }
+
+                // config.setDefaultOptions();
             }
 
             // get application from provided context
@@ -196,13 +198,13 @@ public class RudderClient {
      *
      * @param event    Name of the event you want to track
      * @param property RudderProperty object you want to pass with the track call
-     * @param option   Options related to this track call
+     * @param option   RudderOption object  related to this track call
      */
     public void track(@NonNull String event, @Nullable RudderProperty property, @Nullable RudderOption option) {
         track(new RudderMessageBuilder()
                 .setEventName(event)
                 .setProperty(property)
-                .setRudderOption(option)
+                .setOption(option)
                 .build());
     }
 
@@ -256,13 +258,14 @@ public class RudderClient {
      * @param screenName Name of the screen
      * @param category   Name of the category of the screen
      * @param property   RudderProperty object you want to pass with the screen call
-     * @param option     Options related to this screen call
+     * @param option   RudderOption object  related to this screen call
      */
     public void screen(@NonNull String screenName, @NonNull String category, @Nullable RudderProperty property, @Nullable RudderOption option) {
         if (property == null) property = new RudderProperty();
         property.put("category", category);
         property.put("name", screenName);
-        screen(new RudderMessageBuilder().setEventName(screenName).setProperty(property).setRudderOption(option).build());
+        screen(new RudderMessageBuilder().setEventName(screenName).setProperty(property).setOption(option));
+
     }
 
     /**
@@ -270,14 +273,17 @@ public class RudderClient {
      *
      * @param screenName Name of the screen
      * @param property   RudderProperty object you want to pass with the screen call
-     * @param option     Options related to this screen call
+     * @param option   RudderOption object  related to this screen call
      */
     public void screen(@NonNull String screenName, @Nullable RudderProperty property, @Nullable RudderOption option) {
+
         screen(new RudderMessageBuilder()
                 .setEventName(screenName)
                 .setProperty(property)
-                .setRudderOption(option)
+                .setOption(option)
                 .build());
+
+
     }
 
     /**
@@ -306,10 +312,11 @@ public class RudderClient {
      * @param option RudderOption object
      */
     public void identify(@NonNull RudderTraits traits, @Nullable RudderOption option) {
-        RudderMessage message = new RudderMessageBuilder()
+        RudderMessage message;
+        message = new RudderMessageBuilder()
                 .setEventName(MessageType.IDENTIFY)
                 .setUserId(traits.getId())
-                .setRudderOption(option)
+                .setOption(option)
                 .build();
         message.updateTraits(traits);
         identify(message);
@@ -355,7 +362,9 @@ public class RudderClient {
      */
     public void identify(@NonNull String userId, @Nullable RudderTraits traits, @Nullable RudderOption option) {
         // create new traits object from cache if supplied traits is null
-        if (traits == null) traits = new RudderTraits();
+        if (traits == null) {
+          traits = new RudderTraits();
+        }
         traits.putId(userId);
         identify(traits, option);
     }
@@ -401,20 +410,26 @@ public class RudderClient {
      * @param option RudderOptions for this event
      */
     public void alias(@NonNull String newId, @Nullable RudderOption option) {
+        RudderMessageBuilder builder;
         Map<String, Object> traits = getRudderContext().getTraits();
-        RudderMessageBuilder builder = new RudderMessageBuilder()
+        for (Map.Entry<String, Object> pair : option.context().entrySet()) {
+            traits.put(pair.getKey(), pair.getValue());
+        }
+        builder = new RudderMessageBuilder()
                 .setUserId(newId)
-                .setRudderOption(option);
-
+                .setOption(option);
         String prevUserId = null;
         if (traits.containsKey("userId")) {
             prevUserId = (String) traits.get("userId");
         } else if (traits.containsKey("id")) {
             prevUserId = (String) traits.get("id");
         }
-        if (prevUserId != null) {
-            builder.setPreviousId(prevUserId);
+        if (prevUserId == null) {
+            // set previousId to anonymousId if userId is not present
+            prevUserId = RudderElementCache.getCachedContext().getDeviceId();
         }
+
+        builder.setPreviousId(prevUserId);
         traits.put("userId", newId);
         traits.put("id", newId);
         RudderMessage message = builder.build();
@@ -480,13 +495,13 @@ public class RudderClient {
      * @param option  Options for this group call
      */
     public void group(@NonNull String groupId, @Nullable RudderTraits traits, @Nullable RudderOption option) {
-        RudderMessage message = new RudderMessageBuilder()
+        RudderMessage message;
+        message = new RudderMessageBuilder()
                 .setGroupId(groupId)
                 .setGroupTraits(traits)
-                .setRudderOption(option)
+                .setOption(option)
                 .build();
         group(message);
-
     }
 
     /**

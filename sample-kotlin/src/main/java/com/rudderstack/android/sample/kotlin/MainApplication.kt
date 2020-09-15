@@ -12,22 +12,25 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://9dc068247951.ngrok.io"
-        const val CONTROL_PLANE_URL = "https://986733ed.ngrok.io"
-        const val WRITE_KEY = "1cGJAn3VgQByqQsU5yhWtsK5nwx"
+        const val DATA_PLANE_URL = "https://6b1a12340e0b.ngrok.io"
+        const val CONTROL_PLANE_URL = "https://6b1a12340e0b.ngrok.io"
+        const val WRITE_KEY = "1bt0vcThjsXCUngMjgTFB62xAyg"
     }
 
     override fun onCreate() {
         super.onCreate()
-
+        var input = mapOf("Bugsnag" to true)
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,
             RudderConfig.Builder()
                 .withDataPlaneUrl(DATA_PLANE_URL)
-                .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
+                .withControlPlaneUrl(CONTROL_PLANE_URL)
+                .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withTrackLifecycleEvents(true)
                 .withRecordScreenViews(true)
+                .withFactory(DummyGAIntegrationImpl.FACTORY)
+                .withDefaultOptions(input)
                 .build()
         )
 

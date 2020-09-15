@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /*
  * Config class for RudderClient
@@ -39,6 +40,7 @@ public class RudderConfig {
     private boolean recordScreenViews;
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
+    private Map<String, Object> defaultOptions;
 
     RudderConfig() {
         this(
@@ -51,6 +53,7 @@ public class RudderConfig {
                 Constants.TRACK_LIFECYCLE_EVENTS,
                 Constants.RECORD_SCREEN_VIEWS,
                 Constants.CONTROL_PLANE_URL,
+                null,
                 null
         );
     }
@@ -65,10 +68,10 @@ public class RudderConfig {
             boolean trackLifecycleEvents,
             boolean recordScreenViews,
             String controlPlaneUrl,
-            List<RudderIntegration.Factory> factories
+            List<RudderIntegration.Factory> factories,
+            Map<String, Object> defaultOptions
     ) {
         RudderLogger.init(logLevel);
-
         if (TextUtils.isEmpty(dataPlaneUrl)) {
             RudderLogger.logError("endPointUri can not be null or empty. Set to default.");
             this.dataPlaneUrl = Constants.DATA_PLANE_URL;
@@ -98,10 +101,11 @@ public class RudderConfig {
 
         if (configRefreshInterval > Utils.MAX_CONFIG_REFRESH_INTERVAL) {
             this.configRefreshInterval = Utils.MAX_CONFIG_REFRESH_INTERVAL;
-        } else if (configRefreshInterval < Utils.MIN_CONFIG_REFRESH_INTERVAL) {
-            this.configRefreshInterval = Utils.MIN_CONFIG_REFRESH_INTERVAL;
         } else {
-            this.configRefreshInterval = configRefreshInterval;
+            this.configRefreshInterval = Math.max(
+                    configRefreshInterval,
+                    Utils.MIN_CONFIG_REFRESH_INTERVAL
+            );
         }
 
         if (sleepTimeOut < Utils.MIN_SLEEP_TIMEOUT) {
@@ -128,6 +132,7 @@ public class RudderConfig {
             if (!controlPlaneUrl.endsWith("/")) controlPlaneUrl += "/";
             this.controlPlaneUrl = controlPlaneUrl;
         }
+        this.defaultOptions = defaultOptions;
     }
 
     /**
@@ -151,6 +156,13 @@ public class RudderConfig {
      */
     public int getFlushQueueSize() {
         return flushQueueSize;
+    }
+
+    /**
+     * @return defaultOptions
+     */
+    public Map<String, Object> getDefaultOptions() {
+        return defaultOptions;
     }
 
     /**
@@ -229,6 +241,10 @@ public class RudderConfig {
 
     void setFlushQueueSize(int flushQueueSize) {
         this.flushQueueSize = flushQueueSize;
+    }
+
+    void setDefaultOptions(Map<String, Object> defaultOptions) {
+        this.defaultOptions = defaultOptions;
     }
 
     void setDbCountThreshold(int dbCountThreshold) {
@@ -354,6 +370,16 @@ public class RudderConfig {
             return this;
         }
 
+        private Map<String, Object> defaultOptions = null;
+
+        public Builder withDefaultOptions(Map<String, Object> defaultOptions) {
+            if (defaultOptions == null) {
+                RudderLogger.logError("Default options cannot be null");
+            }
+            this.defaultOptions = defaultOptions;
+            return this;
+        }
+
         private boolean isDebug = false;
 
         /**
@@ -474,7 +500,8 @@ public class RudderConfig {
                     this.trackLifecycleEvents,
                     this.recordScreenViews,
                     this.controlPlaneUrl,
-                    this.factories
+                    this.factories,
+                    this.defaultOptions
             );
         }
     }
