@@ -262,7 +262,9 @@ public class RudderTraits {
      */
     public RudderTraits() {
         RudderContext rudderContext = RudderElementCache.getCachedContext();
-        if (rudderContext != null) this.anonymousId = rudderContext.getDeviceId();
+        if (rudderContext != null) {
+            this.anonymousId = rudderContext.getDeviceId();
+        }
     }
 
 
@@ -538,7 +540,7 @@ public class RudderTraits {
         private String street;
 
         /**
-         *  default public constructor
+         * default public constructor
          */
         public Address() {
         }
@@ -680,7 +682,7 @@ public class RudderTraits {
         private String industry;
 
         /**
-         *  default public constructor
+         * default public constructor
          */
         public Company() {
         }

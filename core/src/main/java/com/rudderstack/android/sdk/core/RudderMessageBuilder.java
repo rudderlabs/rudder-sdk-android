@@ -82,15 +82,32 @@ public class RudderMessageBuilder {
     }
 
     public RudderMessage build() {
-        RudderMessage event = new RudderMessage();
-        if (this.userId != null) event.setUserId(this.userId);
-        if (this.eventName != null) event.setEventName(this.eventName);
-        if (this.property != null) event.setProperty(this.property);
-        if (this.userProperty != null) event.setUserProperty(this.userProperty);
-        if (this.previousId != null) event.setPreviousId(this.previousId);
-        if (this.groupId != null) event.setGroupId(this.groupId);
-        if (this.groupTraits != null) event.setGroupTraits(this.groupTraits);
+        RudderMessage message = new RudderMessage();
+        if (this.userId != null) {
+            message.setUserId(this.userId);
+        }
+        if (this.eventName != null) {
+            message.setEventName(this.eventName);
+        }
+        if (this.property != null) {
+            message.setProperty(this.property);
+        }
+        if (this.userProperty != null) {
+            message.setUserProperty(this.userProperty);
+        }
+        if (this.previousId != null) {
+            message.setPreviousId(this.previousId);
+        }
+        if (this.groupId != null) {
+            message.setGroupId(this.groupId);
+        }
+        if (this.groupTraits != null) {
+            message.setGroupTraits(this.groupTraits);
+        }
+        if (this.option != null) {
+            message.setRudderOption(option);
+        }
 
-        return event;
+        return message;
     }
 }

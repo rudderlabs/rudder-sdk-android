@@ -40,7 +40,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
     private RudderPreferenceManager preferenceManager;
-    private Map<String, RudderIntegration> integrationOperationsMap = new HashMap<>();
+    private Map<String, RudderIntegration<?>> integrationOperationsMap = new HashMap<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
 
     private boolean isSDKInitialized = false;
@@ -486,7 +486,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 message.setIntegrations(prepareIntegrations());
                 for (String key : integrationOperationsMap.keySet()) {
                     RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                    RudderIntegration integration = integrationOperationsMap.get(key);
+                    RudderIntegration<?> integration = integrationOperationsMap.get(key);
                     if (integration != null) {
                         integration.dump(message);
                     }
@@ -510,7 +510,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug("EventRepository: resetting native SDKs");
             for (String key : integrationOperationsMap.keySet()) {
                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: reset for %s", key));
-                RudderIntegration integration = integrationOperationsMap.get(key);
+                RudderIntegration<?> integration = integrationOperationsMap.get(key);
                 if (integration != null) {
                     integration.reset();
                 }
@@ -525,7 +525,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug("EventRepository: flush native SDKs");
             for (String key : integrationOperationsMap.keySet()) {
                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush for %s", key));
-                RudderIntegration integration = integrationOperationsMap.get(key);
+                RudderIntegration<?> integration = integrationOperationsMap.get(key);
                 if (integration != null) {
                     integration.flush();
                 }

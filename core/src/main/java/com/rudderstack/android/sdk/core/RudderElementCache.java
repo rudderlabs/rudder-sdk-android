@@ -2,6 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 import android.app.Application;
 
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -37,6 +38,10 @@ class RudderElementCache {
 
     static void updateTraits(Map<String, Object> traits) {
         cachedContext.updateTraitsMap(traits);
+    }
+
+    public static void updateExternalIds(List<Map<String, Object>> externalIds) {
+        cachedContext.updateExternalIds(externalIds);
     }
 }
 
