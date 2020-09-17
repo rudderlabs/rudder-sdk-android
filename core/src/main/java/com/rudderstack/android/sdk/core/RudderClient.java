@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 
 import com.rudderstack.android.sdk.core.util.Utils;
 
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -297,8 +298,11 @@ public class RudderClient {
 
         //  handle external Ids
         RudderOption option = message.getRudderOption();
-        if (option != null && option.getExternalIds() != null && !option.getExternalIds().isEmpty()) {
-            RudderElementCache.updateExternalIds(option.getExternalIds());
+        if (option != null) {
+            List<Map<String, Object>> externalIds = option.getExternalIds();
+            if (externalIds != null && !externalIds.isEmpty()) {
+                RudderElementCache.updateExternalIds(option.getExternalIds());
+            }
         }
 
         // set message type to identify

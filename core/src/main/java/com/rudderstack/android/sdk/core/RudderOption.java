@@ -1,5 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
+import androidx.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,14 +46,13 @@ public class RudderOption {
             externalIds.add(externalIdMap);
         } else {
             externalIds.get(mapIndex).put("id", id);
-//            externalIds.remove(mapIndex);
-//            externalIds.add(mapIndex, externalIdMap);
         }
 
         // return for builder pattern
         return this;
     }
 
+    @Nullable
     List<Map<String, Object>> getExternalIds() {
         return externalIds;
     }

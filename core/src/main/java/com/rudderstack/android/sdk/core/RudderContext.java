@@ -70,7 +70,7 @@ public class RudderContext {
 
         // get saved external Ids from prefs. if not present set it to null
         String externalIdsJson = preferenceManger.getExternalIds();
-        RudderLogger.logDebug(String.format(Locale.US, "ExternalIds from persistence storage%s", traitsJson));
+        RudderLogger.logDebug(String.format(Locale.US, "ExternalIds from persistence storage%s", externalIdsJson));
         if (externalIdsJson != null) {
             this.externalIds = Utils.convertToList(externalIdsJson);
             RudderLogger.logDebug("Using old externalIds from persistence");
@@ -241,9 +241,12 @@ public class RudderContext {
 
         // update persistance storage
         try {
-            if (RudderClient.getInstance() != null && RudderClient.getInstance().getApplication() != null) {
-                RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getInstance().getApplication());
-                preferenceManger.saveExternalIds(new Gson().toJson(this.externalIds));
+            if (RudderClient.getInstance() != null) {
+                Application application = RudderClient.getInstance().getApplication();
+                if (application != null) {
+                    RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
+                    preferenceManger.saveExternalIds(new Gson().toJson(this.externalIds));
+                }
             }
         } catch (NullPointerException ex) {
             RudderLogger.logError(ex);
