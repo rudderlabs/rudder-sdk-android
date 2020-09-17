@@ -301,7 +301,7 @@ public class RudderClient {
         if (option != null) {
             List<Map<String, Object>> externalIds = option.getExternalIds();
             if (externalIds != null && !externalIds.isEmpty()) {
-                RudderElementCache.updateExternalIds(option.getExternalIds());
+                RudderElementCache.updateExternalIds(externalIds);
             }
         }
 
