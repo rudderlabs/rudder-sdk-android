@@ -151,6 +151,7 @@ public class RudderClient {
      * Track your event using RudderMessageBuilder
      *
      * @param builder instance of RudderMessageBuilder
+     * @deprecated Will be removed soon
      */
     public void track(@NonNull RudderMessageBuilder builder) {
         track(builder.build());
@@ -160,6 +161,7 @@ public class RudderClient {
      * Track your event using RudderMessage
      *
      * @param message RudderMessage you want to track. Use RudderMessageBuilder to create the message object
+     * @deprecated Will be removed soon
      */
     public void track(@NonNull RudderMessage message) {
         message.setType(MessageType.TRACK);
@@ -210,6 +212,7 @@ public class RudderClient {
      * Record screen view with RudderMessageBuilder
      *
      * @param builder instance of RudderMessageBuilder
+     * @deprecated Will be removed soon
      */
     public void screen(@NonNull RudderMessageBuilder builder) {
         screen(builder.build());
@@ -219,6 +222,7 @@ public class RudderClient {
      * Record screen view with RudderMessage
      *
      * @param message instance of RudderMessage
+     * @deprecated Will be removed soon
      */
     public void screen(@NonNull RudderMessage message) {
         message.setType(MessageType.SCREEN);
@@ -284,17 +288,26 @@ public class RudderClient {
      * Identify your user
      *
      * @param message instance of RudderMessage
+     * @deprecated Will be removed soon
      */
     public void identify(@NonNull RudderMessage message) {
         // update cached traits and persist
         RudderElementCache.updateTraits(message.getTraits());
         RudderElementCache.persistTraits();
 
+        //  handle external Ids
+        RudderOption option = message.getRudderOption();
+        if (option != null && option.getExternalIds() != null && !option.getExternalIds().isEmpty()) {
+            RudderElementCache.updateExternalIds(option.getExternalIds());
+        }
+
         // set message type to identify
         message.setType(MessageType.IDENTIFY);
 
         // dump to repository
-        if (repository != null) repository.dump(message);
+        if (repository != null) {
+            repository.dump(message);
+        }
     }
 
     /**
@@ -355,7 +368,9 @@ public class RudderClient {
      */
     public void identify(@NonNull String userId, @Nullable RudderTraits traits, @Nullable RudderOption option) {
         // create new traits object from cache if supplied traits is null
-        if (traits == null) traits = new RudderTraits();
+        if (traits == null) {
+            traits = new RudderTraits();
+        }
         traits.putId(userId);
         identify(traits, option);
     }
@@ -366,6 +381,7 @@ public class RudderClient {
      * Alias call
      *
      * @param builder RudderMessage.Builder
+     * @deprecated Will be removed soon
      */
     public void alias(@NonNull RudderMessageBuilder builder) {
         alias(builder.build());
@@ -375,6 +391,7 @@ public class RudderClient {
      * Alias call
      *
      * @param message RudderMessage
+     * @deprecated Will be removed soon
      */
     void alias(@NonNull RudderMessage message) {
         message.setType(MessageType.ALIAS);
@@ -432,6 +449,7 @@ public class RudderClient {
      * Add the user to a group
      *
      * @param builder RudderMessageBuilder
+     * @deprecated Will be removed soon
      */
     public void group(@NonNull RudderMessageBuilder builder) {
         group(builder.build());
@@ -441,6 +459,7 @@ public class RudderClient {
      * Add the user to a group
      *
      * @param message RudderMessage
+     * @deprecated Will be removed soon
      */
     public void group(@NonNull RudderMessage message) {
         message.setType(MessageType.GROUP);

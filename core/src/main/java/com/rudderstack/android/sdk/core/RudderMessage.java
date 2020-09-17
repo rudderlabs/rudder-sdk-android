@@ -45,6 +45,8 @@ public class RudderMessage {
     @SerializedName("groupId")
     private String groupId;
 
+    private transient RudderOption rudderOption;
+
     RudderMessage() {
         context = RudderElementCache.getCachedContext();
         this.anonymousId = context.getDeviceId();
@@ -168,5 +170,13 @@ public class RudderMessage {
      */
     public String getAnonymousId() {
         return anonymousId;
+    }
+
+    RudderOption getRudderOption() {
+        return rudderOption;
+    }
+
+    void setRudderOption(RudderOption rudderOption) {
+        this.rudderOption = rudderOption;
     }
 }

@@ -5,12 +5,16 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.provider.Settings;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.rudderstack.android.sdk.core.util.Utils;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -37,6 +41,8 @@ public class RudderContext {
     private RudderNetwork networkInfo;
     @SerializedName("timezone")
     private String timezone = Utils.getTimeZone();
+    @SerializedName("externalId")
+    private List<Map<String, Object>> externalIds = null;
 
     private RudderContext() {
         // stop instantiating without application instance.
@@ -62,6 +68,14 @@ public class RudderContext {
             RudderLogger.logDebug("Using old traits from persistence");
         }
 
+        // get saved external Ids from prefs. if not present set it to null
+        String externalIdsJson = preferenceManger.getExternalIds();
+        RudderLogger.logDebug(String.format(Locale.US, "ExternalIds from persistence storage%s", traitsJson));
+        if (externalIdsJson != null) {
+            this.externalIds = Utils.convertToList(externalIdsJson);
+            RudderLogger.logDebug("Using old externalIds from persistence");
+        }
+
         this.screenInfo = new RudderScreenInfo(application);
         this.userAgent = System.getProperty("http.agent");
         this.deviceInfo = new RudderDeviceInfo(deviceId);
@@ -78,7 +92,9 @@ public class RudderContext {
 
         // convert the whole traits to map and take care of the extras
         Map<String, Object> traitsMap = Utils.convertToMap(new Gson().toJson(traits));
-        if (traits.getExtras() != null) traitsMap.putAll(traits.getExtras());
+        if (traits.getExtras() != null) {
+            traitsMap.putAll(traits.getExtras());
+        }
 
         // update traits object here
         this.traits = traitsMap;
@@ -189,21 +205,48 @@ public class RudderContext {
 
     /**
      * Getter method for Advertising ID
+     *
      * @return The Advertising ID if available, returns null otherwise.
      */
     @Nullable
     public String getAdvertisingId() {
-        if (this.deviceInfo == null) { return null; }
+        if (this.deviceInfo == null) {
+            return null;
+        }
         return this.deviceInfo.getAdvertisingId();
     }
 
     /**
      * Getter method for Ad Tracking Status.
+     *
      * @return true or false, depending on whether ad tracking is enabled or disabled.
      */
     public boolean isAdTrackingEnabled() {
-        if (this.deviceInfo == null) { return false; }
+        if (this.deviceInfo == null) {
+            return false;
+        }
         return this.deviceInfo.isAdTrackingEnabled();
     }
 
+    /**
+     * @return ExternalIds for the current session
+     */
+    @Nullable
+    public List<Map<String, Object>> getExternalIds() {
+        return externalIds;
+    }
+
+    void updateExternalIds(@NonNull List<Map<String, Object>> externalIds) {
+        this.externalIds = externalIds;
+
+        // update persistance storage
+        try {
+            if (RudderClient.getInstance() != null && RudderClient.getInstance().getApplication() != null) {
+                RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getInstance().getApplication());
+                preferenceManger.saveExternalIds(new Gson().toJson(this.externalIds));
+            }
+        } catch (NullPointerException ex) {
+            RudderLogger.logError(ex);
+        }
+    }
 }
