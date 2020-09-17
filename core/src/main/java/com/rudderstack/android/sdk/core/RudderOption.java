@@ -6,13 +6,13 @@ import java.util.List;
 import java.util.Map;
 
 public class RudderOption {
-    private List<Map<String, Object>> externalIds = null;
+    private List<Map<String, Object>> externalIds;
 
     public RudderOption() {
         this.externalIds = RudderElementCache.getCachedContext().getExternalIds();
     }
 
-    public RudderOption putExternalId(String type, String value) {
+    public RudderOption putExternalId(String type, String id) {
         if (this.externalIds == null) {
             this.externalIds = new ArrayList<>();
         }
@@ -36,10 +36,10 @@ public class RudderOption {
             externalIdMap.put("type", type);
         }
 
-        // assign new value or update existing value
-        externalIdMap.put("value", value);
+        // assign new id or update existing id
+        externalIdMap.put("id", id);
 
-        // finally update existing position or add new value
+        // finally update existing position or add new id
         if (mapIndex == -1) { // not found in existing storage
             externalIds.add(externalIdMap);
         } else {
