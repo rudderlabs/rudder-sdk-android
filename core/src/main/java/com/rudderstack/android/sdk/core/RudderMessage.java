@@ -1,5 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.Expose;
@@ -178,5 +179,13 @@ public class RudderMessage {
 
     void setRudderOption(RudderOption rudderOption) {
         this.rudderOption = rudderOption;
+    }
+
+    /**
+     * @return Returns message level context
+     */
+    @NonNull
+    public RudderContext getContext() {
+        return context;
     }
 }

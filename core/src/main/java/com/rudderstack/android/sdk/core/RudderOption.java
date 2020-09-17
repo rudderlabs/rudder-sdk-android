@@ -43,8 +43,9 @@ public class RudderOption {
         if (mapIndex == -1) { // not found in existing storage
             externalIds.add(externalIdMap);
         } else {
-            externalIds.remove(mapIndex);
-            externalIds.add(mapIndex, externalIdMap);
+            externalIds.get(mapIndex).put("id", id);
+//            externalIds.remove(mapIndex);
+//            externalIds.add(mapIndex, externalIdMap);
         }
 
         // return for builder pattern

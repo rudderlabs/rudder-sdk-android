@@ -2,7 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 public abstract class RudderIntegration<T> {
     public interface Factory {
-        RudderIntegration<Object> create(Object settings, RudderClient client, RudderConfig config);
+        RudderIntegration<?> create(Object settings, RudderClient client, RudderConfig config);
 
         String key();
     }
