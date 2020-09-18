@@ -11,7 +11,7 @@ class RudderPreferenceManager {
     private static final String RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY = "rl_server_last_updated";
     private static final String RUDDER_TRAITS_KEY = "rl_traits";
     private static final String RUDDER_APPLICATION_INFO_KEY = "rl_application_info_key";
-    private static final String RUDDER_EXTERNAL_TRAITS_KEY = "rl_external_id";
+    private static final String RUDDER_EXTERNAL_ID_KEY = "rl_external_id";
 
     private static SharedPreferences preferences;
     private static RudderPreferenceManager instance;
@@ -59,10 +59,14 @@ class RudderPreferenceManager {
     }
 
     String getExternalIds() {
-        return preferences.getString(RUDDER_EXTERNAL_TRAITS_KEY, null);
+        return preferences.getString(RUDDER_EXTERNAL_ID_KEY, null);
     }
 
     void saveExternalIds(String externalIdsJson) {
-        preferences.edit().putString(RUDDER_EXTERNAL_TRAITS_KEY, externalIdsJson).apply();
+        preferences.edit().putString(RUDDER_EXTERNAL_ID_KEY, externalIdsJson).apply();
+    }
+
+    void clearExternalIds() {
+        preferences.edit().remove(RUDDER_EXTERNAL_ID_KEY).apply();
     }
 }
