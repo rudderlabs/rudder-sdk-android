@@ -246,13 +246,14 @@ public class RudderContext {
                 }
             }
 
+            // update local variable
+            this.externalIds = externalIds;
+
             if (preferenceManger != null) {
                 if (externalIds == null) {
                     // clear persistence storage : RESET call
                     preferenceManger.clearExternalIds();
                 } else {
-                    // update local variable
-                    this.externalIds = externalIds;
                     // update persistence storage
                     preferenceManger.saveExternalIds(new Gson().toJson(this.externalIds));
                 }
