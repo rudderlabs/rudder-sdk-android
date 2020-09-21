@@ -236,15 +236,25 @@ public class RudderContext {
         return externalIds;
     }
 
-    void updateExternalIds(@NonNull List<Map<String, Object>> externalIds) {
-        this.externalIds = externalIds;
-
-        // update persistance storage
+    void updateExternalIds(@Nullable List<Map<String, Object>> externalIds) {
         try {
+            RudderPreferenceManager preferenceManger = null;
             if (RudderClient.getInstance() != null) {
                 Application application = RudderClient.getInstance().getApplication();
                 if (application != null) {
-                    RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
+                    preferenceManger = RudderPreferenceManager.getInstance(application);
+                }
+            }
+
+            // update local variable
+            this.externalIds = externalIds;
+
+            if (preferenceManger != null) {
+                if (externalIds == null) {
+                    // clear persistence storage : RESET call
+                    preferenceManger.clearExternalIds();
+                } else {
+                    // update persistence storage
                     preferenceManger.saveExternalIds(new Gson().toJson(this.externalIds));
                 }
             }
