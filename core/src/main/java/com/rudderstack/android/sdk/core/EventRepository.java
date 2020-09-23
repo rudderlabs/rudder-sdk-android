@@ -486,20 +486,20 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
         synchronized (eventReplayMessageQueue) {
-//            if (isFactoryInitialized || fromHistory) {
-//                RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
-//                message.setIntegrations(prepareIntegrations());
-//                for (String key : integrationOperationsMap.keySet()) {
-//                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-//                    RudderIntegration<?> integration = integrationOperationsMap.get(key);
-//                    if (integration != null) {
-//                        integration.dump(message);
-//                    }
-//                }
-//            } else {
+            if (isFactoryInitialized || fromHistory) {
+                RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
+                message.setIntegrations(prepareIntegrations());
+                for (String key : integrationOperationsMap.keySet()) {
+                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                    RudderIntegration<?> integration = integrationOperationsMap.get(key);
+                    if (integration != null) {
+                        integration.dump(message);
+                    }
+                }
+            } else {
                 RudderLogger.logDebug("EventRepository: makeFactoryDump: factories are not initialized. dumping to replay queue");
                 eventReplayMessageQueue.add(message);
-//            }
+            }
         }
     }
 
