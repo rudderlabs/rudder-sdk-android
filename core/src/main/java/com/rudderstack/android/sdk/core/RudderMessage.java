@@ -49,7 +49,7 @@ public class RudderMessage {
     private transient RudderOption rudderOption;
 
     RudderMessage() {
-        context = RudderElementCache.getCachedContext();
+        this.context = RudderElementCache.getCachedContext();
         this.anonymousId = context.getDeviceId();
 
         Map<String, Object> traits = context.getTraits();
@@ -187,5 +187,9 @@ public class RudderMessage {
     @NonNull
     public RudderContext getContext() {
         return context;
+    }
+
+    void updateContext() {
+        this.context = RudderElementCache.getCachedContext();
     }
 }

@@ -149,21 +149,33 @@ public class RudderTraitsBuilder {
     }
 
     public RudderTraits build() {
+        RudderTraits.Address address = null;
+        if (this.city != null ||
+                this.country != null ||
+                this.postalCode != null ||
+                this.state != null ||
+                this.street != null) {
+            address = new RudderTraits.Address(
+                    this.city,
+                    this.country,
+                    this.postalCode,
+                    this.state,
+                    this.street
+            );
+        }
+        RudderTraits.Company company = null;
+        if (this.companyName != null || this.companyId != null || this.industry != null) {
+            company = new RudderTraits.Company(
+                    this.companyName,
+                    this.companyId,
+                    this.industry
+            );
+        }
         return new RudderTraits(
-                new RudderTraits.Address(
-                        this.city,
-                        this.country,
-                        this.postalCode,
-                        this.state,
-                        this.street
-                ),
+                address,
                 this.age,
                 this.birthDay,
-                new RudderTraits.Company(
-                        this.companyName,
-                        this.companyId,
-                        this.industry
-                ),
+                company,
                 this.createdAt,
                 this.description,
                 this.email,

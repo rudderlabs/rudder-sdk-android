@@ -144,7 +144,7 @@ public class RudderClient {
      * @return Application context
      */
     @Nullable
-    public Application getApplication() {
+    public static Application getApplication() {
         return application;
     }
 
@@ -307,6 +307,7 @@ public class RudderClient {
 
         // set message type to identify
         message.setType(MessageType.IDENTIFY);
+        message.updateContext();
 
         // dump to repository
         if (repository != null) {

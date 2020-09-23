@@ -9,7 +9,7 @@ import java.util.Map;
  * RudderContext is populated once and cached through out the lifecycle
  * */
 class RudderElementCache {
-    private static RudderContext cachedContext;
+    static RudderContext cachedContext;
 
     private RudderElementCache() {
         // stop instantiating
@@ -24,7 +24,7 @@ class RudderElementCache {
     }
 
     static RudderContext getCachedContext() {
-        return cachedContext;
+        return cachedContext.copy();
     }
 
     static void reset() {

@@ -75,7 +75,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
             RudderElementCache.initiate(_application);
 
-            String anonymousId = RudderElementCache.getCachedContext().getDeviceId();
+            String anonymousId = Utils.getDeviceId(_application);
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousId: %s", anonymousId));
             this.anonymousIdHeaderString = Base64.encodeToString(anonymousId.getBytes("UTF-8"), Base64.DEFAULT);
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousIdHeaderString: %s", this.anonymousIdHeaderString));
@@ -465,9 +465,14 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * generic method for dumping all the events
      * */
     void dump(@NonNull RudderMessage message) {
-        if (!isSDKEnabled) return;
+        if (!isSDKEnabled) {
+            return;
+        }
 
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: eventName: %s", message.getEventName()));
+        Map<String, Object> integrations = new HashMap<>();
+        integrations.put("All", true);
+        message.setIntegrations(integrations);
 
         makeFactoryDump(message, false);
         String eventJson = new Gson().toJson(message);
@@ -481,20 +486,20 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
         synchronized (eventReplayMessageQueue) {
-            if (isFactoryInitialized || fromHistory) {
-                RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
-                message.setIntegrations(prepareIntegrations());
-                for (String key : integrationOperationsMap.keySet()) {
-                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                    RudderIntegration<?> integration = integrationOperationsMap.get(key);
-                    if (integration != null) {
-                        integration.dump(message);
-                    }
-                }
-            } else {
+//            if (isFactoryInitialized || fromHistory) {
+//                RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
+//                message.setIntegrations(prepareIntegrations());
+//                for (String key : integrationOperationsMap.keySet()) {
+//                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+//                    RudderIntegration<?> integration = integrationOperationsMap.get(key);
+//                    if (integration != null) {
+//                        integration.dump(message);
+//                    }
+//                }
+//            } else {
                 RudderLogger.logDebug("EventRepository: makeFactoryDump: factories are not initialized. dumping to replay queue");
                 eventReplayMessageQueue.add(message);
-            }
+//            }
         }
     }
 
