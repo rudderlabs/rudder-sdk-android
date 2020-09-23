@@ -34,13 +34,13 @@ public class RudderContext {
     @SerializedName("userAgent")
     private String userAgent;
     @SerializedName("locale")
-    private String locale = Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
+    private String locale;
     @SerializedName("device")
     private RudderDeviceInfo deviceInfo;
     @SerializedName("network")
     private RudderNetwork networkInfo;
     @SerializedName("timezone")
-    private String timezone = Utils.getTimeZone();
+    private String timezone;
     @SerializedName("externalId")
     private List<Map<String, Object>> externalIds = null;
 
@@ -82,6 +82,8 @@ public class RudderContext {
         this.networkInfo = new RudderNetwork(application);
         this.osInfo = new RudderOSInfo();
         this.libraryInfo = new RudderLibraryInfo();
+        this.locale = Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
+        this.timezone = Utils.getTimeZone();
     }
 
     void updateTraits(RudderTraits traits) {
@@ -261,5 +263,27 @@ public class RudderContext {
         } catch (NullPointerException ex) {
             RudderLogger.logError(ex);
         }
+    }
+
+    RudderContext copy() {
+        RudderContext copy = new RudderContext();
+
+        copy.app = this.app;
+        if (this.traits != null) {
+            copy.traits = new HashMap<>(this.traits);
+        }
+        copy.libraryInfo = this.libraryInfo;
+        copy.osInfo = this.osInfo;
+        copy.screenInfo = this.screenInfo;
+        copy.userAgent = this.userAgent;
+        copy.locale = this.locale;
+        copy.deviceInfo = this.deviceInfo;
+        copy.networkInfo = this.networkInfo;
+        copy.timezone = this.timezone;
+        if (this.externalIds != null) {
+            copy.externalIds = new ArrayList<>(this.externalIds);
+        }
+
+        return copy;
     }
 }
