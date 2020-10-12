@@ -48,7 +48,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
     implementation 'com.google.android.material:material:1.2.1'
 
-    implementation 'com.rudderstack.android.sdk:core:1.0.6'
+    implementation 'com.rudderstack.android.sdk:core:1.0.7'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.rudderstack.android.integration:adjust:0.1.0'
     implementation 'com.adjust.sdk:adjust-android:4.24.1'
