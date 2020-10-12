@@ -13,17 +13,17 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val rudderClient = MainApplication.rudderClient
-
-        val properties: MutableMap<String, Any> = mutableMapOf()
-        properties["test_key_1"] = "test_value_1"
-
-        val childProperties: MutableMap<String, String> = HashMap()
-        childProperties["test_child_key_1"] = "test_child_value_1"
-        properties["test_key_2"] = childProperties
-        properties["category"] = "test_category"
-
-        rudderClient!!.track("Sample Track Event", RudderProperty().putValue(properties))
-        rudderClient.identify("test_user_id")
+//        val rudderClient = MainApplication.rudderClient
+//
+//        val properties: MutableMap<String, Any> = mutableMapOf()
+//        properties["test_key_1"] = "test_value_1"
+//
+//        val childProperties: MutableMap<String, String> = HashMap()
+//        childProperties["test_child_key_1"] = "test_child_value_1"
+//        properties["test_key_2"] = childProperties
+//        properties["category"] = "test_category"
+//
+//        rudderClient!!.track("Sample Track Event", RudderProperty().putValue(properties))
+//        rudderClient.identify("test_user_id")
     }
 }

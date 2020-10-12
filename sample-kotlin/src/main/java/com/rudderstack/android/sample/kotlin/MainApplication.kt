@@ -12,8 +12,8 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://8f27920d3fc6.ngrok.io"
-        const val CONTROL_PLANE_URL = "https://986733ed.ngrok.io"
+        const val DATA_PLANE_URL = "https://d3a1b4509d38.ngrok.io"
+        const val CONTROL_PLANE_URL = "https://d3a1b4509d38.ngrok.io"
         const val WRITE_KEY = "1cGJAn3VgQByqQsU5yhWtsK5nwx"
     }
 
@@ -25,6 +25,7 @@ class MainApplication : Application() {
             WRITE_KEY,
             RudderConfig.Builder()
                 .withDataPlaneUrl(DATA_PLANE_URL)
+                .withControlPlaneUrl(CONTROL_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
                 .withTrackLifecycleEvents(false)
                 .withRecordScreenViews(false)

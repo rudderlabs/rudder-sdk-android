@@ -11,7 +11,9 @@ public class RudderOption {
     private List<Map<String, Object>> externalIds;
 
     public RudderOption() {
-        this.externalIds = RudderElementCache.cachedContext.getExternalIds();
+        if (RudderElementCache.cachedContext != null) {
+            this.externalIds = RudderElementCache.cachedContext.getExternalIds();
+        }
     }
 
     public RudderOption putExternalId(String type, String id) {

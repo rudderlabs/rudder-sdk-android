@@ -21,13 +21,13 @@ class MainActivity : AppCompatActivity() {
 //            MainApplication.rudderClient!!.track("Test Event 3")
 //            MainApplication.rudderClient!!.track("Test Event 4")
 
-//            MainApplication.rudderClient!!.identify(
-//                "userId",
-//                RudderTraits().putFirstName("Test First Name"),
-//                RudderOption()
-//                    .putExternalId("brazeExternalId", "some_external_id_1")
-//                    .putExternalId("braze_id", "some_braze_id_2")
-//            )
+            MainApplication.rudderClient!!.identify(
+                "userId",
+                RudderTraits().putFirstName("Test First Name"),
+                RudderOption()
+                    .putExternalId("brazeExternalId", "some_external_id_1")
+                    .putExternalId("braze_id", "some_braze_id_2")
+            )
 
             MainApplication.rudderClient!!.track("Test Event")
         }, 2000)
