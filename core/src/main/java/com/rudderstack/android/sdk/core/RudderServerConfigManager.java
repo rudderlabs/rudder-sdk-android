@@ -23,28 +23,20 @@ class RudderServerConfigManager {
     private Map<String, Object> integrationsMap = null;
     private Utils.NetworkResponses receivedError = Utils.NetworkResponses.SUCCESS;
 
-    static RudderServerConfigManager getInstance(Application _application, String _writeKey, RudderConfig config) {
-        if (instance == null) {
-            RudderLogger.logDebug("Creating RudderServerConfigManager instance");
-            instance = new RudderServerConfigManager(_application, _writeKey, config);
-        }
-        return instance;
-    }
 
-    private RudderServerConfigManager(Application _application, String _writeKey, RudderConfig _config) {
+    RudderServerConfigManager(Application _application, String _writeKey, RudderConfig _config) {
         preferenceManger = RudderPreferenceManager.getInstance(_application);
-        serverConfig = retrieveConfig();
         rudderConfig = _config;
-        boolean isConfigOutdated = isServerConfigOutDated();
-        if (serverConfig == null) {
-            RudderLogger.logDebug("Server config is not present in preference storage. downloading config");
-            downloadConfig(_writeKey);
-        } else {
-            if (isConfigOutdated) {
-                RudderLogger.logDebug("Server config is outdated. downloading config again");
-                downloadConfig(_writeKey);
-            } else {
-                RudderLogger.logDebug("Server config found. Using existing config");
+        // fetch server config
+        RudderLogger.logDebug(String.format("Downloading server config for writeKey: %s", _writeKey));
+        boolean downloadSuccessful =  downloadConfig(_writeKey);
+        if (!downloadSuccessful) {
+            RudderLogger.logDebug("Server config download failed.Using the last saved config from storage");
+            // retrieve last saved config from storage
+            serverConfig = retrieveConfig();
+            if (serverConfig == null) {
+                RudderLogger.logDebug("Server config retrieval failed.No config found in storage");
+                RudderLogger.logError(String.format("Failed to fetch server config for writeKey: %s", _writeKey));
             }
         }
     }
@@ -67,19 +59,19 @@ class RudderServerConfigManager {
         return new Gson().fromJson(configJson, RudderServerConfig.class);
     }
 
-    private void downloadConfig(final String _writeKey) {
+    private boolean downloadConfig(final String _writeKey) {
         // don't try to download anything if writeKey is not valid
         if (TextUtils.isEmpty(_writeKey)) {
             receivedError = Utils.NetworkResponses.WRITE_KEY_ERROR;
-            return;
+            return false;
         }
-
+        final boolean[] isDone = {false};
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                boolean isDone = false;
+                isDone[0] = false;
                 int retryCount = 0, retryTimeOut = 10;
-                while (!isDone && retryCount <= 3) {
+                while (!isDone[0] && retryCount <= 3) {
                     try {
                         String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig";
                         RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configUrl: %s", configUrl));
@@ -115,7 +107,7 @@ class RudderServerConfigManager {
                             serverConfig = new Gson().fromJson(configJson, RudderServerConfig.class);
 
                             // reset retry count
-                            isDone = true;
+                            isDone[0] = true;
 
                             RudderLogger.logInfo("RudderServerConfigManager: downloadConfig: server config download successful");
                         } else {
@@ -159,6 +151,13 @@ class RudderServerConfigManager {
         });
         RudderLogger.logVerbose("Download Thread Id:" + thread.getId());
         thread.start();
+        try {
+            // wait for download to finish
+            thread.join();
+        } catch (InterruptedException ex) {
+            RudderLogger.logError(ex);
+        }
+        return isDone[0];
     }
 
     RudderServerConfig getConfig() {

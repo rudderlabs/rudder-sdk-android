@@ -86,7 +86,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
             // 4. initiate RudderServerConfigManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
-            this.configManager = RudderServerConfigManager.getInstance(_application, _writeKey, _config);
+            this.configManager = new RudderServerConfigManager(_application, _writeKey, _config);
 
             // 5. start processor thread
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
