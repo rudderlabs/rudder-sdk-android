@@ -18,7 +18,7 @@ repositories {
 ```
 2. Add the dependency under ```dependencies```
 ```
-implementation 'com.rudderstack.android.sdk:core:1.0.7'
+implementation 'com.rudderstack.android.sdk:core:1.0.8'
 ```
 
 ## Initialize ```RudderClient```

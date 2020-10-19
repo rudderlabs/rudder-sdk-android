@@ -21,6 +21,7 @@ public class RudderClient {
     // repository instance
     private static EventRepository repository;
     private static Application application;
+    private static String _advertisingId;
 
     /*
      * private constructor
@@ -108,7 +109,7 @@ public class RudderClient {
             // initiate EventRepository class
             if (application != null && writeKey != null) {
                 RudderLogger.logVerbose("getInstance: creating EventRepository.");
-                repository = new EventRepository(application, writeKey, config);
+                repository = new EventRepository(application, writeKey, config, _advertisingId);
             }
         }
         return instance;
@@ -166,7 +167,9 @@ public class RudderClient {
      */
     public void track(@NonNull RudderMessage message) {
         message.setType(MessageType.TRACK);
-        if (repository != null) repository.dump(message);
+        if (repository != null) {
+            repository.dump(message);
+        }
     }
 
     /**
@@ -227,7 +230,9 @@ public class RudderClient {
      */
     public void screen(@NonNull RudderMessage message) {
         message.setType(MessageType.SCREEN);
-        if (repository != null) repository.dump(message);
+        if (repository != null) {
+            repository.dump(message);
+        }
     }
 
     /**
@@ -400,7 +405,9 @@ public class RudderClient {
      */
     void alias(@NonNull RudderMessage message) {
         message.setType(MessageType.ALIAS);
-        if (repository != null) repository.dump(message);
+        if (repository != null) {
+            repository.dump(message);
+        }
     }
 
     /**
@@ -468,7 +475,9 @@ public class RudderClient {
      */
     public void group(@NonNull RudderMessage message) {
         message.setType(MessageType.GROUP);
-        if (repository != null) repository.dump(message);
+        if (repository != null) {
+            repository.dump(message);
+        }
     }
 
     /**
@@ -534,6 +543,30 @@ public class RudderClient {
     }
 
     /**
+     * Set the AdvertisingId yourself. If set, SDK will not capture idfa automatically
+     *
+     * <b>Call this method before initializing the RudderClient</b>
+     *
+     * @param advertisingId IDFA for the device
+     */
+    public static void updateWithAdvertisingId(@Nullable String advertisingId) {
+        if (instance != null) {
+            RudderLogger.logWarn("Set the advertisingId before calling getInstance");
+            return;
+        }
+        _advertisingId = advertisingId;
+    }
+
+    /**
+     * Set the push token for the device to be passed to the downstream destinations
+     *
+     * @param deviceToken Push Token from FCM
+     */
+    public void putDeviceToken(@Nullable String deviceToken) {
+        RudderElementCache.cachedContext.putDeviceToken(deviceToken);
+    }
+
+    /**
      * Reset SDK
      */
     public void reset() {
@@ -547,7 +580,9 @@ public class RudderClient {
      * Flush Events
      */
     public void flush() {
-        if (repository != null) repository.flush();
+        if (repository != null) {
+            repository.flush();
+        }
     }
 
     /**
@@ -557,11 +592,15 @@ public class RudderClient {
      * @param callback RudderClient.Callback object
      */
     public void onIntegrationReady(String key, Callback callback) {
-        if (repository != null) repository.onIntegrationReady(key, callback);
+        if (repository != null) {
+            repository.onIntegrationReady(key, callback);
+        }
     }
 
     public void optOut() {
-        if (repository != null) repository.optOut();
+        if (repository != null) {
+            repository.optOut();
+        }
     }
 
     /**
@@ -572,7 +611,9 @@ public class RudderClient {
     }
 
     public void shutdown() {
-        if (repository != null) repository.shutdown();
+        if (repository != null) {
+            repository.shutdown();
+        }
     }
 
     /*

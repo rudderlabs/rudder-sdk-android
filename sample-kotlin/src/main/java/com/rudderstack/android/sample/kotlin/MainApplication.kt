@@ -12,7 +12,7 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://d3a1b4509d38.ngrok.io"
+        const val DATA_PLANE_URL = "https://e051df6962db.ngrok.io"
         const val CONTROL_PLANE_URL = "https://d3a1b4509d38.ngrok.io"
         const val WRITE_KEY = "1cGJAn3VgQByqQsU5yhWtsK5nwx"
     }
@@ -20,18 +20,20 @@ class MainApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,
             RudderConfig.Builder()
                 .withDataPlaneUrl(DATA_PLANE_URL)
-                .withControlPlaneUrl(CONTROL_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
-                .withTrackLifecycleEvents(false)
-                .withRecordScreenViews(false)
+                .withTrackLifecycleEvents(true)
+                .withRecordScreenViews(true)
                 .build()
         )
 
-        rudderClient!!.rudderContext.putDeviceToken("some_device_token")
+        RudderClient.updateWithAdvertisingId("some_idfa");
+
+        rudderClient!!.putDeviceToken("some_device_token")
     }
 }

@@ -1,12 +1,6 @@
 package com.rudderstack.android.sample.kotlin
 
-import android.app.Activity
 import android.app.Application
-import android.os.Bundle
-import android.util.Log
-import com.adjust.sdk.Adjust
-import com.adjust.sdk.AdjustConfig
-import com.adjust.sdk.LogLevel
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
@@ -15,7 +9,7 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://8a7ec66bc40a.ngrok.io"
+        const val DATA_PLANE_URL = "https://69f2b920a648.ngrok.io"
         const val CONTROL_PLANE_URL = "https://8a7ec66bc40a.ngrok.io"
         const val WRITE_KEY = "1ZOVzjHRL0Vpk627qpkmcIYLrv3"
     }
@@ -37,18 +31,18 @@ class MainApplication : Application() {
 //
 //        rudderClient!!.rudderContext.putDeviceToken("some_device_token")
 
-        val adjust = Adjust.getDefaultInstance()
-        val apiToken: String? = "t1yurrb968zk"
-        val delay = 7.0
-        val adjustConfig = AdjustConfig(
-            this,
-            apiToken,
-            AdjustConfig.ENVIRONMENT_SANDBOX
-        )
-        adjustConfig.setLogLevel(LogLevel.VERBOSE)
-        if (delay > 0) {
-            adjustConfig.setDelayStart(delay)
-        }
+//        val adjust = Adjust.getDefaultInstance()
+//        val apiToken: String? = "t1yurrb968zk"
+//        val delay = 7.0
+//        val adjustConfig = AdjustConfig(
+//            this,
+//            apiToken,
+//            AdjustConfig.ENVIRONMENT_SANDBOX
+//        )
+//        adjustConfig.setLogLevel(LogLevel.VERBOSE)
+//        if (delay > 0) {
+//            adjustConfig.setDelayStart(delay)
+//        }
 
 //        adjustConfig.setOnAttributionChangedListener { attribution ->
 //            Log.d("AdjustFactory", "Attribution callback called!")
@@ -75,8 +69,8 @@ class MainApplication : Application() {
 //            Log.d("AdjustFactory", "Deep link URL: $deeplink")
 //            true
 //        }
-        adjustConfig.setSendInBackground(true)
-        adjust.onCreate(adjustConfig)
+//        adjustConfig.setSendInBackground(true)
+//        adjust.onCreate(adjustConfig)
 //        this.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
 //            override fun onActivityCreated(activity: Activity, bundle: Bundle) {}
 //            override fun onActivityStarted(activity: Activity) {}
