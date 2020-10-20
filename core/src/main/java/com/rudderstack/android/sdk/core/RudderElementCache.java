@@ -15,10 +15,10 @@ class RudderElementCache {
         // stop instantiating
     }
 
-    static void initiate(Application application) {
+    static void initiate(Application application, String advertisingId) {
         if (cachedContext == null) {
             RudderLogger.logDebug("RudderElementCache: initiating RudderContext");
-            cachedContext = new RudderContext(application);
+            cachedContext = new RudderContext(application, advertisingId);
             cachedContext.updateDeviceWithAdId();
         }
     }

@@ -28,8 +28,12 @@ class RudderDeviceInfo {
     @SerializedName("advertisingId")
     private String advertisingId;
 
-    RudderDeviceInfo(String deviceId) {
+    RudderDeviceInfo(String deviceId, String advertisingId) {
         this.deviceId = deviceId;
+        if (advertisingId != null && !advertisingId.isEmpty()) {
+            this.advertisingId = advertisingId;
+            this.adTrackingEnabled = true;
+        }
     }
 
     String getDeviceId() {

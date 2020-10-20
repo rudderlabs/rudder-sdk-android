@@ -49,7 +49,7 @@ public class RudderContext {
         // cachedContext is used every time, once initialized
     }
 
-    RudderContext(Application application) {
+    RudderContext(Application application, String advertisingId) {
         String deviceId = Utils.getDeviceId(application);
 
         this.app = new RudderApp(application);
@@ -78,7 +78,7 @@ public class RudderContext {
 
         this.screenInfo = new RudderScreenInfo(application);
         this.userAgent = System.getProperty("http.agent");
-        this.deviceInfo = new RudderDeviceInfo(deviceId);
+        this.deviceInfo = new RudderDeviceInfo(deviceId, advertisingId);
         this.networkInfo = new RudderNetwork(application);
         this.osInfo = new RudderOSInfo();
         this.libraryInfo = new RudderLibraryInfo();
@@ -105,8 +105,8 @@ public class RudderContext {
     void persistTraits() {
         // persist updated traits to sharedPreference
         try {
-            if (RudderClient.getInstance() != null && RudderClient.getInstance().getApplication() != null) {
-                RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getInstance().getApplication());
+            if (RudderClient.getApplication() != null) {
+                RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getApplication());
                 preferenceManger.saveTraits(new Gson().toJson(this.traits));
             }
         } catch (NullPointerException ex) {
@@ -126,8 +126,21 @@ public class RudderContext {
         return deviceInfo.getDeviceId();
     }
 
-    public void putDeviceToken(String token) {
-        this.deviceInfo.setToken(token);
+    // set the push token as passed by the developer
+    void putDeviceToken(String token) {
+        if (token != null && !token.isEmpty()) {
+            this.deviceInfo.setToken(token);
+        }
+    }
+
+    // set the values provided by the user
+    void updateWithAdvertisingId(String advertisingId) {
+        if (advertisingId == null || advertisingId.isEmpty()) {
+            this.deviceInfo.setAdTrackingEnabled(false);
+        } else {
+            this.deviceInfo.setAdTrackingEnabled(true);
+            this.deviceInfo.setAdvertisingId(advertisingId);
+        }
     }
 
     void updateDeviceWithAdId() {
@@ -158,12 +171,12 @@ public class RudderContext {
     }
 
     private boolean getGooglePlayServicesAdvertisingID() throws Exception {
-        if (RudderClient.getInstance() == null || RudderClient.getInstance().getApplication() == null) {
+        if (RudderClient.getApplication() == null) {
             return false;
         }
 
         Object advertisingInfo = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient")
-                .getMethod("getAdvertisingIdInfo", Context.class).invoke(null, RudderClient.getInstance().getApplication());
+                .getMethod("getAdvertisingIdInfo", Context.class).invoke(null, RudderClient.getApplication());
 
         if (advertisingInfo == null) {
             return false;
@@ -178,18 +191,22 @@ public class RudderContext {
             return false;
         }
 
-        this.deviceInfo.setAdvertisingId((String) advertisingInfo.getClass().getMethod("getId").invoke(advertisingInfo));
-        this.deviceInfo.setAdTrackingEnabled(true);
+        if (this.deviceInfo.getAdvertisingId() == null || this.deviceInfo.getAdvertisingId().isEmpty()) {
+            // set the values if and only if the values are not set
+            // if value exists, it must have been set by the developer. don't overwrite
+            this.deviceInfo.setAdvertisingId((String) advertisingInfo.getClass().getMethod("getId").invoke(advertisingInfo));
+            this.deviceInfo.setAdTrackingEnabled(true);
+        }
 
         return true;
     }
 
     private boolean getAmazonFireAdvertisingID() throws Exception {
-        if (RudderClient.getInstance() == null || RudderClient.getInstance().getApplication() == null) {
+        if (RudderClient.getApplication() == null) {
             return false;
         }
 
-        ContentResolver contentResolver = RudderClient.getInstance().getApplication().getContentResolver();
+        ContentResolver contentResolver = RudderClient.getApplication().getContentResolver();
 
         boolean limitAdTracking = Settings.Secure.getInt(contentResolver, "limit_ad_tracking") != 0;
 
@@ -199,8 +216,12 @@ public class RudderContext {
             return false;
         }
 
-        this.deviceInfo.setAdvertisingId(Settings.Secure.getString(contentResolver, "advertising_id"));
-        this.deviceInfo.setAdTrackingEnabled(true);
+        if (this.deviceInfo.getAdvertisingId() == null || this.deviceInfo.getAdvertisingId().isEmpty()) {
+            // set the values if and only if the values are not set
+            // if value exists, it must have been set by the developer. don't overwrite
+            this.deviceInfo.setAdvertisingId(Settings.Secure.getString(contentResolver, "advertising_id"));
+            this.deviceInfo.setAdTrackingEnabled(true);
+        }
 
         return true;
     }
@@ -241,11 +262,9 @@ public class RudderContext {
     void updateExternalIds(@Nullable List<Map<String, Object>> externalIds) {
         try {
             RudderPreferenceManager preferenceManger = null;
-            if (RudderClient.getInstance() != null) {
-                Application application = RudderClient.getInstance().getApplication();
-                if (application != null) {
-                    preferenceManger = RudderPreferenceManager.getInstance(application);
-                }
+            Application application = RudderClient.getApplication();
+            if (application != null) {
+                preferenceManger = RudderPreferenceManager.getInstance(application);
             }
 
             // update local variable

@@ -58,7 +58,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * 5. start processor thread
      * 6. initiate factories
      * */
-    EventRepository(Application _application, String _writeKey, RudderConfig _config) {
+    EventRepository(Application _application, String _writeKey, RudderConfig _config, String _advertisingId) {
         // 1. set the values of writeKey, config
         try {
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: writeKey: %s", _writeKey));
@@ -73,7 +73,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         try {
             // 2. initiate RudderElementCache
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
-            RudderElementCache.initiate(_application);
+            RudderElementCache.initiate(_application, _advertisingId);
 
             String anonymousId = Utils.getDeviceId(_application);
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousId: %s", anonymousId));
