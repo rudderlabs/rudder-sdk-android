@@ -1,3 +1,5 @@
+[ ![Download](https://api.bintray.com/packages/rudderstack/rudderstack/core/images/download.svg) ](https://bintray.com/rudderstack/rudderstack/core/_latestVersion)
+
 # What is Rudder?
 
 **Short answer:**
