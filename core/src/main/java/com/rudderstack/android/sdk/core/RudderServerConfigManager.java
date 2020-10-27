@@ -14,13 +14,14 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 class RudderServerConfigManager {
     private static RudderPreferenceManager preferenceManger;
     private static RudderServerConfigManager instance;
     private static RudderServerConfig serverConfig;
-    private boolean isConfigInitialized = false;
     private static RudderConfig rudderConfig;
+    private static ReentrantLock lock = new ReentrantLock();
     private Map<String, Object> integrationsMap = null;
     private Utils.NetworkResponses receivedError = Utils.NetworkResponses.SUCCESS;
 
@@ -59,24 +60,24 @@ class RudderServerConfigManager {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                boolean downloadSuccessful = downloadConfig(_writeKey);
-                if (!downloadSuccessful) {
-                    RudderLogger.logDebug("Server config download failed.Using the last saved config from storage");
-                    // retrieve last saved config from storage
-                    serverConfig = retrieveConfig();
-                    if (serverConfig == null) {
-                        RudderLogger.logDebug("Server config retrieval failed.No config found in storage");
-                        RudderLogger.logError(String.format("Failed to fetch server config for writeKey: %s", _writeKey));
-                    }
+                // download and store config to storage
+                downloadConfig(_writeKey);
+                // retrieve config from storage
+
+                lock.lock();
+                serverConfig = retrieveConfig();
+                if (serverConfig == null) {
+                    RudderLogger.logDebug("Server config retrieval failed.No config found in storage");
+                    RudderLogger.logError(String.format("Failed to fetch server config for writeKey: %s", _writeKey));
                 }
-                isConfigInitialized = true;
+                lock.unlock();
             }
         });
         RudderLogger.logVerbose("Download Thread Id:" + thread.getId());
         thread.start();
     }
 
-    private boolean downloadConfig(final String _writeKey) {
+    private void downloadConfig(final String _writeKey) {
         RudderLogger.logDebug(String.format("Downloading server config for writeKey: %s", _writeKey));
         boolean isDone = false;
         int retryCount = 0, retryTimeOut = 10;
@@ -112,9 +113,6 @@ class RudderServerConfigManager {
                     preferenceManger.updateLastUpdatedTime();
                     preferenceManger.saveConfigJson(configJson);
 
-                    // update server config as well
-                    serverConfig = new Gson().fromJson(configJson, RudderServerConfig.class);
-
                     // reset retry count
                     isDone = true;
 
@@ -137,7 +135,7 @@ class RudderServerConfigManager {
                     // TODO : change the logic based on a defined API response or responseCode
                     if (baos.toString().equals("{\"message\":\"Invalid write key\"}")) {
                         receivedError = Utils.NetworkResponses.WRITE_KEY_ERROR;
-                        return false;
+                        return;
                     }
                     RudderLogger.logInfo("Retrying to download in " + retryTimeOut + "s");
 
@@ -156,17 +154,17 @@ class RudderServerConfigManager {
                 }
             }
         }
-        return isDone;
+        if (!isDone) {
+            RudderLogger.logDebug("Server config download failed.Using the last saved config from storage");
+        }
     }
 
     RudderServerConfig getConfig() {
-        if (!isConfigInitialized) {
-            return null;
-        }
-        if (serverConfig == null) {
-            serverConfig = retrieveConfig();
-        }
-        return serverConfig;
+        RudderServerConfig config = null;
+        lock.lock();
+        config = serverConfig;
+        lock.unlock();
+        return config;
     }
 
     Utils.NetworkResponses getError() {
