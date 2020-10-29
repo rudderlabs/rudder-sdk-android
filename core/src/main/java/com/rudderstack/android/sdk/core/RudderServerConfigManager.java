@@ -80,7 +80,7 @@ class RudderServerConfigManager {
     private void downloadConfig(final String _writeKey) {
         RudderLogger.logDebug(String.format("Downloading server config for writeKey: %s", _writeKey));
         boolean isDone = false;
-        int retryCount = 0, retryTimeOut = 10;
+        int retryCount = 0;
         while (!isDone && retryCount <= 3) {
             try {
                 String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig";
@@ -137,18 +137,18 @@ class RudderServerConfigManager {
                         receivedError = Utils.NetworkResponses.WRITE_KEY_ERROR;
                         return;
                     }
-                    RudderLogger.logInfo("Retrying to download in " + retryTimeOut + "s");
 
                     retryCount += 1;
+                    RudderLogger.logInfo("downloadConfig: Retrying to download in " + retryCount + "s");
                     receivedError = Utils.NetworkResponses.ERROR;
-                    Thread.sleep(retryCount * retryTimeOut * 1000);
+                    Thread.sleep(retryCount * 1000);
                 }
             } catch (Exception ex) {
                 RudderLogger.logError(ex);
-                RudderLogger.logInfo("Retrying to download in " + retryTimeOut + "s");
                 retryCount += 1;
+                RudderLogger.logInfo("downloadConfig: Retrying to download in " + retryCount + "s");
                 try {
-                    Thread.sleep(retryCount * retryTimeOut * 1000);
+                    Thread.sleep(retryCount * 1000);
                 } catch (InterruptedException e) {
                     RudderLogger.logError(e);
                 }
