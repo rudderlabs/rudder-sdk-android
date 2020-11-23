@@ -192,4 +192,11 @@ public class RudderMessage {
     void updateContext() {
         this.context = RudderElementCache.getCachedContext();
     }
+
+    /**
+     * @return Group ID for the event
+     */
+    public String getGroupId() {
+        return groupId;
+    }
 }
