@@ -197,6 +197,6 @@ public class RudderMessage {
      * @return Group ID for the event
      */
     public String getGroupId() {
-        return groupId;
+        return this.groupId;
     }
 }
