@@ -12,15 +12,16 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://e051df6962db.ngrok.io"
-        const val CONTROL_PLANE_URL = "https://d3a1b4509d38.ngrok.io"
+        const val DATA_PLANE_URL = "https://a4f291d1e130.ngrok.io"
+        const val CONTROL_PLANE_URL = "https://a4f291d1e130.ngrok.io"
         const val WRITE_KEY = "1cGJAn3VgQByqQsU5yhWtsK5nwx"
     }
 
     override fun onCreate() {
         super.onCreate()
 
-
+        RudderClient.setAnonymousId("31de5a69-c27c-4514-bee2-eb94ad5c0b3a");
+        RudderClient.updateWithAdvertisingId("some_idfa");
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,
@@ -31,9 +32,6 @@ class MainApplication : Application() {
                 .withRecordScreenViews(true)
                 .build()
         )
-
-        RudderClient.updateWithAdvertisingId("some_idfa");
-
         rudderClient!!.putDeviceToken("some_device_token")
     }
 }

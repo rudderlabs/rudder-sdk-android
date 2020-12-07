@@ -50,7 +50,7 @@ public class RudderMessage {
 
     RudderMessage() {
         this.context = RudderElementCache.getCachedContext();
-        this.anonymousId = context.getDeviceId();
+        this.anonymousId = RudderContext.getAnonymousId();
 
         Map<String, Object> traits = context.getTraits();
         if (traits != null && traits.containsKey("id")) {

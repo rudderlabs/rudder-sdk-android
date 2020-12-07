@@ -17,6 +17,8 @@ class MainApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        RudderClient.
+
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,
