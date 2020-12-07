@@ -7,6 +7,7 @@ import android.provider.Settings;
 import android.util.Pair;
 
 import com.google.gson.annotations.SerializedName;
+import com.rudderstack.android.sdk.core.util.Utils;
 
 import static com.rudderstack.android.sdk.core.util.Utils.isOnClassPath;
 
@@ -28,8 +29,8 @@ class RudderDeviceInfo {
     @SerializedName("advertisingId")
     private String advertisingId;
 
-    RudderDeviceInfo(String deviceId, String advertisingId) {
-        this.deviceId = deviceId;
+    RudderDeviceInfo(String advertisingId) {
+        this.deviceId = Utils.getDeviceId(RudderClient.getApplication());
         if (advertisingId != null && !advertisingId.isEmpty()) {
             this.advertisingId = advertisingId;
             this.adTrackingEnabled = true;

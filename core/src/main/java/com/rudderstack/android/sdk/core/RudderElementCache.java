@@ -2,6 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 import android.app.Application;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,10 +16,10 @@ class RudderElementCache {
         // stop instantiating
     }
 
-    static void initiate(Application application, String advertisingId) {
+    static void initiate(Application application, String anonymousId, String advertisingId) {
         if (cachedContext == null) {
             RudderLogger.logDebug("RudderElementCache: initiating RudderContext");
-            cachedContext = new RudderContext(application, advertisingId);
+            cachedContext = new RudderContext(application, anonymousId, advertisingId);
             cachedContext.updateDeviceWithAdId();
         }
     }
@@ -43,6 +44,12 @@ class RudderElementCache {
 
     public static void updateExternalIds(List<Map<String, Object>> externalIds) {
         cachedContext.updateExternalIds(externalIds);
+    }
+
+    public static void setAnonymousId(String anonymousId) {
+        Map<String, Object> traits =new HashMap<>();
+        traits.put("anonymousId",anonymousId);
+        cachedContext.updateTraitsMap(traits);
     }
 }
 

@@ -22,6 +22,7 @@ public class RudderClient {
     private static EventRepository repository;
     private static Application application;
     private static String _advertisingId;
+    private static String _anonymousId;
 
     /*
      * private constructor
@@ -109,7 +110,7 @@ public class RudderClient {
             // initiate EventRepository class
             if (application != null && writeKey != null) {
                 RudderLogger.logVerbose("getInstance: creating EventRepository.");
-                repository = new EventRepository(application, writeKey, config, _advertisingId);
+                repository = new EventRepository(application, writeKey, config, _anonymousId, _advertisingId);
             }
         }
         return instance;
@@ -564,6 +565,19 @@ public class RudderClient {
      */
     public void putDeviceToken(@Nullable String deviceToken) {
         RudderElementCache.cachedContext.putDeviceToken(deviceToken);
+    }
+
+    /**
+     * Set the anonymousId for the device to be used further
+     *
+     * @param anonymousId AnonymousId you want to use for the application
+     */
+    public static void setAnonymousId(String anonymousId) {
+        if (instance != null) {
+            RudderLogger.logWarn("Set the anonymousId before calling getInstance");
+            return;
+        }
+        _anonymousId = anonymousId;
     }
 
     /**

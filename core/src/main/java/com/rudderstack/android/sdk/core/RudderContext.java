@@ -4,8 +4,8 @@ import android.app.Application;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.provider.Settings;
+import android.text.TextUtils;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
@@ -44,13 +44,18 @@ public class RudderContext {
     @SerializedName("externalId")
     private List<Map<String, Object>> externalIds = null;
 
+    private static transient String _anonymousId;
+
     private RudderContext() {
         // stop instantiating without application instance.
         // cachedContext is used every time, once initialized
     }
 
-    RudderContext(Application application, String advertisingId) {
-        String deviceId = Utils.getDeviceId(application);
+    RudderContext(Application application, String anonymousId, String advertisingId) {
+        if (TextUtils.isEmpty(anonymousId)) {
+            anonymousId = Utils.getDeviceId(application);
+        }
+        _anonymousId = anonymousId;
 
         this.app = new RudderApp(application);
 
@@ -59,7 +64,7 @@ public class RudderContext {
         String traitsJson = preferenceManger.getTraits();
         RudderLogger.logDebug(String.format(Locale.US, "Traits from persistence storage%s", traitsJson));
         if (traitsJson == null) {
-            RudderTraits traits = new RudderTraits(deviceId);
+            RudderTraits traits = new RudderTraits(anonymousId);
             this.traits = Utils.convertToMap(new Gson().toJson(traits));
             this.persistTraits();
             RudderLogger.logDebug("New traits has been saved");
@@ -78,7 +83,7 @@ public class RudderContext {
 
         this.screenInfo = new RudderScreenInfo(application);
         this.userAgent = System.getProperty("http.agent");
-        this.deviceInfo = new RudderDeviceInfo(deviceId, advertisingId);
+        this.deviceInfo = new RudderDeviceInfo(advertisingId);
         this.networkInfo = new RudderNetwork(application);
         this.osInfo = new RudderOSInfo();
         this.libraryInfo = new RudderLibraryInfo();
@@ -89,7 +94,7 @@ public class RudderContext {
     void updateTraits(RudderTraits traits) {
         // if traits is null reset the traits to a new one with only anonymousId
         if (traits == null) {
-            traits = new RudderTraits(this.getDeviceId());
+            traits = new RudderTraits();
         }
 
         // convert the whole traits to map and take care of the extras
@@ -282,6 +287,10 @@ public class RudderContext {
         } catch (NullPointerException ex) {
             RudderLogger.logError(ex);
         }
+    }
+
+    static String getAnonymousId() {
+        return _anonymousId;
     }
 
     RudderContext copy() {

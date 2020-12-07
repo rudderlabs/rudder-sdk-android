@@ -265,7 +265,7 @@ public class RudderTraits {
     public RudderTraits() {
         Application application = RudderClient.getApplication();
         if (application != null) {
-            this.anonymousId = Utils.getDeviceId(application);
+            this.anonymousId = RudderContext.getAnonymousId();
         }
     }
 
@@ -301,7 +301,7 @@ public class RudderTraits {
     public RudderTraits(Address address, String age, String birthday, Company company, String createdAt, String description, String email, String firstName, String gender, String id, String lastName, String name, String phone, String title, String userName) {
         Application application = RudderClient.getApplication();
         if (application != null) {
-            this.anonymousId = Utils.getDeviceId(application);
+            this.anonymousId = RudderContext.getAnonymousId();
         }
         this.address = address;
         this.age = age;
