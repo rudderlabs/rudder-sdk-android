@@ -86,7 +86,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
             // 4. initiate RudderServerConfigManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
-            this.configManager = RudderServerConfigManager.getInstance(_application, _writeKey, _config);
+            this.configManager = new RudderServerConfigManager(_application, _writeKey, _config);
 
             // 5. start processor thread
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
@@ -139,8 +139,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         } else {
                             retryCount += 1;
                             RudderLogger.logDebug("EventRepository: initiateFactories: retry count: " + retryCount);
-                            RudderLogger.logInfo("Retrying in " + retryCount + "s");
-                            Thread.sleep(retryCount * 1000);
+                            RudderLogger.logInfo("initiateSDK: Retrying in " + retryCount * 2 + "s");
+                            Thread.sleep(retryCount * 2 * 1000);
                         }
                     }
                 } catch (Exception ex) {
@@ -312,7 +312,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             RudderLogger.logInfo("Wrong WriteKey. Aborting");
                             break;
                         } else if (networkResponse == Utils.NetworkResponses.ERROR) {
-                            RudderLogger.logInfo("Retrying in " + sleepCount + "s");
+                            RudderLogger.logInfo("flushEvents: Retrying in " + sleepCount + "s");
                             Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000);
                         } else {
                             // retry entire logic in 1 second
