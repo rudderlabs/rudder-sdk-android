@@ -285,9 +285,9 @@ public class RudderClient {
      */
     public void screen(@NonNull String screenName, @Nullable RudderProperty property, @Nullable RudderOption option) {
         if (property == null) {
-	        property = new RudderProperty();
+            property = new RudderProperty();
         }
-        property.put("name",screenName);
+        property.put("name", screenName);
         screen(new RudderMessageBuilder()
                 .setEventName(screenName)
                 .setProperty(property)
@@ -445,10 +445,11 @@ public class RudderClient {
             prevUserId = (String) traits.get("userId");
         } else if (traits.containsKey("id")) {
             prevUserId = (String) traits.get("id");
+        } else {
+            prevUserId = RudderContext.getAnonymousId();
         }
-        if (prevUserId != null) {
-            builder.setPreviousId(prevUserId);
-        }
+
+        builder.setPreviousId(prevUserId);
         traits.put("userId", newId);
         traits.put("id", newId);
         RudderMessage message = builder.build();
