@@ -284,7 +284,9 @@ public class RudderClient {
      * @param option     Options related to this screen call
      */
     public void screen(@NonNull String screenName, @Nullable RudderProperty property, @Nullable RudderOption option) {
-        if (property == null) property = new RudderProperty();
+        if (property == null) {
+	        property = new RudderProperty();
+        }
         property.put("name",screenName);
         screen(new RudderMessageBuilder()
                 .setEventName(screenName)
