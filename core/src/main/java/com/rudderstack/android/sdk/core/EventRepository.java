@@ -392,73 +392,73 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * */
     private Utils.NetworkResponses flushEventsToServer(String payload) {
         try {
+            RudderLogger.logDebug("Ruchira inside flushevents");
+
             if (TextUtils.isEmpty(this.authHeaderString)) {
                 RudderLogger.logError("EventRepository: flushEventsToServer: WriteKey was not correct. Aborting flush to server");
                 return null;
             }
 
-            // get endPointUrl form config object
-            String dataPlaneEndPoint = config.getDataPlaneUrl() + "v1/batch";
-            RudderLogger.logDebug("EventRepository: flushEventsToServer: dataPlaneEndPoint: " + dataPlaneEndPoint);
+            int backOffCount = 0;
+            while (backOffCount < 5) {
+                // get endPointUrl form config object
+                String dataPlaneEndPoint = config.getDataPlaneUrl() + "v1/batch";
+                RudderLogger.logDebug("EventRepository: flushEventsToServer: dataPlaneEndPoint: " + dataPlaneEndPoint);
 
-            // create url object
-            URL url = new URL(dataPlaneEndPoint);
-            // get connection object
-            HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
-            // set connection object to return output
-            httpConnection.setDoOutput(true);
-            //  set content type for network request
-            httpConnection.setRequestProperty("Content-Type", "application/json");
-            // set authorization header
-            httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", this.authHeaderString));
-            // set anonymousId header for definitive routing
-            httpConnection.setRequestProperty("AnonymousId", this.anonymousIdHeaderString);
-            // set request method
-            httpConnection.setRequestMethod("POST");
-            // get output stream and write payload content
-            OutputStream os = httpConnection.getOutputStream();
-            OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
-            osw.write(payload);
-            osw.flush();
-            osw.close();
-            os.close();
-            // create connection
-            httpConnection.connect();
-            // get input stream from connection to get output from the server
-            if (httpConnection.getResponseCode() == 200) {
-                BufferedInputStream bis = new BufferedInputStream(httpConnection.getInputStream());
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                int res = bis.read();
-                // read response from the server
-                while (res != -1) {
-                    baos.write((byte) res);
-                    res = bis.read();
-                }
-                // finally return response when reading from server is completed
-                if (baos.toString().equalsIgnoreCase("OK")) {
+                // create url object
+                URL url = new URL(dataPlaneEndPoint);
+                // get connection object
+                HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+                // set connection object to return output
+                httpConnection.setDoOutput(true);
+                //  set content type for network request
+                httpConnection.setRequestProperty("Content-Type", "application/json");
+                // set authorization header
+                httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", this.authHeaderString));
+                // set anonymousId header for definitive routing
+                httpConnection.setRequestProperty("AnonymousId", this.anonymousIdHeaderString);
+                // set request method
+                httpConnection.setRequestMethod("POST");
+                // get output stream and write payload content
+                OutputStream os = httpConnection.getOutputStream();
+                OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
+                osw.write(payload);
+                osw.flush();
+                osw.close();
+                os.close();
+                // create connection
+                httpConnection.connect();
+                // get input stream from connection to get output from the server
+                if (httpConnection.getResponseCode()== 200) {
                     return Utils.NetworkResponses.SUCCESS;
-                }
-            } else {
-                BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                int res = bis.read();
-                // read response from the server
-                while (res != -1) {
-                    baos.write((byte) res);
-                    res = bis.read();
-                }
-                // finally return response when reading from server is completed
-                String errorResp = baos.toString();
-                RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + errorResp);
-                // return null as request made is not successful
-                if (errorResp.toLowerCase().contains("invalid write key")) {
-                    return Utils.NetworkResponses.WRITE_KEY_ERROR;
+                } else if (httpConnection.getResponseCode() == 500) {
+                    backOffCount += 1;
+                    RudderLogger.logInfo("EventRepository: flushEventsToServer: ServerError with code 500: doing backoff for  " + backOffCount + "s");
+                    Thread.sleep(backOffCount * 1000);
+
+                } else {
+                    BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    int res = bis.read();
+                    // read response from the server
+                    while (res != -1) {
+                        baos.write((byte) res);
+                        res = bis.read();
+                    }
+                    // finally return response when reading from server is completed
+                    String errorResp = baos.toString();
+                    RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + errorResp);
+                    // return null as request made is not successful
+                    if (errorResp.toLowerCase().contains("invalid write key")) {
+                        return Utils.NetworkResponses.WRITE_KEY_ERROR;
+                    }
                 }
             }
-        } catch (Exception ex) {
-            RudderLogger.logError(ex);
-        }
-        return Utils.NetworkResponses.ERROR;
+            } catch(Exception ex){
+                RudderLogger.logError(ex);
+            }
+            return Utils.NetworkResponses.ERROR;
+
     }
 
     /*
