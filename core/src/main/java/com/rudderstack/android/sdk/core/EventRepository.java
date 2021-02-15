@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -28,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 
 /*
  * utility class for event processing
@@ -253,13 +255,16 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             public void run() {
                 // initiate sleepCount
                 int sleepCount = 0;
+                int backoffCount = 0;
+                RudderLogger.logInfo("Ruchira backoffcount" + backoffCount);
+                Random rand = new Random();
                 Utils.NetworkResponses networkResponse = Utils.NetworkResponses.SUCCESS;
 
                 // initiate lists for messageId and message
                 ArrayList<Integer> messageIds = new ArrayList<>();
                 ArrayList<String> messages = new ArrayList<>();
 
-                while (true) {
+                while (true && backoffCount < 5) {
                     try {
                         // clear lists for reuse
                         messageIds.clear();
@@ -314,7 +319,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         } else if (networkResponse == Utils.NetworkResponses.ERROR) {
                             RudderLogger.logInfo("flushEvents: Retrying in " + sleepCount + "s");
                             Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000);
-                        } else {
+                        } else if(networkResponse == Utils.NetworkResponses.ERROR_500) {
+                            backoffCount +=1;
+                            RudderLogger.logInfo("flushEvents: Retrying in for 500 error from server for " + backoffCount + " time");
+                            Thread.sleep((rand.nextInt(1000)+1)*backoffCount);
+                        }
+                            else {
                             // retry entire logic in 1 second
                             Thread.sleep(1000);
                         }
@@ -392,15 +402,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * */
     private Utils.NetworkResponses flushEventsToServer(String payload) {
         try {
-            RudderLogger.logDebug("Ruchira inside flushevents");
 
             if (TextUtils.isEmpty(this.authHeaderString)) {
                 RudderLogger.logError("EventRepository: flushEventsToServer: WriteKey was not correct. Aborting flush to server");
                 return null;
             }
 
-            int backOffCount = 0;
-            while (backOffCount < 5) {
                 // get endPointUrl form config object
                 String dataPlaneEndPoint = config.getDataPlaneUrl() + "v1/batch";
                 RudderLogger.logDebug("EventRepository: flushEventsToServer: dataPlaneEndPoint: " + dataPlaneEndPoint);
@@ -432,10 +439,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 if (httpConnection.getResponseCode()== 200) {
                     return Utils.NetworkResponses.SUCCESS;
                 } else if (httpConnection.getResponseCode() == 500) {
-                    backOffCount += 1;
-                    RudderLogger.logInfo("EventRepository: flushEventsToServer: ServerError with code 500: doing backoff for  " + backOffCount + "s");
-                    Thread.sleep(backOffCount * 1000);
-
+                return Utils.NetworkResponses.ERROR_500;
                 } else {
                     BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -453,7 +457,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         return Utils.NetworkResponses.WRITE_KEY_ERROR;
                     }
                 }
-            }
+
             } catch(Exception ex){
                 RudderLogger.logError(ex);
             }
