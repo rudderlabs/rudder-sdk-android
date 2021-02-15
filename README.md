@@ -1,16 +1,16 @@
 [ ![Download](https://api.bintray.com/packages/rudderstack/rudderstack/core/images/download.svg) ](https://bintray.com/rudderstack/rudderstack/core/_latestVersion)
 
-# What is Rudder?
+# What is RudderStack?
 
-**Short answer:**
-Rudder is an open-source Segment alternative written in Go, built for the enterprise. .
+[RudderStack](https://rudderstack.com/) is a **customer data pipeline** tool for collecting, routing and processing data from your websites, apps, cloud tools, and data warehouse.
 
-**Long answer:**
-Rudder is a platform for collecting, storing and routing customer event data to dozens of tools. Rudder is open-source, can run in your cloud environment (AWS, GCP, Azure or even your data-centre) and provides a powerful transformation framework to process your event data on the fly.
+More information on RudderStack can be found [here](https://github.com/rudderlabs/rudder-server).
 
-Released under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+## RudderStack Android SDK
 
-## Getting Started with Android SDK
+The RudderStack Android SDK allows you to track event data from your Android apps. After integrating this SDK, you will also be able to send the event data to your preferred destinations such as Google Analytics, Amplitude, and more.
+
+## Getting Started with the RudderStack Android SDK
 
 1. Add these lines to your ```app/build.gradle```
 ```
@@ -24,6 +24,7 @@ implementation 'com.rudderstack.android.sdk:core:1.0.10'
 ```
 
 ## Initialize ```RudderClient```
+
 ```
 val rudderClient: RudderClient = RudderClient.getInstance(
     this,
@@ -63,10 +64,14 @@ RudderClient.with(this).track(
 );
 ```
 
-For more detailed documentation check [the documentation page](https://docs.rudderstack.com/sdk-integration-guide/getting-started-with-android-sdk).
+For more detailed documentation check [the documentation page](https://docs.rudderstack.com/rudderstack-sdk-integration-guides/rudderstack-android-sdk).
 
 ## Register your callbacks
-For device mode destinations- You can register callbacks, which will be executed after the nativeSDK has been successfully initialized.Use the `onIntegrationReady` method to register your callback.The following snippet shows an example:
+
+For device mode destinations, you can register callbacks, which will be executed after the native SDK has been successfully initialized. Use the `onIntegrationReady` method to register your callback.
+
+The following snippet shows an example:
+
 ```
 rudderClient.onIntegrationReady("Lotame") {
   var nativeSDK  = (it as LotameIntegration)
@@ -74,8 +79,11 @@ rudderClient.onIntegrationReady("Lotame") {
 }
 ```
 The variable `it` contains the intialized nativeSDK object.
-Note: The method `onIntegrationReady` accepts two arguments- the integration name(eg. "Lotame") and the callback.
+
+**Note**: The method `onIntegrationReady` accepts two arguments- the integration name(eg. "Lotame") and the callback.
 
 [Registering Lotame's onSync callback](https://github.com/rudderlabs/rudder-integration-lotame-android#register-your-onsync-callback) shows one more example of registering a callback using `onIntegrationReady`.
+
 ## Contact Us
+
 If you come across any issues while configuring or using RudderStack, please feel free to [contact us](https://rudderstack.com/contact/) or start a conversation on our [Slack](https://resources.rudderstack.com/join-rudderstack-slack) channel. We will be happy to help you.
