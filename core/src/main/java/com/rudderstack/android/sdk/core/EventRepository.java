@@ -255,8 +255,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             public void run() {
                 // initiate sleepCount
                 int sleepCount = 0;
-                int backoffCount = 0;
-                RudderLogger.logInfo("Ruchira backoffcount" + backoffCount);
                 Random rand = new Random();
                 Utils.NetworkResponses networkResponse = Utils.NetworkResponses.SUCCESS;
 
@@ -264,7 +262,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 ArrayList<Integer> messageIds = new ArrayList<>();
                 ArrayList<String> messages = new ArrayList<>();
 
-                while (true && backoffCount < 5) {
+                while (true) {
                     try {
                         // clear lists for reuse
                         messageIds.clear();
@@ -312,6 +310,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         }
                         // increment sleepCount to track total elapsed seconds
                         sleepCount += 1;
+
                         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
                         if (networkResponse == Utils.NetworkResponses.WRITE_KEY_ERROR) {
                             RudderLogger.logInfo("Wrong WriteKey. Aborting");
@@ -320,11 +319,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             RudderLogger.logInfo("flushEvents: Retrying in " + sleepCount + "s");
                             Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000);
                         } else if(networkResponse == Utils.NetworkResponses.ERROR_500) {
-                            backoffCount +=1;
-                            RudderLogger.logInfo("flushEvents: Retrying in for 500 error from server for " + backoffCount + " time");
-                            Thread.sleep((rand.nextInt(1000)+1)*backoffCount);
-                        }
-                            else {
+                            RudderLogger.logInfo("flushEvents: Retrying in for 500 error from server for " + sleepCount + " time");
+                            Thread.sleep((rand.nextInt(1000)+1)*sleepCount);
+                        } else {
                             // retry entire logic in 1 second
                             Thread.sleep(1000);
                         }
@@ -408,60 +405,60 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 return null;
             }
 
-                // get endPointUrl form config object
-                String dataPlaneEndPoint = config.getDataPlaneUrl() + "v1/batch";
-                RudderLogger.logDebug("EventRepository: flushEventsToServer: dataPlaneEndPoint: " + dataPlaneEndPoint);
+            // get endPointUrl form config object
+            String dataPlaneEndPoint = config.getDataPlaneUrl() + "v1/batch";
+            RudderLogger.logDebug("EventRepository: flushEventsToServer: dataPlaneEndPoint: " + dataPlaneEndPoint);
 
-                // create url object
-                URL url = new URL(dataPlaneEndPoint);
-                // get connection object
-                HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
-                // set connection object to return output
-                httpConnection.setDoOutput(true);
-                //  set content type for network request
-                httpConnection.setRequestProperty("Content-Type", "application/json");
-                // set authorization header
-                httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", this.authHeaderString));
-                // set anonymousId header for definitive routing
-                httpConnection.setRequestProperty("AnonymousId", this.anonymousIdHeaderString);
-                // set request method
-                httpConnection.setRequestMethod("POST");
-                // get output stream and write payload content
-                OutputStream os = httpConnection.getOutputStream();
-                OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
-                osw.write(payload);
-                osw.flush();
-                osw.close();
-                os.close();
-                // create connection
-                httpConnection.connect();
-                // get input stream from connection to get output from the server
-                if (httpConnection.getResponseCode()== 200) {
-                    return Utils.NetworkResponses.SUCCESS;
-                } else if (httpConnection.getResponseCode() == 500) {
+            // create url object
+            URL url = new URL(dataPlaneEndPoint);
+            // get connection object
+            HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+            // set connection object to return output
+            httpConnection.setDoOutput(true);
+            //  set content type for network request
+            httpConnection.setRequestProperty("Content-Type", "application/json");
+            // set authorization header
+            httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", this.authHeaderString));
+            // set anonymousId header for definitive routing
+            httpConnection.setRequestProperty("AnonymousId", this.anonymousIdHeaderString);
+            // set request method
+            httpConnection.setRequestMethod("POST");
+            // get output stream and write payload content
+            OutputStream os = httpConnection.getOutputStream();
+            OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
+            osw.write(payload);
+            osw.flush();
+            osw.close();
+            os.close();
+            // create connection
+            httpConnection.connect();
+            // get input stream from connection to get output from the server
+            if (httpConnection.getResponseCode()== 200) {
+                return Utils.NetworkResponses.SUCCESS;
+            } else if (httpConnection.getResponseCode() == 500) {
                 return Utils.NetworkResponses.ERROR_500;
-                } else {
-                    BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    int res = bis.read();
-                    // read response from the server
-                    while (res != -1) {
-                        baos.write((byte) res);
-                        res = bis.read();
-                    }
-                    // finally return response when reading from server is completed
-                    String errorResp = baos.toString();
-                    RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + errorResp);
-                    // return null as request made is not successful
-                    if (errorResp.toLowerCase().contains("invalid write key")) {
-                        return Utils.NetworkResponses.WRITE_KEY_ERROR;
-                    }
+            } else {
+                BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                int res = bis.read();
+                // read response from the server
+                while (res != -1) {
+                    baos.write((byte) res);
+                    res = bis.read();
                 }
-
-            } catch(Exception ex){
-                RudderLogger.logError(ex);
+                // finally return response when reading from server is completed
+                String errorResp = baos.toString();
+                RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + errorResp);
+                // return null as request made is not successful
+                if (errorResp.toLowerCase().contains("invalid write key")) {
+                    return Utils.NetworkResponses.WRITE_KEY_ERROR;
+                }
             }
-            return Utils.NetworkResponses.ERROR;
+
+        } catch(Exception ex){
+            RudderLogger.logError(ex);
+        }
+        return Utils.NetworkResponses.ERROR;
 
     }
 
