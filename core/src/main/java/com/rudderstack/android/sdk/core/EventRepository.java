@@ -318,9 +318,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         } else if (networkResponse == Utils.NetworkResponses.ERROR) {
                             RudderLogger.logInfo("flushEvents: Retrying in " + sleepCount + "s");
                             Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000);
-                        } else if(networkResponse == Utils.NetworkResponses.ERROR_500) {
+                        } else if (networkResponse == Utils.NetworkResponses.ERROR_500) {
                             RudderLogger.logInfo("flushEvents: Retrying in for 500 error from server for " + sleepCount + " time");
-                            Thread.sleep((rand.nextInt(1000)+1)*sleepCount);
+                            Thread.sleep((rand.nextInt(1000) + 1) * sleepCount);
                         } else {
                             // retry entire logic in 1 second
                             Thread.sleep(1000);
@@ -433,7 +433,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             // create connection
             httpConnection.connect();
             // get input stream from connection to get output from the server
-            if (httpConnection.getResponseCode()== 200) {
+            if (httpConnection.getResponseCode() == 200) {
                 return Utils.NetworkResponses.SUCCESS;
             } else if (httpConnection.getResponseCode() == 500) {
                 return Utils.NetworkResponses.ERROR_500;
@@ -455,7 +455,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
             }
 
-        } catch(Exception ex){
+        } catch (Exception ex) {
             RudderLogger.logError(ex);
         }
         return Utils.NetworkResponses.ERROR;
