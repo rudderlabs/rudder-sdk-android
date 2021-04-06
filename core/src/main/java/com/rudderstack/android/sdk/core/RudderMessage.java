@@ -179,6 +179,9 @@ public class RudderMessage {
 
     void setRudderOption(RudderOption rudderOption) {
         this.rudderOption = rudderOption;
+        if(rudderOption!=null) {
+            setIntegrations(rudderOption.getIntegrations());
+        }
     }
 
     /**
@@ -198,5 +201,13 @@ public class RudderMessage {
      */
     public String getGroupId() {
         return this.groupId;
+    }
+
+    /**
+     * @return Integrations Map passed for the event
+     */
+    @NonNull
+    public Map<String,Boolean> getIntegrations() {
+        return this.integrations;
     }
 }

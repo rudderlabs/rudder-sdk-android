@@ -18,8 +18,17 @@ class MainApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        RudderClient.setAnonymousId("31de5a69-c27c-4514-bee2-eb94ad5c0b3a");
-        RudderClient.updateWithAdvertisingId("some_idfa");
+//        rudderClient = RudderClient.getInstance(
+//            this,
+//            WRITE_KEY,
+//            RudderConfig.Builder()
+//                .withDataPlaneUrl(DATA_PLANE_URL)
+//                .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
+//                .withTrackLifecycleEvents(false)
+//                .withRecordScreenViews(false)
+//                .build(), RudderOption()
+//                .putIntegration("MIXPANEL",true)
+//        )
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,

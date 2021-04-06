@@ -470,10 +470,21 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
 
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: eventName: %s", message.getEventName()));
-        Map<String, Object> integrations = new HashMap<>();
-        integrations.put("All", true);
-        message.setIntegrations(integrations);
-
+        // if no integrations were set in the RudderOption object passed in that particular event
+        // we would fall back to check for the integrations in the RudderOption object passed while initializing the sdk
+        if (message.getIntegrations().size() == 0) {
+            if(RudderClient.getDefaultOptions()!=null && RudderClient.getDefaultOptions().getIntegrations()!=null && RudderClient.getDefaultOptions().getIntegrations().size()!=0)
+            {
+                message.setIntegrations(RudderClient.getDefaultOptions().getIntegrations());
+            }
+            // if no RudderOption object is passed while initializing the sdk we would set all the integrations to true
+            else
+            {
+                Map<String, Object> integrations = new HashMap<>();
+                integrations.put("All", true);
+                message.setIntegrations(integrations);
+            }
+        }
         makeFactoryDump(message, false);
         String eventJson = new Gson().toJson(message);
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
@@ -488,7 +499,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         synchronized (eventReplayMessageQueue) {
             if (isFactoryInitialized || fromHistory) {
                 RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
-                message.setIntegrations(prepareIntegrations());
                 for (String key : integrationOperationsMap.keySet()) {
                     RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
                     RudderIntegration<?> integration = integrationOperationsMap.get(key);
