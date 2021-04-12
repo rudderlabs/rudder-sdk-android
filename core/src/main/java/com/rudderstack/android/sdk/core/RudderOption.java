@@ -65,10 +65,6 @@ public class RudderOption {
 
     public RudderOption putIntegration(@NonNull RudderIntegration.Factory factory, @NonNull boolean enabled)
     {
-        if(this.integrations == null)
-        {
-            integrations = new HashMap<>();
-        }
         integrations.put(factory.key(),enabled);
         return this;
     }
