@@ -480,9 +480,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             // if no RudderOption object is passed while initializing the sdk we would set all the integrations to true
             else
             {
-                Map<String, Object> integrations = new HashMap<>();
-                integrations.put("All", true);
-                message.setIntegrations(integrations);
+                message.setIntegrations(prepareIntegrations());
             }
         }
         makeFactoryDump(message, false);
