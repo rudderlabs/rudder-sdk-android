@@ -3,14 +3,12 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
     }
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 android {
     compileSdkVersion 29
@@ -19,7 +17,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0.10"
+        versionName '1.0.10'
         consumerProguardFiles 'proguard-consumer-rules.pro'
     }
 
@@ -37,6 +35,68 @@ android {
     }
 }
 
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+group = 'com.rudderstack.android.sdk'
+archivesBaseName = 'core'
+version = '1.0.10'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/') {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: 'https://s01.oss.sonatype.org/content/repositories/snapshots/') {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'RudderStack Android SDK'
+                artifactId 'core'
+                packaging 'aar'
+                description 'Android SDK for RudderStack. Steer your customer data.'
+                url 'https://github.com/rudderlabs/rudder-sdk-android'
+
+                scm {
+                    connection 'scm:git:git://github.com/rudderlabs/rudder-sdk-android.git'
+                    developerConnection 'scm:git:ssh://github.com:rudderlabs/rudder-sdk-android.git'
+                    url 'https://github.com/rudderlabs/rudder-sdk-android/tree/master'
+                }
+
+                licenses {
+                    license {
+                        name 'MIT License'
+                        url 'https://github.com/rudderlabs/rudder-sdk-android/blob/master/LICENSE'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'desusai7'
+                        name 'Desu Sai Venkat'
+                        email 'venkat@rudderstack.com'
+                    }
+                }
+            }
+        }
+    }
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -45,8 +105,6 @@ dependencies {
 
     testImplementation 'com.android.support.test:rules:1.0.2'
     testImplementation 'com.android.support.test:runner:1.0.2'
-    testImplementation "org.robolectric:robolectric:4.3"
-    testImplementation "androidx.test:core-ktx:1.2.0"
+    testImplementation 'org.robolectric:robolectric:4.3'
+    testImplementation 'androidx.test:core-ktx:1.2.0'
 }
-
-apply from: './maven.gradle'
