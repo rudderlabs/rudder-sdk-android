@@ -487,13 +487,26 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
         synchronized (eventReplayMessageQueue) {
             if (isFactoryInitialized || fromHistory) {
-                RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
-                message.setIntegrations(prepareIntegrations());
-                for (String key : integrationOperationsMap.keySet()) {
-                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                    RudderIntegration<?> integration = integrationOperationsMap.get(key);
-                    if (integration != null) {
-                        integration.dump(message);
+                if(message.getRudderOption() == null){
+                    for (String key : integrationOperationsMap.keySet()) {
+                        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                        RudderIntegration<?> integration = integrationOperationsMap.get(key);
+                        if(integration != null) {
+                            integration.dump(message);
+                        }
+                    }
+                }
+                else {
+                    //Check if user has configured RudderOption for any specific device mode destinations
+                    //enabledIntegration stores the the RudderOption.integration configured by the user
+                    //while making call using putIntegration() method.
+                    Map<String, Object> enabledIntegration = message.getIntegrations();
+                    for (String key : integrationOperationsMap.keySet()) {
+                        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                        RudderIntegration<?> integration = integrationOperationsMap.get(key);
+                        if (integration != null && enabledIntegration.containsKey(key) && (boolean) enabledIntegration.get(key)) {
+                            integration.dump(message);
+                        }
                     }
                 }
             } else {
