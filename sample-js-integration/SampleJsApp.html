@@ -1,0 +1,613 @@
+<html>
+  <head>
+    <!-- <script>(function(w,d,t,r,u){var f,n,i;w[u]=w[u]||[],f=function(){var o={ti:"17551813"};o.q=w[u],w[u]=new UET(o),w[u].push("pageLoad")},n=d.createElement(t),n.src=r,n.async=1,n.onload=n.onreadystatechange=function(){var s=this.readyState;s&&s!=="loaded"&&s!=="complete"||(f(),n.onload=n.onreadystatechange=null)},i=d.getElementsByTagName(t)[0],i.parentNode.insertBefore(n,i)})(window,document,"script","//bat.bing.com/bat.js","uetq");</script> -->
+    <script src="https://unpkg.com/core-js-bundle@3.6.5/minified.js"></script>
+    <!-- <script src="https://unpkg.com/sendbeacon-polyfill"></script> -->
+    <!-- <script>
+      !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","once","off","on","addSourceMiddleware","addIntegrationMiddleware","setAnonymousId","addDestinationMiddleware"];analytics.factory=function(e){return function(){var t=Array.prototype.slice.call(arguments);t.unshift(e);analytics.push(t);return analytics}};for(var e=0;e<analytics.methods.length;e++){var key=analytics.methods[e];analytics[key]=analytics.factory(key)}analytics.load=function(key,e){var t=document.createElement("script");t.type="text/javascript";t.async=!0;t.src="https://cdn.segment.com/analytics.js/v1/" + key + "/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(t,n);analytics._loadOptions=e};analytics.SNIPPET_VERSION="4.13.1";
+      analytics.load("5r5IvFMrlQ0v87FOMM0x0PzqZBhRsBr0");
+      analytics.page();
+      }}();
+    </script> -->
+    <!-- <script>
+      !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+      posthog.init('5LFahamJqHPlZ2tL1v4ic1Nhive1AlW_m3N4dK5h_gE', {api_host: 'https://app.posthog.com'})
+      posthog.group('sampleUser');
+  </script> -->
+    <script>
+          rudderanalytics = window.rudderanalytics = [];
+          var methods = [
+            "load",
+            "page",
+            "track",
+            "identify",
+            "alias",
+            "group",
+            "ready",
+            "reset",
+            // "requireIntegration",
+            "setAnonymousId",
+            "getAnonymousId",
+          ];
+          for (var i = 0; i < methods.length; i++) {
+            var method = methods[i];
+            rudderanalytics[method] = (function (methodName) {
+              return function () {
+                rudderanalytics.push(
+                  [methodName].concat(Array.prototype.slice.call(arguments))
+                );
+              };
+            })(method);
+          }
+          rudderanalytics.load("1oYWxvjTMyn9HXZhg2JjfGfEGu7"," https://1b91e549e016.ngrok.io");
+          // rudderanalytics.load(
+          //   "1gNTvgL5S2IjyqlttQJfsrUVVIG",
+          //   "https://df23759fee39.ngrok.io",
+          //   // {
+          //   //   integrations: {
+          //   //     All: true,
+          //   //     "Google Analytics": true,
+          //   //     Intercom: false,
+          //   //     Monetate: true,
+          //   //   }
+
+          //   // },
+          //   {
+          //     configUrl: "https://api.dev.rudderlabs.com",
+          //     logLevel: "DEBUG",
+          //     useAutoTracking: false,
+          //     // queueOptions: { maxAttempts: 2, backoffFactor: 2, maxItems: 4 },
+          //   }
+          // );
+          rudderanalytics.ready(function () {
+            console.log("Application is ready with JS");
+          });
+          function getAnonId() {
+            console.log(Android.showAnonId());
+            rudderanalytics.setAnonymousId(Android.showAnonId());
+          }
+          
+          rudderanalytics.track("Simple track call1");
+
+          // rudderanalytics.page()
+          // requireIntegration supports args as string and arrays, so requireIntegration("GoogleAnalytics") and requireIntegration(["GoogleAnalytics", "Hotjar", "Hubspot"]) are valid.
+          // The second parameter is a callback which gets an object of all successful and failed integrations upto now
+          // rudderanalytics.requireIntegration(["GA", "Hotjar"], function(object){console.log(JSON.stringify(object))})
+
+          // for (var i = 0; i < 1; i++) {
+          //   console.log("SamplePage : " + i);
+          //   rudderanalytics.track(
+          //     "Order Completed",
+          //     {
+          //       product_id: "pp10001900011",
+          //       cart_value: 30,
+          //       currency: "USD",
+          //       price: "90",
+          //       value: 3,
+          //       quantity: 1,
+          //       user_actual_id: 12345,
+          //     },
+          //     {
+          //       context: {
+          //         ip: "11.0.0.0",
+          //       },
+          //       anonymousId: "anony11111111",
+          //     },
+          //     function () {
+          //       console.log("product added track call: " + i);
+          //     }
+          //     // () => {console.log("product added track call");
+          //     // }
+          //   );
+          // }
+          function identifyCall() {
+            //  rudderanalytics.requireIntegration(["GoogleAnalytics", "Hotjar"], function(object){console.log(JSON.stringify(object))})
+            // rudderanalytics.setAnonymousId("my-anonymous-id-new");
+            rudderanalytics.identify(
+              "sajal1234",
+              {
+                //RESERVE_KEYWORDS
+                // "anonymous_id": "nskjbjasc623656253bb",
+                "id":"ID101",
+                "sent_at":"20210109134567",
+                "received_at":"202101091347654",
+                "timestamp":"1403743443",
+                "original_timestamp":"1403743443",
+                "event_text":"identify",
+                "event":"Sample Identify call",
+                firstName: "Sajal",
+                lastName: "Mohanta",
+                industry: "ITES",
+                category: "SampleIdentify",
+                email: "testkolkata@rudderlabs.com",
+                organizationId: 378763009439,
+                plan: "Open source",
+                logins: 5,
+                Homephone: 9836543283,
+                mobile: "123456786",
+                title: "Mr",
+                birthDay: new Date().toJSON().slice(0,10).replace(/-/g,'/'),
+                phone: '570-690-4150',
+                state: 'California',
+                rating: "Hot",
+                leadSource: "WEB",
+                city: 'east greenwich',
+                postalCode: '94115',
+                country: 'USA',
+                street: '19123 forest lane',
+                state: 'RI',
+                isEnabled : true,
+                lists: [
+                  {
+                    id: 2,
+                    status: 'unsubscribed'
+                  },
+                  {
+                    id: 3,
+                    status: 'unsubscribe'
+                  }
+                ],
+              "tags": ["x0002x", "y0004y","t0001t"],
+              "fieldInfo": {
+                // address: {
+                //   city: "east greenwich",
+                //   zip: "94115",
+                //   country: "USA",
+                //   street: "19123 forest lane",
+                //   state: "RI",
+                // },
+                Address:"kolkata",
+                state: 'California',
+                multiChoice: "Option 1",
+                listBox : ["Option1","Option2"],
+                DateField : "1988-12-05",
+                DateTimeField : "2020-05-19T02:45:00-05:00",
+                RadioButton : "Option1",
+                CheckBox : ["Option1","Option2","Option3"],
+                HiddenField : "Hidden",
+                TextArea : "This is a sample text area field value . it is tested for Active Campaign. It should have more than 100 words. Lorem ipsum is a dummy sentence to fill up any area. And also , it is used to fill up dummy website. So, it is wriiten by simply wasting time. "
+
+              },
+                timezone: "Berlin",
+                company : "Rudder",
+                company: {
+                  id: 378763009439,
+                  name: "Rudderlabs",
+                  industry: "IT",
+                  employee_count: 1200,
+                },
+
+                createdAt: new Date().toJSON().slice(0,10).replace(/-/g,'/'),
+                
+              },
+              {
+                context: {
+                ip: "0.0.0.0",
+                  "externalId": [
+                  {
+                    "type": "Salesforce-Contact",
+                    "id": "0035g000002XN5MAAW"
+                  },
+                ],
+                //RESERVE_KEYWORDS
+                // "anonymous_id": "nskjbjasc623656253bb",
+                "id":"ID101",
+                "sent_at":"20210109134567",
+                "received_at":"202101091347654",
+                "timestamp":"1403743443",
+                "original_timestamp":"1403743443",
+                "event_text":"identify",
+                "event":"Sample Identify call",
+
+                // 'integrations': {
+                //   'Salesforce': true
+                //  }
+                // }
+                // integrations: { All: true ,HubSpot :false},
+                page: {
+                  path: "/path5",
+                  referrer: "www.google.com",
+                  search: "My Page",
+                  title: "JS Test",
+                  url: "www.rudderstack.com",
+                }
+                //  anonymousId: "dsknkcnd",
+              }
+              });
+            //   rudderanalytics.reset();
+            // rudderanalytics.identify(
+            //   "User_id_2221",
+            //   {
+            //     name: "Shehan Study",
+            //     category: "SampleIdentify",
+            //     email: "chandra+r11@gmail.com",
+            //     plan: "Open source",
+            //     logins: 5,
+            //     createdAt: 1599264000,
+            //   },
+            //   {
+            //     context: {
+            //       ip: "0.0.0.0",
+            //     },
+            //     integrations: { All: true ,HubSpot :false},
+            //     page: {
+            //       path: "sdsd123",
+            //       referrer: "dsd2323s",
+            //       search: "sss232s",
+            //       title: "ddds3223dsd",
+            //       url: "sdsdsa3232dd",
+            //     },
+            //     //  anonymousId: "dsknkcnd",
+            //   }
+            // );
+          }
+          function pageCall() {
+            // rudderanalytics.getAnonymousId();
+            // analytics.page(
+            //   "Experiment Viewed",
+            //   "Cart Viewed",
+            //   {
+            //     path: "xcx",
+            //     referrer: "xc dd",
+            //     search: "sefsefes",
+            //     title: "edwewde",
+            //     url: "wedwedewdew",
+            //   },
+            //   {
+            //     context: {
+            //       ip: "0.0.0.0",
+            //     },
+            //     //   anonymousId:  "xx"
+            //   }
+            // );
+            rudderanalytics.page(
+              "Experiment Viewed",
+              "Cart Viewed",
+              {
+                // path: "xcx",
+                // referrer: "xc dd",
+                // search: "sefsefes",
+                // title: "edwewde",
+                url: "www.abc.com",
+                //RESERVE_KEYWORDS
+                // "anonymous_id": "nskjbjasc623656253bb",
+                "id":"ID101",
+                "sent_at":"20210109134567",
+                "received_at":"202101091347654",
+                "timestamp":"1403743443",
+                "original_timestamp":"1403743443",
+                "event_text":"identify",
+                "event":"Sample Identify call",
+              },
+              {
+                context: {
+                  ip: "0.0.0.0",
+                },
+                //   anonymousId:  "xx"
+              }
+            );
+            rudderanalytics.page({ prop1: "a", prop2: "b" });
+            rudderanalytics.page({ prop1: "a", prop2: "b" });
+            // rudderanalytics.requireIntegration(["Hotjar"], function(object){console.log(JSON.stringify(object))})
+            rudderanalytics.page(
+              { prop1: "a", prop2: "b" },
+              { page: { path: "/path3" } }
+            );
+            rudderanalytics.page(
+              { path: "/path1", prop1: "a", prop2: "b" },
+              { page: { path: "/path3" } }
+            );
+          }
+          function trackCall() {
+            rudderanalytics.track("Simple track call1");
+            // analytics.track(
+            //   // "Order Completed",
+            //   "Sample Track Call",
+            //   {
+            //     // path: "path",
+            //     // referrer: "referrer",
+            //     // search: "search",
+            //     KEY_3: {
+            //       CHILD_KEY_4: "value_3",
+            //       CHILD_KEY_5: "value_4",
+            //     },
+            //     // title: "title",
+            //     // url: "url",
+            //     // total: 1009,
+            //     // revenue: 59,
+            //     revenue_type: "shirt",
+            //     products: [
+            //       {
+            //         product_id: "507f1f77bcf86cd79943901ghh1",
+            //         sku: "45790-38",
+            //         name: "Monopoly: 7rd Edition",
+            //         price: 19,
+            //         position: "1",
+            //         category: "Cars",
+            //         quantity: 4,
+            //         currency: "USD",
+            //         url: "https://www.example.com/product/path",
+            //         image_url: "https://www.example.com/product/path.jpg",
+            //       },
+            //       {
+            //         product_id: "507f1f77bcf86cd79943901gth1",
+            //         sku: "45790-39",
+            //         name: "Monopoly: 8th Edition",
+            //         price: 19,
+            //         quantity: 2,
+            //         position: "1",
+            //         currency: "USD",
+            //         category: "Cars",
+            //         url: "https://www.example.com/product/path",
+            //         image_url: "https://www.example.com/product/path.jpg",
+            //       },
+            //     ],
+            //   },
+            //   {
+            //     context: {
+            //       ip: "0.0.0.0",
+            //     },
+            //     // userID: "sampleUserOption",
+            //     //  anonymousId: '00000000000000000000000000'
+            //   }
+            // );
+            // rudderanalytics.reset();
+            rudderanalytics.track(
+              "Sample Track Call",
+              {
+
+                KEY_3: {
+                  CHILD_KEY_4: "value_3",
+                  CHILD_KEY_5: "value_4",
+                },
+                order_id: '1234',
+                cart_id: '1234df2ddss',
+                share_via: 'SMS',
+                share_message: 'Check this',
+                recipient: 'friend@friendsemail.com',
+                affiliation: 'Apple Store',
+                value: 20,
+                shipping: 22,
+                tax: 1,
+                discount: 1.5,
+                coupon: 'ImagePro',
+                currency: 'USD',
+                revenue: 15.00,
+                total: 17,
+                value: 20,
+                shipping: 22,
+                tax: 1,
+                discount: 1.5,
+                list_id: 'list1',
+                total: 1009,
+                location_id: "L_12345",
+                checkout_id : "LK980456",
+                shipping_method : "AIR",
+                payment_method : "Credit card",
+                coupon_id: 'disc20',
+                coupon_name: 'Disc21',
+                reason: 'Coupon expired',
+                step: 2,
+                query: 'HDMI cable',
+                category: "Apparel",
+                promotion_id: 'promo1',
+                creative: 'banner1',
+                name: 'sale',
+                position: 'home_top',
+               //RESERVE_KEYWORDS
+              //  anonymous_id: "nskjbjasc623656253bb",
+                    id:"ID101",
+                    sent_at:"20210109134567",
+                    received_at:"202101091347654",
+                    timestamp:"1403743443",
+                    original_timestamp:"1403743443",
+                    event_text:"identify",
+                    event:"Sample Identify call",
+                products: [
+                  {
+                    product_id: "SKU_12345",
+                    name: "jeggings",
+                    coupon: "SUMMER_FUN",
+                    discount: 2.22,
+                    promotion_id: "P_12345",
+                    promotion_name: "Summer Sale",
+                    creative: "Summer Banner",
+                    creative_slot: "featured_app_1",
+                    location_id: "L_12345",
+                    affiliation: "Google Store",
+                    brand: "Gucci",
+                    category: "pants",
+                    variant: "Black",
+                    price: 9.99,
+                    currency: "USD",
+                    quantity: 1,
+                    position: 'home_top',
+                    sku: 'G-32',
+                    url: 'https://www.website.com/product/path',
+                    image_url: 'https://www.website.com/product/path.png',
+                    review_id: 'review12',
+                    review_body: 'Good product, delivered in excellent condition',
+                    rating: '5',
+                    share_via: 'SMS',
+                    share_message: 'Check this',
+                    recipient: 'name@friendsemail.com',
+                    wishlist_id: '12345',
+                    wishlist_name: 'Games',
+                    //RESERVE_KEYWORDS
+                    anonymous_id: "nskjbjasc623656253bb",
+                    id:"ID101",
+                    sent_at:"20210109134567",
+                    received_at:"202101091347654",
+                    timestamp:"1403743443",
+                    original_timestamp:"1403743443",
+                    event_text:"identify",
+                    event:"Sample Identify call",
+                  },
+                  {
+                    product_id: "SKU_12347",
+                    name: "leggings",
+                    coupon: "SUMMER_FUN",
+                    discount: 2.22,
+                    promotion_id: "P_12345",
+                    promotion_name: "Summer Sale",
+                    creative_name: "Summer Banner",
+                    creative_slot: "featured_app_1",
+                    location_id: "L_12345",
+                    affiliation: "Google Store",
+                    brand: "Gucci",
+                    category: "pants",
+                    variant: "Black",
+                    price: 9.99,
+                    currency: "USD",
+                    quantity: 1,
+                    sku: 'G-33',
+                    url: 'https://www.website.com/product/path',
+                    image_url: 'https://www.website.com/product/path.png',
+                    review_id: 'review12',
+                    review_body: 'Good product, delivered in excellent condition',
+                    rating: '5',
+                    share_via: 'SMS',
+                    share_message: 'Check this',
+                    recipient: 'name@friendsemail.com',
+                    wishlist_id: '12345',
+                    wishlist_name: 'Games',
+                  },
+                ],
+
+              },
+              {
+                context: {
+                  ip: "0.0.0.0",
+                },
+              }
+            );
+          }
+          function groupCall() {
+            rudderanalytics.group("Sample_groupId234", {
+              KEY_3: {
+                CHILD_KEY_92: "value_95",
+                CHILD_KEY_102: "value_103",
+              },
+              KEY_2: {
+                CHILD_KEY_92: "value_95",
+                CHILD_KEY_102: "value_103",
+              },
+              name: "Shehan Study",
+              company_id1: "SAJAL1.CO7",
+              company_name1: "SAJALGRPCOMPANY341NEW7",
+            });
+            // rudderanalytics.reset();
+            // rudderanalytics.group("Sample_groupId234567", {
+            //   KEY_3: {
+            //     CHILD_KEY_92: "value_95",
+            //     CHILD_KEY_102: "value_103",
+            //   },
+            //   KEY_2: {
+            //     CHILD_KEY_92: "value_95",
+            //     CHILD_KEY_102: "value_103",
+            //   },
+            //   name:"Shehan Study",
+            // "company_id1":"SAJAL1.CO7",
+            // "company_name1":"SAJALGRPCOMPANY341NEW7"
+            // }
+            // );
+          }
+          function aliasCall() {
+            rudderanalytics.alias("newUserIdAlias7");
+            // analytics.alias("newUserIdAlias7");
+          }
+    </script>
+    <!-- <script src="rudder-analytics.min.js"></script> -->
+    <!-- <script src="https://cdn.rudderlabs.com/v2/rudder-analytics.min.js?transport=beacon"></script> -->
+    <!-- <script src="https://cdn.rudderlabs.com/v2/rudder-analytics.min.js"></script> -->
+    <script src="https://cdn.rudderlabs.com/v1/rudder-analytics.min.js"></script>
+    <!-- <script src="https://cdn.rudderlabs.com/v1/rudder-analytics-staging.min.js"></script> -->
+  </head>
+  <body>
+    <div>
+      <a href="navigation.html">Navigation</a>
+      
+      <button type="button" onclick="getAnonId()">AnonymousID</button>
+      <button type="button" onclick="identifyCall()">Identify</button>
+      <button type="button" onclick="pageCall()">Page</button>
+      <button type="button" onclick="trackCall()">Track</button>
+      <button type="button" onclick="groupCall()">Group</button>
+      <button type="button" onclick="aliasCall()">Alias</button>
+      <p>Hi There</p>
+      <form id="myForm">
+        Username:<br />
+        <input type="text" name="ssntest" />
+        <br />  
+        Email id:<br />
+        <input type="text" name="email_id" />
+        <br /><br />
+        <label for="user-password">Password: </label><br />
+        <input
+          type="password"
+          name="user-pwd"
+          id="user-password"
+          class="rudder-no-track"
+        />
+        <br />
+        <label for="user-password2">Password: </label><br />
+        <input
+          type="password"
+          name="user-pwd2"
+          id="user-password2"
+          class="rudder-include"
+        />
+        <br />
+        <input type="radio" name="gender" id="male" class="rudder-include" />
+        <label for="male">Male</label><br />
+        <input type="radio" name="gender" id="female" class="rudder-include" />
+        <label for="female">Female</label>
+        <input type="checkbox" name="subject" id="maths" />
+        <label for="maths">Maths</label>
+        <input type="checkbox" name="subject" id="science" />
+        <label for="sceince">Science</label>
+        <input type="checkbox" name="subject" id="english" />
+        <label for="english">English</label>
+        <label for="Description">Description:</label>
+        <textarea
+          rows="5"
+          cols="50"
+          name="Description"
+          id="Description"
+          class="rudder-include"
+        ></textarea>
+        <div>This is password</div>
+        <div>This should be tracked</div>
+        <div>This is 1111-2222-3333 - adhar number</div>
+        <div name="testssn">This is bad!</div>
+        <div>
+          <label name="ssn"> This too is bad!</label>
+        </div>
+        <div ssn="testssn" key1="value1" key2="AAAAA1111Q">
+          This is good! key2 attribute will not be tracked!
+        </div>
+        <label for="country">Country:</label>
+        <select id="country" id="country">
+          <option value="India">India</option>
+          <option value="Sri Lanka">Sri Lanka</option>
+          <option value="Australia">Australia</option>
+        </select>
+        <input
+          type="hidden"
+          name="googleClientId"
+          class="googleClientId"
+          value="my-gcid"
+          class="rudder-include"
+        />
+        <input type="submit" value="Submit" />
+      </form>
+    </div>
+    <script>
+      var form = document.getElementById("myForm");
+      function handleForm(event) {
+        console.log("form submitted");
+        event.preventDefault();
+      }
+      form.addEventListener("submit", handleForm);
+    </script>
+  </body>
+</html>
