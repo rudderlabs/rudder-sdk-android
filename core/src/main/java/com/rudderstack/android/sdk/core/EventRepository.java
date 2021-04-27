@@ -487,7 +487,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
         synchronized (eventReplayMessageQueue) {
             if (isFactoryInitialized || fromHistory) {
-                if(message.getRudderOption() == null){
+                //If user doesn't set RudderOption, both while initializing the sdk and/or making any calls
+                //then simply dump the message.
+                if(message.getRudderOption() != null && message.getRudderOption().getIntegrations().size() == 0 &&  RudderClient.getDefaultOptions() == null) {
                     for (String key : integrationOperationsMap.keySet()) {
                         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
                         RudderIntegration<?> integration = integrationOperationsMap.get(key);
@@ -496,16 +498,37 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         }
                     }
                 }
+                //If any Option is set i.e., while initializing the sdk and/or making any calls
                 else {
-                    //Check if user has configured RudderOption for any specific device mode destinations
-                    //enabledIntegration stores the the RudderOption.integration configured by the user
-                    //while making call using putIntegration() method.
+                    // If user sets RudderOptions, both when initializing the sdk,
+                    // we need to fetch the option from DefaultOption variable and set the Integration.
+                    if(message.getRudderOption() != null && message.getRudderOption().getIntegrations().size() != 0 && RudderClient.getDefaultOptions()!=null && RudderClient.getDefaultOptions().getIntegrations()!=null && RudderClient.getDefaultOptions().getIntegrations().size()!=0)
+                    {
+                        message.setIntegrations(RudderClient.getDefaultOptions().getIntegrations());
+                    }
+                    //Now fetch all the RudderOption set by the user, for sending events to any specific device mode destinations
                     Map<String, Object> enabledIntegration = message.getIntegrations();
                     for (String key : integrationOperationsMap.keySet()) {
                         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
                         RudderIntegration<?> integration = integrationOperationsMap.get(key);
-                        if (integration != null && enabledIntegration.containsKey(key) && (boolean) enabledIntegration.get(key)) {
-                            integration.dump(message);
+                        if (integration != null){
+                            //If User has set the Option 'All' as 'true'
+                            if(enabledIntegration.containsKey("All") && (boolean) enabledIntegration.get("All")){
+                                //If option for the particular Integration/Key is not present, then dump it
+                                if(enabledIntegration.containsKey(key) == false){
+                                    integration.dump(message);
+                                    continue;
+                                }
+                                //If option for the particular Integration/Key is present and it is set to true, then dump it.
+                                if((boolean) enabledIntegration.get(key)){
+                                    integration.dump(message);
+                                }
+                            }
+                            // If User has not set the Option 'All' as 'true' i.e., 'All' is 'false'
+                            // Then if Option has been set by user then dump else ignore.
+                            else if(enabledIntegration.containsKey(key) && (boolean) enabledIntegration.get(key)){
+                                integration.dump(message);
+                            }
                         }
                     }
                 }
