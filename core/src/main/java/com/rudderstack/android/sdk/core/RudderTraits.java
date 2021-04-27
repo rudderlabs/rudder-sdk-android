@@ -46,7 +46,7 @@ public class RudderTraits {
     private String title;
     @SerializedName("username")
     private String userName;
-    private  Map<String, Object> extras;
+    private Map<String, Object> extras;
 
     private static final String ANONYMOUSID_KEY = "anonymousid";
     private static final String ADDRESS_KEY = "address";
