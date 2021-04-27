@@ -13,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.io.BufferedInputStream;
@@ -475,7 +477,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         message.setIntegrations(integrations);
 
         makeFactoryDump(message, false);
-        String eventJson = new Gson().toJson(message);
+        Gson gson = new GsonBuilder().registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer()).create();
+        String eventJson = gson.toJson(message);
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
         if (Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE) {
             RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
