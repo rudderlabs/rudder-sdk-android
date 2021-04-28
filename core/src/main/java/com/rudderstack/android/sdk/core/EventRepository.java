@@ -496,12 +496,28 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
         synchronized (eventReplayMessageQueue) {
             if (isFactoryInitialized || fromHistory) {
-                RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
-                for (String key : integrationOperationsMap.keySet()) {
-                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                    RudderIntegration<?> integration = integrationOperationsMap.get(key);
-                    if (integration != null) {
-                        integration.dump(message);
+                //Fetch all the RudderOption set by the user, for sending events to any specific device mode destinations
+                Map<String, Object> enabledIntegration = message.getIntegrations();
+                //If User has set the Option 'All' as 'true'
+                if(enabledIntegration.containsKey("All") && (boolean) enabledIntegration.get("All")) {
+                    for (String key : integrationOperationsMap.keySet()) {
+                        RudderIntegration<?> integration = integrationOperationsMap.get(key);
+                        //If integration is not null and if key is either not present or it is set to true, then dump it.
+                        if ( (integration != null) && (!enabledIntegration.containsKey(key) || (boolean) enabledIntegration.get(key)) ) {
+                            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                            integration.dump(message);
+                        }
+                    }
+                }
+                //If User has set any specific Option.
+                else {
+                    for (String key : integrationOperationsMap.keySet()) {
+                        RudderIntegration<?> integration = integrationOperationsMap.get(key);
+                        //If integration is not null and 'key' is set to 'true', then dump it.
+                        if (integration != null && enabledIntegration.containsKey(key) && (boolean) enabledIntegration.get(key) ) {
+                            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                            integration.dump(message);
+                        }
                     }
                 }
             } else {
