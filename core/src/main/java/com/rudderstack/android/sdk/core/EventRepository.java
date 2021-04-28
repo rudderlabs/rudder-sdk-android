@@ -496,17 +496,18 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
         synchronized (eventReplayMessageQueue) {
             if (isFactoryInitialized || fromHistory) {
-                //Fetch all the RudderOption set by the user, for sending events to any specific device mode destinations
-                Map<String, Object> enabledIntegration = message.getIntegrations();
+                //Fetch all the Integrations set by the user, for sending events to any specific device mode destinations
+                Map<String, Object> integrationOptions = message.getIntegrations();
                 //If User has set the Option 'All' as 'true'
-                if(enabledIntegration.containsKey("All") && (boolean) enabledIntegration.get("All")) {
+                if(integrationOptions.containsKey("All") && (boolean) integrationOptions.get("All")) {
                     for (String key : integrationOperationsMap.keySet()) {
                         RudderIntegration<?> integration = integrationOperationsMap.get(key);
                         //If integration is not null and if key is either not present or it is set to true, then dump it.
-                        if ( (integration != null) && (!enabledIntegration.containsKey(key) || (boolean) enabledIntegration.get(key)) ) {
-                            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                            integration.dump(message);
-                        }
+                        if (integration != null)
+                            if(!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key)) {
+                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                                integration.dump(message);
+                            }
                     }
                 }
                 //If User has set any specific Option.
@@ -514,10 +515,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     for (String key : integrationOperationsMap.keySet()) {
                         RudderIntegration<?> integration = integrationOperationsMap.get(key);
                         //If integration is not null and 'key' is set to 'true', then dump it.
-                        if (integration != null && enabledIntegration.containsKey(key) && (boolean) enabledIntegration.get(key) ) {
-                            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                            integration.dump(message);
-                        }
+                        if (integration != null)
+                            if (integrationOptions.containsKey(key) && (boolean) integrationOptions.get(key)) {
+                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                                integration.dump(message);
+                            }
                     }
                 }
             } else {
