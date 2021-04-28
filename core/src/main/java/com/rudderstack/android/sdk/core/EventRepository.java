@@ -489,7 +489,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             if (isFactoryInitialized || fromHistory) {
                 //If user doesn't set RudderOption, both while initializing the sdk and/or making any calls
                 //then simply dump the message.
-                if((message.getRudderOption() == null || (message.getRudderOption()!=null && message.getRudderOption().getIntegrations().size() == 0)) && RudderClient.getDefaultOptions() == null) {
+                if((message.getRudderOption() == null || message.getRudderOption().getIntegrations().size() == 0) && RudderClient.getDefaultOptions() == null) {
                     for (String key : integrationOperationsMap.keySet()) {
                         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
                         RudderIntegration<?> integration = integrationOperationsMap.get(key);
@@ -524,7 +524,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                     integration.dump(message);
                                 }
                             }
-                            // If User has not set the Option 'All' as 'true' i.e., 'All' is 'false'
+                            // If User has not set the Option 'All' as 'true', or, 'All' is 'false'
                             // Then if Option has been set by user then dump else ignore.
                             else if(enabledIntegration.containsKey(key) && (boolean) enabledIntegration.get(key)){
                                 integration.dump(message);
