@@ -196,7 +196,7 @@ public class RudderContext {
             return false;
         }
 
-        if (this.deviceInfo.getAdvertisingId() == null || this.deviceInfo.getAdvertisingId().isEmpty()) {
+        if (TextUtils.isEmpty(this.deviceInfo.getAdvertisingId())) {
             // set the values if and only if the values are not set
             // if value exists, it must have been set by the developer. don't overwrite
             this.deviceInfo.setAdvertisingId((String) advertisingInfo.getClass().getMethod("getId").invoke(advertisingInfo));
@@ -221,7 +221,7 @@ public class RudderContext {
             return false;
         }
 
-        if (this.deviceInfo.getAdvertisingId() == null || this.deviceInfo.getAdvertisingId().isEmpty()) {
+        if (TextUtils.isEmpty(this.deviceInfo.getAdvertisingId())) {
             // set the values if and only if the values are not set
             // if value exists, it must have been set by the developer. don't overwrite
             this.deviceInfo.setAdvertisingId(Settings.Secure.getString(contentResolver, "advertising_id"));
