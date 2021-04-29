@@ -49,7 +49,7 @@ public class RudderTraits {
     @Expose(serialize = false)
     private transient Map<String, Object> extras;
 
-    private static final String ANONYMOUSID_KEY = "anonymousid";
+    private static final String ANONYMOUSID_KEY = "anonymousId";
     private static final String ADDRESS_KEY = "address";
     private static final String AGE_KEY = "age";
     private static final String BIRTHDAY_KEY = "birthday";
@@ -59,7 +59,7 @@ public class RudderTraits {
     private static final String EMAIL_KEY = "email";
     private static final String FIRSTNAME_KEY = "firstname";
     private static final String GENDER_KEY = "gender";
-    private static final String USERID_KEY = "userid";
+    private static final String USERID_KEY = "userId";
     private static final String LASTNAME_KEY = "lastname";
     private static final String NAME_KEY = "name";
     private static final String PHONE_KEY = "phone";
