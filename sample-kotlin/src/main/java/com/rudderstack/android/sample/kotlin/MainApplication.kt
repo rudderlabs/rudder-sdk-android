@@ -1,19 +1,17 @@
 package com.rudderstack.android.sample.kotlin
 
-import android.app.Activity
 import android.app.Application
-import android.os.Bundle
-import android.util.Log
+import android.os.Handler
+import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
-import com.rudderstack.android.sdk.core.RudderClient
 
 class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://a4f291d1e130.ngrok.io"
-        const val CONTROL_PLANE_URL = "https://a4f291d1e130.ngrok.io"
+        const val DATA_PLANE_URL = "https://00173e358c65.ngrok.io"
+        const val CONTROL_PLANE_URL = "https://0e741f50e567.ngrok.io"
         const val WRITE_KEY = "1cGJAn3VgQByqQsU5yhWtsK5nwx"
     }
 
@@ -28,10 +26,16 @@ class MainApplication : Application() {
             RudderConfig.Builder()
                 .withDataPlaneUrl(DATA_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
-                .withTrackLifecycleEvents(true)
-                .withRecordScreenViews(true)
+                .withTrackLifecycleEvents(false)
+                .withRecordScreenViews(false)
                 .build()
         )
         rudderClient!!.putDeviceToken("some_device_token")
+        rudderClient!!.track("first_event")
+
+        Handler().postDelayed({
+            RudderClient.updateWithAdvertisingId("some_idfa_changed")
+            rudderClient!!.track("second_event")
+        }, 3000)
     }
 }

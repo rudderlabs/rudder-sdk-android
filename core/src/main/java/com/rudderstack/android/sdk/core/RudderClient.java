@@ -556,11 +556,13 @@ public class RudderClient {
      * @param advertisingId IDFA for the device
      */
     public static void updateWithAdvertisingId(@Nullable String advertisingId) {
-        if (instance != null) {
-            RudderLogger.logWarn("Set the advertisingId before calling getInstance");
-            return;
+        if (instance == null) {
+            // rudder sdk is not intialized yet. let's use the advertisingId from the beginning
+            _advertisingId = advertisingId;
+        } else {
+            // update the advertisingId
+            RudderElementCache.cachedContext.updateWithAdvertisingId(advertisingId);
         }
-        _advertisingId = advertisingId;
     }
 
     /**
