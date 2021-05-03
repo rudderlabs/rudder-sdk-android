@@ -483,6 +483,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 message.setIntegrations(prepareIntegrations());
             }
         }
+        // If `All` is absent in the integrations object we will set it to true for making All is true by default
+        if(!message.getIntegrations().containsKey("All"))
+        {
+            message.setIntegrations(prepareIntegrations());
+        }
         makeFactoryDump(message, false);
         String eventJson = new Gson().toJson(message);
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
@@ -498,8 +503,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             if (isFactoryInitialized || fromHistory) {
                 //Fetch all the Integrations set by the user, for sending events to any specific device mode destinations
                 Map<String, Object> integrationOptions = message.getIntegrations();
-                //If User has set the Option 'All' as 'true'
-                if(integrationOptions.containsKey("All") && (boolean) integrationOptions.get("All")) {
+                //If 'All' is 'true'
+                if((boolean) integrationOptions.get("All")) {
                     for (String key : integrationOperationsMap.keySet()) {
                         RudderIntegration<?> integration = integrationOperationsMap.get(key);
                         //If integration is not null and if key is either not present or it is set to true, then dump it.
