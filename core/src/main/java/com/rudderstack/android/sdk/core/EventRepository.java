@@ -12,8 +12,13 @@ import android.util.Base64;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.babylon.certificatetransparency.BasicAndroidCTLogger;
+import com.babylon.certificatetransparency.BuildConfig;
+import com.babylon.certificatetransparency.CTHostnameVerifierBuilder;
 import com.google.gson.Gson;
 import com.rudderstack.android.sdk.core.util.Utils;
+
+import net.sqlcipher.database.SQLiteDatabase;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -29,6 +34,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+
 /*
  * utility class for event processing
  * */
@@ -42,6 +50,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private RudderPreferenceManager preferenceManager;
     private Map<String, RudderIntegration<?>> integrationOperationsMap = new HashMap<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
+    private HostnameVerifier hostnameVerifier = null;
 
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
@@ -86,6 +95,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
             // 4. initiate RudderServerConfigManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
+            SQLiteDatabase.loadLibs(_application);
             this.configManager = new RudderServerConfigManager(_application, _writeKey, _config);
 
             // 5. start processor thread
@@ -405,6 +415,17 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             URL url = new URL(dataPlaneEndPoint);
             // get connection object
             HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+            // enable certificate transparency
+            if (httpConnection instanceof HttpsURLConnection) {
+                HttpsURLConnection httpsConnection = (HttpsURLConnection) httpConnection;
+                if (hostnameVerifier == null) {
+                    hostnameVerifier = new CTHostnameVerifierBuilder(httpsConnection.getHostnameVerifier())
+                            .includeHost(url.getHost())
+                            .setLogger(new BasicAndroidCTLogger(BuildConfig.DEBUG))
+                            .build();
+                }
+                httpsConnection.setHostnameVerifier(hostnameVerifier);
+            }
             // set connection object to return output
             httpConnection.setDoOutput(true);
             //  set content type for network request

@@ -7,6 +7,8 @@ import android.util.Base64;
 import com.google.gson.Gson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
+import net.sqlcipher.BuildConfig;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.net.HttpURLConnection;
@@ -16,6 +18,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import com.babylon.certificatetransparency.BasicAndroidCTLogger;
+import com.babylon.certificatetransparency.CTHostnameVerifierBuilder;
+
 class RudderServerConfigManager {
     private static RudderPreferenceManager preferenceManger;
     private static RudderServerConfigManager instance;
@@ -24,6 +31,7 @@ class RudderServerConfigManager {
     private static ReentrantLock lock = new ReentrantLock();
     private Map<String, Object> integrationsMap = null;
     private Utils.NetworkResponses receivedError = Utils.NetworkResponses.SUCCESS;
+    private HostnameVerifier hostnameVerifier = null;
 
 
     RudderServerConfigManager(Application _application, String _writeKey, RudderConfig _config) {
@@ -89,6 +97,17 @@ class RudderServerConfigManager {
                 URL url = new URL(configUrl);
                 // get connection object
                 HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+                // enable certificate transparency
+                if (httpConnection instanceof HttpsURLConnection) {
+                    HttpsURLConnection httpsConnection = (HttpsURLConnection) httpConnection;
+                    if (hostnameVerifier == null) {
+                        hostnameVerifier = new CTHostnameVerifierBuilder(httpsConnection.getHostnameVerifier())
+                                .includeHost(url.getHost())
+                                .setLogger(new BasicAndroidCTLogger(BuildConfig.DEBUG))
+                                .build();
+                    }
+                    httpsConnection.setHostnameVerifier(hostnameVerifier);
+                }
                 // set request method
                 httpConnection.setRequestMethod("GET");
                 // add basic auth_header

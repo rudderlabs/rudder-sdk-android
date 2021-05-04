@@ -2,10 +2,11 @@ package com.rudderstack.android.sdk.core;
 
 import android.app.Application;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabaseCorruptException;
-import android.database.sqlite.SQLiteOpenHelper;
+import net.sqlcipher.database.SQLiteDatabase;
+import net.sqlcipher.database.SQLiteDatabaseCorruptException;
+import net.sqlcipher.database.SQLiteOpenHelper;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -18,6 +19,9 @@ import java.util.Locale;
 class DBPersistentManager extends SQLiteOpenHelper {
     // SQLite database file name
     private static final String DB_NAME = "rl_persistence.db";
+    private static final String ENCRYPTED_DB_NAME = "encrypted_" + DB_NAME;
+    // Hex Key for DB encryption.
+    private static String DB_KEY = "";
     // SQLite database version number
     private static final int DB_VERSION = 1;
     private static final String EVENTS_TABLE_NAME = "events";
@@ -41,7 +45,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
      * */
     void saveEvent(String messageJson) {
         try {
-            SQLiteDatabase database = getWritableDatabase();
+            SQLiteDatabase database = getWritableDatabase(DB_KEY);
             if (database.isOpen()) {
                 String saveEventSQL = String.format(Locale.US, "INSERT INTO %s (%s, %s) VALUES ('%s', %d)",
                         EVENTS_TABLE_NAME, MESSAGE, UPDATED, messageJson.replaceAll("'", "\\\\\'"), System.currentTimeMillis());
@@ -71,7 +75,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
      */
     void flushEvents() {
         try {
-            SQLiteDatabase database = getWritableDatabase();
+            SQLiteDatabase database = getWritableDatabase(DB_KEY);
             if (database.isOpen()) {
                 String deleteSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
                 RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: flushEvents: deleteSQL: %s", deleteSQL));
@@ -91,7 +95,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
     void clearEventsFromDB(List<Integer> messageIds) {
         try {
             // get writable database
-            SQLiteDatabase database = getWritableDatabase();
+            SQLiteDatabase database = getWritableDatabase(DB_KEY);
             if (database.isOpen()) {
                 RudderLogger.logInfo(String.format(Locale.US, "DBPersistentManager: clearEventsFromDB: Clearing %d messages from DB", messageIds.size()));
                 // format CSV string from messageIds list
@@ -126,7 +130,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
         try {
             // get readable database instance
-            SQLiteDatabase database = getReadableDatabase();
+            SQLiteDatabase database = getReadableDatabase(DB_KEY);
             if (database.isOpen()) {
                 String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC LIMIT %d", EVENTS_TABLE_NAME, UPDATED, count);
                 RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchEventsFromDB: selectSQL: %s", selectSQL));
@@ -156,7 +160,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
         try {
             // get readable database instance
-            SQLiteDatabase database = getReadableDatabase();
+            SQLiteDatabase database = getReadableDatabase(DB_KEY);
             if (database.isOpen()) {
                 String countSQL = String.format(Locale.US, "SELECT count(*) FROM %s;", EVENTS_TABLE_NAME);
                 RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: getDBRecordCount: countSQL: %s", countSQL));
@@ -186,6 +190,10 @@ class DBPersistentManager extends SQLiteOpenHelper {
     private static DBPersistentManager instance;
 
     static DBPersistentManager getInstance(Application application) {
+        deleteUnencryptedDb(application);
+        DB_KEY = RudderEncryptedPreferenceManager.getInstance(application)
+                .getDbEncryptionKey();
+
         if (instance == null) {
             RudderLogger.logInfo("DBPersistentManager: getInstance: creating instance");
             instance = new DBPersistentManager(application);
@@ -194,11 +202,18 @@ class DBPersistentManager extends SQLiteOpenHelper {
     }
 
     private DBPersistentManager(Application application) {
-        super(application, DB_NAME, null, DB_VERSION);
+        super(application, ENCRYPTED_DB_NAME, null, DB_VERSION);
         try {
-            getWritableDatabase();
+            getWritableDatabase(DB_KEY);
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
+        }
+    }
+
+    private static void deleteUnencryptedDb(Application application) {
+        File unencryptedDb = application.getDatabasePath(DB_NAME);
+        if (unencryptedDb.exists()) {
+            application.deleteDatabase(DB_NAME);
         }
     }
 
@@ -214,7 +229,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     public void deleteAllEvents() {
         try {
-            SQLiteDatabase database = getWritableDatabase();
+            SQLiteDatabase database = getWritableDatabase(DB_KEY);
             if (database.isOpen()) {
                 // remove events
                 String clearDBSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
