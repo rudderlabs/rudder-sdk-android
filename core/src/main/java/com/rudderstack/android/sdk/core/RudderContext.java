@@ -9,7 +9,9 @@ import android.text.TextUtils;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
+import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
@@ -98,10 +100,8 @@ public class RudderContext {
         }
 
         // convert the whole traits to map and take care of the extras
-        Map<String, Object> traitsMap = Utils.convertToMap(new Gson().toJson(traits));
-        if (traits.getExtras() != null) {
-            traitsMap.putAll(traits.getExtras());
-        }
+        Gson gson = new GsonBuilder().registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer()).create();
+        Map<String, Object> traitsMap = Utils.convertToMap(gson.toJson(traits));
 
         // update traits object here
         this.traits = traitsMap;
