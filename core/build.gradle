@@ -7,7 +7,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 29
         versionCode 1
-        versionName '1.0.11'
+        versionName '1.0.12'
         consumerProguardFiles 'proguard-consumer-rules.pro'
     }
 
@@ -36,3 +36,5 @@ dependencies {
     testImplementation 'org.robolectric:robolectric:4.3'
     testImplementation 'androidx.test:core-ktx:1.2.0'
 }
+
+apply from :'./maven.gradle'
