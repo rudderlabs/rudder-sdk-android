@@ -36,7 +36,7 @@ public class RudderMessage {
     @SerializedName("userProperties")
     private Map<String, Object> userProperties;
     @SerializedName("integrations")
-    private Map<String, Boolean> integrations = new HashMap<>();
+    private Map<String, Object> integrations = new HashMap<>();
     @SerializedName("destinationProps")
     private Map<String, Map> destinationProps = null;
     @SerializedName("previousId")
@@ -158,7 +158,7 @@ public class RudderMessage {
     void setIntegrations(Map<String, Object> integrations) {
         if (integrations == null) return;
         for (String key : integrations.keySet()) {
-            this.integrations.put(key, (Boolean) integrations.get(key));
+            this.integrations.put(key, integrations.get(key));
         }
     }
 
@@ -179,6 +179,9 @@ public class RudderMessage {
 
     void setRudderOption(RudderOption rudderOption) {
         this.rudderOption = rudderOption;
+        if(rudderOption!=null) {
+            setIntegrations(rudderOption.getIntegrations());
+        }
     }
 
     /**
@@ -198,5 +201,13 @@ public class RudderMessage {
      */
     public String getGroupId() {
         return this.groupId;
+    }
+
+    /**
+     * @return Integrations Map passed for the event
+     */
+    @NonNull
+    public Map<String,Object> getIntegrations() {
+        return this.integrations;
     }
 }

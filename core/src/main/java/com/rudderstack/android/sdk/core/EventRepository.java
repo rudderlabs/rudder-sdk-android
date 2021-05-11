@@ -470,10 +470,24 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
 
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: eventName: %s", message.getEventName()));
-        Map<String, Object> integrations = new HashMap<>();
-        integrations.put("All", true);
-        message.setIntegrations(integrations);
-
+        // if no integrations were set in the RudderOption object passed in that particular event
+        // we would fall back to check for the integrations in the RudderOption object passed while initializing the sdk
+        if (message.getIntegrations().size() == 0) {
+            if(RudderClient.getDefaultOptions()!=null && RudderClient.getDefaultOptions().getIntegrations()!=null && RudderClient.getDefaultOptions().getIntegrations().size()!=0)
+            {
+                message.setIntegrations(RudderClient.getDefaultOptions().getIntegrations());
+            }
+            // if no RudderOption object is passed while initializing the sdk we would set all the integrations to true
+            else
+            {
+                message.setIntegrations(prepareIntegrations());
+            }
+        }
+        // If `All` is absent in the integrations object we will set it to true for making All is true by default
+        if(!message.getIntegrations().containsKey("All"))
+        {
+            message.setIntegrations(prepareIntegrations());
+        }
         makeFactoryDump(message, false);
         String eventJson = new Gson().toJson(message);
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
@@ -487,13 +501,30 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
         synchronized (eventReplayMessageQueue) {
             if (isFactoryInitialized || fromHistory) {
-                RudderLogger.logDebug("EventRepository: makeFactoryDump: dumping message to native sdk factories");
-                message.setIntegrations(prepareIntegrations());
-                for (String key : integrationOperationsMap.keySet()) {
-                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                    RudderIntegration<?> integration = integrationOperationsMap.get(key);
-                    if (integration != null) {
-                        integration.dump(message);
+                //Fetch all the Integrations set by the user, for sending events to any specific device mode destinations
+                Map<String, Object> integrationOptions = message.getIntegrations();
+                //If 'All' is 'true'
+                if((boolean) integrationOptions.get("All")) {
+                    for (String key : integrationOperationsMap.keySet()) {
+                        RudderIntegration<?> integration = integrationOperationsMap.get(key);
+                        //If integration is not null and if key is either not present or it is set to true, then dump it.
+                        if (integration != null)
+                            if(!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key)) {
+                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                                integration.dump(message);
+                            }
+                    }
+                }
+                //If User has set any specific Option.
+                else {
+                    for (String key : integrationOperationsMap.keySet()) {
+                        RudderIntegration<?> integration = integrationOperationsMap.get(key);
+                        //If integration is not null and 'key' is set to 'true', then dump it.
+                        if (integration != null)
+                            if (integrationOptions.containsKey(key) && (boolean) integrationOptions.get(key)) {
+                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                                integration.dump(message);
+                            }
                     }
                 }
             } else {

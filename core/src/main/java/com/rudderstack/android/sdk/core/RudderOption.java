@@ -1,5 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -9,11 +10,13 @@ import java.util.Map;
 
 public class RudderOption {
     private List<Map<String, Object>> externalIds;
+    private Map<String,Object> integrations;
 
     public RudderOption() {
         if (RudderElementCache.cachedContext != null) {
             this.externalIds = RudderElementCache.cachedContext.getExternalIds();
         }
+        this.integrations = new HashMap<>();
     }
 
     public RudderOption putExternalId(String type, String id) {
@@ -54,8 +57,25 @@ public class RudderOption {
         return this;
     }
 
+    public RudderOption putIntegration(@NonNull  String type, @NonNull  boolean enabled)
+    {
+        integrations.put(type,enabled);
+        return this;
+    }
+
+    public RudderOption putIntegration(@NonNull RudderIntegration.Factory factory, @NonNull boolean enabled)
+    {
+        integrations.put(factory.key(),enabled);
+        return this;
+    }
+
     @Nullable
     List<Map<String, Object>> getExternalIds() {
         return externalIds;
+    }
+
+    @Nullable
+    Map<String, Object> getIntegrations() {
+        return this.integrations;
     }
 }

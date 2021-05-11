@@ -27,6 +27,7 @@ class MainActivity : AppCompatActivity() {
                 RudderOption()
                     .putExternalId("brazeExternalId", "some_external_id_1")
                     .putExternalId("braze_id", "some_braze_id_2")
+                    .putIntegration("GA",true).putIntegration("Amplitude",true)
             )
 
             MainApplication.rudderClient!!.track("Test Event")
