@@ -10,13 +10,15 @@ import java.util.Map;
 
 public class RudderOption {
     private List<Map<String, Object>> externalIds;
-    private Map<String,Object> integrations;
+    private Map<String, Object> integrations;
+    private Map<String, Object> customContexts;
 
     public RudderOption() {
         if (RudderElementCache.cachedContext != null) {
             this.externalIds = RudderElementCache.cachedContext.getExternalIds();
         }
         this.integrations = new HashMap<>();
+        this.customContexts = new HashMap<>();
     }
 
     public RudderOption putExternalId(String type, String id) {
@@ -57,15 +59,18 @@ public class RudderOption {
         return this;
     }
 
-    public RudderOption putIntegration(@NonNull  String type, @NonNull  boolean enabled)
-    {
-        integrations.put(type,enabled);
+    public RudderOption putIntegration(@NonNull String type, @NonNull boolean enabled) {
+        integrations.put(type, enabled);
         return this;
     }
 
-    public RudderOption putIntegration(@NonNull RudderIntegration.Factory factory, @NonNull boolean enabled)
-    {
-        integrations.put(factory.key(),enabled);
+    public RudderOption putIntegration(@NonNull RudderIntegration.Factory factory, @NonNull boolean enabled) {
+        integrations.put(factory.key(), enabled);
+        return this;
+    }
+
+    public RudderOption putCustomContext(@NonNull String key, @NonNull Map<String, Object> context) {
+        customContexts.put(key, context);
         return this;
     }
 
@@ -77,5 +82,10 @@ public class RudderOption {
     @Nullable
     Map<String, Object> getIntegrations() {
         return this.integrations;
+    }
+
+    @NonNull
+    Map<String, Object> getCustomContexts() {
+        return this.customContexts;
     }
 }

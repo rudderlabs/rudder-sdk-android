@@ -47,6 +47,7 @@ public class RudderMessage {
     private String groupId;
 
     private transient RudderOption rudderOption;
+    private transient Map<String,Object> customContexts;
 
     RudderMessage() {
         this.context = RudderElementCache.getCachedContext();
@@ -162,6 +163,13 @@ public class RudderMessage {
         }
     }
 
+    void setCustomContexts(Map<String,Object> customContexts)
+    {
+        if(customContexts == null) return;
+        this.customContexts = customContexts;
+        this.context.setCustomContexts(customContexts);
+    }
+
     public Map<String, Object> getTraits() {
         return this.context.getTraits();
     }
@@ -181,6 +189,7 @@ public class RudderMessage {
         this.rudderOption = rudderOption;
         if(rudderOption!=null) {
             setIntegrations(rudderOption.getIntegrations());
+            setCustomContexts(rudderOption.getCustomContexts());
         }
     }
 
@@ -194,6 +203,8 @@ public class RudderMessage {
 
     void updateContext() {
         this.context = RudderElementCache.getCachedContext();
+        if(this.customContexts != null)
+        this.context.setCustomContexts(this.customContexts);
     }
 
     /**

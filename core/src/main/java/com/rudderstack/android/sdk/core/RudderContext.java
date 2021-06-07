@@ -45,6 +45,7 @@ public class RudderContext {
     private String timezone;
     @SerializedName("externalId")
     private List<Map<String, Object>> externalIds = null;
+    public Map<String, Object> customContextMap = null;
 
     private static transient String _anonymousId;
 
@@ -287,6 +288,14 @@ public class RudderContext {
         } catch (NullPointerException ex) {
             RudderLogger.logError(ex);
         }
+    }
+
+    void setCustomContexts(Map<String, Object> customContexts) {
+        if (customContexts == null)
+            return;
+        if (this.customContextMap == null)
+            this.customContextMap = new HashMap<>();
+        this.customContextMap.putAll(customContexts);
     }
 
     static String getAnonymousId() {
