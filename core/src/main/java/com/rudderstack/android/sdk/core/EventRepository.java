@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
@@ -475,23 +476,23 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         // if no integrations were set in the RudderOption object passed in that particular event
         // we would fall back to check for the integrations in the RudderOption object passed while initializing the sdk
         if (message.getIntegrations().size() == 0) {
-            if(RudderClient.getDefaultOptions()!=null && RudderClient.getDefaultOptions().getIntegrations()!=null && RudderClient.getDefaultOptions().getIntegrations().size()!=0)
-            {
+            if (RudderClient.getDefaultOptions() != null && RudderClient.getDefaultOptions().getIntegrations() != null && RudderClient.getDefaultOptions().getIntegrations().size() != 0) {
                 message.setIntegrations(RudderClient.getDefaultOptions().getIntegrations());
             }
             // if no RudderOption object is passed while initializing the sdk we would set all the integrations to true
-            else
-            {
+            else {
                 message.setIntegrations(prepareIntegrations());
             }
         }
         // If `All` is absent in the integrations object we will set it to true for making All is true by default
-        if(!message.getIntegrations().containsKey("All"))
-        {
+        if (!message.getIntegrations().containsKey("All")) {
             message.setIntegrations(prepareIntegrations());
         }
         makeFactoryDump(message, false);
-        Gson gson = new GsonBuilder().registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer()).create();
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
+                .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
+                .create();
         String eventJson = gson.toJson(message);
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
         if (Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE) {
@@ -507,12 +508,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 //Fetch all the Integrations set by the user, for sending events to any specific device mode destinations
                 Map<String, Object> integrationOptions = message.getIntegrations();
                 //If 'All' is 'true'
-                if((boolean) integrationOptions.get("All")) {
+                if ((boolean) integrationOptions.get("All")) {
                     for (String key : integrationOperationsMap.keySet()) {
                         RudderIntegration<?> integration = integrationOperationsMap.get(key);
                         //If integration is not null and if key is either not present or it is set to true, then dump it.
                         if (integration != null)
-                            if(!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key)) {
+                            if (!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key)) {
                                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
                                 integration.dump(message);
                             }
