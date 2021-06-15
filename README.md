@@ -1,4 +1,4 @@
-[ ![Download](https://api.bintray.com/packages/rudderstack/rudderstack/core/images/download.svg) ](https://bintray.com/rudderstack/rudderstack/core/_latestVersion)
+[![Maven Central](https://img.shields.io/maven-central/v/com.rudderstack.android.sdk/core.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.rudderstack.android.sdk%22%20AND%20a:%22core%22)
 
 # What is RudderStack?
 
