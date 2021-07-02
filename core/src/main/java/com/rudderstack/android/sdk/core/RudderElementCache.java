@@ -29,7 +29,7 @@ class RudderElementCache {
     }
 
     static void reset() {
-        cachedContext.updateTraits(null);
+        cachedContext.resetTraits();
         cachedContext.updateExternalIds(null);
         persistTraits();
     }

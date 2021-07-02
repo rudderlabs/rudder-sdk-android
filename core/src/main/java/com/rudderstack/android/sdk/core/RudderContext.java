@@ -94,6 +94,13 @@ public class RudderContext {
         this.timezone = Utils.getTimeZone();
     }
 
+    void resetTraits() {
+        RudderTraits traits = new RudderTraits();
+        // convert the whole traits to map and take care of the extras
+        Gson gson = new GsonBuilder().registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer()).create();
+        this.traits = Utils.convertToMap(gson.toJson(traits));
+    }
+
     void updateTraits(RudderTraits traits) {
         // if traits is null reset the traits to a new one with only anonymousId
         if (traits == null) {
@@ -103,7 +110,19 @@ public class RudderContext {
         // convert the whole traits to map and take care of the extras
         Gson gson = new GsonBuilder().registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer()).create();
         Map<String, Object> traitsMap = Utils.convertToMap(gson.toJson(traits));
-        updateTraitsMap(traitsMap);
+
+        String existingId = (String) this.traits.get("id");
+        String newId = (String) traitsMap.get("id");
+
+        // If a user is already loggedIn and then a new user tries to login
+        if (existingId != null && newId != null && !existingId.equals(newId)) {
+            this.traits = traitsMap;
+            return;
+        }
+
+        // update traits object here
+        this.traits.putAll(traitsMap);
+
     }
 
     void persistTraits() {
@@ -123,18 +142,7 @@ public class RudderContext {
     }
 
     void updateTraitsMap(Map<String, Object> traits) {
-
-        String existingId = (String) this.traits.get("id");
-        String newId = (String) traits.get("id");
-
-        // If a user is already loggedIn and then a new user tries to login
-        if (existingId != null && newId != null && !existingId.equals(newId)) {
-            this.traits = traits;
-            return;
-        }
-
-        // update traits object here
-        this.traits.putAll(traits);
+        this.traits = traits;
     }
 
     String getDeviceId() {
