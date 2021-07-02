@@ -105,7 +105,7 @@ public class RudderContext {
         Map<String, Object> traitsMap = Utils.convertToMap(gson.toJson(traits));
 
         // update traits object here
-        this.traits = traitsMap;
+        this.traits.putAll(traitsMap);
     }
 
     void persistTraits() {
@@ -125,7 +125,7 @@ public class RudderContext {
     }
 
     void updateTraitsMap(Map<String, Object> traits) {
-        this.traits = traits;
+        this.traits.putAll(traits);
     }
 
     String getDeviceId() {
