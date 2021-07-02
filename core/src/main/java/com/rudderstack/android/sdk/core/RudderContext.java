@@ -103,9 +103,7 @@ public class RudderContext {
         // convert the whole traits to map and take care of the extras
         Gson gson = new GsonBuilder().registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer()).create();
         Map<String, Object> traitsMap = Utils.convertToMap(gson.toJson(traits));
-
-        // update traits object here
-        this.traits.putAll(traitsMap);
+        updateTraitsMap(traitsMap);
     }
 
     void persistTraits() {
@@ -125,6 +123,17 @@ public class RudderContext {
     }
 
     void updateTraitsMap(Map<String, Object> traits) {
+
+        String existingId = (String) this.traits.get("id");
+        String newId = (String) traits.get("id");
+
+        // If a user is already loggedIn and then a new user tries to login
+        if (existingId != null && newId != null && !existingId.equals(newId)) {
+            this.traits = traits;
+            return;
+        }
+
+        // update traits object here
         this.traits.putAll(traits);
     }
 
