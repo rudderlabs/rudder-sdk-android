@@ -115,6 +115,7 @@ public class Utils {
     public enum NetworkResponses {
         SUCCESS,
         ERROR,
-        WRITE_KEY_ERROR
+        WRITE_KEY_ERROR,
+        ERROR_500
     }
 }

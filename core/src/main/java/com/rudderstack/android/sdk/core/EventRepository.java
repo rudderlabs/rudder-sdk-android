@@ -18,6 +18,7 @@ import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -31,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 
 /*
  * utility class for event processing
@@ -256,6 +258,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             public void run() {
                 // initiate sleepCount
                 int sleepCount = 0;
+                Random rand = new Random();
                 Utils.NetworkResponses networkResponse = Utils.NetworkResponses.SUCCESS;
 
                 // initiate lists for messageId and message
@@ -310,6 +313,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         }
                         // increment sleepCount to track total elapsed seconds
                         sleepCount += 1;
+
                         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
                         if (networkResponse == Utils.NetworkResponses.WRITE_KEY_ERROR) {
                             RudderLogger.logInfo("Wrong WriteKey. Aborting");
@@ -317,6 +321,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         } else if (networkResponse == Utils.NetworkResponses.ERROR) {
                             RudderLogger.logInfo("flushEvents: Retrying in " + sleepCount + "s");
                             Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000);
+                        } else if (networkResponse == Utils.NetworkResponses.ERROR_500) {
+                            RudderLogger.logInfo("flushEvents: Retrying in for 500 error from server for " + sleepCount + " time");
+                            Thread.sleep((rand.nextInt(1000) + 1) * sleepCount);
                         } else {
                             // retry entire logic in 1 second
                             Thread.sleep(1000);
@@ -395,6 +402,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * */
     private Utils.NetworkResponses flushEventsToServer(String payload) {
         try {
+
             if (TextUtils.isEmpty(this.authHeaderString)) {
                 RudderLogger.logError("EventRepository: flushEventsToServer: WriteKey was not correct. Aborting flush to server");
                 return null;
@@ -429,18 +437,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             httpConnection.connect();
             // get input stream from connection to get output from the server
             if (httpConnection.getResponseCode() == 200) {
-                BufferedInputStream bis = new BufferedInputStream(httpConnection.getInputStream());
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                int res = bis.read();
-                // read response from the server
-                while (res != -1) {
-                    baos.write((byte) res);
-                    res = bis.read();
-                }
-                // finally return response when reading from server is completed
-                if (baos.toString().equalsIgnoreCase("OK")) {
-                    return Utils.NetworkResponses.SUCCESS;
-                }
+                return Utils.NetworkResponses.SUCCESS;
+            } else if (httpConnection.getResponseCode() == 500) {
+                return Utils.NetworkResponses.ERROR_500;
             } else {
                 BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -458,10 +457,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     return Utils.NetworkResponses.WRITE_KEY_ERROR;
                 }
             }
+
         } catch (Exception ex) {
             RudderLogger.logError(ex);
         }
         return Utils.NetworkResponses.ERROR;
+
     }
 
     /*
