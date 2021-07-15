@@ -14,8 +14,16 @@ The RudderStack Android SDK allows you to track event data from your Android app
 
 1. Add these lines to your ```app/build.gradle```
 ```
-repositories {
-  maven { url  "https://dl.bintray.com/rudderstack/rudderstack" }
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
 }
 ```
 2. Add the dependency under ```dependencies```
