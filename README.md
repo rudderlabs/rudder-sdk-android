@@ -12,7 +12,7 @@ The RudderStack Android SDK allows you to track event data from your Android app
 
 ## Getting Started with the RudderStack Android SDK
 
-1. Add these lines to your ```app/build.gradle```
+1. Add these lines to your project level `build.gradle` file
 ```
 buildscript {
     repositories {
