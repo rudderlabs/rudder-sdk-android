@@ -315,7 +315,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             RudderLogger.logInfo("Wrong WriteKey. Aborting");
                             break;
                         } else if (networkResponse == Utils.NetworkResponses.ERROR) {
-                            RudderLogger.logInfo("flushEvents: Retrying in " + sleepCount + "s");
+                            RudderLogger.logInfo("flushEvents: Retrying in " + Math.abs(sleepCount - config.getSleepTimeOut()) + "s");
                             Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000);
                         } else {
                             // retry entire logic in 1 second
