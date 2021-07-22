@@ -39,6 +39,7 @@ public class RudderConfig {
     private boolean recordScreenViews;
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
+    private List<RudderIntegration.Factory> customFactories;
 
     RudderConfig() {
         this(
@@ -51,6 +52,7 @@ public class RudderConfig {
                 Constants.TRACK_LIFECYCLE_EVENTS,
                 Constants.RECORD_SCREEN_VIEWS,
                 Constants.CONTROL_PLANE_URL,
+                null,
                 null
         );
     }
@@ -65,7 +67,8 @@ public class RudderConfig {
             boolean trackLifecycleEvents,
             boolean recordScreenViews,
             String controlPlaneUrl,
-            List<RudderIntegration.Factory> factories
+            List<RudderIntegration.Factory> factories,
+            List<RudderIntegration.Factory> customFactories
     ) {
         RudderLogger.init(logLevel);
 
@@ -116,6 +119,10 @@ public class RudderConfig {
 
         if (factories != null && !factories.isEmpty()) {
             this.factories = factories;
+        }
+
+        if (customFactories != null && !customFactories.isEmpty()) {
+            this.customFactories = customFactories;
         }
 
         if (TextUtils.isEmpty(controlPlaneUrl)) {
@@ -205,6 +212,14 @@ public class RudderConfig {
     }
 
     /**
+     * @return customFactories (list of custom factories integrated in the application)
+     */
+    @Nullable
+    public List<RudderIntegration.Factory> getCustomFactories() {
+        return customFactories;
+    }
+
+    /**
      * @return configPlaneUrl (Link to your hosted version of source-config)
      * @deprecated use getControlPlaneUrl()
      */
@@ -274,6 +289,7 @@ public class RudderConfig {
      */
     public static class Builder {
         private List<RudderIntegration.Factory> factories = new ArrayList<>();
+        private List<RudderIntegration.Factory> customFactories = new ArrayList<>();
 
         /**
          * @param factory : Instance of RudderIntegration.Factory (for more information visit https://docs.rudderstack.com)
@@ -299,6 +315,33 @@ public class RudderConfig {
          */
         public Builder withFactories(@NonNull RudderIntegration.Factory... factories) {
             Collections.addAll(this.factories, factories);
+            return this;
+        }
+
+        /**
+         * @param customFactory : Instance of RudderIntegration.Factory (for more information visit https://docs.rudderstack.com)
+         * @return RudderConfig.Builder
+         */
+        public Builder withCustomFactory(@NonNull RudderIntegration.Factory customFactory) {
+            this.customFactories.add(customFactory);
+            return this;
+        }
+
+        /**
+         * @param customFactories List of instances of RudderIntegration.Factory
+         * @return RudderConfig.Builder
+         */
+        public Builder withCustomFactories(@NonNull List<RudderIntegration.Factory> customFactories) {
+            this.customFactories.addAll(customFactories);
+            return this;
+        }
+
+        /**
+         * @param customFactories List of instances of RudderIntegration.Factory
+         * @return RudderConfig.Builder
+         */
+        public Builder withCustomFactories(@NonNull RudderIntegration.Factory... customFactories) {
+            Collections.addAll(this.customFactories, customFactories);
             return this;
         }
 
@@ -474,7 +517,8 @@ public class RudderConfig {
                     this.trackLifecycleEvents,
                     this.recordScreenViews,
                     this.controlPlaneUrl,
-                    this.factories
+                    this.factories,
+                    this.customFactories
             );
         }
     }
