@@ -1,6 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
 import android.app.Application;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
@@ -43,10 +44,12 @@ class DBPersistentManager extends SQLiteOpenHelper {
         try {
             SQLiteDatabase database = getWritableDatabase();
             if (database.isOpen()) {
-                String saveEventSQL = String.format(Locale.US, "INSERT INTO %s (%s, %s) VALUES ('%s', %d)",
-                        EVENTS_TABLE_NAME, MESSAGE, UPDATED, messageJson.replaceAll("'", "\\\\\'"), System.currentTimeMillis());
-                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: saveEvent: saveEventSQL: %s", saveEventSQL));
-                database.execSQL(saveEventSQL);
+                long updatedTime = System.currentTimeMillis();
+                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: saveEvent: Inserting Message %s into table %s as Updated at %d", messageJson.replaceAll("'", "\\\\\'"), EVENTS_TABLE_NAME, updatedTime));
+                ContentValues insertValues = new ContentValues();
+                insertValues.put(MESSAGE, messageJson.replaceAll("'", "\\\\\'"));
+                insertValues.put(UPDATED, updatedTime);
+                database.insert(EVENTS_TABLE_NAME, null, insertValues);
                 RudderLogger.logInfo("DBPersistentManager: saveEvent: Event saved to DB");
             } else {
                 RudderLogger.logError("DBPersistentManager: saveEvent: database is not writable");
