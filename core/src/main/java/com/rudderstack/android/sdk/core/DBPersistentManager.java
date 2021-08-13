@@ -185,12 +185,17 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     private DBPersistentManager(Application application) {
         super(application, DB_NAME, null, DB_VERSION);
-        try {
-            getWritableDatabase();
-            new DBInsertion(getWritableDatabase()).start();
-        } catch (SQLiteDatabaseCorruptException ex) {
-            RudderLogger.logError(ex);
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    DBPersistentManager.this.getWritableDatabase();
+                    new DBInsertion(DBPersistentManager.this.getWritableDatabase()).start();
+                } catch (SQLiteDatabaseCorruptException ex) {
+                    RudderLogger.logError(ex);
+                }
+            }
+        }).start();
     }
 
     @Override
@@ -223,14 +228,14 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
 class DBInsertion extends Thread {
     private SQLiteDatabase database;
-    
+
     public DBInsertion(SQLiteDatabase database) {
         this.database = database;
     }
 
     public void run() {
         while (true) {
-            if(!DBPersistentManager.queue.isEmpty()) {
+            if (!DBPersistentManager.queue.isEmpty()) {
                 try {
                     if (this.database.isOpen()) {
                         String messageJson = DBPersistentManager.queue.remove();
