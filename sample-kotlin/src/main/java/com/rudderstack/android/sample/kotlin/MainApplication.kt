@@ -10,9 +10,9 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://00173e358c65.ngrok.io"
+        const val DATA_PLANE_URL = "https://e5757ebd4d1a.ngrok.io"
         const val CONTROL_PLANE_URL = "https://0e741f50e567.ngrok.io"
-        const val WRITE_KEY = "1cGJAn3VgQByqQsU5yhWtsK5nwx"
+        const val WRITE_KEY = "1pTxG1Tqxr7FCrqIy7j0p28AENV"
     }
 
     override fun onCreate() {
