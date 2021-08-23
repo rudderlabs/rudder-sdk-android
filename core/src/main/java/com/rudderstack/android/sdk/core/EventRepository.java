@@ -48,7 +48,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
-    private boolean isFactoryInitialized;
+    private boolean areFactoriesInitialized = false;
+
     private int noOfActivities;
 
     /*
@@ -129,6 +130,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                 } else {
                                     RudderLogger.logDebug("EventRepository: initiateSDK: No native SDKs are found");
                                 }
+
+                                // initiate custom factories
+                                initiateCustomFactories();
+                                areFactoriesInitialized = true;
+                                replayMessageQueue();
                             } else {
                                 RudderLogger.logDebug("EventRepository: initiateSDK: source is disabled in the dashboard");
                                 RudderLogger.logDebug("Flushing persisted events");
@@ -193,7 +199,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         // let the factories capture everything they want to capture
         if (config == null || config.getFactories() == null || config.getFactories().isEmpty()) {
             RudderLogger.logInfo("EventRepository: initiateFactories: No native SDK factory found");
-            isFactoryInitialized = true;
             return;
         }
         // initiate factories if client is initialized properly
@@ -218,16 +223,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         RudderIntegration<?> nativeOp = factory.create(destinationConfig, RudderClient.getInstance(), config);
                         RudderLogger.logInfo(String.format(Locale.US, "EventRepository: initiateFactories: Initiated %s native SDK factory", key));
                         integrationOperationsMap.put(key, nativeOp);
-                        if (integrationCallbacks.containsKey(key)) {
-                            Object nativeInstance = nativeOp.getUnderlyingInstance();
-                            RudderClient.Callback callback = integrationCallbacks.get(key);
-                            if (nativeInstance != null && callback != null) {
-                                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: initiateFactories: Callback for %s factory invoked", key));
-                                callback.onReady(nativeInstance);
-                            } else {
-                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: Callback for %s factory is null", key));
-                            }
-                        }
+                        handleCallBacks(key, nativeOp);
                     } else {
                         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: destination was null or not enabled for %s", key));
                     }
@@ -236,18 +232,45 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
             }
         }
+    }
 
+    private void initiateCustomFactories() {
+        if (config == null || config.getCustomFactories() == null || config.getCustomFactories().isEmpty()) {
+            RudderLogger.logInfo("EventRepository: initiateCustomFactories: No custom factory found");
+            return;
+        }
+        for (RudderIntegration.Factory customFactory : config.getCustomFactories()) {
+            String key = customFactory.key();
+            RudderIntegration<?> nativeOp = customFactory.create(null, RudderClient.getInstance(), config);
+            RudderLogger.logInfo(String.format(Locale.US, "EventRepository: initiateCustomFactories: Initiated %s custom factory", key));
+            integrationOperationsMap.put(key, nativeOp);
+            handleCallBacks(key, nativeOp);
+        }
+    }
+
+    private void handleCallBacks(String key, RudderIntegration nativeOp) {
+        if (integrationCallbacks.containsKey(key)) {
+            Object nativeInstance = nativeOp.getUnderlyingInstance();
+            RudderClient.Callback callback = integrationCallbacks.get(key);
+            if (nativeInstance != null && callback != null) {
+                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: handleCallBacks: Callback for %s factory invoked", key));
+                callback.onReady(nativeInstance);
+            } else {
+                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: handleCallBacks: Callback for %s factory is null", key));
+            }
+        }
+    }
+
+    private void replayMessageQueue() {
         synchronized (eventReplayMessageQueue) {
-            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: replaying old messages with factory. Count: %d", eventReplayMessageQueue.size()));
+            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: replayMessageQueue: replaying old messages with factories. Count: %d", eventReplayMessageQueue.size()));
             if (!eventReplayMessageQueue.isEmpty()) {
                 for (RudderMessage message : eventReplayMessageQueue) {
                     makeFactoryDump(message, true);
                 }
             }
-            isFactoryInitialized = true;
             eventReplayMessageQueue.clear();
         }
-
     }
 
     private Runnable getProcessorRunnable() {
@@ -504,7 +527,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
         synchronized (eventReplayMessageQueue) {
-            if (isFactoryInitialized || fromHistory) {
+            if (areFactoriesInitialized || fromHistory) {
                 //Fetch all the Integrations set by the user, for sending events to any specific device mode destinations
                 Map<String, Object> integrationOptions = message.getIntegrations();
                 //If 'All' is 'true'
@@ -514,7 +537,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         //If integration is not null and if key is either not present or it is set to true, then dump it.
                         if (integration != null)
                             if (!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key)) {
-                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s and message is %s and event name is %s", key, message.getType(),message.getEventName()));
+
                                 integration.dump(message);
                             }
                     }
@@ -546,7 +570,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     void reset() {
         RudderLogger.logDebug("EventRepository: reset: resetting the SDK");
-        if (isFactoryInitialized) {
+        if (areFactoriesInitialized) {
             RudderLogger.logDebug("EventRepository: resetting native SDKs");
             for (String key : integrationOperationsMap.keySet()) {
                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: reset for %s", key));
@@ -561,7 +585,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     }
 
     void flush() {
-        if (isFactoryInitialized) {
+        if (areFactoriesInitialized) {
             RudderLogger.logDebug("EventRepository: flush native SDKs");
             for (String key : integrationOperationsMap.keySet()) {
                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush for %s", key));

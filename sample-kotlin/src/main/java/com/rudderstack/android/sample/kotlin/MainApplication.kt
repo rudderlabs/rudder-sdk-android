@@ -37,8 +37,9 @@ class MainApplication : Application() {
                 .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
                 .withTrackLifecycleEvents(false)
                 .withRecordScreenViews(false)
+                .withCustomFactory(CustomFactory.FACTORY)
                 .build()
-        )
+)
         rudderClient!!.putDeviceToken("some_device_token")
         rudderClient!!.track("first_event")
 

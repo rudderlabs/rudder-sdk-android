@@ -16,7 +16,7 @@ signing {
 
 group = 'com.rudderstack.android.sdk'
 archivesBaseName = 'core'
-version = '1.0.14'
+version = '1.0.15'
 
 File secretPropsFile = project.rootProject.file('local.properties')
 if (secretPropsFile.exists()) {
