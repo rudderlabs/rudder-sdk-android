@@ -4,6 +4,8 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.annotation.NonNull;
+
 class RudderPreferenceManager {
     // keys
     private static final String RUDDER_PREFS = "rl_prefs";
@@ -12,6 +14,7 @@ class RudderPreferenceManager {
     private static final String RUDDER_TRAITS_KEY = "rl_traits";
     private static final String RUDDER_APPLICATION_INFO_KEY = "rl_application_info_key";
     private static final String RUDDER_EXTERNAL_ID_KEY = "rl_external_id";
+    private static final String RUDDER_OPT_STATUS_KEY = "rl_opt_status";
 
     private static SharedPreferences preferences;
     private static RudderPreferenceManager instance;
@@ -68,5 +71,13 @@ class RudderPreferenceManager {
 
     void clearExternalIds() {
         preferences.edit().remove(RUDDER_EXTERNAL_ID_KEY).apply();
+    }
+
+    boolean getOptStatus() {
+        return preferences.getBoolean(RUDDER_OPT_STATUS_KEY, false);
+    }
+
+    void saveOptStatus(@NonNull boolean optStatus) {
+        preferences.edit().putBoolean(RUDDER_OPT_STATUS_KEY, optStatus).apply();
     }
 }
