@@ -49,6 +49,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
     private boolean areFactoriesInitialized = false;
+    private boolean isOptedOut = false;
 
     private int noOfActivities;
 
@@ -98,6 +99,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
             // initiate RudderPreferenceManager and check for lifeCycleEvents
             preferenceManager = RudderPreferenceManager.getInstance(_application);
+            this.isOptedOut = preferenceManager.getOptStatus();
             if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
                 this.checkApplicationUpdateStatus(_application);
                 _application.registerActivityLifecycleCallbacks(this);
@@ -494,6 +496,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (!isSDKEnabled) {
             return;
         }
+        if (this.isOptedOut) {
+            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+            return;
+        }
 
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: eventName: %s", message.getEventName()));
         // if no integrations were set in the RudderOption object passed in that particular event
@@ -537,7 +543,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         //If integration is not null and if key is either not present or it is set to true, then dump it.
                         if (integration != null)
                             if (!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key)) {
-                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s and message is %s and event name is %s", key, message.getType(),message.getEventName()));
+                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s and message is %s and event name is %s", key, message.getType(), message.getEventName()));
 
                                 integration.dump(message);
                             }
@@ -595,6 +601,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
             }
         }
+    }
+
+    void saveOptStatus(@NonNull boolean optStatus) {
+        this.isOptedOut = optStatus;
+        preferenceManager.saveOptStatus(optStatus);
     }
 
     void onIntegrationReady(String key, RudderClient.Callback callback) {
