@@ -603,6 +603,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
+    boolean getOptStatus(){
+        return this.isOptedOut;
+    }
+
     void saveOptStatus(@NonNull boolean optStatus) {
         this.isOptedOut = optStatus;
         preferenceManager.saveOptStatus(optStatus);
@@ -611,14 +615,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     void onIntegrationReady(String key, RudderClient.Callback callback) {
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: onIntegrationReady: callback registered for %s", key));
         integrationCallbacks.put(key, callback);
-    }
-
-    void shutdown() {
-        // TODO: decide shutdown behavior
-    }
-
-    void optOut() {
-        // TODO:  decide optout functionality and restrictions
     }
 
     @Override
