@@ -710,6 +710,7 @@ public class RudderClient {
         RudderElementCache.cachedContext.putDeviceToken(deviceToken);
     }
 
+    // Comment: Shall we block this or not as this doesnt identify a user directly (for both setting and getting it)
     /**
      * Set the anonymousId for the device to be used further
      *
