@@ -1,4 +1,4 @@
-<!-- [![Maven Central](https://img.shields.io/maven-central/v/com.rudderstack.android.sdk/core.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.rudderstack.android.sdk%22%20AND%20a:%22core%22) -->
+[![Maven Central](https://img.shields.io/maven-central/v/com.rudderstack.android.sdk/core.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.rudderstack.android.sdk%22%20AND%20a:%22core%22)
 
 # What is RudderStack?
 
@@ -28,7 +28,7 @@ allprojects {
 ```
 2. Add the dependency under ```dependencies```
 ```
-implementation 'com.rudderstack.android.sdk:core:1.0.15'
+implementation 'com.rudderstack.android.sdk:core:1.0.17'
 ```
 
 ## Initialize ```RudderClient```
