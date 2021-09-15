@@ -62,7 +62,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * 5. start processor thread
      * 6. initiate factories
      * */
-    EventRepository(Application _application, String _writeKey, RudderConfig _config, String _anonymousId, String _advertisingId, RudderPreferenceManager preferenceManager) {
+    EventRepository(Application _application, String _writeKey, RudderConfig _config, String _anonymousId, String _advertisingId) {
         // 1. set the values of writeKey, config
         try {
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: writeKey: %s", _writeKey));
@@ -75,6 +75,14 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         RudderLogger.logDebug(String.format("EventRepository: constructor: %s", this.config.toString()));
 
         try {
+            // initiate RudderPreferenceManager
+            this.preferenceManager = RudderPreferenceManager.getInstance(_application);
+            if (preferenceManager.getOptStatus()) {
+                RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the anonymousId and advertisingId");
+                _anonymousId = null;
+                _advertisingId = null;
+            }
+
             // 2. initiate RudderElementCache
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
             RudderElementCache.initiate(_application, _anonymousId, _advertisingId);
@@ -96,8 +104,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
             this.initiateSDK();
 
-            // initialise RudderPreferenceManager and check for lifeCycleEvents
-            this.preferenceManager = preferenceManager;
+            // check for lifeCycleEvents
             if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
                 this.checkApplicationUpdateStatus(_application);
                 _application.registerActivityLifecycleCallbacks(this);
@@ -523,6 +530,39 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             return;
         }
         dbManager.saveEvent(eventJson);
+    }
+
+    /**
+     * Opts out a user from tracking the activity. When enabled all the events will be dropped by the SDK.
+     *
+     * @param optOut    Boolean value to store optOut status
+     */
+    void saveOptStatus(boolean optOut) {
+        if (preferenceManager != null) {
+            preferenceManager.saveOptStatus(optOut);
+            updateOptOutTime(optOut);
+        }
+        else {
+            RudderLogger.logError("RudderPreferenceManager object is not initialised. Aborting optOut call");
+        }
+    }
+
+    /**
+     * Update optOut time in RudderSharedPreferenceManager
+     *
+     * @param optOut    Boolean value to update optIn or optOut time
+     */
+    private void updateOptOutTime(boolean optOut) {
+        if (optOut) {
+            preferenceManager.updateOptInTime();
+        }
+        else {
+            preferenceManager.updateOptOutTime();
+        }
+    }
+
+    boolean getOptStatus() {
+        return preferenceManager.getOptStatus();
     }
 
     private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
