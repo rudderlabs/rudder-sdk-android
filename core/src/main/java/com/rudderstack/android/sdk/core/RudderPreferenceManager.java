@@ -15,6 +15,8 @@ class RudderPreferenceManager {
     private static final String RUDDER_APPLICATION_INFO_KEY = "rl_application_info_key";
     private static final String RUDDER_EXTERNAL_ID_KEY = "rl_external_id";
     private static final String RUDDER_OPT_STATUS_KEY = "rl_opt_status";
+    private static final String RUDDER_OPT_IN_TIME_KEY = "rl_opt_in_time";
+    private static final String RUDDER_OPT_OUT_TIME_KEY = "rl_opt_out_time";
 
     private static SharedPreferences preferences;
     private static RudderPreferenceManager instance;
@@ -73,11 +75,29 @@ class RudderPreferenceManager {
         preferences.edit().remove(RUDDER_EXTERNAL_ID_KEY).apply();
     }
 
+    void saveOptStatus(boolean optStatus) {
+        preferences.edit().putBoolean(RUDDER_OPT_STATUS_KEY, optStatus).apply();
+    }
+
     boolean getOptStatus() {
         return preferences.getBoolean(RUDDER_OPT_STATUS_KEY, false);
     }
 
-    void saveOptStatus(@NonNull boolean optStatus) {
-        preferences.edit().putBoolean(RUDDER_OPT_STATUS_KEY, optStatus).apply();
+    void updateOptInTime() {
+        preferences.edit().putLong(RUDDER_OPT_IN_TIME_KEY, System.currentTimeMillis()).apply();
     }
+
+    void updateOptOutTime() {
+        preferences.edit().putLong(RUDDER_OPT_OUT_TIME_KEY, System.currentTimeMillis()).apply();
+    }
+
+    long getOptInTime() {
+        return preferences.getLong(RUDDER_OPT_IN_TIME_KEY, -1);
+    }
+
+    long getOptOutTime() {
+        return preferences.getLong(RUDDER_OPT_OUT_TIME_KEY, -1);
+    }
+
+
 }

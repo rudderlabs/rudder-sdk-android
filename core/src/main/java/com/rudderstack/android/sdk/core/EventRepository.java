@@ -49,7 +49,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
     private boolean areFactoriesInitialized = false;
-    private boolean isOptedOut = false;
 
     private int noOfActivities;
 
@@ -63,7 +62,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * 5. start processor thread
      * 6. initiate factories
      * */
-    EventRepository(Application _application, String _writeKey, RudderConfig _config, String _anonymousId, String _advertisingId) {
+    EventRepository(Application _application, String _writeKey, RudderConfig _config, String _anonymousId, String _advertisingId, RudderPreferenceManager preferenceManager) {
         // 1. set the values of writeKey, config
         try {
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: writeKey: %s", _writeKey));
@@ -97,9 +96,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
             this.initiateSDK();
 
-            // initiate RudderPreferenceManager and check for lifeCycleEvents
-            preferenceManager = RudderPreferenceManager.getInstance(_application);
-            this.isOptedOut = preferenceManager.getOptStatus();
+            // initialise RudderPreferenceManager and check for lifeCycleEvents
+            this.preferenceManager = preferenceManager;
             if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
                 this.checkApplicationUpdateStatus(_application);
                 _application.registerActivityLifecycleCallbacks(this);
@@ -496,10 +494,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (!isSDKEnabled) {
             return;
         }
-        if (this.isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
-            return;
-        }
 
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: eventName: %s", message.getEventName()));
         // if no integrations were set in the RudderOption object passed in that particular event
@@ -601,15 +595,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
             }
         }
-    }
-
-    boolean getOptStatus(){
-        return this.isOptedOut;
-    }
-
-    void saveOptStatus(@NonNull boolean optStatus) {
-        this.isOptedOut = optStatus;
-        preferenceManager.saveOptStatus(optStatus);
     }
 
     void onIntegrationReady(String key, RudderClient.Callback callback) {

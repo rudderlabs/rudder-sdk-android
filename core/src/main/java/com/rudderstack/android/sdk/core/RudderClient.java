@@ -24,7 +24,7 @@ public class RudderClient {
     private static String _advertisingId;
     private static String _anonymousId;
     private static RudderOption defaultOptions;
-    private static boolean _isOptedOut;
+    private static RudderPreferenceManager preferenceManager;
 
     /*
      * private constructor
@@ -92,7 +92,7 @@ public class RudderClient {
             RudderLogger.logVerbose("getInstance: instance null. creating instance");
             // assert writeKey is not null or empty
             if (TextUtils.isEmpty(writeKey)) {
-                RudderLogger.logError("RudderClient: getInstance: writeKey can not be null or empty");
+                throw new IllegalArgumentException("RudderClient: getInstance: writeKey can not be null or empty");
             }
             // assert config is not null
             if (config == null) {
@@ -125,11 +125,18 @@ public class RudderClient {
             // initiate RudderClient instance
             instance = new RudderClient();
 
+            // initiate RudderPreferenceManager
+            preferenceManager = RudderPreferenceManager.getInstance(application);
+
             // initiate EventRepository class
-            if (application != null && writeKey != null) {
+            if (application != null) {
                 RudderLogger.logVerbose("getInstance: creating EventRepository.");
-                repository = new EventRepository(application, writeKey, config, _anonymousId, _advertisingId);
-                _isOptedOut = repository.getOptStatus();
+                if (preferenceManager.getOptStatus()) {
+                    RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the anonymousId and advertisingId");
+                    _anonymousId = null;
+                    _advertisingId = null;
+                }
+                repository = new EventRepository(application, writeKey, config, _anonymousId, _advertisingId, preferenceManager);
             }
         }
         return instance;
@@ -166,6 +173,13 @@ public class RudderClient {
      */
     @Nullable
     public static Application getApplication() {
+        if (preferenceManager == null)  {
+            return null;
+        }
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the getApplication() api call");
+            return null;
+        }
         return application;
     }
 
@@ -176,8 +190,8 @@ public class RudderClient {
      * @deprecated Will be removed soon
      */
     public void track(@NonNull RudderMessageBuilder builder) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the track event");
             return;
         }
         track(builder.build());
@@ -190,8 +204,8 @@ public class RudderClient {
      * @deprecated Will be removed soon
      */
     public void track(@NonNull RudderMessage message) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the track event");
             return;
         }
         message.setType(MessageType.TRACK);
@@ -208,8 +222,8 @@ public class RudderClient {
      * @param event Name of the event you want to track
      */
     public void track(@NonNull String event) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if(preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the track event");
             return;
         }
         track(new RudderMessageBuilder().setEventName(event).build());
@@ -224,8 +238,8 @@ public class RudderClient {
      * @param property RudderProperty object you want to pass with the track call
      */
     public void track(@NonNull String event, @Nullable RudderProperty property) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the track event");
             return;
         }
         track(new RudderMessageBuilder().setEventName(event).setProperty(property).build());
@@ -241,8 +255,8 @@ public class RudderClient {
      * @param option   Options related to this track call
      */
     public void track(@NonNull String event, @Nullable RudderProperty property, @Nullable RudderOption option) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the track event");
             return;
         }
         track(new RudderMessageBuilder()
@@ -259,8 +273,8 @@ public class RudderClient {
      * @deprecated Will be removed soon
      */
     public void screen(@NonNull RudderMessageBuilder builder) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the screen event");
             return;
         }
         screen(builder.build());
@@ -273,8 +287,8 @@ public class RudderClient {
      * @deprecated Will be removed soon
      */
     public void screen(@NonNull RudderMessage message) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the screen event");
             return;
         }
         message.setType(MessageType.SCREEN);
@@ -291,8 +305,8 @@ public class RudderClient {
      * @param screenName Name of the screen
      */
     public void screen(@NonNull String screenName) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the screen event");
             return;
         }
         RudderProperty property = new RudderProperty();
@@ -307,8 +321,8 @@ public class RudderClient {
      * @param property   RudderProperty object you want to pass with the screen call
      */
     public void screen(@NonNull String screenName, @Nullable RudderProperty property) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the screen event");
             return;
         }
         if (property == null) property = new RudderProperty();
@@ -325,8 +339,8 @@ public class RudderClient {
      * @param option     Options related to this screen call
      */
     public void screen(@NonNull String screenName, @NonNull String category, @Nullable RudderProperty property, @Nullable RudderOption option) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the screen event");
             return;
         }
         if (property == null) property = new RudderProperty();
@@ -343,8 +357,8 @@ public class RudderClient {
      * @param option     Options related to this screen call
      */
     public void screen(@NonNull String screenName, @Nullable RudderProperty property, @Nullable RudderOption option) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the screen event");
             return;
         }
         if (property == null) {
@@ -365,8 +379,8 @@ public class RudderClient {
      * @deprecated Will be removed soon
      */
     public void identify(@NonNull RudderMessage message) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the identify event");
             return;
         }
         // update cached traits and persist
@@ -401,8 +415,8 @@ public class RudderClient {
      * @param option RudderOption object
      */
     public void identify(@NonNull RudderTraits traits, @Nullable RudderOption option) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the identify event");
             return;
         }
         RudderMessage message = new RudderMessageBuilder()
@@ -420,8 +434,8 @@ public class RudderClient {
      * @param traits RudderTraits object
      */
     public void identify(@NonNull RudderTraits traits) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the identify event");
             return;
         }
         identify(traits, null);
@@ -433,8 +447,8 @@ public class RudderClient {
      * @param builder RudderTraitsBuilder object
      */
     public void identify(@NonNull RudderTraitsBuilder builder) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the identify event");
             return;
         }
         identify(builder.build());
@@ -448,8 +462,8 @@ public class RudderClient {
      * @param userId userId of your User
      */
     public void identify(@NonNull String userId) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the identify event");
             return;
         }
         identify(new RudderTraitsBuilder().setId(userId));
@@ -465,8 +479,8 @@ public class RudderClient {
      * @param option Extra options using RudderOption class
      */
     public void identify(@NonNull String userId, @Nullable RudderTraits traits, @Nullable RudderOption option) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the identify event");
             return;
         }
         // create new traits object from cache if supplied traits is null
@@ -486,8 +500,8 @@ public class RudderClient {
      * @deprecated Will be removed soon
      */
     public void alias(@NonNull RudderMessageBuilder builder) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the alias event");
             return;
         }
         alias(builder.build());
@@ -500,8 +514,8 @@ public class RudderClient {
      * @deprecated Will be removed soon
      */
     void alias(@NonNull RudderMessage message) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the alias event");
             return;
         }
         message.setType(MessageType.ALIAS);
@@ -518,8 +532,8 @@ public class RudderClient {
      * @param newId New userId for the user
      */
     public void alias(String newId) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the alias event");
             return;
         }
         alias(newId, null);
@@ -534,8 +548,8 @@ public class RudderClient {
      * @param option RudderOptions for this event
      */
     public void alias(@NonNull String newId, @Nullable RudderOption option) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the alias event");
             return;
         }
         Map<String, Object> traits = getRudderContext().getTraits();
@@ -573,8 +587,8 @@ public class RudderClient {
      * @deprecated Will be removed soon
      */
     public void group(@NonNull RudderMessageBuilder builder) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the group event");
             return;
         }
         group(builder.build());
@@ -587,8 +601,8 @@ public class RudderClient {
      * @deprecated Will be removed soon
      */
     public void group(@NonNull RudderMessage message) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the group event");
             return;
         }
         message.setType(MessageType.GROUP);
@@ -605,8 +619,8 @@ public class RudderClient {
      * @param groupId Group ID you want your user to attach to
      */
     public void group(@NonNull String groupId) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the group event");
             return;
         }
         group(groupId, null);
@@ -621,8 +635,8 @@ public class RudderClient {
      * @param traits  Traits of the group
      */
     public void group(@NonNull String groupId, @Nullable RudderTraits traits) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the group event");
             return;
         }
         group(groupId, traits, null);
@@ -638,8 +652,8 @@ public class RudderClient {
      * @param option  Options for this group call
      */
     public void group(@NonNull String groupId, @Nullable RudderTraits traits, @Nullable RudderOption option) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the group event");
             return;
         }
         RudderMessage message = new RudderMessageBuilder()
@@ -662,15 +676,14 @@ public class RudderClient {
         instance = _instance;
     }
 
-    // Comment: Need to discuss whether to block or not
     /**
      * Get the auto-populated RudderContext back
      *
      * @return cached RudderContext object
      */
     public RudderContext getRudderContext() {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence you cannot retrieve the context object");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence context object cannot be retrieved");
             return null;
         }
         return RudderElementCache.getCachedContext();
@@ -684,15 +697,11 @@ public class RudderClient {
      * @param advertisingId IDFA for the device
      */
     public static void updateWithAdvertisingId(@Nullable String advertisingId) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence you cannot update his advertising Id");
-            return;
-        }
         if (instance == null) {
-            // rudder sdk is not intialized yet. let's use the advertisingId from the beginning
+            // rudder sdk is not initialised yet. let's use the advertisingId from the beginning
             _advertisingId = advertisingId;
-        } else {
-            // update the advertisingId
+        }
+        else {
             RudderElementCache.cachedContext.updateWithAdvertisingId(advertisingId);
         }
     }
@@ -703,24 +712,19 @@ public class RudderClient {
      * @param deviceToken Push Token from FCM
      */
     public void putDeviceToken(@Nullable String deviceToken) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence you cannot set his device token");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence device token cannot be set");
             return;
         }
         RudderElementCache.cachedContext.putDeviceToken(deviceToken);
     }
 
-    // Comment: Shall we block this or not as this doesnt identify a user directly (for both setting and getting it)
     /**
      * Set the anonymousId for the device to be used further
      *
      * @param anonymousId AnonymousId you want to use for the application
      */
     public static void setAnonymousId(String anonymousId) {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence you cannot set his anonymousId");
-            return;
-        }
         if (instance != null) {
             RudderLogger.logWarn("Set the anonymousId before calling getInstance");
             return;
@@ -728,28 +732,22 @@ public class RudderClient {
         _anonymousId = anonymousId;
     }
 
-    // Comment: Need to discuss whether reset should be blocked or not
     /**
      * Reset SDK
      */
     public void reset() {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
-            return;
-        }
         RudderElementCache.reset();
         if (repository != null) {
             repository.reset();
         }
     }
 
-    // Comment: Need to discuss whether reset should be blocked or not
     /**
      * Flush Events
      */
     public void flush() {
-        if (_isOptedOut) {
-            RudderLogger.logDebug("User Opted out for tracking his activity, hence dropping the events");
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the flush event");
             return;
         }
         if (repository != null) {
@@ -758,18 +756,40 @@ public class RudderClient {
     }
 
     /**
-     * Opts out a user from tracking his activity. When enabled all the events will be dropped by the SDK.
+     * Opts out a user from tracking the activity. When enabled all the events will be dropped by the SDK.
+     *
+     * @param optOut    Boolean value to store optOut status
      */
-    public void optOut(@NonNull boolean optOut) {
-        if (repository != null) {
-            reset();
-            flush();
-            _isOptedOut = optOut;
-            repository.saveOptStatus(optOut);
+    public void optOut(boolean optOut) {
+        if (preferenceManager != null) {
+            preferenceManager.saveOptStatus(optOut);
+            updateOptOutTime(optOut);
+        }
+        else {
+            RudderLogger.logError("RudderPreferenceManager object is not initialised. Aborting optOut call");
         }
     }
 
-    // Comment: Maybe we can ignore this as this is not related to user activity.
+    /**
+     * Update optOut time in RudderSharedPreferenceManager
+     *
+     * @param optOut    Boolean value to update optIn or optOut time
+     */
+    private void updateOptOutTime(boolean optOut) {
+        if (optOut) {
+            preferenceManager.updateOptInTime();
+        }
+        else {
+            preferenceManager.updateOptOutTime();
+        }
+    }
+
+    /**
+     * Stops this instance from accepting further requests. In-flight events may not be uploaded
+     * right away.
+     */
+    public void shutdown() {}
+
     /**
      * Register Native SDK callback for custom implementation
      *
@@ -777,12 +797,15 @@ public class RudderClient {
      * @param callback RudderClient.Callback object
      */
     public void onIntegrationReady(String key, Callback callback) {
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the Register Native SDK callback events");
+            return;
+        }
         if (repository != null) {
             repository.onIntegrationReady(key, callback);
         }
     }
 
-    // Comment: Maybe we can ignore this as this is not related to user activity. Need to discuss as some part of it doesn't contain user data and some contains
     /**
      * @return default RudderOption object which was set on the initialization of sdk
      */
