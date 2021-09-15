@@ -788,7 +788,9 @@ public class RudderClient {
      * Stops this instance from accepting further requests. In-flight events may not be uploaded
      * right away.
      */
-    public void shutdown() {}
+    public void shutdown() {
+        // TODO: decide shutdown behavior
+    }
 
     /**
      * Register Native SDK callback for custom implementation
