@@ -9,3 +9,5 @@ dependencyResolutionManagement {
 rootProject.name = "Rudder-Android-Libs"
 include ':app'
 include ':web'
+include ':gsonrudderadapter'
+include ':repository'

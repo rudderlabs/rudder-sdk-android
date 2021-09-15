@@ -12,6 +12,7 @@ import java.util.concurrent.*
 class WebServiceImpl internal constructor(
     private val baseUrl: String,
     private val jsonConverter: JsonConverter,
+    private val defaultTimeout:Int = 10000,
     private val executor: ExecutorService = Executors.newCachedThreadPool()
 ) : WebService {
 
@@ -42,6 +43,33 @@ class WebServiceImpl internal constructor(
 
     }
 
+    override fun <T> getAsync(
+        headers: Map<String, String>?,
+        query: Map<String, String>?,
+        endpoint: String,
+        callback: (HttpResponse<T>) -> Unit
+    ) {
+        executor.execute {
+             httpCall<T>(headers, query, null, endpoint, HttpMethod.GET).apply {
+                 callback.invoke(this)
+             }
+        }
+    }
+
+    override fun <T> postAsync(
+        headers: Map<String, String>?,
+        query: Map<String, String>?,
+        body: Any?,
+        endpoint: String,
+        callback: (HttpResponse<T>) -> Unit
+    ) {
+        executor.execute {
+            httpCall<T>(headers, query, body, endpoint, HttpMethod.POST).apply {
+                callback.invoke(this)
+            }
+        }
+    }
+
     override fun setInterceptor(httpInterceptor: HttpInterceptor) {
         _interceptor = httpInterceptor
     }
@@ -55,7 +83,7 @@ class WebServiceImpl internal constructor(
     ): HttpResponse<T> {
 //        try {
 
-            val httpConnection = createHttpConnection(endpoint, headers, type, query, body) {
+            val httpConnection = createHttpConnection(endpoint, headers, type, query, body, defaultTimeout) {
                 //call interceptor if any changes to HttpConnection required
                 _interceptor?.intercept(it) ?: it
             }
@@ -107,7 +135,7 @@ class WebServiceImpl internal constructor(
         endpoint: String,
         headers: Map<String, String>?, type: HttpMethod,
         query: Map<String, String>?,
-        body: Any?, onHttpConnectionCreated: (HttpURLConnection) -> HttpURLConnection
+        body: Any?,defaultTimeout: Int, onHttpConnectionCreated: (HttpURLConnection) -> HttpURLConnection
     ): HttpURLConnection {
         //the url to hit
         val urlStr = "$baseUrl$endpoint" + query?.createQueryString()?.let {    //add query params
@@ -118,7 +146,7 @@ class WebServiceImpl internal constructor(
         var httpConnection = url.openConnection() as HttpURLConnection
         // set connection object to return output
         httpConnection.doOutput = true
-
+        httpConnection.connectTimeout = defaultTimeout
         //set headers
         headers?.iterator()?.forEach { headerEntry ->
             httpConnection.setRequestProperty(headerEntry.key, headerEntry.value)
