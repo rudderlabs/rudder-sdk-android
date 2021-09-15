@@ -511,12 +511,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (!message.getIntegrations().containsKey("All")) {
             message.setIntegrations(prepareIntegrations());
         }
-        makeFactoryDump(message, false);
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
                 .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
                 .create();
         String eventJson = gson.toJson(message);
+        makeFactoryDump(message, false);
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
         if (Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE) {
             RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
