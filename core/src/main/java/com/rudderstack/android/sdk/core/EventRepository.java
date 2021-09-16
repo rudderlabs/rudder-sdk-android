@@ -540,7 +540,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     void saveOptStatus(boolean optOut) {
         if (preferenceManager != null) {
             preferenceManager.saveOptStatus(optOut);
-            updateOptOutTime(optOut);
+            updateOptStatusTime(optOut);
         }
         else {
             RudderLogger.logError("RudderPreferenceManager object is not initialised. Aborting optOut call");
@@ -552,7 +552,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      *
      * @param optOut    Boolean value to update optIn or optOut time
      */
-    private void updateOptOutTime(boolean optOut) {
+    private void updateOptStatusTime(boolean optOut) {
         if (optOut) {
             preferenceManager.updateOptInTime();
         }
