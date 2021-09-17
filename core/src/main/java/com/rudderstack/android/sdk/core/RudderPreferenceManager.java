@@ -4,8 +4,6 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import androidx.annotation.NonNull;
-
 class RudderPreferenceManager {
     // keys
     private static final String RUDDER_PREFS = "rl_prefs";
@@ -98,6 +96,4 @@ class RudderPreferenceManager {
     long getOptOutTime() {
         return preferences.getLong(RUDDER_OPT_OUT_TIME_KEY, -1);
     }
-
-
 }

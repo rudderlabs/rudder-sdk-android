@@ -582,7 +582,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         //If integration is not null and if key is either not present or it is set to true, then dump it.
                         if (integration != null)
                             if (!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key)) {
-                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s and message is %s and event name is %s", key, message.getType(), message.getEventName()));
+                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s and message is %s and event name is %s", key, message.getType(),message.getEventName()));
 
                                 integration.dump(message);
                             }
