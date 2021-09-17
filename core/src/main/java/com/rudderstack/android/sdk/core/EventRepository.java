@@ -78,9 +78,19 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             // initiate RudderPreferenceManager
             this.preferenceManager = RudderPreferenceManager.getInstance(_application);
             if (preferenceManager.getOptStatus()) {
-                RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the anonymousId and advertisingId");
-                _anonymousId = null;
-                _advertisingId = null;
+                if (_anonymousId != null && _advertisingId != null) {
+                    _anonymousId = null;
+                    _advertisingId = null;
+                    RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the anonymousId and advertisingId");
+                }
+                else if (_anonymousId != null) {
+                    _anonymousId = null;
+                    RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the anonymousId");
+                }
+                else if (_advertisingId != null) {
+                    _advertisingId = null;
+                    RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the advertisingId");
+                }
             }
 
             // 2. initiate RudderElementCache
@@ -538,29 +548,29 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * @param optOut    Boolean value to store optOut status
      */
     void saveOptStatus(boolean optOut) {
-        if (preferenceManager != null) {
-            preferenceManager.saveOptStatus(optOut);
-            updateOptStatusTime(optOut);
+        preferenceManager.saveOptStatus(optOut);
+        updateOptStatusTime(optOut);
+    }
+
+    /**
+     * If true, save user optOut time
+     * If false, save user optIn time
+     *
+     * @param optOut    Boolean value to update optOut or optIn time
+     */
+    private void updateOptStatusTime(boolean optOut) {
+        if (optOut) {
+            preferenceManager.updateOptOutTime();
         }
         else {
-            RudderLogger.logError("RudderPreferenceManager object is not initialised. Aborting optOut call");
+            preferenceManager.updateOptInTime();
         }
     }
 
     /**
-     * Update optOut time in RudderSharedPreferenceManager
      *
-     * @param optOut    Boolean value to update optIn or optOut time
+     * @return optOut status
      */
-    private void updateOptStatusTime(boolean optOut) {
-        if (optOut) {
-            preferenceManager.updateOptInTime();
-        }
-        else {
-            preferenceManager.updateOptOutTime();
-        }
-    }
-
     boolean getOptStatus() {
         return preferenceManager.getOptStatus();
     }
