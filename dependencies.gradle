@@ -1,0 +1,14 @@
+ext {
+    versions = [
+            gson   : "2.8.8",
+            jackson: "2.12.4",
+            moshi  : "1.12.0"
+    ]
+
+    deps = [
+            gson   : "com.google.code.gson:gson:${versions.gson}",
+            jackson: "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
+            moshi  : "com.squareup.moshi:moshi-kotlin:${versions.moshi}"
+
+    ]
+}

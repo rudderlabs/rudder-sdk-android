@@ -110,7 +110,7 @@ class Dao<T : Entity> internal constructor(
 
         if (cursor.moveToFirst()) {
             do {
-                items.add(fields.associate {
+                val entity = fields.associate {
                     val value = when (it.type) {
                         RudderField.Type.INTEGER -> cursor.getInt(
                             cursor.getColumnIndex(it.fieldName).takeIf { it > 1 }
@@ -123,7 +123,8 @@ class Dao<T : Entity> internal constructor(
                     Pair(it.fieldName, value)
                 }.let {
                     entityFactory.getEntity(entityClass, it)
-                })
+                }
+                items.add(entity)
             } while (cursor.moveToNext())
         }
         cursor.close()
