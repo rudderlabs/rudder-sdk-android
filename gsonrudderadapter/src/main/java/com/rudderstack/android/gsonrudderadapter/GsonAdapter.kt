@@ -1,12 +1,22 @@
 package com.rudderstack.android.gsonrudderadapter
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
 
 class GsonAdapter : JsonAdapter {
-    override fun <T> writeToJson(): String? {
-        val type = (object : TypeToken<T>(){}).type
-        return null
+    private val gson = GsonBuilder().create()
+    override fun <T> readJsonParameterized(typeAdapter: RudderTypeAdapter<T>, json: String): T? {
+        return gson.fromJson(json, object : TypeToken<T>() {}.type)
+    }
+
+    override fun writeToJson(obj: Any): String? {
+        return gson.toJson(obj)
+    }
+
+    override fun <T> readJson(json: String, resultClass: Class<T>): T {
+        return gson.fromJson(json, resultClass)
     }
 }

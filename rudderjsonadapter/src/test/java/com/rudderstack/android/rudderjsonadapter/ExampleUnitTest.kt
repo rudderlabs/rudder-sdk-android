@@ -1,8 +1,5 @@
 package com.rudderstack.android.rudderjsonadapter
 
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -19,7 +16,7 @@ class ExampleUnitTest {
         assertEquals(4, 2 + 2)
     }
 
-    data class SomeClass(val name: String, val prop: String)
+    /*data class SomeClass(val name: String, val prop: String)
 
     val someJson = "{" +
             "\" type1\" : [" +
@@ -28,9 +25,9 @@ class ExampleUnitTest {
             "\"prop\":\"iok\"" +
             "}" +
             "]" +
-            "}"
+            "}"*/
 
-    @Test
+    /*@Test
     fun checkType() {
 //        val type = Map<String,String>::class.java.typeName
         val rta = object : RudderTypeAdapter<Map<String, List<SomeClass>>>() {}
@@ -54,5 +51,5 @@ class ExampleUnitTest {
         assert(res != null)
         println("res: $res")
 
-    }
+    }*/
 }

@@ -8,7 +8,10 @@ ext {
     deps = [
             gson   : "com.google.code.gson:gson:${versions.gson}",
             jackson: "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
-            moshi  : "com.squareup.moshi:moshi-kotlin:${versions.moshi}"
+            moshi  : [
+                    kotlin: "com.squareup.moshi:moshi-kotlin:${versions.moshi}",
+                    core  : "com.squareup.moshi:moshi:${versions.moshi}"
+            ]
 
     ]
 }
