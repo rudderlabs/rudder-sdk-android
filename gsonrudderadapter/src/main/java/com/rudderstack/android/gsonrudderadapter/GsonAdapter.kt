@@ -12,11 +12,11 @@ class GsonAdapter : JsonAdapter {
         return gson.fromJson(json, object : TypeToken<T>() {}.type)
     }
 
-    override fun writeToJson(obj: Any): String? {
+    override fun <T : Any> writeToJson(obj: T): String? {
         return gson.toJson(obj)
     }
 
-    override fun <T> readJson(json: String, resultClass: Class<T>): T {
+    override fun <T : Any> readJson(json: String, resultClass: Class<T>): T {
         return gson.fromJson(json, resultClass)
     }
 }
