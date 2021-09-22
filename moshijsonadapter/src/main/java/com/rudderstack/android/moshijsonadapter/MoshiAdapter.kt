@@ -11,7 +11,7 @@ class MoshiAdapter : JsonAdapter {
         .addLast(KotlinJsonAdapterFactory())
         .build()
 
-    override fun <T> readJsonParameterized(typeAdapter: RudderTypeAdapter<T>, json: String): T? {
+    override fun <T> readJson(json: String, typeAdapter: RudderTypeAdapter<T>): T? {
         val jsonAdapter = typeAdapter.type?.let {
             moshi.adapter<T>(it)
         }

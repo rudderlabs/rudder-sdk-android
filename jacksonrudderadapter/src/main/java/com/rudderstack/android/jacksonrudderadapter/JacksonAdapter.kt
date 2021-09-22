@@ -11,7 +11,8 @@ class JacksonAdapter : JsonAdapter {
          * update mapper as required
          */
     }
-    override fun <T> readJsonParameterized(typeAdapter: RudderTypeAdapter<T>, json: String): T? {
+
+    override fun <T> readJson(json: String, typeAdapter: RudderTypeAdapter<T>): T? {
         val typeRef: TypeReference<T> =
             object : TypeReference<T>() {}
         return objectMapper.readValue(json, typeRef)
