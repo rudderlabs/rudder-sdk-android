@@ -735,11 +735,7 @@ public class RudderClient {
     public void optOut(boolean optOut) {
         if (repository != null) {
             repository.saveOptStatus(optOut);
-            if (optOut) {
-                RudderLogger.logInfo("optOut() flag is set to true");
-            } else {
-                RudderLogger.logInfo("optOut() flag is set to false");
-            }
+            RudderLogger.logInfo("optOut() flag is set to " + optOut);
         }
         else {
             RudderLogger.logError("SDK is not initialised. Hence aborting optOut API call");
