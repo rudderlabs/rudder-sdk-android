@@ -194,6 +194,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 message.setType(MessageType.TRACK);
                 dump(message);
             } else if (previousVersionCode != versionCode) {
+                // If user has disabled tracking activities (i.e., set optOut() to true)
+                // then discard the event
+                if (getOptStatus()) {
+                    return;
+                }
                 // application updated
                 RudderLogger.logDebug("Tracking Application Updated");
                 preferenceManager.saveBuildVersionCode(versionCode);
@@ -582,7 +587,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         //If integration is not null and if key is either not present or it is set to true, then dump it.
                         if (integration != null)
                             if (!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key)) {
-                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s and message is %s and event name is %s", key, message.getType(),message.getEventName()));
+                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s and message is %s and event name is %s", key, message.getType(), message.getEventName()));
 
                                 integration.dump(message);
                             }
@@ -655,6 +660,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
         if (config.isRecordScreenViews()) {
+            // If user has disabled tracking activities (i.e., set optOut() to true)
+            // then discard the event
+            if (getOptStatus()) {
+                return;
+            }
             ScreenPropertyBuilder screenPropertyBuilder = new ScreenPropertyBuilder().setScreenName(activity.getLocalClassName()).isAtomatic(true);
             RudderMessage screenMessage = new RudderMessageBuilder().setEventName(activity.getLocalClassName()).setProperty(screenPropertyBuilder.build()).build();
             screenMessage.setType(MessageType.SCREEN);
@@ -663,6 +673,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (this.config.isTrackLifecycleEvents()) {
             noOfActivities += 1;
             if (noOfActivities == 1) {
+                // If user has disabled tracking activities (i.e., set optOut() to true)
+                // then discard the event
+                if (getOptStatus()) {
+                    return;
+                }
                 // no previous activity present. Application Opened
                 RudderMessage trackMessage = new RudderMessageBuilder().setEventName("Application Opened").build();
                 trackMessage.setType(MessageType.TRACK);
@@ -686,6 +701,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (this.config.isTrackLifecycleEvents()) {
             noOfActivities -= 1;
             if (noOfActivities == 0) {
+                // If user has disabled tracking activities (i.e., set optOut() to true)
+                // then discard the event
+                if (getOptStatus()) {
+                    return;
+                }
                 RudderMessage message = new RudderMessageBuilder().setEventName("Application Backgrounded").build();
                 message.setType(MessageType.TRACK);
                 this.dump(message);
