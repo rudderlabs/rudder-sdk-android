@@ -76,7 +76,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
         try {
             // initiate RudderPreferenceManager
-            this.preferenceManager = RudderPreferenceManager.getInstance(_application);
+            preferenceManager = RudderPreferenceManager.getInstance(_application);
             if (preferenceManager.getOptStatus()) {
                 _anonymousId = null;
                 RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the anonymousId");
