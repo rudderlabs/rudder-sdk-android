@@ -24,6 +24,7 @@ public class RudderClient {
     private static String _advertisingId;
     private static String _anonymousId;
     private static RudderOption defaultOptions;
+
     /*
      * private constructor
      * */
@@ -58,21 +59,21 @@ public class RudderClient {
         return getInstance(context, writeKey, builder.build());
     }
 
-   /**
-   * API for getting <b>RudderClient</b> instance with custom values for settings through
-   * RudderConfig
-   *
-   * @param context  Application context
-   * @param writeKey Your Android WriteKey from RudderStack dashboard
-   * @param config   Instance of RudderConfig for customised settings
-   * @param option   Instance of RudderOption for customizing integrations to which events to be sent
-   * @return RudderClient instance to be used further
-   */
+    /**
+     * API for getting <b>RudderClient</b> instance with custom values for settings through
+     * RudderConfig
+     *
+     * @param context  Application context
+     * @param writeKey Your Android WriteKey from RudderStack dashboard
+     * @param config   Instance of RudderConfig for customised settings
+     * @param option   Instance of RudderOption for customizing integrations to which events to be sent
+     * @return RudderClient instance to be used further
+     */
     @NonNull
     public static RudderClient getInstance(@NonNull Context context, @Nullable String writeKey, @NonNull RudderConfig config, @Nullable RudderOption option) {
-    defaultOptions = option;
-    return getInstance(context, writeKey, config);
-   }
+        defaultOptions = option;
+        return getInstance(context, writeKey, config);
+    }
 
     /**
      * API for getting <b>RudderClient</b> instance with custom values for settings through
@@ -731,9 +732,14 @@ public class RudderClient {
      *
      * @param optOut    Boolean value to store optOut status
      */
-    public static void optOut(boolean optOut) {
+    public void optOut(boolean optOut) {
         if (repository != null) {
             repository.saveOptStatus(optOut);
+            if (optOut) {
+                RudderLogger.logInfo("optOut() flag is set to true");
+            } else {
+                RudderLogger.logInfo("optOut() flag is set to false");
+            }
         }
         else {
             RudderLogger.logError("SDK is not initialised. Hence aborting optOut API call");
@@ -762,13 +768,12 @@ public class RudderClient {
         }
     }
 
-   /**
-    *
-    * @return default RudderOption object which was set on the initialization of sdk
-    */
-   static RudderOption getDefaultOptions() {
-       return defaultOptions;
-   }
+    /**
+     * @return default RudderOption object which was set on the initialization of sdk
+     */
+    static RudderOption getDefaultOptions() {
+        return defaultOptions;
+    }
 
     /**
      * RudderClient.Callback for getting callback when native SDK integration is ready
