@@ -1,0 +1,60 @@
+/*
+ * Creator: Debanjan Chatterjee on 24/09/21, 11:09 PM Last modified: 23/09/21, 11:32 AM
+ * Copyright: All rights reserved Ⓒ 2021 http://hiteshsahu.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain a
+ * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package com.rudderstack.android.moshirudderadapter
+
+import com.rudderstack.android.rudderjsonadapter.JsonAdapter
+import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+
+class MoshiAdapter : JsonAdapter {
+    private val moshi = Moshi.Builder()
+        .addLast(KotlinJsonAdapterFactory())
+        .build()
+
+    override fun <T> readJson(json: String, typeAdapter: RudderTypeAdapter<T>): T? {
+        val jsonAdapter = typeAdapter.type?.let {
+            moshi.adapter<T>(it)
+        }
+
+        return jsonAdapter?.fromJson(json)
+    }
+
+    override fun <T : Any> writeToJson(obj: T): String? {
+        return writeToJson(obj, null)
+    }
+
+    override fun <T : Any> writeToJson(obj: T, typeAdapter: RudderTypeAdapter<T>?): String? {
+        val adapter: com.squareup.moshi.JsonAdapter<T> =
+            createMoshiAdapter<T>(typeAdapter, obj)
+        return adapter.toJson(obj)
+    }
+
+
+    override fun <T : Any> readJson(json: String, resultClass: Class<T>): T? {
+        val adapter: com.squareup.moshi.JsonAdapter<T> =
+            moshi.adapter<T>(resultClass) as com.squareup.moshi.JsonAdapter<T>
+        return adapter.fromJson(json)
+    }
+
+    private fun <T : Any> createMoshiAdapter(
+        typeAdapter: RudderTypeAdapter<T>?,
+        obj: T
+    ): com.squareup.moshi.JsonAdapter<T> {
+        return typeAdapter?.type?.let {
+            moshi.adapter(it)
+        } ?: moshi.adapter<T>(obj::class.java)
+    }
+}
