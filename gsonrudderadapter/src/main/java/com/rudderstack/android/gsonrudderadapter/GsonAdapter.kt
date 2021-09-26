@@ -19,11 +19,15 @@ import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
+import com.google.gson.JsonElement
+
+
+
 
 class GsonAdapter : JsonAdapter {
     private val gson = GsonBuilder().create()
     override fun <T> readJson(json: String, typeAdapter: RudderTypeAdapter<T>): T? {
-        return gson.fromJson(json, object : TypeToken<T>() {}.type)
+        return gson.fromJson(json, typeAdapter.type)
     }
 
     override fun <T : Any> writeToJson(obj: T): String? {
@@ -32,6 +36,12 @@ class GsonAdapter : JsonAdapter {
 
     override fun <T : Any> writeToJson(obj: T, typeAdapter: RudderTypeAdapter<T>?): String? {
         return writeToJson(obj)
+    }
+
+    override fun <T : Any> readMap(map: Map<String, Any>, resultClass: Class<T>): T? {
+        val jsonElement = gson.toJsonTree(map)
+        return gson.fromJson(jsonElement, resultClass)
+
     }
 
     override fun <T : Any> readJson(json: String, resultClass: Class<T>): T {

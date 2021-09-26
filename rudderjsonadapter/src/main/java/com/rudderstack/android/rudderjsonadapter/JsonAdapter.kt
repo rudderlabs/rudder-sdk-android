@@ -21,4 +21,5 @@ interface JsonAdapter {
     fun <T : Any> writeToJson(obj: T): String?
     fun <T : Any> writeToJson(obj: T, typeAdapter: RudderTypeAdapter<T>?): String?
     fun <T : Any> readJson(json: String, resultClass : Class<T>) : T?
+    fun <T : Any> readMap(map: Map<String, Any>, resultClass: Class<T>) : T?
 }

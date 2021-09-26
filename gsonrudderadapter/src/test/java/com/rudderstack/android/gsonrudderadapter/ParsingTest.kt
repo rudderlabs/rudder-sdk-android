@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.moshirudderadapter
+package com.rudderstack.android.gsonrudderadapter
 
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
 import org.hamcrest.CoreMatchers
@@ -39,7 +39,7 @@ class ParsingTest {
     fun checkDeserialization() {
 //        val type = Map<String,String>::class.java.typeName
         val rta = object : RudderTypeAdapter<Map<String, List<SomeClass>>>() {}
-        val ja = MoshiAdapter()
+        val ja = GsonAdapter()
         val res = ja.readJson<Map<String, List<SomeClass>>>( someJson, rta)
         assert(res != null)
         println("res: $res")
@@ -52,7 +52,7 @@ class ParsingTest {
     @Test
     fun checkSerialization(){
         val someClass = SomeClass("ludo", "iok")
-        val ja = MoshiAdapter()
+        val ja = GsonAdapter()
         val res = ja.writeToJson<Map<String, List<SomeClass>>>(mapOf(Pair("type1", listOf(someClass)) ),
         object : RudderTypeAdapter<Map<String, List<SomeClass>>>(){})
         println(res)
@@ -62,7 +62,7 @@ class ParsingTest {
     @Test
     fun checkMapToObjConversion(){
         val mapRepresentation = mapOf("name" to "Foo", "age" to 20)
-        val adapter = MoshiAdapter()
+        val adapter = GsonAdapter()
 
         val outCome : MapClass? = adapter.readMap(mapRepresentation, MapClass::class.java)
 

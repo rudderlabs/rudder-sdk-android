@@ -18,17 +18,28 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
+import com.fasterxml.jackson.databind.DeserializationFeature
+import java.lang.reflect.Type
+
 
 class JacksonAdapter : JsonAdapter {
     private val objectMapper = ObjectMapper().also {
         /**
          * update mapper as required
          */
+        it.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
     override fun <T> readJson(json: String, typeAdapter: RudderTypeAdapter<T>): T? {
+        val type = typeAdapter.type?:return null
+
         val typeRef: TypeReference<T> =
-            object : TypeReference<T>() {}
+            object : TypeReference<T>() {
+
+                override fun getType(): Type {
+                    return type
+                }
+            }
         return objectMapper.readValue(json, typeRef)
     }
 
@@ -38,6 +49,11 @@ class JacksonAdapter : JsonAdapter {
 
     override fun <T : Any> writeToJson(obj: T, typeAdapter: RudderTypeAdapter<T>?): String? {
         return writeToJson(obj)
+    }
+
+    override fun <T : Any> readMap(map: Map<String, Any>, resultClass: Class<T>): T? {
+
+        return objectMapper.convertValue(map, resultClass)
     }
 
     override fun <T : Any> readJson(json: String, resultClass: Class<T>): T {
