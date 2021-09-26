@@ -17,6 +17,7 @@ package com.rudderstack.android.repository
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -24,9 +25,11 @@ object RudderDatabase {
     private var sqliteOpenHelper: SQLiteOpenHelper? = null
     private var database: SQLiteDatabase? = null
     private var registeredDaoList = HashMap<Class<out Entity>, Dao<out Entity>>(20)
-
+    private lateinit var jsonAdapter : JsonAdapter
     fun init(
-        context: Context, databaseName: String, version: Int = 1,
+        context: Context, databaseName: String,
+        jsonAdapter: JsonAdapter,
+        version: Int = 1,
         databaseCreatedCallback: ((SQLiteDatabase?) -> Unit)? = null,
         databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)? = null
     ) {
@@ -46,6 +49,8 @@ object RudderDatabase {
                 databaseUpgradeCallback?.invoke(database, oldVersion, newVersion)
             }
         }
+
+        this.jsonAdapter = jsonAdapter
     }
 
     fun <T : Entity> getDao(
@@ -57,11 +62,7 @@ object RudderDatabase {
             it.executorService = executorService
         }?.let {
             it as Dao<T>
-        } ?: Dao<T>(entityClass, object :EntityFactory{
-            override fun <T : Entity> getEntity(entity: Class<T>, values: Map<String, Any>): T {
-                TODO("Not yet implemented")
-            }
-        }, executorService).also{
+        } ?: Dao<T>(entityClass,  jsonAdapter, executorService).also{
             registeredDaoList[entityClass] = it
         }
     }

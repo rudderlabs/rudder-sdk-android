@@ -15,6 +15,7 @@
 package com.rudderstack.android.repository
 
 import android.database.sqlite.SQLiteDatabase
+import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -22,7 +23,8 @@ import javax.sql.StatementEvent
 
 class Dao<T : Entity> internal constructor(
     internal val entityClass: Class<T>,
-    private val entityFactory: EntityFactory,
+//    private val entityFactory: EntityFactory,
+    private val jsonAdapter: JsonAdapter,
     internal var executorService: ExecutorService = Executors.newCachedThreadPool()
 ) {
 
@@ -124,7 +126,7 @@ class Dao<T : Entity> internal constructor(
 
         if (cursor.moveToFirst()) {
             do {
-                val entity = fields.associate {
+                 fields.associate {
                     val value = when (it.type) {
                         RudderField.Type.INTEGER -> cursor.getInt(
                             cursor.getColumnIndex(it.fieldName).takeIf { it > 1 }
@@ -136,9 +138,10 @@ class Dao<T : Entity> internal constructor(
                     }
                     Pair(it.fieldName, value)
                 }.let {
-                    entityFactory.getEntity(entityClass, it)
+                    jsonAdapter.readMap(it, entityClass)
+                }?.apply {
+                    items.add(this)
                 }
-                items.add(entity)
             } while (cursor.moveToNext())
         }
         cursor.close()
