@@ -33,16 +33,8 @@ class RudderPreferenceManager {
         return preferences.getLong(RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY, -1);
     }
 
-    String getConfigJson() {
-        return preferences.getString(RUDDER_SERVER_CONFIG_KEY, null);
-    }
-
     void updateLastUpdatedTime() {
         preferences.edit().putLong(RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY, System.currentTimeMillis()).apply();
-    }
-
-    void saveConfigJson(String configJson) {
-        preferences.edit().putString(RUDDER_SERVER_CONFIG_KEY, configJson).apply();
     }
 
     String getTraits() {

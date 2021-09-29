@@ -2,7 +2,9 @@ package com.rudderstack.android.sdk.core;
 
 import com.google.gson.annotations.SerializedName;
 
-class RudderServerDestinationDefinition {
+import java.io.Serializable;
+
+class RudderServerDestinationDefinition implements Serializable {
     @SerializedName("name")
     String definitionName;
     @SerializedName("displayName")
