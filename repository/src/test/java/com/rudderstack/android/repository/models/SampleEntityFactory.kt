@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 24/09/21, 11:09 PM Last modified: 15/09/21, 11:06 PM
+ * Creator: Debanjan Chatterjee on 29/09/21, 12:15 AM Last modified: 29/09/21, 12:15 AM
  * Copyright: All rights reserved Ⓒ 2021 http://hiteshsahu.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,7 +12,17 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.repository
-@Retention
-@Target(AnnotationTarget.CLASS)
-annotation class RudderEntity( val tableName : String, val fields : Array<RudderField>)
+package com.rudderstack.android.repository.models
+
+import com.rudderstack.android.repository.Entity
+import com.rudderstack.android.repository.EntityFactory
+
+object SampleEntityFactory : EntityFactory {
+    override fun <T : Entity> getEntity(entity: Class<T>, values: Map<String, Any>): T? {
+        return when(entity){
+             SampleEntity::class.java -> SampleEntity(values.get("name") as String,
+             values["count"] as Int, (values["items"] as String).split(',')) as T
+            else -> null
+        }
+    }
+}

@@ -15,16 +15,15 @@
 package com.rudderstack.android.repository
 
 import android.database.sqlite.SQLiteDatabase
-import com.rudderstack.android.rudderjsonadapter.JsonAdapter
+import com.rudderstack.android.repository.annotation.RudderEntity
+import com.rudderstack.android.repository.annotation.RudderField
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
-import javax.sql.StatementEvent
 
 class Dao<T : Entity> internal constructor(
     internal val entityClass: Class<T>,
-//    private val entityFactory: EntityFactory,
-    private val jsonAdapter: JsonAdapter,
+    private val entityFactory: EntityFactory,
     internal var executorService: ExecutorService = Executors.newCachedThreadPool()
 ) {
 
@@ -51,17 +50,34 @@ class Dao<T : Entity> internal constructor(
         insertCallback: ((rowIds: List<Long>) -> Unit)? = null
     ) {
         runTransactionOrDeferToCreation { db: SQLiteDatabase ->
-            val rowIds = map {
-                db.insertWithOnConflict(
-                    tableName,
-                    it.nullHackColumn(),
-                    it.generateContentValues(),
-                    conflictResolutionStrategy.type
-                )
-            }
+            val rowIds = insertDbSync(db, this, conflictResolutionStrategy)
             insertCallback?.invoke(rowIds)
         }
 
+    }
+//will return null if db is not yet ready
+    fun List<T>.insertSync(
+        conflictResolutionStrategy: ConflictResolutionStrategy = ConflictResolutionStrategy.CONFLICT_NONE
+    ) : List<Long>? {
+        return _db?.let { db ->
+            insertDbSync(db, this, conflictResolutionStrategy)
+        }
+
+    }
+
+    private fun insertDbSync(
+        db: SQLiteDatabase,
+        items: List<T>,
+        conflictResolutionStrategy: ConflictResolutionStrategy
+    ): List<Long> {
+        return items.map {
+            db.insertWithOnConflict(
+                tableName,
+                it.nullHackColumn(),
+                it.generateContentValues(),
+                conflictResolutionStrategy.type
+            )
+        }
     }
 
     fun List<T>.delete(deleteCallback: ((rowIds: List<Int>) -> Unit)? = null) {
@@ -126,19 +142,19 @@ class Dao<T : Entity> internal constructor(
 
         if (cursor.moveToFirst()) {
             do {
-                 fields.associate {
+                fields.associate {
                     val value = when (it.type) {
                         RudderField.Type.INTEGER -> cursor.getInt(
-                            cursor.getColumnIndex(it.fieldName).takeIf { it > 1 }
+                            cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
                                 ?: throw IllegalArgumentException("No such column ${it.fieldName}")
                         )
                         RudderField.Type.TEXT -> cursor.getString(
-                            cursor.getColumnIndex(it.fieldName).takeIf { it > 1 }
+                            cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
                                 ?: throw IllegalArgumentException("No such column ${it.fieldName}"))
                     }
                     Pair(it.fieldName, value)
                 }.let {
-                    jsonAdapter.readMap(it, entityClass)
+                    entityFactory.getEntity(entityClass, it)
                 }?.apply {
                     items.add(this)
                 }

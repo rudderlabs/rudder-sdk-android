@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 24/09/21, 11:09 PM Last modified: 15/09/21, 7:46 PM
+ * Creator: Debanjan Chatterjee on 28/09/21, 11:58 PM Last modified: 24/09/21, 11:10 PM
  * Copyright: All rights reserved Ⓒ 2021 http://hiteshsahu.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.repository
+package com.rudderstack.android.repository.annotation
 
 /**
  * Store Field values. This will be used to create table
@@ -27,8 +27,8 @@ package com.rudderstack.android.repository
  */
 
 annotation class RudderField(val type: Type, val fieldName: String, val primaryKey: Boolean = false,
-                 val isNullable : Boolean = true,
-                 val isAutoInc: Boolean = false, val isIndex: Boolean = false){
+                             val isNullable : Boolean = true,
+                             val isAutoInc: Boolean = false, val isIndex: Boolean = false){
     /**
      * Represents type of column
      *

@@ -17,7 +17,6 @@ package com.rudderstack.android.repository
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -25,45 +24,54 @@ object RudderDatabase {
     private var sqliteOpenHelper: SQLiteOpenHelper? = null
     private var database: SQLiteDatabase? = null
     private var registeredDaoList = HashMap<Class<out Entity>, Dao<out Entity>>(20)
-    private lateinit var jsonAdapter : JsonAdapter
+    private lateinit var entityFactory: EntityFactory
     fun init(
         context: Context, databaseName: String,
-        jsonAdapter: JsonAdapter,
+        entityFactory: EntityFactory,
         version: Int = 1,
         databaseCreatedCallback: ((SQLiteDatabase?) -> Unit)? = null,
         databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)? = null
     ) {
+        this.entityFactory = entityFactory
         if (sqliteOpenHelper != null)
             return
 //        context = application
 //        this.databaseName = databaseName
-
         sqliteOpenHelper = object : SQLiteOpenHelper(context, databaseName, null, version) {
+            init {
+                //listeners won't be fired else
+                writableDatabase
+            }
             override fun onCreate(database: SQLiteDatabase?) {
                 this@RudderDatabase.database = database
-                initDaoList(registeredDaoList.values.toList())
+                database?.let {
+                    initDaoList(database, registeredDaoList.values.toList())
+                }
                 databaseCreatedCallback?.invoke(database)
             }
 
             override fun onUpgrade(database: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
                 databaseUpgradeCallback?.invoke(database, oldVersion, newVersion)
             }
+
         }
 
-        this.jsonAdapter = jsonAdapter
     }
 
     fun <T : Entity> getDao(
         entityClass: Class<T>, executorService: ExecutorService =
             Executors.newCachedThreadPool()
     ): Dao<T> {
-        return registeredDaoList[entityClass]?.also {
-            it.executorService.shutdown()
+        return registeredDaoList[entityClass]?./*.also {
+//            it.executorService.shutdown()
             it.executorService = executorService
-        }?.let {
+        }?*/let {
             it as Dao<T>
-        } ?: Dao<T>(entityClass,  jsonAdapter, executorService).also{
+        } ?: Dao<T>(entityClass,  entityFactory, executorService).also{
             registeredDaoList[entityClass] = it
+            database?.apply {
+                initDaoList(this, listOf(it))
+            }
         }
     }
 
@@ -74,12 +82,20 @@ object RudderDatabase {
         }
     }
 
-    private fun initDaoList(daoList: List<Dao<out Entity>>) {
-        sqliteOpenHelper?.writableDatabase?.apply {
+    private fun initDaoList(database: SQLiteDatabase, daoList: List<Dao<out Entity>>) {
+        database.apply {
             daoList.forEach {
                 it.setDatabase(this)
             }
         }
+    }
+
+    fun shutDown() {
+//        registeredDaoList.values.forEach {
+//            it.close()
+//        }
+        sqliteOpenHelper?.close()
+        sqliteOpenHelper = null
     }
 
 }

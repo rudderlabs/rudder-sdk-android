@@ -19,7 +19,6 @@ import android.content.ContentValues
 interface Entity {
 
 
-
     /**
      * Maintain same sequence as fields
      *

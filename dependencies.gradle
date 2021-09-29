@@ -14,24 +14,27 @@
 
 ext {
     versions = [
-            gson      : "2.8.8",
-            jackson   : "2.12.4",
-            moshi     : "1.12.0",
-            hamcrest  : "2.2",
-            mockito   : "1.10.19",
-            awaitility: "4.1.0"
+            gson        : "2.8.8",
+            jackson     : "2.12.4",
+            moshi       : "1.12.0",
+            hamcrest    : "2.2",
+            androidXTest: "1.4.0",
+            mockito     : "1.10.19",
+            awaitility  : "4.1.0",
+            robolectric : "4.4"
     ]
 
     deps = [
-            gson      : "com.google.code.gson:gson:${versions.gson}",
-            jackson   : "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
-            moshi     : [
+            gson        : "com.google.code.gson:gson:${versions.gson}",
+            jackson     : "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
+            moshi       : [
                     kotlin: "com.squareup.moshi:moshi-kotlin:${versions.moshi}",
                     core  : "com.squareup.moshi:moshi:${versions.moshi}"
             ],
-            hamcrest  : "org.hamcrest:hamcrest:${versions.hamcrest}",
-            mockito   : "org.mockito:mockito-core:${versions.mockito}",
-            awaitility: "org.awaitility:awaitility:${versions.awaitility}"
-
+            androidXTest: "androidx.test:core:${versions.androidXTest}",
+            hamcrest    : "org.hamcrest:hamcrest:${versions.hamcrest}",
+            mockito     : "org.mockito:mockito-core:${versions.mockito}",
+            awaitility  : "org.awaitility:awaitility:${versions.awaitility}",
+            robolectric : "org.robolectric:robolectric:${versions.robolectric}"
     ]
 }
