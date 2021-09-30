@@ -180,7 +180,6 @@ class RudderServerConfigManager {
             os.writeObject(rudderServerConfig);
             os.close();
             fos.close();
-
         } catch (Exception e) {
             RudderLogger.logError("RudderServerConfigManager: saveRudderServerConfig: Exception while saving RudderServerConfig Object to File");
             e.printStackTrace();
@@ -190,7 +189,7 @@ class RudderServerConfigManager {
     RudderServerConfig getRudderServerConfig() {
         RudderServerConfig rudderServerConfig = null;
         try {
-            if (new File(RUDDER_SERVER_CONFIG_FILE_NAME).exists()) {
+            if (fileExists(context, RUDDER_SERVER_CONFIG_FILE_NAME)) {
                 FileInputStream fis = context.openFileInput(RUDDER_SERVER_CONFIG_FILE_NAME);
                 ObjectInputStream is = new ObjectInputStream(fis);
                 rudderServerConfig = (RudderServerConfig) is.readObject();
@@ -226,5 +225,13 @@ class RudderServerConfigManager {
             }
         }
         return this.integrationsMap;
+    }
+
+    boolean fileExists(Context context, String filename) {
+        File file = context.getFileStreamPath(filename);
+        if (file == null || !file.exists()) {
+            return false;
+        }
+        return true;
     }
 }
