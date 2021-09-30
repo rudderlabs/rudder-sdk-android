@@ -109,18 +109,27 @@ class RudderServerConfigManager {
                         baos.write((byte) res);
                         res = bis.read();
                     }
-
                     String configJson = baos.toString();
-                    RudderServerConfig rudderServerConfig = new Gson().fromJson(configJson, RudderServerConfig.class);
-                    RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configJson: %s", configJson));
-                    // save config for future use
-                    preferenceManger.updateLastUpdatedTime();
-                    saveRudderServerConfig(rudderServerConfig);
-
-                    // reset retry count
-                    isDone = true;
-
-                    RudderLogger.logInfo("RudderServerConfigManager: downloadConfig: server config download successful");
+                    try {
+                        RudderServerConfig rudderServerConfig = new Gson().fromJson(configJson, RudderServerConfig.class);
+                        RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configJson: %s", configJson));
+                        // save config for future use
+                        preferenceManger.updateLastUpdatedTime();
+                        saveRudderServerConfig(rudderServerConfig);
+                        // reset retry count
+                        isDone = true;
+                        RudderLogger.logInfo("RudderServerConfigManager: downloadConfig: server config download successful");
+                    } catch (Exception e) {
+                        isDone = false;
+                        retryCount += 1;
+                        RudderLogger.logError("RudderServerConfigManager: downloadConfig: Failed to parse RudderServerConfig Object, retrying in " + retryCount + "s");
+                        e.printStackTrace();
+                        try {
+                            Thread.sleep(retryCount * 1000);
+                        } catch (InterruptedException e) {
+                            RudderLogger.logError(e);
+                        }
+                    }
                 } else {
                     BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
