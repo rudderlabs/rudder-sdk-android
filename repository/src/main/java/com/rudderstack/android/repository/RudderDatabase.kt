@@ -24,6 +24,9 @@ object RudderDatabase {
     private var sqliteOpenHelper: SQLiteOpenHelper? = null
     private var database: SQLiteDatabase? = null
     private var registeredDaoList = HashMap<Class<out Entity>, Dao<out Entity>>(20)
+
+    private val _commonExecutor = Executors.newCachedThreadPool()
+
     private lateinit var entityFactory: EntityFactory
     fun init(
         context: Context, databaseName: String,
@@ -59,8 +62,8 @@ object RudderDatabase {
     }
 
     fun <T : Entity> getDao(
-        entityClass: Class<T>, executorService: ExecutorService =
-            Executors.newCachedThreadPool()
+        entityClass: Class<T>, executorService: ExecutorService = _commonExecutor
+
     ): Dao<T> {
         return registeredDaoList[entityClass]?./*.also {
 //            it.executorService.shutdown()
@@ -77,9 +80,7 @@ object RudderDatabase {
 
 
     fun <T : Entity> Dao<T>.unregister() {
-        registeredDaoList.remove(entityClass)?.apply {
-            close()
-        }
+        registeredDaoList.remove(entityClass)
     }
 
     private fun initDaoList(database: SQLiteDatabase, daoList: List<Dao<out Entity>>) {

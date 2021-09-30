@@ -32,23 +32,25 @@ import org.robolectric.RuntimeEnvironment
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-@RunWith(RobolectricTestRunner::class)
-//@RunWith(AndroidJUnit4::class)
+//@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class RudderDatabaseTest {
     //    private lateinit var
     @Before
     fun initialize() {
         RudderDatabase.init(
-//            ApplicationProvider.getApplicationContext(),
-            RuntimeEnvironment.application,
+            ApplicationProvider.getApplicationContext(),
+//            RuntimeEnvironment.application,
             "testDb", SampleEntityFactory
         )
 
     }
+
     @After
-    fun tearDown(){
+    fun tearDown() {
         RudderDatabase.shutDown()
     }
+
     @Test
     fun multipleDaoCallsToReturnSameDaoObject() {
         val sampleDaoCheck = RudderDatabase.getDao(SampleEntity::class.java)
@@ -58,8 +60,10 @@ class RudderDatabaseTest {
 
     @Test
     fun testInsertionAndGetSync() {
-        val sampleEntitiesToSave = listOf(SampleEntity("abc", 10, listOf("12", "34", "56")),
-            SampleEntity("def", 20, listOf("78", "90", "12")))
+        val sampleEntitiesToSave = listOf(
+            SampleEntity("abc", 10, listOf("12", "34", "56")),
+            SampleEntity("def", 20, listOf("78", "90", "12"))
+        )
         val sampleDao = RudderDatabase.getDao(SampleEntity::class.java)
         //save data
         val isInserted = AtomicBoolean(false)
@@ -74,8 +78,47 @@ class RudderDatabaseTest {
         //getting the data
         val savedData = with(sampleDao) { getAllSync() }
 
-        MatcherAssert.assertThat(savedData, allOf(Matchers.iterableWithSize(2),
-        contains(*sampleEntitiesToSave.toTypedArray())))
+        MatcherAssert.assertThat(
+            savedData, allOf(
+                Matchers.iterableWithSize(2),
+                contains(*sampleEntitiesToSave.toTypedArray())
+            )
+        )
+
+    }
+
+    @Test
+    fun testGetAsync() {
+        val sampleEntitiesToSave = listOf(
+            SampleEntity("abc", 10, listOf("12", "34", "56")),
+            SampleEntity("def", 20, listOf("78", "90", "12"))
+        )
+        val sampleDao = RudderDatabase.getDao(SampleEntity::class.java)
+        //save data
+        val isInserted = AtomicBoolean(false)
+        with(sampleDao) {
+            val rowIds = sampleEntitiesToSave.insertSync()
+            assertThat(rowIds, iterableWithSize(2))
+            println("inserted: ${rowIds?.size}")
+            isInserted.set(true)
+
+        }
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(isInserted)
+        val isGetComplete = AtomicBoolean(false)
+        //getting the data
+        with(sampleDao) {
+            getAll() {
+                assertThat(
+                    it, allOf(
+                        Matchers.iterableWithSize(2),
+                        contains(*sampleEntitiesToSave.toTypedArray())
+                    )
+                )
+                isGetComplete.set(true)
+            }
+        }
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(isGetComplete)
+
 
     }
 }

@@ -247,11 +247,6 @@ class Dao<T : Entity> internal constructor(
         return "CREATE INDEX $indexName ON $tableName $indexFieldsStmt"
     }
 
-    fun close() {
-        executorService.shutdown()
-        setDatabase(null)
-    }
-
     enum class ConflictResolutionStrategy(val type: Int) {
 
         /**
