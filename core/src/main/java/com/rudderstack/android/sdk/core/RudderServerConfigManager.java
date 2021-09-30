@@ -10,6 +10,7 @@ import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
@@ -189,11 +190,13 @@ class RudderServerConfigManager {
     RudderServerConfig getRudderServerConfig() {
         RudderServerConfig rudderServerConfig = null;
         try {
-            FileInputStream fis = context.openFileInput(RUDDER_SERVER_CONFIG_FILE_NAME);
-            ObjectInputStream is = new ObjectInputStream(fis);
-            rudderServerConfig = (RudderServerConfig) is.readObject();
-            is.close();
-            fis.close();
+            if (new File(RUDDER_SERVER_CONFIG_FILE_NAME).exists()) {
+                FileInputStream fis = context.openFileInput(RUDDER_SERVER_CONFIG_FILE_NAME);
+                ObjectInputStream is = new ObjectInputStream(fis);
+                rudderServerConfig = (RudderServerConfig) is.readObject();
+                is.close();
+                fis.close();
+            }
         } catch (Exception e) {
             RudderLogger.logError("RudderServerConfigManager: getRudderServerConfig: Failed to read RudderServerConfig Object from File");
             e.printStackTrace();
