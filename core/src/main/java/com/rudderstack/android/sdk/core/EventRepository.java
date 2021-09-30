@@ -545,7 +545,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     /**
      * Opts out a user from tracking the activity. When enabled all the events will be dropped by the SDK.
      *
-     * @param optOut    Boolean value to store optOut status
+     * @param optOut Boolean value to store optOut status
      */
     void saveOptStatus(boolean optOut) {
         preferenceManager.saveOptStatus(optOut);
@@ -556,19 +556,17 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * If true, save user optOut time
      * If false, save user optIn time
      *
-     * @param optOut    Boolean value to update optOut or optIn time
+     * @param optOut Boolean value to update optOut or optIn time
      */
     private void updateOptStatusTime(boolean optOut) {
         if (optOut) {
             preferenceManager.updateOptOutTime();
-        }
-        else {
+        } else {
             preferenceManager.updateOptInTime();
         }
     }
 
     /**
-     *
      * @return optOut status
      */
     boolean getOptStatus() {
@@ -587,8 +585,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         //If integration is not null and if key is either not present or it is set to true, then dump it.
                         if (integration != null)
                             if (!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key)) {
-                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s and message is %s and event name is %s", key, message.getType(), message.getEventName()));
-
+                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
                                 integration.dump(message);
                             }
                     }
