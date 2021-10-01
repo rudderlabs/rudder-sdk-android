@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 24/09/21, 11:09 PM Last modified: 23/09/21, 11:32 AM
- * Copyright: All rights reserved Ⓒ 2021 http://hiteshsahu.com
+ * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
+ * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -18,7 +18,11 @@ import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-
+/**
+ * @see JsonAdapter
+ *
+ * A Moshi based implementation of JsonAdapter
+ */
 class MoshiAdapter : JsonAdapter {
     private val moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())

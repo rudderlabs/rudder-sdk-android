@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 24/09/21, 11:09 PM Last modified: 16/09/21, 8:01 PM
- * Copyright: All rights reserved Ⓒ 2021 http://hiteshsahu.com
+ * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
+ * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -21,10 +21,18 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
+/**
+ * Dao for accessing entities
+ *
+ * @param T The type of entity this dao is associated to
+ * @property entityClass
+ * @property entityFactory An implementation of EntityFactory to provide Entities based on database stored values
+ * @property executorService An executor service to run the database queries
+ */
 class Dao<T : Entity> internal constructor(
     internal val entityClass: Class<T>,
     private val entityFactory: EntityFactory,
-    internal var executorService: ExecutorService = Executors.newCachedThreadPool()
+    internal var executorService: ExecutorService
 ) {
 
     private val tableName: String = entityClass.getAnnotation(RudderEntity::class.java)?.tableName
@@ -39,10 +47,11 @@ class Dao<T : Entity> internal constructor(
     /**
      * usage
      * with(dao){
-     *  entity.insert()
+     *  entity.insert(){ rowIds ->
+     *  }
      * }
      *
-     * @param executor
+     * @param conflictResolutionStrategy Strategy to follow in case of insertion conflict
      */
 
     fun List<T>.insert(

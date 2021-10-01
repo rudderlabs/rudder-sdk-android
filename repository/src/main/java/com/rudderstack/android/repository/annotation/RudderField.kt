@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 28/09/21, 11:58 PM Last modified: 24/09/21, 11:10 PM
- * Copyright: All rights reserved Ⓒ 2021 http://hiteshsahu.com
+ * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
+ * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -18,9 +18,9 @@ package com.rudderstack.android.repository.annotation
  * Store Field values. This will be used to create table
  * if isIndex is true, the index name will be "$fieldName1_$fieldName2_idx"
  *
- * @property type
- * @property fieldName
- * @property primaryKey
+ * @property type either text or integer supported
+ * @property fieldName name of column
+ * @property primaryKey true if it's a primary key, false otherwise
  * @property isAutoInc only applicable if primary key and type is Integer
  * @property isIndex if this column should serve as a basis for indexing
  *

@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 24/09/21, 11:09 PM Last modified: 24/09/21, 8:31 PM
- * Copyright: All rights reserved Ⓒ 2021 http://hiteshsahu.com
+ * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
+ * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -20,14 +20,28 @@ import android.database.sqlite.SQLiteOpenHelper
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+/**
+ * Singleton class to act as the Database helper
+ */
 object RudderDatabase {
     private var sqliteOpenHelper: SQLiteOpenHelper? = null
     private var database: SQLiteDatabase? = null
     private var registeredDaoList = HashMap<Class<out Entity>, Dao<out Entity>>(20)
 
-    private val _commonExecutor = Executors.newCachedThreadPool()
+    private val commonExecutor = Executors.newCachedThreadPool()
 
     private lateinit var entityFactory: EntityFactory
+
+    /**
+     * Initialize database
+     *
+     * @param context The context to create database
+     * @param databaseName The database name to be used for the App
+     * @param entityFactory  Used to create entity from class name and values map
+     * @param version database version
+     * @param databaseCreatedCallback Can be used to prefill db on create
+     * @param databaseUpgradeCallback If db upgrade is necessary, this is to be handled
+     */
     fun init(
         context: Context, databaseName: String,
         entityFactory: EntityFactory,
@@ -62,7 +76,7 @@ object RudderDatabase {
     }
 
     fun <T : Entity> getDao(
-        entityClass: Class<T>, executorService: ExecutorService = _commonExecutor
+        entityClass: Class<T>, executorService: ExecutorService = commonExecutor
 
     ): Dao<T> {
         return registeredDaoList[entityClass]?./*.also {

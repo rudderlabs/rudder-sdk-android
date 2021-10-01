@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 24/09/21, 11:09 PM Last modified: 22/09/21, 2:40 PM
- * Copyright: All rights reserved Ⓒ 2021 http://hiteshsahu.com
+ * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
+ * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -14,4 +14,12 @@
 
 package com.rudderstack.android.web
 
+/**
+ * Base response class for http calls
+ *
+ * @param T The type of response body expected
+ * @property status Http status codes
+ * @property body returned object of type T
+ * @property errorBody In case of error this is non null, and contains raw Error Body returned from server
+ */
 data class HttpResponse<T>(val status: Int, val body : T?, val errorBody: String?)

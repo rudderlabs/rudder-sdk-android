@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 24/09/21, 11:09 PM Last modified: 18/09/21, 11:53 PM
- * Copyright: All rights reserved Ⓒ 2021 http://hiteshsahu.com
+ * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
+ * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -11,6 +11,8 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
+/**
+ * Custom type adapters to be mentioned here
+ */
 package com.rudderstack.android.gsonrudderadapter
 

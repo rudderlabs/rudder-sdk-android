@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 24/09/21, 11:09 PM Last modified: 07/09/21, 5:10 PM
- * Copyright: All rights reserved Ⓒ 2021 http://hiteshsahu.com
+ * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
+ * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -16,11 +16,13 @@ package com.rudderstack.android.web
 
 import java.net.HttpURLConnection
 
+/**
+ * An interceptor for the http connection chain.
+ * Adding headers or modifying the HttpConnection can be done here
+ */
 interface HttpInterceptor {
     /**
-     * TODO
-     *
-     * @param connection could be cast to HttpsURLConnection, if ssl is used
+     * @param connection The created HttpURLConnection object, could be cast to HttpsURLConnection, if ssl is used
      */
     fun intercept(connection:HttpURLConnection): HttpURLConnection
 }

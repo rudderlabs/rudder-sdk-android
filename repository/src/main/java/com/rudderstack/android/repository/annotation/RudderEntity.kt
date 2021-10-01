@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 28/09/21, 11:58 PM Last modified: 24/09/21, 11:10 PM
- * Copyright: All rights reserved Ⓒ 2021 http://hiteshsahu.com
+ * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
+ * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -13,6 +13,14 @@
  */
 
 package com.rudderstack.android.repository.annotation
+
+/**
+ * Annotation for entities to be used in RudderDatabase
+ *
+ * @property tableName The name of table to be used for saving the entity
+ * @property fields Fields expected from the entity
+ * @see RudderField
+ */
 @Retention
 @Target(AnnotationTarget.CLASS)
 annotation class RudderEntity( val tableName : String, val fields : Array<RudderField>)

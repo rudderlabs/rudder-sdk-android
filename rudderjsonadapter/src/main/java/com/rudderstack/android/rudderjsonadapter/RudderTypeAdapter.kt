@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 24/09/21, 11:09 PM Last modified: 21/09/21, 11:28 PM
- * Copyright: All rights reserved Ⓒ 2021 http://hiteshsahu.com
+ * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
+ * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -16,6 +16,12 @@ package com.rudderstack.android.rudderjsonadapter
 
 import java.lang.reflect.ParameterizedType
 
+/**
+ * A abstract class to be constructed with type variable T.
+ * Implementation of this class helps in determining the type at runtime
+ *
+ * @param T The generic type to be determined
+ */
 abstract class RudderTypeAdapter<T>  {
     val type
     get() = (this::class.java.genericSuperclass as? ParameterizedType)?.actualTypeArguments?.get(0)

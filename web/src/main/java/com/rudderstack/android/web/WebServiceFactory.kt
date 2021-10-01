@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 24/09/21, 11:09 PM Last modified: 22/09/21, 8:16 PM
- * Copyright: All rights reserved Ⓒ 2021 http://hiteshsahu.com
+ * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
+ * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -19,7 +19,20 @@ import com.rudderstack.android.web.internal.WebServiceImpl
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+/**
+ * A Singleton factory for producing default implementation of WebService.
+ * For multiple base urls or executors, multiple WebService objects can be created.
+ */
 object WebServiceFactory {
+    /**
+     * Creates a default implementation of WebService
+     *
+     * @param baseUrl a valid base url for this web service
+     * @param jsonAdapter A JsonAdapter implementation for serialization and deserialization
+     * @param defaultTimeout Timeout in ms
+     * @param executor The Executor for the web service calls
+     * @return A WebService implementation
+     */
      fun getWebService(
         baseUrl: String,
         jsonAdapter: JsonAdapter,
