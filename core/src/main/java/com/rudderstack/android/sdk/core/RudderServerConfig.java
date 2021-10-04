@@ -2,7 +2,9 @@ package com.rudderstack.android.sdk.core;
 
 import com.google.gson.annotations.SerializedName;
 
-class RudderServerConfig {
+import java.io.Serializable;
+
+class RudderServerConfig implements Serializable {
     @SerializedName("source")
     RudderServerConfigSource source;
 }
