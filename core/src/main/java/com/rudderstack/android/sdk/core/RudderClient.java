@@ -659,6 +659,9 @@ public class RudderClient {
             _advertisingId = advertisingId;
         }
         else {
+            if(getOptOutStatus()) {
+                return;
+            }
             RudderElementCache.cachedContext.updateWithAdvertisingId(advertisingId);
         }
     }
