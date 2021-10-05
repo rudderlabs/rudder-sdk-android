@@ -33,7 +33,8 @@ allprojects {
 2. Then, add the dependency under ```dependencies``` as shown:
 
 ```
-implementation 'com.rudderstack.android.sdk:core:1.0.20'
+
+implementation 'com.rudderstack.android.sdk:core:1.0.21'
 ```
 
 ## Initializing ```RudderClient```
