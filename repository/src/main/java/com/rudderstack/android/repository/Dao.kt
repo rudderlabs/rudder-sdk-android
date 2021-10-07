@@ -32,7 +32,7 @@ import java.util.concurrent.Future
 class Dao<T : Entity> internal constructor(
     internal val entityClass: Class<T>,
     private val entityFactory: EntityFactory,
-    internal var executorService: ExecutorService
+    private val executorService: ExecutorService
 ) {
 
     private val tableName: String = entityClass.getAnnotation(RudderEntity::class.java)?.tableName
@@ -43,6 +43,7 @@ class Dao<T : Entity> internal constructor(
 
     private var _db: SQLiteDatabase? = null
     private var todoTransactions: MutableList<Future<*>> = ArrayList(5)
+    private val _dataChangeListeners = HashSet<DataChangeListener<T>>()
 
     /**
      * usage
@@ -64,10 +65,11 @@ class Dao<T : Entity> internal constructor(
         }
 
     }
-//will return null if db is not yet ready
+
+    //will return null if db is not yet ready
     fun List<T>.insertSync(
         conflictResolutionStrategy: ConflictResolutionStrategy = ConflictResolutionStrategy.CONFLICT_NONE
-    ) : List<Long>? {
+    ): List<Long>? {
         return _db?.let { db ->
             insertDbSync(db, this, conflictResolutionStrategy)
         }
@@ -86,27 +88,78 @@ class Dao<T : Entity> internal constructor(
                 it.generateContentValues(),
                 conflictResolutionStrategy.type
             )
+        }.also {
+            val allData = getAllSync() ?: listOf()
+            _dataChangeListeners.forEach {
+                it.onDataInserted(items, allData)
+            }
         }
     }
 
-    fun List<T>.delete(deleteCallback: ((rowIds: List<Int>) -> Unit)? = null) {
+    fun List<T>.delete(deleteCallback: ((numberOfRows: Int) -> Unit)? = null) {
 
         runTransactionOrDeferToCreation { db ->
             val fields = entityClass.getAnnotation(RudderEntity::class.java)?.fields
+
+            val args = map {
+                it.getPrimaryKeyValues()
+            }.reduce { acc, strings ->
+                acc.mapIndexed { index, s ->
+
+                    "\"$s\", \"${strings[index]}\""
+                }.toTypedArray()
+            }
             val whereClause = fields?.takeIf {
                 it.isNotEmpty()
-            }?.map {
-                "${it.fieldName}=?s"
+            }?.filter {
+                it.primaryKey
+            }?.mapIndexed { index, it ->
+                "${it.fieldName} IN (${args[index]})"
             }?.reduce { acc, s -> "$acc AND $s" }
-            map {
-                if (whereClause != null)
-                    db.delete(tableName, whereClause, it.getPrimaryKeyValues())
-                else -1
-            }.apply {
-                deleteCallback?.invoke(this)
+
+           val numberOfRowsDel = db.delete(tableName,whereClause,null)
+            deleteCallback?.invoke(numberOfRowsDel)
+
+            val allData = getAllSync() ?: listOf()
+            _dataChangeListeners.forEach {
+                it.onDataDeleted(this.subList(0,numberOfRowsDel), allData)
             }
+        }
+    }
+    /**
+     * val args = map {
+    it.getPrimaryKeyValues()
+    }
+    val whereClause = fields?.takeIf {
+    it.isNotEmpty()
+    }?.filter {
+    it.primaryKey
+    }?.mapIndexed { index, it ->
+    "${it.fieldName} IN (${args[index]})"
+    }?.reduce { acc, s -> "$acc AND $s" }
+    val numberOfRowsDel = db.delete(tableName,whereClause, null)
+    deleteCallback?.invoke(numberOfRowsDel)
 
-
+    val allData = getAllSync() ?: listOf()
+    _dataChangeListeners.forEach {
+    it.onDataDeleted(this.subList(0,numberOfRowsDel), allData)
+    }
+     */
+    /**
+     * TODO
+     *
+     * @param whereClause
+     * @param args
+     * @param deleteCallback
+     */
+    fun delete(
+        whereClause: String,
+        args: Array<out String>,
+        deleteCallback: ((numberOfRows: Int) -> Unit)? = null
+    ) {
+        runTransactionOrDeferToCreation { db ->
+            val deletedRows = db.delete(tableName, whereClause, args)
+            deleteCallback?.invoke(deletedRows)
         }
     }
 
@@ -115,6 +168,36 @@ class Dao<T : Entity> internal constructor(
             callback.invoke(getItems(db, "SELECT * FROM $tableName"))
         }
 
+    }
+
+    /**
+     * Listen to any data change, like add or delete data
+     *
+     * @param listener An instance of DataChangeListener
+     * @see DataChangeListener
+     */
+    fun addDataChangeListener(listener: DataChangeListener<T>) {
+        _dataChangeListeners.add(listener)
+    }
+
+    /**
+     * Remove Data Change Listener
+     *
+     * @param listener An instance of DataChangeListener
+     * @see DataChangeListener
+     */
+    fun removeDataChangeListener(listener: DataChangeListener<T>) {
+        _dataChangeListeners.remove(listener)
+    }
+
+    /**
+     * Clear all data change listeners.
+     *
+     *
+     * @see DataChangeListener
+     */
+    fun removeAllDataChangeListeners() {
+        _dataChangeListeners.clear()
     }
 
     /**
@@ -310,5 +393,20 @@ class Dao<T : Entity> internal constructor(
          * Use the following when no conflict action is specified.
          */
         CONFLICT_NONE(SQLiteDatabase.CONFLICT_NONE),
+    }
+
+    interface DataChangeListener<T : Any> {
+        fun onDataInserted(inserted: List<T>, allData: List<T>) {
+            /**
+             * Implementation can be ignored
+             */
+        }
+
+        fun onDataDeleted(deleted: List<T>, allData: List<T>) {
+            /**
+             * Implementation can be ignored
+             */
+        }
+
     }
 }
