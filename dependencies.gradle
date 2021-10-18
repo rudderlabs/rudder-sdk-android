@@ -1,0 +1,40 @@
+/*
+ * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
+ * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain a
+ * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+ext {
+    versions = [
+            gson        : "2.8.8",
+            jackson     : "2.12.4",
+            moshi       : "1.12.0",
+            hamcrest    : "2.2",
+            androidXTest: "1.4.0",
+            mockito     : "1.10.19",
+            awaitility  : "4.1.0",
+            robolectric : "4.4"
+    ]
+
+    deps = [
+            gson        : "com.google.code.gson:gson:${versions.gson}",
+            jackson     : "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
+            moshi       : [
+                    kotlin: "com.squareup.moshi:moshi-kotlin:${versions.moshi}",
+                    core  : "com.squareup.moshi:moshi:${versions.moshi}"
+            ],
+            androidXTest: "androidx.test:core:${versions.androidXTest}",
+            hamcrest    : "org.hamcrest:hamcrest:${versions.hamcrest}",
+            mockito     : "org.mockito:mockito-core:${versions.mockito}",
+            awaitility  : "org.awaitility:awaitility:${versions.awaitility}",
+            robolectric : "org.robolectric:robolectric:${versions.robolectric}"
+    ]
+}
