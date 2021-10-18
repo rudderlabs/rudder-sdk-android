@@ -117,13 +117,17 @@ class Dao<T : Entity> internal constructor(
                 "${it.fieldName} IN (${args[index]})"
             }?.reduce { acc, s -> "$acc AND $s" }
 
-           val numberOfRowsDel = db.delete(tableName,whereClause,null)
-            deleteCallback?.invoke(numberOfRowsDel)
+            // receives the number of deleted rows and fires callback
+           val extendedDeleteCb = { numberOfRows :Int ->
+               deleteCallback?.invoke(numberOfRows)
+               val allData = getAllSync() ?: listOf()
+               _dataChangeListeners.forEach {
+                   it.onDataDeleted(this.subList(0,numberOfRows), allData)
+               }
+           }
+            delete(whereClause, null, extendedDeleteCb)
 
-            val allData = getAllSync() ?: listOf()
-            _dataChangeListeners.forEach {
-                it.onDataDeleted(this.subList(0,numberOfRowsDel), allData)
-            }
+
         }
     }
     /**
@@ -146,15 +150,15 @@ class Dao<T : Entity> internal constructor(
     }
      */
     /**
-     * TODO
+     * Delete based on where clause
      *
-     * @param whereClause
-     * @param args
+     * @param whereClause Used for selecting items for deletion
+     * @param args Substituting arguments if any, else null
      * @param deleteCallback
      */
     fun delete(
-        whereClause: String,
-        args: Array<out String>,
+        whereClause: String?,
+        args: Array<out String>?,
         deleteCallback: ((numberOfRows: Int) -> Unit)? = null
     ) {
         runTransactionOrDeferToCreation { db ->
