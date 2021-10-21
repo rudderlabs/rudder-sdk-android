@@ -501,8 +501,6 @@ public class RudderClient {
             return;
         }
         Map<String, Object> traits = getRudderContext().getTraits();
-        traits.put("userId", newId);
-        traits.put("id", newId);
 
         String prevUserId = null;
         if (traits.containsKey("userId")) {
@@ -512,6 +510,9 @@ public class RudderClient {
         } else {
             prevUserId = RudderContext.getAnonymousId();
         }
+
+        traits.put("userId", newId);
+        traits.put("id", newId);
 
         RudderMessage message = new RudderMessageBuilder()
                 .setUserId(newId)
