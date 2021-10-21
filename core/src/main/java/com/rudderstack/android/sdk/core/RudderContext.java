@@ -6,6 +6,7 @@ import android.content.Context;
 import android.provider.Settings;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
@@ -117,6 +118,7 @@ public class RudderContext {
         // If a user is already loggedIn and then a new user tries to login
         if (existingId != null && newId != null && !existingId.equals(newId)) {
             this.traits = traitsMap;
+            resetExternalIds();
             return;
         }
 
@@ -282,25 +284,30 @@ public class RudderContext {
         return externalIds;
     }
 
-    void updateExternalIds(@Nullable List<Map<String, Object>> externalIds) {
+    void updateExternalIds(@NonNull List<Map<String, Object>> externalIds) {
+        // update local variable
+        this.externalIds = externalIds;
+    }
+
+    void persistExternalIds() {
+        // persist updated externalIds to shared preferences
         try {
-            RudderPreferenceManager preferenceManger = null;
-            Application application = RudderClient.getApplication();
-            if (application != null) {
-                preferenceManger = RudderPreferenceManager.getInstance(application);
+            if (RudderClient.getApplication() != null) {
+                RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getApplication());
+                preferenceManger.saveExternalIds(new Gson().toJson(this.externalIds));
             }
+        } catch (NullPointerException ex) {
+            RudderLogger.logError(ex);
+        }
+    }
 
-            // update local variable
-            this.externalIds = externalIds;
-
-            if (preferenceManger != null) {
-                if (externalIds == null) {
-                    // clear persistence storage : RESET call
-                    preferenceManger.clearExternalIds();
-                } else {
-                    // update persistence storage
-                    preferenceManger.saveExternalIds(new Gson().toJson(this.externalIds));
-                }
+    void resetExternalIds() {
+        this.externalIds = null;
+        // reset externalIds from shared preferences
+        try {
+            if (RudderClient.getApplication() != null) {
+                RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getApplication());
+                preferenceManger.clearExternalIds();
             }
         } catch (NullPointerException ex) {
             RudderLogger.logError(ex);

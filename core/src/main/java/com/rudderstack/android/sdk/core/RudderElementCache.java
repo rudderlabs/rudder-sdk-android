@@ -2,6 +2,8 @@ package com.rudderstack.android.sdk.core;
 
 import android.app.Application;
 
+import androidx.annotation.NonNull;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,25 +32,33 @@ class RudderElementCache {
 
     static void reset() {
         cachedContext.resetTraits();
-        cachedContext.updateExternalIds(null);
         persistTraits();
+        cachedContext.resetExternalIds();
+
     }
 
     static void persistTraits() {
         cachedContext.persistTraits();
     }
 
-    static void updateTraits(Map<String, Object> traits) {
-        cachedContext.updateTraitsMap(traits);
+    static void updateTraits(RudderTraits traits) {
+        cachedContext.updateTraits(traits);
+        persistTraits();
     }
 
-    public static void updateExternalIds(List<Map<String, Object>> externalIds) {
+    static void updateTraits(Map<String, Object> traits) {
+        cachedContext.updateTraitsMap(traits);
+        persistTraits();
+    }
+
+    public static void updateExternalIds(@NonNull List<Map<String, Object>> externalIds) {
         cachedContext.updateExternalIds(externalIds);
+        cachedContext.persistExternalIds();
     }
 
     public static void setAnonymousId(String anonymousId) {
-        Map<String, Object> traits =new HashMap<>();
-        traits.put("anonymousId",anonymousId);
+        Map<String, Object> traits = new HashMap<>();
+        traits.put("anonymousId", anonymousId);
         cachedContext.updateTraitsMap(traits);
     }
 }
