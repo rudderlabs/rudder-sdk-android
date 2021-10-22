@@ -194,6 +194,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 message.setType(MessageType.TRACK);
                 dump(message);
             } else if (previousVersionCode != versionCode) {
+                preferenceManager.saveBuildVersionCode(versionCode);
                 // If user has disabled tracking activities (i.e., set optOut() to true)
                 // then discard the event
                 if (getOptStatus()) {
@@ -201,7 +202,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
                 // application updated
                 RudderLogger.logDebug("Tracking Application Updated");
-                preferenceManager.saveBuildVersionCode(versionCode);
                 RudderMessage message = new RudderMessageBuilder().setEventName("Application Updated").build();
                 message.setType(MessageType.TRACK);
                 dump(message);
