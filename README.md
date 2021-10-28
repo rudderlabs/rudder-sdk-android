@@ -78,7 +78,7 @@ RudderClient.with(this).track(
 );
 ```
 
-For more detailed documentation, click [**here**](https://docs.rudderstack.com/rudderstack-sdk-integration-guides/rudderstack-android-sdk).
+For more detailed documentation, click [**here**](https://docs.rudderstack.com/stream-sources/rudderstack-sdk-integration-guides/rudderstack-android-sdk).
 
 ## Registering your callbacks
 
