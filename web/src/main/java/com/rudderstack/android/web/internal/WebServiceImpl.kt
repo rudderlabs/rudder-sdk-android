@@ -14,7 +14,6 @@
 
 package com.rudderstack.android.web.internal
 
-import android.util.MalformedJsonException
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.android.web.HttpInterceptor
@@ -163,7 +162,7 @@ class WebServiceImpl internal constructor(
     ): HttpResponse<T> {
         return rawHttpCall(headers, query, body, endpoint, type, deserializer = { json ->
             jsonAdapter.readJson(json, responseClass)
-                ?: throw MalformedJsonException("Json adapter not able to parse response body")
+                ?: throw IllegalArgumentException("Json adapter not able to parse response body")
         })
     }
 
@@ -178,7 +177,7 @@ class WebServiceImpl internal constructor(
     ): HttpResponse<T> {
         return rawHttpCall(headers, query, body, endpoint, type, deserializer = { json ->
             jsonAdapter.readJson(json, typeAdapter)
-                ?: throw MalformedJsonException("Json adapter not able to parse response body")
+                ?: throw IllegalArgumentException("Json adapter not able to parse response body")
         })
     }
 
