@@ -2,6 +2,8 @@ package com.rudderstack.android.sdk.core;
 
 import android.app.Application;
 
+import androidx.annotation.NonNull;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +52,12 @@ class RudderElementCache {
         Map<String, Object> traits =new HashMap<>();
         traits.put("anonymousId",anonymousId);
         cachedContext.updateTraitsMap(traits);
+    }
+
+    static void updateAnonymousId(@NonNull String anonymousId){
+        RudderContext.updateAnonymousId(anonymousId);
+        cachedContext.updateAnonymousIdTraits();
+        persistTraits();
     }
 }
 

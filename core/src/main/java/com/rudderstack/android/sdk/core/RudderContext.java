@@ -6,6 +6,7 @@ import android.content.Context;
 import android.provider.Settings;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
@@ -123,6 +124,11 @@ public class RudderContext {
         // update traits object here
         this.traits.putAll(traitsMap);
 
+    }
+
+    void updateAnonymousIdTraits()
+    {
+        this.traits.put("anonymousId", _anonymousId);
     }
 
     void persistTraits() {
@@ -317,6 +323,10 @@ public class RudderContext {
 
     static String getAnonymousId() {
         return _anonymousId;
+    }
+
+    static void updateAnonymousId(@NonNull String anonymousId) {
+        _anonymousId = anonymousId;
     }
 
     RudderContext copy() {

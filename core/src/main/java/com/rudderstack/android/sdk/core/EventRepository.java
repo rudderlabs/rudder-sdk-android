@@ -90,6 +90,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
             // 2. initiate RudderElementCache
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
+            // We first send the anonymousId to RudderElementCache which will just set the anonymousId static variable in RudderContext class.
             RudderElementCache.initiate(_application, _anonymousId, _advertisingId);
 
             String anonymousId = RudderContext.getAnonymousId();
@@ -542,37 +543,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         dbManager.saveEvent(eventJson);
     }
 
-    /**
-     * Opts out a user from tracking the activity. When enabled all the events will be dropped by the SDK.
-     *
-     * @param optOut Boolean value to store optOut status
-     */
-    void saveOptStatus(boolean optOut) {
-        preferenceManager.saveOptStatus(optOut);
-        updateOptStatusTime(optOut);
-    }
-
-    /**
-     * If true, save user optOut time
-     * If false, save user optIn time
-     *
-     * @param optOut Boolean value to update optOut or optIn time
-     */
-    private void updateOptStatusTime(boolean optOut) {
-        if (optOut) {
-            preferenceManager.updateOptOutTime();
-        } else {
-            preferenceManager.updateOptInTime();
-        }
-    }
-
-    /**
-     * @return optOut status
-     */
-    boolean getOptStatus() {
-        return preferenceManager.getOptStatus();
-    }
-
     private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
         synchronized (eventReplayMessageQueue) {
             if (areFactoriesInitialized || fromHistory) {
@@ -647,6 +617,47 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     void onIntegrationReady(String key, RudderClient.Callback callback) {
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: onIntegrationReady: callback registered for %s", key));
         integrationCallbacks.put(key, callback);
+    }
+
+    /**
+     * Opts out a user from tracking the activity. When enabled all the events will be dropped by the SDK.
+     *
+     * @param optOut Boolean value to store optOut status
+     */
+    void saveOptStatus(boolean optOut) {
+        preferenceManager.saveOptStatus(optOut);
+        updateOptStatusTime(optOut);
+    }
+
+    /**
+     * If true, save user optOut time
+     * If false, save user optIn time
+     *
+     * @param optOut Boolean value to update optOut or optIn time
+     */
+    private void updateOptStatusTime(boolean optOut) {
+        if (optOut) {
+            preferenceManager.updateOptOutTime();
+        } else {
+            preferenceManager.updateOptInTime();
+        }
+    }
+
+    /**
+     * @return optOut status
+     */
+    boolean getOptStatus() {
+        return preferenceManager.getOptStatus();
+    }
+
+    void updateAnonymousId(@NonNull String anonymousId) {
+        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: updateAnonymousId: Updating AnonymousId: %s", anonymousId));
+        RudderElementCache.updateAnonymousId(anonymousId);
+        try {
+            this.anonymousIdHeaderString = Base64.encodeToString(RudderContext.getAnonymousId().getBytes("UTF-8"), Base64.DEFAULT);
+        } catch (Exception ex) {
+            RudderLogger.logError(ex.getCause());
+        }
     }
 
     @Override
