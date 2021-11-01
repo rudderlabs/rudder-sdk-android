@@ -32,10 +32,12 @@ abstract class State<T>(initialValue: T? = null) {
 
     private var _value: T? = initialValue
     set(value) {
-        field = value
-        // notifies observers as state changes. Initial value won't be notified
-        observers.forEach {
-            it.get()?.onStateChange(value)
+        synchronized(this) {
+            field = value
+            // notifies observers as state changes. Initial value won't be notified
+            observers.forEach {
+                it.get()?.onStateChange(value)
+            }
         }
     }
     val value: T?
@@ -50,8 +52,10 @@ abstract class State<T>(initialValue: T? = null) {
      * @param observer an instance of Observer
      */
     internal fun subscribe(observer: Observer<T>) {
-        observers.add(WeakReference(observer))
-        observer.onStateChange(value)
+        synchronized(this){
+            observers.add(WeakReference(observer))
+            observer.onStateChange(value)
+        }
     }
 
     /**
@@ -65,9 +69,11 @@ abstract class State<T>(initialValue: T? = null) {
     }
 
     internal fun removeObserver(observer: Observer<T>){
-        observers.removeIf {
-            //remove if observer ref is removed or observer is same as given one
-            it.get()?.equals(observer)?:true
+        synchronized(this) {
+            observers.removeIf {
+                //remove if observer ref is removed or observer is same as given one
+                it.get()?.equals(observer) ?: true
+            }
         }
     }
 
