@@ -19,8 +19,14 @@ import org.hamcrest.Matchers.*
 import org.junit.Test
 
 class StateTest {
+
+    companion object {
+        private const val INITIAL = "initial"
+    }
+
     //a dummy State
-    object DummyState : State<String>("initial")
+    object DummyState : State<String>(INITIAL) {
+    }
 
     /**
      * Test if observers work as expected
@@ -41,15 +47,18 @@ class StateTest {
         val observer1 = object : State.Observer<String> {
             override fun onStateChange(state: String?) {
                 println("obs1: $state")
-                assertThat(state, equalTo(firstMessage))
+                assertThat(state, anyOf(equalTo(INITIAL), equalTo(firstMessage)))
                 isObserver1Called = true
             }
         }
         //should get only first and second messages
-        val observer2  = object : State.Observer<String> {
+        val observer2 = object : State.Observer<String> {
             override fun onStateChange(state: String?) {
                 println("obs2: $state")
-                assertThat(state, anyOf(equalTo(firstMessage), equalTo(secondMessage)))
+                assertThat(
+                    state,
+                    anyOf(equalTo(INITIAL), equalTo(firstMessage), equalTo(secondMessage))
+                )
                 isObserver2Called = true
             }
         }
@@ -59,6 +68,7 @@ class StateTest {
                 println("obs3: $state")
                 assertThat(
                     state, anyOf(
+                        equalTo(INITIAL),
                         equalTo(firstMessage),
                         equalTo(secondMessage), equalTo(thirdMessage), emptyOrNullString()
                     )
