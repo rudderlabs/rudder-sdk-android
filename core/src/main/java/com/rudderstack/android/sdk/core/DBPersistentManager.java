@@ -46,9 +46,13 @@ class DBPersistentManager extends SQLiteOpenHelper {
      * save individual messages to DB
      * */
     void saveEvent(String messageJson) {
-        Message msg = new Message().obtain();
-        msg.obj = messageJson;
-        dbInsertionHandlerThread.addMessage(msg);
+        try {
+            Message msg = new Message().obtain();
+            msg.obj = messageJson;
+            dbInsertionHandlerThread.addMessage(msg);
+        } catch (Exception e) {
+            RudderLogger.logError(e.getCause());
+        }
     }
 
     /*
@@ -190,7 +194,9 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     private DBPersistentManager(Application application) {
         super(application, DB_NAME, null, DB_VERSION);
-        new Thread(new Runnable() {
+
+        // Need to perform db operations on a separate thread to support strict mode.
+        Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -201,7 +207,17 @@ class DBPersistentManager extends SQLiteOpenHelper {
                     RudderLogger.logError(ex);
                 }
             }
-        }).start();
+        });
+
+        t.start();
+
+        // Should return back only when the dbInsertionHandlerThread is started, else events will be dropped so using join here.
+        try {
+            t.join();
+        } catch (InterruptedException e) {
+            RudderLogger.logError(e.getCause());
+        }
+
     }
 
     @Override
