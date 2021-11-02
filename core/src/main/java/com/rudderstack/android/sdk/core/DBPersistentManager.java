@@ -216,7 +216,6 @@ class DBPersistentManager extends SQLiteOpenHelper {
                         for (Message msg : queue) {
                             dbInsertionHandlerThread.addMessage(msg);
                         }
-                        System.out.println("Queue is cleared");
                     }
                 } catch (SQLiteDatabaseCorruptException ex) {
                     RudderLogger.logError(ex);
