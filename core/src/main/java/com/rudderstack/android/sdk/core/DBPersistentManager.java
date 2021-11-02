@@ -12,8 +12,10 @@ import android.os.Looper;
 import android.os.Message;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Queue;
 
 /*
  * Helper class for SQLite operations
@@ -30,6 +32,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
     private static final String MESSAGE_ID = "id";
     static final String UPDATED = "updated";
     DBInsertionHandlerThread dbInsertionHandlerThread;
+    final Queue<Message> queue = new LinkedList<Message>();
 
     /*
      * create table initially if not exists
@@ -49,7 +52,13 @@ class DBPersistentManager extends SQLiteOpenHelper {
         try {
             Message msg = new Message().obtain();
             msg.obj = messageJson;
-            dbInsertionHandlerThread.addMessage(msg);
+            if (dbInsertionHandlerThread == null) {
+                queue.add(msg);
+                return;
+            }
+            synchronized (this) {
+                dbInsertionHandlerThread.addMessage(msg);
+            }
         } catch (Exception e) {
             RudderLogger.logError(e.getCause());
         }
@@ -196,28 +205,24 @@ class DBPersistentManager extends SQLiteOpenHelper {
         super(application, DB_NAME, null, DB_VERSION);
 
         // Need to perform db operations on a separate thread to support strict mode.
-        Thread t = new Thread(new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     DBPersistentManager.this.getWritableDatabase();
-                    dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", DBPersistentManager.this.getWritableDatabase());
-                    dbInsertionHandlerThread.start();
+                    synchronized (this) {
+                        dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", DBPersistentManager.this.getWritableDatabase());
+                        dbInsertionHandlerThread.start();
+                        for (Message msg : queue) {
+                            dbInsertionHandlerThread.addMessage(msg);
+                        }
+                        System.out.println("Queue is cleared");
+                    }
                 } catch (SQLiteDatabaseCorruptException ex) {
                     RudderLogger.logError(ex);
                 }
             }
-        });
-
-        t.start();
-
-        // Should return back only when the dbInsertionHandlerThread is started, else events will be dropped so using join here.
-        try {
-            t.join();
-        } catch (InterruptedException e) {
-            RudderLogger.logError(e.getCause());
-        }
-
+        }).start();
     }
 
     @Override
@@ -258,16 +263,11 @@ class DBInsertionHandlerThread extends HandlerThread {
         this.database = database;
     }
 
-    @Override
-    protected void onLooperPrepared() {
-        super.onLooperPrepared();
-        dbInsertionHandler = new DBInsertionHandler(getLooper(), this.database);
-    }
-
     public void addMessage(Message message) {
-        if (dbInsertionHandler != null) {
-            dbInsertionHandler.sendMessage(message);
+        if (dbInsertionHandler == null) {
+            dbInsertionHandler = new DBInsertionHandler(getLooper(), this.database);
         }
+        dbInsertionHandler.sendMessage(message);
     }
 
     private class DBInsertionHandler extends Handler {
