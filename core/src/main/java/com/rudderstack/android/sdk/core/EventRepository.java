@@ -532,7 +532,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
                 .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
                 .create();
-        System.out.println("Saving Event: "+message.getEventName()+" and type is : "+message.getType());
         String eventJson = gson.toJson(message);
         makeFactoryDump(message, false);
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));

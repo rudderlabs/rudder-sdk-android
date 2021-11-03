@@ -22,9 +22,9 @@
         </activity>
         <activity android:name="com.rudderstack.android.sample.kotlin.FirstActivity" />
         <activity android:name="com.rudderstack.android.sample.kotlin.SecondActivity" />
-        <!-- <meta-data
+        <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-4271859468376006~9737595580"/> -->
+            android:value="ca-app-pub-4271859468376006~9737595580"/>
     </application>
 
 </manifest>
