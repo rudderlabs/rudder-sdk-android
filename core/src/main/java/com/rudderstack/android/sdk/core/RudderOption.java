@@ -14,17 +14,12 @@ public class RudderOption {
     private Map<String, Object> customContexts;
 
     public RudderOption() {
-        if (RudderElementCache.cachedContext != null) {
-            this.externalIds = RudderElementCache.cachedContext.getExternalIds();
-        }
+        this.externalIds = new ArrayList<>();
         this.integrations = new HashMap<>();
         this.customContexts = new HashMap<>();
     }
 
     public RudderOption putExternalId(String type, String id) {
-        if (this.externalIds == null) {
-            this.externalIds = new ArrayList<>();
-        }
 
         // find out if something is already present in the storage (PreferenceManager)
         Map<String, Object> externalIdMap = null;

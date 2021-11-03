@@ -294,7 +294,27 @@ public class RudderContext {
 
     void updateExternalIds(@NonNull List<Map<String, Object>> externalIds) {
         // update local variable
-        this.externalIds = externalIds;
+        if (this.externalIds == null) {
+            this.externalIds = new ArrayList<>();
+            this.externalIds.addAll(externalIds);
+            return;
+        }
+        for (Map<String, Object> newExternalId : externalIds) {
+            String newExternalIdType = (String) newExternalId.get("type");
+            boolean typeAlreadyExists = false;
+            if (newExternalIdType != null) {
+                for (Map<String, Object> existingExternalId : this.externalIds) {
+                    String existingExternalIdType = (String) existingExternalId.get("type");
+                    if (existingExternalIdType != null && existingExternalIdType.equals(newExternalIdType)) {
+                        typeAlreadyExists = true;
+                        existingExternalId.put("id", newExternalId.get("id"));
+                    }
+                }
+                if (!typeAlreadyExists) {
+                    this.externalIds.add(newExternalId);
+                }
+            }
+        }
     }
 
     void persistExternalIds() {
