@@ -665,12 +665,15 @@ public class RudderClient {
      *
      * @param anonymousId AnonymousId you want to use for the application
      */
-    public static void setAnonymousId(String anonymousId) {
-        if (instance != null) {
-            RudderLogger.logWarn("Set the anonymousId before calling getInstance");
+    public static void setAnonymousId(@NonNull String anonymousId) {
+        if (instance == null) {
+            _anonymousId = anonymousId;
             return;
         }
-        _anonymousId = anonymousId;
+        if (repository != null) {
+            repository.updateAnonymousId(anonymousId);
+            return;
+        }
     }
 
     /**

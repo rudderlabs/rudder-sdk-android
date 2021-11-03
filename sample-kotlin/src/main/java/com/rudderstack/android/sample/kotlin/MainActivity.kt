@@ -17,35 +17,35 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-         val option = RudderOption()
-                    .putExternalId("brazeExternalId", "some_external_id_1")
-                    .putExternalId("braze_id", "some_braze_id_2")
-                    .putIntegration("GA", true).putIntegration("Amplitude", true)
-                    .putCustomContext(
-                        "customContext", mapOf(
-                            "version" to "1.0.0",
-                            "language" to "kotlin"
-                        )
-                    )
-            MainApplication.rudderClient!!.identify(
-                "userId",
-                RudderTraits().putFirstName("Test First Name"),
-                option
+        val option = RudderOption()
+            .putExternalId("brazeExternalId", "some_external_id_1")
+            .putExternalId("braze_id", "some_braze_id_2")
+            .putIntegration("GA", true).putIntegration("Amplitude", true)
+            .putCustomContext(
+                "customContext", mapOf(
+                    "version" to "1.0.0",
+                    "language" to "kotlin"
+                )
             )
-            MainApplication.rudderClient!!.reset()
-            val props = RudderProperty()
-            props.put("Name", "John")
-            props.put("city", "NYC")
-            MainApplication.rudderClient!!.track("test event john", props, option)
+        MainApplication.rudderClient!!.identify(
+            "userId",
+            RudderTraits().putFirstName("Test First Name"),
+            option
+        )
+        MainApplication.rudderClient!!.reset()
+        val props = RudderProperty()
+        props.put("Name", "John")
+        props.put("city", "NYC")
+        MainApplication.rudderClient!!.track("test event john", props, option)
 
-            MainApplication.rudderClient!!.track("Test Event")
+        MainApplication.rudderClient!!.track("Test Event")
 
-            MainApplication.rudderClient!!.onIntegrationReady("App Center", NativeCallBack("App Center"));
+        MainApplication.rudderClient!!.onIntegrationReady("App Center", NativeCallBack("App Center"));
 
         MainApplication.rudderClient!!.onIntegrationReady("Custom Factory", NativeCallBack("Custom Factory"));
 
 
-       
+
     }
 }
 

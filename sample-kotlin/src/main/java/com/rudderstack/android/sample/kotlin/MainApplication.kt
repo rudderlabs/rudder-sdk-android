@@ -39,7 +39,7 @@ class MainApplication : Application() {
                 .withRecordScreenViews(false)
                 .withCustomFactory(CustomFactory.FACTORY)
                 .build()
-)
+        )
         rudderClient!!.putDeviceToken("some_device_token")
         rudderClient!!.track("first_event")
 

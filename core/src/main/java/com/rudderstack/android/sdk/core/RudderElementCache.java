@@ -61,5 +61,11 @@ class RudderElementCache {
         traits.put("anonymousId", anonymousId);
         cachedContext.updateTraitsMap(traits);
     }
+
+    static void updateAnonymousId(@NonNull String anonymousId){
+        RudderContext.updateAnonymousId(anonymousId);
+        cachedContext.updateAnonymousIdTraits();
+        persistTraits();
+    }
 }
 
