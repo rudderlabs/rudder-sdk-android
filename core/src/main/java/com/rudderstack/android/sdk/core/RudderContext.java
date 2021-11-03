@@ -56,15 +56,19 @@ public class RudderContext {
     }
 
     RudderContext(Application application, String anonymousId, String advertisingId) {
+        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
+
         if (TextUtils.isEmpty(anonymousId)) {
-            anonymousId = Utils.getDeviceId(application);
+            anonymousId = preferenceManger.getAnonymousId() != null ? preferenceManger.getAnonymousId() : Utils.getDeviceId(application);
+        } else {
+            preferenceManger.saveAnonymousId(anonymousId);
         }
+
         _anonymousId = anonymousId;
 
         this.app = new RudderApp(application);
 
         // get saved traits from prefs. if not present create new one and save
-        RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
         String traitsJson = preferenceManger.getTraits();
         RudderLogger.logDebug(String.format(Locale.US, "Traits from persistence storage%s", traitsJson));
         if (traitsJson == null) {
@@ -126,8 +130,7 @@ public class RudderContext {
 
     }
 
-    void updateAnonymousIdTraits()
-    {
+    void updateAnonymousIdTraits() {
         this.traits.put("anonymousId", _anonymousId);
     }
 

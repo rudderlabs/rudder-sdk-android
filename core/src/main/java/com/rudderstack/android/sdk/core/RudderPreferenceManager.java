@@ -15,6 +15,7 @@ class RudderPreferenceManager {
     private static final String RUDDER_OPT_STATUS_KEY = "rl_opt_status";
     private static final String RUDDER_OPT_IN_TIME_KEY = "rl_opt_in_time";
     private static final String RUDDER_OPT_OUT_TIME_KEY = "rl_opt_out_time";
+    private static final String RUDDER_ANONYMOUS_ID_KEY = "rl_anonymous_id_key";
 
     private static SharedPreferences preferences;
     private static RudderPreferenceManager instance;
@@ -63,6 +64,16 @@ class RudderPreferenceManager {
 
     void clearExternalIds() {
         preferences.edit().remove(RUDDER_EXTERNAL_ID_KEY).apply();
+    }
+
+    void saveAnonymousId(String anonymousId) {
+        System.out.println("Saved anonymousId value : " + anonymousId + " to preferences");
+        preferences.edit().putString(RUDDER_ANONYMOUS_ID_KEY, anonymousId).apply();
+    }
+
+    String getAnonymousId() {
+        System.out.println("Getting anonymousId value from preferences : " + preferences.getString(RUDDER_ANONYMOUS_ID_KEY, null));
+        return preferences.getString(RUDDER_ANONYMOUS_ID_KEY, null);
     }
 
     void saveOptStatus(boolean optStatus) {

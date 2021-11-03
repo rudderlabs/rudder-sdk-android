@@ -653,6 +653,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     void updateAnonymousId(@NonNull String anonymousId) {
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: updateAnonymousId: Updating AnonymousId: %s", anonymousId));
         RudderElementCache.updateAnonymousId(anonymousId);
+        preferenceManager.saveAnonymousId(RudderContext.getAnonymousId());
         try {
             this.anonymousIdHeaderString = Base64.encodeToString(RudderContext.getAnonymousId().getBytes("UTF-8"), Base64.DEFAULT);
         } catch (Exception ex) {
