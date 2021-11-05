@@ -17,20 +17,14 @@ package com.rudderstack.android.web
 import com.rudderstack.android.gsonrudderadapter.GsonAdapter
 import com.rudderstack.android.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.android.moshirudderadapter.MoshiAdapter
+import junit.framework.TestResult
 import junit.framework.TestSuite
+import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Suite
 
+@RunWith(Suite::class)
+@Suite.SuiteClasses(WebApiTest::class, WebApiTestGson::class, WebApiTestMoshi::class)
 class WebApiTestSuite : TestSuite() {
-    @Test
-    fun testWebWithAllAdapters(){
-        addTest(WebApiTest().also {
-            it.jsonAdapter = MoshiAdapter()
-        })
-        addTest(WebApiTest().also {
-            it.jsonAdapter = JacksonAdapter()
-        })
-        addTest(WebApiTest().also {
-            it.jsonAdapter = GsonAdapter()
-        })
-    }
 }

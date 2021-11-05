@@ -14,24 +14,28 @@
 
 package com.rudderstack.android.web
 
+import com.rudderstack.android.gsonrudderadapter.GsonAdapter
+import com.rudderstack.android.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.android.moshirudderadapter.MoshiAdapter
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.android.web.models.ArtDataListResponse
 import com.rudderstack.android.web.models.ArtDataResponse
 import com.rudderstack.android.web.models.Data
+import junit.framework.TestCase
 import junit.framework.TestSuite
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert
+import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
-import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.*
 import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-class WebApiTest : TestSuite() {
-    internal var jsonAdapter: JsonAdapter = MoshiAdapter()
+open class WebApiTest {
+    protected var jsonAdapter: JsonAdapter = MoshiAdapter()
 
     private lateinit var webService: WebService
     private lateinit var agifyWebService: WebService
@@ -85,6 +89,11 @@ class WebApiTest : TestSuite() {
                 )
             )
         )
+        assertThat(response?.info?.licenseText, allOf(
+            notNullValue(),
+            `is`("The data in this response is licensed under a Creative Commons Zero (CC0) " +
+                    "1.0 designation and the Terms and Conditions of artic.edu.")
+        ))
     }
 
     @Test
@@ -234,5 +243,15 @@ class WebApiTest : TestSuite() {
             isComplete.set(true)
         }
         Awaitility.await().atMost(1, TimeUnit.MINUTES).untilTrue(isComplete)
+    }
+}
+class WebApiTestGson : WebApiTest() {
+    init {
+        jsonAdapter = GsonAdapter()
+    }
+}
+class WebApiTestMoshi : WebApiTest() {
+    init {
+        jsonAdapter = MoshiAdapter()
     }
 }

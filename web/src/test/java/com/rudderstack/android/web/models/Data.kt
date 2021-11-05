@@ -15,11 +15,14 @@
 package com.rudderstack.android.web.models
 
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.squareup.moshi.Json
 
 data class Data(
     @Json(name = "id")
+    @JsonProperty("id")
     val id: Int,
     @Json(name = "title")
+    @JsonProperty("title")
     val title: String
 )

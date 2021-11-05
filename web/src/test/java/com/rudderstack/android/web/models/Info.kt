@@ -14,14 +14,22 @@
 
 package com.rudderstack.android.web.models
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.Json
 
 
 data class Info(
     @Json(name = "license_links")
+    @JsonProperty("license_links")
+    @SerializedName("license_links")
     val licenseLinks: List<String>,
     @Json(name = "license_text")
+    @JsonProperty("license_text")
+    @SerializedName("license_text")
     val licenseText: String,
     @Json(name = "version")
+    @JsonProperty("version")
+    @SerializedName("version")
     val version: String
 )

@@ -15,13 +15,17 @@
 package com.rudderstack.android.web.models
 
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.squareup.moshi.Json
 
 data class ArtDataResponse(
     @Json(name = "config")
+    @JsonProperty("config")
     val config: Config,
     @Json(name = "data")
+    @JsonProperty("data")
     val `data`: Data,
     @Json(name = "info")
+    @JsonProperty("info")
     val info: Info
 )
