@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
+ * Creator: Debanjan Chatterjee on 05/11/21, 5:49 PM Last modified: 05/11/21, 5:49 PM
  * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,17 +14,19 @@
 
 package com.rudderstack.android.models
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.google.gson.annotations.SerializedName
+import com.rudderstack.android.gsonrudderadapter.GsonAdapter
+import com.rudderstack.android.jacksonrudderadapter.JacksonAdapter
+import com.rudderstack.android.moshirudderadapter.MoshiAdapter
+import junit.framework.TestSuite
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Suite
 
-data class CustomerEntity(
-    @SerializedName("name")
-    @get:JsonProperty
-    val name : String,
-    @SerializedName("address")
-    @get:JsonProperty
-    val address: String,
-    @SerializedName("work_address")
-    @get:JsonProperty("work_address")
-    val workAddress : String
+@RunWith(Suite::class)
+@Suite.SuiteClasses(
+    RudderServerConfigParseTestJackson::class, RudderServerConfigParseTestGson::class,
+    RudderServerConfigParseTestMoshi::class
 )
+class RudderServerConfigParseTestSuite : TestSuite() {
+
+}

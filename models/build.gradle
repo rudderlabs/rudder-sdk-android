@@ -29,5 +29,19 @@ dependencies {
     //json parsers as compileOnly just for annotations
     compileOnly deps.gson
     compileOnly deps.jackson
+    compileOnly deps.moshi.core
+    compileOnly deps.moshi.kotlin
+    //test
     testImplementation 'junit:junit:4.+'
+
+    testImplementation deps.gson
+    testImplementation deps.jackson
+    testImplementation deps.moshi.core
+    testImplementation deps.moshi.kotlin
+    testImplementation(project(':moshirudderadapter'))
+    testImplementation(project(':gsonrudderadapter'))
+    testImplementation(project(':jacksonrudderadapter'))
+    testImplementation(project(":rudderjsonadapter"))
+
+    testImplementation deps.hamcrest
 }
