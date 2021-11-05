@@ -25,6 +25,6 @@ import org.junit.runner.RunWith
 import org.junit.runners.Suite
 
 @RunWith(Suite::class)
-@Suite.SuiteClasses(WebApiTest::class, WebApiTestGson::class, WebApiTestMoshi::class)
+@Suite.SuiteClasses(WebApiTestJackson::class, WebApiTestGson::class, WebApiTestMoshi::class)
 class WebApiTestSuite : TestSuite() {
 }
