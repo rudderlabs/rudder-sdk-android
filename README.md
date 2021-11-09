@@ -16,7 +16,7 @@
   <b>
     <a href="https://rudderstack.com">Website</a>
     ·
-    <a href="https://rudderstack.com/docs">Documentation</a>
+    <a href="https://rudderstack.com/docs/stream-sources/rudderstack-sdk-integration-guides/rudderstack-android-sdk/">Documentation</a>
     ·
     <a href="https://rudderstack.com/join-rudderstack-slack-community">Slack</a>
   </b>
