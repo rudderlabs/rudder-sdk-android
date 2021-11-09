@@ -18,7 +18,7 @@
     ·
     <a href="https://rudderstack.com/docs/stream-sources/rudderstack-sdk-integration-guides/rudderstack-android-sdk/">Documentation</a>
     ·
-    <a href="https://rudderstack.com/join-rudderstack-slack-community">Slack</a>
+    <a href="https://rudderstack.com/join-rudderstack-slack-community">Community Slack</a>
   </b>
 </p>
 
