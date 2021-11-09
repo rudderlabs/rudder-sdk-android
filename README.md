@@ -1,22 +1,41 @@
-[![Maven Central](https://img.shields.io/maven-central/v/com.rudderstack.android.sdk/core.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.rudderstack.android.sdk%22%20AND%20a:%22core%22)
+<p align="center">
+  <a href="https://rudderstack.com/">
+    <img src="https://user-images.githubusercontent.com/59817155/121357083-1c571300-c94f-11eb-8cc7-ce6df13855c9.png">
+  </a>
+</p>
+
+<p align="center"><b>The Customer Data Platform for Developers</b></p>
+
+<p align="center">
+  <a href="https://search.maven.org/search?q=g:%22com.rudderstack.android.sdk%22%20AND%20a:%22core%22">
+    <img src="https://img.shields.io/maven-central/v/com.rudderstack.android.sdk/core.svg?label=Maven%20Central">
+    </a>
+</p>
+
+<p align="center">
+  <b>
+    <a href="https://rudderstack.com">Website</a>
+    ·
+    <a href="https://rudderstack.com/docs">Documentation</a>
+    ·
+    <a href="https://rudderstack.com/join-rudderstack-slack-community">Slack</a>
+  </b>
+</p>
+
+---
+
 
 # RudderStack Android SDK
 
-RudderStack's Android SDK lets you track event data from your Android app. After integrating the SDK, you will be able to send the event data to your preferred destination/s such as Google Analytics, Amplitude, and more.
+RudderStack's Android SDK lets you track event data from your Android applications. After integrating the SDK, you will be able to send the event data to your preferred destination/s such as Google Analytics, Amplitude, and more.
 
-For detailed documentation on the Android SDK, click [**here**](https://docs.rudderstack.com/stream-sources/rudderstack-sdk-integration-guides/rudderstack-android-sdk).
+For detailed documentation on the Android SDK, click [**here**](https://rudderstack.com/docs/stream-sources/rudderstack-sdk-integration-guides/rudderstack-android-sdk).
 
-## About RudderStack
-
-[**RudderStack**](https://rudderstack.com/) is a **customer data platform for developers**. Our tooling makes it easy to deploy pipelines that collect customer data from every app, website and SaaS platform, then activate it in your warehouse and business tools.
-
-More information on RudderStack can be found [**here**](https://github.com/rudderlabs/rudder-server).
-
-## Getting started with the Android SDK
+## Get started with the Android SDK
 
 1. Add these lines to your project level `build.gradle` file:
 
-```
+```groovy
 buildscript {
     repositories {
         mavenCentral()
@@ -30,9 +49,9 @@ allprojects {
 }
 ```
 
-2. Then, add the dependency under ```dependencies``` as shown:
+2. Then, add the dependency under `dependencies` as shown:
 
-```
+```groovy
 
 implementation 'com.rudderstack.android.sdk:core:1.0.22'
 ```
@@ -78,7 +97,7 @@ RudderClient.with(this).track(
 );
 ```
 
-For more detailed documentation, click [**here**](https://docs.rudderstack.com/stream-sources/rudderstack-sdk-integration-guides/rudderstack-android-sdk).
+For more information on the different types of events supported by the Android SDK, refer to our [**docs**](https://rudderstack.com/docs/stream-sources/rudderstack-sdk-integration-guides/rudderstack-android-sdk).
 
 ## Registering your callbacks
 
@@ -94,10 +113,19 @@ rudderClient.onIntegrationReady("Lotame") {
 ```
 The variable `it` contains the intialized nativeSDK object.
 
-> The method `onIntegrationReady` accepts two arguments- the integration name(eg. "Lotame") and the callback.
----
+> The method `onIntegrationReady` accepts two arguments: the integration name (e.g. "Lotame") and the callback.
 
 [**Registering Lotame's onSync callback**](https://github.com/rudderlabs/rudder-integration-lotame-android#register-your-onsync-callback) shows one more example of registering a callback using `onIntegrationReady`.
+
+## Contribute
+
+We would love to see you contribute to this project. Get more information on how to contribute [**here**](./CONTRIBUTING.md).
+
+## About RudderStack
+
+[**RudderStack**](https://rudderstack.com/) is a **customer data platform for developers**. Our tooling makes it easy to deploy pipelines that collect customer data from every app, website and SaaS platform, then activate it in your warehouse and business tools.
+
+More information on RudderStack can be found [**here**](https://github.com/rudderlabs/rudder-server).
 
 ## Contact us
 
