@@ -19,8 +19,9 @@ android {
     buildToolsVersion "29.0.3"
     defaultConfig {
         applicationId "com.example.testapp1mg"
-        minSdkVersion 21
+        minSdkVersion 19
         targetSdkVersion 29
+        multiDexEnabled true
         versionCode 4
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -51,6 +52,12 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.6'
 
     implementation 'com.google.android.gms:play-services-ads:19.3.0'
+
+    //multidex
+    implementation "androidx.multidex:multidex:2.0.1"
+
+    // SSL Back-porting
+    implementation 'com.google.android.gms:play-services-base:17.6.0'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'
