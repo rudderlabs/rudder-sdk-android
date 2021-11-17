@@ -23,5 +23,5 @@ class Constants {
     // whether we should record screen views automatically
     static final boolean RECORD_SCREEN_VIEWS = false;
     // current version of the library
-    static final String RUDDER_LIBRARY_VERSION = "1.0.22";
+    static final String RUDDER_LIBRARY_VERSION = "1.1.0";
 }
