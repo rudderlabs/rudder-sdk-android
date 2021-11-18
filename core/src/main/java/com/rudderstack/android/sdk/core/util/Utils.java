@@ -41,7 +41,7 @@ public class Utils {
 
     public static String getTimeStamp() {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-        formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         formatter.setCalendar(new GregorianCalendar());
         return formatter.format(new Date());
     }
