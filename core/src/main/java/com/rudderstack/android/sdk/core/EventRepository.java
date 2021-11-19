@@ -556,7 +556,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         if (integration != null)
                             if (!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key)) {
                                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                                integration.dump(message);
+                                Gson gson = new GsonBuilder()
+                                        .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
+                                        .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
+                                        .create();
+                                RudderMessage messageDeepCopy = gson.fromJson(gson.toJson(message), RudderMessage.class);
+                                integration.dump(messageDeepCopy);
                             }
                     }
                 }
@@ -568,7 +573,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         if (integration != null)
                             if (integrationOptions.containsKey(key) && (boolean) integrationOptions.get(key)) {
                                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                                integration.dump(message);
+                                Gson gson = new GsonBuilder()
+                                        .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
+                                        .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
+                                        .create();
+                                RudderMessage messageDeepCopy = gson.fromJson(gson.toJson(message), RudderMessage.class);
+                                integration.dump(messageDeepCopy);
                             }
                     }
                 }
