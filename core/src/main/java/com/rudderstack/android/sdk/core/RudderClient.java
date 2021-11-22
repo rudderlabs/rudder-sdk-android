@@ -23,6 +23,7 @@ public class RudderClient {
     private static String _advertisingId;
     private static String _anonymousId;
     private static RudderOption defaultOptions;
+    private static String _deviceToken;
 
     /*
      * private constructor
@@ -126,7 +127,7 @@ public class RudderClient {
             // initiate EventRepository class
             if (application != null) {
                 RudderLogger.logVerbose("getInstance: creating EventRepository.");
-                repository = new EventRepository(application, writeKey, config, _anonymousId, _advertisingId);
+                repository = new EventRepository(application, writeKey, config, _anonymousId, _advertisingId, _deviceToken);
             }
         }
         return instance;
@@ -653,7 +654,11 @@ public class RudderClient {
      *
      * @param deviceToken Push Token from FCM
      */
-    public void putDeviceToken(@Nullable String deviceToken) {
+    public static void putDeviceToken(@Nullable String deviceToken) {
+        if (instance == null) {
+            _deviceToken = deviceToken;
+            return;
+        }
         if (getOptOutStatus()) {
             return;
         }

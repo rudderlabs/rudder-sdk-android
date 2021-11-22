@@ -29,11 +29,14 @@ class RudderDeviceInfo {
     @SerializedName("advertisingId")
     private String advertisingId;
 
-    RudderDeviceInfo(String advertisingId) {
+    RudderDeviceInfo(String advertisingId, String token) {
         this.deviceId = Utils.getDeviceId(RudderClient.getApplication());
         if (advertisingId != null && !advertisingId.isEmpty()) {
             this.advertisingId = advertisingId;
             this.adTrackingEnabled = true;
+        }
+        if (token != null && !token.isEmpty()) {
+            this.token = token;
         }
     }
 
