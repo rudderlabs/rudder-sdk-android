@@ -2,6 +2,7 @@ package com.rudderstack.android.sample.kotlin
 
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.common.GoogleApiAvailability
@@ -24,6 +25,16 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT)
             tlsBackport()
+     }
+
+    override fun onStart() {
+        super.onStart()
+        MainApplication.rudderClient!!.track("first_event")
+
+        Handler().postDelayed({
+            RudderClient.updateWithAdvertisingId("some_idfa_changed")
+            MainApplication.rudderClient!!.track("second_event")
+        }, 3000)
         val option = RudderOption()
             .putExternalId("brazeExternalId", "some_external_id_1")
             .putExternalId("braze_id", "some_braze_id_2")
@@ -39,13 +50,17 @@ class MainActivity : AppCompatActivity() {
             RudderTraits().putFirstName("Test First Name"),
             option
         )
-        MainApplication.rudderClient!!.reset()
+//        MainApplication.rudderClient!!.reset()
         val props = RudderProperty()
         props.put("Name", "John")
         props.put("city", "NYC")
         MainApplication.rudderClient!!.track("test event john", props, option)
 
+        RudderClient.putDeviceToken("DEVTOKEN2")
+
         MainApplication.rudderClient!!.track("Test Event")
+
+
 
         MainApplication.rudderClient!!.onIntegrationReady(
             "App Center",
