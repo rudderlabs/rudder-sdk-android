@@ -637,7 +637,7 @@ public class RudderClient {
      *
      * @param advertisingId IDFA for the device
      */
-    public static void updateWithAdvertisingId(@Nullable String advertisingId) {
+    public static void putAdvertisingId(@Nullable String advertisingId) {
         if (instance == null) {
             // rudder sdk is not initialised yet. let's use the advertisingId from the beginning
             _advertisingId = advertisingId;
@@ -670,7 +670,7 @@ public class RudderClient {
      *
      * @param anonymousId AnonymousId you want to use for the application
      */
-    public static void setAnonymousId(@NonNull String anonymousId) {
+    public static void putAnonymousId(@NonNull String anonymousId) {
         if (instance == null) {
             _anonymousId = anonymousId;
             return;

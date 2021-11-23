@@ -13,6 +13,7 @@ import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderOption
 import com.rudderstack.android.sdk.core.RudderProperty
 import com.rudderstack.android.sdk.core.RudderTraits
+import java.util.*
 import javax.net.ssl.SSLContext
 
 
@@ -32,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         MainApplication.rudderClient!!.track("first_event")
 
         Handler().postDelayed({
-            RudderClient.updateWithAdvertisingId("some_idfa_changed")
+            RudderClient.putAdvertisingId("some_idfa_changed")
             MainApplication.rudderClient!!.track("second_event")
         }, 3000)
         val option = RudderOption()
@@ -47,7 +48,7 @@ class MainActivity : AppCompatActivity() {
             )
         MainApplication.rudderClient!!.identify(
             "userId",
-            RudderTraits().putFirstName("Test First Name"),
+            RudderTraits().putFirstName("Test First Name").putBirthday(Date()),
             option
         )
 //        MainApplication.rudderClient!!.reset()
