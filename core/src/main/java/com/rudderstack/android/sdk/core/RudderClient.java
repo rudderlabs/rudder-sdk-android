@@ -637,7 +637,7 @@ public class RudderClient {
      *
      * @param advertisingId IDFA for the device
      */
-    public static void putAdvertisingId(@Nullable String advertisingId) {
+    public static void putAdvertisingId(@NonNull String advertisingId) {
         if (instance == null) {
             // rudder sdk is not initialised yet. let's use the advertisingId from the beginning
             _advertisingId = advertisingId;
@@ -654,7 +654,7 @@ public class RudderClient {
      *
      * @param deviceToken Push Token from FCM
      */
-    public static void putDeviceToken(@Nullable String deviceToken) {
+    public static void putDeviceToken(@NonNull String deviceToken) {
         if (instance == null) {
             _deviceToken = deviceToken;
             return;
