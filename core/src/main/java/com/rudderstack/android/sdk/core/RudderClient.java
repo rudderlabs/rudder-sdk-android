@@ -641,12 +641,12 @@ public class RudderClient {
         if (instance == null) {
             // rudder sdk is not initialised yet. let's use the advertisingId from the beginning
             _advertisingId = advertisingId;
-        } else {
-            if (getOptOutStatus()) {
-                return;
-            }
-            RudderElementCache.cachedContext.updateWithAdvertisingId(advertisingId);
+            return;
         }
+        if (getOptOutStatus()) {
+            return;
+        }
+        RudderElementCache.cachedContext.updateWithAdvertisingId(advertisingId);
     }
 
     /**
@@ -656,6 +656,7 @@ public class RudderClient {
      */
     public static void putDeviceToken(@NonNull String deviceToken) {
         if (instance == null) {
+            // rudder sdk is not initialised yet. let's use the deviceToken from the beginning
             _deviceToken = deviceToken;
             return;
         }
@@ -672,12 +673,12 @@ public class RudderClient {
      */
     public static void putAnonymousId(@NonNull String anonymousId) {
         if (instance == null) {
+            // rudder sdk is not initialised yet. let's use the anonymousId from the beginning
             _anonymousId = anonymousId;
             return;
         }
         if (repository != null) {
             repository.updateAnonymousId(anonymousId);
-            return;
         }
     }
 
