@@ -23,6 +23,7 @@ public class RudderClient {
     private static String _advertisingId;
     private static String _anonymousId;
     private static RudderOption defaultOptions;
+    private static String _deviceToken;
 
     /*
      * private constructor
@@ -126,7 +127,7 @@ public class RudderClient {
             // initiate EventRepository class
             if (application != null) {
                 RudderLogger.logVerbose("getInstance: creating EventRepository.");
-                repository = new EventRepository(application, writeKey, config, _anonymousId, _advertisingId);
+                repository = new EventRepository(application, writeKey, config, _anonymousId, _advertisingId, _deviceToken);
             }
         }
         return instance;
@@ -636,16 +637,16 @@ public class RudderClient {
      *
      * @param advertisingId IDFA for the device
      */
-    public static void updateWithAdvertisingId(@Nullable String advertisingId) {
+    public static void putAdvertisingId(@NonNull String advertisingId) {
         if (instance == null) {
             // rudder sdk is not initialised yet. let's use the advertisingId from the beginning
             _advertisingId = advertisingId;
-        } else {
-            if (getOptOutStatus()) {
-                return;
-            }
-            RudderElementCache.cachedContext.updateWithAdvertisingId(advertisingId);
+            return;
         }
+        if (getOptOutStatus()) {
+            return;
+        }
+        RudderElementCache.cachedContext.updateWithAdvertisingId(advertisingId);
     }
 
     /**
@@ -653,7 +654,12 @@ public class RudderClient {
      *
      * @param deviceToken Push Token from FCM
      */
-    public void putDeviceToken(@Nullable String deviceToken) {
+    public static void putDeviceToken(@NonNull String deviceToken) {
+        if (instance == null) {
+            // rudder sdk is not initialised yet. let's use the deviceToken from the beginning
+            _deviceToken = deviceToken;
+            return;
+        }
         if (getOptOutStatus()) {
             return;
         }
@@ -665,14 +671,17 @@ public class RudderClient {
      *
      * @param anonymousId AnonymousId you want to use for the application
      */
-    public static void setAnonymousId(@NonNull String anonymousId) {
+    public static void putAnonymousId(@NonNull String anonymousId) {
         if (instance == null) {
+            // rudder sdk is not initialised yet. let's use the anonymousId from the beginning
             _anonymousId = anonymousId;
+            return;
+        }
+        if (getOptOutStatus()) {
             return;
         }
         if (repository != null) {
             repository.updateAnonymousId(anonymousId);
-            return;
         }
     }
 

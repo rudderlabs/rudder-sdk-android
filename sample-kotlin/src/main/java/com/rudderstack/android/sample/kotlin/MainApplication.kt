@@ -12,9 +12,9 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://6c43-175-101-36-4.ngrok.io"
+        const val DATA_PLANE_URL = "https://a86b-2409-4070-2c11-8b9f-903f-e344-da4f-136b.ngrok.io"
         const val CONTROL_PLANE_URL = "https://0e741f50e567.ngrok.io"
-        const val WRITE_KEY = "1pTxG1Tqxr7FCrqIy7j0p28AENV"
+        const val WRITE_KEY = "1n0JdVPZTRUIkLXYccrWzZwdGSx"
     }
 
     override fun onCreate() {
@@ -30,25 +30,22 @@ class MainApplication : Application() {
 //                .withRecordScreenViews(false)
 //                .build(), RudderOption()
 //                .putIntegration("MIXPANEL",true)
+
+
 //        )
+        RudderClient.putDeviceToken("DEVTOKEN1");
+
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,
             RudderConfig.Builder()
                 .withDataPlaneUrl(DATA_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
-                .withTrackLifecycleEvents(false)
-                .withRecordScreenViews(false)
+                .withTrackLifecycleEvents(true)
+                .withRecordScreenViews(true)
                 .withCustomFactory(CustomFactory.FACTORY)
                 .build()
         )
-        rudderClient!!.putDeviceToken("some_device_token")
-        rudderClient!!.track("first_event")
-
-        Handler().postDelayed({
-            RudderClient.updateWithAdvertisingId("some_idfa_changed")
-            rudderClient!!.track("second_event")
-        }, 3000)
     }
 
     override fun attachBaseContext(base: Context) {

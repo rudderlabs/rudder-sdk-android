@@ -64,7 +64,7 @@
           });
           function getAnonId() {
             console.log(Android.showAnonId());
-            rudderanalytics.setAnonymousId(Android.showAnonId());
+            rudderanalytics.putAnonymousId(Android.showAnonId());
           }
           
           rudderanalytics.track("Simple track call1");

@@ -55,7 +55,7 @@ public class RudderContext {
         // cachedContext is used every time, once initialized
     }
 
-    RudderContext(Application application, String anonymousId, String advertisingId) {
+    RudderContext(Application application, String anonymousId, String advertisingId, String deviceToken) {
         RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
 
         if (TextUtils.isEmpty(anonymousId)) {
@@ -91,7 +91,7 @@ public class RudderContext {
 
         this.screenInfo = new RudderScreenInfo(application);
         this.userAgent = System.getProperty("http.agent");
-        this.deviceInfo = new RudderDeviceInfo(advertisingId);
+        this.deviceInfo = new RudderDeviceInfo(advertisingId, deviceToken);
         this.networkInfo = new RudderNetwork(application);
         this.osInfo = new RudderOSInfo();
         this.libraryInfo = new RudderLibraryInfo();

@@ -62,7 +62,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * 5. start processor thread
      * 6. initiate factories
      * */
-    EventRepository(Application _application, String _writeKey, RudderConfig _config, String _anonymousId, String _advertisingId) {
+    EventRepository(Application _application, String _writeKey, RudderConfig _config, String _anonymousId, String _advertisingId, String _deviceToken) {
         // 1. set the values of writeKey, config
         try {
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: writeKey: %s", _writeKey));
@@ -86,12 +86,16 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     _advertisingId = null;
                     RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the advertisingId");
                 }
+                if (!TextUtils.isEmpty(_deviceToken)) {
+                    _deviceToken = null;
+                    RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the device token");
+                }
             }
 
             // 2. initiate RudderElementCache
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
             // We first send the anonymousId to RudderElementCache which will just set the anonymousId static variable in RudderContext class.
-            RudderElementCache.initiate(_application, _anonymousId, _advertisingId);
+            RudderElementCache.initiate(_application, _anonymousId, _advertisingId, _deviceToken);
 
             String anonymousId = RudderContext.getAnonymousId();
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousId: %s", anonymousId));

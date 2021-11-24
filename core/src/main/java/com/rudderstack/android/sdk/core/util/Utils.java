@@ -13,6 +13,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -40,12 +41,14 @@ public class Utils {
 
     public static String getTimeStamp() {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-        formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+        formatter.setCalendar(new GregorianCalendar());
+        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         return formatter.format(new Date());
     }
 
     public static String toDateString(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        formatter.setCalendar(new GregorianCalendar());
         return formatter.format(date);
     }
 
