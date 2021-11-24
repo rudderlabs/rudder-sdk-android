@@ -677,6 +677,9 @@ public class RudderClient {
             _anonymousId = anonymousId;
             return;
         }
+        if (getOptOutStatus()) {
+            return;
+        }
         if (repository != null) {
             repository.updateAnonymousId(anonymousId);
         }
