@@ -2,8 +2,12 @@ package com.rudderstack.android.sdk.core;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.ParseException;
+import android.net.Uri;
+import android.os.BadParcelableException;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -31,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
  * utility class for event processing
@@ -39,6 +44,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private final List<RudderMessage> eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
     private String authHeaderString;
     private String anonymousIdHeaderString;
+    private String currentVersion;
     private RudderConfig config;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
@@ -49,6 +55,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
     private boolean areFactoriesInitialized = false;
+    private AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
 
     private int noOfActivities;
 
@@ -189,6 +196,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             } else {
                 versionCode = packageInfo.versionCode;
             }
+            currentVersion = String.valueOf(versionCode);
             RudderLogger.logDebug("Current Installed Version: " + versionCode);
 
             if (previousVersionCode == -1) {
@@ -691,12 +699,91 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 if (getOptStatus()) {
                     return;
                 }
-                // no previous activity present. Application Opened
-                RudderMessage trackMessage = new RudderMessageBuilder().setEventName("Application Opened").build();
+                RudderMessage trackMessage;
+                // When no previous activity present
+                if (isFirstLaunch.getAndSet(false)) {
+                    trackMessage = new RudderMessageBuilder()
+                            .setEventName("Application Opened")
+                            .setProperty(
+                                    trackDeepLink(activity)
+                                            .putValue("from_background", false)
+                                            .putValue("version", (!currentVersion.equals("")) ? currentVersion : "")
+                            ).build();
+                }
+                // When app enters from background to foreground
+                else {
+                    trackMessage = new RudderMessageBuilder()
+                            .setEventName("Application Opened")
+                            .setProperty(
+                                    new RudderProperty()
+                                            .putValue("from_background", true)
+                            ).build();
+                }
                 trackMessage.setType(MessageType.TRACK);
                 this.dump(trackMessage);
             }
         }
+    }
+
+    /** Returns referring_application, url and its query parameter. */
+    @NonNull
+    private RudderProperty trackDeepLink(Activity activity) {
+        RudderProperty rudderProperty = new RudderProperty();
+        try {
+            Intent intent = activity.getIntent();
+            if (intent == null || intent.getData() == null) {
+                rudderProperty.putValue("referring_application", "");
+                rudderProperty.putValue("url", "");
+                return rudderProperty;
+            }
+
+            // Get information about who launched this activity
+            Uri referrer = getReferrer(activity);
+            rudderProperty.putValue("referring_application", (referrer != null) ? referrer.toString() : "");
+
+            Uri uri = intent.getData();
+            try {
+                for (String parameter : uri.getQueryParameterNames()) {
+                    String value = uri.getQueryParameter(parameter);
+                    if (value != null && !value.trim().isEmpty()) {
+                        rudderProperty.putValue(parameter, value);
+                    }
+                }
+            } catch (Exception e) {
+                RudderLogger.logError("Failed to get uri parameters: " + e);
+            }
+
+            rudderProperty.putValue("url", (uri != null) ? uri.toString() : "");
+        } catch (Exception e) {
+            RudderLogger.logError("Error occurred while tracking deep link" + e);
+        }
+        return rudderProperty;
+    }
+
+    /** Returns information about who launched this activity. */
+    private Uri getReferrer(Activity activity) {
+        // If devices running on SDK versions greater than equal to 22
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            return activity.getReferrer();
+        }
+        // If devices running on SDK versions greater than equal to 19
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            Intent intent = activity.getIntent();
+            try {
+                Uri referrer = intent.getParcelableExtra(Intent.EXTRA_REFERRER);
+                if (referrer != null) {
+                    return referrer;
+                }
+                // Intent.EXTRA_REFERRER_NAME
+                String referrerName = intent.getStringExtra("android.intent.extra.REFERRER_NAME");
+                if (referrerName != null) {
+                    return Uri.parse(referrerName);
+                }
+            } catch (BadParcelableException | ParseException e) {
+                return null;
+            }
+        }
+        return null;
     }
 
     @Override
