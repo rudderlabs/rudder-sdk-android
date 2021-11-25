@@ -30,10 +30,12 @@ class MainApplication : Application() {
 //                .withRecordScreenViews(false)
 //                .build(), RudderOption()
 //                .putIntegration("MIXPANEL",true)
-
-
 //        )
-        RudderClient.putDeviceToken("DEVTOKEN1");
+//        RudderClient.setAnonymousId("anonymous_id")
+//        RudderClient.updateWithAdvertisingId("DEVTOKEN1")
+
+        RudderClient.putAnonymousId("anonymous_id_1")
+        RudderClient.putDeviceToken("DevToken2")
 
         rudderClient = RudderClient.getInstance(
             this,

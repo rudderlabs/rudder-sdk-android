@@ -7,7 +7,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 29
         versionCode 1
-        versionName '1.2.0'
+        versionName '1.2.1'
         consumerProguardFiles 'proguard-consumer-rules.pro'
     }
 
@@ -37,4 +37,4 @@ dependencies {
     testImplementation 'androidx.test:core-ktx:1.2.0'
 }
 
-apply from :'./maven.gradle'
+//apply from :'./maven.gradle'
