@@ -636,6 +636,19 @@ public class RudderClient {
      * <b>Call this method before initializing the RudderClient</b>
      *
      * @param advertisingId IDFA for the device
+     *
+     * @deprecated Will be removed soon
+     */
+    public static void updateWithAdvertisingId(@NonNull String advertisingId) {
+        RudderClient.putDeviceToken(advertisingId);
+    }
+
+    /**
+     * Set the AdvertisingId yourself. If set, SDK will not capture idfa automatically
+     *
+     * <b>Call this method before initializing the RudderClient</b>
+     *
+     * @param advertisingId IDFA for the device
      */
     public static void putAdvertisingId(@NonNull String advertisingId) {
         if (instance == null) {
@@ -664,6 +677,17 @@ public class RudderClient {
             return;
         }
         RudderElementCache.cachedContext.putDeviceToken(deviceToken);
+    }
+
+    /**
+     * Set the anonymousId for the device to be used further
+     *
+     * @param anonymousId AnonymousId you want to use for the application
+     *
+     * @deprecated Will be removed soon
+     */
+    public static void setAnonymousId(@NonNull String anonymousId) {
+        RudderClient.putAnonymousId(anonymousId);
     }
 
     /**
