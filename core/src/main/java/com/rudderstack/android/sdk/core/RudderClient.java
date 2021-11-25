@@ -640,7 +640,7 @@ public class RudderClient {
      * @deprecated Will be removed soon
      */
     public static void updateWithAdvertisingId(@NonNull String advertisingId) {
-        RudderClient.putDeviceToken(advertisingId);
+        RudderClient.putAdvertisingId(advertisingId);
     }
 
     /**
