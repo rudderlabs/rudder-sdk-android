@@ -44,7 +44,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private final List<RudderMessage> eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
     private String authHeaderString;
     private String anonymousIdHeaderString;
-    private String currentVersion;
+    private int versionCode;
     private RudderConfig config;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
@@ -190,13 +190,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             String packageName = application.getPackageName();
             PackageManager packageManager = application.getPackageManager();
             PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
-            int versionCode;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 versionCode = (int) packageInfo.getLongVersionCode();
             } else {
                 versionCode = packageInfo.versionCode;
             }
-            currentVersion = String.valueOf(versionCode);
             RudderLogger.logDebug("Current Installed Version: " + versionCode);
 
             if (previousVersionCode == -1) {
@@ -700,25 +698,13 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     return;
                 }
                 RudderMessage trackMessage;
-                // When no previous activity present
-                if (isFirstLaunch.getAndSet(false)) {
-                    trackMessage = new RudderMessageBuilder()
+                trackMessage = new RudderMessageBuilder()
                             .setEventName("Application Opened")
                             .setProperty(
                                     trackDeepLink(activity)
                                             .putValue("from_background", false)
-                                            .putValue("version", (!currentVersion.equals("")) ? currentVersion : "")
+                                            .putValue("version", versionCode)
                             ).build();
-                }
-                // When app enters from background to foreground
-                else {
-                    trackMessage = new RudderMessageBuilder()
-                            .setEventName("Application Opened")
-                            .setProperty(
-                                    new RudderProperty()
-                                            .putValue("from_background", true)
-                            ).build();
-                }
                 trackMessage.setType(MessageType.TRACK);
                 this.dump(trackMessage);
             }
@@ -729,31 +715,36 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     @NonNull
     private RudderProperty trackDeepLink(Activity activity) {
         RudderProperty rudderProperty = new RudderProperty();
+        // If it is not firstLaunch then return only RudderProperty instance
+//        if (!isFirstLaunch.getAndSet(false)) {
+//            return rudderProperty;
+//        }
         try {
             Intent intent = activity.getIntent();
             if (intent == null || intent.getData() == null) {
-                rudderProperty.putValue("referring_application", "");
-                rudderProperty.putValue("url", "");
                 return rudderProperty;
             }
 
             // Get information about who launched this activity
-            Uri referrer = getReferrer(activity);
-            rudderProperty.putValue("referring_application", (referrer != null) ? referrer.toString() : "");
-
-            Uri uri = intent.getData();
-            try {
-                for (String parameter : uri.getQueryParameterNames()) {
-                    String value = uri.getQueryParameter(parameter);
-                    if (value != null && !value.trim().isEmpty()) {
-                        rudderProperty.putValue(parameter, value);
-                    }
-                }
-            } catch (Exception e) {
-                RudderLogger.logError("Failed to get uri parameters: " + e);
+            String referrer = getReferrer(activity);
+            if (referrer != null) {
+                rudderProperty.putValue("referring_application", referrer);
             }
 
-            rudderProperty.putValue("url", (uri != null) ? uri.toString() : "");
+            Uri uri = intent.getData();
+            if (uri != null) {
+                try {
+                    for (String parameter : uri.getQueryParameterNames()) {
+                        String value = uri.getQueryParameter(parameter);
+                        if (value != null && !value.trim().isEmpty()) {
+                            rudderProperty.putValue(parameter, value);
+                        }
+                    }
+                } catch (Exception e) {
+                    RudderLogger.logError("Failed to get uri query parameters: " + e);
+                }
+                rudderProperty.putValue("url", uri.toString());
+            }
         } catch (Exception e) {
             RudderLogger.logError("Error occurred while tracking deep link" + e);
         }
@@ -761,10 +752,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     }
 
     /** Returns information about who launched this activity. */
-    private Uri getReferrer(Activity activity) {
+    private String getReferrer(Activity activity) {
         // If devices running on SDK versions greater than equal to 22
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-            return activity.getReferrer();
+            return activity.getReferrer().toString();
         }
         // If devices running on SDK versions greater than equal to 19
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -772,12 +763,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             try {
                 Uri referrer = intent.getParcelableExtra(Intent.EXTRA_REFERRER);
                 if (referrer != null) {
-                    return referrer;
+                    return referrer.toString();
                 }
                 // Intent.EXTRA_REFERRER_NAME
                 String referrerName = intent.getStringExtra("android.intent.extra.REFERRER_NAME");
                 if (referrerName != null) {
-                    return Uri.parse(referrerName);
+                    return Uri.parse(referrerName).toString();
                 }
             } catch (BadParcelableException | ParseException e) {
                 return null;
