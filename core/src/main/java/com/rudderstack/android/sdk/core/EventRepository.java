@@ -716,9 +716,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private RudderProperty trackDeepLink(Activity activity) {
         RudderProperty rudderProperty = new RudderProperty();
         // If it is not firstLaunch then return only RudderProperty instance
-//        if (!isFirstLaunch.getAndSet(false)) {
-//            return rudderProperty;
-//        }
+        if (!isFirstLaunch.getAndSet(false)) {
+            return rudderProperty;
+        }
         try {
             Intent intent = activity.getIntent();
             if (intent == null || intent.getData() == null) {
