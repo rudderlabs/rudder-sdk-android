@@ -8,18 +8,14 @@ import android.app.Application;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -34,7 +30,6 @@ class DBPersistentManager {
 
     DBInsertionHandlerThread dbInsertionHandlerThread;
     final Queue<Message> queue = new LinkedList<Message>();
-
 
 
     /*
@@ -71,16 +66,8 @@ class DBPersistentManager {
      */
     void flushEvents() {
         try {
-//            SQLiteDatabase database = getWritableDatabase();
-//            if (database.isOpen()) {
-//                String deleteSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
-//                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: flushEvents: deleteSQL: %s", deleteSQL));
-//                database.execSQL(deleteSQL);
             application.getContentResolver().delete(EventContentProvider.CONTENT_URI_EVENTS, null, null);
-                RudderLogger.logInfo("DBPersistentManager: flushEvents: Messages deleted from DB");
-            /*} else {
-                RudderLogger.logError("DBPersistentManager: flushEvents: database is not writable");
-            }*/
+            RudderLogger.logInfo("DBPersistentManager: flushEvents: Messages deleted from DB");
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
         }
@@ -91,33 +78,19 @@ class DBPersistentManager {
      * */
     void clearEventsFromDB(List<Integer> messageIds) {
         try {
-            // get writable database
-//            SQLiteDatabase database = getWritableDatabase();
-//            if (database.isOpen()) {
-                RudderLogger.logInfo(String.format(Locale.US, "DBPersistentManager: clearEventsFromDB: Clearing %d messages from DB", messageIds.size()));
-                // format CSV string from messageIds list
-//                StringBuilder builder = new StringBuilder();
-//                for (int index = 0; index < messageIds.size(); index++) {
-//                    builder.append(messageIds.get(index));
-//                    builder.append(",");
-//                }
-                // remove last "," character
-//                builder.deleteCharAt(builder.length() - 1);
-                // remove events
-            String[] args = new String[messageIds.size()];
-            for (int i = 0; i < messageIds.size(); i++) {
-                args[i] = messageIds.get(i).toString();
+            RudderLogger.logInfo(String.format(Locale.US, "DBPersistentManager: clearEventsFromDB: Clearing %d messages from DB", messageIds.size()));
+            // format CSV string from messageIds list
+            StringBuilder builder = new StringBuilder();
+            for (int index = 0; index < messageIds.size(); index++) {
+                builder.append(messageIds.get(index));
+                builder.append(",");
             }
-                application.getContentResolver().delete(EventContentProvider.CONTENT_URI_EVENTS, MESSAGE_ID + "=?",
-                        args);
-                /*String deleteSQL = String.format(Locale.US, "DELETE FROM %s WHERE %s IN (%s)",
-                        EVENTS_TABLE_NAME, MESSAGE_ID, builder.toString());*/
-//                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: clearEventsFromDB: deleteSQL: %s", deleteSQL));
-//                database.execSQL(deleteSQL);
-                RudderLogger.logInfo("DBPersistentManager: clearEventsFromDB: Messages deleted from DB");
-            /*} else {
-                RudderLogger.logError("DBPersistentManager: clearEventsFromDB: database is not writable");
-            }*/
+            //  remove last "," character
+            builder.deleteCharAt(builder.length() - 1);
+            // remove events
+            int deleted = application.getContentResolver().delete(EventContentProvider.CONTENT_URI_EVENTS, String.format(MESSAGE_ID + " IN (%s)", builder.toString()),
+                    null);
+            RudderLogger.logInfo("DBPersistentManager: clearEventsFromDB: Messages deleted from DB " + deleted);
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
         }
@@ -132,31 +105,22 @@ class DBPersistentManager {
         if (!messages.isEmpty()) messages.clear();
 
         try {
-            // get readable database instance
-//            SQLiteDatabase database = getReadableDatabase();
-//            if (database.isOpen()) {
-//                String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC LIMIT %d", EVENTS_TABLE_NAME, UPDATED, count);
-//                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchEventsFromDB: selectSQL: %s", selectSQL));
-//                Cursor cursor = database.rawQuery(selectSQL, null);
-                Uri contentUri = EventContentProvider.CONTENT_URI_EVENTS.buildUpon()
-                        .appendQueryParameter(EventContentProvider.QUERY_PARAMETER_LIMIT,
-                                String.valueOf(count)).build();
-                Cursor cursor = application.getContentResolver().query(contentUri,
-                        null,null,null, EventsDbHelper.UPDATED + "ASC");
-                if (cursor.moveToFirst()) {
-                    RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: fetched messages from DB");
-                    while (!cursor.isAfterLast()) {
-                        messageIds.add(cursor.getInt(cursor.getColumnIndex(MESSAGE_ID)));
-                        messages.add(cursor.getString(cursor.getColumnIndex(MESSAGE)));
-                        cursor.moveToNext();
-                    }
-                } else {
-                    RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: DB is empty");
+            Uri contentUri = EventContentProvider.CONTENT_URI_EVENTS.buildUpon()
+                    .appendQueryParameter(EventContentProvider.QUERY_PARAMETER_LIMIT,
+                            String.valueOf(count)).build();
+            Cursor cursor = application.getContentResolver().query(contentUri,
+                    null, null, null, EventsDbHelper.UPDATED + " ASC");
+            if (cursor.moveToFirst()) {
+                RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: fetched messages from DB");
+                while (!cursor.isAfterLast()) {
+                    messageIds.add(cursor.getInt(cursor.getColumnIndex(MESSAGE_ID)));
+                    messages.add(cursor.getString(cursor.getColumnIndex(MESSAGE)));
+                    cursor.moveToNext();
                 }
-                cursor.close();
-            /*} else {
-                RudderLogger.logError("DBPersistentManager: fetchEventsFromDB: database is not readable");
-            }*/
+            } else {
+                RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: DB is empty");
+            }
+            cursor.close();
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
         }
@@ -167,32 +131,23 @@ class DBPersistentManager {
         int count = -1;
 
         try {
-            // get readable database instance
-//            SQLiteDatabase database = getReadableDatabase();
-//            if (database.isOpen()) {
-//                String countSQL = String.format(Locale.US, "SELECT count(*) FROM %s;", EVENTS_TABLE_NAME);
-//                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: getDBRecordCount: countSQL: %s", countSQL));
-//                Cursor cursor = database.rawQuery(countSQL, null);
-                Cursor cursor = application.getContentResolver().query(EventContentProvider.CONTENT_URI_EVENTS,
-                        new String[] {"count(*) AS count"},
-                        null,
-                        null,
-                        null);
-                if (cursor.moveToFirst()) {
-                    RudderLogger.logInfo("DBPersistentManager: getDBRecordCount: fetched count from DB");
-                    while (!cursor.isAfterLast()) {
-                        // result will be in the first position
-                        count = cursor.getInt(0);
-                        cursor.moveToNext();
-                    }
-                } else {
-                    RudderLogger.logInfo("DBPersistentManager: getDBRecordCount: DB is empty");
+            Cursor cursor = application.getContentResolver().query(EventContentProvider.CONTENT_URI_EVENTS,
+                    new String[]{"count(*) AS count"},
+                    null,
+                    null,
+                    null);
+            if (cursor.moveToFirst()) {
+                RudderLogger.logInfo("DBPersistentManager: getDBRecordCount: fetched count from DB");
+                while (!cursor.isAfterLast()) {
+                    // result will be in the first position
+                    count = cursor.getInt(0);
+                    cursor.moveToNext();
                 }
-                // release cursor
-                cursor.close();
-            /*} else {
-                RudderLogger.logError("DBPersistentManager: getDBRecordCount: database is not readable");
-            }*/
+            } else {
+                RudderLogger.logInfo("DBPersistentManager: getDBRecordCount: DB is empty");
+            }
+            // release cursor
+            cursor.close();
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
         }
@@ -219,7 +174,6 @@ class DBPersistentManager {
             @Override
             public void run() {
                 try {
-//                    DBPersistentManager.this.getWritableDatabase();
                     synchronized (this) {
                         dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", application);
                         dbInsertionHandlerThread.start();
@@ -235,31 +189,20 @@ class DBPersistentManager {
     }
 
 
-
-
-
     public void deleteAllEvents() {
         try {
-//            SQLiteDatabase database = getWritableDatabase();
-//            if (database.isOpen()) {
-                // remove events
-//                String clearDBSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
-//                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: deleteAllEvents: clearDBSQL: %s", clearDBSQL));
-//                database.execSQL(clearDBSQL);
-            application.getContentResolver().delete(EventContentProvider.CONTENT_URI_EVENTS,null,null);
-                RudderLogger.logInfo("DBPersistentManager: deleteAllEvents: deleted all events");
-//            } else {
-//                RudderLogger.logError("DBPersistentManager: deleteAllEvents: database is not writable");
-//            }
+            application.getContentResolver().delete(EventContentProvider.CONTENT_URI_EVENTS, null, null);
+            RudderLogger.logInfo("DBPersistentManager: deleteAllEvents: deleted all events");
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
         }
     }
+
     private String getProcessName() {
         int mypid = android.os.Process.myPid();
         ActivityManager manager = (ActivityManager) application.getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningAppProcessInfo> infos = manager.getRunningAppProcesses();
-        for(ActivityManager.RunningAppProcessInfo info : infos) {
+        for (ActivityManager.RunningAppProcessInfo info : infos) {
             if (info.pid == mypid) {
                 return info.processName;
             }
@@ -289,7 +232,8 @@ class DBInsertionHandlerThread extends HandlerThread {
     private class DBInsertionHandler extends Handler {
 
         private Context context;
-        public DBInsertionHandler(Looper looper,Context context) {
+
+        public DBInsertionHandler(Looper looper, Context context) {
             super(looper);
             this.context = context;
 
@@ -298,20 +242,14 @@ class DBInsertionHandlerThread extends HandlerThread {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-//            if (this.database.isOpen()) {
-                String messageJson = (String) msg.obj;
-                long updatedTime = System.currentTimeMillis();
-//                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: saveEvent: Inserting Message %s into table %s as Updated at %d", messageJson.replaceAll("'", "\\\\\'"), DBPersistentManager.EVENTS_TABLE_NAME, updatedTime));
-                ContentValues insertValues = new ContentValues();
-                insertValues.put(EventsDbHelper.MESSAGE, messageJson.replaceAll("'", "\\\\\'"));
-                insertValues.put(EventsDbHelper.UPDATED, updatedTime);
+            String messageJson = (String) msg.obj;
+            long updatedTime = System.currentTimeMillis();
+            ContentValues insertValues = new ContentValues();
+            insertValues.put(EventsDbHelper.MESSAGE, messageJson.replaceAll("'", "\\\\\'"));
+            insertValues.put(EventsDbHelper.UPDATED, updatedTime);
 
-                context.getContentResolver().insert(EventContentProvider.CONTENT_URI_EVENTS, insertValues);
-//                database.insert(DBPersistentManager.EVENTS_TABLE_NAME, null, insertValues);
-                RudderLogger.logInfo("DBPersistentManager: saveEvent: Event saved to DB");
-            /*} else {
-                RudderLogger.logError("DBPersistentManager: saveEvent: database is not writable");
-            }*/
+            context.getContentResolver().insert(EventContentProvider.CONTENT_URI_EVENTS, insertValues);
+            RudderLogger.logInfo("DBPersistentManager: saveEvent: Event saved to DB");
         }
     }
 }
