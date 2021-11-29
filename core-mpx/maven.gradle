@@ -15,7 +15,7 @@ signing {
 }
 
 group = 'com.rudderstack.android.sdk'
-archivesBaseName = 'core'
+archivesBaseName = 'core-mpx'
 version = '1.2.1'
 
 File secretPropsFile = project.rootProject.file('local.properties')

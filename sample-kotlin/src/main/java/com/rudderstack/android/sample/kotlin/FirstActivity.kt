@@ -14,4 +14,14 @@ class FirstActivity : AppCompatActivity() {
             startActivity(Intent(this, SecondActivity::class.java))
         }
     }
+
+    override fun onStart() {
+        super.onStart()
+        Thread {
+            for (i in 1..10000) {
+                println("Event from First Activity {$i}")
+                MainApplication.rudderClient!!.track("Event from First Activity {$i}")
+            }
+        }.start()
+    }
 }
