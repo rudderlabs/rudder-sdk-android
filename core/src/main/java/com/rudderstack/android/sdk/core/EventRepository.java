@@ -55,7 +55,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
     private boolean areFactoriesInitialized = false;
-    private AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
+    private AtomicBoolean isFirstLaunch = new AtomicBoolean(false);
 
     private int noOfActivities;
 
@@ -700,11 +700,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 RudderMessage trackMessage;
                 trackMessage = new RudderMessageBuilder()
                             .setEventName("Application Opened")
-                            .setProperty(
-                                    trackDeepLink(activity)
-                                            .putValue("from_background", false)
-                                            .putValue("version", versionCode)
-                            ).build();
+                            .setProperty(trackDeepLink(activity))
+                        .build();
                 trackMessage.setType(MessageType.TRACK);
                 this.dump(trackMessage);
             }
@@ -714,11 +711,13 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     /** Returns referring_application, url and its query parameter. */
     @NonNull
     private RudderProperty trackDeepLink(Activity activity) {
-        RudderProperty rudderProperty = new RudderProperty();
-        // If it is not firstLaunch then return only RudderProperty instance
-        if (!isFirstLaunch.getAndSet(false)) {
+        RudderProperty rudderProperty = new RudderProperty()
+                        .putValue("from_background", isFirstLaunch.get());
+        // If it is not firstLaunch then return RudderProperty instance
+        if (isFirstLaunch.getAndSet(true)) {
             return rudderProperty;
         }
+        rudderProperty.putValue("version", versionCode);
         try {
             Intent intent = activity.getIntent();
             if (intent == null || intent.getData() == null) {
