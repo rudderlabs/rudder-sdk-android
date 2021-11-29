@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <application>
         <provider
-            android:authorities="com.rudderstack.android.sdk.core.EventContentProvider"
+            android:authorities="${applicationId}.EventContentProvider"
             android:name="com.rudderstack.android.sdk.core.EventContentProvider"/>
     </application>
 </manifest>
