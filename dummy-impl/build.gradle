@@ -28,7 +28,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    compileOnly project(':core')
+    compileOnly project(':core-mpx')
     implementation 'com.google.code.gson:gson:2.8.6'
 
     testImplementation 'com.android.support.test:rules:1.0.2'
