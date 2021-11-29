@@ -37,4 +37,4 @@ dependencies {
     testImplementation 'androidx.test:core-ktx:1.2.0'
 }
 
-apply from :'./maven.gradle'
+//apply from :'./maven.gradle'

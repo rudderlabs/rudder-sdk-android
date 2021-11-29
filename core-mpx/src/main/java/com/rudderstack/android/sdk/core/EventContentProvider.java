@@ -11,37 +11,32 @@ import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.Locale;
-
 public class EventContentProvider extends ContentProvider {
-    static final String AUTHORITY =
-            EventContentProvider.class.getCanonicalName();
+    private String authority;
+    static Uri CONTENT_URI_EVENTS;
 
-    static final Uri CONTENT_URI_EVENTS =
-            Uri.parse("content://" + AUTHORITY + "/" + EVENTS_TABLE_NAME);
 
-    static final UriMatcher uriMatcher;
+    static UriMatcher uriMatcher;
     static final String QUERY_PARAMETER_LIMIT = "limit";
     private final static int EVENT_CODE = 1;
     private final static int EVENT_ID_CODE = 2;
 
-    static {
-        uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-        uriMatcher.addURI(AUTHORITY, EVENTS_TABLE_NAME, EVENT_CODE);
-        uriMatcher.addURI(AUTHORITY, EVENTS_TABLE_NAME + "/#", EVENT_ID_CODE);
-    }
 
     private EventsDbHelper dbHelper;
 
     @Override
     public boolean onCreate() {
+        authority = getContext().getApplicationContext().getPackageName() + ".EventContentProvider";
+        CONTENT_URI_EVENTS = Uri.parse("content://" + authority +"/"+ EVENTS_TABLE_NAME);
+        uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+        uriMatcher.addURI(authority, EVENTS_TABLE_NAME, EVENT_CODE);
+        uriMatcher.addURI(authority, EVENTS_TABLE_NAME + "/#", EVENT_ID_CODE);
         dbHelper = new EventsDbHelper(getContext());
         return true;
     }
