@@ -29,7 +29,7 @@ afterEvaluate {
                 // Mostly self-explanatory metadata
                 pom {
                     name = 'RudderStack Android SDK'
-                    description = 'Android SDK for RudderStack. Steer your customer data.'
+                    description = 'Extension for Android SDK of RudderStack for Multiple Process Apps. Steer your customer data.'
                     url = 'https://github.com/rudderlabs/rudder-sdk-android'
 
                     licenses {
@@ -50,7 +50,7 @@ afterEvaluate {
                     scm {
                         connection = 'scm:git:git://github.com/rudderlabs/rudder-sdk-android.git'
                         developerConnection = 'scm:git:ssh://github.com:rudderlabs/rudder-sdk-android.git'
-                        url = 'https://github.com/rudderlabs/rudder-sdk-android/tree/master'
+                        url = 'https://github.com/rudderlabs/rudder-sdk-android/tree/fix/multiple-process-access'
                     }
                 }
             }
