@@ -14,13 +14,11 @@ import androidx.annotation.RequiresApi;
 import java.util.Locale;
 
 final class EventsDbHelper extends SQLiteOpenHelper {
-    // SQLite database file name
     private static final String DB_NAME = "rl_persistence.db";
-    // SQLite database version number
     private static final int DB_VERSION = 1;
     static final String EVENTS_TABLE_NAME = "events";
     static final String MESSAGE = "message";
-     static final String MESSAGE_ID = "id";
+    static final String MESSAGE_ID = "id";
     static final String UPDATED = "updated";
 
      EventsDbHelper(Context context){
