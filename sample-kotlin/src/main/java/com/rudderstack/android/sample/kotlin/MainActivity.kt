@@ -31,17 +31,20 @@ class MainActivity : AppCompatActivity() {
         navigate_to_first.setOnClickListener{
             startActivity(Intent(this, FirstActivity::class.java))
         }
+
+
+        Thread {
+            Log.e("Debug","MainActivity onStart")
+            for (i in 1..10) {
+                println("Main Activity {$i} and process ${MainApplication.getProcessName(application)}")
+                MainApplication.rudderClient!!.track("Main Activity {$i} and process ${MainApplication.getProcessName(application)}")
+            }
+        }.start()
      }
 
     override fun onStart() {
         super.onStart()
-        Log.e("Debug","MainActivity onStart")
-        Thread {
-            for (i in 1..10000) {
-                println("Event from Main Activity {$i}")
-                MainApplication.rudderClient!!.track("Event from Main Activity {$i}")
-            }
-        }.start()
+
 //        MainApplication.rudderClient!!.track("first_event")
 //
 //        Handler().postDelayed({

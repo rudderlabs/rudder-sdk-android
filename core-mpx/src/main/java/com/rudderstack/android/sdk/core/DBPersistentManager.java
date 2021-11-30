@@ -204,24 +204,11 @@ class DBPersistentManager {
         }
     }
 
-    private String getProcessName() {
-        int mypid = android.os.Process.myPid();
-        ActivityManager manager = (ActivityManager) application.getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningAppProcessInfo> infos = manager.getRunningAppProcesses();
-        for (ActivityManager.RunningAppProcessInfo info : infos) {
-            if (info.pid == mypid) {
-                return info.processName;
-            }
-        }
-        // may never return null
-        return null;
-    }
     static void initializeUri(Context context){
         if(EventContentProvider.authority == null)
             EventContentProvider.authority = context.getApplicationContext().getPackageName()+"."+EventContentProvider.class.getSimpleName();
     }
     static String getUri(Context context){
-//        if(EventContentProvider.authority == null)
             return context.getApplicationContext().getPackageName()+"."+EventContentProvider.class.getSimpleName();
     }
 }

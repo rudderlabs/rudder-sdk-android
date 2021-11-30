@@ -24,27 +24,17 @@ import androidx.annotation.Nullable;
 import java.util.Locale;
 
 public class EventContentProvider extends ContentProvider {
-//    static final String AUTHORITY =
-//            EventContentProvider.class.getCanonicalName();
-
-//    static Uri CONTENT_URI_EVENTS ;
     static String authority = "";
     private static String check = "initial";
     static  UriMatcher uriMatcher;
     static final String QUERY_PARAMETER_LIMIT = "limit";
     private final static int EVENT_CODE = 1;
     private final static int EVENT_ID_CODE = 2;
-    static{
-        /*uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-        uriMatcher.addURI(AUTHORITY, EVENTS_TABLE_NAME, EVENT_CODE);
-        uriMatcher.addURI(AUTHORITY, EVENTS_TABLE_NAME + "/#", EVENT_ID_CODE);*/
-    }
-
+    
     private EventsDbHelper dbHelper;
 
     @Override
     public void attachInfo(Context context, ProviderInfo info) {
-        Log.e("evp", "attach info: " + info.authority  + " more:" + info.processName + " package:" + info.packageName);
         authority = info.packageName + ".EventContentProvider";
         check = "checked";
 
@@ -57,7 +47,6 @@ public class EventContentProvider extends ContentProvider {
     @Override
     public boolean onCreate() {
         dbHelper = new EventsDbHelper(getContext());
-        Log.e("evp", "on create, check:" + check);
         return true;
     }
 
@@ -79,8 +68,7 @@ public class EventContentProvider extends ContentProvider {
     @Override
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
         long rowID = dbHelper.getWritableDatabase().insert(	EVENTS_TABLE_NAME, "", values);
-        Log.e("evp", "check: " + check);
-
+        
         /**
          * If record is added successfully
          */
@@ -131,16 +119,13 @@ public class EventContentProvider extends ContentProvider {
         getContext().getContentResolver().notifyChange(uri, null);
         return count;
     }
-//    private Uri contentUri = null;
+
     static Uri getContentUri(String authority){
-//        if(contentUri == null) {
-//        Log.e("pvc", "authority"+ authority);
            Uri contentUri =
                     Uri.parse("content://" + authority + "/" + EVENTS_TABLE_NAME);
             uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
             uriMatcher.addURI(authority, EVENTS_TABLE_NAME, EVENT_CODE);
             uriMatcher.addURI(authority, EVENTS_TABLE_NAME + "/#", EVENT_ID_CODE);
-//        }
         return contentUri;
     }
 

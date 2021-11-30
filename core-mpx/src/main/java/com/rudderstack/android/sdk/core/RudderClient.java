@@ -25,6 +25,12 @@ public class RudderClient {
     private static RudderOption defaultOptions;
     private static String _deviceToken;
 
+    public void setMainProcessName(String mainProcessName) {
+        this.mainProcessName = mainProcessName;
+    }
+
+    String mainProcessName = "";
+
     /*
      * private constructor
      * */
