@@ -21,9 +21,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.rudderstack.android.sample.kotlin.FirstActivity" android:process=":secondProcess" />
-        <activity android:name="com.rudderstack.android.sample.kotlin.SecondActivity" />
 
+        <activity android:name="com.rudderstack.android.sample.kotlin.FirstActivity" android:process=":firstProcess" />
+        <activity android:name="com.rudderstack.android.sample.kotlin.SecondActivity" android:process=":secondProcess" />
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-4271859468376006~9737595580" />

@@ -5,6 +5,7 @@ import static com.rudderstack.android.sdk.core.FlushUtils.flushNativeSdks;
 import static com.rudderstack.android.sdk.core.FlushUtils.getPayloadFromMessages;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -13,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -60,7 +62,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
 
     private int noOfActivities;
-
+    private Application application;
 
     /*
      * constructor to be called from RudderClient internally.
@@ -85,6 +87,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         this.context = _application.getApplicationContext();
         this.config = _config;
         RudderLogger.logDebug(String.format("EventRepository: constructor: %s", this.config.toString()));
+        this.application = _application;
 
         try {
             // initiate RudderPreferenceManager
@@ -154,8 +157,14 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             if (isSDKEnabled) {
                                 // initiate processor
                                 RudderLogger.logDebug("EventRepository: initiateSDK: Initiating processor");
-                                Thread processorThread = new Thread(getProcessorRunnable());
-                                processorThread.start();
+                                StringBuilder mainProcess = new StringBuilder(application.getPackageName());
+                                if(RudderClient.getInstance() != null && !RudderClient.getInstance().mainProcessName.isEmpty()){
+                                    mainProcess.append(":").append(RudderClient.getInstance().mainProcessName);
+                                }
+                                if (getProcessName(application).equals(mainProcess.toString())) {
+                                    Thread processorThread = new Thread(getProcessorRunnable(), "processor_thread");
+                                    processorThread.start();
+                                }
 
                                 // initiate factories
                                 if (serverConfig.source.destinations != null) {
@@ -225,6 +234,16 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 ).build();
         message.setType(MessageType.TRACK);
         dump(message);
+    }
+    private String getProcessName(Application application) {
+        int pid = android.os.Process.myPid();
+        ActivityManager manager = (ActivityManager) application.getSystemService(application.getApplicationContext().ACTIVITY_SERVICE);
+        for (ActivityManager.RunningAppProcessInfo processInfo : manager.getRunningAppProcesses()) {
+            if (processInfo.pid == pid) {
+                return processInfo.processName;
+            }
+        }
+        return "";
     }
 
     private void checkApplicationUpdateStatus(Application application) {

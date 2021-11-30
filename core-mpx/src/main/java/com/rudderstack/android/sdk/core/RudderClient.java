@@ -32,6 +32,11 @@ public class RudderClient {
     private static String _deviceToken;
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
+    public void setMainProcessName(String mainProcessName) {
+        this.mainProcessName = mainProcessName;
+    }
+
+    String mainProcessName = "";
 
     /*
      * private constructor
