@@ -66,7 +66,9 @@ class DBPersistentManager {
      */
     void flushEvents() {
         try {
-            application.getContentResolver().delete(EventContentProvider.CONTENT_URI_EVENTS, null, null);
+            DBPersistentManager.initializeUri(application);
+
+            application.getContentResolver().delete(EventContentProvider.getContentUri(DBPersistentManager.getUri(application)), null, null);
             RudderLogger.logInfo("DBPersistentManager: flushEvents: Messages deleted from DB");
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
@@ -88,7 +90,8 @@ class DBPersistentManager {
             //  remove last "," character
             builder.deleteCharAt(builder.length() - 1);
             // remove events
-            int deleted = application.getContentResolver().delete(EventContentProvider.CONTENT_URI_EVENTS, String.format(MESSAGE_ID + " IN (%s)", builder.toString()),
+            DBPersistentManager.initializeUri(application);
+            int deleted = application.getContentResolver().delete(EventContentProvider.getContentUri(DBPersistentManager.getUri(application)), String.format(MESSAGE_ID + " IN (%s)", builder.toString()),
                     null);
             RudderLogger.logInfo("DBPersistentManager: clearEventsFromDB: Messages deleted from DB " + deleted);
         } catch (SQLiteDatabaseCorruptException ex) {
@@ -105,9 +108,10 @@ class DBPersistentManager {
         if (!messages.isEmpty()) messages.clear();
 
         try {
-            Uri contentUri = EventContentProvider.CONTENT_URI_EVENTS.buildUpon()
+            Uri contentUri = EventContentProvider.getContentUri(DBPersistentManager.getUri(application)).buildUpon()
                     .appendQueryParameter(EventContentProvider.QUERY_PARAMETER_LIMIT,
                             String.valueOf(count)).build();
+            DBPersistentManager.initializeUri(application);
             Cursor cursor = application.getContentResolver().query(contentUri,
                     null, null, null, EventsDbHelper.UPDATED + " ASC");
             if (cursor.moveToFirst()) {
@@ -131,7 +135,8 @@ class DBPersistentManager {
         int count = -1;
 
         try {
-            Cursor cursor = application.getContentResolver().query(EventContentProvider.CONTENT_URI_EVENTS,
+            DBPersistentManager.initializeUri(application);
+            Cursor cursor = application.getContentResolver().query(EventContentProvider.getContentUri(DBPersistentManager.getUri(application)),
                     new String[]{"count(*) AS count"},
                     null,
                     null,
@@ -191,7 +196,8 @@ class DBPersistentManager {
 
     public void deleteAllEvents() {
         try {
-            application.getContentResolver().delete(EventContentProvider.CONTENT_URI_EVENTS, null, null);
+            DBPersistentManager.initializeUri(application);
+            application.getContentResolver().delete(EventContentProvider.getContentUri(DBPersistentManager.getUri(application)), null, null);
             RudderLogger.logInfo("DBPersistentManager: deleteAllEvents: deleted all events");
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
@@ -209,6 +215,14 @@ class DBPersistentManager {
         }
         // may never return null
         return null;
+    }
+    static void initializeUri(Context context){
+        if(EventContentProvider.authority == null)
+            EventContentProvider.authority = context.getApplicationContext().getPackageName()+"."+EventContentProvider.class.getSimpleName();
+    }
+    static String getUri(Context context){
+//        if(EventContentProvider.authority == null)
+            return context.getApplicationContext().getPackageName()+"."+EventContentProvider.class.getSimpleName();
     }
 }
 
@@ -247,9 +261,10 @@ class DBInsertionHandlerThread extends HandlerThread {
             ContentValues insertValues = new ContentValues();
             insertValues.put(EventsDbHelper.MESSAGE, messageJson.replaceAll("'", "\\\\\'"));
             insertValues.put(EventsDbHelper.UPDATED, updatedTime);
-
-            context.getContentResolver().insert(EventContentProvider.CONTENT_URI_EVENTS, insertValues);
+            DBPersistentManager.initializeUri(context);
+            context.getContentResolver().insert(EventContentProvider.getContentUri(DBPersistentManager.getUri(context)), insertValues);
             RudderLogger.logInfo("DBPersistentManager: saveEvent: Event saved to DB");
         }
     }
+
 }

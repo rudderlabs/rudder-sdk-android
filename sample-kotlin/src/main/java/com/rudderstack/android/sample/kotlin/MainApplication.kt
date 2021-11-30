@@ -3,6 +3,7 @@ package com.rudderstack.android.sample.kotlin
 import android.app.Application
 import android.content.Context
 import android.os.Handler
+import android.util.Log
 import androidx.multidex.MultiDex
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
@@ -48,6 +49,7 @@ class MainApplication : Application() {
                 .withCustomFactory(CustomFactory.FACTORY)
                 .build()
         )
+        Log.e("Debug","Application OnCreate")
 
         Thread {
             for (i in 1..10000) {

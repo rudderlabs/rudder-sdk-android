@@ -25,6 +25,9 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-4271859468376006~9737595580"/>
+        <provider
+            android:authorities="${applicationId}.EventContentProvider"
+            android:name="com.rudderstack.android.sdk.core.EventContentProvider"/>
     </application>
 
 </manifest>

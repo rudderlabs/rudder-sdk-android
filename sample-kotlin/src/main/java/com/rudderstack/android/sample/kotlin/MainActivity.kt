@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        Log.e("Debug","MainActivity onStart")
         Thread {
             for (i in 1..10000) {
                 println("Event from Main Activity {$i}")
