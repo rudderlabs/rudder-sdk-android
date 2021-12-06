@@ -201,7 +201,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // application was not installed previously, Application Installed events
                 RudderLogger.logDebug("Tracking Application Installed");
                 preferenceManager.saveBuildVersionCode(versionCode);
-                RudderMessage message = new RudderMessageBuilder().setEventName("Application Installed").build();
+                RudderMessage message = new RudderMessageBuilder()
+                        .setEventName("Application Installed")
+                        .setProperty(
+                                new RudderProperty()
+                                        .putValue("version", versionCode)
+                        ).build();
                 message.setType(MessageType.TRACK);
                 dump(message);
             } else if (previousVersionCode != versionCode) {
@@ -210,10 +215,15 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 if (getOptStatus()) {
                     return;
                 }
-                // application updated
+                // Application updated
                 RudderLogger.logDebug("Tracking Application Updated");
                 preferenceManager.saveBuildVersionCode(versionCode);
-                RudderMessage message = new RudderMessageBuilder().setEventName("Application Updated").build();
+                RudderMessage message = new RudderMessageBuilder().setEventName("Application Updated")
+                        .setProperty(
+                                new RudderProperty()
+                                        .putValue("previous_version", previousVersionCode)
+                                        .putValue("version", versionCode)
+                        ).build();
                 message.setType(MessageType.TRACK);
                 dump(message);
             }
