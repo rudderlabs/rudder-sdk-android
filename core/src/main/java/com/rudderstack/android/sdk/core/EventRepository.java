@@ -51,7 +51,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
     private boolean areFactoriesInitialized = false;
-    private AtomicBoolean isFirstLaunch = new AtomicBoolean(false);
+    private AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
 
     private int noOfActivities;
 

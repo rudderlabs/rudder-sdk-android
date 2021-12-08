@@ -127,9 +127,9 @@ public class Utils {
     @NonNull
     public static RudderProperty trackDeepLink(Activity activity, AtomicBoolean isFirstLaunch, int versionCode) {
         RudderProperty rudderProperty = new RudderProperty()
-                .putValue("from_background", isFirstLaunch.get());
+                .putValue("from_background", !isFirstLaunch.get());
         // If it is not firstLaunch then return RudderProperty instance
-        if (isFirstLaunch.getAndSet(true)) {
+        if (!isFirstLaunch.getAndSet(false)) {
             return rudderProperty;
         }
         rudderProperty.putValue("version", versionCode);
