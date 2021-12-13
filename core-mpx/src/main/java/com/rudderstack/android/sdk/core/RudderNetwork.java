@@ -3,6 +3,8 @@ package com.rudderstack.android.sdk.core;
 import static android.content.Context.TELEPHONY_SERVICE;
 import static com.rudderstack.android.sdk.core.util.Utils.isTv;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
@@ -22,6 +24,7 @@ class RudderNetwork {
     @SerializedName("cellular")
     private boolean isCellularEnabled = false;
 
+    @SuppressLint("MissingPermission")
     RudderNetwork(Application application) {
         try {
             // carrier name
@@ -43,12 +46,11 @@ class RudderNetwork {
             // cellular status
             TelephonyManager tm = (TelephonyManager) application.getSystemService(Context.TELEPHONY_SERVICE);
             if (tm != null && tm.getSimState() == TelephonyManager.SIM_STATE_READY) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                    isCellularEnabled = Settings.Global.getInt(application.getContentResolver(), "mobile_data", 1) == 1;
-                } else {
-                    isCellularEnabled = Settings.Secure.getInt(application.getContentResolver(), "mobile_data", 1) == 1;
-                }
+                isCellularEnabled = Settings.Global.getInt(application.getContentResolver(), "mobile_data", 1) == 1;
             }
+        } catch (SecurityException ex) {
+            RudderLogger.logWarn("RudderNetwork: Missing Bluetooth/Wifi Permissions in the app");
+            RudderLogger.logWarn("RudderNetwork: Bluetooth/Wifi status will be set to false");
         } catch (Exception ex) {
             RudderLogger.logError(ex);
         }
