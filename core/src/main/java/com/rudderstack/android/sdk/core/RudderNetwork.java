@@ -45,6 +45,9 @@ class RudderNetwork {
             if (tm != null && tm.getSimState() == TelephonyManager.SIM_STATE_READY) {
                 isCellularEnabled = Settings.Global.getInt(application.getContentResolver(), "mobile_data", 1) == 1;
             }
+        } catch (SecurityException ex) {
+            RudderLogger.logWarn("RudderNetwork: Missing Bluetooth/Wifi Permissions in the app");
+            RudderLogger.logWarn("RudderNetwork: Bluetooth/Wifi status will be set to false");
         } catch (Exception ex) {
             RudderLogger.logError(ex);
         }
