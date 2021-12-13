@@ -1,16 +1,21 @@
 package com.rudderstack.android.sdk.core.util;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
+import android.net.ParseException;
+import android.net.Uri;
+import android.os.BadParcelableException;
 import android.os.Build;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.RudderLogger;
+import com.rudderstack.android.sdk.core.RudderProperty;
 
 import java.io.UnsupportedEncodingException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -19,9 +24,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static android.provider.Settings.Secure.ANDROID_ID;
 import static android.provider.Settings.System.getString;
+
+import androidx.annotation.NonNull;
 
 public class Utils {
 
@@ -113,6 +121,74 @@ public class Utils {
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
+
+    /** Returns referring_application, url and its query parameter. */
+    @NonNull
+    public static RudderProperty trackDeepLink(Activity activity, AtomicBoolean isFirstLaunch, int versionCode) {
+        RudderProperty rudderProperty = new RudderProperty()
+                .putValue("from_background", !isFirstLaunch.get());
+        // If it is not firstLaunch then return RudderProperty instance
+        if (!isFirstLaunch.getAndSet(false)) {
+            return rudderProperty;
+        }
+        rudderProperty.putValue("version", versionCode);
+        try {
+            Intent intent = activity.getIntent();
+            if (intent == null || intent.getData() == null) {
+                return rudderProperty;
+            }
+
+            // Get information about who launched this activity
+            String referrer = getReferrer(activity);
+            if (referrer != null) {
+                rudderProperty.putValue("referring_application", referrer);
+            }
+
+            Uri uri = intent.getData();
+            if (uri != null) {
+                try {
+                    for (String parameter : uri.getQueryParameterNames()) {
+                        String value = uri.getQueryParameter(parameter);
+                        if (value != null && !value.trim().isEmpty()) {
+                            rudderProperty.putValue(parameter, value);
+                        }
+                    }
+                } catch (Exception e) {
+                    RudderLogger.logError("Failed to get uri query parameters: " + e);
+                }
+                rudderProperty.putValue("url", uri.toString());
+            }
+        } catch (Exception e) {
+            RudderLogger.logError("Error occurred while tracking deep link" + e);
+        }
+        return rudderProperty;
+    }
+
+    /** Returns information about who launched this activity. */
+    private static String getReferrer(Activity activity) {
+        // If devices running on SDK versions greater than equal to 22
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            return activity.getReferrer().toString();
+        }
+        // If devices running on SDK versions greater than equal to 19
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            Intent intent = activity.getIntent();
+            try {
+                Uri referrer = intent.getParcelableExtra(Intent.EXTRA_REFERRER);
+                if (referrer != null) {
+                    return referrer.toString();
+                }
+                // Intent.EXTRA_REFERRER_NAME
+                String referrerName = intent.getStringExtra("android.intent.extra.REFERRER_NAME");
+                if (referrerName != null) {
+                    return Uri.parse(referrerName).toString();
+                }
+            } catch (BadParcelableException | ParseException e) {
+                return null;
+            }
+        }
+        return null;
     }
 
     public enum NetworkResponses {
