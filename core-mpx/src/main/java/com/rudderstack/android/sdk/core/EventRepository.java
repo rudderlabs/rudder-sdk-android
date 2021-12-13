@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
  * utility class for event processing
@@ -41,6 +42,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private final List<RudderMessage> eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
     private String authHeaderString;
     private String anonymousIdHeaderString;
+    private int versionCode;
     private RudderConfig config;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
@@ -51,6 +53,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
     private boolean areFactoriesInitialized = false;
+    private AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
 
     private int noOfActivities;
 
@@ -144,7 +147,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                 // initiate processor
                                 RudderLogger.logDebug("EventRepository: initiateSDK: Initiating processor");
                                 StringBuilder mainProcess = new StringBuilder(application.getPackageName());
-                                if(RudderClient.getInstance() != null && !RudderClient.getInstance().mainProcessName.isEmpty()){
+                                if (RudderClient.getInstance() != null && !RudderClient.getInstance().mainProcessName.isEmpty()) {
                                     mainProcess.append(":").append(RudderClient.getInstance().mainProcessName);
                                 }
                                 if (getProcessName(application).equals(mainProcess.toString())) {
@@ -217,7 +220,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // application was not installed previously, Application Installed events
                 RudderLogger.logDebug("Tracking Application Installed");
                 preferenceManager.saveBuildVersionCode(versionCode);
-                RudderMessage message = new RudderMessageBuilder().setEventName("Application Installed").build();
+                RudderMessage message = new RudderMessageBuilder()
+                        .setEventName("Application Installed")
+                        .setProperty(
+                                new RudderProperty()
+                                        .putValue("version", versionCode)
+                        ).build();
                 message.setType(MessageType.TRACK);
                 dump(message);
             } else if (previousVersionCode != versionCode) {
@@ -226,10 +234,15 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 if (getOptStatus()) {
                     return;
                 }
-                // application updated
+                // Application updated
                 RudderLogger.logDebug("Tracking Application Updated");
                 preferenceManager.saveBuildVersionCode(versionCode);
-                RudderMessage message = new RudderMessageBuilder().setEventName("Application Updated").build();
+                RudderMessage message = new RudderMessageBuilder().setEventName("Application Updated")
+                        .setProperty(
+                                new RudderProperty()
+                                        .putValue("previous_version", previousVersionCode)
+                                        .putValue("version", versionCode)
+                        ).build();
                 message.setType(MessageType.TRACK);
                 dump(message);
             }
@@ -714,7 +727,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     return;
                 }
                 // no previous activity present. Application Opened
-                RudderMessage trackMessage = new RudderMessageBuilder().setEventName("Application Opened").build();
+                RudderMessage trackMessage;
+                trackMessage = new RudderMessageBuilder()
+                        .setEventName("Application Opened")
+                        .setProperty(Utils.trackDeepLink(activity, isFirstLaunch, versionCode))
+                        .build();
                 trackMessage.setType(MessageType.TRACK);
                 this.dump(trackMessage);
             }
