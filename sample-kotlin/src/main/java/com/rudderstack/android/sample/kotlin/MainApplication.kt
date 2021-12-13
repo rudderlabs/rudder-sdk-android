@@ -1,7 +1,9 @@
 package com.rudderstack.android.sample.kotlin
 
 import android.app.Application
+import android.content.Context
 import android.os.Handler
+import androidx.multidex.MultiDex
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
@@ -10,9 +12,9 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://e5757ebd4d1a.ngrok.io"
+        const val DATA_PLANE_URL = "https://a86b-2409-4070-2c11-8b9f-903f-e344-da4f-136b.ngrok.io"
         const val CONTROL_PLANE_URL = "https://0e741f50e567.ngrok.io"
-        const val WRITE_KEY = "1pTxG1Tqxr7FCrqIy7j0p28AENV"
+        const val WRITE_KEY = "1n0JdVPZTRUIkLXYccrWzZwdGSx"
     }
 
     override fun onCreate() {
@@ -29,23 +31,27 @@ class MainApplication : Application() {
 //                .build(), RudderOption()
 //                .putIntegration("MIXPANEL",true)
 //        )
+//        RudderClient.setAnonymousId("anonymous_id")
+//        RudderClient.updateWithAdvertisingId("DEVTOKEN1")
+
+        RudderClient.putAnonymousId("anonymous_id_1")
+        RudderClient.putDeviceToken("DevToken2")
+
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,
             RudderConfig.Builder()
                 .withDataPlaneUrl(DATA_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
-                .withTrackLifecycleEvents(false)
-                .withRecordScreenViews(false)
+                .withTrackLifecycleEvents(true)
+                .withRecordScreenViews(true)
                 .withCustomFactory(CustomFactory.FACTORY)
                 .build()
-)
-        rudderClient!!.putDeviceToken("some_device_token")
-        rudderClient!!.track("first_event")
+        )
+    }
 
-        Handler().postDelayed({
-            RudderClient.updateWithAdvertisingId("some_idfa_changed")
-            rudderClient!!.track("second_event")
-        }, 3000)
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(base)
+        MultiDex.install(this)
     }
 }

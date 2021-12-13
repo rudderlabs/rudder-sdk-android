@@ -2,6 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.Base64;
 
@@ -87,7 +88,7 @@ class RudderServerConfigManager {
         int retryCount = 0;
         while (!isDone && retryCount <= 3) {
             try {
-                String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig";
+                String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig?p=android&v="+Constants.RUDDER_LIBRARY_VERSION+"&bv="+android.os.Build.VERSION.SDK_INT;
                 RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configUrl: %s", configUrl));
                 // create url object
                 URL url = new URL(configUrl);

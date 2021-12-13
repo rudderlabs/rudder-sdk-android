@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
  * utility class for event processing
@@ -39,6 +40,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private final List<RudderMessage> eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
     private String authHeaderString;
     private String anonymousIdHeaderString;
+    private int versionCode;
     private RudderConfig config;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
@@ -49,6 +51,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
     private boolean areFactoriesInitialized = false;
+    private AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
 
     private int noOfActivities;
 
@@ -62,7 +65,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * 5. start processor thread
      * 6. initiate factories
      * */
-    EventRepository(Application _application, String _writeKey, RudderConfig _config, String _anonymousId, String _advertisingId) {
+    EventRepository(Application _application, String _writeKey, RudderConfig _config, String _anonymousId, String _advertisingId, String _deviceToken) {
         // 1. set the values of writeKey, config
         try {
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: writeKey: %s", _writeKey));
@@ -86,11 +89,16 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     _advertisingId = null;
                     RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the advertisingId");
                 }
+                if (!TextUtils.isEmpty(_deviceToken)) {
+                    _deviceToken = null;
+                    RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the device token");
+                }
             }
 
             // 2. initiate RudderElementCache
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
-            RudderElementCache.initiate(_application, _anonymousId, _advertisingId);
+            // We first send the anonymousId to RudderElementCache which will just set the anonymousId static variable in RudderContext class.
+            RudderElementCache.initiate(_application, _anonymousId, _advertisingId, _deviceToken);
 
             String anonymousId = RudderContext.getAnonymousId();
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousId: %s", anonymousId));
@@ -178,7 +186,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             String packageName = application.getPackageName();
             PackageManager packageManager = application.getPackageManager();
             PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
-            int versionCode;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 versionCode = (int) packageInfo.getLongVersionCode();
             } else {
@@ -190,7 +197,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // application was not installed previously, Application Installed events
                 RudderLogger.logDebug("Tracking Application Installed");
                 preferenceManager.saveBuildVersionCode(versionCode);
-                RudderMessage message = new RudderMessageBuilder().setEventName("Application Installed").build();
+                RudderMessage message = new RudderMessageBuilder()
+                        .setEventName("Application Installed")
+                        .setProperty(
+                                new RudderProperty()
+                                        .putValue("version", versionCode)
+                        ).build();
                 message.setType(MessageType.TRACK);
                 dump(message);
             } else if (previousVersionCode != versionCode) {
@@ -200,9 +212,14 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 if (getOptStatus()) {
                     return;
                 }
-                // application updated
+                // Application updated
                 RudderLogger.logDebug("Tracking Application Updated");
-                RudderMessage message = new RudderMessageBuilder().setEventName("Application Updated").build();
+                RudderMessage message = new RudderMessageBuilder().setEventName("Application Updated")
+                        .setProperty(
+                                new RudderProperty()
+                                        .putValue("previous_version", previousVersionCode)
+                                        .putValue("version", versionCode)
+                        ).build();
                 message.setType(MessageType.TRACK);
                 dump(message);
             }
@@ -542,37 +559,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         dbManager.saveEvent(eventJson);
     }
 
-    /**
-     * Opts out a user from tracking the activity. When enabled all the events will be dropped by the SDK.
-     *
-     * @param optOut Boolean value to store optOut status
-     */
-    void saveOptStatus(boolean optOut) {
-        preferenceManager.saveOptStatus(optOut);
-        updateOptStatusTime(optOut);
-    }
-
-    /**
-     * If true, save user optOut time
-     * If false, save user optIn time
-     *
-     * @param optOut Boolean value to update optOut or optIn time
-     */
-    private void updateOptStatusTime(boolean optOut) {
-        if (optOut) {
-            preferenceManager.updateOptOutTime();
-        } else {
-            preferenceManager.updateOptInTime();
-        }
-    }
-
-    /**
-     * @return optOut status
-     */
-    boolean getOptStatus() {
-        return preferenceManager.getOptStatus();
-    }
-
     private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
         synchronized (eventReplayMessageQueue) {
             if (areFactoriesInitialized || fromHistory) {
@@ -649,6 +635,48 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         integrationCallbacks.put(key, callback);
     }
 
+    /**
+     * Opts out a user from tracking the activity. When enabled all the events will be dropped by the SDK.
+     *
+     * @param optOut Boolean value to store optOut status
+     */
+    void saveOptStatus(boolean optOut) {
+        preferenceManager.saveOptStatus(optOut);
+        updateOptStatusTime(optOut);
+    }
+
+    /**
+     * If true, save user optOut time
+     * If false, save user optIn time
+     *
+     * @param optOut Boolean value to update optOut or optIn time
+     */
+    private void updateOptStatusTime(boolean optOut) {
+        if (optOut) {
+            preferenceManager.updateOptOutTime();
+        } else {
+            preferenceManager.updateOptInTime();
+        }
+    }
+
+    /**
+     * @return optOut status
+     */
+    boolean getOptStatus() {
+        return preferenceManager.getOptStatus();
+    }
+
+    void updateAnonymousId(@NonNull String anonymousId) {
+        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: updateAnonymousId: Updating AnonymousId: %s", anonymousId));
+        RudderElementCache.updateAnonymousId(anonymousId);
+        preferenceManager.saveAnonymousId(RudderContext.getAnonymousId());
+        try {
+            this.anonymousIdHeaderString = Base64.encodeToString(RudderContext.getAnonymousId().getBytes("UTF-8"), Base64.DEFAULT);
+        } catch (Exception ex) {
+            RudderLogger.logError(ex.getCause());
+        }
+    }
+
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
 
@@ -675,8 +703,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 if (getOptStatus()) {
                     return;
                 }
-                // no previous activity present. Application Opened
-                RudderMessage trackMessage = new RudderMessageBuilder().setEventName("Application Opened").build();
+                RudderMessage trackMessage;
+                trackMessage = new RudderMessageBuilder()
+                            .setEventName("Application Opened")
+                            .setProperty(Utils.trackDeepLink(activity, isFirstLaunch, versionCode))
+                        .build();
                 trackMessage.setType(MessageType.TRACK);
                 this.dump(trackMessage);
             }
