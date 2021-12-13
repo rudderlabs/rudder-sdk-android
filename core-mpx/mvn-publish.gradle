@@ -21,7 +21,7 @@ publishing {
             customizePom(pom)
             groupId 'com.rudderstack.android.sdk'
             artifactId 'core-mpx'
-            version '1.0.0'
+            version '1.0.1'
 
             // create the sign pom artifact
             pom.withXml {
