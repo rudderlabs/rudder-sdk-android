@@ -158,7 +158,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                 // initiate processor
                                 RudderLogger.logDebug("EventRepository: initiateSDK: Initiating processor");
                                 StringBuilder mainProcess = new StringBuilder(application.getPackageName());
-                                if(RudderClient.getInstance() != null && !RudderClient.getInstance().mainProcessName.isEmpty()){
+                                if (RudderClient.getInstance() != null && !RudderClient.getInstance().mainProcessName.isEmpty()) {
                                     mainProcess.append(":").append(RudderClient.getInstance().mainProcessName);
                                 }
                                 if (getProcessName(application).equals(mainProcess.toString())) {
