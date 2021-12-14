@@ -37,4 +37,11 @@ dependencies {
     testImplementation 'androidx.test:core-ktx:1.2.0'
 }
 
-apply from :'./maven.gradle'
+ext {
+    PUBLISH_GROUP_ID = 'com.rudderstack.android.sdk'
+    PUBLISH_VERSION = '1.2.2'
+    PUBLISH_ARTIFACT_ID = 'core'
+}
+
+apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"
+
