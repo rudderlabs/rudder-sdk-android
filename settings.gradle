@@ -1,1 +1,1 @@
-include ':sample-cdn', ':sample-kotlin', ':core', ':sample-segment-java', ':sample-kotlin-integration', ':dummy-impl'
+include ':sample-cdn', ':sample-kotlin', ':core', ':sample-segment-java', ':sample-kotlin-integration', ':dummy-impl', ':android-tv'

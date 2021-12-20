@@ -1,5 +1,8 @@
 package com.rudderstack.android.sdk.core;
 
+import static android.content.Context.TELEPHONY_SERVICE;
+import static com.rudderstack.android.sdk.core.util.Utils.isTv;
+
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
@@ -8,8 +11,6 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 
 import com.google.gson.annotations.SerializedName;
-
-import static android.content.Context.TELEPHONY_SERVICE;
 
 class RudderNetwork {
     @SerializedName("carrier")
@@ -24,8 +25,10 @@ class RudderNetwork {
     RudderNetwork(Application application) {
         try {
             // carrier name
-            TelephonyManager telephonyManager = (TelephonyManager) application.getSystemService(TELEPHONY_SERVICE);
-            this.carrier = telephonyManager != null ? telephonyManager.getNetworkOperatorName() : "NA";
+            if (!isTv(application)) {
+                TelephonyManager telephonyManager = (TelephonyManager) application.getSystemService(TELEPHONY_SERVICE);
+                this.carrier = telephonyManager != null ? telephonyManager.getNetworkOperatorName() : "NA";
+            }
 
             // wifi enabled
             WifiManager wifi = (WifiManager) application.getSystemService(Context.WIFI_SERVICE);
