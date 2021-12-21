@@ -299,7 +299,6 @@ open class RudderServerConfigParseTest {
         val rta = object : RudderTypeAdapter<RudderServerConfig>() {}
         val res = jsonAdapter.readJson<RudderServerConfig>(testJson, rta)
         assert(res != null)
-        println("res: $res")
         assertThat(res?.source?.destinations?.get(1), allOf(
             notNullValue(), isA(RudderServerConfig.RudderServerDestination::class.java)
         ))

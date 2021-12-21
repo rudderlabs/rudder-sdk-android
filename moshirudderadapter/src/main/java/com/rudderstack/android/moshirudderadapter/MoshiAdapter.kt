@@ -23,10 +23,9 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
  *
  * A Moshi based implementation of JsonAdapter
  */
-class MoshiAdapter : JsonAdapter {
-    private val moshi = Moshi.Builder()
-        .addLast(KotlinJsonAdapterFactory())
-        .build()
+class MoshiAdapter(private val moshi : Moshi = Moshi.Builder()
+    .addLast(KotlinJsonAdapterFactory())
+    .build()) : JsonAdapter {
 
     override fun <T> readJson(json: String, typeAdapter: RudderTypeAdapter<T>): T? {
         val jsonAdapter = typeAdapter.type?.let {

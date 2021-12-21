@@ -25,8 +25,12 @@ import org.junit.runners.Suite
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
     RudderServerConfigParseTestJackson::class, RudderServerConfigParseTestGson::class,
-    RudderServerConfigParseTestMoshi::class
+    RudderServerConfigParseTestMoshi::class,
+    //message
+    MessageParseGsonTest::class,
+    MessageParseJacksonTest::class,
+    MessageParseMoshiTest::class
 )
-class RudderServerConfigParseTestSuite : TestSuite() {
+class ParseTestSuite : TestSuite() {
 
 }

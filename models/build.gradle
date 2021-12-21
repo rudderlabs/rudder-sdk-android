@@ -31,6 +31,8 @@ dependencies {
     compileOnly deps.jackson
     compileOnly deps.moshi.core
     compileOnly deps.moshi.kotlin
+    compileOnly deps.moshi.adapter
+
     //test
     testImplementation 'junit:junit:4.+'
 
@@ -38,6 +40,9 @@ dependencies {
     testImplementation deps.jackson
     testImplementation deps.moshi.core
     testImplementation deps.moshi.kotlin
+    testImplementation deps.moshi.adapter
+//    testImplementation deps.jsonAssert
+
     testImplementation(project(':moshirudderadapter'))
     testImplementation(project(':gsonrudderadapter'))
     testImplementation(project(':jacksonrudderadapter'))

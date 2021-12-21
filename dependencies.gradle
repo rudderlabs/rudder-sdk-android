@@ -17,12 +17,13 @@ ext {
             work        : "2.7.0",
             gson        : "2.8.8",
             jackson     : "2.12.4",
-            moshi       : "1.12.0",
+            moshi       : "1.13.0",
             hamcrest    : "2.2",
             androidXTest: "1.4.0",
             mockito     : "1.10.19",
             awaitility  : "4.1.0",
-            robolectric : "4.4"
+            robolectric : "4.4",
+            jsonAssert  : "2.18.0"
     ]
 
     deps = [
@@ -30,13 +31,15 @@ ext {
             gson        : "com.google.code.gson:gson:${versions.gson}",
             jackson     : "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
             moshi       : [
-                    kotlin: "com.squareup.moshi:moshi-kotlin:${versions.moshi}",
-                    core  : "com.squareup.moshi:moshi:${versions.moshi}"
+                    kotlin : "com.squareup.moshi:moshi-kotlin:${versions.moshi}",
+                    core   : "com.squareup.moshi:moshi:${versions.moshi}",
+                    adapter: "com.squareup.moshi:moshi-adapters:${versions.moshi}"
             ],
             androidXTest: "androidx.test:core:${versions.androidXTest}",
             hamcrest    : "org.hamcrest:hamcrest:${versions.hamcrest}",
             mockito     : "org.mockito:mockito-core:${versions.mockito}",
             awaitility  : "org.awaitility:awaitility:${versions.awaitility}",
-            robolectric : "org.robolectric:robolectric:${versions.robolectric}"
+            robolectric : "org.robolectric:robolectric:${versions.robolectric}",
+            jsonAssert  : "net.javacrumbs.json-unit:json-unit-assertj: ${versions.jsonAssert}"
     ]
 }
