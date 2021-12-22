@@ -23,7 +23,7 @@ ext {
             mockito     : "1.10.19",
             awaitility  : "4.1.0",
             robolectric : "4.4",
-            jsonAssert  : "2.18.0"
+            jsonAssert  : "1.5.0"
     ]
 
     deps = [
@@ -40,6 +40,6 @@ ext {
             mockito     : "org.mockito:mockito-core:${versions.mockito}",
             awaitility  : "org.awaitility:awaitility:${versions.awaitility}",
             robolectric : "org.robolectric:robolectric:${versions.robolectric}",
-            jsonAssert  : "net.javacrumbs.json-unit:json-unit-assertj: ${versions.jsonAssert}"
+            jsonAssert  : "org.skyscreamer:jsonassert:${versions.jsonAssert}"
     ]
 }

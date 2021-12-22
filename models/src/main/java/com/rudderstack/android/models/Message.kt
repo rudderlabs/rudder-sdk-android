@@ -14,8 +14,10 @@
 
 package com.rudderstack.android.models
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.*
 import java.util.*
@@ -30,7 +32,7 @@ typealias IdentifyProperties = Map<String, String>
 typealias MessageIntegrations = MutableMap<String, Any>
 typealias MessageDestinationProps = MutableMap<String, Map<*, *>>
 typealias GroupTraits = Map<String, String>
-
+@JsonIgnoreProperties("type\$models")
 sealed class Message(
 
     /**
@@ -38,8 +40,11 @@ sealed class Message(
      * @see EventType
      */
     @SerializedName("type")
-    @JsonProperty("type")
+    @param:JsonProperty("type")
+    @field:JsonProperty("type")
+    @get:JsonProperty("type")
     @Json(name = "type")
+
     internal var type: EventType,
 
     @SerializedName("messageId")
@@ -77,11 +82,13 @@ sealed class Message(
     val timestamp: String,
 
 
-    @SerializedName("channel")
-    @JsonProperty("channel")
-    @Json(name = "channel")
+//    @SerializedName("channel")
+//    @JsonProperty("channel")
+//    @get:JsonProperty("channel")
+//    @Json(name = "channel")
 //    @ChannelMitigationMoshi
-    private val _channel: String? = "",
+//    @Transient
+//    private val _channel: String? = null,
 
     @SerializedName("destinationProps")
     @JsonProperty("destinationProps")
@@ -106,15 +113,17 @@ sealed class Message(
 
     //ugly hack for moshi
     //https://github.com/square/moshi/issues/609#issuecomment-798805367
-    @Transient
-    val messageChanel : String = "server"
-    get() {
-        field
-        return if(_channel.isNullOrEmpty()) "server" else _channel
-    }
+    @Json(name = "channel")
+    @JsonProperty("channel")
+    @SerializedName("channel")
+    var channel : String = "server"
 
+    /*get() {
+        return field
+//        return if(_channel.isNullOrEmpty()) "server" else _channel
+    }*/
+    @JsonIgnore
     fun getType() = type
-
     /*@Retention(AnnotationRetention.RUNTIME)
     @JsonQualifier
     annotation class ChannelMitigationMoshi
@@ -279,9 +288,7 @@ class AliasMessage(
     @JsonProperty("timestamp")
     @Json(name = "timestamp")
     timestamp: String,
-    @JsonProperty("channel")
-    @Json(name = "channel")
-    channel: String? = "",
+
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
@@ -300,7 +307,7 @@ class AliasMessage(
     anonymousId,
     userId,
     timestamp,
-    channel,
+//    channel,
     destinationProps,
     integrations
 ){
@@ -324,9 +331,7 @@ class GroupMessage(
     @JsonProperty("timestamp")
     @Json(name = "timestamp")
     timestamp: String,
-    @JsonProperty("channel")
-    @Json(name = "channel")
-    channel: String? = "",
+
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
@@ -354,7 +359,7 @@ class GroupMessage(
     anonymousId,
     userId,
     timestamp,
-    channel,
+//    channel,
     destinationProps,
     integrations
 )
@@ -376,9 +381,7 @@ class PageMessage(
     @JsonProperty("timestamp")
     @Json(name = "timestamp")
     timestamp: String,
-    @JsonProperty("channel")
-    @Json(name = "channel")
-    channel: String? = "",
+
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
@@ -390,7 +393,9 @@ class PageMessage(
      */
 
     @SerializedName("event")
-    @JsonProperty("event")
+    @get:JsonProperty("event")
+    @field:JsonProperty("event")
+    @param:JsonProperty("event")
     @Json(name = "event")
     var name: String? = null,
 
@@ -417,7 +422,7 @@ class PageMessage(
     anonymousId,
     userId,
     timestamp,
-    channel,
+//    channel,
     destinationProps,
     integrations
 )
@@ -439,9 +444,7 @@ class ScreenMessage(
     @JsonProperty("timestamp")
     @Json(name = "timestamp")
     timestamp: String,
-    @JsonProperty("channel")
-    @Json(name = "channel")
-    channel: String? = "",
+
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
@@ -453,7 +456,9 @@ class ScreenMessage(
      */
 
     @SerializedName("event")
-    @JsonProperty("event")
+    @get:JsonProperty("event")
+    @field:JsonProperty("event")
+    @param:JsonProperty("event")
     @Json(name = "event")
     var name: String? = null,
 
@@ -475,7 +480,7 @@ class ScreenMessage(
     anonymousId,
     userId,
     timestamp,
-    channel,
+//    channel,
     destinationProps,
     integrations
 )
@@ -497,9 +502,7 @@ class TrackMessage(
     @JsonProperty("timestamp")
     @Json(name = "timestamp")
     timestamp: String,
-    @JsonProperty("channel")
-    @Json(name = "channel")
-    channel: String? = "",
+    /*channel: String? = null,*/
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
@@ -511,7 +514,9 @@ class TrackMessage(
      */
 
     @SerializedName("event")
-    @JsonProperty("event")
+    @field:JsonProperty("event")
+    @param:JsonProperty("event")
+    @get:JsonProperty("event")
     @Json(name = "event")
     val eventName: String? = null,
     /**
@@ -531,7 +536,7 @@ class TrackMessage(
     anonymousId,
     userId,
     timestamp,
-    channel,
+//    channel,
     destinationProps,
     integrations
 ){
@@ -556,9 +561,7 @@ class IdentifyMessage(
     @JsonProperty("timestamp")
     @Json(name = "timestamp")
     timestamp: String,
-    @JsonProperty("channel")
-    @Json(name = "channel")
-    channel: String? = "",
+
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
@@ -582,7 +585,7 @@ class IdentifyMessage(
     anonymousId,
     userId,
     timestamp,
-    channel,
+//    channel,
     destinationProps,
     integrations
 )

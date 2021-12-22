@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 30/10/21, 8:13 PM Last modified: 30/10/21, 8:13 PM
+ * Creator: Debanjan Chatterjee on 24/11/21, 11:13 PM Last modified: 03/11/21, 11:29 PM
  * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.core.state.internal
+package com.rudderstack.android.core.state
 
 import java.lang.ref.WeakReference
 

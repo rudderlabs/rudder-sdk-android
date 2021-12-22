@@ -18,14 +18,16 @@ import com.rudderstack.android.gsonrudderadapter.GsonAdapter
 import com.rudderstack.android.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.android.moshirudderadapter.MoshiAdapter
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
-import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
 import org.hamcrest.MatcherAssert
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
+import org.json.JSONObject
 import org.junit.Test
+import org.skyscreamer.jsonassert.JSONAssert
+import org.skyscreamer.jsonassert.JSONCompareMode
 
 abstract class MessageParseTest {
-    abstract var jsonAdapter : JsonAdapter
+    abstract var jsonAdapter: JsonAdapter
 
     companion object {
         private const val TRACK_JSON =
@@ -40,7 +42,7 @@ abstract class MessageParseTest {
                     "  },\n" +
                     "  \"event\": \"Java Test\",\n" +
                     "  \"properties\": {\n" +
-                    "    \"count\": 1\n" +
+                    "    \"count\": \"1\"\n" +
                     "  }\n" +
                     "}"
         private const val ALIAS_JSON = "{\n" +
@@ -81,7 +83,7 @@ abstract class MessageParseTest {
                 "  },\n" +
                 "  \"event\": \"Java Test\",\n" +
                 "  \"properties\": {\n" +
-                "    \"count\": 1\n" +
+                "    \"count\": \"1\"\n" +
                 "  }\n" +
                 "}"
 
@@ -96,7 +98,7 @@ abstract class MessageParseTest {
                 "  },\n" +
                 "  \"event\": \"Java Test\",\n" +
                 "  \"properties\": {\n" +
-                "    \"count\": 1\n" +
+                "    \"count\": \"1\"\n" +
                 "  },\n" +
                 "  \"category\": \"some_category\"\n" +
                 "}"
@@ -109,81 +111,158 @@ abstract class MessageParseTest {
                 "  \"integrations\": {\n" +
                 "    \"firebase\": true,\n" +
                 "    \"amplitude\": false\n" +
-                "  }\n" +
+                "  },\n" +
+                "\"properties\": {}\n" +
                 "}"
-    }
-    @Test
-    fun testTrackParsing(){
-        val track = jsonAdapter.readJson(TRACK_JSON, TrackMessage::class.java)
-        MatcherAssert.assertThat(track, allOf(notNullValue(),
-        hasProperty("type", `is`(Message.EventType.TRACK)),
-        hasProperty("messageChanel", `is`("server")),
-        hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
-        hasProperty("properties", allOf( aMapWithSize<String,String>(1))),
-        hasProperty("eventName", `is`("Java Test"))))
-        assertThat(track!!.properties!!["count"], `is`("1"))
-        //serialization
-        val trackJson = jsonAdapter.writeToJson(track)
-        assertThat(trackJson, `is`(TRACK_JSON.replace("\n", "").replace(" ", "")))
-    }
-    @Test
-    fun testAliasParsing(){
-        val alias = jsonAdapter.readJson(ALIAS_JSON, AliasMessage::class.java)
-        MatcherAssert.assertThat(alias, allOf(notNullValue(),
-        hasProperty("type", `is`(Message.EventType.ALIAS)),
-        hasProperty("messageChanel", `is`("server")),
-        hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z"))))
     }
 
     @Test
-    fun testGroupParsing(){
+    fun testTrackParsing() {
+        val track = jsonAdapter.readJson(TRACK_JSON, TrackMessage::class.java)
+        MatcherAssert.assertThat(
+            track, allOf(
+                notNullValue(),
+                hasProperty("type", `is`(Message.EventType.TRACK)),
+                hasProperty("channel", `is`("server")),
+                hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
+                hasProperty("properties", allOf(aMapWithSize<String, String>(1))),
+                hasProperty("eventName", `is`("Java Test"))
+            )
+        )
+        assertThat(track!!.properties!!["count"], `is`("1"))
+        //serialization
+        val trackJson = jsonAdapter.writeToJson(track)
+        println("track_json: $trackJson")
+        JSONAssert.assertEquals(
+            trackJson, JSONObject(TRACK_JSON).also {
+                it.put("channel", "server")
+            },
+            JSONCompareMode.LENIENT
+        )
+    }
+
+    @Test
+    fun testAliasParsing() {
+        val alias = jsonAdapter.readJson(ALIAS_JSON, AliasMessage::class.java)
+        assertThat(alias, notNullValue())
+        MatcherAssert.assertThat(
+            alias, allOf(
+                notNullValue(),
+                hasProperty("type", `is`(Message.EventType.ALIAS)),
+                hasProperty("channel", `is`("server")),
+                hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z"))
+            )
+        )
+        val aliasJson = jsonAdapter.writeToJson(alias!!)
+        println("alias_json: $aliasJson")
+
+        JSONAssert.assertEquals(
+            aliasJson, JSONObject(ALIAS_JSON).also {
+                it.put("channel", "server")
+            },
+            JSONCompareMode.LENIENT
+        )
+    }
+
+    @Test
+    fun testGroupParsing() {
         val group = jsonAdapter.readJson(GROUP_JSON, GroupMessage::class.java)
-        assertThat(group, allOf(notNullValue(),
-            hasProperty("type", `is`(Message.EventType.GROUP)),
-            hasProperty("messageChanel", `is`("server")),
-            hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
-            hasProperty("traits", allOf( aMapWithSize<String,String>(2))),
+        assertThat(
+            group, allOf(
+                notNullValue(),
+                hasProperty("type", `is`(Message.EventType.GROUP)),
+                hasProperty("channel", `is`("server")),
+                hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
+                hasProperty("traits", allOf(aMapWithSize<String, String>(2))),
 //            hasProperty("eventName", `is`("Java Test"))
-            ))
+            )
+        )
         assertThat(group!!.traits!!["group"], `is`("some_name"))
         assertThat(group.traits!!["journey"], `is`("Australia"))
+        val groupJson = jsonAdapter.writeToJson(group)
+        println("group_json: $groupJson")
+
+        JSONAssert.assertEquals(
+            groupJson, JSONObject(GROUP_JSON).also {
+                it.put("channel", "server")
+            },
+            JSONCompareMode.LENIENT
+        )
     }
+
     @Test
-    fun testScreenParsing(){
+    fun testScreenParsing() {
         val screen = jsonAdapter.readJson(SCREEN_JSON, ScreenMessage::class.java)
-        assertThat(screen, allOf(notNullValue(),
-            hasProperty("type", `is`(Message.EventType.SCREEN)),
-            hasProperty("messageChanel", `is`("server")),
-            hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
-            hasProperty("properties", allOf( aMapWithSize<String,String>(1))),
-            hasProperty("userId", `is`("debanjanchatterjee"))
-            ))
+        assertThat(
+            screen, allOf(
+                notNullValue(),
+                hasProperty("type", `is`(Message.EventType.SCREEN)),
+                hasProperty("channel", `is`("server")),
+                hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
+                hasProperty("properties", allOf(aMapWithSize<String, String>(1))),
+                hasProperty("userId", `is`("debanjanchatterjee"))
+            )
+        )
         assertThat(screen!!.properties!!["count"], `is`("1"))
+        val screenJson = jsonAdapter.writeToJson(screen)
+        println("screen_json: $screenJson")
+
+        JSONAssert.assertEquals(
+            screenJson, JSONObject(SCREEN_JSON).also {
+                it.put("channel", "server")
+            },
+            JSONCompareMode.LENIENT
+        )
     }
+
     @Test
-    fun testPageParsing(){
+    fun testPageParsing() {
         val page = jsonAdapter.readJson(PAGE_JSON, PageMessage::class.java)
-        assertThat(page, allOf(notNullValue(),
-            hasProperty("type", `is`(Message.EventType.PAGE)),
-            hasProperty("messageChanel", `is`("server")),
-            hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
-            hasProperty("properties", allOf( aMapWithSize<String,String>(1))),
-            hasProperty("userId", `is`("debanjanchatterjee")),
-            hasProperty("category", `is`("some_category"))
-            ))
+        assertThat(
+            page, allOf(
+                notNullValue(),
+                hasProperty("type", `is`(Message.EventType.PAGE)),
+                hasProperty("channel", `is`("server")),
+                hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
+                hasProperty("properties", allOf(aMapWithSize<String, String>(1))),
+                hasProperty("userId", `is`("debanjanchatterjee")),
+                hasProperty("category", `is`("some_category"))
+            )
+        )
         assertThat(page!!.properties!!["count"], `is`("1"))
+        val pageJson = jsonAdapter.writeToJson(page)
+        println("page_json: $pageJson")
+        JSONAssert.assertEquals(
+            pageJson, JSONObject(PAGE_JSON).also {
+                it.put("channel", "server")
+            },
+            JSONCompareMode.LENIENT
+        )
     }
+
     @Test
-    fun testIdentifyParsing(){
+    fun testIdentifyParsing() {
         val identify = jsonAdapter.readJson(IDENTIFY_JSON, IdentifyMessage::class.java)
-        assertThat(identify, allOf(notNullValue(),
-            hasProperty("type", `is`(Message.EventType.IDENTIFY)),
-            hasProperty("messageChanel", `is`("server")),
-            hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
-            hasProperty("integrations", allOf( aMapWithSize<String,String>(2))),
-            ))
+        assertThat(
+            identify, allOf(
+                notNullValue(),
+                hasProperty("type", `is`(Message.EventType.IDENTIFY)),
+                hasProperty("channel", `is`("server")),
+                hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
+                hasProperty("integrations", allOf(aMapWithSize<String, String>(2))),
+            )
+        )
         assertThat(identify!!.integrations!!["firebase"], `is`(true))
         assertThat(identify.integrations!!["amplitude"], `is`(false))
+
+        val identifyJson = jsonAdapter.writeToJson(identify)
+        println("identify_json: $identifyJson")
+        JSONAssert.assertEquals(
+            identifyJson, JSONObject(IDENTIFY_JSON).also {
+                it.put("channel", "server")
+            },
+            JSONCompareMode.LENIENT
+        )
     }
 
 }
@@ -191,9 +270,11 @@ abstract class MessageParseTest {
 class MessageParseGsonTest : MessageParseTest() {
     override var jsonAdapter: JsonAdapter = GsonAdapter()
 }
+
 class MessageParseJacksonTest : MessageParseTest() {
     override var jsonAdapter: JsonAdapter = JacksonAdapter()
 }
+
 class MessageParseMoshiTest : MessageParseTest() {
     override var jsonAdapter: JsonAdapter = MoshiAdapter(coreMoshi)
 }

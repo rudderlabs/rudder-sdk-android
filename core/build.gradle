@@ -18,13 +18,17 @@ plugins {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 apply from : "$rootDir/dependencies.gradle"
 
 dependencies {
+//    api project(path: ':repository')
+    api project(path: ':rudderjsonadapter')
+    api project(path: ':models')
+    api project(path: ':web')
 
 //    api(project(":web"))
 //    implementation(project(":rudderjsonadapter"))

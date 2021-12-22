@@ -26,6 +26,7 @@ apply from : "$rootDir/dependencies.gradle"
 
 dependencies {
 
+
     //json parsers as compileOnly just for annotations
     compileOnly deps.gson
     compileOnly deps.jackson
@@ -41,7 +42,7 @@ dependencies {
     testImplementation deps.moshi.core
     testImplementation deps.moshi.kotlin
     testImplementation deps.moshi.adapter
-//    testImplementation deps.jsonAssert
+    testImplementation deps.jsonAssert
 
     testImplementation(project(':moshirudderadapter'))
     testImplementation(project(':gsonrudderadapter'))
