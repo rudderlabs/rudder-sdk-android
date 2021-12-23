@@ -40,6 +40,7 @@ sealed class Message(
      * @see EventType
      */
     @SerializedName("type")
+    //@Expose
     @param:JsonProperty("type")
     @field:JsonProperty("type")
     @get:JsonProperty("type")
@@ -50,6 +51,7 @@ sealed class Message(
     @SerializedName("messageId")
     @JsonProperty("messageId")
     @Json(name = "messageId")
+    //@Expose
     val messageId: String = String.format(
         Locale.US,
         "%d-%s",
@@ -60,12 +62,14 @@ sealed class Message(
     @SerializedName("context")
     @JsonProperty("context")
     @Json(name = "context")
+    //@Expose
     //convert to json to put any object as value
     protected var context: MessageContext? = null,
 
     @SerializedName("anonymousId")
     @JsonProperty("anonymousId")
     @Json(name = "anonymousId")
+    //@Expose
     val anonymousId: String,
 
     /**
@@ -74,11 +78,13 @@ sealed class Message(
     @SerializedName("userId")
     @JsonProperty("userId")
     @Json(name = "userId")
+    //@Expose
     var userId: String? = null,
 
     @SerializedName("timestamp")
     @JsonProperty("timestamp")
     @Json(name = "timestamp")
+    //@Expose
     val timestamp: String,
 
 
@@ -93,13 +99,16 @@ sealed class Message(
     @SerializedName("destinationProps")
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
+    //@Expose
     private var destinationProps: MessageDestinationProps? = null,
 
     @SerializedName("integrations")
     @JsonProperty("integrations")
     @Json(name = "integrations")
+    //@Expose
     val integrations: MessageIntegrations = HashMap(),
-
+//    @Transient
+    _channel : String?= null
 
 
 
@@ -116,7 +125,8 @@ sealed class Message(
     @Json(name = "channel")
     @JsonProperty("channel")
     @SerializedName("channel")
-    var channel : String = "server"
+    var channel : String = _channel?:"server"
+    get() = field?:"server"
 
     /*get() {
         return field
@@ -299,7 +309,7 @@ class AliasMessage(
     @JsonProperty("previousId")
     @Json(name = "previousId")
     private var previousId: String? = null,
-
+//    _channel : String? = null
     ) : Message(
     EventType.ALIAS,
     messageId,
@@ -307,9 +317,8 @@ class AliasMessage(
     anonymousId,
     userId,
     timestamp,
-//    channel,
     destinationProps,
-    integrations
+    integrations,
 ){
 
     }
