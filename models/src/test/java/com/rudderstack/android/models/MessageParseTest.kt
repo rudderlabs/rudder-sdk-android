@@ -141,6 +141,14 @@ abstract class MessageParseTest {
             },
             JSONCompareMode.LENIENT
         )
+
+        track.channel = "web"
+        JSONAssert.assertEquals(
+            jsonAdapter.writeToJson(track), JSONObject(TRACK_JSON).also {
+                it.put("channel", "web")
+            },
+            JSONCompareMode.LENIENT
+        )
     }
 
     @Test
