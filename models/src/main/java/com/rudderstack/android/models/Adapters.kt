@@ -21,6 +21,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 
 
+/*
 val coreMoshi : Moshi
     get() = Moshi.Builder()
 //        .add(Message.ChannelMoshiAdapter())
@@ -34,6 +35,7 @@ val coreMoshi : Moshi
         )
         .addLast(KotlinJsonAdapterFactory())
         .build()
+*/
 
 //val coreGson = RuntimeTypeAdapterFactory.of(Message::class.java)
 //    .withSubtype(TrackMessage::class.java, Message.EventType.TRACK.value)

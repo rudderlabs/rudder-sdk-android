@@ -14,24 +14,30 @@
 
 package com.rudderstack.android.core
 
-import com.rudderstack.android.core.settings.Settings
-import com.rudderstack.android.core.state.State
+import com.rudderstack.android.core.internal.MessageHandlerDelegate
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
 class Analytics(
-    private val writeKey: String,
-    private val settingsState : State<Settings>,
-    private val analyticsExecutor: Executor = Executors.newCachedThreadPool(),
-    private val networkExecutor : Executor = Executors.newSingleThreadExecutor()
-    ) {
+    writeKey: String,
+    settings: Settings,
+    analyticsExecutor: Executor = Executors.newCachedThreadPool(),
+    networkExecutor: Executor = Executors.newSingleThreadExecutor()
+) : MessageHandler by MessageHandlerDelegate(
+    writeKey,
+    settings,
+    analyticsExecutor,
+    networkExecutor
+) {
 
-    fun track(){}
-    fun identify(){}
-    fun screen(){}
-    fun group(){}
-    fun processEvent(){}
+
+    fun track() {}
+    fun identify() {}
+    fun screen() {}
+    fun group() {}
+    fun processEvent() {}
+
     // This applies a closure(a block of code) to each plugin
-    fun applyClosure(){}
+    fun applyClosure() {}
 
 }

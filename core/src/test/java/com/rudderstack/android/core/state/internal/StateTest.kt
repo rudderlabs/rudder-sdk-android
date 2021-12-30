@@ -14,7 +14,7 @@
 
 package com.rudderstack.android.core.state.internal
 
-import com.rudderstack.android.core.state.State
+import com.rudderstack.android.core.State
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.Test

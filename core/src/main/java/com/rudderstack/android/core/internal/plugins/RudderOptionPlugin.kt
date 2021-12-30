@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 05/11/21, 11:34 PM Last modified: 05/11/21, 11:34 PM
+ * Creator: Debanjan Chatterjee on 23/12/21, 4:07 PM Last modified: 23/12/21, 4:07 PM
  * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,12 +12,14 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.core.settings
+package com.rudderstack.android.core.internal.plugins
 
-class Settings {
-    /**
-     * pluginMap to store the plugin id and if it's enabled
-     */
-    private val _pluginMap = HashMap<String, Boolean>()
+import com.rudderstack.android.core.Plugin
+import com.rudderstack.android.core.RudderOptions
+import com.rudderstack.android.models.Message
 
+internal class RudderOptionPlugin(options: RudderOptions) : Plugin {
+    override fun intercept(chain: Plugin.Chain): Message {
+        TODO("Not yet implemented")
+    }
 }

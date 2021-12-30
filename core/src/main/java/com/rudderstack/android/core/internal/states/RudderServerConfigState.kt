@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 24/11/21, 11:14 PM Last modified: 06/11/21, 12:01 AM
+ * Creator: Debanjan Chatterjee on 29/12/21, 7:48 PM Last modified: 29/12/21, 7:48 PM
  * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,10 +12,10 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.core.state.internal
+package com.rudderstack.android.core.internal.states
 
-import com.rudderstack.android.core.settings.Settings
-import com.rudderstack.android.core.state.State
+import com.rudderstack.android.core.State
+import com.rudderstack.android.models.RudderServerConfig
 
-object SettingsState : State<Settings>() {
+internal class RudderServerConfigState : State<RudderServerConfig>() {
 }

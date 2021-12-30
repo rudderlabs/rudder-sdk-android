@@ -87,15 +87,6 @@ sealed class Message(
     //@Expose
     val timestamp: String,
 
-
-//    @SerializedName("channel")
-//    @JsonProperty("channel")
-//    @get:JsonProperty("channel")
-//    @Json(name = "channel")
-//    @ChannelMitigationMoshi
-//    @Transient
-//    private val _channel: String? = null,
-
     @SerializedName("destinationProps")
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
@@ -111,13 +102,6 @@ sealed class Message(
     _channel : String?= null
 
 
-
-
-
-
-
-//    @Transient
-//    private var customContexts: Map<String, Any>? = null
 ) {
 
     //ugly hack for moshi
@@ -128,10 +112,6 @@ sealed class Message(
     var channel : String = _channel?:"server"
     get() = field?:"server"
 
-    /*get() {
-        return field
-//        return if(_channel.isNullOrEmpty()) "server" else _channel
-    }*/
     @JsonIgnore
     fun getType() = type
     /*@Retention(AnnotationRetention.RUNTIME)
@@ -248,6 +228,7 @@ sealed class Message(
                 userId = traits["id"].toString()
             }
         }*/
+
 
     enum class EventType(val value: String) {
         @SerializedName("Alias")

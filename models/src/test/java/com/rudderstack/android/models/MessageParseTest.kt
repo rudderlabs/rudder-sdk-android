@@ -286,5 +286,5 @@ class MessageParseJacksonTest : MessageParseTest() {
 }
 
 class MessageParseMoshiTest : MessageParseTest() {
-    override var jsonAdapter: JsonAdapter = MoshiAdapter(coreMoshi)
+    override var jsonAdapter: JsonAdapter = MoshiAdapter()
 }

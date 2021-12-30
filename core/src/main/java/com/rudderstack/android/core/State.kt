@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 24/11/21, 11:13 PM Last modified: 03/11/21, 11:29 PM
+ * Creator: Debanjan Chatterjee on 29/12/21, 5:38 PM Last modified: 24/11/21, 11:18 PM
  * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.core.state
+package com.rudderstack.android.core
 
 import java.lang.ref.WeakReference
 
@@ -27,7 +27,7 @@ import java.lang.ref.WeakReference
  *
  * @param initialValue An initial value can be supplied, which defaults to null
  */
-abstract class State<T>(initialValue: T? = null) {
+internal abstract class State<T>(initialValue: T? = null) {
 
 
     private var _value: T? = initialValue
