@@ -26,7 +26,7 @@ class StateTest {
     }
 
     //a dummy State
-    object DummyState : State<String>(INITIAL) {
+    internal object DummyState : State<String>(INITIAL) {
     }
 
     /**

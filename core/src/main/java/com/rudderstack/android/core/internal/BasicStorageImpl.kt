@@ -39,4 +39,8 @@ internal class BasicStorageImpl : Storage {
 
     override val isOptedOut: Boolean
         get() = TODO("Not yet implemented")
+    override val optOutTime: Long
+        get() = TODO("Not yet implemented")
+    override val optInTime: Long
+        get() = TODO("Not yet implemented")
 }

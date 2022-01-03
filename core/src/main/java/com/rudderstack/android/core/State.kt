@@ -82,7 +82,7 @@ internal abstract class State<T>(initialValue: T? = null) {
      *
      * @param T Type of value State holds
      */
-    interface Observer<T> {
+    fun interface Observer<T> {
         fun onStateChange(state: T?)
     }
 }

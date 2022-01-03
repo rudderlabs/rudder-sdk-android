@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.core.internal
 
+import com.rudderstack.android.core.DestinationPlugin
 import com.rudderstack.android.core.Plugin
 import com.rudderstack.android.models.Message
 
@@ -25,7 +26,8 @@ import com.rudderstack.android.models.Message
 internal class CentralPluginChain(
     private val message: Message,
     private val plugins: List<Plugin>,
-    private val index: Int
+    private val index: Int = 0,
+    override val originalMessage: Message = message
 ) : Plugin.Chain {
     private var numberOfCalls = 1
     override fun message(): Message {
@@ -33,23 +35,36 @@ internal class CentralPluginChain(
     }
 
     override fun proceed(message: Message): Message {
-        if(plugins.size <= index)
+        if (plugins.size <= index)
             return message
         // a chain can be proceeded just once
-        check(numberOfCalls ++ < 2){
+        check(numberOfCalls++ < 2) {
             "proceed cannot be called on same chain twice"
         }
         // Call the next interceptor in the chain.
-        val next = copy(index = index + 1, message = message)
         val plugin = plugins[index]
+        val next = if (plugin is DestinationPlugin) {
+            // destination plugins will be getting a copy, so they don't tamper the original
+            val msgCopy = message.copy()
+            val subPlugins = plugin.subPlugins
+            val subPluginsModifiedCopyMsg = if (!subPlugins.isNullOrEmpty()) {
+                val realSubPluginChain = copy(msgCopy, subPlugins, 0)
+                realSubPluginChain.proceed(msgCopy)
+            } else msgCopy // message specifically modified for a destination plugin
 
-       return plugin.intercept(next)
+            //message is the altered message object and unaltered message is sent as original object
+            copy(index = index + 1, message = subPluginsModifiedCopyMsg, originalMessage = message)
+        } else
+            //in case of other plugins, change is propagated
+            copy(index = index + 1, message = message)
+        return plugin.intercept(next)
 
     }
 
     internal fun copy(
         message: Message = this.message,
         plugins: List<Plugin> = this.plugins,
-        index: Int = this.index
-    ) = CentralPluginChain(message, plugins, index)
+        index: Int = this.index,
+        originalMessage: Message = this.originalMessage
+    ) = CentralPluginChain(message, plugins, index, originalMessage)
 }

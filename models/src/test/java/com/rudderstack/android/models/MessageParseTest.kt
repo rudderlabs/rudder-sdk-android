@@ -37,6 +37,8 @@ abstract class MessageParseTest {
                     "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
                     "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
                     "  \"userId\": \"debanjanchatterjee\",\n" +
+                    "  \"context\": null,\n" +
+
                     "  \"integrations\": {\n" +
                     "    \n" +
                     "  },\n" +
@@ -51,6 +53,8 @@ abstract class MessageParseTest {
                 "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
                 "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
                 "  \"userId\": \"debanjanchatterjee\",\n" +
+                "  \"context\": null,\n" +
+
                 "  \"integrations\": {\n" +
                 "    \n" +
                 "  },\n" +
@@ -63,6 +67,8 @@ abstract class MessageParseTest {
                 "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
                 "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
                 "  \"userId\": \"debanjanchatterjee\",\n" +
+                "  \"context\": null,\n" +
+
                 "  \"integrations\": {\n" +
                 "    \n" +
                 "  },\n" +
@@ -78,6 +84,8 @@ abstract class MessageParseTest {
                 "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
                 "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
                 "  \"userId\": \"debanjanchatterjee\",\n" +
+                "  \"context\": null,\n" +
+
                 "  \"integrations\": {\n" +
                 "    \n" +
                 "  },\n" +
@@ -93,6 +101,8 @@ abstract class MessageParseTest {
                 "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
                 "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
                 "  \"userId\": \"debanjanchatterjee\",\n" +
+                "  \"context\": null,\n" +
+
                 "  \"integrations\": {\n" +
                 "    \n" +
                 "  },\n" +
@@ -108,6 +118,8 @@ abstract class MessageParseTest {
                 "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
                 "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
                 "  \"userId\": \"debanjanchatterjee\",\n" +
+                "  \"context\": null,\n" +
+
                 "  \"integrations\": {\n" +
                 "    \"firebase\": true,\n" +
                 "    \"amplitude\": false\n" +

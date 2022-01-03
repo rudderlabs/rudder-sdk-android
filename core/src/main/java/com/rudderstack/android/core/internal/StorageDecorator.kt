@@ -14,7 +14,10 @@
 
 package com.rudderstack.android.core.internal
 
+import com.rudderstack.android.core.Settings
+import com.rudderstack.android.core.State
 import com.rudderstack.android.core.Storage
+import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.Message
 
 /**
@@ -23,23 +26,26 @@ import com.rudderstack.android.models.Message
  *
  * @property storage Platform specific implementation of [Storage]
  */
-internal class StorageDecorator(private val storage : Storage = BasicStorageImpl()) : Storage by storage {
+internal class StorageDecorator(private val storage : Storage = BasicStorageImpl(),
+private val settingsState : State<Settings> = SettingsState) : Storage by storage {
+
+    init {
+        settingsState.subscribe{
+
+        }
+    }
 
     /**
-     * Calls back with data when this time has elapsed after last callback
+     * Listener for listening to data change. Should adhere to [Settings]
      *
-     * @param time in milli seconds
-     */
-    internal fun setMaxInterval(time : Long){}
-
-    /**
-     * Calls back with data if this threshold is reached
      *
-     * @param count data count in storage
      */
-    internal fun setMaxCountThreshold(count :Int){}
-
     internal fun interface Listener{
+        /**
+         * Data changed in database. Either the threshold time or threshold data count has elapsed
+         *
+         * @param messages List of [Message]
+         */
         fun onDataChange(messages: List<Message>)
     }
 }

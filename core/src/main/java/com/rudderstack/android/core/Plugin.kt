@@ -23,7 +23,6 @@ import com.rudderstack.android.models.RudderServerConfig
  *
  */
 fun interface Plugin {
-
     /**
      * Joins ("chains") the plugins for a particular message
      *
@@ -36,6 +35,15 @@ fun interface Plugin {
          */
         fun message(): Message
 
+        /**
+         * Available only for DestinationPlugins
+         * For other plugins, this is same as [message]
+         * Destination chain contains the original message, that is prior to being copied and
+         * intercepted by Sub Plugins.
+         * [Chain.proceed] should be called with this message so as to discard any
+         * alteration to the message by [DestinationPlugin]
+         */
+        val originalMessage : Message
         /**
          * Indicates that processing of this plugin is over and now the message is ready to be taken forward.
          * If changes made to the message object is local to plugin and is not intended to be moved forward,
@@ -56,7 +64,7 @@ fun interface Plugin {
      * interceptors.
      *
      * ```kotlin
-     * val interceptor = Interceptor { chain: Interceptor.Chain ->
+     * val plugin = Plugin { chain: Plugin.Chain ->
      *     chain.proceed(chain.request())
      * }
      * ```
@@ -64,17 +72,7 @@ fun interface Plugin {
         inline operator fun invoke(crossinline block: (chain: Chain) -> Message): Plugin =
             Plugin { block(it) }
     }*/
-    fun intercept(chain: Chain): Message
-
-    /**
-     * To add a sub plugin to a main plugin.
-     * The order will be
-     * internal-plugins -->sub-plugin (main-plugin-1) -> main-plugin-1 -> ... ->cloud plugin->device mode-plugin
-     *
-     * @param plugin A plugin object.
-     * @see PluginInterceptor
-     */
-    fun addSubPlugin(plugin: PluginInterceptor){}
+    fun  intercept(chain: Chain): Message
 
     /**
      * Called when settings is updated
@@ -84,14 +82,5 @@ fun interface Plugin {
     fun updateSettings(settings: Settings){}
 
     fun updateRudderServerConfig(config: RudderServerConfig){}
-    /**
-     * Marker Interface for sub-plugins that can be added to each individual plugin.
-     * This is to discourage developers to intentionally/unintentionally adding main plugins as sub
-     * plugins.
-     *
-     * Sub-plugins are those which intercepts the data prior to it reaches the main plugin code.
-     * These plugins only act on the main-plugin that it is added to.
-     *
-     */
-    interface PluginInterceptor : Plugin
+
 }

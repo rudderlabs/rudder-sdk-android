@@ -32,6 +32,7 @@ typealias IdentifyProperties = Map<String, String>
 typealias MessageIntegrations = MutableMap<String, Any>
 typealias MessageDestinationProps = MutableMap<String, Map<*, *>>
 typealias GroupTraits = Map<String, String>
+
 @JsonIgnoreProperties("type\$models")
 sealed class Message(
 
@@ -64,7 +65,7 @@ sealed class Message(
     @Json(name = "context")
     //@Expose
     //convert to json to put any object as value
-    protected var context: MessageContext? = null,
+    val context: MessageContext? = null,
 
     @SerializedName("anonymousId")
     @JsonProperty("anonymousId")
@@ -99,7 +100,7 @@ sealed class Message(
     //@Expose
     val integrations: MessageIntegrations = HashMap(),
 //    @Transient
-    _channel : String?= null
+    _channel: String? = null
 
 
 ) {
@@ -109,8 +110,8 @@ sealed class Message(
     @Json(name = "channel")
     @JsonProperty("channel")
     @SerializedName("channel")
-    var channel : String = _channel?:"server"
-    get() = field?:"server"
+    var channel: String = _channel ?: "server"
+        get() = field ?: "server"
 
     @JsonIgnore
     fun getType() = type
@@ -229,6 +230,73 @@ sealed class Message(
             }
         }*/
 
+    open fun copy(): Message = when (this) {
+        is AliasMessage -> AliasMessage(
+            messageId,
+            context,
+            anonymousId,
+            userId,
+            timestamp,
+            destinationProps,
+            integrations,
+            previousId
+        )
+        is GroupMessage -> GroupMessage(
+            messageId,
+            context,
+            anonymousId,
+            userId,
+            timestamp,
+            destinationProps,
+            integrations,
+            groupId,
+            traits
+        )
+        is IdentifyMessage -> IdentifyMessage(
+            messageId,
+            context,
+            anonymousId,
+            userId,
+            timestamp,
+            destinationProps,
+            integrations,
+            properties
+        )
+        is PageMessage -> PageMessage(
+            messageId,
+            context,
+            anonymousId,
+            userId,
+            timestamp,
+            destinationProps,
+            integrations,
+            name,
+            properties,
+            category
+        )
+        is ScreenMessage -> ScreenMessage(
+            messageId,
+            context,
+            anonymousId,
+            userId,
+            timestamp,
+            destinationProps,
+            integrations,
+            name,
+            properties
+        )
+        is TrackMessage -> TrackMessage(
+            messageId,
+            context,
+            anonymousId,
+            userId,
+            timestamp,
+            destinationProps,
+            integrations,
+            eventName,
+            properties
+        )
+    }
 
     enum class EventType(val value: String) {
         @SerializedName("Alias")
@@ -289,9 +357,9 @@ class AliasMessage(
     @SerializedName("previousId")
     @JsonProperty("previousId")
     @Json(name = "previousId")
-    private var previousId: String? = null,
+    var previousId: String? = null,
 //    _channel : String? = null
-    ) : Message(
+) : Message(
     EventType.ALIAS,
     messageId,
     context,
@@ -300,9 +368,11 @@ class AliasMessage(
     timestamp,
     destinationProps,
     integrations,
-){
-
+) {
+    override fun copy(): AliasMessage {
+        return super.copy() as AliasMessage
     }
+}
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 class GroupMessage(
@@ -352,7 +422,12 @@ class GroupMessage(
 //    channel,
     destinationProps,
     integrations
-)
+) {
+
+    override fun copy(): GroupMessage {
+        return super.copy() as GroupMessage
+    }
+}
 
 
 class PageMessage(
@@ -415,7 +490,12 @@ class PageMessage(
 //    channel,
     destinationProps,
     integrations
-)
+) {
+
+    override fun copy(): PageMessage {
+        return super.copy() as PageMessage
+    }
+}
 
 
 class ScreenMessage(
@@ -473,7 +553,12 @@ class ScreenMessage(
 //    channel,
     destinationProps,
     integrations
-)
+) {
+
+    override fun copy(): ScreenMessage {
+        return super.copy() as ScreenMessage
+    }
+}
 
 @JsonIgnoreProperties(ignoreUnknown = true, allowSetters = true)
 class TrackMessage(
@@ -529,10 +614,12 @@ class TrackMessage(
 //    channel,
     destinationProps,
     integrations
-){
+) {
 
+    override fun copy(): TrackMessage {
+        return super.copy() as TrackMessage
+    }
 }
-
 
 
 class IdentifyMessage(
@@ -578,7 +665,12 @@ class IdentifyMessage(
 //    channel,
     destinationProps,
     integrations
-)
+) {
+
+    override fun copy(): IdentifyMessage {
+        return super.copy() as IdentifyMessage
+    }
+}
 
 
 
