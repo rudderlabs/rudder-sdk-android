@@ -2,8 +2,10 @@ package com.rudderstack.android.sdk.core.util;
 
 import android.app.Activity;
 import android.app.Application;
+import android.app.UiModeManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.net.ParseException;
 import android.net.Uri;
 import android.os.BadParcelableException;
@@ -26,6 +28,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static android.content.Context.UI_MODE_SERVICE;
 import static android.provider.Settings.Secure.ANDROID_ID;
 import static android.provider.Settings.System.getString;
 
@@ -189,6 +192,19 @@ public class Utils {
             }
         }
         return null;
+    }
+
+    /**
+     * Returns whether the app is running on a TV device.
+     *
+     * @param context Any context.
+     * @return Whether the app is running on a TV device.
+     */
+    public static boolean isTv(Context context) {
+        UiModeManager uiModeManager =
+                (UiModeManager) context.getApplicationContext().getSystemService(UI_MODE_SERVICE);
+        return uiModeManager != null
+                && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
 
     public enum NetworkResponses {
