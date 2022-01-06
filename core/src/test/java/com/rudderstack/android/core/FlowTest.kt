@@ -45,14 +45,14 @@ class FlowTest {
     }
 
     private var enteredPluginNo = 1
-    private val dummyPlugin1  = DestinationPlugin {
+    private val dummyPlugin1  = DestinationPlugin<Any>("dummy1") {
         val msg = it.message()
         assertThat(enteredPluginNo ++, `is`(MAIN_PLUGIN_1_SL_NO))
         //message and original message should be different for destination plugin
         assertThat(msg, not(it.originalMessage))
         it.proceed(it.originalMessage)
     }
-    private val dummyPlugin2 = DestinationPlugin {
+    private val dummyPlugin2 = DestinationPlugin<Any>("dummy2") {
         val msg = it.message()
         assertThat(enteredPluginNo ++, `is`(MAIN_PLUGIN_2_SL_NO))
 

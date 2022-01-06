@@ -16,7 +16,6 @@ package com.rudderstack.android.core
 
 import com.rudderstack.android.models.Message
 
-
 /**
  * Destination Plugins are those plugin extensions that are used to send data to device mode
  * destinations.
@@ -28,10 +27,15 @@ import com.rudderstack.android.models.Message
  * message.
  * This is to safeguard against changes for one destination being propagated to other destination.
  * For propagating changes in Message, use general plugin.
+ * @param T The Destination type associated to this Plugin
  */
-interface DestinationPlugin : Plugin {
-
+interface DestinationPlugin<T> : Plugin {
+    /**
+     * An unique name for Destination plugin
+     */
+    val name : String
     var subPlugins: List<PluginInterceptor>
+    var onReadyCallbacks: List<(T, Boolean) -> Unit>
 //    get() = ArrayList(field)
 
     /**
@@ -46,6 +50,17 @@ interface DestinationPlugin : Plugin {
     fun addSubPlugin(plugin: PluginInterceptor) {
 
         subPlugins = subPlugins + plugin
+
+    }
+
+    /**
+     * Called when the device destination is ready to accept requests
+     *
+     * @param callbackOnReady called with the destination specific class object and
+     * true or false depending on initialization success or failure
+     */
+    fun addIsReadyCallback(callbackOnReady : (T, isUsable: Boolean) -> Unit){
+        onReadyCallbacks = onReadyCallbacks + callbackOnReady
     }
 
     companion object {
@@ -55,18 +70,22 @@ interface DestinationPlugin : Plugin {
          * interceptors.
          *
          * ```kotlin
-         * val plugin = DestinationPlugin { chain: Plugin.Chain ->
+         * val plugin = DestinationPlugin("name") { chain: Plugin.Chain ->
          *     chain.proceed(chain.request())
          * }
          * ```
          */
-        inline operator fun invoke(crossinline block: (chain: Plugin.Chain) -> Message): DestinationPlugin =
-            object : DestinationPlugin {
-                override var subPlugins: List<PluginInterceptor> = ArrayList()
+        inline operator fun<T> invoke(name: String,  crossinline block: (chain: Plugin.Chain) -> Message): DestinationPlugin<T> =
+            object : DestinationPlugin<T> {
+                override val name: String
+                    get() = name
+                override var subPlugins: List<PluginInterceptor> = listOf()
 
                 override fun intercept(chain: Plugin.Chain): Message {
                     return block(chain)
                 }
+
+                override var onReadyCallbacks: List<(T, Boolean) -> Unit> = listOf()
             }
     }
 

@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 28/12/21, 8:16 PM Last modified: 28/12/21, 8:16 PM
- * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 05/01/22, 8:10 PM Last modified: 05/01/22, 8:10 PM
+ * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -18,10 +18,11 @@ import com.rudderstack.android.core.Plugin
 import com.rudderstack.android.models.Message
 
 /**
- * Adds anonymous id to the message.
- *
+ * Will be executed just before the device destination plugins.
+ * Will store messages till all factories are ready
+ * After that reiterate the messages to the plugins
  */
-internal class AnonymousIdPlugin : Plugin{
+internal class WakeupActionPlugin : Plugin {
     override fun intercept(chain: Plugin.Chain): Message {
         TODO("Not yet implemented")
     }

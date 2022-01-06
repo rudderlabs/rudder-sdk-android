@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 28/12/21, 8:16 PM Last modified: 28/12/21, 8:16 PM
- * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 05/01/22, 8:08 PM Last modified: 05/01/22, 8:08 PM
+ * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -15,14 +15,21 @@
 package com.rudderstack.android.core.internal.plugins
 
 import com.rudderstack.android.core.Plugin
+import com.rudderstack.android.core.Settings
+import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.Message
 
 /**
- * Adds anonymous id to the message.
+ * If opted out, msg won't go forward, will return from here.
  *
  */
-internal class AnonymousIdPlugin : Plugin{
+internal class GDPRPlugin : Plugin {
     override fun intercept(chain: Plugin.Chain): Message {
-        TODO("Not yet implemented")
+//        return
+    //        if(opted out)
+        // chain.message
+        //else
+       return chain.proceed(chain.message())
+
     }
 }

@@ -14,5 +14,15 @@
 
 package com.rudderstack.android.core.internal.plugins
 
-class CloudPlugin {
+import com.rudderstack.android.core.Plugin
+import com.rudderstack.android.models.Message
+
+/**
+ * Adds [Message] to repository for further processing
+ *
+ */
+class CloudPlugin : Plugin {
+    override fun intercept(chain: Plugin.Chain): Message {
+        TODO("Not yet implemented")
+    }
 }

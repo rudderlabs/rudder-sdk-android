@@ -14,19 +14,29 @@
 
 package com.rudderstack.android.core.internal
 
-import com.rudderstack.android.core.MessageHandler
-import com.rudderstack.android.core.Plugin
+import com.rudderstack.android.core.*
+import com.rudderstack.android.core.internal.plugins.*
+import com.rudderstack.android.core.internal.plugins.AnonymousIdPlugin
+import com.rudderstack.android.core.internal.plugins.GDPRPlugin
+import com.rudderstack.android.core.internal.plugins.RudderOptionPlugin
+import com.rudderstack.android.core.internal.plugins.VersionPlugin
+import com.rudderstack.android.core.internal.plugins.WakeupActionPlugin
 import com.rudderstack.android.core.internal.states.SettingsState
-import com.rudderstack.android.core.Settings
+import com.rudderstack.android.models.Message
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
-internal class MessageHandlerDelegate(
+internal class AnalyticsDelegate(
     private val writeKey: String,
     settings : Settings,
     private val analyticsExecutor: Executor = Executors.newCachedThreadPool(),
     private val networkExecutor : Executor = Executors.newSingleThreadExecutor()
-) : MessageHandler {
+) : Controller {
+    private val customPlugins : MutableList<Plugin> = ArrayList()
+    private val destinationPlugins : MutableList<DestinationPlugin<*>> = ArrayList()
+    init {
+        SettingsState.update(settings)
+    }
     override fun applySettings(settings: Settings) {
         SettingsState.update(settings)
     }
@@ -52,5 +62,28 @@ internal class MessageHandlerDelegate(
 
     override fun putDeviceToken(token: String) {
         TODO("Not yet implemented")
+    }
+
+    override fun addPlugin(vararg plugin: Plugin) {
+        if (plugin.isEmpty()) return
+        plugin.forEach {
+            if(it is DestinationPlugin<*>) destinationPlugins.add(it)
+            else
+                customPlugins.add(it)
+        }
+    }
+
+    override fun processMessage(message: Message, options: RudderOptions?, lifecycleController: LifecycleController?) {
+        val operatePlugins = listOf(GDPRPlugin(),
+            RudderOptionPlugin(options?: SettingsState.value?.options?: return),
+        VersionPlugin(),
+        AnonymousIdPlugin()
+        ) + customPlugins + WakeupActionPlugin()
+
+        val lcc = lifecycleController?: message.let { msg ->
+
+            LifecycleControllerImpl(msg, operatePlugins )
+        }
+
     }
 }

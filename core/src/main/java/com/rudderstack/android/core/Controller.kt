@@ -14,12 +14,14 @@
 
 package com.rudderstack.android.core
 
+import com.rudderstack.android.models.Message
+
 /**
  * Handles all messages, assorting the plugins, keeping track of cache, to name a few of it's
  * duties
  *
  */
-interface MessageHandler {
+interface Controller {
     /**
      * Apply changed settings to plugins
      *
@@ -69,4 +71,22 @@ interface MessageHandler {
      * @param token device token for FCM
      */
     fun putDeviceToken(token : String)
+
+    /**
+     * Custom plugins to be added.
+     * These can be used to log/transform messages
+     *
+     * @param plugin A [Plugin] object
+     */
+    fun addPlugin(vararg plugin: Plugin)
+    /**
+     * Submit a [Message] for processing.
+     * The message is taken up by the controller and it passes through the set of timelines defined.
+     * Refrain from using this unless you are sure about it. Use other utility methods for
+     * [Analytics.track], [Analytics.screen], [Analytics.identify], [Analytics.alias], [Analytics.group]
+     * @param message A [Message] object up for submission
+     * @param options Individual [RudderOptions] for this message. Only applicable for this message
+     * @param lifecycleController LifeCycleController related to this message, null for default implementation
+     */
+    fun processMessage(message: Message, options: RudderOptions?, lifecycleController: LifecycleController? = null)
 }

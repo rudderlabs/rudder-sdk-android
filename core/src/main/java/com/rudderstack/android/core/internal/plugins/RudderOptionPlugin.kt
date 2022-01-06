@@ -18,8 +18,17 @@ import com.rudderstack.android.core.Plugin
 import com.rudderstack.android.core.RudderOptions
 import com.rudderstack.android.models.Message
 
-internal class RudderOptionPlugin(options: RudderOptions) : Plugin {
+/**
+ * Alters flow and adds values to [Message] depending on options.
+ * Manipulates the list of destination plugins based on options
+ *
+ *
+ * @param options
+ */
+internal class RudderOptionPlugin(private val options: RudderOptions) : Plugin {
     override fun intercept(chain: Plugin.Chain): Message {
-        TODO("Not yet implemented")
+        val msg = chain.message()
+//        msg.integrations
+        return chain.proceed(msg)
     }
 }

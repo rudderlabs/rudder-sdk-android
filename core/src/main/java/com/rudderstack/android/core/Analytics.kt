@@ -14,7 +14,8 @@
 
 package com.rudderstack.android.core
 
-import com.rudderstack.android.core.internal.MessageHandlerDelegate
+import com.rudderstack.android.core.internal.AnalyticsDelegate
+import com.rudderstack.android.models.*
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
@@ -23,7 +24,7 @@ class Analytics(
     settings: Settings,
     analyticsExecutor: Executor = Executors.newCachedThreadPool(),
     networkExecutor: Executor = Executors.newSingleThreadExecutor()
-) : MessageHandler by MessageHandlerDelegate(
+) : Controller by AnalyticsDelegate(
     writeKey,
     settings,
     analyticsExecutor,
@@ -31,13 +32,23 @@ class Analytics(
 ) {
 
 
-    fun track() {}
-    fun identify() {}
-    fun screen() {}
-    fun group() {}
-    fun processEvent() {}
+    fun track(message: TrackMessage, options: RudderOptions? = null) {
 
-    // This applies a closure(a block of code) to each plugin
-    fun applyClosure() {}
+    }
+    fun track(eventName: String, properties : Map<String, Any>, options: RudderOptions? = null) {}
+    fun screen(message: ScreenMessage, options: RudderOptions? = null) {}
+    fun screen(screenName: String, category: String, properties: Map<String, Any>, options: RudderOptions? = null) {}
+    fun identify(message: IdentifyMessage, options: RudderOptions? = null) {
+    }
+    fun identify(userID: String, traits: Map<String, Any>? = null, options: RudderOptions? = null) {
+    }
+    fun alias(message: AliasMessage, options: RudderOptions? = null) {}
+    fun alias(newId: String, options: RudderOptions? = null) {}
+
+    fun group(message: GroupMessage, options: RudderOptions? = null) {}
+    fun group(groupID: String, traits: Map<String, Any>? = null, options: RudderOptions? = null) {}
+    private fun processMessage(message: Message) {
+
+    }
 
 }

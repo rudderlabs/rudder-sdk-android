@@ -30,9 +30,9 @@ interface LifecycleController {
     val message : Message
 
     /**
-     * Separate options can be added for each message
-     */
-    val options : RudderOptions
+     * Separate options can be added for each message, null if there are no specific options
+     *//*
+    val options : RudderOptions?*/
 
     /**
      * Associated list of plugins

@@ -38,8 +38,9 @@ data class Settings(
     val flushQueueSize: Int = FLUSH_QUEUE_SIZE,
     val maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
     val controlPlaneUrl: String = CONTROL_PLANE_URL,
-    val trackLifecycleEvents: Boolean = false,
-    val recordScreenViews: Boolean = false,
+    //available in android only
+//    val trackLifecycleEvents: Boolean = false,
+//    val recordScreenViews: Boolean = false,
 ) {
 
     companion object {
@@ -61,6 +62,5 @@ data class Settings(
         private const val CONTROL_PLANE_URL = "https://api.rudderlabs.com"
 
     }
-
 
 }

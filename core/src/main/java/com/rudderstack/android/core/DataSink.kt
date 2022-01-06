@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 28/12/21, 8:16 PM Last modified: 28/12/21, 8:16 PM
- * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 06/01/22, 11:07 AM Last modified: 06/01/22, 11:07 AM
+ * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,17 +12,12 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.core.internal.plugins
-
-import com.rudderstack.android.core.Plugin
-import com.rudderstack.android.models.Message
+package com.rudderstack.android.core
 
 /**
- * Adds anonymous id to the message.
+ * Class to handle data insertion, listening to [Storage] and calling REST APIs to sync the
+ * messages to cloud.
  *
  */
-internal class AnonymousIdPlugin : Plugin{
-    override fun intercept(chain: Plugin.Chain): Message {
-        TODO("Not yet implemented")
-    }
+class DataSink {
 }

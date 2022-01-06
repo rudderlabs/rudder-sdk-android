@@ -28,7 +28,6 @@ import com.rudderstack.android.models.Message
  */
 internal class LifecycleControllerImpl(
     override val message: Message,
-    override val options: RudderOptions,
     override val plugins: List<Plugin>
 ) : LifecycleController {
     override fun process() {
