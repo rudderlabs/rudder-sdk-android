@@ -15,14 +15,18 @@
 package com.rudderstack.android.core.internal.plugins
 
 import com.rudderstack.android.core.Plugin
+import com.rudderstack.android.core.Storage
 import com.rudderstack.android.models.Message
 
 /**
- * Adds [Message] to repository for further processing
+ * Adds [Message] to repository for further processing.
+ * Used for cloud mode destinations.
  *
  */
-class CloudPlugin : Plugin {
+internal class StoragePlugin(private val storage: Storage ) : Plugin {
     override fun intercept(chain: Plugin.Chain): Message {
-        TODO("Not yet implemented")
+        val message = chain.message()
+        storage.saveMessage(message.copy())
+        return chain.proceed(message)
     }
 }

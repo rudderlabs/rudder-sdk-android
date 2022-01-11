@@ -29,8 +29,9 @@ package com.rudderstack.android.core
  * @property maxFlushInterval Max time (in millis) to wait for a flush, even if the queue size hasn't
  * passed the threshold
  * @property controlPlaneUrl Config plane url to get the write key
- * @property trackLifecycleEvents Will track activity lifecycle if set to true, else false
- * @property recordScreenViews Will record screen views if true.
+// * @property trackLifecycleEvents Will track activity lifecycle if set to true, else false
+// * @property recordScreenViews Will record screen views if true.
+ * @property isOptOut GDPR implementation. Data won't be sent if GDPR is true
  */
 data class Settings(
     val options: RudderOptions = RudderOptions.default(),
@@ -38,6 +39,7 @@ data class Settings(
     val flushQueueSize: Int = FLUSH_QUEUE_SIZE,
     val maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
     val controlPlaneUrl: String = CONTROL_PLANE_URL,
+    val isOptOut : Boolean = false
     //available in android only
 //    val trackLifecycleEvents: Boolean = false,
 //    val recordScreenViews: Boolean = false,

@@ -19,6 +19,10 @@ import com.rudderstack.android.models.Message
 /**
  * Requires specific implementation of how storage should be handled.
  * Can be customised according to requirements.
+ *
+ * Since we intend to sync the database at regular intervals, hence data volumes handled by storage
+ * is pretty low.
+ * That is the reason are avoiding any selection arguments.
  */
 interface Storage {
     /**
@@ -34,16 +38,27 @@ interface Storage {
      * @param messages [Message] objects ready to be removed from storage
      */
     fun deleteMessages(messages: List<Message>)
-    //get messages not yet done
 
-//    fun getMessages() : List<Message>
+    /**
+     * Add a data change listener that calls back when any changes to data is made.
+     *
+     * @param listener callback for the changed data
+     */
+    fun addDataChangeListener(listener : (data : List<Message>) -> Unit)
 
+    /**
+     * Asynchronous method to get the entire data present
+     *
+     * @param callback returns the list of [Message]
+     */
+    fun getData(callback : (List<Message>) -> Unit)
     /**
      * Platform specific implementation of caching context. This can be done locally too.
      *
      * @param context A map representing the context. Refer to [Message]
      */
     fun cacheContext(context : Map<String, String>)
+
 
     /**
      * Retrieve the cached context

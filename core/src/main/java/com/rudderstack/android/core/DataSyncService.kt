@@ -19,5 +19,5 @@ package com.rudderstack.android.core
  * messages to cloud.
  *
  */
-class DataSink {
+class DataSyncService {
 }

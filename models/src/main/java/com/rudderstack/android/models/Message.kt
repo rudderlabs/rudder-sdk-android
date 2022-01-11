@@ -17,7 +17,6 @@ package com.rudderstack.android.models
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.*
 import java.util.*
@@ -329,6 +328,30 @@ sealed class Message(
         @Json(name = "Identify")
         IDENTIFY("Identify")
     }
+
+    override fun toString(): String {
+        return "type = $type, " +
+                "messageId = $messageId, " +
+                "context = $context, " +
+                "anonymousId = $anonymousId, " +
+                "userId = $userId, " +
+                "timestamp = $timestamp, " +
+                "destinationProps = $destinationProps, " +
+                "integrations = $integrations, " +
+                "channel = $channel"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is Message && other.type === this.type &&
+                other.messageId == this.messageId &&
+                other.context == this.context &&
+                other.anonymousId == this.anonymousId &&
+                other.userId == this.userId &&
+                other.timestamp == this.timestamp &&
+                other.destinationProps == this.destinationProps &&
+                other.integrations == this.integrations &&
+                other.channel == this.channel
+    }
 }
 
 class AliasMessage(
@@ -371,6 +394,20 @@ class AliasMessage(
 ) {
     override fun copy(): AliasMessage {
         return super.copy() as AliasMessage
+    }
+    override fun toString(): String {
+        return "${super.toString()}, " +
+                "previousId = $previousId"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return super.equals(other) &&
+                other is AliasMessage &&
+                other.previousId == previousId
+    }
+
+    override fun hashCode(): Int {
+        return super.hashCode() * (previousId?.hashCode() ?: 1)
     }
 }
 
@@ -427,6 +464,25 @@ class GroupMessage(
     override fun copy(): GroupMessage {
         return super.copy() as GroupMessage
     }
+    override fun toString(): String {
+        return "${super.toString()}, " +
+                "groupId = $groupId, " +
+                "traits = $traits"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return super.equals(other) &&
+                other is GroupMessage &&
+                other.groupId == groupId &&
+                other.traits == traits
+    }
+
+    override fun hashCode(): Int {
+        var result = groupId?.hashCode() ?: 0
+        result = 31 * result + (traits?.hashCode() ?: 0)
+        return result
+    }
+
 }
 
 
@@ -495,6 +551,28 @@ class PageMessage(
     override fun copy(): PageMessage {
         return super.copy() as PageMessage
     }
+
+    override fun toString(): String {
+        return "${super.toString()}, " +
+                "name = $name, " +
+                "properties = $properties, " +
+                "category = $category"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return super.equals(other) &&
+                other is PageMessage &&
+                other.name == name &&
+                other.properties == properties &&
+                other.category == category
+    }
+
+    override fun hashCode(): Int {
+        var result = name?.hashCode() ?: 0
+        result = 31 * result + (properties?.hashCode() ?: 0)
+        result = 31 * result + (category?.hashCode() ?: 0)
+        return result
+    }
 }
 
 
@@ -558,6 +636,18 @@ class ScreenMessage(
     override fun copy(): ScreenMessage {
         return super.copy() as ScreenMessage
     }
+    override fun toString(): String {
+        return "${super.toString()}, " +
+                "name = $name, " +
+                "properties = $properties"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return super.equals(other) &&
+                other is ScreenMessage &&
+                other.name == name &&
+                other.properties == properties
+    }
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true, allowSetters = true)
@@ -619,6 +709,25 @@ class TrackMessage(
     override fun copy(): TrackMessage {
         return super.copy() as TrackMessage
     }
+
+    override fun toString(): String {
+        return "${super.toString()}, " +
+                "eventName = $eventName, " +
+                "properties = $properties"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return super.equals(other) &&
+                other is TrackMessage &&
+                other.eventName == eventName &&
+                other.properties == properties
+    }
+
+    override fun hashCode(): Int {
+        var result =  (eventName?.hashCode() ?: 0)
+        result = 31 * result + (properties?.hashCode() ?: 0)
+        return result
+    }
 }
 
 
@@ -669,6 +778,21 @@ class IdentifyMessage(
 
     override fun copy(): IdentifyMessage {
         return super.copy() as IdentifyMessage
+    }
+
+    override fun toString(): String {
+        return "${super.toString()}, " +
+                "properties = $properties"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return super.equals(other) &&
+                other is IdentifyMessage &&
+                other.properties == properties
+    }
+
+    override fun hashCode(): Int {
+        return properties?.hashCode() ?: 0
     }
 }
 

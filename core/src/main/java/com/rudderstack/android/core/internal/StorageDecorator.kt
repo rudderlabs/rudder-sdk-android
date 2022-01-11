@@ -19,6 +19,7 @@ import com.rudderstack.android.core.State
 import com.rudderstack.android.core.Storage
 import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.Message
+import java.util.*
 
 /**
  * Storage Decorator that invokes the listener based on the threshold set, with respect to time or
@@ -26,12 +27,37 @@ import com.rudderstack.android.models.Message
  *
  * @property storage Platform specific implementation of [Storage]
  */
-internal class StorageDecorator(private val storage : Storage = BasicStorageImpl(),
-private val settingsState : State<Settings> = SettingsState) : Storage by storage {
-
+internal class StorageDecorator(
+    private val storage: Storage,
+    private val settingsState: State<Settings> = SettingsState, private val dataChangeListener: Listener? = null
+) : Storage by storage {
+    private val thresholdCountDownTimer = Timer("data_listen")
+    private var periodicTaskScheduler: TimerTask? = null
     init {
-        settingsState.subscribe{
+        settingsState.subscribe {
+            rescheduleTimer(it)
+        }
+        addDataChangeListener {
+            if (it.isNotEmpty() && settingsState.value?.flushQueueSize?:0 <= it.size){
+                dataChangeListener?.onDataChange(it)
+                rescheduleTimer(settingsState.value)
+            }
+        }
+    }
 
+    private fun rescheduleTimer(settings: Settings?){
+        periodicTaskScheduler?.cancel()
+        thresholdCountDownTimer.purge()
+        if (settings != null) {
+            periodicTaskScheduler = object : TimerTask() {
+                override fun run() {
+                    getData { data ->
+                        if (data.isNotEmpty())
+                            dataChangeListener?.onDataChange(data)
+                    }
+                }
+            }
+            thresholdCountDownTimer.schedule(periodicTaskScheduler, settings.maxFlushInterval, settings.maxFlushInterval)
         }
     }
 
@@ -40,7 +66,7 @@ private val settingsState : State<Settings> = SettingsState) : Storage by storag
      *
      *
      */
-    internal fun interface Listener{
+    internal fun interface Listener {
         /**
          * Data changed in database. Either the threshold time or threshold data count has elapsed
          *

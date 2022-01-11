@@ -36,4 +36,5 @@ dependencies {
     testImplementation 'junit:junit:4.+'
     testImplementation deps.hamcrest
     testImplementation deps.mockito
+    testImplementation deps.awaitility
 }

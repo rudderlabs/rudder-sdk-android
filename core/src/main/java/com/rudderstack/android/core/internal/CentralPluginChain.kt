@@ -43,7 +43,7 @@ internal class CentralPluginChain(
         }
         // Call the next interceptor in the chain.
         val plugin = plugins[index]
-        val next = if (plugin is DestinationPlugin) {
+        val next = if (plugin is DestinationPlugin<*>) {
             // destination plugins will be getting a copy, so they don't tamper the original
             val msgCopy = message.copy()
             val subPlugins = plugin.subPlugins
