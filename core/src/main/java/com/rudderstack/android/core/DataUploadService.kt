@@ -14,10 +14,18 @@
 
 package com.rudderstack.android.core
 
+import com.rudderstack.android.models.Message
+
 /**
- * Class to handle data insertion, listening to [Storage] and calling REST APIs to sync the
- * messages to cloud.
+ * Class to handle data upload to server
  *
  */
-class DataSyncService {
+interface DataUploadService {
+    /**
+     * Uploads data to cloud
+     *
+     * @param data The list of messages to upload
+     * @param callback Callback providing either success or failure status of upload
+     */
+    fun upload(data: List<Message>, callback: (success: Boolean) -> Unit)
 }

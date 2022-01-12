@@ -35,7 +35,7 @@ class JacksonAdapter : JsonAdapter {
     }
 
     override fun <T> readJson(json: String, typeAdapter: RudderTypeAdapter<T>): T? {
-        val type = typeAdapter.type?:return null
+        val type = typeAdapter.type ?: return null
 
         val typeRef: TypeReference<T> =
             object : TypeReference<T>() {
@@ -61,6 +61,16 @@ class JacksonAdapter : JsonAdapter {
     }
 
     override fun <T : Any> readJson(json: String, resultClass: Class<T>): T {
-        return objectMapper.readValue(json, resultClass)
+        //in case T is primitive, json needs to be returned as primitive
+        return when (resultClass) {
+            String::class.java, CharSequence::class.java ->
+                json as T
+            Int::class.java -> json.toInt() as T
+            Double::class.java -> json.toDouble() as T
+            Float::class.java -> json.toFloat() as T
+            Long::class.java -> json.toLong() as T
+            else -> objectMapper.readValue(json, resultClass)
+
+        }
     }
 }

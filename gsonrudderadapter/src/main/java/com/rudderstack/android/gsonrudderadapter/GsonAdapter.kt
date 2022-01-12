@@ -49,6 +49,7 @@ class GsonAdapter : JsonAdapter {
     }
 
     override fun <T : Any> readJson(json: String, resultClass: Class<T>): T {
+        //gson is comfortable in parsing just strings/primitives
         return gson.fromJson(json, resultClass)
     }
 }

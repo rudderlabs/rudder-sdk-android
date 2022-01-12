@@ -33,16 +33,18 @@ internal class StorageDecorator(
 ) : Storage by storage {
     private val thresholdCountDownTimer = Timer("data_listen")
     private var periodicTaskScheduler: TimerTask? = null
+
+    private val onDataChange = { data : List<Message> ->
+        if (data.isNotEmpty() && settingsState.value?.flushQueueSize?:0 <= data.size){
+            dataChangeListener?.onDataChange(data)
+            rescheduleTimer(settingsState.value)
+        }
+    }
     init {
         settingsState.subscribe {
             rescheduleTimer(it)
         }
-        addDataChangeListener {
-            if (it.isNotEmpty() && settingsState.value?.flushQueueSize?:0 <= it.size){
-                dataChangeListener?.onDataChange(it)
-                rescheduleTimer(settingsState.value)
-            }
-        }
+        addDataChangeListener (onDataChange)
     }
 
     private fun rescheduleTimer(settings: Settings?){
@@ -59,6 +61,12 @@ internal class StorageDecorator(
             }
             thresholdCountDownTimer.schedule(periodicTaskScheduler, settings.maxFlushInterval, settings.maxFlushInterval)
         }
+    }
+
+    internal fun shutdown(){
+        removeDataChangeListener(onDataChange)
+        thresholdCountDownTimer.cancel()
+
     }
 
     /**

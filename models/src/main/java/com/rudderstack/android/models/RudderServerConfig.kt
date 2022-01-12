@@ -23,7 +23,7 @@ import java.io.Serializable
 import java.util.*
 
 /**
- *
+ * Configuration of the server
  * @property source
  */
 data class RudderServerConfig(
@@ -38,6 +38,15 @@ data class RudderServerConfig(
     val source: RudderServerConfigSource? = null
 ) : Serializable {
 
+    /**
+     * Configuration of source
+     *
+     * @property sourceId
+     * @property sourceName
+     * @property isSourceEnabled
+     * @property updatedAt
+     * @property destinations
+     */
     data class RudderServerConfigSource(
         @Json(name = "id")
         @JsonProperty("id")

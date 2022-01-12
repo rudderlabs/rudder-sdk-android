@@ -47,6 +47,10 @@ internal class QueueBasedStorageImpl(
         dataChangeListeners = dataChangeListeners + listener
     }
 
+    override fun removeDataChangeListener(listener: (data: List<Message>) -> Unit) {
+        dataChangeListeners = dataChangeListeners - listener
+    }
+
     override fun getData(callback: (List<Message>) -> Unit) {
         callback.invoke(queue.toList())
     }

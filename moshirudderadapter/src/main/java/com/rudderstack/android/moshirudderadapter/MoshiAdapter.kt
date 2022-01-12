@@ -54,9 +54,22 @@ class MoshiAdapter(private val moshi : Moshi = Moshi.Builder()
 
 
     override fun <T : Any> readJson(json: String, resultClass: Class<T>): T? {
-        val adapter: com.squareup.moshi.JsonAdapter<T> =
-            moshi.adapter<T>(resultClass) as com.squareup.moshi.JsonAdapter<T>
-        return adapter.fromJson(json)
+        //in case T is primitive, json needs to be returned as primitive
+        return when (resultClass) {
+            String::class.java, CharSequence::class.java ->
+                json as T
+            Int::class.java -> json.toInt() as T
+            Double::class.java -> json.toDouble() as T
+            Float::class.java -> json.toFloat() as T
+            Long::class.java -> json.toLong() as T
+            else -> {
+                val adapter: com.squareup.moshi.JsonAdapter<T> =
+                    moshi.adapter<T>(resultClass) as com.squareup.moshi.JsonAdapter<T>
+                return adapter.fromJson(json)
+            }
+
+        }
+
     }
 
     private fun <T : Any> createMoshiAdapter(

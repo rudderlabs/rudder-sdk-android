@@ -34,16 +34,19 @@ package com.rudderstack.android.core
  * @property isOptOut GDPR implementation. Data won't be sent if GDPR is true
  */
 data class Settings(
+    val anonymousId : String? = null,
     val options: RudderOptions = RudderOptions.default(),
     val dataPlaneUrl: String = DATA_PLANE_URL,
     val flushQueueSize: Int = FLUSH_QUEUE_SIZE,
     val maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
-    val controlPlaneUrl: String = CONTROL_PLANE_URL,
+    private val _controlPlaneUrl: String = CONTROL_PLANE_URL,
     val isOptOut : Boolean = false
     //available in android only
 //    val trackLifecycleEvents: Boolean = false,
 //    val recordScreenViews: Boolean = false,
 ) {
+    val controlPlaneUrl
+    get() = _controlPlaneUrl.formattedUrl
 
     companion object {
         /**
@@ -61,8 +64,15 @@ data class Settings(
         private const val MAX_FLUSH_INTERVAL = 10 * 1000L //10 seconds
 
         // config-plane url to get the config for the writeKey
-        private const val CONTROL_PLANE_URL = "https://api.rudderlabs.com"
+        private const val CONTROL_PLANE_URL = "https://api.rudderlabs.com/"
 
     }
+    /**
+     * Extension function for URL.
+     * In case URL doesn't end with '/'
+     * this will append it.
+     */
+    private val String.formattedUrl
+        get() = if (this.endsWith('/')) this else "$this/"
 
 }

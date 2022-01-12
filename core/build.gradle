@@ -37,4 +37,8 @@ dependencies {
     testImplementation deps.hamcrest
     testImplementation deps.mockito
     testImplementation deps.awaitility
+
+    testImplementation(project(':moshirudderadapter'))
+    testImplementation(project(':gsonrudderadapter'))
+    testImplementation(project(':jacksonrudderadapter'))
 }

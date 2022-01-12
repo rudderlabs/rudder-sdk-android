@@ -46,6 +46,7 @@ interface Storage {
      */
     fun addDataChangeListener(listener : (data : List<Message>) -> Unit)
 
+    fun removeDataChangeListener(listener : (data : List<Message>) -> Unit)
     /**
      * Asynchronous method to get the entire data present
      *
