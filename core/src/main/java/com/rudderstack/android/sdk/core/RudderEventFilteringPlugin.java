@@ -2,6 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -10,17 +11,20 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A utility class for Event Filtering
+ */
 class RudderEventFilteringPlugin {
 
     private static final String DISABLE = "disable";
-    private static final String WHITELIST = "whitelist";
-    private static final String BLACKLIST = "blacklist";
+    private static final String WHITELISTED_EVENTS = "whitelistedEvents";
+    private static final String BLACKLISTED_EVENTS = "blacklistedEvents";
     private static final String EVENT_FILTERING_OPTION = "eventFilteringOption";
     private static final String EVENT_NAME = "eventName";
 
     private Map<String, String> eventFilteringOption = new HashMap<>();
-    private Map<String, ArrayList<String>> whitelist = new HashMap<>();
-    private Map<String, ArrayList<String>> blacklist = new HashMap<>();
+    private Map<String, ArrayList<String>> whitelistEvents = new HashMap<>();
+    private Map<String, ArrayList<String>> blacklistEvents = new HashMap<>();
 
     RudderEventFilteringPlugin(List<RudderServerDestination> destinations) {
         if (!destinations.isEmpty()) {
@@ -33,18 +37,16 @@ class RudderEventFilteringPlugin {
                 if (!eventFilteringStatus.equals(DISABLE) && !eventFilteringOption.containsKey(destinationName)) {
                     eventFilteringOption.put(destinationName, eventFilteringStatus);
                     // If it is whiteListed events
-                    if (eventFilteringStatus.equals(WHITELIST) &&
-                            destinationConfig.containsKey(WHITELIST) ) {
+                    if (eventFilteringStatus.equals(WHITELISTED_EVENTS) && destinationConfig.containsKey(WHITELISTED_EVENTS) ) {
                         setEvent(destinationName,
-                                (ArrayList<LinkedHashMap<String, String>>) destinationConfig.get(WHITELIST),
-                                whitelist);
+                                (ArrayList<LinkedHashMap<String, String>>) destinationConfig.get(WHITELISTED_EVENTS),
+                                whitelistEvents);
                     }
                     // If it is blackListed events
-                    else if (eventFilteringStatus.equals(BLACKLIST) &&
-                            destinationConfig.containsKey(BLACKLIST)) {
+                    else if (eventFilteringStatus.equals(BLACKLISTED_EVENTS) && destinationConfig.containsKey(BLACKLISTED_EVENTS)) {
                       setEvent(destinationName,
-                              (ArrayList<LinkedHashMap<String, String>>) destinationConfig.get(BLACKLIST),
-                              blacklist);
+                              (ArrayList<LinkedHashMap<String, String>>) destinationConfig.get(BLACKLISTED_EVENTS),
+                              blacklistEvents);
                     }
                 }
             }
@@ -63,34 +65,89 @@ class RudderEventFilteringPlugin {
                           Map<String, ArrayList<String>> whiteOrBlackListEvent) {
         whiteOrBlackListEvent.put(destinationName, new ArrayList<String>());
         for (LinkedHashMap<String, String> whiteListedEvent : configEventsObject) {
-            String eventName = String.valueOf(whiteListedEvent.get(EVENT_NAME));
+            String eventName = String.valueOf(whiteListedEvent.get(EVENT_NAME)).trim();
             if (!TextUtils.isEmpty(eventName)) {
                 whiteOrBlackListEvent.get(destinationName).add(eventName);
             }
         }
     }
 
-    boolean isEventAllowed(@Nullable String destinationName, @Nullable RudderMessage message) {
-        if (message != null && !TextUtils.isEmpty(message.getType()) && message.getType().equals(MessageType.TRACK))
+    /**
+     * It return true if event is either whitelisted or not blocked else it return false.
+     *
+     * @param destinationName A {@code String} value which refers to the destination which event belongs to.
+     * @param message A {@code RudderMessage} object.
+     * @return A {@code boolean} value true if event is allowed to execute else false if it is blocked.
+     */
+    boolean isEventAllowed(@NonNull String destinationName, @Nullable RudderMessage message) {
+        if (message != null
+                && !TextUtils.isEmpty(message.getType())
+                && message.getType().equals(MessageType.TRACK)
+                && !TextUtils.isEmpty(message.getEventName()))
             // If destination is configured to whitelist or blacklist then proceed
-            if (eventFilteringOption.containsKey(destinationName)) {
-                if (eventFilteringOption.get(destinationName).equals(WHITELIST)) {
-                    return whitelist.get(destinationName).contains(message.getEventName());
+            if (isEventFilterEnabled(destinationName)) {
+                boolean isEventAllowed;
+                if (getEventFilterType(destinationName).equals(WHITELISTED_EVENTS)) {
+                    isEventAllowed = getWhitelistEvents(destinationName).contains(message.getEventName().trim());
+                } else {
+                    isEventAllowed = !getBlacklistEvents(destinationName).contains(message.getEventName().trim());
                 }
-                return !blacklist.get(destinationName).contains(message.getEventName());
+                handleLogMessage(isEventAllowed, destinationName, message.getEventName().trim());
+                return isEventAllowed;
             }
         return true;
     }
 
-    Map<String, String> getEventFilteringOption() {
-        return eventFilteringOption;
+    /**
+     * It logs message to the console if the event is not allowed because of being blocked or not whitelisted.
+     *
+     * @param isEventAllowed A {@code boolean} value to decide that current event is allowed to be executed or not.
+     * @param destinationName A {@code String} value which refers to the destination which event belongs to.
+     * @param eventName A {@code String} value which refers to the event name.
+     */
+    private void handleLogMessage(boolean isEventAllowed, String destinationName, String eventName) {
+        if (!isEventAllowed) {
+            if (getEventFilterType(destinationName).equals(WHITELISTED_EVENTS)) {
+                RudderLogger.logInfo("Since " + eventName + " event is not Whitelisted it is being dropped.");
+                return;
+            }
+            RudderLogger.logInfo("Since " + eventName + " event is Blacklisted it is being dropped.");
+        }
     }
 
-    Map<String, ArrayList<String>> getWhitelist() {
-        return whitelist;
+    /**
+     *
+     * @param destinationName A {@code String} value which refers to the destination which event belongs to.
+     * @return A {@code boolean} value true if there exists the destination and it is set to either whitelist or blacklist else false.
+     */
+    boolean isEventFilterEnabled(String destinationName) {
+        return eventFilteringOption.containsKey(destinationName);
     }
 
-    Map<String, ArrayList<String>> getBlacklist() {
-        return blacklist;
+    /**
+     *
+     * @param destinationName A {@code String} value which refers to the destination which event belongs to.
+     * @return It returns three things: whitelisted, blacklisted or NULL value.
+     */
+    String getEventFilterType(String destinationName) {
+        return eventFilteringOption.get(destinationName);
+    }
+
+    /**
+     *
+     * @param destinationName A {@code String} value which refers to the destination which event belongs to.
+     * @return It returns {@code ArrayList<String>} value containing all the whitelisted events of the given destination type.
+     */
+    ArrayList<String> getWhitelistEvents(String destinationName) {
+        return whitelistEvents.get(destinationName);
+    }
+
+    /**
+     *
+     * @param destinationName A {@code String} value which refers to the destination which event belongs to.
+     * @return It returns {@code ArrayList<String>} value containing all the blacklisted events of the given destination type.
+     */
+    ArrayList<String> getBlacklistEvents(String destinationName) {
+        return blacklistEvents.get(destinationName);
     }
 }

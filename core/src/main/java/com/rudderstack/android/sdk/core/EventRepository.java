@@ -574,9 +574,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         if (integration != null)
                             if (!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key))
                                 if (rudderEventFilteringPlugin.isEventAllowed(key, message)) {
-                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                                integration.dump(message);
-                            }
+                                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                                    integration.dump(message);
+                                }
                     }
                 }
                 //If User has set any specific Option.
@@ -587,9 +587,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         if (integration != null)
                             if (integrationOptions.containsKey(key) && (boolean) integrationOptions.get(key))
                                 if (rudderEventFilteringPlugin.isEventAllowed(key, message)) {
-                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                                integration.dump(message);
-                            }
+                                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                                    integration.dump(message);
+                                }
                     }
                 }
             } else {
