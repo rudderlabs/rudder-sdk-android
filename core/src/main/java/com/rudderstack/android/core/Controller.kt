@@ -89,4 +89,10 @@ interface Controller {
      * @param lifecycleController LifeCycleController related to this message, null for default implementation
      */
     fun processMessage(message: Message, options: RudderOptions?, lifecycleController: LifecycleController? = null)
+
+    /**
+     * Shuts down the Analytics. Once shutdown, a new instance needs to be created.
+     *
+     */
+    fun shutdown()
 }

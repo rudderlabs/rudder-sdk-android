@@ -14,7 +14,11 @@
 
 package com.rudderstack.android.core.internal.plugins
 
+import com.rudderstack.android.core.DestinationConfig
 import com.rudderstack.android.core.Plugin
+import com.rudderstack.android.core.State
+import com.rudderstack.android.core.Storage
+import com.rudderstack.android.core.internal.states.DestinationConfigState
 import com.rudderstack.android.models.Message
 
 /**
@@ -22,8 +26,17 @@ import com.rudderstack.android.models.Message
  * Will store messages till all factories are ready
  * After that reiterate the messages to the plugins
  */
-internal class WakeupActionPlugin : Plugin {
+internal class WakeupActionPlugin(
+    private val storage: Storage,
+    private val destConfigState: State<DestinationConfig> = DestinationConfigState
+) : Plugin {
     override fun intercept(chain: Plugin.Chain): Message {
-        TODO("Not yet implemented")
+        return if(destConfigState.value?.allIntegrationsReady != true || storage.startupQueue.isNotEmpty()){
+            storage.saveStartupMessageInQueue(chain.message())
+            chain.message()
+        }else{
+           chain.proceed(chain.message())
+        }
     }
+
 }

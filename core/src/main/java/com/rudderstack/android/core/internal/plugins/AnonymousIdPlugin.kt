@@ -15,6 +15,7 @@
 package com.rudderstack.android.core.internal.plugins
 
 import com.rudderstack.android.core.Plugin
+import com.rudderstack.android.core.Settings
 import com.rudderstack.android.models.Message
 
 /**
@@ -22,7 +23,14 @@ import com.rudderstack.android.models.Message
  *
  */
 internal class AnonymousIdPlugin : Plugin{
+    private var anonymousId = ""
+
     override fun intercept(chain: Plugin.Chain): Message {
-        TODO("Not yet implemented")
+        return chain.proceed(chain.message().also {
+            it.anonymousId = anonymousId
+        })
+    }
+    override fun updateSettings(settings: Settings) {
+        anonymousId = settings.anonymousId?:""
     }
 }

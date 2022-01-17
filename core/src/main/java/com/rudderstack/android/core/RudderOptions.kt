@@ -27,7 +27,7 @@ package com.rudderstack.android.core
  */
 class RudderOptions private constructor(
     val externalIds: Map<String, Any>,
-    val integrations: Map<String, Any>,
+    val integrations: Map<String, Boolean>,
     val customContexts: Map<String, Any>,
 
     ) {
@@ -54,7 +54,7 @@ class RudderOptions private constructor(
      */
     class Builder {
         private var _externalIds: Map<String, Any> = mapOf()
-        private var _integrations: Map<String, Any> = mapOf()
+        private var _integrations: Map<String, Boolean> = mapOf()
         private var _customContexts: Map<String, Any> = mapOf()
 
 
@@ -63,7 +63,7 @@ class RudderOptions private constructor(
             return this
         }
 
-        fun withIntegrations(integrations: Map<String, Any>): Builder {
+        fun withIntegrations(integrations: Map<String, Boolean>): Builder {
             this._integrations = integrations
             return this
         }

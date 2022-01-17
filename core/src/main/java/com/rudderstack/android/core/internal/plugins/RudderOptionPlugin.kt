@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.core.internal.plugins
 
+import com.rudderstack.android.core.DestinationPlugin
 import com.rudderstack.android.core.Plugin
 import com.rudderstack.android.core.RudderOptions
 import com.rudderstack.android.models.Message
@@ -22,13 +23,50 @@ import com.rudderstack.android.models.Message
  * Alters flow and adds values to [Message] depending on options.
  * Manipulates the list of destination plugins based on options
  *
- *
+ * Individual plugin option takes precedence over "All"
+ * For eg. If "All" is set to true, but a certain integration is set to false,
+ * that integration will be dumped and not used.
+ * Likewise if "All" is set to false but a particular integration is set to true, we use it.
  * @param options
  */
 internal class RudderOptionPlugin(private val options: RudderOptions) : Plugin {
     override fun intercept(chain: Plugin.Chain): Message {
         val msg = chain.message()
-//        msg.integrations
-        return chain.proceed(msg)
+        val validIntegrations = validIntegrations()
+        msg.integrations = validIntegrations
+        val destinationPlugins = chain.plugins.filterIsInstance<DestinationPlugin<*>>()
+
+        return  if (destinationPlugins.isNotEmpty()) {
+            val validPlugins = filterDestinationPlugins(
+                destinationPlugins,
+                msg.integrations ?: mapOf()
+            )
+            return chain.with(validPlugins).proceed(msg)
+        } else
+             chain.proceed(msg)
+    }
+
+    private fun filterDestinationPlugins(
+        destinationPlugins: List<DestinationPlugin<*>>,
+        integrations: Map<String, Boolean>
+    ): List<DestinationPlugin<*>> {
+        return destinationPlugins.toMutableList().also {
+            it.removeAll {
+                integrations.getOrDefault(
+                    it.name,
+                    integrations.getOrDefault("All", true)
+                ) //if destination name is not present
+            }
+        }
+    }
+
+    private fun validIntegrations(): Map<String, Boolean> {
+        return if (options.integrations.isEmpty() || options.integrations.getOrDefault(
+                "All",
+                false
+            )
+        ) mapOf("All" to true) // if integrations is empty, it should allow All
+        else options.integrations
+
     }
 }

@@ -24,12 +24,16 @@ import com.rudderstack.android.models.Message
  *
  */
 internal class GDPRPlugin : Plugin {
+    private var isOptOut = false
     override fun intercept(chain: Plugin.Chain): Message {
-//        return
-    //        if(opted out)
-        // chain.message
-        //else
-       return chain.proceed(chain.message())
+        return if (isOptOut)
+            chain.message()
+        else
+            chain.proceed(chain.message())
 
+    }
+
+    override fun updateSettings(settings: Settings) {
+        isOptOut = settings.isOptOut
     }
 }

@@ -24,16 +24,20 @@ import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.android.web.WebServiceFactory
 import java.util.*
+import java.util.concurrent.Executor
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 internal class DataUploadServiceImpl(
     writeKey : String,
     private val jsonAdapter: JsonAdapter,
-    private val settingsState: State<Settings> = SettingsState
+    private val settingsState: State<Settings> = SettingsState,
+    private val networkExecutor: ExecutorService = Executors.newCachedThreadPool()
 ) : DataUploadService {
 
     private var webService = WebServiceFactory.getWebService(
         settingsState.value?.controlPlaneUrl ?: Settings().controlPlaneUrl,
-        jsonAdapter
+        jsonAdapter, executor = networkExecutor
     )
     private val encodedWriteKey = Base64.getEncoder().encodeToString(
         String.format(Locale.US, "%s:", writeKey).toByteArray(charset("UTF-8"))

@@ -19,7 +19,6 @@ import com.rudderstack.android.core.internal.plugins.*
 import com.rudderstack.android.core.internal.plugins.AnonymousIdPlugin
 import com.rudderstack.android.core.internal.plugins.GDPRPlugin
 import com.rudderstack.android.core.internal.plugins.RudderOptionPlugin
-import com.rudderstack.android.core.internal.plugins.VersionPlugin
 import com.rudderstack.android.core.internal.plugins.WakeupActionPlugin
 import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.Message
@@ -36,7 +35,10 @@ internal class AnalyticsDelegate(
     private val destinationPlugins : MutableList<DestinationPlugin<*>> = ArrayList()
     init {
         SettingsState.update(settings)
+        wakeupAction()
     }
+
+
     override fun applySettings(settings: Settings) {
         SettingsState.update(settings)
     }
@@ -74,16 +76,23 @@ internal class AnalyticsDelegate(
     }
 
     override fun processMessage(message: Message, options: RudderOptions?, lifecycleController: LifecycleController?) {
-        val operatePlugins = listOf(GDPRPlugin(),
+       /* val operatePlugins = listOf(GDPRPlugin(),
             RudderOptionPlugin(options?: SettingsState.value?.options?: return),
-        VersionPlugin(),
         AnonymousIdPlugin()
-        ) + customPlugins + WakeupActionPlugin()
+        ) + customPlugins + WakeupActionPlugin(storage = )
 
         val lcc = lifecycleController?: message.let { msg ->
 
             LifecycleControllerImpl(msg, operatePlugins )
-        }
+        }*/
 
+    }
+
+    override fun shutdown() {
+        TODO("Not yet implemented")
+    }
+
+    private fun wakeupAction() {
+        TODO("Not yet implemented")
     }
 }

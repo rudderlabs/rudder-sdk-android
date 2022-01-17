@@ -25,8 +25,8 @@ import com.rudderstack.android.models.Message
  */
 internal class CentralPluginChain(
     private val message: Message,
-    private val plugins: List<Plugin>,
-    private val index: Int = 0,
+    override val plugins: List<Plugin>,
+    override val index: Int = 0,
     override val originalMessage: Message = message
 ) : Plugin.Chain {
     private var numberOfCalls = 1
@@ -59,6 +59,10 @@ internal class CentralPluginChain(
             copy(index = index + 1, message = message)
         return plugin.intercept(next)
 
+    }
+
+    override fun with(plugins: List<Plugin>): Plugin.Chain {
+        return copy(plugins = plugins)
     }
 
     internal fun copy(

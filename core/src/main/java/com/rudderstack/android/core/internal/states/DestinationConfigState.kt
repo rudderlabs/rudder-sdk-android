@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 05/01/22, 8:09 PM Last modified: 05/01/22, 8:09 PM
+ * Creator: Debanjan Chatterjee on 13/01/22, 6:01 PM Last modified: 13/01/22, 6:01 PM
  * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,17 +12,10 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.core.internal.plugins
+package com.rudderstack.android.core.internal.states
 
-import com.rudderstack.android.core.Plugin
-import com.rudderstack.android.models.Message
+import com.rudderstack.android.core.DestinationConfig
+import com.rudderstack.android.core.State
 
-/**
- * Adds version of SDK to message
- *
- */
-internal class VersionPlugin : Plugin {
-    override fun intercept(chain: Plugin.Chain): Message {
-        TODO("Not yet implemented")
-    }
+internal object DestinationConfigState : State<DestinationConfig>(DestinationConfig()) {
 }

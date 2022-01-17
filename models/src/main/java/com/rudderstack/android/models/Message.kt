@@ -28,7 +28,7 @@ typealias ScreenProperties = Map<String, String>
 typealias TrackProperties = Map<String, String>
 typealias IdentifyProperties = Map<String, String>
 //integrations might change from String,Boolean to String, Object at a later point of time
-typealias MessageIntegrations = MutableMap<String, Any>
+typealias MessageIntegrations = Map<String, Boolean>
 typealias MessageDestinationProps = MutableMap<String, Map<*, *>>
 typealias GroupTraits = Map<String, String>
 
@@ -70,7 +70,7 @@ sealed class Message(
     @JsonProperty("anonymousId")
     @Json(name = "anonymousId")
     //@Expose
-    val anonymousId: String,
+    var anonymousId: String,
 
     /**
      * @return User ID for the event
@@ -93,11 +93,7 @@ sealed class Message(
     //@Expose
     private var destinationProps: MessageDestinationProps? = null,
 
-    @SerializedName("integrations")
-    @JsonProperty("integrations")
-    @Json(name = "integrations")
-    //@Expose
-    val integrations: MessageIntegrations = HashMap(),
+
 //    @Transient
     _channel: String? = null
 
@@ -114,6 +110,17 @@ sealed class Message(
 
     @JsonIgnore
     fun getType() = type
+
+    /**
+     * For internal use. Any value set over here will be overwritten internally.
+     * For setting custom configuration for integrations for a particular message,
+     * use RudderOptions
+     */
+    @SerializedName("integrations")
+    @JsonProperty("integrations")
+    @Json(name = "integrations")
+    //@Expose
+    var integrations: MessageIntegrations? = null
     /*@Retention(AnnotationRetention.RUNTIME)
     @JsonQualifier
     annotation class ChannelMitigationMoshi
@@ -237,7 +244,7 @@ sealed class Message(
             userId,
             timestamp,
             destinationProps,
-            integrations,
+//            integrations,
             previousId
         )
         is GroupMessage -> GroupMessage(
@@ -247,7 +254,7 @@ sealed class Message(
             userId,
             timestamp,
             destinationProps,
-            integrations,
+//            integrations,
             groupId,
             traits
         )
@@ -258,7 +265,7 @@ sealed class Message(
             userId,
             timestamp,
             destinationProps,
-            integrations,
+//            integrations,
             properties
         )
         is PageMessage -> PageMessage(
@@ -268,7 +275,7 @@ sealed class Message(
             userId,
             timestamp,
             destinationProps,
-            integrations,
+//            integrations,
             name,
             properties,
             category
@@ -280,7 +287,7 @@ sealed class Message(
             userId,
             timestamp,
             destinationProps,
-            integrations,
+//            integrations,
             name,
             properties
         )
@@ -291,7 +298,7 @@ sealed class Message(
             userId,
             timestamp,
             destinationProps,
-            integrations,
+//            integrations,
             eventName,
             properties
         )
@@ -352,6 +359,18 @@ sealed class Message(
                 other.integrations == this.integrations &&
                 other.channel == this.channel
     }
+
+    override fun hashCode(): Int {
+        var result = type.hashCode()
+        result = 31 * result + messageId.hashCode()
+        result = 31 * result + (context?.hashCode() ?: 0)
+        result = 31 * result + anonymousId.hashCode()
+        result = 31 * result + (userId?.hashCode() ?: 0)
+        result = 31 * result + timestamp.hashCode()
+        result = 31 * result + (destinationProps?.hashCode() ?: 0)
+        result = 31 * result + integrations.hashCode()
+        return result
+    }
 }
 
 class AliasMessage(
@@ -374,9 +393,9 @@ class AliasMessage(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
-    @JsonProperty("integrations")
-    @Json(name = "integrations")
-    integrations: MessageIntegrations = HashMap(),
+//    @JsonProperty("integrations")
+//    @Json(name = "integrations")
+//    integrations: MessageIntegrations = HashMap(),
     @SerializedName("previousId")
     @JsonProperty("previousId")
     @Json(name = "previousId")
@@ -390,7 +409,7 @@ class AliasMessage(
     userId,
     timestamp,
     destinationProps,
-    integrations,
+//    integrations,
 ) {
     override fun copy(): AliasMessage {
         return super.copy() as AliasMessage
@@ -432,9 +451,9 @@ class GroupMessage(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
-    @JsonProperty("integrations")
-    @Json(name = "integrations")
-    integrations: MessageIntegrations = HashMap(),
+//    @JsonProperty("integrations")
+//    @Json(name = "integrations")
+//    integrations: MessageIntegrations = HashMap(),
     /**
      * @return Group ID for the event
      */
@@ -458,7 +477,7 @@ class GroupMessage(
     timestamp,
 //    channel,
     destinationProps,
-    integrations
+//    integrations
 ) {
 
     override fun copy(): GroupMessage {
@@ -506,9 +525,9 @@ class PageMessage(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
-    @JsonProperty("integrations")
-    @Json(name = "integrations")
-    integrations: MessageIntegrations = HashMap(),
+//    @JsonProperty("integrations")
+//    @Json(name = "integrations")
+//    integrations: MessageIntegrations = HashMap(),
     /**
      * @return Name of the event tracked
      */
@@ -545,7 +564,7 @@ class PageMessage(
     timestamp,
 //    channel,
     destinationProps,
-    integrations
+//    integrations
 ) {
 
     override fun copy(): PageMessage {
@@ -596,9 +615,9 @@ class ScreenMessage(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
-    @JsonProperty("integrations")
-    @Json(name = "integrations")
-    integrations: MessageIntegrations = HashMap(),
+//    @JsonProperty("integrations")
+//    @Json(name = "integrations")
+//    integrations: MessageIntegrations = HashMap(),
     /**
      * @return Name of the event tracked
      */
@@ -630,7 +649,7 @@ class ScreenMessage(
     timestamp,
 //    channel,
     destinationProps,
-    integrations
+//    integrations
 ) {
 
     override fun copy(): ScreenMessage {
@@ -671,9 +690,9 @@ class TrackMessage(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
-    @JsonProperty("integrations")
-    @Json(name = "integrations")
-    integrations: MessageIntegrations = HashMap(),
+//    @JsonProperty("integrations")
+//    @Json(name = "integrations")
+//    integrations: MessageIntegrations = HashMap(),
     /**
      * @return Name of the event tracked
      */
@@ -703,7 +722,7 @@ class TrackMessage(
     timestamp,
 //    channel,
     destinationProps,
-    integrations
+//    integrations
 ) {
 
     override fun copy(): TrackMessage {
@@ -751,9 +770,9 @@ class IdentifyMessage(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
-    @JsonProperty("integrations")
-    @Json(name = "integrations")
-    integrations: MessageIntegrations = HashMap(),
+//    @JsonProperty("integrations")
+//    @Json(name = "integrations")
+//    integrations: MessageIntegrations = HashMap(),
     /**
      * Get the properties back as set to the event
      * Always convert objects to it's json equivalent before setting it as values
@@ -773,7 +792,7 @@ class IdentifyMessage(
     timestamp,
 //    channel,
     destinationProps,
-    integrations
+//    integrations
 ) {
 
     override fun copy(): IdentifyMessage {

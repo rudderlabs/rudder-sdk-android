@@ -56,6 +56,26 @@ fun interface Plugin {
          * @return The processed message that will be provided to later interceptors.
          */
         fun proceed(message: Message): Message
+
+        /**
+         * Get the list of plugins this Chain operates on
+         *
+         * @return the set of plugins that this Chain operates on
+         */
+        val plugins : List<Plugin>
+
+        /**
+         * Index of the plugin that is being operated.
+         * Generally if called from inside a plugin, this denotes the index of the plugin
+         */
+        val index : Int
+
+        /**
+         * Create a copy of [Chain] with updated set of plugins.
+         *
+         * @param plugins
+         */
+        fun with(plugins: List<Plugin>) : Chain
     }
     /*companion object {
         */

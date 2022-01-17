@@ -74,6 +74,23 @@ interface Storage {
     fun saveOptOut(optOut : Boolean)
 
     /**
+     * [DestinationPlugin]s in general start up asynchronously, which means messages sent
+     * prior to their initialization might get dropped. Thus to counter that, [Message] objects
+     * received prior to all Destination Plugins initialization are stored in startup queue and
+     * replayed back.
+     * Here developers can provide their custom implementation of the startup queue.
+     * @param message [Message] objects that are being sent to destination plugins prior to their
+     * startup
+     */
+    fun saveStartupMessageInQueue(message: Message)
+
+    /**
+     * @see saveStartupMessageInQueue
+     * get the messages that were posted before all device mode destinations initialized.
+     */
+    val startupQueue : List<Message>
+
+    /**
      * Get opted out state
      */
     val isOptedOut : Boolean
