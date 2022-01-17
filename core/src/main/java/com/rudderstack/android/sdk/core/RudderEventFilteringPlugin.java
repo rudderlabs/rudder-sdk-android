@@ -7,7 +7,6 @@ import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,20 +30,20 @@ class RudderEventFilteringPlugin {
             // Iterate all destinations
             for (RudderServerDestination destination:destinations) {
                 Map<String, Object> destinationConfig = (Map<String, Object>) destination.destinationConfig;
-                final String destinationName = destination.destinationDefinition.displayName;
+                final String destinationDefinitionDisplayName = destination.destinationDefinition.displayName;
                 final String eventFilteringStatus = destinationConfig.containsKey(EVENT_FILTERING_OPTION)
                         ? (String) destinationConfig.get(EVENT_FILTERING_OPTION) : DISABLE;
-                if (!eventFilteringStatus.equals(DISABLE) && !eventFilteringOption.containsKey(destinationName)) {
-                    eventFilteringOption.put(destinationName, eventFilteringStatus);
+                if (!eventFilteringStatus.equals(DISABLE) && !eventFilteringOption.containsKey(destinationDefinitionDisplayName)) {
+                    eventFilteringOption.put(destinationDefinitionDisplayName, eventFilteringStatus);
                     // If it is whiteListed events
                     if (eventFilteringStatus.equals(WHITELISTED_EVENTS) && destinationConfig.containsKey(WHITELISTED_EVENTS) ) {
-                        setEvent(destinationName,
+                        setEvent(destinationDefinitionDisplayName,
                                 (List<Map<String, String>>) destinationConfig.get(WHITELISTED_EVENTS),
                                 whitelistEvents);
                     }
                     // If it is blackListed events
                     else if (eventFilteringStatus.equals(BLACKLISTED_EVENTS) && destinationConfig.containsKey(BLACKLISTED_EVENTS)) {
-                      setEvent(destinationName,
+                      setEvent(destinationDefinitionDisplayName,
                               (List<Map<String, String>>) destinationConfig.get(BLACKLISTED_EVENTS),
                               blacklistEvents);
                     }
@@ -56,18 +55,18 @@ class RudderEventFilteringPlugin {
     /**
      * setEvent - It sets either the whitelist or blacklist depending on the eventFilteringOption configured at the dashboard
      *
-     * @param destinationName A string containing the destination name.
+     * @param destinationDefinitionDisplayName A string containing the destination name.
      * @param configEventsObject A {@code ArrayList<LinkedHashMap<String, String>>} which contains all the blacklist or whitelist event configured at the dashboard.
      * @param whiteOrBlackListEvent A {@code Map<String, ArrayList<String>>} with key/value pairs that will store the whitelist or blacklist event depending on the eventFilteringOption configured at the dashboard.
      */
-    private void setEvent(String destinationName,
+    private void setEvent(String destinationDefinitionDisplayName,
                           List<Map<String, String>> configEventsObject,
                           Map<String, List<String>> whiteOrBlackListEvent) {
-        whiteOrBlackListEvent.put(destinationName, new ArrayList<String>());
+        whiteOrBlackListEvent.put(destinationDefinitionDisplayName, new ArrayList<String>());
         for (Map<String, String> whiteListedEvent : configEventsObject) {
             String eventName = String.valueOf(whiteListedEvent.get(EVENT_NAME)).trim();
             if (!TextUtils.isEmpty(eventName)) {
-                whiteOrBlackListEvent.get(destinationName).add(eventName);
+                whiteOrBlackListEvent.get(destinationDefinitionDisplayName).add(eventName);
             }
         }
     }
