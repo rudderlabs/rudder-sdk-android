@@ -35,6 +35,13 @@ dependencies {
     testImplementation 'com.android.support.test:runner:1.0.2'
     testImplementation 'org.robolectric:robolectric:4.3'
     testImplementation 'androidx.test:core-ktx:1.2.0'
+    testImplementation "org.hamcrest:hamcrest:2.2"
+    testImplementation "org.mockito:mockito-core:3.11.2"
+    testImplementation "org.mockito:mockito-inline:3.11.2"
+
+    testImplementation "org.powermock:powermock-core:2.0.9"
+    testImplementation "org.powermock:powermock-module-junit4:2.0.9"
+    testImplementation "org.powermock:powermock-api-mockito2:2.0.9"
 }
 
 ext {
@@ -43,5 +50,5 @@ ext {
     PUBLISH_ARTIFACT_ID = 'core'
 }
 
-apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"
+//apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"
 

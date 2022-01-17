@@ -16,15 +16,15 @@ import java.util.Map;
  */
 class RudderEventFilteringPlugin {
 
-    private static final String DISABLE = "disable";
-    private static final String WHITELISTED_EVENTS = "whitelistedEvents";
-    private static final String BLACKLISTED_EVENTS = "blacklistedEvents";
-    private static final String EVENT_FILTERING_OPTION = "eventFilteringOption";
+    static final String DISABLE = "disable";
+    static final String WHITELISTED_EVENTS = "whitelistedEvents";
+    static final String BLACKLISTED_EVENTS = "blacklistedEvents";
+    static final String EVENT_FILTERING_OPTION = "eventFilteringOption";
     private static final String EVENT_NAME = "eventName";
 
     private Map<String, String> eventFilteringOption = new HashMap<>();
-    private Map<String, ArrayList<String>> whitelistEvents = new HashMap<>();
-    private Map<String, ArrayList<String>> blacklistEvents = new HashMap<>();
+    private Map<String, List<String>> whitelistEvents = new HashMap<>();
+    private Map<String, List<String>> blacklistEvents = new HashMap<>();
 
     RudderEventFilteringPlugin(List<RudderServerDestination> destinations) {
         if (!destinations.isEmpty()) {
@@ -39,13 +39,13 @@ class RudderEventFilteringPlugin {
                     // If it is whiteListed events
                     if (eventFilteringStatus.equals(WHITELISTED_EVENTS) && destinationConfig.containsKey(WHITELISTED_EVENTS) ) {
                         setEvent(destinationName,
-                                (ArrayList<LinkedHashMap<String, String>>) destinationConfig.get(WHITELISTED_EVENTS),
+                                (List<Map<String, String>>) destinationConfig.get(WHITELISTED_EVENTS),
                                 whitelistEvents);
                     }
                     // If it is blackListed events
                     else if (eventFilteringStatus.equals(BLACKLISTED_EVENTS) && destinationConfig.containsKey(BLACKLISTED_EVENTS)) {
                       setEvent(destinationName,
-                              (ArrayList<LinkedHashMap<String, String>>) destinationConfig.get(BLACKLISTED_EVENTS),
+                              (List<Map<String, String>>) destinationConfig.get(BLACKLISTED_EVENTS),
                               blacklistEvents);
                     }
                 }
@@ -61,10 +61,10 @@ class RudderEventFilteringPlugin {
      * @param whiteOrBlackListEvent A {@code Map<String, ArrayList<String>>} with key/value pairs that will store the whitelist or blacklist event depending on the eventFilteringOption configured at the dashboard.
      */
     private void setEvent(String destinationName,
-                          ArrayList<LinkedHashMap<String, String>> configEventsObject,
-                          Map<String, ArrayList<String>> whiteOrBlackListEvent) {
+                          List<Map<String, String>> configEventsObject,
+                          Map<String, List<String>> whiteOrBlackListEvent) {
         whiteOrBlackListEvent.put(destinationName, new ArrayList<String>());
-        for (LinkedHashMap<String, String> whiteListedEvent : configEventsObject) {
+        for (Map<String, String> whiteListedEvent : configEventsObject) {
             String eventName = String.valueOf(whiteListedEvent.get(EVENT_NAME)).trim();
             if (!TextUtils.isEmpty(eventName)) {
                 whiteOrBlackListEvent.get(destinationName).add(eventName);
@@ -138,7 +138,7 @@ class RudderEventFilteringPlugin {
      * @param destinationName A {@code String} value which refers to the destination which event belongs to.
      * @return It returns {@code ArrayList<String>} value containing all the whitelisted events of the given destination type.
      */
-    ArrayList<String> getWhitelistEvents(String destinationName) {
+    List<String> getWhitelistEvents(String destinationName) {
         return whitelistEvents.get(destinationName);
     }
 
@@ -147,7 +147,7 @@ class RudderEventFilteringPlugin {
      * @param destinationName A {@code String} value which refers to the destination which event belongs to.
      * @return It returns {@code ArrayList<String>} value containing all the blacklisted events of the given destination type.
      */
-    ArrayList<String> getBlacklistEvents(String destinationName) {
+    List<String> getBlacklistEvents(String destinationName) {
         return blacklistEvents.get(destinationName);
     }
 }
