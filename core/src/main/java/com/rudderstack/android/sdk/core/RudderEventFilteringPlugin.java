@@ -22,8 +22,8 @@ class RudderEventFilteringPlugin {
     private static final String EVENT_NAME = "eventName";
 
     private Map<String, String> eventFilteringOption = new HashMap<>();
-    private Map<String, List<String>> whitelistEvents = new HashMap<>();
-    private Map<String, List<String>> blacklistEvents = new HashMap<>();
+    private Map<String, List<String>> whitelistEvents;
+    private Map<String, List<String>> blacklistEvents;
 
     RudderEventFilteringPlugin(List<RudderServerDestination> destinations) {
         if (!destinations.isEmpty()) {
@@ -34,19 +34,24 @@ class RudderEventFilteringPlugin {
                 final String eventFilteringStatus = destinationConfig.containsKey(EVENT_FILTERING_OPTION)
                         ? (String) destinationConfig.get(EVENT_FILTERING_OPTION) : DISABLE;
                 if (!eventFilteringStatus.equals(DISABLE) && !eventFilteringOption.containsKey(destinationDefinitionDisplayName)) {
-                    eventFilteringOption.put(destinationDefinitionDisplayName, eventFilteringStatus);
                     // If it is whiteListed events
                     if (eventFilteringStatus.equals(WHITELISTED_EVENTS) && destinationConfig.containsKey(WHITELISTED_EVENTS) ) {
+                        whitelistEvents = new HashMap<>();
                         setEvent(destinationDefinitionDisplayName,
                                 (List<Map<String, String>>) destinationConfig.get(WHITELISTED_EVENTS),
                                 whitelistEvents);
                     }
                     // If it is blackListed events
                     else if (eventFilteringStatus.equals(BLACKLISTED_EVENTS) && destinationConfig.containsKey(BLACKLISTED_EVENTS)) {
-                      setEvent(destinationDefinitionDisplayName,
-                              (List<Map<String, String>>) destinationConfig.get(BLACKLISTED_EVENTS),
-                              blacklistEvents);
+                        blacklistEvents = new HashMap<>();
+                        setEvent(destinationDefinitionDisplayName,
+                                (List<Map<String, String>>) destinationConfig.get(BLACKLISTED_EVENTS),
+                                blacklistEvents);
                     }
+                    else {
+                        continue;
+                    }
+                    eventFilteringOption.put(destinationDefinitionDisplayName, eventFilteringStatus);
                 }
             }
         }
@@ -138,7 +143,10 @@ class RudderEventFilteringPlugin {
      * @return It returns {@code ArrayList<String>} value containing all the whitelisted events of the given destination type.
      */
     List<String> getWhitelistEvents(String destinationName) {
-        return whitelistEvents.get(destinationName);
+        if (whitelistEvents != null) {
+            return whitelistEvents.get(destinationName);
+        }
+        return null;
     }
 
     /**
@@ -147,6 +155,9 @@ class RudderEventFilteringPlugin {
      * @return It returns {@code ArrayList<String>} value containing all the blacklisted events of the given destination type.
      */
     List<String> getBlacklistEvents(String destinationName) {
-        return blacklistEvents.get(destinationName);
+        if (blacklistEvents != null) {
+            return blacklistEvents.get(destinationName);
+        }
+        return null;
     }
 }
