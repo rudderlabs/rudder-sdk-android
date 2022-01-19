@@ -46,8 +46,10 @@ public class RudderEventFilteringPluginTest {
     private RudderEventFilteringPlugin plugin_Blacklist_LifeCycle;
     private RudderEventFilteringPlugin plugin_Whitelist_Empty;
     private RudderEventFilteringPlugin plugin_Blacklist_Empty;
-    private RudderEventFilteringPlugin plugin_WithMultipleDestinations;
-    private RudderEventFilteringPlugin getPlugin_WithMultipleDestinationsOfSameType;
+    private RudderEventFilteringPlugin plugin_WithMultipleDestinationsOfDifferentType;
+    private RudderEventFilteringPlugin plugin_WithMultipleDestinationsOfDifferentType_Whitelist;
+    private RudderEventFilteringPlugin plugin_WithMultipleDestinationsOfDifferentType_Blacklist;
+    private RudderEventFilteringPlugin plugin_WithMultipleDestinationsOfSameType;
     private RudderMessage message;
 
     @Before
@@ -167,7 +169,7 @@ public class RudderEventFilteringPluginTest {
                 null, lifeCycleEvents_EmptyBlacklist
         ));
 
-        // With multiple destinations
+        // With multiple destinations - Of different type
         final List<RudderServerDestination> testDestinations_Amplitude_MultipleDestinations = new ArrayList();
         // Blacklist
         List<Map<String, String>> blackListedEvent2 = new ArrayList<>();
@@ -249,6 +251,102 @@ public class RudderEventFilteringPluginTest {
                 whiteListedEvents3, null
         ));
 
+        // With Multiple destination of different type - But have only whitelist events
+        final List<RudderServerDestination> testDestinations_Amplitude_MultipleDestinationsOfDifferentType_Whitelist = new ArrayList();
+        // Whitelisted - 1
+        List<Map<String, String>> whiteListedEvents4 = new ArrayList<>();
+        Map<String, String> event9_1 = new HashMap<>();
+        event9_1.put("eventName", "White-1");
+        Map<String, String> event9_2 = new HashMap<>();
+        event9_2.put("eventName", "White-2");
+        Map<String, String> event9_3 = new HashMap<>();
+        event9_3.put("eventName", "White-3");
+        Map<String, String> event9_4 = new HashMap<>();
+        event9_4.put("eventName", "White-4");
+        Map<String, String> event9_5 = new HashMap<>();
+        event9_5.put("eventName", "White-5_1");
+        whiteListedEvents4.add(event9_1);
+        whiteListedEvents4.add(event9_2);
+        whiteListedEvents4.add(event9_3);
+        whiteListedEvents4.add(event9_4);
+        whiteListedEvents4.add(event9_5);
+        testDestinations_Amplitude_MultipleDestinationsOfDifferentType_Whitelist.add(createServerDestination("23YLpuMKgF5t5U6Ac7HcY5seOI1", "Amplitude Event Filtering",
+                true, "AM",
+                "Amplitude", EventFilteringStatus.WHITE_LISTED,
+                whiteListedEvents4, null
+        ));
+
+        // Whitelisted - 2
+        List<Map<String, String>> whiteListedEvents5 = new ArrayList<>();
+        Map<String, String> event10_1 = new HashMap<>();
+        event10_1.put("eventName", "White-1");
+        Map<String, String> event10_2 = new HashMap<>();
+        event10_2.put("eventName", "White-2");
+        Map<String, String> event10_3 = new HashMap<>();
+        event10_3.put("eventName", "White-3");
+        Map<String, String> event10_4 = new HashMap<>();
+        event10_4.put("eventName", "White-4");
+        Map<String, String> event10_5 = new HashMap<>();
+        event10_5.put("eventName", "White-5_2");
+        whiteListedEvents5.add(event10_1);
+        whiteListedEvents5.add(event10_2);
+        whiteListedEvents5.add(event10_3);
+        whiteListedEvents5.add(event10_4);
+        whiteListedEvents5.add(event10_5);
+        testDestinations_Amplitude_MultipleDestinationsOfDifferentType_Whitelist.add(createServerDestination("23YLpuMKgF5t5U6Ac7HcY5seOI1", "Firebase Event Filtering",
+                true, "FIREBASE",
+                "Firebase", EventFilteringStatus.WHITE_LISTED,
+                whiteListedEvents5, null
+        ));
+
+        // With Multiple destination of different type - But have only blacklist events
+        final List<RudderServerDestination> testDestinations_Amplitude_MultipleDestinationsOfDifferentType_Blacklist = new ArrayList();
+        // Blacklist - 1
+        List<Map<String, String>> blackListedEvent4 = new ArrayList<>();
+        Map<String, String> event11_1 = new HashMap<>();
+        event11_1.put("eventName", "Black-1");
+        Map<String, String> event11_2 = new HashMap<>();
+        event11_2.put("eventName", "Black-2");
+        Map<String, String> event11_3 = new HashMap<>();
+        event11_3.put("eventName", "Black-3");
+        Map<String, String> event11_4 = new HashMap<>();
+        event11_4.put("eventName", "Black-4");
+        Map<String, String> event11_5 = new HashMap<>();
+        event11_5.put("eventName", "Black-5_1");
+        blackListedEvent4.add(event11_1);
+        blackListedEvent4.add(event11_2);
+        blackListedEvent4.add(event11_3);
+        blackListedEvent4.add(event11_4);
+        blackListedEvent4.add(event11_5);
+        testDestinations_Amplitude_MultipleDestinationsOfDifferentType_Blacklist.add(createServerDestination("23YLpuMKgF5t5U6Ac7HcY5seOI1", "Amplitude Event Filtering",
+                true, "AM",
+                "Amplitude", EventFilteringStatus.BLACK_LISTED,
+                null, blackListedEvent4
+        ));
+        // Blacklist - 2
+        List<Map<String, String>> blackListedEvent5 = new ArrayList<>();
+        Map<String, String> event12_1 = new HashMap<>();
+        event12_1.put("eventName", "Black-1");
+        Map<String, String> event12_2 = new HashMap<>();
+        event12_2.put("eventName", "Black-2");
+        Map<String, String> event12_3 = new HashMap<>();
+        event12_3.put("eventName", "Black-3");
+        Map<String, String> event12_4 = new HashMap<>();
+        event12_4.put("eventName", "Black-4");
+        Map<String, String> event12_5 = new HashMap<>();
+        event12_5.put("eventName", "Black-5_2");
+        blackListedEvent5.add(event12_1);
+        blackListedEvent5.add(event12_2);
+        blackListedEvent5.add(event12_3);
+        blackListedEvent5.add(event12_4);
+        blackListedEvent5.add(event12_5);
+        testDestinations_Amplitude_MultipleDestinationsOfDifferentType_Blacklist.add(createServerDestination("23YLpuMKgF5t5U6Ac7HcY5seOI1", "Firebase Event Filtering",
+                true, "FIREBASE",
+                "Firebase", EventFilteringStatus.BLACK_LISTED,
+                null, blackListedEvent5
+        ));
+
+
         // For any string values
         PowerMockito.when(TextUtils.isEmpty(any(CharSequence.class))).thenAnswer(new Answer<Boolean>() {
             @Override
@@ -272,8 +370,10 @@ public class RudderEventFilteringPluginTest {
         plugin_Blacklist_LifeCycle = new RudderEventFilteringPlugin(testDestinations_Amplitude_Blacklist_LifeCycle);
         plugin_Whitelist_Empty = new RudderEventFilteringPlugin(testDestinations_Amplitude_EmptyWhitelist);
         plugin_Blacklist_Empty = new RudderEventFilteringPlugin(testDestinations_Amplitude_EmptyBlacklist);
-        plugin_WithMultipleDestinations = new RudderEventFilteringPlugin(testDestinations_Amplitude_MultipleDestinations);
-        getPlugin_WithMultipleDestinationsOfSameType = new RudderEventFilteringPlugin(testDestinations_Amplitude_MultipleDestinationsOfSameType);
+        plugin_WithMultipleDestinationsOfDifferentType = new RudderEventFilteringPlugin(testDestinations_Amplitude_MultipleDestinations);
+        plugin_WithMultipleDestinationsOfSameType = new RudderEventFilteringPlugin(testDestinations_Amplitude_MultipleDestinationsOfSameType);
+        plugin_WithMultipleDestinationsOfDifferentType_Whitelist = new RudderEventFilteringPlugin(testDestinations_Amplitude_MultipleDestinationsOfDifferentType_Whitelist);
+        plugin_WithMultipleDestinationsOfDifferentType_Blacklist = new RudderEventFilteringPlugin(testDestinations_Amplitude_MultipleDestinationsOfDifferentType_Blacklist);
     }
 
     private void mockTheLog() {
@@ -475,32 +575,138 @@ public class RudderEventFilteringPluginTest {
 
         // Here destinations: Amplitude events is Blacklisted and Firebase events is Whitelisted
         PowerMockito.when(message,"getEventName").thenReturn("Black-1");
-        assertFalse(plugin_WithMultipleDestinations.isEventAllowed("Amplitude", message));
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType.isEventAllowed("Amplitude", message));
         PowerMockito.when(message,"getEventName").thenReturn("Black-2");
-        assertFalse(plugin_WithMultipleDestinations.isEventAllowed("Amplitude", message));
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType.isEventAllowed("Amplitude", message));
         PowerMockito.when(message,"getEventName").thenReturn("Black-3");
-        assertFalse(plugin_WithMultipleDestinations.isEventAllowed("Amplitude", message));
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType.isEventAllowed("Amplitude", message));
         PowerMockito.when(message,"getEventName").thenReturn("Black-4");
-        assertFalse(plugin_WithMultipleDestinations.isEventAllowed("Amplitude", message));
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType.isEventAllowed("Amplitude", message));
 
         PowerMockito.when(message,"getEventName").thenReturn("White-1");
-        assertTrue(plugin_WithMultipleDestinations.isEventAllowed("Amplitude", message));
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType.isEventAllowed("Amplitude", message));
         PowerMockito.when(message,"getEventName").thenReturn("AsNotBlacklistedThenAllowed");
-        assertTrue(plugin_WithMultipleDestinations.isEventAllowed("Amplitude", message));
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType.isEventAllowed("Amplitude", message));
 
         PowerMockito.when(message,"getEventName").thenReturn("White-1");
-        assertTrue(plugin_WithMultipleDestinations.isEventAllowed("Firebase", message));
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType.isEventAllowed("Firebase", message));
         PowerMockito.when(message,"getEventName").thenReturn("White-2");
-        assertTrue(plugin_WithMultipleDestinations.isEventAllowed("Firebase", message));
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType.isEventAllowed("Firebase", message));
         PowerMockito.when(message,"getEventName").thenReturn("White-3");
-        assertTrue(plugin_WithMultipleDestinations.isEventAllowed("Firebase", message));
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType.isEventAllowed("Firebase", message));
         PowerMockito.when(message,"getEventName").thenReturn("White-4");
-        assertTrue(plugin_WithMultipleDestinations.isEventAllowed("Firebase", message));
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType.isEventAllowed("Firebase", message));
 
         PowerMockito.when(message,"getEventName").thenReturn("Black-1");
-        assertFalse(plugin_WithMultipleDestinations.isEventAllowed("Firebase", message));
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType.isEventAllowed("Firebase", message));
         PowerMockito.when(message,"getEventName").thenReturn("AsNotWhitelistedThenBlocked");
-        assertFalse(plugin_WithMultipleDestinations.isEventAllowed("Firebase", message));
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType.isEventAllowed("Firebase", message));
+    }
+
+    @Test
+    public void isEventAllowed_MultipleDestinationsOfSameType() throws Exception {
+        PowerMockito.when(message,"getType").thenReturn(MessageType.TRACK);
+
+        if (plugin_WithMultipleDestinationsOfSameType.getEventFilterType("Amplitude").equals(BLACKLISTED_EVENTS)) {
+            PowerMockito.when(message,"getEventName").thenReturn("Black-1");
+            assertFalse(plugin_WithMultipleDestinationsOfSameType.isEventAllowed("Amplitude", message));
+            PowerMockito.when(message,"getEventName").thenReturn("Black-2");
+            assertFalse(plugin_WithMultipleDestinationsOfSameType.isEventAllowed("Amplitude", message));
+            PowerMockito.when(message,"getEventName").thenReturn("Black-3");
+            assertFalse(plugin_WithMultipleDestinationsOfSameType.isEventAllowed("Amplitude", message));
+            PowerMockito.when(message,"getEventName").thenReturn("Black-4");
+            assertFalse(plugin_WithMultipleDestinationsOfSameType.isEventAllowed("Amplitude", message));
+
+            PowerMockito.when(message,"getEventName").thenReturn("AsNotBlacklisted-EventAllowed");
+            assertTrue(plugin_WithMultipleDestinationsOfSameType.isEventAllowed("Amplitude", message));
+        }
+        else if (plugin_WithMultipleDestinationsOfSameType.getEventFilterType("Amplitude").equals(WHITELISTED_EVENTS)) {
+            PowerMockito.when(message,"getEventName").thenReturn("White-1");
+            assertTrue(plugin_WithMultipleDestinationsOfSameType.isEventAllowed("Amplitude", message));
+            PowerMockito.when(message,"getEventName").thenReturn("White-2");
+            assertTrue(plugin_WithMultipleDestinationsOfSameType.isEventAllowed("Amplitude", message));
+            PowerMockito.when(message,"getEventName").thenReturn("White-3");
+            assertTrue(plugin_WithMultipleDestinationsOfSameType.isEventAllowed("Amplitude", message));
+            PowerMockito.when(message,"getEventName").thenReturn("White-4");
+            assertTrue(plugin_WithMultipleDestinationsOfSameType.isEventAllowed("Amplitude", message));
+
+            PowerMockito.when(message,"getEventName").thenReturn("AsNotWhitelisted-EventBlocked");
+            assertFalse(plugin_WithMultipleDestinationsOfSameType.isEventAllowed("Amplitude", message));
+        }
+    }
+
+    @Test
+    public void isEventAllowed_MultipleDestinationsOfDifferentType_Whitelist() throws Exception {
+        PowerMockito.when(message,"getType").thenReturn(MessageType.TRACK);
+
+        PowerMockito.when(message,"getEventName").thenReturn("White-1");
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Amplitude", message));
+        PowerMockito.when(message,"getEventName").thenReturn("White-2");
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Amplitude", message));
+        PowerMockito.when(message,"getEventName").thenReturn("White-3");
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Amplitude", message));
+        PowerMockito.when(message,"getEventName").thenReturn("White-4");
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Amplitude", message));
+
+        PowerMockito.when(message,"getEventName").thenReturn("AsNotWhitelisted-HenceBlocked");
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Amplitude", message));
+
+        PowerMockito.when(message,"getEventName").thenReturn("White-1");
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Firebase", message));
+        PowerMockito.when(message,"getEventName").thenReturn("White-2");
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Firebase", message));
+        PowerMockito.when(message,"getEventName").thenReturn("White-3");
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Firebase", message));
+        PowerMockito.when(message,"getEventName").thenReturn("White-4");
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Firebase", message));
+
+        PowerMockito.when(message,"getEventName").thenReturn("AsNotWhitelisted-HenceBlocked");
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Firebase", message));
+
+        // When event is other than White-1, White-2 etc. i.e., for Amplitude event is White-5_1 and for Firebase it is White-5_2
+        PowerMockito.when(message,"getEventName").thenReturn("White-5_1");
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Amplitude", message));
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Firebase", message));
+        PowerMockito.when(message,"getEventName").thenReturn("White-5_2");
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Amplitude", message));
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Whitelist.isEventAllowed("Firebase", message));
+    }
+
+    @Test
+    public void isEventAllowed_MultipleDestinationsOfDifferentType_Blacklist() throws Exception {
+        PowerMockito.when(message,"getType").thenReturn(MessageType.TRACK);
+
+        PowerMockito.when(message,"getEventName").thenReturn("Black-1");
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Amplitude", message));
+        PowerMockito.when(message,"getEventName").thenReturn("Black-2");
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Amplitude", message));
+        PowerMockito.when(message,"getEventName").thenReturn("Black-3");
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Amplitude", message));
+        PowerMockito.when(message,"getEventName").thenReturn("Black-4");
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Amplitude", message));
+
+        PowerMockito.when(message,"getEventName").thenReturn("AsNotBlacklisted-HenceAllowed");
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Amplitude", message));
+
+        PowerMockito.when(message,"getEventName").thenReturn("Black-1");
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Firebase", message));
+        PowerMockito.when(message,"getEventName").thenReturn("Black-2");
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Firebase", message));
+        PowerMockito.when(message,"getEventName").thenReturn("Black-3");
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Firebase", message));
+        PowerMockito.when(message,"getEventName").thenReturn("Black-4");
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Firebase", message));
+
+        PowerMockito.when(message,"getEventName").thenReturn("AsNotBlacklisted-HenceAllowed");
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Firebase", message));
+
+        // When event is other than White-1, White-2 etc. i.e., for Amplitude event is White-5_1 and for Firebase it is White-5_2
+        PowerMockito.when(message,"getEventName").thenReturn("Black-5_1");
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Amplitude", message));
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Firebase", message));
+        PowerMockito.when(message,"getEventName").thenReturn("Black-5_2");
+        assertTrue(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Amplitude", message));
+        assertFalse(plugin_WithMultipleDestinationsOfDifferentType_Blacklist.isEventAllowed("Firebase", message));
     }
 
     @Test
@@ -512,7 +718,9 @@ public class RudderEventFilteringPluginTest {
         whiteListedEvents.add( "White-4");
         assertThat(plugin_Whitelist.getWhitelistEvents("Amplitude"), is(whiteListedEvents));
 
+        assertNull(plugin_Whitelist.getWhitelistEvents("Firebase"));
         assertNull(plugin_Blacklist.getWhitelistEvents("Amplitude"));
+        assertNull(plugin_Blacklist.getWhitelistEvents("Firebase"));
         assertNull(plugin_Blacklist_Empty.getWhitelistEvents("Amplitude"));
         assertNotNull(plugin_Whitelist_Empty.getWhitelistEvents("Amplitude"));
     }
@@ -526,7 +734,9 @@ public class RudderEventFilteringPluginTest {
         blackListedEvents.add( "Black-4");
         assertThat(plugin_Blacklist.getBlacklistEvents("Amplitude"), is(blackListedEvents));
 
+        assertNull(plugin_Blacklist.getWhitelistEvents("Firebase"));
         assertNull(plugin_Whitelist.getBlacklistEvents("Amplitude"));
+        assertNull(plugin_Whitelist.getBlacklistEvents("Firebase"));
         assertNull(plugin_Whitelist_Empty.getBlacklistEvents("Amplitude"));
         assertNotNull(plugin_Blacklist_Empty.getBlacklistEvents("Amplitude"));
     }
