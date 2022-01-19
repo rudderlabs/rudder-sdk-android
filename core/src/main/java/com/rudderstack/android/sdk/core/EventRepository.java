@@ -148,6 +148,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                 // initiate factories
                                 if (serverConfig.source.destinations != null) {
                                     initiateFactories(serverConfig.source.destinations);
+                                    RudderLogger.logDebug("EventRepository: initiating event filtering plugin for device mode destinations");
                                     rudderEventFilteringPlugin = new RudderEventFilteringPlugin(serverConfig.source.destinations);
                                 } else {
                                     RudderLogger.logDebug("EventRepository: initiateSDK: No native SDKs are found");
