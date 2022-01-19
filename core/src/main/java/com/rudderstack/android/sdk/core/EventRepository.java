@@ -45,6 +45,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
     private RudderPreferenceManager preferenceManager;
+    private RudderEventFilteringPlugin rudderEventFilteringPlugin;
     private Map<String, RudderIntegration<?>> integrationOperationsMap = new HashMap<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
 
@@ -147,6 +148,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                 // initiate factories
                                 if (serverConfig.source.destinations != null) {
                                     initiateFactories(serverConfig.source.destinations);
+                                    RudderLogger.logDebug("EventRepository: initiating event filtering plugin for device mode destinations");
+                                    rudderEventFilteringPlugin = new RudderEventFilteringPlugin(serverConfig.source.destinations);
                                 } else {
                                     RudderLogger.logDebug("EventRepository: initiateSDK: No native SDKs are found");
                                 }
@@ -570,10 +573,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         RudderIntegration<?> integration = integrationOperationsMap.get(key);
                         //If integration is not null and if key is either not present or it is set to true, then dump it.
                         if (integration != null)
-                            if (!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key)) {
-                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                                integration.dump(message);
-                            }
+                            if (!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key))
+                                if (rudderEventFilteringPlugin.isEventAllowed(key, message)) {
+                                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                                    integration.dump(message);
+                                }
                     }
                 }
                 //If User has set any specific Option.
@@ -582,10 +586,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         RudderIntegration<?> integration = integrationOperationsMap.get(key);
                         //If integration is not null and 'key' is set to 'true', then dump it.
                         if (integration != null)
-                            if (integrationOptions.containsKey(key) && (boolean) integrationOptions.get(key)) {
-                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                                integration.dump(message);
-                            }
+                            if (integrationOptions.containsKey(key) && (boolean) integrationOptions.get(key))
+                                if (rudderEventFilteringPlugin.isEventAllowed(key, message)) {
+                                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
+                                    integration.dump(message);
+                                }
                     }
                 }
             } else {
