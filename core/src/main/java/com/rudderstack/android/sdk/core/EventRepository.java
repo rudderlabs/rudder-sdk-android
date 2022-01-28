@@ -120,6 +120,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
             // check for lifeCycleEvents
             this.checkApplicationUpdateStatus(_application);
+            if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
+                _application.registerActivityLifecycleCallbacks(this);
+            }
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
@@ -192,16 +195,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 versionCode = packageInfo.versionCode;
             }
             RudderLogger.logDebug("Current Installed Version: " + versionCode);
-            boolean isLifeCycleEventsAllowed = config.isTrackLifecycleEvents() || config.isRecordScreenViews();
-            if (isLifeCycleEventsAllowed) {
-                application.registerActivityLifecycleCallbacks(this);
-            }
 
             if (previousVersionCode == -1) {
                 // application was not installed previously, Application Installed event
                 preferenceManager.saveBuildVersionCode(versionCode);
                 // If trackLifeCycleEvents is not allowed then discard the event
-                if (!isLifeCycleEventsAllowed) {
+                if (!config.isTrackLifecycleEvents()) {
                     return;
                 }
                 RudderLogger.logDebug("Tracking Application Installed");
@@ -216,7 +215,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             } else if (previousVersionCode != versionCode) {
                 preferenceManager.saveBuildVersionCode(versionCode);
                 // If either optOut() is set to true or LifeCycleEvents set to false then discard the event
-                if (getOptStatus() || !isLifeCycleEventsAllowed) {
+                if (getOptStatus() || !config.isTrackLifecycleEvents()) {
                     return;
                 }
                 // Application Updated event
