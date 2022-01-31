@@ -119,8 +119,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             this.initiateSDK();
 
             // check for lifeCycleEvents
+            this.checkApplicationUpdateStatus(_application);
             if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
-                this.checkApplicationUpdateStatus(_application);
                 _application.registerActivityLifecycleCallbacks(this);
             }
         } catch (Exception ex) {
@@ -197,9 +197,13 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug("Current Installed Version: " + versionCode);
 
             if (previousVersionCode == -1) {
-                // application was not installed previously, Application Installed events
-                RudderLogger.logDebug("Tracking Application Installed");
+                // application was not installed previously, Application Installed event
                 preferenceManager.saveBuildVersionCode(versionCode);
+                // If trackLifeCycleEvents is not allowed then discard the event
+                if (!config.isTrackLifecycleEvents()) {
+                    return;
+                }
+                RudderLogger.logDebug("Tracking Application Installed");
                 RudderMessage message = new RudderMessageBuilder()
                         .setEventName("Application Installed")
                         .setProperty(
@@ -210,12 +214,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 dump(message);
             } else if (previousVersionCode != versionCode) {
                 preferenceManager.saveBuildVersionCode(versionCode);
-                // If user has disabled tracking activities (i.e., set optOut() to true)
-                // then discard the event
-                if (getOptStatus()) {
+                // If either optOut() is set to true or LifeCycleEvents set to false then discard the event
+                if (getOptStatus() || !config.isTrackLifecycleEvents()) {
                     return;
                 }
-                // Application updated
+                // Application Updated event
                 RudderLogger.logDebug("Tracking Application Updated");
                 RudderMessage message = new RudderMessageBuilder().setEventName("Application Updated")
                         .setProperty(
