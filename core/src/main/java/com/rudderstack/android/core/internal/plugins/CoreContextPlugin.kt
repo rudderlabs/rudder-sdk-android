@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 06/01/22, 11:07 AM Last modified: 06/01/22, 11:07 AM
+ * Creator: Debanjan Chatterjee on 21/01/22, 1:47 PM Last modified: 21/01/22, 1:47 PM
  * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,27 +12,22 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.core
+package com.rudderstack.android.core.internal.plugins
 
+import com.rudderstack.android.core.Analytics
+import com.rudderstack.android.core.Plugin
 import com.rudderstack.android.models.Message
 
-/**
- * Class to handle data upload to server
- *
- */
-interface DataUploadService {
-    /**
-     * Uploads data to cloud
-     *
-     * @param data The list of messages to upload
-     * @param extraInfo If any data needs to be added to the body
-     * @param callback Callback providing either success or failure status of upload
-     */
-    fun upload(data: List<Message>, extraInfo : Map<String,String>? = null, callback: (success: Boolean) -> Unit)
 
-    /**
-     * Service no longer needed, release resources
-     *
-     */
-    fun shutdown()
+internal class CoreContextPlugin : Plugin {
+    private lateinit var version : String
+
+    override fun setup(analytics: Analytics) {
+        super.setup(analytics)
+        version = analytics.version
+    }
+    override fun intercept(chain: Plugin.Chain): Message {
+        TODO("Not yet implemented")
+    }
+
 }

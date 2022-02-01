@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 06/01/22, 11:07 AM Last modified: 06/01/22, 11:07 AM
+ * Creator: Debanjan Chatterjee on 24/01/22, 8:13 PM Last modified: 24/01/22, 8:13 PM
  * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,25 +14,28 @@
 
 package com.rudderstack.android.core
 
-import com.rudderstack.android.models.Message
+import com.rudderstack.android.models.RudderServerConfig
+import com.rudderstack.android.web.HttpResponse
 
 /**
- * Class to handle data upload to server
+ * Download config for SDK.
+ * Config aids in usage of device mode plugins.
  *
  */
-interface DataUploadService {
+interface ConfigDownloadService {
     /**
-     * Uploads data to cloud
+     * Fetches the config from
      *
-     * @param data The list of messages to upload
-     * @param extraInfo If any data needs to be added to the body
-     * @param callback Callback providing either success or failure status of upload
+     * @param platform
+     * @param libraryVersion
+     * @param osVersion
      */
-    fun upload(data: List<Message>, extraInfo : Map<String,String>? = null, callback: (success: Boolean) -> Unit)
+    fun download(platform : String, libraryVersion : String, osVersion : String, retryStrategy: RetryStrategy,
+                 callback: (success : Boolean, RudderServerConfig?, lastErrorMsg : String?) -> Unit)
 
     /**
-     * Service no longer needed, release resources
+     * Release resources if any
      *
      */
-    fun shutdown()
+    fun shutDown()
 }

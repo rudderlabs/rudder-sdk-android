@@ -14,15 +14,14 @@
 
 package com.rudderstack.android.core.internal.plugins
 
+import com.rudderstack.android.core.*
 import com.rudderstack.android.core.DestinationConfig
-import com.rudderstack.android.core.Plugin
 import com.rudderstack.android.core.State
-import com.rudderstack.android.core.Storage
 import com.rudderstack.android.core.internal.states.DestinationConfigState
 import com.rudderstack.android.models.Message
 
 /**
- * Will be executed just before the device destination plugins.
+ * Must be added prior to destination plugins.
  * Will store messages till all factories are ready
  * After that reiterate the messages to the plugins
  */
@@ -31,12 +30,20 @@ internal class WakeupActionPlugin(
     private val destConfigState: State<DestinationConfig> = DestinationConfigState
 ) : Plugin {
     override fun intercept(chain: Plugin.Chain): Message {
-        return if(destConfigState.value?.allIntegrationsReady != true || storage.startupQueue.isNotEmpty()){
-            storage.saveStartupMessageInQueue(chain.message())
-            chain.message()
-        }else{
-           chain.proceed(chain.message())
-        }
+        val destinationConfig = destConfigState.value ?: return chain.proceed(chain.message())
+        val forwardChain =
+            if (!destinationConfig.allIntegrationsReady || storage.startupQueue.isNotEmpty()) {
+                storage.saveStartupMessageInQueue(chain.message())
+                //remove all destination plugins that are not ready, for others the message flow is normal
+                val validPlugins = chain.plugins.toMutableList().apply {
+                    removeIf {
+                        it is DestinationPlugin<*> && !destinationConfig.isIntegrationReady(it.name)
+                    }
+                }
+                chain.with(validPlugins)
+            } else chain
+        return forwardChain.proceed(chain.message())
+
     }
 
 }

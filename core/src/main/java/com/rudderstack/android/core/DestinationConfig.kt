@@ -25,7 +25,7 @@ package com.rudderstack.android.core
  * @property integrationMap Denotes the integration along with it's integration state.
  */
 
-class DestinationConfig(private val integrationMap: Map<String, Boolean> = hashMapOf()) {
+internal class DestinationConfig(private val integrationMap: Map<String, Boolean> = hashMapOf()) {
     /**
      * Assigns a particular integration to it's state.
      * In case the integration is not present in the map, it's added along with it's state.
@@ -78,5 +78,14 @@ class DestinationConfig(private val integrationMap: Map<String, Boolean> = hashM
         get() = integrationMap.values.filter { !it }.isNullOrEmpty()
 
     private fun copy(integrationMap: Map<String, Boolean>) = DestinationConfig(integrationMap)
+
+    /**
+     * Remove the destination from destination config, so it won't be accounted for.
+     *
+     * @param plugin The name of the [DestinationPlugin]
+     */
+    fun removeIntegration(plugin: String): DestinationConfig {
+        return copy(integrationMap.toMutableMap().apply { remove(plugin) })
+    }
 
 }

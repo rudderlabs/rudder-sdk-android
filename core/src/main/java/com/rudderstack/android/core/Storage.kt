@@ -15,6 +15,7 @@
 package com.rudderstack.android.core
 
 import com.rudderstack.android.models.Message
+import com.rudderstack.android.models.RudderServerConfig
 
 /**
  * Requires specific implementation of how storage should be handled.
@@ -67,6 +68,18 @@ interface Storage {
     val context : Map<String, String>
 
     /**
+     * CPU extensive operation, better to offload to a different thread
+     *
+     * @param serverConfig SDK initialization data [RudderServerConfig]
+     */
+    fun saveServerConfig(serverConfig: RudderServerConfig)
+
+    /**
+     * CPU intensive operation. Might involve file access.
+     */
+    val serverConfig : RudderServerConfig
+
+    /**
      * Platform specific implementation of saving opt out choice.
      *
      * @param optOut Save opt out state
@@ -84,6 +97,17 @@ interface Storage {
      */
     fun saveStartupMessageInQueue(message: Message)
 
+    /**
+     * Clear startup queue
+     *
+     */
+    fun clearStartupQueue()
+
+    /**
+     * Shutdown the process
+     *
+     */
+    fun shutdown()
     /**
      * @see saveStartupMessageInQueue
      * get the messages that were posted before all device mode destinations initialized.

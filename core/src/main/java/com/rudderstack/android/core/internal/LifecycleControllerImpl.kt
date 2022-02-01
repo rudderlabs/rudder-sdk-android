@@ -31,6 +31,7 @@ internal class LifecycleControllerImpl(
     override val plugins: List<Plugin>
 ) : LifecycleController {
     override fun process() {
-
+        val centralPluginChain = CentralPluginChain(message, plugins)
+        centralPluginChain.proceed(message)
     }
 }

@@ -58,27 +58,27 @@ interface Controller {
      */
     val isOptedOut : Boolean
 
-    /**
+   /* *//**
      * Advertising id(if any) to be sent over to destinations
      *
      * @param advertisingId Advertising id for sending to destinations
-     */
+     *//*
     fun putAdvertisingId(advertisingId: String)
 
-    /**
+    *//**
      * Set FCM device token
      *
      * @param token device token for FCM
-     */
+     *//*
     fun putDeviceToken(token : String)
-
+*/ //android
     /**
      * Custom plugins to be added.
      * These can be used to log/transform messages
      *
-     * @param plugin A [Plugin] object
+     * @param plugins  [Plugin] objects
      */
-    fun addPlugin(vararg plugin: Plugin)
+    fun addPlugin(vararg plugins: Plugin)
     /**
      * Submit a [Message] for processing.
      * The message is taken up by the controller and it passes through the set of timelines defined.
@@ -90,6 +90,7 @@ interface Controller {
      */
     fun processMessage(message: Message, options: RudderOptions?, lifecycleController: LifecycleController? = null)
 
+    //fun reset()
     /**
      * Shuts down the Analytics. Once shutdown, a new instance needs to be created.
      *

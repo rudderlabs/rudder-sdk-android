@@ -16,7 +16,7 @@ package com.rudderstack.android.core.plugins
 
 import com.rudderstack.android.core.Settings
 import com.rudderstack.android.core.internal.CentralPluginChain
-import com.rudderstack.android.core.internal.QueueBasedStorageImpl
+import com.rudderstack.android.core.internal.BasicStorageImpl
 import com.rudderstack.android.core.internal.StorageDecorator
 import com.rudderstack.android.core.internal.plugins.StoragePlugin
 import com.rudderstack.android.core.internal.states.SettingsState
@@ -50,7 +50,7 @@ class StoragePluginTest {
         val settings = Settings(flushQueueSize = 11)
         SettingsState.update(settings)
         val storagePlugin = StoragePlugin(StorageDecorator(
-            QueueBasedStorageImpl(),
+            BasicStorageImpl(),
         ) {
             assertThat(
                 it,
@@ -76,7 +76,7 @@ class StoragePluginTest {
         )
         SettingsState.update(settings)
         val storagePluginCreated = System.currentTimeMillis()
-        val storagePlugin = StoragePlugin(StorageDecorator(QueueBasedStorageImpl()) {
+        val storagePlugin = StoragePlugin(StorageDecorator(BasicStorageImpl()) {
 
             assertThat(
                 (System.currentTimeMillis() - storagePluginCreated), allOf(

@@ -38,3 +38,11 @@ fun Map<String, Any>.addCurrency(value : String) = this + Pair("currency", value
 fun Map<String, Any>.addRevenue(value : String) = this + Pair("revenue", value)
 
 fun Map<String, Any>.addCategory(category : String) = this + ("category" to category)
+
+/**
+ * Used for adding advertisingId to context
+ *
+ * @param advertisingId The advertising id associated to the application
+ */
+fun Map<String, String>.putAdvertisingId(advertisingId : String) = this + ("advertisingId" to advertisingId)
+fun Map<String, String>.putDeviceToken(advertisingId : String) = this + ("advertisingId" to advertisingId)

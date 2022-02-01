@@ -63,7 +63,8 @@ internal class StorageDecorator(
         }
     }
 
-    internal fun shutdown(){
+    override fun shutdown(){
+        storage.shutdown()
         removeDataChangeListener(onDataChange)
         thresholdCountDownTimer.cancel()
 

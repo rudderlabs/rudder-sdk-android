@@ -19,12 +19,16 @@ import com.rudderstack.android.core.State
 import com.rudderstack.android.core.Storage
 import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.Message
+import com.rudderstack.android.models.RudderServerConfig
+import java.io.File
+import java.io.FileOutputStream
+import java.io.ObjectOutputStream
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 
-internal class QueueBasedStorageImpl(
+internal class BasicStorageImpl(
     private val queue: Queue<Message> = LinkedList()
 ) : Storage {
     private var cachedContext: Map<String,String> = mapOf()
@@ -32,6 +36,8 @@ internal class QueueBasedStorageImpl(
     private var _isOptOut = false
     private var _optOutTime = -1L
     private var _optInTime = -1L
+
+    private val serverConfigFile = File("/temp/rudder-analytics/server_config")
 
     override fun saveMessage(vararg messages: Message) {
         queue.addAll(messages)
@@ -62,6 +68,27 @@ internal class QueueBasedStorageImpl(
     override val context: Map<String, String>
         get() = cachedContext
 
+    override fun saveServerConfig(serverConfig: RudderServerConfig) {
+        try {
+            if (!serverConfigFile.exists()) {
+                serverConfigFile.parentFile.mkdirs()
+                serverConfigFile.createNewFile()
+            }
+            val fos = FileOutputStream(serverConfigFile)
+            val oos = ObjectOutputStream(fos)
+
+            oos.writeObject(serverConfig)
+            oos.flush()
+            fos.close()
+
+        }catch (ex : Exception){
+            //TODO(log)
+        }
+    }
+
+    override val serverConfig: RudderServerConfig
+        get() = TODO("Not yet implemented")
+
     override fun saveOptOut(optOut: Boolean) {
          _isOptOut = optOut
         if(optOut){
@@ -69,6 +96,21 @@ internal class QueueBasedStorageImpl(
         }else
             _optInTime = System.currentTimeMillis()
     }
+
+    override fun saveStartupMessageInQueue(message: Message) {
+        TODO("Not yet implemented")
+    }
+
+    override fun clearStartupQueue() {
+        TODO("Not yet implemented")
+    }
+
+    override fun shutdown() {
+        queue.clear()
+    }
+
+    override val startupQueue: List<Message>
+        get() = TODO("Not yet implemented")
 
     override val isOptedOut: Boolean
         get() = _isOptOut

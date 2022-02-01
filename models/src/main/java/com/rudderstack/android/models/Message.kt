@@ -48,16 +48,7 @@ sealed class Message(
 
     internal var type: EventType,
 
-    @SerializedName("messageId")
-    @JsonProperty("messageId")
-    @Json(name = "messageId")
-    //@Expose
-    val messageId: String = String.format(
-        Locale.US,
-        "%d-%s",
-        System.currentTimeMillis(),
-        UUID.randomUUID().toString()
-    ),
+
 
     @SerializedName("context")
     @JsonProperty("context")
@@ -99,6 +90,16 @@ sealed class Message(
 
 
 ) {
+    @SerializedName("messageId")
+    @JsonProperty("messageId")
+    @Json(name = "messageId")
+    //@Expose
+    val messageId: String = String.format(
+        Locale.US,
+        "%d-%s",
+        System.currentTimeMillis(),
+        UUID.randomUUID().toString()
+    )
 
     //ugly hack for moshi
     //https://github.com/square/moshi/issues/609#issuecomment-798805367
@@ -238,7 +239,7 @@ sealed class Message(
 
     open fun copy(): Message = when (this) {
         is AliasMessage -> AliasMessage(
-            messageId,
+//            messageId,
             context,
             anonymousId,
             userId,
@@ -248,7 +249,7 @@ sealed class Message(
             previousId
         )
         is GroupMessage -> GroupMessage(
-            messageId,
+//            messageId,
             context,
             anonymousId,
             userId,
@@ -259,7 +260,7 @@ sealed class Message(
             traits
         )
         is IdentifyMessage -> IdentifyMessage(
-            messageId,
+//            messageId,
             context,
             anonymousId,
             userId,
@@ -269,7 +270,7 @@ sealed class Message(
             properties
         )
         is PageMessage -> PageMessage(
-            messageId,
+//            messageId,
             context,
             anonymousId,
             userId,
@@ -281,7 +282,7 @@ sealed class Message(
             category
         )
         is ScreenMessage -> ScreenMessage(
-            messageId,
+//            messageId,
             context,
             anonymousId,
             userId,
@@ -292,7 +293,7 @@ sealed class Message(
             properties
         )
         is TrackMessage -> TrackMessage(
-            messageId,
+//            messageId,
             context,
             anonymousId,
             userId,
@@ -374,9 +375,7 @@ sealed class Message(
 }
 
 class AliasMessage(
-    @JsonProperty("messageId")
-    @Json(name = "messageId")
-    messageId: String,
+
     @JsonProperty("context")
     @Json(name = "context")
     context: MessageContext? = null,
@@ -403,7 +402,7 @@ class AliasMessage(
 //    _channel : String? = null
 ) : Message(
     EventType.ALIAS,
-    messageId,
+//    messageId,
     context,
     anonymousId,
     userId,
@@ -432,9 +431,7 @@ class AliasMessage(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 class GroupMessage(
-    @JsonProperty("messageId")
-    @Json(name = "messageId")
-    messageId: String,
+
     @JsonProperty("context")
     @Json(name = "context")
     context: MessageContext? = null,
@@ -470,7 +467,7 @@ class GroupMessage(
 
     ) : Message(
     EventType.GROUP,
-    messageId,
+//    messageId,
     context,
     anonymousId,
     userId,
@@ -506,9 +503,7 @@ class GroupMessage(
 
 
 class PageMessage(
-    @JsonProperty("messageId")
-    @Json(name = "messageId")
-    messageId: String,
+
     @JsonProperty("context")
     @Json(name = "context")
     context: MessageContext? = null,
@@ -557,7 +552,7 @@ class PageMessage(
 
     ) : Message(
     EventType.PAGE,
-    messageId,
+//    messageId,
     context,
     anonymousId,
     userId,
@@ -596,9 +591,7 @@ class PageMessage(
 
 
 class ScreenMessage(
-    @JsonProperty("messageId")
-    @Json(name = "messageId")
-    messageId: String,
+
     @JsonProperty("context")
     @Json(name = "context")
     context: MessageContext? = null,
@@ -642,7 +635,7 @@ class ScreenMessage(
 
     ) : Message(
     EventType.SCREEN,
-    messageId,
+//    messageId,
     context,
     anonymousId,
     userId,
@@ -671,9 +664,7 @@ class ScreenMessage(
 
 @JsonIgnoreProperties(ignoreUnknown = true, allowSetters = true)
 class TrackMessage(
-    @JsonProperty("messageId")
-    @Json(name = "messageId")
-    messageId: String,
+
     @JsonProperty("context")
     @Json(name = "context")
     context: MessageContext? = null,
@@ -715,7 +706,7 @@ class TrackMessage(
     val properties: TrackProperties? = null,
 ) : Message(
     EventType.TRACK,
-    messageId,
+//    messageId,
     context,
     anonymousId,
     userId,
@@ -751,9 +742,7 @@ class TrackMessage(
 
 
 class IdentifyMessage(
-    @JsonProperty("messageId")
-    @Json(name = "messageId")
-    messageId: String,
+
     @JsonProperty("context")
     @Json(name = "context")
     context: MessageContext? = null,
@@ -785,7 +774,7 @@ class IdentifyMessage(
 
     ) : Message(
     EventType.IDENTIFY,
-    messageId,
+//    messageId,
     context,
     anonymousId,
     userId,

@@ -20,7 +20,7 @@ import java.net.HttpURLConnection
  * An interceptor for the http connection chain.
  * Adding headers or modifying the HttpConnection can be done here
  */
-interface HttpInterceptor {
+fun interface HttpInterceptor {
     /**
      * @param connection The created HttpURLConnection object, could be cast to HttpsURLConnection, if ssl is used
      */

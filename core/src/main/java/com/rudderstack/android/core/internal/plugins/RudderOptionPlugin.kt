@@ -61,12 +61,10 @@ internal class RudderOptionPlugin(private val options: RudderOptions) : Plugin {
     }
 
     private fun validIntegrations(): Map<String, Boolean> {
-        return if (options.integrations.isEmpty() || options.integrations.getOrDefault(
-                "All",
-                false
-            )
+        return if (options.integrations.isEmpty()
         ) mapOf("All" to true) // if integrations is empty, it should allow All
         else options.integrations
 
     }
+
 }

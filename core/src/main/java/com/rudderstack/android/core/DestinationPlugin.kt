@@ -34,6 +34,12 @@ interface DestinationPlugin<T> : Plugin {
      * An unique name for Destination plugin
      */
     val name : String
+
+    /**
+     * Returns whether this plugin is ready to accept events.
+     * Closely linked to [onReadyCallbacks]
+     */
+    val isReady : Boolean
     var subPlugins: List<PluginInterceptor>
     var onReadyCallbacks: List<(T, Boolean) -> Unit>
 //    get() = ArrayList(field)
@@ -74,9 +80,10 @@ interface DestinationPlugin<T> : Plugin {
          *     chain.proceed(chain.request())
          * }
          * ```
-         */
+         *//*
         inline operator fun<T> invoke(name: String,  crossinline block: (chain: Plugin.Chain) -> Message): DestinationPlugin<T> =
             object : DestinationPlugin<T> {
+
                 override val name: String
                     get() = name
                 override var subPlugins: List<PluginInterceptor> = listOf()
@@ -86,7 +93,8 @@ interface DestinationPlugin<T> : Plugin {
                 }
 
                 override var onReadyCallbacks: List<(T, Boolean) -> Unit> = listOf()
-            }
+
+            }*/
     }
 
     /**

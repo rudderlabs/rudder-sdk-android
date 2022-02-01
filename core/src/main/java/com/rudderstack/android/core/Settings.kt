@@ -36,24 +36,19 @@ package com.rudderstack.android.core
 data class Settings(
     val anonymousId : String? = null,
     val options: RudderOptions = RudderOptions.default(),
-    val dataPlaneUrl: String = DATA_PLANE_URL,
+//    val dataPlaneUrl: String = DATA_PLANE_URL,
     val flushQueueSize: Int = FLUSH_QUEUE_SIZE,
     val maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
-    private val _controlPlaneUrl: String = CONTROL_PLANE_URL,
+//    private val _controlPlaneUrl: String = CONTROL_PLANE_URL,
     val isOptOut : Boolean = false
     //available in android only
 //    val trackLifecycleEvents: Boolean = false,
 //    val recordScreenViews: Boolean = false,
 ) {
-    val controlPlaneUrl
-    get() = _controlPlaneUrl.formattedUrl
-
     companion object {
         /**
          * Default values for settings
          */
-        // default base url or rudder-backend-server
-        private const val DATA_PLANE_URL = "https://hosted.rudderlabs.com"
 
         // default flush queue size for the events to be flushed to server
         private const val FLUSH_QUEUE_SIZE = 30
@@ -63,8 +58,6 @@ data class Settings(
         // events will be flushed to server after maxFlushInterval millis
         private const val MAX_FLUSH_INTERVAL = 10 * 1000L //10 seconds
 
-        // config-plane url to get the config for the writeKey
-        private const val CONTROL_PLANE_URL = "https://api.rudderlabs.com/"
 
     }
     /**

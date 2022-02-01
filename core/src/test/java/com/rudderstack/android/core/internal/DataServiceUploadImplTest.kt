@@ -55,11 +55,9 @@ abstract class DataServiceUploadImplTest {
     fun setup() {
         dataServiceImpl = DataUploadServiceImpl(
             "1xXCubSHWXbpBI2h6EpCjKOsxmQ",
-            jsonAdapter
+            jsonAdapter, dataPlaneUrl = "https://rudderstacgwyx.dataplane.rudderstack.com"
         )
-        SettingsState.update(Settings(
-            _controlPlaneUrl = "https://rudderstacgwyx.dataplane.rudderstack.com"
-        ))
+
     }
 
     @Test

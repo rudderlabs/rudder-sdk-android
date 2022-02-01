@@ -95,6 +95,13 @@ fun interface Plugin {
     fun  intercept(chain: Chain): Message
 
     /**
+     * Setup code for this plugin
+     * Helps in changing settings, etc.
+     * @param analytics The analytics object this plugin is added to.
+     */
+    fun setup(analytics: Analytics){}
+
+    /**
      * Called when settings is updated
      *
      * @param settings [Settings] globally set for the sdk
