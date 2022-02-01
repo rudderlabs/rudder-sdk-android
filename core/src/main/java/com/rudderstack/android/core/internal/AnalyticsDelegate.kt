@@ -117,6 +117,8 @@ internal class AnalyticsDelegate(
         destConfigState = DestinationConfigState
     )
 
+    private var _serverConfig: RudderServerConfig? = null
+
     init {
         SettingsState.update(settings)
         DestinationConfigState.update(DestinationConfig())
@@ -129,6 +131,9 @@ internal class AnalyticsDelegate(
 
     override fun applySettings(settings: Settings) {
         SettingsState.update(settings)
+        applyClosure {
+            applySettingsClosure(this)
+        }
     }
 
     override fun applyClosure(closure: Plugin.() -> Unit) {
@@ -161,6 +166,7 @@ internal class AnalyticsDelegate(
     }*/
 
     override fun addPlugin(vararg plugins: Plugin) {
+
         if (plugins.isEmpty()) return
         plugins.forEach {
             if (it is DestinationPlugin<*>) {
@@ -173,8 +179,11 @@ internal class AnalyticsDelegate(
             } else
                 _customPlugins = _customPlugins + it
 
+            applyUpdateClosures(it)
         }
+
     }
+
 
 
     override fun processMessage(
@@ -260,23 +269,30 @@ internal class AnalyticsDelegate(
             libDetails.getOrDefault(LIB_KEY_OS_VERSION, ""),
             sdkVerifyRetryStrategy
         ) { success, rudderServerConfig, lastErrorMsg ->
-            if (success && rudderServerConfig != null && rudderServerConfig.source?.isSourceEnabled != false) {
-                handleConfigData(rudderServerConfig)
-            } else {
-                //TODO(logger)
-                //log lastErrorMsg or isSourceEnabled
-                shutdown()
+            analyticsExecutor.submit {
+                if (success && rudderServerConfig != null && rudderServerConfig.source?.isSourceEnabled != false) {
+                    handleConfigData(rudderServerConfig)
+                } else {
+                    val cachedConfig = _storageDecorator.serverConfig
+                    if(cachedConfig != null)
+                        handleConfigData(cachedConfig)
+                    else {
+                        //TODO(logger)
+                        //log lastErrorMsg or isSourceEnabled
+                        shutdown()
+                    }
+                }
             }
         }
     }
 
     private fun handleConfigData(serverConfig: RudderServerConfig) {
-        analyticsExecutor.submit {
-            _storageDecorator.saveServerConfig(serverConfig)
-            applyClosure {
-                updateRudderServerConfig(serverConfig)
-            }
+        _storageDecorator.saveServerConfig(serverConfig)
+        _serverConfig = serverConfig
+        applyClosure {
+            applyServerConfigClosure(this)
         }
+
     }
 
     /**
@@ -293,10 +309,16 @@ internal class AnalyticsDelegate(
         _internalPrePlugins = _internalPrePlugins + storagePlugin
 
         _internalPostPlugins = _internalPostPlugins + wakeupActionPlugin
+        //if plugin update related configs are ready
+        applyClosure {
+            applyUpdateClosures(this)
+        }
     }
 
     private fun onStorageDataChange(data: List<Message>) {
-        if (data.isEmpty()) return
+        if (data.isEmpty() || _serverConfig == null) return // in case server config is
+        // not yet downloaded
+
         //post the data
         dataUploadService.upload(data, _commonContext) {
             if (it) {
@@ -305,5 +327,23 @@ internal class AnalyticsDelegate(
         }
 
 
+    }
+
+    private fun applyUpdateClosures(plugin: Plugin) {
+        //server config closure, if available
+        applyServerConfigClosure(plugin)
+        //settings closure
+        applySettingsClosure(plugin)
+    }
+
+    private fun applySettingsClosure(plugin: Plugin){
+        SettingsState.value?.apply {
+            plugin.updateSettings(this)
+        }
+    }
+    private fun applyServerConfigClosure(plugin: Plugin){
+        _serverConfig?.apply {
+            plugin.updateRudderServerConfig(this@apply)
+        }
     }
 }

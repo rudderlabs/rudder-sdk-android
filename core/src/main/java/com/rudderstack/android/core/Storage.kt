@@ -77,7 +77,7 @@ interface Storage {
     /**
      * CPU intensive operation. Might involve file access.
      */
-    val serverConfig : RudderServerConfig
+    val serverConfig : RudderServerConfig?
 
     /**
      * Platform specific implementation of saving opt out choice.

@@ -14,8 +14,10 @@
 
 package com.rudderstack.android.core.internal.plugins
 
+import com.rudderstack.android.core.DestinationPlugin
 import com.rudderstack.android.core.Plugin
 import com.rudderstack.android.models.Message
+import com.rudderstack.android.models.RudderServerConfig
 
 /**
  * Enables or disables destination plugins based on server config.
@@ -29,8 +31,29 @@ import com.rudderstack.android.models.Message
  * In case device mode destination plugins are present along with server config, all destination
  * plugins that are disabled in destination config are filtered out.
  */
-internal class DestinationConfigurationPlugin /*: Plugin {
+internal class DestinationConfigurationPlugin : Plugin {
+    private var _notAllowedDestinations : List<String> = listOf()
+    private var _isConfigUpdated = false
     override fun intercept(chain: Plugin.Chain): Message {
+        val msg = chain.message()
+        val destinationPlugins = chain.plugins.filterIsInstance<DestinationPlugin<*>>()
 
+        return  if (destinationPlugins.isNotEmpty()) {
+            val validPlugins = destinationPlugins.filter {
+               _isConfigUpdated && it.name !in _notAllowedDestinations
+            }
+            return chain.with(validPlugins).proceed(msg)
+        } else
+            chain.proceed(msg)
     }
-}*/
+
+    override fun updateRudderServerConfig(config: RudderServerConfig) {
+        super.updateRudderServerConfig(config)
+        _isConfigUpdated = true
+        _notAllowedDestinations = config.source?.destinations?.filter {
+            !it.isDestinationEnabled
+        }?.map {
+            it.destinationName?: it.destinationDefinition?.definitionName?:""
+        }?: listOf()
+    }
+}
