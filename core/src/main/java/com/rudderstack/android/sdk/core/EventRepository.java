@@ -331,23 +331,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         messageIds.clear();
                         messages.clear();
 
-                        // get current record count from db
-                        int recordCount = dbManager.getDBRecordCount();
-                        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: DBRecordCount: %d", recordCount));
-                        // if record count exceeds threshold count, remove older events
-                        if (recordCount > config.getDbCountThreshold()) {
-                            // fetch extra old events
-                            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: OldRecordCount: %d", (recordCount - config.getDbCountThreshold())));
-                            dbManager.fetchEventsFromDB(messageIds, messages, recordCount - config.getDbCountThreshold());
-                            // remove events
-                            dbManager.clearEventsFromDB(messageIds);
-                            // clear lists for reuse
-                            messageIds.clear();
-                            messages.clear();
-                        }
-
+                        checkIfDBThresholdAttained();
                         // fetch enough events to form a batch
-                        RudderLogger.logDebug("Fetching events to flush to sever");
+                        RudderLogger.logDebug("EventRepository: processor: Fetching events to flush to server");
                         dbManager.fetchEventsFromDB(messageIds, messages, config.getFlushQueueSize());
                         // if there are enough events to form a batch and flush to server
                         // OR
@@ -390,6 +376,27 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
             }
         };
+    }
+
+    /*
+     * check if the number of events in the db crossed the dbCountThreshold then delete the older events which are in excess.
+     */
+
+    private void checkIfDBThresholdAttained() {
+        // get current record count from db
+        int recordCount = dbManager.getDBRecordCount();
+        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: checkIfDBThresholdAttained: DBRecordCount: %d", recordCount));
+        // if record count exceeds threshold count, remove older events
+        if (recordCount > config.getDbCountThreshold()) {
+            // fetch extra old events
+            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: checkIfDBThresholdAttained: OldRecordCount: %d", (recordCount - config.getDbCountThreshold())));
+            // initiate lists for messageId and message
+            ArrayList<Integer> messageIds = new ArrayList<>();
+            ArrayList<String> messages = new ArrayList<>();
+            dbManager.fetchEventsFromDB(messageIds, messages, recordCount - config.getDbCountThreshold());
+            // remove events
+            dbManager.clearEventsFromDB(messageIds);
+        }
     }
 
     /*
@@ -527,6 +534,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         return Utils.NetworkResponses.ERROR;
     }
 
+
     /*
      * generic method for dumping all the events
      * */
@@ -636,7 +644,34 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
             }
         }
+
+        Utils.NetworkResponses networkResponse = Utils.NetworkResponses.ERROR;
+        // initiate lists for messageId and message
+        ArrayList<Integer> messageIds = new ArrayList<>();
+        ArrayList<String> messages = new ArrayList<>();
+
+        // fetch enough events to form a batch
+        RudderLogger.logDebug("EventRepository: Flush: Fetching events to flush to server");
+        dbManager.fetchEventsFromDB(messageIds, messages, config.getFlushQueueSize());
+
+        if (!messages.isEmpty()) {
+            // form payload JSON form the list of messages
+            String payload = getPayloadFromMessages(messageIds, messages);
+            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: payload: %s", payload));
+            RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: EventCount: %d", messageIds.size()));
+            if (payload != null) {
+                // send payload to server if it is not null
+                networkResponse = flushEventsToServer(payload);
+                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: ServerResponse: %s", networkResponse));
+                // if success received from server
+                if (networkResponse == Utils.NetworkResponses.SUCCESS) {
+                    // remove events from DB
+                    dbManager.clearEventsFromDB(messageIds);
+                }
+            }
+        }
     }
+
 
     void onIntegrationReady(String key, RudderClient.Callback callback) {
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: onIntegrationReady: callback registered for %s", key));
@@ -713,8 +748,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
                 RudderMessage trackMessage;
                 trackMessage = new RudderMessageBuilder()
-                            .setEventName("Application Opened")
-                            .setProperty(Utils.trackDeepLink(activity, isFirstLaunch, versionCode))
+                        .setEventName("Application Opened")
+                        .setProperty(Utils.trackDeepLink(activity, isFirstLaunch, versionCode))
                         .build();
                 trackMessage.setType(MessageType.TRACK);
                 this.dump(trackMessage);
