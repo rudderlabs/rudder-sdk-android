@@ -18,7 +18,7 @@ public class RudderClient {
     // singleton instance
     private static RudderClient instance;
     // repository instance
-    private static EventRepository repository;
+    static EventRepository repository;
     private static Application application;
     private static String _advertisingId;
     private static String _anonymousId;

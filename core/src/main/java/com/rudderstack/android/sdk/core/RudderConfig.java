@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 
 import com.rudderstack.android.sdk.core.util.Utils;
 
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +36,7 @@ public class RudderConfig {
     private int sleepTimeOut;
     private int logLevel;
     private int configRefreshInterval;
+    private boolean flushPeriodically;
     private boolean trackLifecycleEvents;
     private boolean recordScreenViews;
     private String controlPlaneUrl;
@@ -49,6 +51,7 @@ public class RudderConfig {
                 Constants.SLEEP_TIMEOUT,
                 RudderLogger.RudderLogLevel.ERROR,
                 Constants.CONFIG_REFRESH_INTERVAL,
+                Constants.FLUSH_PERIODICALLY,
                 Constants.TRACK_LIFECYCLE_EVENTS,
                 Constants.RECORD_SCREEN_VIEWS,
                 Constants.CONTROL_PLANE_URL,
@@ -64,6 +67,7 @@ public class RudderConfig {
             int sleepTimeOut,
             int logLevel,
             int configRefreshInterval,
+            boolean flushPeriodically,
             boolean trackLifecycleEvents,
             boolean recordScreenViews,
             String controlPlaneUrl,
@@ -114,6 +118,7 @@ public class RudderConfig {
             this.sleepTimeOut = sleepTimeOut;
         }
 
+        this.flushPeriodically = flushPeriodically;
         this.trackLifecycleEvents = trackLifecycleEvents;
         this.recordScreenViews = recordScreenViews;
 
@@ -186,6 +191,13 @@ public class RudderConfig {
      */
     public int getConfigRefreshInterval() {
         return configRefreshInterval;
+    }
+
+    /**
+     * @return flushPeriodically (whether the periodic flushing of events in the db is enabled using Workmanager or not)
+     */
+    public boolean isPeriodicFlushEnabled() {
+        return flushPeriodically;
     }
 
     /**
@@ -457,6 +469,18 @@ public class RudderConfig {
             return this;
         }
 
+        private boolean flushPeriodically = Constants.FLUSH_PERIODICALLY;
+
+        /**
+         * @param shouldFlushPeriodically Whether we should flush the events in the db periodically or not
+         * @return RudderConfig.Builder
+         */
+
+        public Builder withFlushPeriodically(boolean shouldFlushPeriodically) {
+            this.flushPeriodically = shouldFlushPeriodically;
+            return this;
+        }
+
         private boolean recordScreenViews = Constants.RECORD_SCREEN_VIEWS;
 
         /**
@@ -514,6 +538,7 @@ public class RudderConfig {
                     this.sleepTimeout,
                     this.isDebug ? RudderLogger.RudderLogLevel.DEBUG : logLevel,
                     this.configRefreshInterval,
+                    this.flushPeriodically,
                     this.trackLifecycleEvents,
                     this.recordScreenViews,
                     this.controlPlaneUrl,

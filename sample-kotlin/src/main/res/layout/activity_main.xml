@@ -77,11 +77,11 @@
             android:text="Screen" />
 
         <Button
-            android:id="@+id/identifyBtn"
+            android:id="@+id/flush"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:text="Identify" />
+            android:text="Flush" />
 
         <Button
             android:id="@+id/resetBtn"

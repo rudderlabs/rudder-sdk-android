@@ -18,6 +18,8 @@ class Constants {
     static final int SLEEP_TIMEOUT = 10;
     // config-plane url to get the config for the writeKey
     static final String CONTROL_PLANE_URL = "https://api.rudderlabs.com";
+    // wether we should enable periodic flushing of events using WorkManager automatically
+    static final boolean FLUSH_PERIODICALLY = false;
     // whether we should trackLifecycle events
     static final boolean TRACK_LIFECYCLE_EVENTS = true;
     // whether we should record screen views automatically

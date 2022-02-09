@@ -2,6 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -11,6 +12,13 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import androidx.work.WorkRequest;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -31,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
@@ -40,8 +49,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private final List<RudderMessage> eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
     private String authHeaderString;
     private String anonymousIdHeaderString;
-    private int versionCode;
-    private RudderConfig config;
+    private Context context;
+    RudderConfig config;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
     private RudderPreferenceManager preferenceManager;
@@ -75,6 +84,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         } catch (UnsupportedEncodingException ex) {
             RudderLogger.logError(ex);
         }
+        this.context = _application.getApplicationContext();
         this.config = _config;
         RudderLogger.logDebug(String.format("EventRepository: constructor: %s", this.config.toString()));
 
@@ -182,6 +192,39 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }).start();
     }
 
+    private void sendApplicationInstalled(int versionCode) {
+        // If trackLifeCycleEvents is not allowed then discard the event
+        if (!config.isTrackLifecycleEvents()) {
+            return;
+        }
+        RudderLogger.logDebug("Tracking Application Installed");
+        RudderMessage message = new RudderMessageBuilder()
+                .setEventName("Application Installed")
+                .setProperty(
+                        new RudderProperty()
+                                .putValue("version", versionCode)
+                ).build();
+        message.setType(MessageType.TRACK);
+        dump(message);
+    }
+
+    private void sendApplicationUpdated(int previousVersionCode, int newVersionCode) {
+        // If either optOut() is set to true or LifeCycleEvents set to false then discard the event
+        if (getOptStatus() || !config.isTrackLifecycleEvents()) {
+            return;
+        }
+        // Application Updated event
+        RudderLogger.logDebug("Tracking Application Updated");
+        RudderMessage message = new RudderMessageBuilder().setEventName("Application Updated")
+                .setProperty(
+                        new RudderProperty()
+                                .putValue("previous_version", previousVersionCode)
+                                .putValue("version", newVersionCode)
+                ).build();
+        message.setType(MessageType.TRACK);
+        dump(message);
+    }
+
     private void checkApplicationUpdateStatus(Application application) {
         try {
             int previousVersionCode = preferenceManager.getBuildVersionCode();
@@ -189,50 +232,27 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             String packageName = application.getPackageName();
             PackageManager packageManager = application.getPackageManager();
             PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
+            int newVersionCode = 0;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                versionCode = (int) packageInfo.getLongVersionCode();
+                newVersionCode = (int) packageInfo.getLongVersionCode();
             } else {
-                versionCode = packageInfo.versionCode;
+                newVersionCode = packageInfo.versionCode;
             }
-            RudderLogger.logDebug("Current Installed Version: " + versionCode);
-
+            RudderLogger.logDebug("Current Installed Version: " + newVersionCode);
             if (previousVersionCode == -1) {
                 // application was not installed previously, Application Installed event
-                preferenceManager.saveBuildVersionCode(versionCode);
-                // If trackLifeCycleEvents is not allowed then discard the event
-                if (!config.isTrackLifecycleEvents()) {
-                    return;
-                }
-                RudderLogger.logDebug("Tracking Application Installed");
-                RudderMessage message = new RudderMessageBuilder()
-                        .setEventName("Application Installed")
-                        .setProperty(
-                                new RudderProperty()
-                                        .putValue("version", versionCode)
-                        ).build();
-                message.setType(MessageType.TRACK);
-                dump(message);
-            } else if (previousVersionCode != versionCode) {
-                preferenceManager.saveBuildVersionCode(versionCode);
-                // If either optOut() is set to true or LifeCycleEvents set to false then discard the event
-                if (getOptStatus() || !config.isTrackLifecycleEvents()) {
-                    return;
-                }
-                // Application Updated event
-                RudderLogger.logDebug("Tracking Application Updated");
-                RudderMessage message = new RudderMessageBuilder().setEventName("Application Updated")
-                        .setProperty(
-                                new RudderProperty()
-                                        .putValue("previous_version", previousVersionCode)
-                                        .putValue("version", versionCode)
-                        ).build();
-                message.setType(MessageType.TRACK);
-                dump(message);
+                preferenceManager.saveBuildVersionCode(newVersionCode);
+                sendApplicationInstalled(newVersionCode);
+                registerPeriodicFlushWorker();
+            } else if (previousVersionCode != newVersionCode) {
+                preferenceManager.saveBuildVersionCode(newVersionCode);
+                sendApplicationUpdated(previousVersionCode, newVersionCode);
             }
         } catch (PackageManager.NameNotFoundException ex) {
             RudderLogger.logError(ex);
         }
     }
+
 
     private void initiateFactories(List<RudderServerDestination> destinations) {
         // initiate factory initialization after 10s
@@ -330,35 +350,38 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         // clear lists for reuse
                         messageIds.clear();
                         messages.clear();
-
-                        checkIfDBThresholdAttained();
-                        // fetch enough events to form a batch
-                        RudderLogger.logDebug("EventRepository: processor: Fetching events to flush to server");
-                        dbManager.fetchEventsFromDB(messageIds, messages, config.getFlushQueueSize());
-                        // if there are enough events to form a batch and flush to server
-                        // OR
-                        // sleepTimeOut seconds has elapsed since last successful flush and
-                        // we have at least one event to flush to server
-                        if (messages.size() >= config.getFlushQueueSize() || (!messages.isEmpty() && sleepCount >= config.getSleepTimeOut())) {
-                            // form payload JSON form the list of messages
-                            String payload = getPayloadFromMessages(messageIds, messages);
-                            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: payload: %s", payload));
-                            RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: EventCount: %d", messageIds.size()));
-                            if (payload != null) {
-                                // send payload to server if it is not null
-                                networkResponse = flushEventsToServer(payload);
-                                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: ServerResponse: %s", networkResponse));
-                                // if success received from server
-                                if (networkResponse == Utils.NetworkResponses.SUCCESS) {
-                                    // remove events from DB
-                                    dbManager.clearEventsFromDB(messageIds);
-                                    // reset sleep count to indicate successful flush
-                                    sleepCount = 0;
+                        synchronized (dbManager) {
+                            System.out.println("Desu: Processor is Running");
+                            checkIfDBThresholdAttained();
+                            // fetch enough events to form a batch
+                            RudderLogger.logDebug("EventRepository: processor: Fetching events to flush to server");
+                            dbManager.fetchEventsFromDB(messageIds, messages, config.getFlushQueueSize());
+                            // if there are enough events to form a batch and flush to server
+                            // OR
+                            // sleepTimeOut seconds has elapsed since last successful flush and
+                            // we have at least one event to flush to server
+                            if (messages.size() >= config.getFlushQueueSize() || (!messages.isEmpty() && sleepCount >= config.getSleepTimeOut())) {
+                                // form payload JSON form the list of messages
+                                String payload = getPayloadFromMessages(messageIds, messages);
+                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: payload: %s", payload));
+                                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: EventCount: %d", messageIds.size()));
+                                if (payload != null) {
+                                    // send payload to server if it is not null
+                                    networkResponse = flushEventsToServer(payload);
+                                    RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: ServerResponse: %s", networkResponse));
+                                    // if success received from server
+                                    if (networkResponse == Utils.NetworkResponses.SUCCESS) {
+                                        // remove events from DB
+                                        dbManager.clearEventsFromDB(messageIds);
+                                        // reset sleep count to indicate successful flush
+                                        sleepCount = 0;
+                                    }
                                 }
                             }
                         }
                         // increment sleepCount to track total elapsed seconds
                         sleepCount += 1;
+                        System.out.println(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
                         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
                         if (networkResponse == Utils.NetworkResponses.WRITE_KEY_ERROR) {
                             RudderLogger.logInfo("Wrong WriteKey. Aborting");
@@ -385,6 +408,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private void checkIfDBThresholdAttained() {
         // get current record count from db
         int recordCount = dbManager.getDBRecordCount();
+        System.out.println(String.format(Locale.US, "EventRepository: checkIfDBThresholdAttained: DBRecordCount: %d", recordCount));
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: checkIfDBThresholdAttained: DBRecordCount: %d", recordCount));
         // if record count exceeds threshold count, remove older events
         if (recordCount > config.getDbCountThreshold()) {
@@ -405,7 +429,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * of deserialization and forming the payload object and creating the json string
      * again from the object
      * */
-    private String getPayloadFromMessages(ArrayList<Integer> messageIds, ArrayList<String> messages) {
+    String getPayloadFromMessages(ArrayList<Integer> messageIds, ArrayList<String> messages) {
         try {
             RudderLogger.logDebug("EventRepository: getPayloadFromMessages: recordCount: " + messages.size());
             String sentAtTimestamp = Utils.getTimeStamp();
@@ -463,7 +487,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     /*
      * flush events payload to server and return response as String
      * */
-    private Utils.NetworkResponses flushEventsToServer(String payload) {
+    Utils.NetworkResponses flushEventsToServer(String payload) {
         try {
             if (TextUtils.isEmpty(this.authHeaderString)) {
                 RudderLogger.logError("EventRepository: flushEventsToServer: WriteKey was not correct. Aborting flush to server");
@@ -472,6 +496,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
             // get endPointUrl form config object
             String dataPlaneEndPoint = config.getDataPlaneUrl() + "v1/batch";
+            System.out.println("EventRepository: flushEventsToServer: dataPlaneEndPoint: " + dataPlaneEndPoint);
             RudderLogger.logDebug("EventRepository: flushEventsToServer: dataPlaneEndPoint: " + dataPlaneEndPoint);
 
             // create url object
@@ -529,6 +554,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
             }
         } catch (Exception ex) {
+            System.out.println("Printing cause:" + ex.getCause());
+            System.out.println("Printing Localized Message: " + ex.getLocalizedMessage());
+            System.out.println(ex.getStackTrace());
             RudderLogger.logError(ex);
         }
         return Utils.NetworkResponses.ERROR;
@@ -633,6 +661,102 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
+    void registerPeriodicFlushWorker() {
+
+        if (config.isPeriodicFlushEnabled()) {
+            Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
+            PeriodicWorkRequest flushPendingEvents =
+                    new PeriodicWorkRequest.Builder(FlushEventsWorker.class, 1, TimeUnit.HOURS)
+                            .addTag("Flushing Pending Events Periodically")
+                            .setConstraints(constraints)
+                            .build();
+
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                    "flushEvents",
+                    ExistingPeriodicWorkPolicy.KEEP,
+                    flushPendingEvents);
+
+            System.out.println("Periodic Flush Worker Registered and its Id is " + flushPendingEvents.getId());
+        }
+
+//        WorkRequest uploadWorkRequest =
+//                new OneTimeWorkRequest.Builder(FlushEventsWorker.class)
+//                        .addTag("Flush for one-time")
+//                        .build();
+//
+//        System.out.println("Work Id is : " + uploadWorkRequest.getId());
+//
+//        WorkManager
+//                .getInstance(context)
+//                .enqueue(uploadWorkRequest);
+//
+//
+//        System.out.println("Work enqueued");
+
+        // We cannot send Event repository object and config through the data object.
+        //  new Data.Builder().put("EVENT_REPOSITORY", this).put("CONFIG", config);
+
+
+//        // Example of creating constraints, periodic work request and setting constraints to it.
+//        Constraints constraints = new Constraints.Builder().setRequiresDeviceIdle(true).setRequiredNetworkType(NetworkType.CONNECTED).build();
+//        PeriodicWorkRequest saveRequest =
+//                new PeriodicWorkRequest.Builder(FlushEventsWorker.class, 1, TimeUnit.HOURS)
+//                        .addTag("Flushing Periodically")
+//                        .setConstraints(constraints)
+//                        .build();
+//
+
+
+        // We will use enqueueUniquePeriodicWork as we don't want the same work to be enqueued again and again even though this block of code is called everytime the app is launched.
+        // Probably we can use the logic for registering the periodic work in the section where we are triggering Application Installed.
+        // At the end we need to see we will have only one work running with the given tag regardless of how many times you enqueue it.
+//        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+//                "sendLogs",
+//                ExistingPeriodicWorkPolicy.KEEP,
+//                saveRequest);
+
+
+        //        saveRequest.getId(); // could be the work id, which we can use to check the status of the work.
+        // trying to read the work status and print it accordingly, need to figure out how to get access to the lifecycleowner here
+//        WorkManager.getInstance(context).getWorkInfoByIdLiveData(uploadWorkRequest.getId()).observe(lifecycleOwner, new Observer<WorkInfo>() {
+//            @Override
+//            public void onChanged(@Nullable WorkInfo workInfo) {
+//                if (workInfo != null) {
+//                    Data progress = workInfo.getProgress();
+//                    int value = progress.getInt(PROGRESS, 0);
+//
+//                }
+//            }
+//        });
+
+    }
+
+    <T> ArrayList<T> getBatch(ArrayList<T> messageDetails) {
+        if (messageDetails.size() <= 30) {
+            return messageDetails;
+        } else {
+            return new ArrayList(messageDetails.subList(0, 30));
+        }
+    }
+
+//    String getBatchPayload(ArrayList<Integer> messageIds, ArrayList<String> messages) {
+//        if (messages.size() <= config.getFlushQueueSize()) {
+//            return getPayloadFromMessages(messageIds, messages);
+//        } else {
+//            return getPayloadFromMessages(new ArrayList(messageIds.subList(0, config.getFlushQueueSize())), new ArrayList(messages.subList(0, config.getFlushQueueSize())));
+//        }
+//    }
+//
+//    void clearBatchPayload(ArrayList<Integer> messageIds, ArrayList<String> messages) {
+//        if (messages.size() <= config.getFlushQueueSize()) {
+//            messages.clear();
+//            messageIds.clear();
+//        } else {
+//            messages.subList(0, config.getFlushQueueSize()).clear();
+//            messageIds.subList(0, config.getFlushQueueSize()).clear();
+//        }
+//    }
+
     void flush() {
         if (areFactoriesInitialized) {
             RudderLogger.logDebug("EventRepository: flush native SDKs");
@@ -645,31 +769,63 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             }
         }
 
-        Utils.NetworkResponses networkResponse = Utils.NetworkResponses.ERROR;
-        // initiate lists for messageId and message
-        ArrayList<Integer> messageIds = new ArrayList<>();
-        ArrayList<String> messages = new ArrayList<>();
+        // We need to update this to flush untill and unless there are no events in the db.
+        // We need to synchronize the access to the db between the processor thread and flush background thread
+        // we will also add logs that at the moment there are total 90 events and since the batch size is 30,
+        // they will be sent as 3 events or something like that
 
-        // fetch enough events to form a batch
-        RudderLogger.logDebug("EventRepository: Flush: Fetching events to flush to server");
-        dbManager.fetchEventsFromDB(messageIds, messages, config.getFlushQueueSize());
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Utils.NetworkResponses networkResponse = Utils.NetworkResponses.ERROR;
+                // initiate lists for messageId and message
+                ArrayList<Integer> entireMessageIds = new ArrayList<>();
+                ArrayList<String> entireMessages = new ArrayList<>();
 
-        if (!messages.isEmpty()) {
-            // form payload JSON form the list of messages
-            String payload = getPayloadFromMessages(messageIds, messages);
-            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: payload: %s", payload));
-            RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: EventCount: %d", messageIds.size()));
-            if (payload != null) {
-                // send payload to server if it is not null
-                networkResponse = flushEventsToServer(payload);
-                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: ServerResponse: %s", networkResponse));
-                // if success received from server
-                if (networkResponse == Utils.NetworkResponses.SUCCESS) {
-                    // remove events from DB
-                    dbManager.clearEventsFromDB(messageIds);
+                // while there are events in the db.
+                // or may be we will get all the events available in the db the moment this call is made. and send them as individual batches.
+                // but while flush is happening, we need to make sure the processor is not picking up the same events, so that the events are not sent twice.
+                // or for flush we will not care about the batch size
+                // if the ingestion happens continously, flush might happen forever.
+                // we need to hold the processor while the flush is happening, so that either processor / flush will happen any given time.
+                // we can use synchronization (or) lock on the event repository object, so that the either of processor thread or flush thread are sending events at any time.
+
+                // fetch enough events to form a batch
+                RudderLogger.logDebug("EventRepository: Flush: Fetching events to flush to server");
+                dbManager.fetchAllEventsFromDB(entireMessageIds, entireMessages);
+                while (true) {
+                    synchronized (dbManager) {
+                        System.out.println("Desu: Flush is running");
+                    }
                 }
+
+//                while (entireMessages.size() > 0) {
+//                    ArrayList<Integer> batchMessageIds = getBatch(entireMessageIds);
+//                    ArrayList<String> batchMessages = getBatch(entireMessages);
+//                    String payload = getPayloadFromMessages(batchMessageIds, batchMessages);
+//                    System.out.println(String.format(Locale.US, "EventRepository: flush: payload: %s", payload));
+//                    System.out.println(String.format(Locale.US, "EventRepository: flush: EventCount: %d", batchMessageIds.size()));
+//                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: payload: %s", payload));
+//                    RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: EventCount: %d", batchMessages.size()));
+//                    if (payload != null) {
+//                        // send payload to server if it is not null
+//                        networkResponse = flushEventsToServer(payload);
+//                        System.out.println(String.format(Locale.US, "EventRepository: flush: ServerResponse: %s", networkResponse));
+//                        RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: ServerResponse: %s", networkResponse));
+//                        // if success received from server
+//                        if (networkResponse == Utils.NetworkResponses.SUCCESS) {
+//                            // remove events from DB
+//                            System.out.println(String.format(Locale.US, "EventRepository: flush: clearingEvents from DB: %s", networkResponse));
+//                            RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: clearingEvents from DB: %s", networkResponse));
+//                            dbManager.clearEventsFromDB(batchMessageIds);
+//                            entireMessageIds.removeAll(batchMessageIds);
+//                            entireMessages.removeAll(batchMessages);
+//                        }
+//                    }
+//                }
             }
-        }
+
+        }).start();
     }
 
 
@@ -749,7 +905,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 RudderMessage trackMessage;
                 trackMessage = new RudderMessageBuilder()
                         .setEventName("Application Opened")
-                        .setProperty(Utils.trackDeepLink(activity, isFirstLaunch, versionCode))
+                        .setProperty(Utils.trackDeepLink(activity, isFirstLaunch, preferenceManager.getBuildVersionCode()))
                         .build();
                 trackMessage.setType(MessageType.TRACK);
                 this.dump(trackMessage);
@@ -793,4 +949,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     public void onActivityDestroyed(@NonNull Activity activity) {
 
     }
+
 }
+
+
+
+
