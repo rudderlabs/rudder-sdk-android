@@ -33,25 +33,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-//        MainApplication.rudderClient!!.track("first_event")
-
-
-        for (i in 1..80) {
-            val eventName = "Event number ${i}"
-            println(eventName);
-            MainApplication.rudderClient!!.track(eventName)
-        }
 
         trackBtn.setOnClickListener {
-            MainApplication.rudderClient!!.track("event_on_button_click")
+            for (i in 1..89) {
+                val eventName = "Event number ${i}"
+                println(eventName);
+                MainApplication.rudderClient!!.track(eventName)
+            }
         }
 
         flush.setOnClickListener {
+            MainApplication.rudderClient!!.track("Event Number 90")
             MainApplication.rudderClient!!.flush();
-//            MainApplication.rudderClient!!.startWorker()
-//            sleep(3000)
-//            System.exit(0);
-
         }
 
         // 54 events needed 3 seconds of time, but the events weren't cleared sometimes

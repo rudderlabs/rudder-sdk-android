@@ -58,6 +58,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private Map<String, RudderIntegration<?>> integrationOperationsMap = new HashMap<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
 
+    // initiate lists for messageIds and messages
+    private ArrayList<Integer> messageIds = new ArrayList<>();
+    private ArrayList<String> messages = new ArrayList<>();
+
+
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
     private boolean areFactoriesInitialized = false;
@@ -341,21 +346,18 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 int sleepCount = 0;
                 Utils.NetworkResponses networkResponse = Utils.NetworkResponses.SUCCESS;
 
-                // initiate lists for messageId and message
-                ArrayList<Integer> messageIds = new ArrayList<>();
-                ArrayList<String> messages = new ArrayList<>();
-
                 while (true) {
-                    try {
-                        // clear lists for reuse
-                        messageIds.clear();
-                        messages.clear();
-                        synchronized (dbManager) {
-                            System.out.println("Desu: Processor is Running");
+                    synchronized (messageIds) {
+                        try {
+                            // clear lists for reuse
+                            messageIds.clear();
+                            messages.clear();
                             checkIfDBThresholdAttained();
                             // fetch enough events to form a batch
                             RudderLogger.logDebug("EventRepository: processor: Fetching events to flush to server");
-                            dbManager.fetchEventsFromDB(messageIds, messages, config.getFlushQueueSize());
+                           dbManager.fetchEventsFromDB(messageIds, messages, config.getFlushQueueSize());
+                            System.out.println("Desu : EventRepository got batch messageIds and messages");
+                            Thread.sleep(3000);
                             // if there are enough events to form a batch and flush to server
                             // OR
                             // sleepTimeOut seconds has elapsed since last successful flush and
@@ -363,41 +365,53 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             if (messages.size() >= config.getFlushQueueSize() || (!messages.isEmpty() && sleepCount >= config.getSleepTimeOut())) {
                                 // form payload JSON form the list of messages
                                 String payload = getPayloadFromMessages(messageIds, messages);
+                                System.out.println("Desu : EventRepository Generated payload");
                                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: payload: %s", payload));
                                 RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: EventCount: %d", messageIds.size()));
                                 if (payload != null) {
                                     // send payload to server if it is not null
                                     networkResponse = flushEventsToServer(payload);
+                                    System.out.println("Desu : EventRepository Tried Sending events to server");
                                     RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: ServerResponse: %s", networkResponse));
                                     // if success received from server
                                     if (networkResponse == Utils.NetworkResponses.SUCCESS) {
                                         // remove events from DB
                                         dbManager.clearEventsFromDB(messageIds);
+                                        System.out.println("Desu : EventRepository Successfully Sent events to server");
                                         // reset sleep count to indicate successful flush
                                         sleepCount = 0;
                                     }
                                 }
                             }
+                        } catch (Exception ex) {
+                            RudderLogger.logError(ex);
                         }
-                        // increment sleepCount to track total elapsed seconds
-                        sleepCount += 1;
-                        System.out.println(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
-                        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
+                    }
+                    // increment sleepCount to track total elapsed seconds
+                    sleepCount += 1;
+                    System.out.println(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
+                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
+                    try {
                         if (networkResponse == Utils.NetworkResponses.WRITE_KEY_ERROR) {
                             RudderLogger.logInfo("Wrong WriteKey. Aborting");
                             break;
                         } else if (networkResponse == Utils.NetworkResponses.ERROR) {
                             RudderLogger.logInfo("flushEvents: Retrying in " + Math.abs(sleepCount - config.getSleepTimeOut()) + "s");
+                            System.out.println("Desu : EventRepository Sleep Started");
                             Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000);
+                            System.out.println("Desu : EventRepository Sleep Completed");
                         } else {
                             // retry entire logic in 1 second
+                            System.out.println("Desu : EventRepository Sleep Started");
                             Thread.sleep(1000);
+                            System.out.println("Desu : EventRepository Sleep Completed");
                         }
                     } catch (Exception ex) {
                         RudderLogger.logError(ex);
                     }
                 }
             }
+
         };
     }
 
@@ -732,30 +746,21 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     }
 
     <T> ArrayList<T> getBatch(ArrayList<T> messageDetails) {
-        if (messageDetails.size() <= 30) {
+        if (messageDetails.size() <= config.getFlushQueueSize()) {
             return messageDetails;
         } else {
-            return new ArrayList(messageDetails.subList(0, 30));
+            return new ArrayList(messageDetails.subList(0, config.getFlushQueueSize()));
         }
     }
 
-//    String getBatchPayload(ArrayList<Integer> messageIds, ArrayList<String> messages) {
-//        if (messages.size() <= config.getFlushQueueSize()) {
-//            return getPayloadFromMessages(messageIds, messages);
-//        } else {
-//            return getPayloadFromMessages(new ArrayList(messageIds.subList(0, config.getFlushQueueSize())), new ArrayList(messages.subList(0, config.getFlushQueueSize())));
-//        }
-//    }
-//
-//    void clearBatchPayload(ArrayList<Integer> messageIds, ArrayList<String> messages) {
-//        if (messages.size() <= config.getFlushQueueSize()) {
-//            messages.clear();
-//            messageIds.clear();
-//        } else {
-//            messages.subList(0, config.getFlushQueueSize()).clear();
-//            messageIds.subList(0, config.getFlushQueueSize()).clear();
-//        }
-//    }
+
+    int getNumberOfBatches(int numberOfEvents) {
+        if (numberOfEvents % config.getFlushQueueSize() == 0) {
+            return numberOfEvents / config.getFlushQueueSize();
+        } else {
+            return (numberOfEvents / config.getFlushQueueSize()) + 1;
+        }
+    }
 
     void flush() {
         if (areFactoriesInitialized) {
@@ -769,60 +774,62 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             }
         }
 
-        // We need to update this to flush untill and unless there are no events in the db.
-        // We need to synchronize the access to the db between the processor thread and flush background thread
-        // we will also add logs that at the moment there are total 90 events and since the batch size is 30,
-        // they will be sent as 3 events or something like that
-
         new Thread(new Runnable() {
             @Override
             public void run() {
                 Utils.NetworkResponses networkResponse = Utils.NetworkResponses.ERROR;
-                // initiate lists for messageId and message
-                ArrayList<Integer> entireMessageIds = new ArrayList<>();
-                ArrayList<String> entireMessages = new ArrayList<>();
+                System.out.println("Desu : Flush Requested for Synchronization");
+                synchronized (messageIds) {
+                    System.out.println("Desu : Flush got access to Synchronization");
+                    messageIds.clear();
+                    messages.clear();
 
-                // while there are events in the db.
-                // or may be we will get all the events available in the db the moment this call is made. and send them as individual batches.
-                // but while flush is happening, we need to make sure the processor is not picking up the same events, so that the events are not sent twice.
-                // or for flush we will not care about the batch size
-                // if the ingestion happens continously, flush might happen forever.
-                // we need to hold the processor while the flush is happening, so that either processor / flush will happen any given time.
-                // we can use synchronization (or) lock on the event repository object, so that the either of processor thread or flush thread are sending events at any time.
+                    
 
-                // fetch enough events to form a batch
-                RudderLogger.logDebug("EventRepository: Flush: Fetching events to flush to server");
-                dbManager.fetchAllEventsFromDB(entireMessageIds, entireMessages);
-                while (true) {
-                    synchronized (dbManager) {
-                        System.out.println("Desu: Flush is running");
+                    RudderLogger.logDebug("EventRepository: Flush: Fetching events to flush to server");
+                    dbManager.fetchAllEventsFromDB(messageIds, messages);
+                    int numberOfBatches = getNumberOfBatches(messages.size());
+                    boolean lastBatchFailed = false;
+                    for (int i = 1; i <= numberOfBatches && !lastBatchFailed; i++) {
+                        lastBatchFailed = true;
+                        int retries = 3;
+                        while (retries-- > 0) {
+                            ArrayList<Integer> batchMessageIds = getBatch(messageIds);
+                            ArrayList<String> batchMessages = getBatch(messages);
+                            String payload = getPayloadFromMessages(batchMessageIds, batchMessages);
+                            System.out.println("Desu : Flush Created Payload");
+                            System.out.println(String.format(Locale.US, "EventRepository: flush: payload: %s", payload));
+                            System.out.println(String.format(Locale.US, "EventRepository: flush: EventCount: %d", batchMessageIds.size()));
+                            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: payload: %s", payload));
+                            RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: EventCount: %d", batchMessages.size()));
+                            if (payload != null) {
+                                // send payload to server if it is not null
+                                networkResponse = flushEventsToServer(payload);
+                                System.out.println("Desu : flush tried sending events to server");
+                                System.out.println(String.format(Locale.US, "EventRepository: flush: ServerResponse: %s", networkResponse));
+                                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: ServerResponse: %s", networkResponse));
+                                // if success received from server
+                                if (networkResponse == Utils.NetworkResponses.SUCCESS) {
+                                    // remove events from DB
+                                    System.out.println(String.format("Desu : Successfully sent batch %d / %d ", i, numberOfBatches));
+                                    System.out.println("Desu : FLush Succesfully sent events to server");
+                                    System.out.println(String.format(Locale.US, "EventRepository: flush: clearingEvents from DB: %s", networkResponse));
+                                    RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: clearingEvents from DB: %s", networkResponse));
+                                    dbManager.clearEventsFromDB(batchMessageIds);
+                                    messageIds.removeAll(batchMessageIds);
+                                    messages.removeAll(batchMessages);
+                                    lastBatchFailed = false;
+                                    break;
+                                }
+                            }
+                            System.out.println(String.format("Desu : Failed to send batch %d / %d retrying again in Flush , %d retries left", i, numberOfBatches, retries));
+                        }
+                        if (lastBatchFailed) {
+                            System.out.println(String.format("Desu : Failed to send batch %d / %d after 3 retries , dropping the remaining batches as well", i, numberOfBatches));
+                        }
                     }
-                }
 
-//                while (entireMessages.size() > 0) {
-//                    ArrayList<Integer> batchMessageIds = getBatch(entireMessageIds);
-//                    ArrayList<String> batchMessages = getBatch(entireMessages);
-//                    String payload = getPayloadFromMessages(batchMessageIds, batchMessages);
-//                    System.out.println(String.format(Locale.US, "EventRepository: flush: payload: %s", payload));
-//                    System.out.println(String.format(Locale.US, "EventRepository: flush: EventCount: %d", batchMessageIds.size()));
-//                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: payload: %s", payload));
-//                    RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: EventCount: %d", batchMessages.size()));
-//                    if (payload != null) {
-//                        // send payload to server if it is not null
-//                        networkResponse = flushEventsToServer(payload);
-//                        System.out.println(String.format(Locale.US, "EventRepository: flush: ServerResponse: %s", networkResponse));
-//                        RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: ServerResponse: %s", networkResponse));
-//                        // if success received from server
-//                        if (networkResponse == Utils.NetworkResponses.SUCCESS) {
-//                            // remove events from DB
-//                            System.out.println(String.format(Locale.US, "EventRepository: flush: clearingEvents from DB: %s", networkResponse));
-//                            RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: clearingEvents from DB: %s", networkResponse));
-//                            dbManager.clearEventsFromDB(batchMessageIds);
-//                            entireMessageIds.removeAll(batchMessageIds);
-//                            entireMessages.removeAll(batchMessages);
-//                        }
-//                    }
-//                }
+                }
             }
 
         }).start();
