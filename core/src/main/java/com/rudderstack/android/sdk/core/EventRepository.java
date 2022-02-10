@@ -15,10 +15,9 @@ import androidx.annotation.Nullable;
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.NetworkType;
-import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
-import androidx.work.WorkRequest;
+
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -50,7 +49,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private String authHeaderString;
     private String anonymousIdHeaderString;
     private Context context;
-    RudderConfig config;
+    private RudderConfig config;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
     private RudderPreferenceManager preferenceManager;
@@ -355,9 +354,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             checkIfDBThresholdAttained();
                             // fetch enough events to form a batch
                             RudderLogger.logDebug("EventRepository: processor: Fetching events to flush to server");
-                           dbManager.fetchEventsFromDB(messageIds, messages, config.getFlushQueueSize());
+                            dbManager.fetchEventsFromDB(messageIds, messages, config.getFlushQueueSize());
                             System.out.println("Desu : EventRepository got batch messageIds and messages");
-                            Thread.sleep(3000);
                             // if there are enough events to form a batch and flush to server
                             // OR
                             // sleepTimeOut seconds has elapsed since last successful flush and
@@ -428,9 +426,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (recordCount > config.getDbCountThreshold()) {
             // fetch extra old events
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: checkIfDBThresholdAttained: OldRecordCount: %d", (recordCount - config.getDbCountThreshold())));
-            // initiate lists for messageId and message
-            ArrayList<Integer> messageIds = new ArrayList<>();
-            ArrayList<String> messages = new ArrayList<>();
             dbManager.fetchEventsFromDB(messageIds, messages, recordCount - config.getDbCountThreshold());
             // remove events
             dbManager.clearEventsFromDB(messageIds);
@@ -443,7 +438,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * of deserialization and forming the payload object and creating the json string
      * again from the object
      * */
-    String getPayloadFromMessages(ArrayList<Integer> messageIds, ArrayList<String> messages) {
+    private String getPayloadFromMessages(ArrayList<Integer> messageIds, ArrayList<String> messages) {
         try {
             RudderLogger.logDebug("EventRepository: getPayloadFromMessages: recordCount: " + messages.size());
             String sentAtTimestamp = Utils.getTimeStamp();
@@ -501,7 +496,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     /*
      * flush events payload to server and return response as String
      * */
-    Utils.NetworkResponses flushEventsToServer(String payload) {
+    private Utils.NetworkResponses flushEventsToServer(String payload) {
         try {
             if (TextUtils.isEmpty(this.authHeaderString)) {
                 RudderLogger.logError("EventRepository: flushEventsToServer: WriteKey was not correct. Aborting flush to server");
@@ -675,7 +670,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
-    void registerPeriodicFlushWorker() {
+    private void registerPeriodicFlushWorker() {
 
         if (config.isPeriodicFlushEnabled()) {
             Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
@@ -693,68 +688,19 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             System.out.println("Periodic Flush Worker Registered and its Id is " + flushPendingEvents.getId());
         }
 
-//        WorkRequest uploadWorkRequest =
-//                new OneTimeWorkRequest.Builder(FlushEventsWorker.class)
-//                        .addTag("Flush for one-time")
-//                        .build();
-//
-//        System.out.println("Work Id is : " + uploadWorkRequest.getId());
-//
-//        WorkManager
-//                .getInstance(context)
-//                .enqueue(uploadWorkRequest);
-//
-//
-//        System.out.println("Work enqueued");
-
-        // We cannot send Event repository object and config through the data object.
-        //  new Data.Builder().put("EVENT_REPOSITORY", this).put("CONFIG", config);
-
-
-//        // Example of creating constraints, periodic work request and setting constraints to it.
-//        Constraints constraints = new Constraints.Builder().setRequiresDeviceIdle(true).setRequiredNetworkType(NetworkType.CONNECTED).build();
-//        PeriodicWorkRequest saveRequest =
-//                new PeriodicWorkRequest.Builder(FlushEventsWorker.class, 1, TimeUnit.HOURS)
-//                        .addTag("Flushing Periodically")
-//                        .setConstraints(constraints)
-//                        .build();
-//
-
-
-        // We will use enqueueUniquePeriodicWork as we don't want the same work to be enqueued again and again even though this block of code is called everytime the app is launched.
-        // Probably we can use the logic for registering the periodic work in the section where we are triggering Application Installed.
-        // At the end we need to see we will have only one work running with the given tag regardless of how many times you enqueue it.
-//        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-//                "sendLogs",
-//                ExistingPeriodicWorkPolicy.KEEP,
-//                saveRequest);
-
-
-        //        saveRequest.getId(); // could be the work id, which we can use to check the status of the work.
-        // trying to read the work status and print it accordingly, need to figure out how to get access to the lifecycleowner here
-//        WorkManager.getInstance(context).getWorkInfoByIdLiveData(uploadWorkRequest.getId()).observe(lifecycleOwner, new Observer<WorkInfo>() {
-//            @Override
-//            public void onChanged(@Nullable WorkInfo workInfo) {
-//                if (workInfo != null) {
-//                    Data progress = workInfo.getProgress();
-//                    int value = progress.getInt(PROGRESS, 0);
-//
-//                }
-//            }
-//        });
 
     }
 
-    <T> ArrayList<T> getBatch(ArrayList<T> messageDetails) {
+    private <T> ArrayList<T> getBatch(ArrayList<T> messageDetails) {
         if (messageDetails.size() <= config.getFlushQueueSize()) {
             return messageDetails;
         } else {
-            return new ArrayList(messageDetails.subList(0, config.getFlushQueueSize()));
+            return new ArrayList<T>(messageDetails.subList(0, config.getFlushQueueSize()));
         }
     }
 
 
-    int getNumberOfBatches(int numberOfEvents) {
+    private int getNumberOfBatches(int numberOfEvents) {
         if (numberOfEvents % config.getFlushQueueSize() == 0) {
             return numberOfEvents / config.getFlushQueueSize();
         } else {
@@ -777,14 +723,13 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Utils.NetworkResponses networkResponse = Utils.NetworkResponses.ERROR;
+                Utils.NetworkResponses networkResponse;
                 System.out.println("Desu : Flush Requested for Synchronization");
                 synchronized (messageIds) {
                     System.out.println("Desu : Flush got access to Synchronization");
                     messageIds.clear();
                     messages.clear();
 
-                    
 
                     RudderLogger.logDebug("EventRepository: Flush: Fetching events to flush to server");
                     dbManager.fetchAllEventsFromDB(messageIds, messages);
@@ -958,7 +903,3 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     }
 
 }
-
-
-
-

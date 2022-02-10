@@ -16,9 +16,6 @@ public class FlushEventsWorker extends Worker {
 
     @Override
     public Result doWork() {
-        // Need to decide if we would like to have a retry-policy by defining back-off policy
-        // Retry with backoff doesn't make more sense for Periodic work requests
-        // Result.retry();
         RudderClient.getInstance().flush();
         return Result.success();
     }

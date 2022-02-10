@@ -23,6 +23,3 @@
 -keep class com.rudderstack.android.sdk.core.* { *; }
 -keep class com.rudderstack.android.sdk.core.ecomm.* { *; }
 -keep class com.rudderstack.android.sdk.core.util.* { *; }
--keepclassmembers class * extends androidx.work.Worker {
-    public <init>(android.content.Context,androidx.work.WorkerParameters);
-}

@@ -124,7 +124,9 @@ class DBPersistentManager extends SQLiteOpenHelper {
         }
     }
 
-
+    /*
+     * returns messageIds and messages returned on executing the supplied SQL statement
+     * */
     void getEventsFromDB(ArrayList<Integer> messageIds, ArrayList<String> messages, String selectSQL) {
         // clear lists if not empty
         if (!messageIds.isEmpty()) messageIds.clear();
