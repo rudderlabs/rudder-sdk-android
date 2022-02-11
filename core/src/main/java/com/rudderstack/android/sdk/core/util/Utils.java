@@ -19,6 +19,7 @@ import com.rudderstack.android.sdk.core.RudderProperty;
 
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -216,4 +217,22 @@ public class Utils {
         ERROR,
         WRITE_KEY_ERROR
     }
+
+    // Comment : We should decide on having a separate Utils class as this is public to everyone and we are placing SDK useful methods as well in this
+    public static int getNumberOfBatches(int numberOfEvents, int flushQueueSize) {
+        if (numberOfEvents % flushQueueSize == 0) {
+            return numberOfEvents / flushQueueSize;
+        } else {
+            return (numberOfEvents / flushQueueSize) + 1;
+        }
+    }
+
+    public static <T> ArrayList<T> getBatch(ArrayList<T> messageDetails, int flushQueueSize) {
+        if (messageDetails.size() <= flushQueueSize) {
+            return messageDetails;
+        } else {
+            return new ArrayList<T>(messageDetails.subList(0, flushQueueSize));
+        }
+    }
+
 }

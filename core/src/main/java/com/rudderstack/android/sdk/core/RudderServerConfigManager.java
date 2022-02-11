@@ -174,6 +174,38 @@ class RudderServerConfigManager {
         }
     }
 
+    static void saveRudderFlushConfig(RudderFlushConfig rudderFlushConfig)
+    {
+        try {
+            FileOutputStream fos = context.openFileOutput("RudderFlushConfig", Context.MODE_PRIVATE);
+            ObjectOutputStream os = new ObjectOutputStream(fos);
+            os.writeObject(rudderFlushConfig);
+            os.close();
+            fos.close();
+        } catch (Exception e) {
+            RudderLogger.logError("RudderServerConfigManager: saveRudderFlushConfig: Exception while saving RudderServerConfig Object to File");
+            e.printStackTrace();
+        }
+    }
+
+    static RudderFlushConfig getRudderFlushConfig(Context context) {
+        RudderFlushConfig rudderFlushConfig = null;
+        try {
+            if (fileExists(context, "RudderFlushConfig")) {
+                FileInputStream fis = context.openFileInput("RudderFlushConfig");
+                ObjectInputStream is = new ObjectInputStream(fis);
+                rudderFlushConfig = (RudderFlushConfig) is.readObject();
+                is.close();
+                fis.close();
+            }
+        } catch (Exception e) {
+            RudderLogger.logError("RudderServerConfigManager: getRudderFlushConfig: Failed to read RudderServerConfig Object from File");
+            e.printStackTrace();
+        } finally {
+            return rudderFlushConfig;
+        }
+    }
+
     void saveRudderServerConfig(RudderServerConfig rudderServerConfig) {
         try {
             FileOutputStream fos = context.openFileOutput(RUDDER_SERVER_CONFIG_FILE_NAME, Context.MODE_PRIVATE);
@@ -187,7 +219,7 @@ class RudderServerConfigManager {
         }
     }
 
-    RudderServerConfig getRudderServerConfig() {
+    static RudderServerConfig getRudderServerConfig() {
         RudderServerConfig rudderServerConfig = null;
         try {
             if (fileExists(context, RUDDER_SERVER_CONFIG_FILE_NAME)) {
@@ -228,7 +260,7 @@ class RudderServerConfigManager {
         return this.integrationsMap;
     }
 
-    boolean fileExists(Context context, String filename) {
+    static boolean fileExists(Context context, String filename) {
         File file = context.getFileStreamPath(filename);
         if (file == null || !file.exists()) {
             return false;

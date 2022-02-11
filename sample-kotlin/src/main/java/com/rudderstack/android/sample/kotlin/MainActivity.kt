@@ -10,13 +10,11 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
-import com.rudderstack.android.sdk.core.RudderClient
-import com.rudderstack.android.sdk.core.RudderOption
-import com.rudderstack.android.sdk.core.RudderProperty
-import com.rudderstack.android.sdk.core.RudderTraits
+import com.rudderstack.android.sdk.core.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.Thread.sleep
 import java.util.*
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 
 
@@ -34,17 +32,40 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
+        lateinit var rudderClient : RudderClient;
+        RudderClient.putAnonymousId("anonymous_id_1")
+        RudderClient.putDeviceToken("DevToken2")
+
+        println("Desu:Debugging: Inside the Application Code");
+        initialize.setOnClickListener {
+            val rudderConfig = RudderConfig.Builder()
+                .withDataPlaneUrl(MainApplication.DATA_PLANE_URL)
+                .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
+                .withTrackLifecycleEvents(false)
+                .withFlushPeriodically(15, TimeUnit.MINUTES)
+                .withFlushQueueSize(90)
+                .withSleepCount(180)
+                .withRecordScreenViews(false)
+                .build()
+
+            rudderClient = RudderClient.getInstance(
+                this,
+                MainApplication.WRITE_KEY,
+                rudderConfig
+            )
+        }
+
         trackBtn.setOnClickListener {
             for (i in 1..89) {
                 val eventName = "Event number Testing 10:30 ${i}"
                 println(eventName);
-                MainApplication.rudderClient!!.track(eventName)
+                rudderClient!!.track(eventName)
             }
         }
 
         flush.setOnClickListener {
-            MainApplication.rudderClient!!.track("Event Number 90")
-            MainApplication.rudderClient!!.flush();
+            rudderClient!!.track("Event Number 90")
+            rudderClient!!.flush();
         }
 
         // 54 events needed 3 seconds of time, but the events weren't cleared sometimes

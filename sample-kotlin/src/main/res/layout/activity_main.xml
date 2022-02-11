@@ -56,11 +56,11 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <Button
-            android:id="@+id/navigate_to_first"
+            android:id="@+id/initialize"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:text="Navigate to first activity" />
+            android:text="initialize" />
 
         <Button
             android:id="@+id/trackBtn"
