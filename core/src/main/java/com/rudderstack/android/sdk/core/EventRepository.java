@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
@@ -109,6 +108,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the device token");
                 }
             }
+
+            // isWorkScheduled("Flushing Pending Events Periodically", context);
 
             // 2. initiate RudderElementCache
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
@@ -355,7 +356,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             // fetch enough events to form a batch
                             RudderLogger.logDebug("EventRepository: processor: Fetching events to flush to server");
                             dbManager.fetchEventsFromDB(messageIds, messages, config.getFlushQueueSize());
-                            System.out.println("Desu : EventRepository got batch messageIds and messages");
                             // if there are enough events to form a batch and flush to server
                             // OR
                             // sleepTimeOut seconds has elapsed since last successful flush and
@@ -363,19 +363,16 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             if (messages.size() >= config.getFlushQueueSize() || (!messages.isEmpty() && sleepCount >= config.getSleepTimeOut())) {
                                 // form payload JSON form the list of messages
                                 String payload = getPayloadFromMessages(messageIds, messages);
-                                System.out.println("Desu : EventRepository Generated payload");
                                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: payload: %s", payload));
                                 RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: EventCount: %d", messageIds.size()));
                                 if (payload != null) {
                                     // send payload to server if it is not null
                                     networkResponse = flushEventsToServer(payload);
-                                    System.out.println("Desu : EventRepository Tried Sending events to server");
                                     RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: ServerResponse: %s", networkResponse));
                                     // if success received from server
                                     if (networkResponse == Utils.NetworkResponses.SUCCESS) {
                                         // remove events from DB
                                         dbManager.clearEventsFromDB(messageIds);
-                                        System.out.println("Desu : EventRepository Successfully Sent events to server");
                                         // reset sleep count to indicate successful flush
                                         sleepCount = 0;
                                     }
@@ -387,7 +384,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     }
                     // increment sleepCount to track total elapsed seconds
                     sleepCount += 1;
-                    System.out.println(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
                     RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: SleepCount: %d", sleepCount));
                     try {
                         if (networkResponse == Utils.NetworkResponses.WRITE_KEY_ERROR) {
@@ -395,14 +391,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             break;
                         } else if (networkResponse == Utils.NetworkResponses.ERROR) {
                             RudderLogger.logInfo("flushEvents: Retrying in " + Math.abs(sleepCount - config.getSleepTimeOut()) + "s");
-                            System.out.println("Desu : EventRepository Sleep Started");
                             Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000);
-                            System.out.println("Desu : EventRepository Sleep Completed");
                         } else {
                             // retry entire logic in 1 second
-                            System.out.println("Desu : EventRepository Sleep Started");
                             Thread.sleep(1000);
-                            System.out.println("Desu : EventRepository Sleep Completed");
                         }
                     } catch (Exception ex) {
                         RudderLogger.logError(ex);
@@ -420,7 +412,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private void checkIfDBThresholdAttained() {
         // get current record count from db
         int recordCount = dbManager.getDBRecordCount();
-        System.out.println(String.format(Locale.US, "EventRepository: checkIfDBThresholdAttained: DBRecordCount: %d", recordCount));
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: checkIfDBThresholdAttained: DBRecordCount: %d", recordCount));
         // if record count exceeds threshold count, remove older events
         if (recordCount > config.getDbCountThreshold()) {
@@ -505,7 +496,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
             // get endPointUrl form config object
             String dataPlaneEndPoint = config.getDataPlaneUrl() + "v1/batch";
-            System.out.println("EventRepository: flushEventsToServer: dataPlaneEndPoint: " + dataPlaneEndPoint);
             RudderLogger.logDebug("EventRepository: flushEventsToServer: dataPlaneEndPoint: " + dataPlaneEndPoint);
 
             // create url object
@@ -563,9 +553,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
             }
         } catch (Exception ex) {
-            System.out.println("Printing cause:" + ex.getCause());
-            System.out.println("Printing Localized Message: " + ex.getLocalizedMessage());
-            System.out.println(ex.getStackTrace());
             RudderLogger.logError(ex);
         }
         return Utils.NetworkResponses.ERROR;
@@ -675,7 +662,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (config.isPeriodicFlushEnabled()) {
             Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
             PeriodicWorkRequest flushPendingEvents =
-                    new PeriodicWorkRequest.Builder(FlushEventsWorker.class, 1, TimeUnit.HOURS)
+                    new PeriodicWorkRequest.Builder(FlushEventsWorker.class, config.getRepeatInterval(), config.getRepeatIntervalTimeUnit())
                             .addTag("Flushing Pending Events Periodically")
                             .setConstraints(constraints)
                             .build();
@@ -685,7 +672,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     ExistingPeriodicWorkPolicy.KEEP,
                     flushPendingEvents);
 
-            System.out.println("Periodic Flush Worker Registered and its Id is " + flushPendingEvents.getId());
+            RudderLogger.logDebug("EventRepository: registerPeriodicFlushWorker: Registered Periodic Work Request with ID " + flushPendingEvents.getId());
         }
 
 
@@ -724,16 +711,13 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             @Override
             public void run() {
                 Utils.NetworkResponses networkResponse;
-                System.out.println("Desu : Flush Requested for Synchronization");
                 synchronized (messageIds) {
-                    System.out.println("Desu : Flush got access to Synchronization");
                     messageIds.clear();
                     messages.clear();
-
-
-                    RudderLogger.logDebug("EventRepository: Flush: Fetching events to flush to server");
+                    RudderLogger.logDebug("EventRepository: flush: Fetching events to flush to server");
                     dbManager.fetchAllEventsFromDB(messageIds, messages);
                     int numberOfBatches = getNumberOfBatches(messages.size());
+                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: %d batches of events to be flushed", numberOfBatches));
                     boolean lastBatchFailed = false;
                     for (int i = 1; i <= numberOfBatches && !lastBatchFailed; i++) {
                         lastBatchFailed = true;
@@ -742,24 +726,17 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             ArrayList<Integer> batchMessageIds = getBatch(messageIds);
                             ArrayList<String> batchMessages = getBatch(messages);
                             String payload = getPayloadFromMessages(batchMessageIds, batchMessages);
-                            System.out.println("Desu : Flush Created Payload");
-                            System.out.println(String.format(Locale.US, "EventRepository: flush: payload: %s", payload));
-                            System.out.println(String.format(Locale.US, "EventRepository: flush: EventCount: %d", batchMessageIds.size()));
                             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: payload: %s", payload));
                             RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: EventCount: %d", batchMessages.size()));
                             if (payload != null) {
                                 // send payload to server if it is not null
                                 networkResponse = flushEventsToServer(payload);
-                                System.out.println("Desu : flush tried sending events to server");
-                                System.out.println(String.format(Locale.US, "EventRepository: flush: ServerResponse: %s", networkResponse));
                                 RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: ServerResponse: %s", networkResponse));
                                 // if success received from server
                                 if (networkResponse == Utils.NetworkResponses.SUCCESS) {
                                     // remove events from DB
-                                    System.out.println(String.format("Desu : Successfully sent batch %d / %d ", i, numberOfBatches));
-                                    System.out.println("Desu : FLush Succesfully sent events to server");
-                                    System.out.println(String.format(Locale.US, "EventRepository: flush: clearingEvents from DB: %s", networkResponse));
-                                    RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: clearingEvents from DB: %s", networkResponse));
+                                    RudderLogger.logDebug(String.format("EventRepository: flush: Successfully sent batch %d/%d ", i, numberOfBatches));
+                                    RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: clearingEvents of batch %d from DB: %s", i, networkResponse));
                                     dbManager.clearEventsFromDB(batchMessageIds);
                                     messageIds.removeAll(batchMessageIds);
                                     messages.removeAll(batchMessages);
@@ -767,10 +744,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                     break;
                                 }
                             }
-                            System.out.println(String.format("Desu : Failed to send batch %d / %d retrying again in Flush , %d retries left", i, numberOfBatches, retries));
+                            RudderLogger.logDebug(String.format("EventRepository: flush: Failed to send batch %d/%d retrying again, %d retries left", i, numberOfBatches, retries));
                         }
                         if (lastBatchFailed) {
-                            System.out.println(String.format("Desu : Failed to send batch %d / %d after 3 retries , dropping the remaining batches as well", i, numberOfBatches));
+                            RudderLogger.logDebug(String.format("EventRepository: flush: Failed to send batch %d/%d after 3 retries , dropping the remaining batches as well", i, numberOfBatches));
                         }
                     }
 
@@ -901,5 +878,4 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     public void onActivityDestroyed(@NonNull Activity activity) {
 
     }
-
 }

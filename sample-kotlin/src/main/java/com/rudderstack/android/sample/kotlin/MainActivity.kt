@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
 
         trackBtn.setOnClickListener {
             for (i in 1..89) {
-                val eventName = "Event number ${i}"
+                val eventName = "Event number Testing 10:30 ${i}"
                 println(eventName);
                 MainApplication.rudderClient!!.track(eventName)
             }

@@ -39,7 +39,7 @@ public class Utils {
     // range constants
     public static final int MIN_CONFIG_REFRESH_INTERVAL = 1;
     public static final int MAX_CONFIG_REFRESH_INTERVAL = 24;
-    public static final int MIN_SLEEP_TIMEOUT = 10;
+    public static final int MIN_SLEEP_TIMEOUT = 5;
     public static final int MIN_FLUSH_QUEUE_SIZE = 1;
     public static final int MAX_FLUSH_QUEUE_SIZE = 100;
     public static final int MAX_EVENT_SIZE = 32 * 1024; // 32 KB
@@ -126,7 +126,9 @@ public class Utils {
         }
     }
 
-    /** Returns referring_application, url and its query parameter. */
+    /**
+     * Returns referring_application, url and its query parameter.
+     */
     @NonNull
     public static RudderProperty trackDeepLink(Activity activity, AtomicBoolean isFirstLaunch, int versionCode) {
         RudderProperty rudderProperty = new RudderProperty()
@@ -168,7 +170,9 @@ public class Utils {
         return rudderProperty;
     }
 
-    /** Returns information about who launched this activity. */
+    /**
+     * Returns information about who launched this activity.
+     */
     private static String getReferrer(Activity activity) {
         // If devices running on SDK versions greater than equal to 22
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {

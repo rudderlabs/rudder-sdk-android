@@ -5,6 +5,7 @@ import android.content.Context
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
+import java.util.concurrent.TimeUnit
 
 class MainApplication : Application() {
     companion object {
@@ -22,18 +23,19 @@ class MainApplication : Application() {
         RudderClient.putDeviceToken("DevToken2")
 
         val rudderConfig = RudderConfig.Builder()
-                .withDataPlaneUrl(DATA_PLANE_URL)
-                .withLogLevel(RudderLogger.RudderLogLevel.NONE)
-                .withTrackLifecycleEvents(false)
-                .withFlushQueueSize(90)
-                .withSleepCount(180)
-                .withRecordScreenViews(false)
-                .build()
+            .withDataPlaneUrl(DATA_PLANE_URL)
+            .withLogLevel(RudderLogger.RudderLogLevel.NONE)
+            .withTrackLifecycleEvents(false)
+            .withFlushPeriodically(3, TimeUnit.DAYS)
+            .withFlushQueueSize(90)
+            .withSleepCount(180)
+            .withRecordScreenViews(false)
+            .build()
 
         rudderClient = RudderClient.getInstance(
-                this,
-                WRITE_KEY,
-                rudderConfig
+            this,
+            WRITE_KEY,
+            rudderConfig
         )
     }
 

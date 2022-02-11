@@ -16,6 +16,7 @@ public class FlushEventsWorker extends Worker {
 
     @Override
     public Result doWork() {
+        RudderLogger.logDebug("FlushEventsWorker: doWork: Started Periodic Flushing of Events ");
         RudderClient.getInstance().flush();
         return Result.success();
     }

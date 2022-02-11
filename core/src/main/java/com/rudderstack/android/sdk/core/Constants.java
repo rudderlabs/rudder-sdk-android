@@ -1,5 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
+import java.util.concurrent.TimeUnit;
+
 /*
  * Default value holder class
  * */
@@ -18,8 +20,12 @@ class Constants {
     static final int SLEEP_TIMEOUT = 10;
     // config-plane url to get the config for the writeKey
     static final String CONTROL_PLANE_URL = "https://api.rudderlabs.com";
-    // wether we should enable periodic flushing of events using WorkManager automatically
-    static final boolean FLUSH_PERIODICALLY = false;
+    // if the periodic flushing of events from db to server is enabled or not
+    static final boolean PERIODIC_FLUSH_ENABLED = false;
+    // the interval in which we should flush away the events in the db periodically
+    static final long REPEAT_INTERVAL = 1;
+    // the TimeUnit in which the repeatInterval is specified. It can be either minutes / hours.
+    static final TimeUnit REPEAT_INTERVAL_TIME_UNIT = TimeUnit.HOURS;
     // whether we should trackLifecycle events
     static final boolean TRACK_LIFECYCLE_EVENTS = true;
     // whether we should record screen views automatically
