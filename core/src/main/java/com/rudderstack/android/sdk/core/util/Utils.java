@@ -17,6 +17,7 @@ import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.RudderLogger;
 import com.rudderstack.android.sdk.core.RudderProperty;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -125,6 +126,14 @@ public class Utils {
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
+
+    public static boolean fileExists(Context context, String filename) {
+        File file = context.getFileStreamPath(filename);
+        if (file == null || !file.exists()) {
+            return false;
+        }
+        return true;
     }
 
     /**

@@ -36,7 +36,6 @@ class MainActivity : AppCompatActivity() {
         RudderClient.putAnonymousId("anonymous_id_1")
         RudderClient.putDeviceToken("DevToken2")
 
-        println("Desu:Debugging: Inside the Application Code");
         initialize.setOnClickListener {
             val rudderConfig = RudderConfig.Builder()
                 .withDataPlaneUrl(MainApplication.DATA_PLANE_URL)
@@ -66,6 +65,10 @@ class MainActivity : AppCompatActivity() {
         flush.setOnClickListener {
             rudderClient!!.track("Event Number 90")
             rudderClient!!.flush();
+        }
+
+        cancel.setOnClickListener{
+            rudderClient.cancelPeriodicWorkRequest();
         }
 
         // 54 events needed 3 seconds of time, but the events weren't cleared sometimes

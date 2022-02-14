@@ -731,6 +731,12 @@ public class RudderClient {
         }
     }
 
+    public void cancelPeriodicWorkRequest() {
+        if(repository != null) {
+            repository.cancelPeriodicFlushWorker();
+        }
+    }
+
     /**
      * To retrieve OptOut status
      *

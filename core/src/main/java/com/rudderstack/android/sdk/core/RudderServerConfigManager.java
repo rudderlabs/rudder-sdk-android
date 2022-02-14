@@ -88,7 +88,7 @@ class RudderServerConfigManager {
         int retryCount = 0;
         while (!isDone && retryCount <= 3) {
             try {
-                String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig?p=android&v="+Constants.RUDDER_LIBRARY_VERSION+"&bv="+android.os.Build.VERSION.SDK_INT;
+                String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig?p=android&v=" + Constants.RUDDER_LIBRARY_VERSION + "&bv=" + android.os.Build.VERSION.SDK_INT;
                 RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configUrl: %s", configUrl));
                 // create url object
                 URL url = new URL(configUrl);
@@ -174,38 +174,6 @@ class RudderServerConfigManager {
         }
     }
 
-    static void saveRudderFlushConfig(RudderFlushConfig rudderFlushConfig)
-    {
-        try {
-            FileOutputStream fos = context.openFileOutput("RudderFlushConfig", Context.MODE_PRIVATE);
-            ObjectOutputStream os = new ObjectOutputStream(fos);
-            os.writeObject(rudderFlushConfig);
-            os.close();
-            fos.close();
-        } catch (Exception e) {
-            RudderLogger.logError("RudderServerConfigManager: saveRudderFlushConfig: Exception while saving RudderServerConfig Object to File");
-            e.printStackTrace();
-        }
-    }
-
-    static RudderFlushConfig getRudderFlushConfig(Context context) {
-        RudderFlushConfig rudderFlushConfig = null;
-        try {
-            if (fileExists(context, "RudderFlushConfig")) {
-                FileInputStream fis = context.openFileInput("RudderFlushConfig");
-                ObjectInputStream is = new ObjectInputStream(fis);
-                rudderFlushConfig = (RudderFlushConfig) is.readObject();
-                is.close();
-                fis.close();
-            }
-        } catch (Exception e) {
-            RudderLogger.logError("RudderServerConfigManager: getRudderFlushConfig: Failed to read RudderServerConfig Object from File");
-            e.printStackTrace();
-        } finally {
-            return rudderFlushConfig;
-        }
-    }
-
     void saveRudderServerConfig(RudderServerConfig rudderServerConfig) {
         try {
             FileOutputStream fos = context.openFileOutput(RUDDER_SERVER_CONFIG_FILE_NAME, Context.MODE_PRIVATE);
@@ -219,10 +187,10 @@ class RudderServerConfigManager {
         }
     }
 
-    static RudderServerConfig getRudderServerConfig() {
+    RudderServerConfig getRudderServerConfig() {
         RudderServerConfig rudderServerConfig = null;
         try {
-            if (fileExists(context, RUDDER_SERVER_CONFIG_FILE_NAME)) {
+            if (Utils.fileExists(context, RUDDER_SERVER_CONFIG_FILE_NAME)) {
                 FileInputStream fis = context.openFileInput(RUDDER_SERVER_CONFIG_FILE_NAME);
                 ObjectInputStream is = new ObjectInputStream(fis);
                 rudderServerConfig = (RudderServerConfig) is.readObject();
@@ -260,11 +228,4 @@ class RudderServerConfigManager {
         return this.integrationsMap;
     }
 
-    static boolean fileExists(Context context, String filename) {
-        File file = context.getFileStreamPath(filename);
-        if (file == null || !file.exists()) {
-            return false;
-        }
-        return true;
-    }
 }

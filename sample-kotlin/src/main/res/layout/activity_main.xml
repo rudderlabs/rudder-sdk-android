@@ -84,10 +84,10 @@
             android:text="Flush" />
 
         <Button
-            android:id="@+id/resetBtn"
+            android:id="@+id/cancel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:text="Reset" />
+            android:text="Cancel" />
     </LinearLayout>
 </ScrollView>

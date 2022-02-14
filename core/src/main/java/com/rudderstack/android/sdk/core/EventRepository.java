@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
@@ -75,8 +76,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * 2. initiate RudderElementCache
      * 3. initiate DBPersistentManager for SQLite operations
      * 4. initiate RudderServerConfigManager
-     * 5. start processor thread
-     * 6. initiate factories
+     * 5. initiate RudderFlushConfig and save it to a file for use by PeriodicWorkRequest
+     * 6. start processor thread
+     * 7. initiate factories
      * */
     EventRepository(Application _application, String _writeKey, RudderConfig _config, String _anonymousId, String _advertisingId, String _deviceToken) {
         // 1. set the values of writeKey, config
@@ -109,8 +111,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
             }
 
-            // isWorkScheduled("Flushing Pending Events Periodically", context);
-
             // 2. initiate RudderElementCache
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
             // We first send the anonymousId to RudderElementCache which will just set the anonymousId static variable in RudderContext class.
@@ -128,9 +128,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             // 4. initiate RudderServerConfigManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
             this.configManager = new RudderServerConfigManager(_application, _writeKey, _config);
-            RudderServerConfigManager.saveRudderFlushConfig(new RudderFlushConfig(config.getDataPlaneUrl(), authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize()));
 
-            // 5. start processor thread
+            // 5. initiate RudderFlushConfig and save it to a file for use by PeriodicWorkRequest
+            RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(config.getDataPlaneUrl(), authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize());
+            RudderFlushConfigManager.saveRudderFlushConfig(context, rudderFlushConfig);
+
+            // 6. start processor thread
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
             this.initiateSDK();
 
@@ -430,7 +433,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * of deserialization and forming the payload object and creating the json string
      * again from the object
      * */
-    // should be moved out of EventRepository
     static String getPayloadFromMessages(ArrayList<Integer> messageIds, ArrayList<String> messages) {
         try {
             RudderLogger.logDebug("EventRepository: getPayloadFromMessages: recordCount: " + messages.size());
@@ -489,7 +491,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     /*
      * flush events payload to server and return response as String
      * */
-    // Comment: Should be moved out of Event Repository
     static Utils.NetworkResponses flushEventsToServer(String payload, String dataPlaneUrl, String authHeaderString, String anonymousIdHeaderString) {
         try {
             if (TextUtils.isEmpty(authHeaderString)) {
@@ -638,7 +639,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
-    // should also be moved somewhere into a utils kind of thing
     private Map<String, Object> prepareIntegrations() {
         Map<String, Object> integrationPlaceholder = new HashMap<>();
         integrationPlaceholder.put("All", true);
@@ -676,10 +676,25 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     ExistingPeriodicWorkPolicy.KEEP,
                     flushPendingEvents);
 
-            RudderLogger.logDebug("EventRepository: registerPeriodicFlushWorker: Registered Periodic Work Request with ID " + flushPendingEvents.getId());
+            String periodicWorkRequestId = flushPendingEvents.getId().toString();
+            preferenceManager.savePeriodicWorkRequestId(periodicWorkRequestId);
+
+            RudderLogger.logDebug("EventRepository: registerPeriodicFlushWorker: Registered PeriodicWorkRequest with ID " + periodicWorkRequestId);
         }
+    }
 
-
+    void cancelPeriodicFlushWorker() {
+        if (!config.isPeriodicFlushEnabled()) {
+            RudderLogger.logWarn("EventRepository: cancelPeriodicFlushWorker: Periodic Flush is Disabled, no PeriodicWorkRequest to be cancelled");
+            return;
+        }
+        String periodicWorkRequestId = preferenceManager.getPeriodicWorkRequestId();
+        if (periodicWorkRequestId == null) {
+            RudderLogger.logWarn("EventRepository: cancelPeriodicFlushWorker: Couldn't find PeriodicWorkRequest Id, cannot cancel PeriodicWorkRequest");
+            return;
+        }
+        WorkManager.getInstance(context).cancelWorkById(UUID.fromString(periodicWorkRequestId));
+        RudderLogger.logDebug("EventRepository: cancelPeriodicFlushWorker: Successfully cancelled PeriodicWorkRequest With ID " + periodicWorkRequestId);
     }
 
     void flush() {
@@ -698,7 +713,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             @Override
             public void run() {
                 Utils.NetworkResponses networkResponse;
-             synchronized (messageIds) {
+                synchronized (messageIds) {
                     messageIds.clear();
                     messages.clear();
                     RudderLogger.logDebug("EventRepository: flush: Fetching events to flush to server");
