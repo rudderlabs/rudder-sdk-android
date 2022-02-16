@@ -112,9 +112,9 @@ public class RudderClient {
                     config.setDbCountThreshold(Constants.DB_COUNT_THRESHOLD);
                 }
                 // assure sleepTimeOut never goes below 10s
-                if (config.getSleepTimeOut() < 10) {
+                if (config.getSleepTimeOut() < Utils.MIN_SLEEP_TIMEOUT) {
                     RudderLogger.logVerbose("getInstance: SleepTimeOut is wrong. using default.");
-                    config.setSleepTimeOut(10);
+                    config.setSleepTimeOut(Constants.SLEEP_TIMEOUT);
                 }
             }
 
@@ -728,6 +728,12 @@ public class RudderClient {
         }
         if (repository != null) {
             repository.flush();
+        }
+    }
+
+    public void cancelPeriodicWorkRequest() {
+        if(repository != null) {
+            repository.cancelPeriodicFlushWorker();
         }
     }
 

@@ -16,13 +16,10 @@ public class RudderClientTest {
 
     @Before
     public void setUp() {
-        System.out.println("setup called");
-
     }
 
     @Test
     public void shouldNotBeNull() {
-        System.out.println(this.client);
         assertNotNull(this.client);
     }
 

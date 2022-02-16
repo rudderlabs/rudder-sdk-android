@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT)
             tlsBackport()
-     }
+    }
 
     override fun onStart() {
         super.onStart()
