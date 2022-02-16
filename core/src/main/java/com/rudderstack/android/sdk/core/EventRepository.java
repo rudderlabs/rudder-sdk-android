@@ -709,10 +709,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                     break;
                                 }
                             }
-                            RudderLogger.logDebug(String.format("EventRepository: flush: Failed to send batch %d/%d retrying again, %d retries left", i, numberOfBatches, retries));
+                            RudderLogger.logWarn(String.format("EventRepository: flush: Failed to send batch %d/%d retrying again, %d retries left", i, numberOfBatches, retries));
                         }
                         if (lastBatchFailed) {
-                            RudderLogger.logDebug(String.format("EventRepository: flush: Failed to send batch %d/%d after 3 retries , dropping the remaining batches as well", i, numberOfBatches));
+                            RudderLogger.logWarn(String.format("EventRepository: flush: Failed to send batch %d/%d after 3 retries , dropping the remaining batches as well", i, numberOfBatches));
                         }
                     }
 
