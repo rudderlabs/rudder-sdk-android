@@ -56,5 +56,6 @@ public class MainActivity extends AppCompatActivity {
                         .putValue("ad_creative", "Red Hello World Ad")
                         .putValue("ad_group", "Red Ones")));
 
+
     }
 }

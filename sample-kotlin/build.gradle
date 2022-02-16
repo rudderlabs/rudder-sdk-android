@@ -21,7 +21,7 @@ android {
         applicationId "com.example.testapp1mg"
         minSdkVersion 24
         targetSdkVersion 31
-//        multiDexEnabled true
+        multiDexEnabled true
         versionCode 4
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -59,7 +59,7 @@ dependencies {
 
     implementation "androidx.work:work-runtime:2.7.1"
     //multidex
-//    implementation "androidx.multidex:multidex:2.0.1"
+    implementation "androidx.multidex:multidex:2.0.1"
 
     // SSL Back-porting
     implementation 'com.google.android.gms:play-services-base:17.6.0'

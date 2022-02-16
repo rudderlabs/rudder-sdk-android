@@ -3,13 +3,12 @@ package com.rudderstack.android.sample.kotlin
 import android.app.Application
 
 import android.content.Context
+import androidx.multidex.MultiDex
 import androidx.work.Configuration
 
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
-import java.util.concurrent.TimeUnit
-import kotlin.concurrent.thread
 
 class MainApplication : Application(), Configuration.Provider {
     companion object {
@@ -22,11 +21,7 @@ class MainApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        thread(start = true) {
-            for (i in 1..100) {
-                println("${Thread.currentThread()} $i has run.")
-            }
-        }
+
 //        val rudderConfig = RudderConfig.Builder()
 //            .withDataPlaneUrl(MainApplication.DATA_PLANE_URL)
 //            .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
@@ -43,11 +38,26 @@ class MainApplication : Application(), Configuration.Provider {
 //            rudderConfig
 //        )
 
+        RudderClient.putAnonymousId("anonymous_id_1")
+        RudderClient.putDeviceToken("DevToken2")
+
+        rudderClient = RudderClient.getInstance(
+            this,
+            WRITE_KEY,
+            RudderConfig.Builder()
+                .withDataPlaneUrl(DATA_PLANE_URL)
+                .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
+                .withTrackLifecycleEvents(true)
+                .withRecordScreenViews(true)
+                .withCustomFactory(CustomFactory.FACTORY)
+                .build()
+        )
 
     }
 
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
+        MultiDex.install(this)
     }
 
     // To initialize WorkManager on demand instead of on startup

@@ -227,7 +227,9 @@ public class Utils {
         WRITE_KEY_ERROR
     }
 
-    // Comment : We should decide on having a separate Utils class as this is public to everyone and we are placing SDK useful methods as well in this
+    /**
+     * Returns the number of batches the given number of events can be split into considering the batch size configured.
+     */
     public static int getNumberOfBatches(int numberOfEvents, int flushQueueSize) {
         if (numberOfEvents % flushQueueSize == 0) {
             return numberOfEvents / flushQueueSize;
@@ -236,6 +238,9 @@ public class Utils {
         }
     }
 
+    /**
+     * Returns a batch of messageDetails from a list of messageDetails provided considering the batch size configured.
+     */
     public static <T> ArrayList<T> getBatch(ArrayList<T> messageDetails, int flushQueueSize) {
         if (messageDetails.size() <= flushQueueSize) {
             return messageDetails;
