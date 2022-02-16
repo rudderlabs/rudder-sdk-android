@@ -664,6 +664,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private void registerPeriodicFlushWorker() {
 
         if (config.isPeriodicFlushEnabled()) {
+            if (!Utils.isOnClassPath("androidx.work.WorkManager")) {
+                RudderLogger.logWarn("EventRepository: registerPeriodicFlushWorker: WorkManager dependency not found, please add it to your build.gradle");
+                return;
+            }
             Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
             PeriodicWorkRequest flushPendingEvents =
                     new PeriodicWorkRequest.Builder(FlushEventsWorker.class, config.getRepeatInterval(), config.getRepeatIntervalTimeUnit())
@@ -686,6 +690,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     void cancelPeriodicFlushWorker() {
         if (!config.isPeriodicFlushEnabled()) {
             RudderLogger.logWarn("EventRepository: cancelPeriodicFlushWorker: Periodic Flush is Disabled, no PeriodicWorkRequest to be cancelled");
+            return;
+        }
+        if (!Utils.isOnClassPath("androidx.work.WorkManager")) {
+            RudderLogger.logWarn("EventRepository: cancelPeriodicFlushWorker: WorkManager dependency not found, please add it to your build.gradle");
             return;
         }
         String periodicWorkRequestId = preferenceManager.getPeriodicWorkRequestId();
