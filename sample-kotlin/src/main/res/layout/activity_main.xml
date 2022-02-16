@@ -56,11 +56,11 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <Button
-            android:id="@+id/navigate_to_first"
+            android:id="@+id/initialize"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:text="Navigate to first activity" />
+            android:text="initialize" />
 
         <Button
             android:id="@+id/trackBtn"
@@ -77,17 +77,17 @@
             android:text="Screen" />
 
         <Button
-            android:id="@+id/identifyBtn"
+            android:id="@+id/flush"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:text="Identify" />
+            android:text="Flush" />
 
         <Button
-            android:id="@+id/resetBtn"
+            android:id="@+id/cancel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:text="Reset" />
+            android:text="Cancel" />
     </LinearLayout>
 </ScrollView>
