@@ -1,14 +1,17 @@
 package com.rudderstack.android.sample.kotlin
 
 import android.app.Application
+
 import android.content.Context
+import androidx.work.Configuration
+
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
-class MainApplication : Application() {
+class MainApplication : Application(), Configuration.Provider {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
@@ -45,5 +48,12 @@ class MainApplication : Application() {
 
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
+    }
+
+    // To initialize WorkManager on demand instead of on startup
+    override fun getWorkManagerConfiguration(): Configuration {
+        return Configuration.Builder()
+            .setMinimumLoggingLevel(android.util.Log.INFO)
+            .build()
     }
 }

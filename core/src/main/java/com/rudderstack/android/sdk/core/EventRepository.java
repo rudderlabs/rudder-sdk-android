@@ -12,11 +12,6 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.work.Constraints;
-import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.NetworkType;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
 
 
 import com.google.gson.Gson;
@@ -38,7 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
@@ -54,6 +48,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private RudderServerConfigManager configManager;
     private RudderPreferenceManager preferenceManager;
     private RudderEventFilteringPlugin rudderEventFilteringPlugin;
+    private RudderFlushWorkManager rudderFlushWorkManager;
     private Map<String, RudderIntegration<?>> integrationOperationsMap = new HashMap<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
 
@@ -76,7 +71,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * 2. initiate RudderElementCache
      * 3. initiate DBPersistentManager for SQLite operations
      * 4. initiate RudderServerConfigManager
-     * 5. initiate RudderFlushConfig and save it to a file for use by PeriodicWorkRequest
+     * 5. initiate FlushWorkManager
      * 6. start processor thread
      * 7. initiate factories
      * */
@@ -129,9 +124,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
             this.configManager = new RudderServerConfigManager(_application, _writeKey, _config);
 
-            // 5. initiate RudderFlushConfig and save it to a file for use by PeriodicWorkRequest
-            RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(config.getDataPlaneUrl(), authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize());
-            RudderFlushConfigManager.saveRudderFlushConfig(context, rudderFlushConfig);
+            // 5. initiate FlushWorkManager
+            RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(config.getDataPlaneUrl(), authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel());
+            this.rudderFlushWorkManager = new RudderFlushWorkManager(context, config, preferenceManager, rudderFlushConfig);
 
             // 6. start processor thread
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
@@ -252,7 +247,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // application was not installed previously, Application Installed event
                 preferenceManager.saveBuildVersionCode(newVersionCode);
                 sendApplicationInstalled(newVersionCode);
-                registerPeriodicFlushWorker();
+                rudderFlushWorkManager.registerPeriodicFlushWorker();
             } else if (previousVersionCode != newVersionCode) {
                 preferenceManager.saveBuildVersionCode(newVersionCode);
                 sendApplicationUpdated(previousVersionCode, newVersionCode);
@@ -661,48 +656,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
-    private void registerPeriodicFlushWorker() {
-
-        if (config.isPeriodicFlushEnabled()) {
-            if (!Utils.isOnClassPath("androidx.work.WorkManager")) {
-                RudderLogger.logWarn("EventRepository: registerPeriodicFlushWorker: WorkManager dependency not found, please add it to your build.gradle");
-                return;
-            }
-            Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
-            PeriodicWorkRequest flushPendingEvents =
-                    new PeriodicWorkRequest.Builder(FlushEventsWorker.class, config.getRepeatInterval(), config.getRepeatIntervalTimeUnit())
-                            .addTag("Flushing Pending Events Periodically")
-                            .setConstraints(constraints)
-                            .build();
-
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                    "flushEvents",
-                    ExistingPeriodicWorkPolicy.KEEP,
-                    flushPendingEvents);
-
-            String periodicWorkRequestId = flushPendingEvents.getId().toString();
-            preferenceManager.savePeriodicWorkRequestId(periodicWorkRequestId);
-
-            RudderLogger.logDebug("EventRepository: registerPeriodicFlushWorker: Registered PeriodicWorkRequest with ID " + periodicWorkRequestId);
-        }
-    }
-
     void cancelPeriodicFlushWorker() {
-        if (!config.isPeriodicFlushEnabled()) {
-            RudderLogger.logWarn("EventRepository: cancelPeriodicFlushWorker: Periodic Flush is Disabled, no PeriodicWorkRequest to be cancelled");
-            return;
-        }
-        if (!Utils.isOnClassPath("androidx.work.WorkManager")) {
-            RudderLogger.logWarn("EventRepository: cancelPeriodicFlushWorker: WorkManager dependency not found, please add it to your build.gradle");
-            return;
-        }
-        String periodicWorkRequestId = preferenceManager.getPeriodicWorkRequestId();
-        if (periodicWorkRequestId == null) {
-            RudderLogger.logWarn("EventRepository: cancelPeriodicFlushWorker: Couldn't find PeriodicWorkRequest Id, cannot cancel PeriodicWorkRequest");
-            return;
-        }
-        WorkManager.getInstance(context).cancelWorkById(UUID.fromString(periodicWorkRequestId));
-        RudderLogger.logDebug("EventRepository: cancelPeriodicFlushWorker: Successfully cancelled PeriodicWorkRequest With ID " + periodicWorkRequestId);
+        rudderFlushWorkManager.cancelPeriodicFlushWorker();
     }
 
     void flush() {

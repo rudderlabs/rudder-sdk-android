@@ -56,9 +56,5 @@ public class MainActivity extends AppCompatActivity {
                         .putValue("ad_creative", "Red Hello World Ad")
                         .putValue("ad_group", "Red Ones")));
 
-
-        val properties = RudderProperty().putValue(mapOf("key_1" to "value_1", "key_2" to "value_2" , "key_3" to "value_3"))
-        rudderClient!!.track("Testing Latch Track", properties)
-
     }
 }

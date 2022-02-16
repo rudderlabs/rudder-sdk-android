@@ -23,14 +23,14 @@ public class FlushEventsWorker extends Worker {
     @Override
     public Result doWork() {
 
-        RudderLogger.logDebug("FlushEventsWorker: doWork: Started Periodic Flushing of Events ");
-
-        // initiate lists for messageIds and messages
-        RudderFlushConfig flushConfig = RudderFlushConfigManager.getRudderFlushConfig(getApplicationContext());
+        RudderLogger.logInfo("FlushEventsWorker: doWork: Started Periodic Flushing of Events ");
+        RudderFlushConfig flushConfig = RudderFlushWorkManager.getRudderFlushConfig(getApplicationContext());
         if (flushConfig == null) {
             RudderLogger.logWarn("FlushEventsWorker: doWork: RudderFlushConfig is empty, couldn't flush the events, aborting the work");
             return Result.failure();
         }
+
+        RudderLogger.init(flushConfig.getLogLevel());
 
         DBPersistentManager dbManager = DBPersistentManager.getInstance((Application) getApplicationContext());
         if (dbManager == null) {
@@ -40,7 +40,7 @@ public class FlushEventsWorker extends Worker {
 
         ArrayList<Integer> messageIds = new ArrayList<>();
         ArrayList<String> messages = new ArrayList<>();
-        
+
         RudderLogger.logDebug("FlushEventsWorker: doWork: Fetching events to flush to server");
         dbManager.fetchAllEventsFromDB(messageIds, messages);
         int numberOfBatches = Utils.getNumberOfBatches(messages.size(), flushConfig.getFlushQueueSize());
