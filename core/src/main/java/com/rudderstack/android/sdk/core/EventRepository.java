@@ -13,7 +13,6 @@ import android.util.Base64;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
@@ -33,6 +32,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
@@ -63,6 +64,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
 
     private int noOfActivities;
+
+    //flush executor
+    private final ExecutorService flushExecutor = Executors.newSingleThreadExecutor();
 
     /*
      * constructor to be called from RudderClient internally.
@@ -671,8 +675,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
             }
         }
-
-        new Thread(new Runnable() {
+        if(flushExecutor.isShutdown() || flushExecutor.isTerminated())
+            return;
+        flushExecutor.submit(new Runnable() {
             @Override
             public void run() {
                 Utils.NetworkResponses networkResponse;
@@ -718,8 +723,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
                 }
             }
+        });
 
-        }).start();
+
     }
 
 
@@ -842,5 +848,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     @Override
     public void onActivityDestroyed(@NonNull Activity activity) {
 
+    }
+
+    public void shutDown() {
+        flushExecutor.shutdown();
     }
 }

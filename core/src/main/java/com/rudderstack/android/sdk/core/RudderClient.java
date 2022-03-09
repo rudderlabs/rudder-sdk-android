@@ -772,7 +772,8 @@ public class RudderClient {
      * Stops this instance from accepting further requests.
      */
     public void shutdown() {
-        // TODO: decide shutdown behavior
+        if(repository != null)
+            repository.shutDown();
     }
 
     /**
