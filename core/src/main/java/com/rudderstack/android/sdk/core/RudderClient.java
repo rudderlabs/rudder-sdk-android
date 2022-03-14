@@ -10,6 +10,9 @@ import androidx.annotation.Nullable;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /*
  * Primary class to be used in client
@@ -32,6 +35,10 @@ public class RudderClient {
         RudderLogger.logVerbose("RudderClient: constructor invoked.");
     }
 
+    /**
+     * A single thread executor to queue up all flush requests
+     */
+    private final ExecutorService flushExecutorService = Executors.newSingleThreadExecutor();
 
     /**
      * API for getting RudderClient instance with bare minimum
@@ -720,14 +727,23 @@ public class RudderClient {
     }
 
     /**
-     * Flush Events
+     * Flush Events in async manner.
+     * This calls queues the requests on {@link RudderClient#flushExecutorService}
+     * Deprecated. Use {{@link RudderConfig.Builder#withFlushPeriodically(long, TimeUnit)}} instead
      */
+    @Deprecated
     public void flush() {
         if (getOptOutStatus()) {
             return;
         }
         if (repository != null) {
-            repository.flush();
+            flushExecutorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    repository.flushSync();
+                }
+            });
+
         }
     }
 

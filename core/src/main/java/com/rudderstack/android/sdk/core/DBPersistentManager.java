@@ -127,7 +127,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
     /*
      * returns messageIds and messages returned on executing the supplied SQL statement
      * */
-    void getEventsFromDB(ArrayList<Integer> messageIds, ArrayList<String> messages, String selectSQL) {
+    void getEventsFromDB(List<Integer> messageIds, List<String> messages, String selectSQL) {
         // clear lists if not empty
         if (!messageIds.isEmpty()) messageIds.clear();
         if (!messages.isEmpty()) messages.clear();
@@ -168,7 +168,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
     /*
      * retrieve all messages from DB and store messageIds and messages separately
      * */
-    void fetchAllEventsFromDB(ArrayList<Integer> messageIds, ArrayList<String> messages) {
+    void fetchAllEventsFromDB(List<Integer> messageIds, List<String> messages) {
         String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC", EVENTS_TABLE_NAME, UPDATED);
         RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchAllEventsFromDB: selectSQL: %s", selectSQL));
         getEventsFromDB(messageIds, messages, selectSQL);
@@ -227,7 +227,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
             public void run() {
                 try {
                     DBPersistentManager.this.getWritableDatabase();
-                    synchronized (this) {
+                    synchronized (DBPersistentManager.this) {
                         dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", DBPersistentManager.this.getWritableDatabase());
                         dbInsertionHandlerThread.start();
                         for (Message msg : queue) {
