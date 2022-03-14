@@ -22,13 +22,7 @@ import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -426,10 +420,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     }
 
 
-
-
-
-
     /*
      * generic method for dumping all the events
      * */
@@ -507,12 +497,13 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     }
 
     void flushSync() {
-        synchronized (this){
-            FlushUtils.flush(areFactoriesInitialized, integrationOperationsMap,
-                    messageIds, messages, config.getFlushQueueSize(), config.getDataPlaneUrl(),
-                    dbManager, authHeaderString, anonymousIdHeaderString);
-        }
+//        synchronized (this){
+        FlushUtils.flush(areFactoriesInitialized, integrationOperationsMap,
+                messageIds, messages, config.getFlushQueueSize(), config.getDataPlaneUrl(),
+                dbManager, authHeaderString, anonymousIdHeaderString);
+//        }
     }
+
     private Map<String, Object> prepareIntegrations() {
         Map<String, Object> integrationPlaceholder = new HashMap<>();
         integrationPlaceholder.put("All", true);
@@ -538,8 +529,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     void cancelPeriodicFlushWorker() {
         rudderFlushWorkManager.cancelPeriodicFlushWorker();
     }
-
-
 
 
     void onIntegrationReady(String key, RudderClient.Callback callback) {
