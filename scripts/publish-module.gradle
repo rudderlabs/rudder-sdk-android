@@ -41,9 +41,9 @@ afterEvaluate {
 
                     developers {
                         developer {
-                            id = 'desusai7'
-                            name = 'Desu Sai Venkat'
-                            email ='venkat@rudderstack.com'
+                            id = 'itsdebs'
+                            name = 'Debanjan Chatterjee'
+                            email ='debanjan@rudderstack.com'
                         }
                     }
 
