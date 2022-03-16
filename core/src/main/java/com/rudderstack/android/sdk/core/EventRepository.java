@@ -1,6 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
 import static com.rudderstack.android.sdk.core.FlushUtils.flushEventsToServer;
+import static com.rudderstack.android.sdk.core.FlushUtils.flushNativeSdks;
 import static com.rudderstack.android.sdk.core.FlushUtils.getPayloadFromMessages;
 
 import android.app.Activity;
@@ -653,6 +654,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     }
 
     public void shutDown() {
+        if (areFactoriesInitialized && integrationOperationsMap != null) {
+            flushNativeSdks(integrationOperationsMap);
+        }
     }
 
 }
