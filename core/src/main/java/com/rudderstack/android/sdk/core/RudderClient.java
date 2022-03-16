@@ -31,7 +31,7 @@ public class RudderClient {
     private static RudderOption defaultOptions;
     private static String _deviceToken;
 
-    private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 2;
+    private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
 
     /*
      * private constructor
@@ -51,7 +51,7 @@ public class RudderClient {
      */
     final ExecutorService flushExecutorService = new ThreadPoolExecutor(1, 1,
             0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<Runnable>(2),
+            new LinkedBlockingQueue<Runnable>(NUMBER_OF_FLUSH_CALLS_IN_QUEUE),
             handler);
 
     /**
@@ -743,7 +743,7 @@ public class RudderClient {
     /**
      * Flush Events in async manner.
      * This calls queues the requests on {@link RudderClient#flushExecutorService}
-     * Deprecated. Use {{@link RudderConfig.Builder#withFlushPeriodically(long, TimeUnit)}} instead
+     * @deprecated Use {@link RudderConfig.Builder#withFlushPeriodically(long, TimeUnit)} instead
      */
     @Deprecated
     public void flush() {
