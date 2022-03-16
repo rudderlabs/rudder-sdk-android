@@ -146,18 +146,7 @@ class FlushUtils {
             }
             // get input stream from connection to get output from the server
             if (httpConnection.getResponseCode() == 200) {
-                BufferedInputStream bis = new BufferedInputStream(httpConnection.getInputStream());
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                int res = bis.read();
-                // read response from the server
-                while (res != -1) {
-                    baos.write((byte) res);
-                    res = bis.read();
-                }
-                // finally return response when reading from server is completed
-                if (baos.toString().equalsIgnoreCase("OK")) {
                     return Utils.NetworkResponses.SUCCESS;
-                }
             } else {
                 BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
