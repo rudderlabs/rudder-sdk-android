@@ -1,173 +1,110 @@
 package com.rudderstack.android.sdk.core;
 
+import static org.awaitility.Awaitility.await;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import android.app.Application;
+import android.content.Context;
+import android.webkit.URLUtil;
+
+import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
-import static org.junit.Assert.assertNotNull;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-@RunWith(RobolectricTestRunner.class)
-@Config(minSdk = 16, maxSdk = 28)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({RudderClient.class, URLUtil.class})
+//@Config(minSdk = 16, maxSdk = 28)
 public class RudderClientTest {
-
-    private RudderClient client;
+    EventRepository repository;
+    Application application = PowerMockito.mock(Application.class);
+    Context context = PowerMockito.mock(Context.class);
+    RudderConfig config;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        PowerMockito.when(context, "getApplicationContext").thenAnswer(new Answer<Application>() {
+            @Override
+            public Application answer(InvocationOnMock invocation) throws Throwable {
+                return application;
+            }
+        });
+        PowerMockito.spy(URLUtil.class);
+        PowerMockito.when(URLUtil.class, "isValidUrl", anyString()).thenAnswer(new Answer<Boolean>() {
+            @Override
+            public Boolean answer(InvocationOnMock invocation) throws Throwable {
+                return true;
+            }
+        });
+        PowerMockito.spy(RudderClient.class);
+        PowerMockito.when(RudderClient.class, "getOptOutStatus").thenAnswer(new Answer<Boolean>() {
+            @Override
+            public Boolean answer(InvocationOnMock invocation) throws Throwable {
+                return false;
+            }
+        });
+        config = PowerMockito.mock(RudderConfig.class);
+        PowerMockito.whenNew(RudderConfig.class).withNoArguments().thenReturn(config);
+        repository = PowerMockito.mock(EventRepository.class);
+        PowerMockito.whenNew(EventRepository.class).withAnyArguments().thenReturn(repository);
+
     }
 
-    @Test
-    public void shouldNotBeNull() {
-        assertNotNull(this.client);
-    }
+    private long lastInvokedAt = 0L;
+    private int numberOfTimesFlushSyncCalled = 0;
 
     @Test
-    public void getInstance() {
+    public void flush() throws Exception {
+        final int threadCount = 16;
+        final AtomicBoolean isDone = new AtomicBoolean(false);
+
+        PowerMockito.when(repository, "flushSync").thenAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                assertThat((System.currentTimeMillis() - lastInvokedAt), Matchers.greaterThan(1000L));
+                lastInvokedAt = System.currentTimeMillis();
+                System.out.println("last invoked " + lastInvokedAt);
+                ++numberOfTimesFlushSyncCalled;
+                //we assume, the threads have all started by now
+                // this should be the the last thread or the first thread
+                assertThat(numberOfTimesFlushSyncCalled, Matchers.lessThanOrEqualTo(2));
+
+                Thread.sleep(1000);
+                isDone.set(numberOfTimesFlushSyncCalled == 2);
+
+                return null;
+            }
+        });
+        final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
+
+        for (int num = 0; num < threadCount; num++) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println("Running thread : " + Thread.currentThread().getName() + " \ncalling at: " + System.currentTimeMillis());
+                    client.flush();
+                }
+            }, "t-num-" + num).start();
+        }
+        //if within 10 secs other thread calls, that will be caught
+        Thread.sleep(9000);
+//        await().atMost(10, SECONDS).untilTrue(isDone);
+        assertThat(isDone.get(), Matchers.is(true));
     }
 
-    @Test
-    public void getInstance1() {
-    }
-
-    @Test
-    public void getInstance2() {
-    }
-
-    @Test
-    public void getInstance3() {
-    }
-
-    @Test
-    public void with() {
-    }
-
-    @Test
-    public void getApplication() {
-    }
-
-    @Test
-    public void track() {
-    }
-
-    @Test
-    public void track1() {
-    }
-
-    @Test
-    public void track2() {
-    }
-
-    @Test
-    public void track3() {
-    }
-
-    @Test
-    public void track4() {
-    }
-
-    @Test
-    public void screen() {
-    }
-
-    @Test
-    public void screen1() {
-    }
-
-    @Test
-    public void screen2() {
-    }
-
-    @Test
-    public void screen3() {
-    }
-
-    @Test
-    public void screen4() {
-    }
-
-    @Test
-    public void screen5() {
-    }
-
-    @Test
-    public void page() {
-    }
-
-    @Test
-    public void page1() {
-    }
-
-    @Test
-    public void identify() {
-    }
-
-    @Test
-    public void identify1() {
-    }
-
-    @Test
-    public void identify2() {
-    }
-
-    @Test
-    public void identify3() {
-    }
-
-    @Test
-    public void identify4() {
-    }
-
-    @Test
-    public void identify5() {
-    }
-
-    @Test
-    public void alias() {
-    }
-
-    @Test
-    public void alias1() {
-    }
-
-    @Test
-    public void group() {
-    }
-
-    @Test
-    public void group1() {
-    }
-
-    @Test
-    public void group2() {
-    }
-
-    @Test
-    public void setSingletonInstance() {
-    }
-
-    @Test
-    public void getRudderContext() {
-    }
-
-    @Test
-    public void getSnapShot() {
-    }
-
-    @Test
-    public void reset() {
-    }
-
-    @Test
-    public void optOut() {
-    }
-
-    @Test
-    public void onIntegrationReady() {
-    }
-
-    @Test
-    public void shutdown() {
+    @After
+    public void clearMocks() {
+        Mockito.framework().clearInlineMocks();
     }
 }

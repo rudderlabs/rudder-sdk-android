@@ -10,6 +10,12 @@ import androidx.annotation.Nullable;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /*
  * Primary class to be used in client
@@ -25,6 +31,8 @@ public class RudderClient {
     private static RudderOption defaultOptions;
     private static String _deviceToken;
 
+    private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
+
     /*
      * private constructor
      * */
@@ -32,6 +40,19 @@ public class RudderClient {
         RudderLogger.logVerbose("RudderClient: constructor invoked.");
     }
 
+    /**
+     * A handler for rejected tasks that discards the oldest unhandled request and then retries
+     * execute, unless the executor is shut down, in which case the task is discarded.
+     */
+    final RejectedExecutionHandler handler = new ThreadPoolExecutor.DiscardOldestPolicy();
+
+    /**
+     * A single thread executor to queue up all flush requests
+     */
+    final ExecutorService flushExecutorService = new ThreadPoolExecutor(1, 1,
+            0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<Runnable>(NUMBER_OF_FLUSH_CALLS_IN_QUEUE),
+            handler);
 
     /**
      * API for getting RudderClient instance with bare minimum
@@ -720,14 +741,23 @@ public class RudderClient {
     }
 
     /**
-     * Flush Events
+     * Flush Events in async manner.
+     * This calls queues the requests on {@link RudderClient#flushExecutorService}
+     * @deprecated Use {@link RudderConfig.Builder#withFlushPeriodically(long, TimeUnit)} instead
      */
+    @Deprecated
     public void flush() {
         if (getOptOutStatus()) {
             return;
         }
         if (repository != null) {
-            repository.flush();
+            flushExecutorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    repository.flushSync();
+                }
+            });
+
         }
     }
 
@@ -772,7 +802,8 @@ public class RudderClient {
      * Stops this instance from accepting further requests.
      */
     public void shutdown() {
-        // TODO: decide shutdown behavior
+        if(repository != null)
+            repository.shutDown();
     }
 
     /**

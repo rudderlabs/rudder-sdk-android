@@ -41,7 +41,7 @@ public class Utils {
     // range constants
     public static final int MIN_CONFIG_REFRESH_INTERVAL = 1;
     public static final int MAX_CONFIG_REFRESH_INTERVAL = 24;
-    public static final int MIN_SLEEP_TIMEOUT = 5;
+    public static final int MIN_SLEEP_TIMEOUT = 1;
     public static final int MIN_FLUSH_QUEUE_SIZE = 1;
     public static final int MAX_FLUSH_QUEUE_SIZE = 100;
     public static final int MAX_EVENT_SIZE = 32 * 1024; // 32 KB
@@ -241,11 +241,11 @@ public class Utils {
     /**
      * Returns a batch of messageDetails from a list of messageDetails provided considering the batch size configured.
      */
-    public static <T> ArrayList<T> getBatch(ArrayList<T> messageDetails, int flushQueueSize) {
+    public static <T> List<T> getBatch(List<T> messageDetails, int flushQueueSize) {
         if (messageDetails.size() <= flushQueueSize) {
             return messageDetails;
         } else {
-            return new ArrayList<T>(messageDetails.subList(0, flushQueueSize));
+            return new ArrayList(messageDetails.subList(0, flushQueueSize));
         }
     }
 
