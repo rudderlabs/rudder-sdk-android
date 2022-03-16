@@ -35,7 +35,7 @@ class FlushUtils {
      * @param integrationOperationsMap
      * @param messageIds
      * @param messages
-     * @param flushQueSize
+     * @param flushQueueSize
      * @param dataPlaneUrl
      * @param dbManager
      * @param authHeaderString
@@ -43,37 +43,31 @@ class FlushUtils {
      * @return
      */
     static boolean flush(boolean areFactoriesInitialized, @Nullable Map<String, RudderIntegration<?>> integrationOperationsMap,
-                         List<Integer> messageIds, List<String> messages, int flushQueSize, String dataPlaneUrl,
+                         List<Integer> messageIds, List<String> messages, int flushQueueSize, String dataPlaneUrl,
                          DBPersistentManager dbManager,
                          String authHeaderString, String anonymousIdHeaderString) {
 
         if (areFactoriesInitialized && integrationOperationsMap != null) {
-            RudderLogger.logDebug("EventRepository: flush native SDKs");
-            for (String key : integrationOperationsMap.keySet()) {
-                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush for %s", key));
-                RudderIntegration<?> integration = integrationOperationsMap.get(key);
-                if (integration != null) {
-                    integration.flush();
-                }
-            }
+            flushNativeSdks(integrationOperationsMap);
         }
         Utils.NetworkResponses networkResponse;
 
         messageIds.clear();
         messages.clear();
         RudderLogger.logDebug("EventRepository: flush: Fetching events to flush to server");
+        //locks to prevent concurrent database access.
         synchronized (DB_LOCK) {
             dbManager.fetchAllEventsFromDB(messageIds, messages);
         }
-        int numberOfBatches = Utils.getNumberOfBatches(messages.size(), flushQueSize);
+        int numberOfBatches = Utils.getNumberOfBatches(messages.size(), flushQueueSize);
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: %d batches of events to be flushed", numberOfBatches));
         boolean lastBatchFailed;
-        for (int i = 1; i <= numberOfBatches /*&& !lastBatchFailed*/; i++) {
+        for (int i = 1; i <= numberOfBatches; i++) {
             lastBatchFailed = true;
             int retries = 3;
             while (retries-- > 0) {
-                List<Integer> batchMessageIds = Utils.getBatch(messageIds, flushQueSize);
-                List<String> batchMessages = Utils.getBatch(messages, flushQueSize);
+                List<Integer> batchMessageIds = Utils.getBatch(messageIds, flushQueueSize);
+                List<String> batchMessages = Utils.getBatch(messages, flushQueueSize);
                 String payload = getPayloadFromMessages(batchMessageIds, batchMessages);
                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: payload: %s", payload));
                 RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: EventCount: %d", batchMessages.size()));
@@ -103,6 +97,17 @@ class FlushUtils {
         return true;
 
 
+    }
+
+    static void flushNativeSdks(Map<String, RudderIntegration<?>> integrationOperationsMap) {
+        RudderLogger.logDebug("EventRepository: flush native SDKs");
+        for (Map.Entry<String, RudderIntegration<?>> entry : integrationOperationsMap.entrySet()) {
+            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush for %s", entry.getKey()));
+            RudderIntegration<?> integration = entry.getValue();
+            if (integration != null) {
+                integration.flush();
+            }
+        }
     }
 
     /*
@@ -135,6 +140,7 @@ class FlushUtils {
             httpConnection.setRequestMethod("POST");
             // get output stream and write payload content
             OutputStream os = httpConnection.getOutputStream();
+            //locks to prevent concurrent server access.
             synchronized (FLUSH_LOCK) {
                 OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
                 osw.write(payload);

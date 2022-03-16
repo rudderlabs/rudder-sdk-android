@@ -119,7 +119,7 @@ public class EventRepositoryTest {
                 "}";
         //when
         boolean result = FlushUtils.flush(false, null, messageIdsParams, messagesParams,
-                30, "https://api.rudderlabs.com/", dbPersistentManager
+                30, "api.rudderstack.com/", dbPersistentManager
                 , "auth_key", "anon_id");
 
 
@@ -137,7 +137,7 @@ public class EventRepositoryTest {
                 arg3.capture(),
                 arg4.capture()
 //                Mockito.eq(expectedPayload.replace("\n", "").replace(" ", "")),
-//                Mockito.eq("https://api.rudderlabs.com/"),
+//                Mockito.eq("api.rudderstack.com/"),
 //                Mockito.eq("auth_key"),
 //                Mockito.eq("anon_id")
                 );
@@ -146,7 +146,7 @@ public class EventRepositoryTest {
         assertThat(arg1.getValue().replace(" ", ""),
                 Matchers.is(expectedPayload.replace("\n", "").replace(" ", "")));
         System.out.println(arg2.getValue());
-        assertThat(arg2.getValue().replace(" ", ""), Matchers.is("https://api.rudderlabs.com/"));
+        assertThat(arg2.getValue().replace(" ", ""), Matchers.is("api.rudderstack.com/"));
         System.out.println(arg3.getValue());
         assertThat(arg3.getValue(), Matchers.is("auth_key"));
         System.out.println(arg4.getValue());
@@ -195,7 +195,7 @@ public class EventRepositoryTest {
                 @Override
                 public void run() {
                     FlushUtils.flush(false, null, messageIdsParams, messagesParams,
-                            30, "https://api.rudderlabs.com/", dbPersistentManager
+                            30, "api.rudderstack.com/", dbPersistentManager
                             , "auth_key", "anon_id");
                 }
             }, "flush-thread-" + n){
