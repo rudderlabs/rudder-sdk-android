@@ -12,6 +12,9 @@ import com.rudderstack.android.sdk.core.util.Utils;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /*
@@ -28,6 +31,8 @@ public class RudderClient {
     private static RudderOption defaultOptions;
     private static String _deviceToken;
 
+    private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 2;
+
     /*
      * private constructor
      * */
@@ -36,9 +41,18 @@ public class RudderClient {
     }
 
     /**
+     * A handler for rejected tasks that discards the oldest unhandled request and then retries
+     * execute, unless the executor is shut down, in which case the task is discarded.
+     */
+    final RejectedExecutionHandler handler = new ThreadPoolExecutor.DiscardOldestPolicy();
+
+    /**
      * A single thread executor to queue up all flush requests
      */
-    private final ExecutorService flushExecutorService = Executors.newSingleThreadExecutor();
+    final ExecutorService flushExecutorService = new ThreadPoolExecutor(1, 1,
+            0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<Runnable>(2),
+            handler);
 
     /**
      * API for getting RudderClient instance with bare minimum
