@@ -140,8 +140,12 @@ class DBPersistentManager extends SQLiteOpenHelper {
                 if (cursor.moveToFirst()) {
                     RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: fetched messages from DB");
                     while (!cursor.isAfterLast()) {
-                        messageIds.add(cursor.getInt(cursor.getColumnIndex(MESSAGE_ID)));
-                        messages.add(cursor.getString(cursor.getColumnIndex(MESSAGE)));
+                        final int messageIdColIndex = cursor.getColumnIndex(MESSAGE_ID);
+                        final int messageColIndex = cursor.getColumnIndex(MESSAGE);
+                        if(messageIdColIndex > -1)
+                            messageIds.add(cursor.getInt(messageIdColIndex));
+                        if(messageColIndex > -1)
+                            messages.add(cursor.getString(messageColIndex));
                         cursor.moveToNext();
                     }
                 } else {
