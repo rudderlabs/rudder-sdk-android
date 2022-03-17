@@ -36,6 +36,11 @@ public class RudderProperty {
         return this;
     }
 
+    public RudderProperty putValue(RudderProperty property) {
+        if (map != null) this.map.putAll(property.map);
+        return this;
+    }
+
     public void putRevenue(double revenue) {
         map.put("revenue", revenue);
     }
