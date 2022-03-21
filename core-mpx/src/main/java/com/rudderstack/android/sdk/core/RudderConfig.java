@@ -121,37 +121,38 @@ public class RudderConfig {
             this.sleepTimeOut = Constants.SLEEP_TIMEOUT;
         } else {
             this.sleepTimeOut = sleepTimeOut;
-        this.isPeriodicFlushEnabled = isPeriodicFlushEnabled;
+            this.isPeriodicFlushEnabled = isPeriodicFlushEnabled;
 
-        if (repeatIntervalTimeUnit == TimeUnit.MINUTES && repeatInterval < 15) {
-            RudderLogger.logError("RudderConfig: the repeat Interval for Flushing Periodically should be atleast 15 minutes, falling back to default of 1 hour");
-            this.repeatInterval = Constants.REPEAT_INTERVAL;
-            this.repeatIntervalTimeUnit = Constants.REPEAT_INTERVAL_TIME_UNIT;
-        } else {
-            this.repeatInterval = repeatInterval;
-            this.repeatIntervalTimeUnit = repeatIntervalTimeUnit;
-        }
+            if (repeatIntervalTimeUnit == TimeUnit.MINUTES && repeatInterval < 15) {
+                RudderLogger.logError("RudderConfig: the repeat Interval for Flushing Periodically should be atleast 15 minutes, falling back to default of 1 hour");
+                this.repeatInterval = Constants.REPEAT_INTERVAL;
+                this.repeatIntervalTimeUnit = Constants.REPEAT_INTERVAL_TIME_UNIT;
+            } else {
+                this.repeatInterval = repeatInterval;
+                this.repeatIntervalTimeUnit = repeatIntervalTimeUnit;
+            }
 
-        this.trackLifecycleEvents = trackLifecycleEvents;
-        this.recordScreenViews = recordScreenViews;
+            this.trackLifecycleEvents = trackLifecycleEvents;
+            this.recordScreenViews = recordScreenViews;
 
-        if (factories != null && !factories.isEmpty()) {
-            this.factories = factories;
-        }
+            if (factories != null && !factories.isEmpty()) {
+                this.factories = factories;
+            }
 
-        if (customFactories != null && !customFactories.isEmpty()) {
-            this.customFactories = customFactories;
-        }
+            if (customFactories != null && !customFactories.isEmpty()) {
+                this.customFactories = customFactories;
+            }
 
-        if (TextUtils.isEmpty(controlPlaneUrl)) {
-            RudderLogger.logError("configPlaneUrl can not be null or empty. Set to default.");
-            this.controlPlaneUrl = Constants.CONTROL_PLANE_URL;
-        } else if (!URLUtil.isValidUrl(controlPlaneUrl)) {
-            RudderLogger.logError("Malformed configPlaneUrl. Set to default");
-            this.controlPlaneUrl = Constants.CONTROL_PLANE_URL;
-        } else {
-            if (!controlPlaneUrl.endsWith("/")) controlPlaneUrl += "/";
-            this.controlPlaneUrl = controlPlaneUrl;
+            if (TextUtils.isEmpty(controlPlaneUrl)) {
+                RudderLogger.logError("configPlaneUrl can not be null or empty. Set to default.");
+                this.controlPlaneUrl = Constants.CONTROL_PLANE_URL;
+            } else if (!URLUtil.isValidUrl(controlPlaneUrl)) {
+                RudderLogger.logError("Malformed configPlaneUrl. Set to default");
+                this.controlPlaneUrl = Constants.CONTROL_PLANE_URL;
+            } else {
+                if (!controlPlaneUrl.endsWith("/")) controlPlaneUrl += "/";
+                this.controlPlaneUrl = controlPlaneUrl;
+            }
         }
     }
 
@@ -516,7 +517,7 @@ public class RudderConfig {
             this.repeatIntervalTimeUnit = repeatIntervalTimeUnit;
             return this;
         }
-        
+
         private boolean recordScreenViews = Constants.RECORD_SCREEN_VIEWS;
 
         /**

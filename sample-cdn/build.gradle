@@ -2,7 +2,7 @@ buildscript {
     ext.kotlin_version = '1.3.41'
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.70"
@@ -39,7 +39,6 @@ android {
 }
 
 repositories {
-    maven { url "https://dl.bintray.com/rudderstack/rudderstack" }
     maven { url "https://appboy.github.io/appboy-android-sdk/sdk" }
 }
 
@@ -51,8 +50,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.2'
     implementation 'com.google.android.material:material:1.2.1'
 
-    implementation 'com.rudderstack.android.sdk:core:1.0.9'
     implementation 'com.google.code.gson:gson:2.8.6'
+    implementation project(':core-mpx')
 
     implementation 'com.google.android.gms:play-services-ads:19.4.0'
 
