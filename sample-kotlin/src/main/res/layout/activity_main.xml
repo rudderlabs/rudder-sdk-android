@@ -8,86 +8,39 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:gravity="center"
-            android:text="Testing Application for RudderSDK"
-            android:textStyle="bold" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/writeKey"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:hint="writeKey" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/endPointUrl"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:hint="endPointUrl" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/userId"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="userId"
-                android:text="some_user_id" />
-        </com.google.android.material.textfield.TextInputLayout>
-
         <Button
             android:id="@+id/initialize"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:text="initialize" />
+            android:text="Initialize" />
 
         <Button
-            android:id="@+id/trackBtn"
+            android:id="@+id/optIn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:text="OPT IN" />
+
+        <Button
+            android:id="@+id/track"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             android:text="Track" />
 
         <Button
-            android:id="@+id/screenBtn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:text="Screen" />
-
-        <Button
             android:id="@+id/navigate_to_first"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:text="Flush" />
+            android:text="Next Screen" />
 
         <Button
-            android:id="@+id/cancel"
+            android:id="@+id/flush"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:text="Cancel" />
+            android:text="Flush" />
     </LinearLayout>
 </ScrollView>

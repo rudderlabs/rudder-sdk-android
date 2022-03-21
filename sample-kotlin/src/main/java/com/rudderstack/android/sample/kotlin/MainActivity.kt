@@ -5,8 +5,13 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.rudderstack.android.integrations.appcenter.AppcenterIntegrationFactory
 import com.rudderstack.android.sample.kotlin.MainApplication.Companion.tlsBackport
+import com.rudderstack.android.sdk.core.RudderClient
+import com.rudderstack.android.sdk.core.RudderConfig
+import com.rudderstack.android.sdk.core.RudderLogger
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
@@ -18,22 +23,36 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT)
             tlsBackport(this)
 
+        initialize.setOnClickListener {
+            MainApplication.rudderClient = RudderClient.getInstance(
+                this,
+                MainApplication.WRITE_KEY,
+                RudderConfig.Builder()
+                    .withDataPlaneUrl(MainApplication.DATA_PLANE_URL)
+                    .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
+                    .withTrackLifecycleEvents(true)
+                    .withFlushPeriodically(15, TimeUnit.MINUTES)
+                    .withFactory(AppcenterIntegrationFactory.FACTORY)
+                    .withRecordScreenViews(true)
+                    .build()
+            )
+        }
+
         navigate_to_first.setOnClickListener {
             startActivity(Intent(this, FirstActivity::class.java))
         }
 
-        Thread {
-            Log.e("Debug", "MainActivity onStart")
+
+        flush.setOnClickListener {
+            MainApplication.rudderClient!!.flush();
+        }
+
+        track.setOnClickListener {
+            MainApplication.rudderClient!!.track("Track 1")
+            MainApplication.rudderClient!!.track("Track 2")
             for (i in 1..10) {
-                println("Main Activity {$i} and process ${MainApplication.getProcessName(application)}")
-                MainApplication.rudderClient!!.track(
-                    "Main Activity {$i} and process ${
-                        MainApplication.getProcessName(
-                            application
-                        )
-                    }"
-                )
+                MainApplication.rudderClient!!.track("Event on Button Click $i")
             }
-        }.start()
+        }
     }
 }

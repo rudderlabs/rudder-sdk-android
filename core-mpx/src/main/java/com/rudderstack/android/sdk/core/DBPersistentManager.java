@@ -108,10 +108,11 @@ class DBPersistentManager {
         if (!messages.isEmpty()) messages.clear();
 
         try {
-            Uri contentUri = EventContentProvider.getContentUri(DBPersistentManager.getUri(application)).buildUpon()
-                    .appendQueryParameter(EventContentProvider.QUERY_PARAMETER_LIMIT,
-                            String.valueOf(count)).build();
-            DBPersistentManager.initializeUri(application);
+            Uri contentUri = EventContentProvider.getContentUri(DBPersistentManager.getUri(application));
+            if (count != null) {
+              contentUri =  contentUri.buildUpon().appendQueryParameter(EventContentProvider.QUERY_PARAMETER_LIMIT,
+                        String.valueOf(count)).build();
+            }
             Cursor cursor = application.getContentResolver().query(contentUri,
                     null, null, null, UPDATED + " ASC");
             if (cursor.moveToFirst()) {

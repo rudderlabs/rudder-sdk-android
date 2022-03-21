@@ -15,8 +15,6 @@ import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
 
 import com.rudderstack.android.sdk.core.RudderClient
-import com.rudderstack.android.sdk.core.RudderConfig
-import com.rudderstack.android.sdk.core.RudderLogger
 import javax.net.ssl.SSLContext
 
 
@@ -24,7 +22,7 @@ class MainApplication : Application(), Configuration.Provider {
     companion object {
         var rudderClient: RudderClient? = null
         const val DATA_PLANE_URL = "https://54b4-2409-4070-4e9f-ded2-c901-b6e6-5b1a-38b2.ngrok.io"
-        const val WRITE_KEY = "26Sr4BnWAAm3xCIBL9Equ1uKB4N"
+        const val WRITE_KEY = "1pTxG1Tqxr7FCrqIy7j0p28AENV"
 
         fun getProcessName(application: Application): String? {
             val mypid = Process.myPid()
@@ -60,23 +58,12 @@ class MainApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-
-        rudderClient = RudderClient.getInstance(
-            this,
-            WRITE_KEY,
-            RudderConfig.Builder()
-                .withDataPlaneUrl(DATA_PLANE_URL)
-                .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
-                .withTrackLifecycleEvents(true)
-                .withRecordScreenViews(true)
-                .build()
-        )
         Log.e("Debug", "Application OnCreate")
 
         Thread {
             for (i in 1..10) {
                 println("Event from Main Application {$i}")
-                rudderClient!!.track("Event from Main Application {$i}")
+//                rudderClient!!.track("Event from Main Application {$i}")
             }
         }.start()
     }
