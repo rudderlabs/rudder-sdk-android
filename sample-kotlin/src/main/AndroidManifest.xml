@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.rudderstack.android.sample.kotlin">
 
     <uses-permission android:name="android.permission.INTERNET" />    
@@ -19,12 +20,23 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name="com.rudderstack.android.sample.kotlin.FirstActivity" android:process=":firstProcess" />
+        <activity android:name="com.rudderstack.android.sample.kotlin.FirstActivity"/>
         <activity android:name="com.rudderstack.android.sample.kotlin.SecondActivity" android:process=":secondProcess" />
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-4271859468376006~9737595580"/>
+            android:value="ca-app-pub-4271859468376006~9737595580" />
+        <!-- To disable workManager Initialization on startup and initialize it only on-demand -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <!-- If you are using androidx.startup to initialize other components -->
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
         <provider
             android:authorities="${applicationId}.EventContentProvider"
             android:name="com.rudderstack.android.sdk.core.EventContentProvider"/>

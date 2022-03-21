@@ -16,6 +16,7 @@ class RudderPreferenceManager {
     private static final String RUDDER_OPT_IN_TIME_KEY = "rl_opt_in_time";
     private static final String RUDDER_OPT_OUT_TIME_KEY = "rl_opt_out_time";
     private static final String RUDDER_ANONYMOUS_ID_KEY = "rl_anonymous_id_key";
+    private static final String RUDDER_PERIODIC_WORK_REQUEST_ID_KEY = "rl_periodic_work_request_key";
 
     private static SharedPreferences preferences;
     private static RudderPreferenceManager instance;
@@ -96,5 +97,13 @@ class RudderPreferenceManager {
 
     long getOptOutTime() {
         return preferences.getLong(RUDDER_OPT_OUT_TIME_KEY, -1);
+    }
+  
+    void savePeriodicWorkRequestId(String periodicWorkRequestId) {
+        preferences.edit().putString(RUDDER_PERIODIC_WORK_REQUEST_ID_KEY, periodicWorkRequestId).apply();
+    }
+
+    String getPeriodicWorkRequestId() {
+        return preferences.getString(RUDDER_PERIODIC_WORK_REQUEST_ID_KEY, null);
     }
 }

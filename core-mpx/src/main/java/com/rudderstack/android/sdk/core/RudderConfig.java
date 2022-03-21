@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 /*
  * Config class for RudderClient
@@ -35,6 +36,9 @@ public class RudderConfig {
     private int sleepTimeOut;
     private int logLevel;
     private int configRefreshInterval;
+    private boolean isPeriodicFlushEnabled;
+    private long repeatInterval;
+    private TimeUnit repeatIntervalTimeUnit;
     private boolean trackLifecycleEvents;
     private boolean recordScreenViews;
     private String controlPlaneUrl;
@@ -49,6 +53,9 @@ public class RudderConfig {
                 Constants.SLEEP_TIMEOUT,
                 RudderLogger.RudderLogLevel.ERROR,
                 Constants.CONFIG_REFRESH_INTERVAL,
+                Constants.PERIODIC_FLUSH_ENABLED,
+                Constants.REPEAT_INTERVAL,
+                Constants.REPEAT_INTERVAL_TIME_UNIT,
                 Constants.TRACK_LIFECYCLE_EVENTS,
                 Constants.RECORD_SCREEN_VIEWS,
                 Constants.CONTROL_PLANE_URL,
@@ -64,6 +71,9 @@ public class RudderConfig {
             int sleepTimeOut,
             int logLevel,
             int configRefreshInterval,
+            boolean isPeriodicFlushEnabled,
+            long repeatInterval,
+            TimeUnit repeatIntervalTimeUnit,
             boolean trackLifecycleEvents,
             boolean recordScreenViews,
             String controlPlaneUrl,
@@ -108,10 +118,18 @@ public class RudderConfig {
         }
 
         if (sleepTimeOut < Utils.MIN_SLEEP_TIMEOUT) {
-            RudderLogger.logError("invalid sleepTimeOut. Set to default");
             this.sleepTimeOut = Constants.SLEEP_TIMEOUT;
         } else {
             this.sleepTimeOut = sleepTimeOut;
+        this.isPeriodicFlushEnabled = isPeriodicFlushEnabled;
+
+        if (repeatIntervalTimeUnit == TimeUnit.MINUTES && repeatInterval < 15) {
+            RudderLogger.logError("RudderConfig: the repeat Interval for Flushing Periodically should be atleast 15 minutes, falling back to default of 1 hour");
+            this.repeatInterval = Constants.REPEAT_INTERVAL;
+            this.repeatIntervalTimeUnit = Constants.REPEAT_INTERVAL_TIME_UNIT;
+        } else {
+            this.repeatInterval = repeatInterval;
+            this.repeatIntervalTimeUnit = repeatIntervalTimeUnit;
         }
 
         this.trackLifecycleEvents = trackLifecycleEvents;
@@ -186,6 +204,27 @@ public class RudderConfig {
      */
     public int getConfigRefreshInterval() {
         return configRefreshInterval;
+    }
+
+    /**
+     * @return isPeriodicFlushEnabled if periodic flushing of events from db to server is enabled or not
+     */
+    public boolean isPeriodicFlushEnabled() {
+        return isPeriodicFlushEnabled;
+    }
+
+    /**
+     * @return repeatInterval the interval in which the SDK should flush away the events from db to server
+     */
+    public long getRepeatInterval() {
+        return repeatInterval;
+    }
+
+    /**
+     * @return repeatIntervalTimeUnit the time unit in which the flushing should be happening.
+     */
+    public TimeUnit getRepeatIntervalTimeUnit() {
+        return repeatIntervalTimeUnit;
     }
 
     /**
@@ -457,6 +496,27 @@ public class RudderConfig {
             return this;
         }
 
+        private boolean isPeriodicFlushEnabled = Constants.PERIODIC_FLUSH_ENABLED;
+        private long repeatInterval = Constants.REPEAT_INTERVAL;
+        private TimeUnit repeatIntervalTimeUnit = Constants.REPEAT_INTERVAL_TIME_UNIT;
+
+        /**
+         * @param repeatInterval         the interval in which we should flush away the events in the db periodically
+         * @param repeatIntervalTimeUnit the TimeUnit in which the repeatInterval is specified. It can be either minutes / hours.
+         * @return RudderConfig.Builder
+         */
+
+        public Builder withFlushPeriodically(long repeatInterval, TimeUnit repeatIntervalTimeUnit) {
+            this.isPeriodicFlushEnabled = true;
+            if (repeatIntervalTimeUnit == TimeUnit.MINUTES && repeatInterval < 15) {
+                RudderLogger.logError("RudderConfig: Builder: withFlushPeriodically: the repeat Interval for Flushing Periodically should be atleast 15 minutes, falling back to default of 1 hour");
+                return this;
+            }
+            this.repeatInterval = repeatInterval;
+            this.repeatIntervalTimeUnit = repeatIntervalTimeUnit;
+            return this;
+        }
+        
         private boolean recordScreenViews = Constants.RECORD_SCREEN_VIEWS;
 
         /**
@@ -514,6 +574,9 @@ public class RudderConfig {
                     this.sleepTimeout,
                     this.isDebug ? RudderLogger.RudderLogLevel.DEBUG : logLevel,
                     this.configRefreshInterval,
+                    this.isPeriodicFlushEnabled,
+                    this.repeatInterval,
+                    this.repeatIntervalTimeUnit,
                     this.trackLifecycleEvents,
                     this.recordScreenViews,
                     this.controlPlaneUrl,

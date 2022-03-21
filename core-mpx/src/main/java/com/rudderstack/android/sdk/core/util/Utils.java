@@ -2,8 +2,10 @@ package com.rudderstack.android.sdk.core.util;
 
 import android.app.Activity;
 import android.app.Application;
+import android.app.UiModeManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.net.ParseException;
 import android.net.Uri;
 import android.os.BadParcelableException;
@@ -15,8 +17,10 @@ import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.RudderLogger;
 import com.rudderstack.android.sdk.core.RudderProperty;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -25,7 +29,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-
+import static android.content.Context.UI_MODE_SERVICE;
 import static android.provider.Settings.Secure.ANDROID_ID;
 import static android.provider.Settings.System.getString;
 
@@ -36,7 +40,7 @@ public class Utils {
     // range constants
     public static final int MIN_CONFIG_REFRESH_INTERVAL = 1;
     public static final int MAX_CONFIG_REFRESH_INTERVAL = 24;
-    public static final int MIN_SLEEP_TIMEOUT = 10;
+    public static final int MIN_SLEEP_TIMEOUT = 1;
     public static final int MIN_FLUSH_QUEUE_SIZE = 1;
     public static final int MAX_FLUSH_QUEUE_SIZE = 100;
     public static final int MAX_EVENT_SIZE = 32 * 1024; // 32 KB
@@ -123,6 +127,14 @@ public class Utils {
         }
     }
 
+    public static boolean fileExists(Context context, String filename) {
+        File file = context.getFileStreamPath(filename);
+        if (file == null || !file.exists()) {
+            return false;
+        }
+        return true;
+    }
+  
     /**
      * Returns referring_application, url and its query parameter.
      */
@@ -194,10 +206,44 @@ public class Utils {
         }
         return null;
     }
+  
+    /**
+     * Returns whether the app is running on a TV device.
+     *
+     * @param context Any context.
+     * @return Whether the app is running on a TV device.
+     */
+    public static boolean isTv(Context context) {
+        UiModeManager uiModeManager =
+                (UiModeManager) context.getApplicationContext().getSystemService(UI_MODE_SERVICE);
+        return uiModeManager != null
+                && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
+    }
 
     public enum NetworkResponses {
         SUCCESS,
         ERROR,
         WRITE_KEY_ERROR
+    }
+    /**
+     * Returns the number of batches the given number of events can be split into considering the batch size configured.
+     */
+    public static int getNumberOfBatches(int numberOfEvents, int flushQueueSize) {
+        if (numberOfEvents % flushQueueSize == 0) {
+            return numberOfEvents / flushQueueSize;
+        } else {
+            return (numberOfEvents / flushQueueSize) + 1;
+        }
+    }
+
+    /**
+     * Returns a batch of messageDetails from a list of messageDetails provided considering the batch size configured.
+     */
+    public static <T> List<T> getBatch(List<T> messageDetails, int flushQueueSize) {
+        if (messageDetails.size() <= flushQueueSize) {
+            return messageDetails;
+        } else {
+            return new ArrayList(messageDetails.subList(0, flushQueueSize));
+        }
     }
 }

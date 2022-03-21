@@ -88,7 +88,7 @@ class RudderServerConfigManager {
         int retryCount = 0;
         while (!isDone && retryCount <= 3) {
             try {
-                String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig?p=android&v="+Constants.RUDDER_LIBRARY_VERSION+"&bv="+android.os.Build.VERSION.SDK_INT;
+                String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig?p=android&v=" + Constants.RUDDER_LIBRARY_VERSION + "&bv=" + android.os.Build.VERSION.SDK_INT;
                 RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configUrl: %s", configUrl));
                 // create url object
                 URL url = new URL(configUrl);
@@ -190,7 +190,7 @@ class RudderServerConfigManager {
     RudderServerConfig getRudderServerConfig() {
         RudderServerConfig rudderServerConfig = null;
         try {
-            if (fileExists(context, RUDDER_SERVER_CONFIG_FILE_NAME)) {
+            if (Utils.fileExists(context, RUDDER_SERVER_CONFIG_FILE_NAME)) {
                 FileInputStream fis = context.openFileInput(RUDDER_SERVER_CONFIG_FILE_NAME);
                 ObjectInputStream is = new ObjectInputStream(fis);
                 rudderServerConfig = (RudderServerConfig) is.readObject();
@@ -226,13 +226,5 @@ class RudderServerConfigManager {
             }
         }
         return this.integrationsMap;
-    }
-
-    boolean fileExists(Context context, String filename) {
-        File file = context.getFileStreamPath(filename);
-        if (file == null || !file.exists()) {
-            return false;
-        }
-        return true;
     }
 }
