@@ -42,6 +42,11 @@
         <activity
             android:name=".BrowseErrorActivity"
             android:exported="false" />
+
+        <provider
+            android:name="com.rudderstack.android.sdk.core.EventContentProvider"
+            android:authorities="${applicationId}.EventContentProvider" />
     </application>
 
-</manifest>
+
+    </manifest>
