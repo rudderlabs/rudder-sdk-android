@@ -1,9 +1,9 @@
 package com.rudderstack.android.sdk.core;
 
-import static org.awaitility.Awaitility.await;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
-import static java.util.concurrent.TimeUnit.SECONDS;
+
 
 import android.app.Application;
 import android.content.Context;

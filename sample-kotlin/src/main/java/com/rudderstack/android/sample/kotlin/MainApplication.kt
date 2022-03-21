@@ -4,30 +4,30 @@ import android.app.ActivityManager
 import android.app.Application
 
 import android.content.Context
-import android.os.Handler
 import android.os.Process
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.multidex.MultiDex
 import androidx.work.Configuration
+import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException
+import com.google.android.gms.common.GooglePlayServicesRepairableException
+import com.google.android.gms.security.ProviderInstaller
 
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
-
-import com.google.android.gms.ads.identifier.AdvertisingIdClient;
+import javax.net.ssl.SSLContext
 
 
 class MainApplication : Application(), Configuration.Provider {
     companion object {
         var rudderClient: RudderClient? = null
-        const val TAG = "MainApplication"
-//        const val DATA_PLANE_URL = "https://2569-14-97-100-194.ngrok.io"
-//        const val CONTROL_PLANE_URL = "https://0e741f50e567.ngrok.io"
+        const val DATA_PLANE_URL = "https://54b4-2409-4070-4e9f-ded2-c901-b6e6-5b1a-38b2.ngrok.io"
         const val WRITE_KEY = "26Sr4BnWAAm3xCIBL9Equ1uKB4N"
+
         fun getProcessName(application: Application): String? {
-
             val mypid = Process.myPid()
-
             val manager = application.getSystemService(ACTIVITY_SERVICE) as ActivityManager
             val infos = manager.runningAppProcesses
             for (info in infos) {
@@ -35,42 +35,40 @@ class MainApplication : Application(), Configuration.Provider {
                     return info.processName
                 }
             }
-            // may never return null
             return null
+        }
+
+         fun tlsBackport(activity: AppCompatActivity) {
+            try {
+                ProviderInstaller.installIfNeeded(activity)
+                Log.e("Rudder", "Play present")
+                val sslContext: SSLContext = SSLContext.getInstance("TLSv1.2")
+                sslContext.init(null, null, null)
+                sslContext.createSSLEngine()
+            } catch (e: GooglePlayServicesRepairableException) {
+                // Prompt the user to install/update/enable Google Play services.
+                GoogleApiAvailability.getInstance()
+                    .showErrorNotification(activity, e.connectionStatusCode)
+                Log.e("Rudder", "Play install")
+            } catch (e: GooglePlayServicesNotAvailableException) {
+                // Indicates a non-recoverable error: let the user know.
+                Log.e("SecurityException", "Google Play Services not available.");
+                e.printStackTrace()
+            }
         }
     }
 
     override fun onCreate() {
         super.onCreate()
 
-//        val rudderConfig = RudderConfig.Builder()
-//            .withDataPlaneUrl(MainApplication.DATA_PLANE_URL)
-//            .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
-//            .withTrackLifecycleEvents(false)
-//            .withFlushPeriodically(15, TimeUnit.MINUTES)
-//            .withFlushQueueSize(90)
-//            .withSleepCount(180)
-//            .withRecordScreenViews(false)
-//            .build()
-//
-//        rudderClient = RudderClient.getInstance(
-//            this,
-//            WRITE_KEY,
-//            rudderConfig
-//        )
-
-//        RudderClient.putAnonymousId("anonymous_id_1")
-//        RudderClient.putDeviceToken("DevToken2")
-
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,
             RudderConfig.Builder()
-//                .withDataPlaneUrl(DATA_PLANE_URL)
+                .withDataPlaneUrl(DATA_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withTrackLifecycleEvents(true)
                 .withRecordScreenViews(true)
-//                .withCustomFactory(CustomFactory.FACTORY)
                 .build()
         )
         Log.e("Debug", "Application OnCreate")
