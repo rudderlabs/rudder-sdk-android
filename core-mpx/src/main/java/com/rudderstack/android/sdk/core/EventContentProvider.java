@@ -2,9 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 import static android.provider.Telephony.BaseMmsColumns.MESSAGE_ID;
 import static com.rudderstack.android.sdk.core.EventsDbHelper.EVENTS_TABLE_NAME;
-import static com.rudderstack.android.sdk.core.EventsDbHelper.UPDATED;
 
-import android.app.Application;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -13,15 +11,12 @@ import android.content.UriMatcher;
 import android.content.pm.ProviderInfo;
 import android.database.Cursor;
 import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.Locale;
 
 public class EventContentProvider extends ContentProvider {
     static String authority = "";

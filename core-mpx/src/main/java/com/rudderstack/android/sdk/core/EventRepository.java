@@ -14,7 +14,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -517,12 +516,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     }
 
     void flushSync() {
-//        synchronized (this){
         FlushUtils.flush(areFactoriesInitialized, integrationOperationsMap,
                 messageIds, messages, config.getFlushQueueSize(), config.getDataPlaneUrl(),
                 dbManager, authHeaderString, anonymousIdHeaderString);
-//        }
-    }
+   }
 
     private Map<String, Object> prepareIntegrations() {
         Map<String, Object> integrationPlaceholder = new HashMap<>();

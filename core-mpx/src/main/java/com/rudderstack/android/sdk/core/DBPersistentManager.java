@@ -1,11 +1,9 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.EventsDbHelper.EVENTS_TABLE_NAME;
 import static com.rudderstack.android.sdk.core.EventsDbHelper.MESSAGE;
 import static com.rudderstack.android.sdk.core.EventsDbHelper.MESSAGE_ID;
 import static com.rudderstack.android.sdk.core.EventsDbHelper.UPDATED;
 
-import android.app.ActivityManager;
 import android.app.Application;
 import android.content.ContentValues;
 import android.content.Context;
@@ -102,7 +100,7 @@ class DBPersistentManager {
     }
 
     /*
-     * returns messageIds and messages returned on executing the supplied SQL statement
+     * retrieve `count` number of messages from DB and store messageIds and messages separately
      * */
     void getEventsFromDB(List<Integer> messageIds, List<String> messages, Integer count) {
         // clear lists if not empty
@@ -140,8 +138,6 @@ class DBPersistentManager {
      * retrieve `count` number of messages from DB and store messageIds and messages separately
      * */
     void fetchEventsFromDB(ArrayList<Integer> messageIds, ArrayList<String> messages, int count) {
-        String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC LIMIT %d", EVENTS_TABLE_NAME, UPDATED, count);
-        RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchEventsFromDB: selectSQL: %s", selectSQL));
         getEventsFromDB(messageIds, messages, count);
     }
 
@@ -149,8 +145,6 @@ class DBPersistentManager {
      * retrieve all messages from DB and store messageIds and messages separately
      * */
     void fetchAllEventsFromDB(List<Integer> messageIds, List<String> messages) {
-        String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC", EVENTS_TABLE_NAME, UPDATED);
-        RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchAllEventsFromDB: selectSQL: %s", selectSQL));
         getEventsFromDB(messageIds, messages, null);
     }
 
