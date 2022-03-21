@@ -50,7 +50,6 @@ dependencies {
     implementation project(':core-mpx')
     implementation 'com.rudderstack.android.integration:appcenter:1.0.1'
 
-
     implementation 'com.google.code.gson:gson:2.8.6'
 
     implementation 'com.google.android.gms:play-services-ads:19.3.0'

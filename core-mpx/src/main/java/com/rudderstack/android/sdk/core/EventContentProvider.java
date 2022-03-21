@@ -2,7 +2,6 @@ package com.rudderstack.android.sdk.core;
 
 import static android.provider.Telephony.BaseMmsColumns.MESSAGE_ID;
 import static com.rudderstack.android.sdk.core.EventsDbHelper.EVENTS_TABLE_NAME;
-
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -13,7 +12,6 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.net.Uri;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -25,7 +23,6 @@ public class EventContentProvider extends ContentProvider {
     static final String QUERY_PARAMETER_LIMIT = "limit";
     private final static int EVENT_CODE = 1;
     private final static int EVENT_ID_CODE = 2;
-
     private EventsDbHelper dbHelper;
 
     @Override
@@ -63,7 +60,6 @@ public class EventContentProvider extends ContentProvider {
     @Override
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
         long rowID = dbHelper.getWritableDatabase().insert(EVENTS_TABLE_NAME, "", values);
-
         /**
          * If record is added successfully
          */

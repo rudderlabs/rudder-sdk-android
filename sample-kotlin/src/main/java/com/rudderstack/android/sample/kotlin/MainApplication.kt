@@ -73,6 +73,14 @@ class MainApplication : Application(), Configuration.Provider {
                 .withRecordScreenViews(true)
                 .build()
         )
+        Log.e("Debug","Application OnCreate")
+
+        Thread {
+            for (i in 1..10) {
+                println("Event from Main Application {$i}")
+                rudderClient!!.track("Event from Main Application {$i}")
+            }
+        }.start()
     }
 
     override fun attachBaseContext(base: Context) {

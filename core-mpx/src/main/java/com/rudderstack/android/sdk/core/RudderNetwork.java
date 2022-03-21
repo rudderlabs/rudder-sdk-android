@@ -2,7 +2,6 @@ package com.rudderstack.android.sdk.core;
 
 import static android.content.Context.TELEPHONY_SERVICE;
 import static com.rudderstack.android.sdk.core.util.Utils.isTv;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Application;

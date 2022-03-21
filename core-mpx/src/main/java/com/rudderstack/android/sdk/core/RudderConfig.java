@@ -118,12 +118,9 @@ public class RudderConfig {
         }
 
         if (sleepTimeOut < Utils.MIN_SLEEP_TIMEOUT) {
-            RudderLogger.logError("invalid sleepTimeOut. Set to default");
             this.sleepTimeOut = Constants.SLEEP_TIMEOUT;
         } else {
             this.sleepTimeOut = sleepTimeOut;
-        }
-
         this.isPeriodicFlushEnabled = isPeriodicFlushEnabled;
 
         if (repeatIntervalTimeUnit == TimeUnit.MINUTES && repeatInterval < 15) {
@@ -519,7 +516,7 @@ public class RudderConfig {
             this.repeatIntervalTimeUnit = repeatIntervalTimeUnit;
             return this;
         }
-
+        
         private boolean recordScreenViews = Constants.RECORD_SCREEN_VIEWS;
 
         /**

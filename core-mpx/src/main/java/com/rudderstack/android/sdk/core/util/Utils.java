@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import static android.content.Context.UI_MODE_SERVICE;
 import static android.provider.Settings.Secure.ANDROID_ID;
 import static android.provider.Settings.System.getString;
@@ -135,7 +134,7 @@ public class Utils {
         }
         return true;
     }
-
+  
     /**
      * Returns referring_application, url and its query parameter.
      */
@@ -207,7 +206,7 @@ public class Utils {
         }
         return null;
     }
-
+  
     /**
      * Returns whether the app is running on a TV device.
      *
@@ -226,7 +225,6 @@ public class Utils {
         ERROR,
         WRITE_KEY_ERROR
     }
-
     /**
      * Returns the number of batches the given number of events can be split into considering the batch size configured.
      */
@@ -248,5 +246,4 @@ public class Utils {
             return new ArrayList(messageDetails.subList(0, flushQueueSize));
         }
     }
-
 }

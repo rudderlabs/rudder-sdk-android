@@ -20,7 +20,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name="com.rudderstack.android.sample.kotlin.FirstActivity"/>
         <activity android:name="com.rudderstack.android.sample.kotlin.SecondActivity" android:process=":secondProcess" />
         <meta-data
@@ -38,7 +37,6 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
-
         <provider
             android:authorities="${applicationId}.EventContentProvider"
             android:name="com.rudderstack.android.sdk.core.EventContentProvider"/>

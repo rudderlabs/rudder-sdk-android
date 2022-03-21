@@ -3,7 +3,6 @@ package com.rudderstack.android.sdk.core;
 import static com.rudderstack.android.sdk.core.FlushUtils.flushEventsToServer;
 import static com.rudderstack.android.sdk.core.FlushUtils.flushNativeSdks;
 import static com.rudderstack.android.sdk.core.FlushUtils.getPayloadFromMessages;
-
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
@@ -53,8 +52,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     // initiate lists for messageIds and messages
     private ArrayList<Integer> messageIds = new ArrayList<>();
     private ArrayList<String> messages = new ArrayList<>();
-
-
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
     private boolean areFactoriesInitialized = false;
@@ -234,6 +231,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         message.setType(MessageType.TRACK);
         dump(message);
     }
+      
     private String getProcessName(Application application) {
         int pid = android.os.Process.myPid();
         ActivityManager manager = (ActivityManager) application.getSystemService(application.getApplicationContext().ACTIVITY_SERVICE);
@@ -272,7 +270,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logError(ex);
         }
     }
-
 
     private void initiateFactories(List<RudderServerDestination> destinations) {
         // initiate factory initialization after 10s
@@ -360,7 +357,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // initiate sleepCount
                 int sleepCount = 0;
                 Utils.NetworkResponses networkResponse = Utils.NetworkResponses.SUCCESS;
-
                 while (true) {
                     synchronized (messageIds) {
                         try {
@@ -416,7 +412,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     }
                 }
             }
-
         };
     }
 
@@ -437,7 +432,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             dbManager.clearEventsFromDB(messageIds);
         }
     }
-
 
     /*
      * generic method for dumping all the events
@@ -546,7 +540,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     void cancelPeriodicFlushWorker() {
         rudderFlushWorkManager.cancelPeriodicFlushWorker();
     }
-
 
     void onIntegrationReady(String key, RudderClient.Callback callback) {
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: onIntegrationReady: callback registered for %s", key));
@@ -668,7 +661,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     public void onActivityDestroyed(@NonNull Activity activity) {
 
     }
-
+          
     public void shutDown() {
         if (areFactoriesInitialized && integrationOperationsMap != null) {
             flushNativeSdks(integrationOperationsMap);
