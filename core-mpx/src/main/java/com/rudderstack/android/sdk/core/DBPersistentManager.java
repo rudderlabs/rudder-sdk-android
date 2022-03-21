@@ -3,7 +3,7 @@ package com.rudderstack.android.sdk.core;
 import static com.rudderstack.android.sdk.core.EventsDbHelper.MESSAGE;
 import static com.rudderstack.android.sdk.core.EventsDbHelper.MESSAGE_ID;
 import static com.rudderstack.android.sdk.core.EventsDbHelper.UPDATED;
-
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.ContentValues;
 import android.content.Context;
@@ -148,7 +148,6 @@ class DBPersistentManager {
     void fetchAllEventsFromDB(List<Integer> messageIds, List<String> messages) {
         getEventsFromDB(messageIds, messages, null);
     }
-
 
     int getDBRecordCount() {
         // initiate count

@@ -227,5 +227,4 @@ class RudderServerConfigManager {
         }
         return this.integrationsMap;
     }
-
 }

@@ -1,6 +1,5 @@
 package com.rudderstack.android.sdk.core;
 
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 

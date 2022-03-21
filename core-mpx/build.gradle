@@ -49,7 +49,6 @@ dependencies {
     testImplementation 'org.awaitility:awaitility:4.2.0'
 
     compileOnly "androidx.work:work-runtime:2.7.1"
-
 }
 
 ext {

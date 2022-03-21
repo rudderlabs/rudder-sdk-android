@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.rudderstack.android.sample.kotlin.MainApplication.Companion.tlsBackport
 import kotlinx.android.synthetic.main.activity_first.*
+import javax.net.ssl.SSLContext
 
 class FirstActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,4 +41,29 @@ class FirstActivity : AppCompatActivity() {
             }
         }.start()
     }
+
+    override fun onStart() {
+        super.onStart()
+
+    }
+
+    private fun tlsBackport() {
+        try {
+            ProviderInstaller.installIfNeeded(this)
+            Log.e("Rudder", "Play present")
+            val sslContext: SSLContext = SSLContext.getInstance("TLSv1.2")
+            sslContext.init(null, null, null)
+            sslContext.createSSLEngine()
+        } catch (e: GooglePlayServicesRepairableException) {
+            // Prompt the user to install/update/enable Google Play services.
+            GoogleApiAvailability.getInstance()
+                .showErrorNotification(this, e.connectionStatusCode)
+            Log.e("Rudder", "Play install")
+        } catch (e: GooglePlayServicesNotAvailableException) {
+            // Indicates a non-recoverable error: let the user know.
+            Log.e("SecurityException", "Google Play Services not available.");
+            e.printStackTrace()
+        }
+    }
+
 }
