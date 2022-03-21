@@ -23,21 +23,6 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT)
             tlsBackport(this)
 
-        initialize.setOnClickListener {
-            MainApplication.rudderClient = RudderClient.getInstance(
-                this,
-                MainApplication.WRITE_KEY,
-                RudderConfig.Builder()
-                    .withDataPlaneUrl(MainApplication.DATA_PLANE_URL)
-                    .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
-                    .withTrackLifecycleEvents(true)
-                    .withFlushPeriodically(15, TimeUnit.MINUTES)
-                    .withFactory(AppcenterIntegrationFactory.FACTORY)
-                    .withRecordScreenViews(true)
-                    .build()
-            )
-        }
-
         navigate_to_first.setOnClickListener {
             startActivity(Intent(this, FirstActivity::class.java))
         }

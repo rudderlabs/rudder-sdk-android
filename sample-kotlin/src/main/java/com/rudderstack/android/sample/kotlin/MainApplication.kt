@@ -13,8 +13,12 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
+import com.rudderstack.android.integrations.appcenter.AppcenterIntegrationFactory
 
 import com.rudderstack.android.sdk.core.RudderClient
+import com.rudderstack.android.sdk.core.RudderConfig
+import com.rudderstack.android.sdk.core.RudderLogger
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 
 
@@ -36,7 +40,7 @@ class MainApplication : Application(), Configuration.Provider {
             return null
         }
 
-         fun tlsBackport(activity: AppCompatActivity) {
+        fun tlsBackport(activity: AppCompatActivity) {
             try {
                 ProviderInstaller.installIfNeeded(activity)
                 Log.e("Rudder", "Play present")
@@ -44,12 +48,10 @@ class MainApplication : Application(), Configuration.Provider {
                 sslContext.init(null, null, null)
                 sslContext.createSSLEngine()
             } catch (e: GooglePlayServicesRepairableException) {
-                // Prompt the user to install/update/enable Google Play services.
                 GoogleApiAvailability.getInstance()
                     .showErrorNotification(activity, e.connectionStatusCode)
                 Log.e("Rudder", "Play install")
             } catch (e: GooglePlayServicesNotAvailableException) {
-                // Indicates a non-recoverable error: let the user know.
                 Log.e("SecurityException", "Google Play Services not available.");
                 e.printStackTrace()
             }
@@ -59,13 +61,18 @@ class MainApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         Log.e("Debug", "Application OnCreate")
-
-        Thread {
-            for (i in 1..10) {
-                println("Event from Main Application {$i}")
-//                rudderClient!!.track("Event from Main Application {$i}")
-            }
-        }.start()
+        rudderClient = RudderClient.getInstance(
+            this,
+            WRITE_KEY,
+            RudderConfig.Builder()
+                .withDataPlaneUrl(MainApplication.DATA_PLANE_URL)
+                .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
+                .withTrackLifecycleEvents(true)
+                .withFlushPeriodically(15, TimeUnit.MINUTES)
+                .withFactory(AppcenterIntegrationFactory.FACTORY)
+                .withRecordScreenViews(true)
+                .build()
+        )
     }
 
     override fun attachBaseContext(base: Context) {
