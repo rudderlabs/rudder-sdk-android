@@ -1,7 +1,9 @@
 package com.rudderstack.android.sdk.core;
 
+import static com.rudderstack.android.sdk.core.EventsDbHelper.EVENTS_TABLE_NAME;
 import static com.rudderstack.android.sdk.core.EventsDbHelper.MESSAGE;
 import static com.rudderstack.android.sdk.core.EventsDbHelper.MESSAGE_ID;
+import static com.rudderstack.android.sdk.core.EventsDbHelper.UPDATED;
 
 import android.app.ActivityManager;
 import android.app.Application;
@@ -102,31 +104,28 @@ class DBPersistentManager {
     /*
      * returns messageIds and messages returned on executing the supplied SQL statement
      * */
-    void getEventsFromDB(List<Integer> messageIds, List<String> messages, String selectSQL) {
+    void getEventsFromDB(List<Integer> messageIds, List<String> messages, Integer count) {
         // clear lists if not empty
         if (!messageIds.isEmpty()) messageIds.clear();
         if (!messages.isEmpty()) messages.clear();
 
         try {
-                Uri contentUri = EventContentProvider.getContentUri(DBPersistentManager.getUri(application)).buildUpon()
+            Uri contentUri = EventContentProvider.getContentUri(DBPersistentManager.getUri(application)).buildUpon()
                     .appendQueryParameter(EventContentProvider.QUERY_PARAMETER_LIMIT,
                             String.valueOf(count)).build();
-                DBPersistentManager.initializeUri(application);
-                Cursor cursor = application.getContentResolver().query(contentUri,
-                        null,null,null, EventsDbHelper.UPDATED + "ASC");
-                if (cursor.moveToFirst()) {
-                    RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: fetched messages from DB");
-                    while (!cursor.isAfterLast()) {
-                        final int messageIdColIndex = cursor.getColumnIndex(MESSAGE_ID);
-                        final int messageColIndex = cursor.getColumnIndex(MESSAGE);
-                        if(messageIdColIndex > -1)
-                            messageIds.add(cursor.getInt(messageIdColIndex));
-                        if(messageColIndex > -1)
-                            messages.add(cursor.getString(messageColIndex));
-                        cursor.moveToNext();
-                    }
-                } else {
-                    RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: DB is empty");
+            DBPersistentManager.initializeUri(application);
+            Cursor cursor = application.getContentResolver().query(contentUri,
+                    null, null, null, UPDATED + " ASC");
+            if (cursor.moveToFirst()) {
+                RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: fetched messages from DB");
+                while (!cursor.isAfterLast()) {
+                    final int messageIdColIndex = cursor.getColumnIndex(MESSAGE_ID);
+                    final int messageColIndex = cursor.getColumnIndex(MESSAGE);
+                    if (messageIdColIndex > -1)
+                        messageIds.add(cursor.getInt(messageIdColIndex));
+                    if (messageColIndex > -1)
+                        messages.add(cursor.getString(messageColIndex));
+                    cursor.moveToNext();
                 }
             } else {
                 RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: DB is empty");
@@ -143,7 +142,7 @@ class DBPersistentManager {
     void fetchEventsFromDB(ArrayList<Integer> messageIds, ArrayList<String> messages, int count) {
         String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC LIMIT %d", EVENTS_TABLE_NAME, UPDATED, count);
         RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchEventsFromDB: selectSQL: %s", selectSQL));
-        getEventsFromDB(messageIds, messages, selectSQL);
+        getEventsFromDB(messageIds, messages, count);
     }
 
     /*
@@ -152,7 +151,7 @@ class DBPersistentManager {
     void fetchAllEventsFromDB(List<Integer> messageIds, List<String> messages) {
         String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC", EVENTS_TABLE_NAME, UPDATED);
         RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchAllEventsFromDB: selectSQL: %s", selectSQL));
-        getEventsFromDB(messageIds, messages, selectSQL);
+        getEventsFromDB(messageIds, messages, null);
     }
 
 
@@ -230,12 +229,13 @@ class DBPersistentManager {
         }
     }
 
-    static void initializeUri(Context context){
-        if(EventContentProvider.authority == null)
-            EventContentProvider.authority = context.getApplicationContext().getPackageName()+"."+EventContentProvider.class.getSimpleName();
+    static void initializeUri(Context context) {
+        if (EventContentProvider.authority == null)
+            EventContentProvider.authority = context.getApplicationContext().getPackageName() + "." + EventContentProvider.class.getSimpleName();
     }
-    static String getUri(Context context){
-            return context.getApplicationContext().getPackageName()+"."+EventContentProvider.class.getSimpleName();
+
+    static String getUri(Context context) {
+        return context.getApplicationContext().getPackageName() + "." + EventContentProvider.class.getSimpleName();
     }
 }
 
@@ -273,7 +273,7 @@ class DBInsertionHandlerThread extends HandlerThread {
             long updatedTime = System.currentTimeMillis();
             ContentValues insertValues = new ContentValues();
             insertValues.put(EventsDbHelper.MESSAGE, messageJson.replaceAll("'", "\\\\\'"));
-            insertValues.put(EventsDbHelper.UPDATED, updatedTime);
+            insertValues.put(UPDATED, updatedTime);
             DBPersistentManager.initializeUri(context);
             context.getContentResolver().insert(EventContentProvider.getContentUri(DBPersistentManager.getUri(context)), insertValues);
             RudderLogger.logInfo("DBPersistentManager: saveEvent: Event saved to DB");

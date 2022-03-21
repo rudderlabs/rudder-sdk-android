@@ -29,7 +29,7 @@ class RudderDeviceInfo {
     @SerializedName("advertisingId")
     private String advertisingId;
 
-    RudderDeviceInfo(String advertisingId, String token) {
+         RudderDeviceInfo(String advertisingId, String token) {
         this.deviceId = Utils.getDeviceId(RudderClient.getApplication());
         if (advertisingId != null && !advertisingId.isEmpty()) {
             this.advertisingId = advertisingId;

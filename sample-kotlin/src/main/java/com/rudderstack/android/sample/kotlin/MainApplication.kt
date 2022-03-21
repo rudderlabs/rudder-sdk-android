@@ -14,13 +14,16 @@ import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
 
+import com.google.android.gms.ads.identifier.AdvertisingIdClient;
+
+
 class MainApplication : Application(), Configuration.Provider {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://2569-14-97-100-194.ngrok.io"
-        const val CONTROL_PLANE_URL = "https://0e741f50e567.ngrok.io"
-        const val WRITE_KEY = "1n0JdVPZTRUIkLXYccrWzZwdGSx"
+//        const val DATA_PLANE_URL = "https://2569-14-97-100-194.ngrok.io"
+//        const val CONTROL_PLANE_URL = "https://0e741f50e567.ngrok.io"
+        const val WRITE_KEY = "26Sr4BnWAAm3xCIBL9Equ1uKB4N"
         fun getProcessName(application: Application): String? {
 
             val mypid = Process.myPid()
@@ -63,14 +66,14 @@ class MainApplication : Application(), Configuration.Provider {
             this,
             WRITE_KEY,
             RudderConfig.Builder()
-                .withDataPlaneUrl(DATA_PLANE_URL)
+//                .withDataPlaneUrl(DATA_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withTrackLifecycleEvents(true)
                 .withRecordScreenViews(true)
-                .withCustomFactory(CustomFactory.FACTORY)
+//                .withCustomFactory(CustomFactory.FACTORY)
                 .build()
         )
-        Log.e("Debug","Application OnCreate")
+        Log.e("Debug", "Application OnCreate")
 
         Thread {
             for (i in 1..10) {
