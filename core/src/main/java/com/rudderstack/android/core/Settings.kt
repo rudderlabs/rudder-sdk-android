@@ -23,18 +23,17 @@ package com.rudderstack.android.core
  * ```
  *
  * @property options Global [RudderOptions] for all plugins
- * @property dataPlaneUrl Base url to hit for cloud mode
  * @property flushQueueSize Max elements to be stored before a flush. Once it passes this threshold,
  * flush is triggered
  * @property maxFlushInterval Max time (in millis) to wait for a flush, even if the queue size hasn't
  * passed the threshold
- * @property controlPlaneUrl Config plane url to get the write key
 // * @property trackLifecycleEvents Will track activity lifecycle if set to true, else false
 // * @property recordScreenViews Will record screen views if true.
  * @property isOptOut GDPR implementation. Data won't be sent if GDPR is true
  */
 data class Settings(
     val anonymousId : String? = null,
+    val userId : String? = null,
     val options: RudderOptions = RudderOptions.default(),
 //    val dataPlaneUrl: String = DATA_PLANE_URL,
     val flushQueueSize: Int = FLUSH_QUEUE_SIZE,

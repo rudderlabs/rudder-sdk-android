@@ -14,7 +14,10 @@
 
 package com.rudderstack.android.core
 
+import com.rudderstack.android.core.internal.MissingPropertiesException
 import com.rudderstack.android.models.Message
+import com.rudderstack.android.models.ScreenMessage
+import com.rudderstack.android.models.TrackMessage
 
 /**
  * Handles all messages, assorting the plugins, keeping track of cache, to name a few of it's
@@ -96,4 +99,12 @@ interface Controller {
      *
      */
     fun shutdown()
+
+    /**
+     * Fill default details for [TrackMessage]
+     * @throws [MissingPropertiesException] if neither of userId or anonymous id is present
+     */
+    @Throws(MissingPropertiesException::class)
+    fun <T: Message> T.withDefaults() : T
+
 }

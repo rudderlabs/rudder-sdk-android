@@ -26,6 +26,11 @@ import com.rudderstack.android.models.RudderServerConfig
  * That is the reason are avoiding any selection arguments.
  */
 interface Storage {
+    companion object {
+        const val MAX_STORAGE_CAPACITY = 2_000
+        const val MAX_FETCH_LIMIT = 5_00
+    }
+
     /**
      * Platform specific implementation for saving [Message]
      *
@@ -45,27 +50,29 @@ interface Storage {
      *
      * @param listener callback for the changed data
      */
-    fun addDataChangeListener(listener : (data : List<Message>) -> Unit)
+    fun addDataChangeListener(listener: (data: List<Message>) -> Unit)
 
-    fun removeDataChangeListener(listener : (data : List<Message>) -> Unit)
+    fun removeDataChangeListener(listener: (data: List<Message>) -> Unit)
+
     /**
      * Asynchronous method to get the entire data present
      *
      * @param callback returns the list of [Message]
      */
-    fun getData(callback : (List<Message>) -> Unit)
+    fun getData(callback: (List<Message>) -> Unit)
+
     /**
      * Platform specific implementation of caching context. This can be done locally too.
      *
      * @param context A map representing the context. Refer to [Message]
      */
-    fun cacheContext(context : Map<String, String>)
+    fun cacheContext(context: Map<String, String>)
 
 
     /**
      * Retrieve the cached context
      */
-    val context : Map<String, String>
+    val context: Map<String, String>
 
     /**
      * CPU extensive operation, better to offload to a different thread
@@ -77,14 +84,14 @@ interface Storage {
     /**
      * CPU intensive operation. Might involve file access.
      */
-    val serverConfig : RudderServerConfig?
+    val serverConfig: RudderServerConfig?
 
     /**
      * Platform specific implementation of saving opt out choice.
      *
      * @param optOut Save opt out state
      */
-    fun saveOptOut(optOut : Boolean)
+    fun saveOptOut(optOut: Boolean)
 
     /**
      * [DestinationPlugin]s in general start up asynchronously, which means messages sent
@@ -108,23 +115,25 @@ interface Storage {
      *
      */
     fun shutdown()
+
     /**
      * @see saveStartupMessageInQueue
      * get the messages that were posted before all device mode destinations initialized.
      */
-    val startupQueue : List<Message>
+    val startupQueue: List<Message>
 
     /**
      * Get opted out state
      */
-    val isOptedOut : Boolean
+    val isOptedOut: Boolean
 
     /**
      * Returns opt out time instant if any else -1L
      */
-    val optOutTime : Long
+    val optOutTime: Long
+
     /**
      * Returns opt in time instant if any else -1L
      */
-    val optInTime : Long
+    val optInTime: Long
 }

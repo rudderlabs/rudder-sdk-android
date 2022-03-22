@@ -22,15 +22,17 @@ import com.rudderstack.android.models.Message
  * Adds anonymous id to the message.
  *
  */
-internal class AnonymousIdPlugin : Plugin{
+internal class AnonymousIdPlugin : Plugin {
     private var anonymousId = ""
 
     override fun intercept(chain: Plugin.Chain): Message {
         return chain.proceed(chain.message().also {
-            it.anonymousId = anonymousId
+            if (it.anonymousId.isNullOrEmpty())
+                it.anonymousId = anonymousId
         })
     }
+
     override fun updateSettings(settings: Settings) {
-        anonymousId = settings.anonymousId?:""
+        anonymousId = settings.anonymousId ?: ""
     }
 }

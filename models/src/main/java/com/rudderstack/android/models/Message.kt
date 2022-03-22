@@ -18,18 +18,18 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.annotations.SerializedName
-import com.squareup.moshi.*
+import com.rudderstack.android.models.Message.EventType
+import com.squareup.moshi.Json
 import java.util.*
-import kotlin.collections.HashMap
 
 typealias MessageContext = Map<String, String>
 typealias PageProperties = Map<String, String>
 typealias ScreenProperties = Map<String, String>
 typealias TrackProperties = Map<String, String>
-typealias IdentifyProperties = Map<String, String>
+typealias IdentifyTraits = Map<String, Any>
 //integrations might change from String,Boolean to String, Object at a later point of time
 typealias MessageIntegrations = Map<String, Boolean>
-typealias MessageDestinationProps = MutableMap<String, Map<*, *>>
+typealias MessageDestinationProps = Map<String, Map<*, *>>
 typealias GroupTraits = Map<String, String>
 
 @JsonIgnoreProperties("type\$models")
@@ -49,7 +49,6 @@ sealed class Message(
     internal var type: EventType,
 
 
-
     @SerializedName("context")
     @JsonProperty("context")
     @Json(name = "context")
@@ -61,7 +60,7 @@ sealed class Message(
     @JsonProperty("anonymousId")
     @Json(name = "anonymousId")
     //@Expose
-    var anonymousId: String,
+    var anonymousId: String?,
 
     /**
      * @return User ID for the event
@@ -82,7 +81,7 @@ sealed class Message(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     //@Expose
-    private var destinationProps: MessageDestinationProps? = null,
+    protected var destinationProps: MessageDestinationProps? = null,
 
 
 //    @Transient
@@ -237,7 +236,9 @@ sealed class Message(
             }
         }*/
 
-    open fun copy(): Message = when (this) {
+    open fun copy(context: MessageContext? = this.context,
+                  anonymousId: String? = this.anonymousId,
+                  userId: String? = this.userId): Message = when (this) {
         is AliasMessage -> AliasMessage(
 //            messageId,
             context,
@@ -267,7 +268,7 @@ sealed class Message(
             timestamp,
             destinationProps,
 //            integrations,
-            properties
+            traits
         )
         is PageMessage -> PageMessage(
 //            messageId,
@@ -290,6 +291,7 @@ sealed class Message(
             destinationProps,
 //            integrations,
             name,
+            category,
             properties
         )
         is TrackMessage -> TrackMessage(
@@ -381,7 +383,7 @@ class AliasMessage(
     context: MessageContext? = null,
     @JsonProperty("anonymousId")
     @Json(name = "anonymousId")
-    anonymousId: String,
+    anonymousId: String?,
     @JsonProperty("userId")
     @Json(name = "userId")
     userId: String? = null,
@@ -410,9 +412,22 @@ class AliasMessage(
     destinationProps,
 //    integrations,
 ) {
-    override fun copy(): AliasMessage {
-        return super.copy() as AliasMessage
+    override fun copy(context: MessageContext? ,
+                      anonymousId: String?,
+                      userId: String?): AliasMessage {
+        return super.copy(context, anonymousId, userId) as AliasMessage
     }
+
+    fun copy(
+        context: MessageContext? = this.context,
+        anonymousId: String? = this.anonymousId,
+        userId: String? = this.userId,
+        timestamp: String = this.timestamp,
+
+        destinationProps: MessageDestinationProps? = this.destinationProps,
+        previousId: String? = this.previousId,
+    ) = AliasMessage(context, anonymousId, userId, timestamp, destinationProps, previousId)
+
     override fun toString(): String {
         return "${super.toString()}, " +
                 "previousId = $previousId"
@@ -437,7 +452,7 @@ class GroupMessage(
     context: MessageContext? = null,
     @JsonProperty("anonymousId")
     @Json(name = "anonymousId")
-    anonymousId: String,
+    anonymousId: String?,
     @JsonProperty("userId")
     @Json(name = "userId")
     userId: String? = null,
@@ -477,9 +492,23 @@ class GroupMessage(
 //    integrations
 ) {
 
-    override fun copy(): GroupMessage {
-        return super.copy() as GroupMessage
+    override fun copy(context: MessageContext? ,
+                      anonymousId: String?,
+                      userId: String?): GroupMessage {
+        return super.copy(context, anonymousId, userId) as GroupMessage
     }
+
+    fun copy(
+        context: MessageContext? = this.context,
+        anonymousId: String? = this.anonymousId,
+        userId: String? = this.userId,
+        timestamp: String = this.timestamp,
+
+        destinationProps: MessageDestinationProps? = this.destinationProps,
+        groupId: String? = this.groupId,
+        traits: GroupTraits? = this.traits,
+        ) = GroupMessage(context, anonymousId, userId, timestamp, destinationProps, groupId, traits)
+
     override fun toString(): String {
         return "${super.toString()}, " +
                 "groupId = $groupId, " +
@@ -509,7 +538,7 @@ class PageMessage(
     context: MessageContext? = null,
     @JsonProperty("anonymousId")
     @Json(name = "anonymousId")
-    anonymousId: String,
+    anonymousId: String?,
     @JsonProperty("userId")
     @Json(name = "userId")
     userId: String? = null,
@@ -562,10 +591,24 @@ class PageMessage(
 //    integrations
 ) {
 
-    override fun copy(): PageMessage {
-        return super.copy() as PageMessage
+    override fun copy(context: MessageContext? ,
+                      anonymousId: String?,
+                      userId: String?): PageMessage {
+        return super.copy(context, anonymousId, userId) as PageMessage
     }
 
+    fun copy(
+        context: MessageContext? = this.context,
+        anonymousId: String? = this.anonymousId,
+        userId: String? = this.userId,
+        timestamp: String = this.timestamp,
+        destinationProps: MessageDestinationProps? = this.destinationProps,
+        name: String? = this.name,
+        properties: PageProperties? = this.properties,
+        category: String? = this.category,
+
+        ) = PageMessage(context, anonymousId, userId, timestamp, destinationProps, name, properties,
+        category)
     override fun toString(): String {
         return "${super.toString()}, " +
                 "name = $name, " +
@@ -597,7 +640,7 @@ class ScreenMessage(
     context: MessageContext? = null,
     @JsonProperty("anonymousId")
     @Json(name = "anonymousId")
-    anonymousId: String,
+    anonymousId: String?,
     @JsonProperty("userId")
     @Json(name = "userId")
     userId: String? = null,
@@ -611,10 +654,13 @@ class ScreenMessage(
 //    @JsonProperty("integrations")
 //    @Json(name = "integrations")
 //    integrations: MessageIntegrations = HashMap(),
+
+    @JsonProperty("category")
+    @Json(name = "category")
+    internal val category: String?,
     /**
      * @return Name of the event tracked
      */
-
     @SerializedName("event")
     @get:JsonProperty("event")
     @field:JsonProperty("event")
@@ -645,9 +691,26 @@ class ScreenMessage(
 //    integrations
 ) {
 
-    override fun copy(): ScreenMessage {
-        return super.copy() as ScreenMessage
+    override fun copy(context: MessageContext? ,
+                      anonymousId: String?,
+                      userId: String?): ScreenMessage {
+        return super.copy(context, anonymousId, userId) as ScreenMessage
     }
+
+    fun copy(
+        context: MessageContext? = this.context,
+        anonymousId: String? = this.anonymousId,
+        userId: String? = this.userId,
+        timestamp: String = this.timestamp,
+
+        destinationProps: MessageDestinationProps? = this.destinationProps,
+        name: String? = this.name,
+        category: String? = this.category,
+        properties: ScreenProperties? = this.properties,
+
+        ) = ScreenMessage(context, anonymousId, userId, timestamp, destinationProps,category, name,
+        properties)
+
     override fun toString(): String {
         return "${super.toString()}, " +
                 "name = $name, " +
@@ -660,6 +723,13 @@ class ScreenMessage(
                 other.name == name &&
                 other.properties == properties
     }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + (name?.hashCode() ?: 0)
+        result = 31 * result + (properties?.hashCode() ?: 0)
+        return result
+    }
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true, allowSetters = true)
@@ -670,7 +740,7 @@ class TrackMessage(
     context: MessageContext? = null,
     @JsonProperty("anonymousId")
     @Json(name = "anonymousId")
-    anonymousId: String,
+    anonymousId: String?,
     @JsonProperty("userId")
     @Json(name = "userId")
     userId: String? = null,
@@ -716,9 +786,20 @@ class TrackMessage(
 //    integrations
 ) {
 
-    override fun copy(): TrackMessage {
-        return super.copy() as TrackMessage
+    override fun copy(context: MessageContext? ,
+                      anonymousId: String?,
+                      userId: String?): TrackMessage {
+        return super.copy(context, anonymousId, userId) as TrackMessage
     }
+    fun copy(
+        context: MessageContext? = this.context,
+        anonymousId: String? = this.anonymousId,
+        userId: String? = this.userId,
+        timestamp: String = this.timestamp,
+        destinationProps: MessageDestinationProps? = this.destinationProps,
+        eventName: String? = this.eventName,
+        properties: TrackProperties? = this.properties,
+    ) = TrackMessage(context, anonymousId, userId, timestamp, destinationProps, eventName, properties)
 
     override fun toString(): String {
         return "${super.toString()}, " +
@@ -734,10 +815,12 @@ class TrackMessage(
     }
 
     override fun hashCode(): Int {
-        var result =  (eventName?.hashCode() ?: 0)
+        var result = (eventName?.hashCode() ?: 0)
         result = 31 * result + (properties?.hashCode() ?: 0)
         return result
     }
+
+
 }
 
 
@@ -748,7 +831,7 @@ class IdentifyMessage(
     context: MessageContext? = null,
     @JsonProperty("anonymousId")
     @Json(name = "anonymousId")
-    anonymousId: String,
+    anonymousId: String?,
     @JsonProperty("userId")
     @Json(name = "userId")
     userId: String? = null,
@@ -770,7 +853,7 @@ class IdentifyMessage(
     @SerializedName("properties")
     @JsonProperty("properties")
     @Json(name = "properties")
-    val properties: IdentifyProperties? = null,
+    val traits: IdentifyTraits? = null,
 
     ) : Message(
     EventType.IDENTIFY,
@@ -784,23 +867,35 @@ class IdentifyMessage(
 //    integrations
 ) {
 
-    override fun copy(): IdentifyMessage {
-        return super.copy() as IdentifyMessage
+    override fun copy(context: MessageContext? ,
+                      anonymousId: String?,
+                      userId: String?): IdentifyMessage {
+        return super.copy(context, anonymousId, userId) as IdentifyMessage
     }
+
+    fun copy(
+        context: MessageContext? = this.context,
+        anonymousId: String? = this.anonymousId,
+        userId: String? = this.userId,
+        timestamp: String = this.timestamp,
+        destinationProps: MessageDestinationProps? = this.destinationProps,
+        properties: IdentifyTraits? = this.traits,
+
+        ) = IdentifyMessage(context, anonymousId, userId, timestamp, destinationProps, properties)
 
     override fun toString(): String {
         return "${super.toString()}, " +
-                "properties = $properties"
+                "properties = $traits"
     }
 
     override fun equals(other: Any?): Boolean {
         return super.equals(other) &&
                 other is IdentifyMessage &&
-                other.properties == properties
+                other.traits == traits
     }
 
     override fun hashCode(): Int {
-        return properties?.hashCode() ?: 0
+        return traits?.hashCode() ?: 0
     }
 }
 

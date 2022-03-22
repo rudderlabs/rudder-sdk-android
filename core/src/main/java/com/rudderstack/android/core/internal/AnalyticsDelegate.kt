@@ -24,6 +24,7 @@ import com.rudderstack.android.core.internal.states.DestinationConfigState
 import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.Message
 import com.rudderstack.android.models.RudderServerConfig
+import com.rudderstack.android.models.TrackMessage
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
 import java.io.FileInputStream
@@ -31,9 +32,9 @@ import java.io.IOException
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.jvm.Throws
 
 internal class AnalyticsDelegate(
-//    private val writeKey: String,
     settings: Settings,
     storage: Storage,
     private val defaultOptions: RudderOptions,
@@ -42,12 +43,12 @@ internal class AnalyticsDelegate(
     // implies if source config be downloaded. must for using device mode
     shouldVerifySdk: Boolean,
     //retry strategy to verify sdk in case shouldVerifySdk is true
-    private val sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
+    private val sdkVerifyRetryStrategy: RetryStrategy,
     private val dataUploadService: DataUploadService,
     //can be null only if shouldVerifySdk is false
-    private val configDownloadService: ConfigDownloadService? = null,
-    private val analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
-//    networkExecutor: ExecutorService = Executors.newCachedThreadPool()
+    private val configDownloadService: ConfigDownloadService? ,
+    private val analyticsExecutor: ExecutorService,
+    private val logger: Logger
 ) : Controller {
 
 
@@ -71,7 +72,7 @@ internal class AnalyticsDelegate(
                 )
             }
         } catch (ex: IOException) {
-            //TODO(Log the error)
+            logger.error(log = "Config fetch error", throwable = ex)
             mapOf()
         }
 
@@ -185,14 +186,13 @@ internal class AnalyticsDelegate(
     }
 
 
-
     override fun processMessage(
         message: Message,
         options: RudderOptions?,
         lifecycleController: LifecycleController?
     ) {
-
-        val lcc = lifecycleController ?: message.let { msg ->
+        val preparedMessage = message.withDefaults()
+        val lcc = lifecycleController ?: preparedMessage.let { msg ->
 
             LifecycleControllerImpl(msg, _allPlugins.toMutableList().also {
                 //after gdpr plugin
@@ -209,6 +209,19 @@ internal class AnalyticsDelegate(
         dataUploadService.shutdown()
         analyticsExecutor.shutdown()
     }
+
+    @Throws(MissingPropertiesException::class)
+    override fun <T : Message> T.withDefaults(): T {
+        val anonId = this.anonymousId?: SettingsState.value?.anonymousId
+        val userId = this.userId?: SettingsState.value?.userId
+        if( anonId == null && userId == null)
+                    throw MissingPropertiesException("Either Anonymous Id or User Id must be present");
+        return this.copy(
+            context = (context?: mapOf()) + _commonContext,
+            anonymousId = anonId, userId = userId
+        ) as T
+    }
+
 
     private fun initDestinationPlugin(plugin: DestinationPlugin<*>) {
 
@@ -234,7 +247,7 @@ internal class AnalyticsDelegate(
                     _storageDecorator.clearStartupQueue()
                 }
             } else {
-                //TODO(USE Logger plugin can't be activated, removing from DestinationConfig)
+                logger.warn(log = "plugin ${plugin.name} activation failed")
                 //remove from destination config, else all integrations ready won't be true anytime
 
                 val newDestinationConfig =
@@ -274,10 +287,10 @@ internal class AnalyticsDelegate(
                     handleConfigData(rudderServerConfig)
                 } else {
                     val cachedConfig = _storageDecorator.serverConfig
-                    if(cachedConfig != null)
+                    if (cachedConfig != null)
                         handleConfigData(cachedConfig)
                     else {
-                        //TODO(logger)
+                        logger.error( log = "SDK Initialization failed due to $lastErrorMsg")
                         //log lastErrorMsg or isSourceEnabled
                         shutdown()
                     }
@@ -336,12 +349,13 @@ internal class AnalyticsDelegate(
         applySettingsClosure(plugin)
     }
 
-    private fun applySettingsClosure(plugin: Plugin){
+    private fun applySettingsClosure(plugin: Plugin) {
         SettingsState.value?.apply {
             plugin.updateSettings(this)
         }
     }
-    private fun applyServerConfigClosure(plugin: Plugin){
+
+    private fun applyServerConfigClosure(plugin: Plugin) {
         _serverConfig?.apply {
             plugin.updateRudderServerConfig(this@apply)
         }

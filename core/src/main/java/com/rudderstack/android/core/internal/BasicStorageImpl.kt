@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.core.internal
 
+import com.rudderstack.android.core.Logger
 import com.rudderstack.android.core.Settings
 import com.rudderstack.android.core.State
 import com.rudderstack.android.core.Storage
@@ -27,9 +28,11 @@ import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
+import kotlin.math.log
 
 internal class BasicStorageImpl(
-    private val queue: Queue<Message> = LinkedList()
+    private val queue: Queue<Message> = LinkedList(),
+    private val logger: Logger
 ) : Storage {
     private var cachedContext: Map<String,String> = mapOf()
     private var dataChangeListeners = listOf<(List<Message>) -> Unit>()
@@ -40,7 +43,11 @@ internal class BasicStorageImpl(
     private val serverConfigFile = File("/temp/rudder-analytics/server_config")
 
     override fun saveMessage(vararg messages: Message) {
-        queue.addAll(messages)
+        if(queue.size >= Storage.MAX_STORAGE_CAPACITY){
+            logger.warn(log = "Max storage capacity reached, dropping events")
+        }else {
+            queue.addAll(messages.take(Storage.MAX_STORAGE_CAPACITY - queue.size))
+        }
         onDataChange()
     }
 
@@ -58,7 +65,7 @@ internal class BasicStorageImpl(
     }
 
     override fun getData(callback: (List<Message>) -> Unit) {
-        callback.invoke(queue.toList())
+        callback.invoke(queue.take(Storage.MAX_FETCH_LIMIT).toList())
     }
 
     override fun cacheContext(context: Map<String, String>) {
@@ -120,7 +127,7 @@ internal class BasicStorageImpl(
         get() = _optInTime
 
     private fun onDataChange(){
-        val msgs = queue.toList()
+        val msgs = queue.take(Storage.MAX_FETCH_LIMIT).toList()
         dataChangeListeners.forEach {
             it.invoke(msgs)
         }

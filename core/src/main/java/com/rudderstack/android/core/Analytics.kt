@@ -14,9 +14,11 @@
 
 package com.rudderstack.android.core
 
+import com.rudderstack.android.core.internal.*
 import com.rudderstack.android.core.internal.AnalyticsDelegate
-import com.rudderstack.android.core.internal.DataUploadServiceImpl
 import com.rudderstack.android.core.internal.BasicStorageImpl
+import com.rudderstack.android.core.internal.ConfigDownloadServiceImpl
+import com.rudderstack.android.core.internal.DataUploadServiceImpl
 import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.*
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
@@ -50,11 +52,13 @@ class Analytics(
     writeKey: String,
     settings: Settings,
     jsonAdapter: JsonAdapter,
-    shouldVerifySdk : Boolean = true,
+    shouldVerifySdk: Boolean = true,
+    sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
     options: RudderOptions = RudderOptions.default(),
     dataPlaneUrl: String = DATA_PLANE_URL,
     controlPlaneUrl: String = CONTROL_PLANE_URL,
-    storage: Storage = BasicStorageImpl(),
+    logger: Logger = KotlinLogger,
+    storage: Storage = BasicStorageImpl(logger = logger),
     analyticsExecutor: ExecutorService = Executors.newCachedThreadPool(),
     networkExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
     dataUploadService: DataUploadService = DataUploadServiceImpl(
@@ -63,21 +67,27 @@ class Analytics(
         SettingsState,
         dataPlaneUrl,
         networkExecutor
-    )
-) : Controller by AnalyticsDelegate(
+    ),
+    configDownloadService: ConfigDownloadService = ConfigDownloadServiceImpl(
+        writeKey,
+        controlPlaneUrl,
+        jsonAdapter,
+        networkExecutor
+    ),
+
+    ) : Controller by AnalyticsDelegate(
 //    writeKey,
     settings,
     storage,
     options,
     jsonAdapter,
     shouldVerifySdk,
-    RetryStrategy.exponential(),
+    sdkVerifyRetryStrategy,
     dataUploadService,
-
-    /*controlPlaneUrl,
-    shouldVerifySdk,
+    configDownloadService,
     analyticsExecutor,
-    networkExecutor*/
+    logger
+
 ) {
 
 
@@ -91,35 +101,60 @@ class Analytics(
     }
 
     fun track(message: TrackMessage, options: RudderOptions? = null) {
-        processMessage(message,options)
+        processMessage(message, options)
     }
 
-    fun track(eventName: String, properties: Map<String, Any>, options: RudderOptions? = null) {
-//        track(TrackMessage())
+    fun track(eventName: String, trackProperties: TrackProperties, options: RudderOptions? = null) {
+        track(TrackMessage(null,  null, null,
+        Utils.timeStamp, eventName = eventName, properties = trackProperties), options)
 
     }
-    fun screen(message: ScreenMessage, options: RudderOptions? = null) {}
+
+    fun screen(message: ScreenMessage, options: RudderOptions? = null) {
+        processMessage(message, options)
+    }
     fun screen(
         screenName: String,
         category: String,
-        properties: Map<String, Any>,
+        screenProperties: ScreenProperties,
         options: RudderOptions? = null
     ) {
+        screen(
+            ScreenMessage(null,
+        null, null, Utils.timeStamp, category = category,
+                name = screenName, properties = screenProperties), options
+        )
     }
 
     fun identify(message: IdentifyMessage, options: RudderOptions? = null) {
+        //TODO(save userId)
+        processMessage(message, options)
     }
 
     fun identify(userID: String, traits: Map<String, Any>? = null, options: RudderOptions? = null) {
+        val completeTraits = (traits?: mapOf()) + mapOf("userId" to userID)
+        identify(
+            IdentifyMessage(null, null, null, Utils.timeStamp, traits = completeTraits, ), options
+        )
     }
 
-    fun alias(message: AliasMessage, options: RudderOptions? = null) {}
-    fun alias(newId: String, options: RudderOptions? = null) {}
-
-    fun group(message: GroupMessage, options: RudderOptions? = null) {}
-    fun group(groupID: String, traits: Map<String, Any>? = null, options: RudderOptions? = null) {}
-    private fun processMessage(message: Message) {
-
+    fun alias(message: AliasMessage, options: RudderOptions? = null) {
+        //TODO(change userId)
+        processMessage(message, options)
     }
+    fun alias(newId: String, options: RudderOptions? = null) {
+//        alias(
+//            AliasMessage(timestamp = Utils.timeStamp, )
+//        )
+    }
+
+    fun group(message: GroupMessage, options: RudderOptions? = null) {
+        processMessage(message, options)
+    }
+    fun group(groupID: String, traits: GroupTraits? = null, options: RudderOptions? = null) {
+        group(GroupMessage(null, null, null, Utils.timeStamp, null,
+        groupID, traits), options)
+    }
+
 
 }

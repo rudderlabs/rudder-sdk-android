@@ -25,8 +25,7 @@ java {
 apply from : "$rootDir/dependencies.gradle"
 
 dependencies {
-
-
+    
     //json parsers as compileOnly just for annotations
     compileOnly deps.gson
     compileOnly deps.jackson
