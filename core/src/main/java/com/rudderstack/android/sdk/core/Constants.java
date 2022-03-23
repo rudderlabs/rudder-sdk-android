@@ -26,6 +26,8 @@ class Constants {
     static final long REPEAT_INTERVAL = 1;
     // the TimeUnit in which the repeatInterval is specified. It can be either minutes / hours.
     static final TimeUnit REPEAT_INTERVAL_TIME_UNIT = TimeUnit.HOURS;
+    // whether we should automatically collect advertisement Id.
+    static final boolean AUTO_COLLECT_ADVERT_ID = true;
     // whether we should trackLifecycle events
     static final boolean TRACK_LIFECYCLE_EVENTS = true;
     // whether we should record screen views automatically
