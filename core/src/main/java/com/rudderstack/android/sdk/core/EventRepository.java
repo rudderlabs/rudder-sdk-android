@@ -107,7 +107,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             // 2. initiate RudderElementCache
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
             // We first send the anonymousId to RudderElementCache which will just set the anonymousId static variable in RudderContext class.
-            RudderElementCache.initiate(_application, _anonymousId, _advertisingId, _deviceToken);
+            RudderElementCache.initiate(_application, _anonymousId, _advertisingId, _deviceToken, _config.isAutoCollectAdvertId());
 
             String anonymousId = RudderContext.getAnonymousId();
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousId: %s", anonymousId));

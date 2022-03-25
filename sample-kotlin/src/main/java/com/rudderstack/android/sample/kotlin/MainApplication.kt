@@ -49,6 +49,7 @@ class MainApplication : Application(), Configuration.Provider {
                 .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
                 .withTrackLifecycleEvents(true)
                 .withRecordScreenViews(true)
+                .withAutoCollectAdvertId(false)
                 .withCustomFactory(CustomFactory.FACTORY)
                 .build()
         )

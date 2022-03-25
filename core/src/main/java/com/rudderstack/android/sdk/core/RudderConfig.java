@@ -40,6 +40,7 @@ public class RudderConfig {
     private long repeatInterval;
     private TimeUnit repeatIntervalTimeUnit;
     private boolean trackLifecycleEvents;
+    private boolean autoCollectAdvertId;
     private boolean recordScreenViews;
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
@@ -57,6 +58,7 @@ public class RudderConfig {
                 Constants.REPEAT_INTERVAL,
                 Constants.REPEAT_INTERVAL_TIME_UNIT,
                 Constants.TRACK_LIFECYCLE_EVENTS,
+                Constants.AUTO_COLLECT_ADVERT_ID,
                 Constants.RECORD_SCREEN_VIEWS,
                 Constants.CONTROL_PLANE_URL,
                 null,
@@ -75,6 +77,7 @@ public class RudderConfig {
             long repeatInterval,
             TimeUnit repeatIntervalTimeUnit,
             boolean trackLifecycleEvents,
+            boolean autoCollectAdvertId,
             boolean recordScreenViews,
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
@@ -136,6 +139,7 @@ public class RudderConfig {
         }
 
         this.trackLifecycleEvents = trackLifecycleEvents;
+        this.autoCollectAdvertId = autoCollectAdvertId;
         this.recordScreenViews = recordScreenViews;
 
         if (factories != null && !factories.isEmpty()) {
@@ -237,6 +241,12 @@ public class RudderConfig {
     public boolean isTrackLifecycleEvents() {
         return trackLifecycleEvents;
     }
+
+    /**
+     * @return autoCollectAdvertId (whether we are automatically collecting the advertisingId if the
+     * com.google.android.gms.ads.identifier.AdvertisingIdClient is found on the classpath.
+     */
+    public boolean isAutoCollectAdvertId() { return autoCollectAdvertId; }
 
     /**
      * @return recordScreenViews (whether we are recording the screen views automatically)
@@ -543,6 +553,18 @@ public class RudderConfig {
             return this;
         }
 
+        private boolean autoCollectAdvertId = Constants.AUTO_COLLECT_ADVERT_ID;
+
+        /**
+         * @param shouldAutoCollectAdvertId (whether we should automatically collecting the advertisingId if the
+         * com.google.android.gms.ads.identifier.AdvertisingIdClient is found on the classpath.
+         * @return RudderConfig.Builder
+         */
+        public Builder withAutoCollectAdvertId(boolean shouldAutoCollectAdvertId) {
+            this.autoCollectAdvertId = shouldAutoCollectAdvertId;
+            return this;
+        }
+
         private String controlPlaneUrl = Constants.CONTROL_PLANE_URL;
 
         /**
@@ -581,6 +603,7 @@ public class RudderConfig {
                     this.repeatInterval,
                     this.repeatIntervalTimeUnit,
                     this.trackLifecycleEvents,
+                    this.autoCollectAdvertId,
                     this.recordScreenViews,
                     this.controlPlaneUrl,
                     this.factories,
