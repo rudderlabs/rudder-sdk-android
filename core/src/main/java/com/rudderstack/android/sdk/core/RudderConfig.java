@@ -322,10 +322,6 @@ public class RudderConfig {
         this.trackLifecycleEvents = trackLifecycleEvents;
     }
 
-    void setAutoCollectAdvertId(boolean autoCollectAdvertId) {
-       this.autoCollectAdvertId = autoCollectAdvertId;
-    }
-
     void setRecordScreenViews(boolean recordScreenViews) {
         this.recordScreenViews = recordScreenViews;
     }
