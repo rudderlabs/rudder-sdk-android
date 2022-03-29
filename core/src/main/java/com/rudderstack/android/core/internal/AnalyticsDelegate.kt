@@ -15,24 +15,20 @@
 package com.rudderstack.android.core.internal
 
 import com.rudderstack.android.core.*
-import com.rudderstack.android.core.internal.plugins.AnonymousIdPlugin
 import com.rudderstack.android.core.internal.plugins.GDPRPlugin
 import com.rudderstack.android.core.internal.plugins.RudderOptionPlugin
 import com.rudderstack.android.core.internal.plugins.StoragePlugin
 import com.rudderstack.android.core.internal.plugins.WakeupActionPlugin
+import com.rudderstack.android.core.internal.states.ContextState
 import com.rudderstack.android.core.internal.states.DestinationConfigState
 import com.rudderstack.android.core.internal.states.SettingsState
-import com.rudderstack.android.models.Message
-import com.rudderstack.android.models.RudderServerConfig
-import com.rudderstack.android.models.TrackMessage
+import com.rudderstack.android.models.*
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
 import java.io.FileInputStream
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import kotlin.jvm.Throws
 
 internal class AnalyticsDelegate(
     settings: Settings,
@@ -48,7 +44,8 @@ internal class AnalyticsDelegate(
     //can be null only if shouldVerifySdk is false
     private val configDownloadService: ConfigDownloadService? ,
     private val analyticsExecutor: ExecutorService,
-    private val logger: Logger
+    private val logger: Logger,
+    context:MessageContext,
 ) : Controller {
 
 
@@ -80,11 +77,11 @@ internal class AnalyticsDelegate(
     private val _commonContext = mapOf<String, String>(
         "library" to (jsonAdapter.writeToJson(
             libDetails.filter {
-                it.key in arrayOf(LIB_KEY_NAME, LIB_KEY_VERSION)
+                it.key in arrayOf(AnalyticsDelegate.LIB_KEY_NAME, AnalyticsDelegate.LIB_KEY_VERSION)
             }.map {
                 when (it.key) {
-                    LIB_KEY_NAME -> "name" to it.value
-                    LIB_KEY_VERSION -> "version" to it.value
+                    AnalyticsDelegate.LIB_KEY_NAME -> "name" to it.value
+                    AnalyticsDelegate.LIB_KEY_VERSION -> "version" to it.value
                     else -> it.toPair()
                 }
             }.toMap(),
@@ -110,7 +107,6 @@ internal class AnalyticsDelegate(
 
 
     //plugins
-    private val anonymousIdPlugin = AnonymousIdPlugin()
     private val gdprPlugin = GDPRPlugin()
     private val storagePlugin = StoragePlugin(_storageDecorator)
     private val wakeupActionPlugin = WakeupActionPlugin(
@@ -123,6 +119,7 @@ internal class AnalyticsDelegate(
     init {
         SettingsState.update(settings)
         DestinationConfigState.update(DestinationConfig())
+        ContextState.update(context)
         initializePlugins()
         if (shouldVerifySdk) {
             updateSourceConfig()
@@ -191,14 +188,11 @@ internal class AnalyticsDelegate(
         options: RudderOptions?,
         lifecycleController: LifecycleController?
     ) {
-        val preparedMessage = message.withDefaults()
-        val lcc = lifecycleController ?: preparedMessage.let { msg ->
-
-            LifecycleControllerImpl(msg, _allPlugins.toMutableList().also {
-                //after gdpr plugin
-                it.add(1, RudderOptionPlugin(options ?: defaultOptions))
-            })
-        }
+        val lcc = lifecycleController ?: LifecycleControllerImpl(message,
+            _allPlugins.toMutableList().also {
+            //after gdpr plugin
+            it.add(1, RudderOptionPlugin(options ?: defaultOptions))
+        })
         lcc.process()
 
     }
@@ -210,17 +204,8 @@ internal class AnalyticsDelegate(
         analyticsExecutor.shutdown()
     }
 
-    @Throws(MissingPropertiesException::class)
-    override fun <T : Message> T.withDefaults(): T {
-        val anonId = this.anonymousId?: SettingsState.value?.anonymousId
-        val userId = this.userId?: SettingsState.value?.userId
-        if( anonId == null && userId == null)
-                    throw MissingPropertiesException("Either Anonymous Id or User Id must be present");
-        return this.copy(
-            context = (context?: mapOf()) + _commonContext,
-            anonymousId = anonId, userId = userId
-        ) as T
-    }
+//    @Throws(MissingPropertiesException::class)
+//    override fun <T : Message> T.withDefaults(): T
 
 
     private fun initDestinationPlugin(plugin: DestinationPlugin<*>) {
@@ -317,7 +302,7 @@ internal class AnalyticsDelegate(
         _internalPrePlugins = _internalPrePlugins + gdprPlugin
 
         // add anonymous id to message
-        _internalPrePlugins = _internalPrePlugins + anonymousIdPlugin
+//        _internalPrePlugins = _internalPrePlugins + anonymousIdPlugin
         // store for cloud destinations
         _internalPrePlugins = _internalPrePlugins + storagePlugin
 

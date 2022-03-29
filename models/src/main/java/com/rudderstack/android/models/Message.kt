@@ -22,11 +22,11 @@ import com.rudderstack.android.models.Message.EventType
 import com.squareup.moshi.Json
 import java.util.*
 
-typealias MessageContext = Map<String, String>
+typealias MessageContext = Map<String, Any?>
 typealias PageProperties = Map<String, String>
 typealias ScreenProperties = Map<String, String>
 typealias TrackProperties = Map<String, String>
-typealias IdentifyTraits = Map<String, Any>
+typealias IdentifyTraits = Map<String, Any?>
 //integrations might change from String,Boolean to String, Object at a later point of time
 typealias MessageIntegrations = Map<String, Boolean>
 typealias MessageDestinationProps = Map<String, Map<*, *>>
@@ -236,9 +236,11 @@ sealed class Message(
             }
         }*/
 
-    open fun copy(context: MessageContext? = this.context,
-                  anonymousId: String? = this.anonymousId,
-                  userId: String? = this.userId): Message = when (this) {
+    open fun copy(
+        context: MessageContext? = this.context,
+        anonymousId: String? = this.anonymousId,
+        userId: String? = this.userId
+    ): Message = when (this) {
         is AliasMessage -> AliasMessage(
 //            messageId,
             context,
@@ -376,7 +378,7 @@ sealed class Message(
     }
 }
 
-class AliasMessage(
+class AliasMessage internal constructor(
 
     @JsonProperty("context")
     @Json(name = "context")
@@ -412,9 +414,27 @@ class AliasMessage(
     destinationProps,
 //    integrations,
 ) {
-    override fun copy(context: MessageContext? ,
-                      anonymousId: String?,
-                      userId: String?): AliasMessage {
+    companion object {
+        fun create(
+            timestamp: String,
+
+            anonymousId: String? = null,
+            userId: String? = null,
+
+            destinationProps: MessageDestinationProps? = null,
+            previousId: String? = null,
+            traits: Map<String, Any?>? = null,
+            externalIds: List<Map<String, String>>? = null,
+            customContextMap: Map<String, Any>? = null,
+        ) = AliasMessage(createContext(traits, externalIds, customContextMap),
+            anonymousId, userId, timestamp, destinationProps, previousId)
+    }
+
+    override fun copy(
+        context: MessageContext?,
+        anonymousId: String?,
+        userId: String?
+    ): AliasMessage {
         return super.copy(context, anonymousId, userId) as AliasMessage
     }
 
@@ -442,10 +462,11 @@ class AliasMessage(
     override fun hashCode(): Int {
         return super.hashCode() * (previousId?.hashCode() ?: 1)
     }
+
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-class GroupMessage(
+class GroupMessage internal constructor(
 
     @JsonProperty("context")
     @Json(name = "context")
@@ -491,10 +512,27 @@ class GroupMessage(
     destinationProps,
 //    integrations
 ) {
+    companion object{
+        fun create(
+            anonymousId: String? = null,
+            userId: String? = null,
+            timestamp: String,
 
-    override fun copy(context: MessageContext? ,
-                      anonymousId: String?,
-                      userId: String?): GroupMessage {
+            destinationProps: MessageDestinationProps? = null,
+            groupId: String?,
+            groupTraits: GroupTraits?,
+
+            traits: Map<String, Any?>? = null,
+            externalIds: List<Map<String, String>>? = null,
+            customContextMap: Map<String, Any>? = null,
+        ) = GroupMessage(createContext(traits, externalIds, customContextMap),
+            anonymousId, userId, timestamp, destinationProps, groupId, groupTraits)
+    }
+    override fun copy(
+        context: MessageContext?,
+        anonymousId: String?,
+        userId: String?
+    ): GroupMessage {
         return super.copy(context, anonymousId, userId) as GroupMessage
     }
 
@@ -507,7 +545,7 @@ class GroupMessage(
         destinationProps: MessageDestinationProps? = this.destinationProps,
         groupId: String? = this.groupId,
         traits: GroupTraits? = this.traits,
-        ) = GroupMessage(context, anonymousId, userId, timestamp, destinationProps, groupId, traits)
+    ) = GroupMessage(context, anonymousId, userId, timestamp, destinationProps, groupId, traits)
 
     override fun toString(): String {
         return "${super.toString()}, " +
@@ -531,7 +569,7 @@ class GroupMessage(
 }
 
 
-class PageMessage(
+class PageMessage internal constructor(
 
     @JsonProperty("context")
     @Json(name = "context")
@@ -590,10 +628,28 @@ class PageMessage(
     destinationProps,
 //    integrations
 ) {
-
-    override fun copy(context: MessageContext? ,
-                      anonymousId: String?,
-                      userId: String?): PageMessage {
+    companion object{
+        fun create(
+            anonymousId: String? = null,
+            userId: String? = null,
+            timestamp: String,
+            destinationProps: MessageDestinationProps? = null,
+            name: String? = null,
+            properties: PageProperties? = null,
+            category: String? = null,
+            traits: Map<String, Any?>? = null,
+            externalIds: List<Map<String, String>>? = null,
+            customContextMap: Map<String, Any>? = null
+            ) = PageMessage(
+            createContext(traits, externalIds, customContextMap),
+            anonymousId, userId, timestamp, destinationProps, name, properties,
+            category)
+    }
+    override fun copy(
+        context: MessageContext?,
+        anonymousId: String?,
+        userId: String?
+    ): PageMessage {
         return super.copy(context, anonymousId, userId) as PageMessage
     }
 
@@ -607,8 +663,11 @@ class PageMessage(
         properties: PageProperties? = this.properties,
         category: String? = this.category,
 
-        ) = PageMessage(context, anonymousId, userId, timestamp, destinationProps, name, properties,
-        category)
+        ) = PageMessage(
+        context, anonymousId, userId, timestamp, destinationProps, name, properties,
+        category
+    )
+
     override fun toString(): String {
         return "${super.toString()}, " +
                 "name = $name, " +
@@ -633,7 +692,7 @@ class PageMessage(
 }
 
 
-class ScreenMessage(
+class ScreenMessage internal constructor(
 
     @JsonProperty("context")
     @Json(name = "context")
@@ -690,10 +749,32 @@ class ScreenMessage(
     destinationProps,
 //    integrations
 ) {
+    companion object{
+        fun create(
 
-    override fun copy(context: MessageContext? ,
-                      anonymousId: String?,
-                      userId: String?): ScreenMessage {
+            timestamp: String,
+            anonymousId: String? = null,
+            userId: String? = null,
+
+            destinationProps: MessageDestinationProps? = null,
+            name: String? = null,
+            category: String? = null,
+            properties: ScreenProperties? = null,
+
+            traits: Map<String, Any?>? = null,
+                   externalIds: List<Map<String, String>>? = null,
+                   customContextMap: Map<String, Any>? = null)
+         = ScreenMessage(
+        createContext(traits, externalIds, customContextMap),
+            anonymousId, userId, timestamp, destinationProps, category, name,
+        properties
+        )
+    }
+    override fun copy(
+        context: MessageContext?,
+        anonymousId: String?,
+        userId: String?
+    ): ScreenMessage {
         return super.copy(context, anonymousId, userId) as ScreenMessage
     }
 
@@ -708,8 +789,10 @@ class ScreenMessage(
         category: String? = this.category,
         properties: ScreenProperties? = this.properties,
 
-        ) = ScreenMessage(context, anonymousId, userId, timestamp, destinationProps,category, name,
-        properties)
+        ) = ScreenMessage(
+        context, anonymousId, userId, timestamp, destinationProps, category, name,
+        properties
+    )
 
     override fun toString(): String {
         return "${super.toString()}, " +
@@ -733,7 +816,7 @@ class ScreenMessage(
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true, allowSetters = true)
-class TrackMessage(
+class TrackMessage internal constructor(
 
     @JsonProperty("context")
     @Json(name = "context")
@@ -785,12 +868,35 @@ class TrackMessage(
     destinationProps,
 //    integrations
 ) {
-
-    override fun copy(context: MessageContext? ,
-                      anonymousId: String?,
-                      userId: String?): TrackMessage {
+    companion object{
+        fun create(
+            eventName: String?,
+            timestamp: String,
+            properties: TrackProperties? = null,
+            anonymousId: String? = null,
+            userId: String? = null,
+            destinationProps: MessageDestinationProps? = null,
+            traits: Map<String, Any?>? = null,
+            externalIds: List<Map<String, String>>? = null,
+            customContextMap: Map<String, Any>? = null
+        ) = TrackMessage(
+            createContext(traits, externalIds, customContextMap),
+            anonymousId,
+            userId,
+            timestamp,
+            destinationProps,
+            eventName,
+            properties
+        )
+    }
+    override fun copy(
+        context: MessageContext?,
+        anonymousId: String?,
+        userId: String?
+    ): TrackMessage {
         return super.copy(context, anonymousId, userId) as TrackMessage
     }
+
     fun copy(
         context: MessageContext? = this.context,
         anonymousId: String? = this.anonymousId,
@@ -799,7 +905,15 @@ class TrackMessage(
         destinationProps: MessageDestinationProps? = this.destinationProps,
         eventName: String? = this.eventName,
         properties: TrackProperties? = this.properties,
-    ) = TrackMessage(context, anonymousId, userId, timestamp, destinationProps, eventName, properties)
+    ) = TrackMessage(
+        context,
+        anonymousId,
+        userId,
+        timestamp,
+        destinationProps,
+        eventName,
+        properties
+    )
 
     override fun toString(): String {
         return "${super.toString()}, " +
@@ -824,7 +938,7 @@ class TrackMessage(
 }
 
 
-class IdentifyMessage(
+class IdentifyMessage internal constructor(
 
     @JsonProperty("context")
     @Json(name = "context")
@@ -867,9 +981,25 @@ class IdentifyMessage(
 //    integrations
 ) {
 
-    override fun copy(context: MessageContext? ,
-                      anonymousId: String?,
-                      userId: String?): IdentifyMessage {
+    companion object{
+        fun create(
+            anonymousId: String? = null,
+            userId: String? = null,
+            timestamp: String,
+            properties: IdentifyTraits? = null,
+            destinationProps: MessageDestinationProps? = null,
+            traits: Map<String, Any?>? = null,
+            externalIds: List<Map<String, String>>? = null,
+            customContextMap: Map<String, Any>? = null
+            ) = IdentifyMessage(createContext(traits, externalIds, customContextMap),
+            anonymousId, userId, timestamp, destinationProps, properties)
+
+    }
+    override fun copy(
+        context: MessageContext?,
+        anonymousId: String?,
+        userId: String?
+    ): IdentifyMessage {
         return super.copy(context, anonymousId, userId) as IdentifyMessage
     }
 

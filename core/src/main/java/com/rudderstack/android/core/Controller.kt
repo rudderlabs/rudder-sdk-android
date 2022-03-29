@@ -100,11 +100,6 @@ interface Controller {
      */
     fun shutdown()
 
-    /**
-     * Fill default details for [TrackMessage]
-     * @throws [MissingPropertiesException] if neither of userId or anonymous id is present
-     */
-    @Throws(MissingPropertiesException::class)
-    fun <T: Message> T.withDefaults() : T
+
 
 }

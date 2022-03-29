@@ -17,6 +17,7 @@ package com.rudderstack.android.core.internal.plugins
 import com.rudderstack.android.core.DestinationPlugin
 import com.rudderstack.android.core.Plugin
 import com.rudderstack.android.core.RudderOptions
+import com.rudderstack.android.core.Storage
 import com.rudderstack.android.models.Message
 
 /**
@@ -30,11 +31,13 @@ import com.rudderstack.android.models.Message
  * @param options
  */
 internal class RudderOptionPlugin(private val options: RudderOptions) : Plugin {
+
     override fun intercept(chain: Plugin.Chain): Message {
         val msg = chain.message()
         val validIntegrations = validIntegrations()
         msg.integrations = validIntegrations
         val destinationPlugins = chain.plugins.filterIsInstance<DestinationPlugin<*>>()
+        //fill external ids
 
         return  if (destinationPlugins.isNotEmpty()) {
             val validPlugins = filterDestinationPlugins(
@@ -61,9 +64,7 @@ internal class RudderOptionPlugin(private val options: RudderOptions) : Plugin {
     }
 
     private fun validIntegrations(): Map<String, Boolean> {
-        return if (options.integrations.isEmpty()
-        ) mapOf("All" to true) // if integrations is empty, it should allow All
-        else options.integrations
+        return options.integrations.ifEmpty { mapOf("All" to true) }
 
     }
 

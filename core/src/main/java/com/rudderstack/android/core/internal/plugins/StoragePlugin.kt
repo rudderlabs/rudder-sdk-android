@@ -16,17 +16,20 @@ package com.rudderstack.android.core.internal.plugins
 
 import com.rudderstack.android.core.Plugin
 import com.rudderstack.android.core.Storage
+import com.rudderstack.android.models.IdentifyMessage
 import com.rudderstack.android.models.Message
 
 /**
  * Adds [Message] to repository for further processing.
  * Used for cloud mode destinations.
+ * Saves user related data in case of identify messages and
  *
  */
 internal class StoragePlugin(private val storage: Storage ) : Plugin {
     override fun intercept(chain: Plugin.Chain): Message {
         val message = chain.message()
         storage.saveMessage(message.copy())
+
         return chain.proceed(message)
     }
 }

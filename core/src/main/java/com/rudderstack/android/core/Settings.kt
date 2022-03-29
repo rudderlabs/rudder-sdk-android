@@ -35,10 +35,8 @@ data class Settings(
     val anonymousId : String? = null,
     val userId : String? = null,
     val options: RudderOptions = RudderOptions.default(),
-//    val dataPlaneUrl: String = DATA_PLANE_URL,
     val flushQueueSize: Int = FLUSH_QUEUE_SIZE,
     val maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
-//    private val _controlPlaneUrl: String = CONTROL_PLANE_URL,
     val isOptOut : Boolean = false
     //available in android only
 //    val trackLifecycleEvents: Boolean = false,

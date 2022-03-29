@@ -104,9 +104,13 @@ class Analytics(
         processMessage(message, options)
     }
 
-    fun track(eventName: String, trackProperties: TrackProperties, options: RudderOptions? = null) {
-        track(TrackMessage(null,  null, null,
-        Utils.timeStamp, eventName = eventName, properties = trackProperties), options)
+    fun track(eventName: String,
+              trackProperties: TrackProperties,
+              userID: String? = null,
+              options: RudderOptions? = null) {
+        track(TrackMessage.create(
+        timestamp = Utils.timeStamp, eventName = eventName, properties = trackProperties,
+        userId = userID), options)
 
     }
 
@@ -117,11 +121,11 @@ class Analytics(
         screenName: String,
         category: String,
         screenProperties: ScreenProperties,
+        userID: String? = null,
         options: RudderOptions? = null
     ) {
         screen(
-            ScreenMessage(null,
-        null, null, Utils.timeStamp, category = category,
+            ScreenMessage.create(userId = userID, timestamp = Utils.timeStamp, category = category,
                 name = screenName, properties = screenProperties), options
         )
     }
@@ -131,10 +135,14 @@ class Analytics(
         processMessage(message, options)
     }
 
-    fun identify(userID: String, traits: Map<String, Any>? = null, options: RudderOptions? = null) {
-        val completeTraits = (traits?: mapOf()) + mapOf("userId" to userID)
+    fun identify(userID: String, traits: Map<String, Any>? = null,
+                 options: RudderOptions? = null, ) {
+        val completeTraits =  mapOf("userId" to userID) optAdd traits
         identify(
-            IdentifyMessage(null, null, null, Utils.timeStamp, traits = completeTraits, ), options
+            IdentifyMessage.create(
+                userId =  userID,
+                timestamp = Utils.timeStamp,
+                traits = completeTraits, ), options
         )
     }
 
@@ -142,18 +150,21 @@ class Analytics(
         //TODO(change userId)
         processMessage(message, options)
     }
-    fun alias(newId: String, options: RudderOptions? = null) {
-//        alias(
-//            AliasMessage(timestamp = Utils.timeStamp, )
-//        )
+    fun alias(newId: String,
+              options: RudderOptions? = null) {
+        alias(
+            AliasMessage.create(timestamp = Utils.timeStamp, userId = newId ), options
+        )
     }
 
     fun group(message: GroupMessage, options: RudderOptions? = null) {
         processMessage(message, options)
     }
-    fun group(groupID: String, traits: GroupTraits? = null, options: RudderOptions? = null) {
-        group(GroupMessage(null, null, null, Utils.timeStamp, null,
-        groupID, traits), options)
+    fun group(groupID: String, traits: GroupTraits? = null,
+              userID: String? = null,
+              options: RudderOptions? = null) {
+        group(GroupMessage.create(timestamp = Utils.timeStamp, userId = userID,
+        groupId = groupID, groupTraits = traits), options)
     }
 
 

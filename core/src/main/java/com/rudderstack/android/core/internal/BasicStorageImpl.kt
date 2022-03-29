@@ -19,6 +19,7 @@ import com.rudderstack.android.core.Settings
 import com.rudderstack.android.core.State
 import com.rudderstack.android.core.Storage
 import com.rudderstack.android.core.internal.states.SettingsState
+import com.rudderstack.android.models.IdentifyTraits
 import com.rudderstack.android.models.Message
 import com.rudderstack.android.models.RudderServerConfig
 import java.io.File
@@ -34,7 +35,7 @@ internal class BasicStorageImpl(
     private val queue: Queue<Message> = LinkedList(),
     private val logger: Logger
 ) : Storage {
-    private var cachedContext: Map<String,String> = mapOf()
+    private var cachedContext: Map<String,Any> = mapOf()
     private var dataChangeListeners = listOf<(List<Message>) -> Unit>()
     private var _isOptOut = false
     private var _optOutTime = -1L
@@ -68,11 +69,13 @@ internal class BasicStorageImpl(
         callback.invoke(queue.take(Storage.MAX_FETCH_LIMIT).toList())
     }
 
-    override fun cacheContext(context: Map<String, String>) {
+
+
+    override fun cacheContext(context: Map<String, Any>) {
         cachedContext = context
     }
 
-    override val context: Map<String, String>
+    override val context: Map<String, Any>
         get() = cachedContext
 
     override fun saveServerConfig(serverConfig: RudderServerConfig) {
@@ -104,6 +107,22 @@ internal class BasicStorageImpl(
             _optInTime = System.currentTimeMillis()
     }
 
+    override fun saveTraits(traits: IdentifyTraits) {
+        TODO("Not yet implemented")
+    }
+
+    override fun saveExternalIds(externalIds: List<Map<String, String>>) {
+        TODO("Not yet implemented")
+    }
+
+    override fun clearExternalIds() {
+        TODO("Not yet implemented")
+    }
+
+    override fun saveAnonymousId(anonymousId: String) {
+        TODO("Not yet implemented")
+    }
+
     override fun saveStartupMessageInQueue(message: Message) {
         TODO("Not yet implemented")
     }
@@ -125,6 +144,12 @@ internal class BasicStorageImpl(
         get() = _optOutTime
     override val optInTime: Long
         get() = _optInTime
+    override val traits: Map<String, Any>
+        get() = TODO("Not yet implemented")
+    override val externalIds: List<Map<String, String>>
+        get() = TODO("Not yet implemented")
+    override val anonymousId: String
+        get() = TODO("Not yet implemented")
 
     private fun onDataChange(){
         val msgs = queue.take(Storage.MAX_FETCH_LIMIT).toList()
