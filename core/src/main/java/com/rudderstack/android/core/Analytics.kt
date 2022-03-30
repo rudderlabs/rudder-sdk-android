@@ -74,7 +74,9 @@ class Analytics(
         jsonAdapter,
         networkExecutor
     ),
-
+    defaultTraits: IdentifyTraits? = null,
+    defaultExternalIds : List<Map<String, String>>? = null,
+    defaultContextMap: Map<String, Any>? = null
     ) : Controller by AnalyticsDelegate(
 //    writeKey,
     settings,
@@ -86,7 +88,8 @@ class Analytics(
     dataUploadService,
     configDownloadService,
     analyticsExecutor,
-    logger
+    logger,
+    createContext(defaultTraits, defaultExternalIds, defaultContextMap)
 
 ) {
 

@@ -23,7 +23,7 @@ package com.rudderstack.android.models
  * @param customContextMap
  * @return
  */
-internal fun createContext(
+fun createContext(
     traits: Map<String, Any?>? = null,
     externalIds: List<Map<String, String>>? = null,
     customContextMap: Map<String, Any>? = null

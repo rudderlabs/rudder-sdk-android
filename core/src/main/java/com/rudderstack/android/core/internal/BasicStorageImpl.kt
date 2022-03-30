@@ -41,6 +41,16 @@ internal class BasicStorageImpl(
     private var _optOutTime = -1L
     private var _optInTime = -1L
 
+    private var _serverConfig : RudderServerConfig? = null
+    private var _traits : IdentifyTraits? = null
+    private var _externalIds : List<Map<String, String>>? = null
+    private var _anonymousId : String? = null
+
+    /**
+     * This queue holds the messages that are generated prior to destinations waking up
+     */
+    private val startupQ = LinkedList<Message>()
+
     private val serverConfigFile = File("/temp/rudder-analytics/server_config")
 
     override fun saveMessage(vararg messages: Message) {
@@ -92,12 +102,9 @@ internal class BasicStorageImpl(
             fos.close()
 
         }catch (ex : Exception){
-            //TODO(log)
+            logger.error(log = "Server Config cannot be saved", throwable = ex)
         }
     }
-
-    override val serverConfig: RudderServerConfig
-        get() = TODO("Not yet implemented")
 
     override fun saveOptOut(optOut: Boolean) {
          _isOptOut = optOut
@@ -108,35 +115,39 @@ internal class BasicStorageImpl(
     }
 
     override fun saveTraits(traits: IdentifyTraits) {
-        TODO("Not yet implemented")
+        this._traits = traits
     }
 
     override fun saveExternalIds(externalIds: List<Map<String, String>>) {
-        TODO("Not yet implemented")
+        _externalIds = externalIds
     }
 
     override fun clearExternalIds() {
-        TODO("Not yet implemented")
+        _externalIds = listOf()
     }
 
     override fun saveAnonymousId(anonymousId: String) {
-        TODO("Not yet implemented")
+        _anonymousId = anonymousId
     }
 
     override fun saveStartupMessageInQueue(message: Message) {
-        TODO("Not yet implemented")
+        startupQ.add(message)
     }
 
     override fun clearStartupQueue() {
-        TODO("Not yet implemented")
+        startupQ.clear()
     }
 
     override fun shutdown() {
         queue.clear()
     }
 
+
+    override val serverConfig: RudderServerConfig?
+        get() = _serverConfig
+
     override val startupQueue: List<Message>
-        get() = TODO("Not yet implemented")
+        get() = startupQ
 
     override val isOptedOut: Boolean
         get() = _isOptOut
@@ -144,12 +155,12 @@ internal class BasicStorageImpl(
         get() = _optOutTime
     override val optInTime: Long
         get() = _optInTime
-    override val traits: Map<String, Any>
-        get() = TODO("Not yet implemented")
-    override val externalIds: List<Map<String, String>>
-        get() = TODO("Not yet implemented")
-    override val anonymousId: String
-        get() = TODO("Not yet implemented")
+    override val traits: IdentifyTraits?
+        get() = _traits
+    override val externalIds: List<Map<String, String>>?
+        get() = _externalIds
+    override val anonymousId: String?
+        get() = _anonymousId
 
     private fun onDataChange(){
         val msgs = queue.take(Storage.MAX_FETCH_LIMIT).toList()

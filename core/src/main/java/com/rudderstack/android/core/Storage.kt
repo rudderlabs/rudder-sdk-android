@@ -169,16 +169,16 @@ interface Storage {
     /**
      * Returns traits
      */
-    val traits: Map<String, Any>
+    val traits: IdentifyTraits?
 
     /**
      * external ids persisted through identify calls.
      * Any external ids passed in other events will be merged with this.
      */
-    val externalIds: List<Map<String, String>>
+    val externalIds: List<Map<String, String>>?
 
     /**
      * Anonymous id associated to the app instance
      */
-    val anonymousId: String
+    val anonymousId: String?
 }
