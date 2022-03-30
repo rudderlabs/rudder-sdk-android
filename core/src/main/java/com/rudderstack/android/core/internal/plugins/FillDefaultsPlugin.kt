@@ -28,7 +28,7 @@ import com.rudderstack.android.models.TrackMessage
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 
 internal class FillDefaultsPlugin(
-    private val defaultContext: Map<String, Any>, private val settingsState: State<Settings>,
+    private val defaultContext: MessageContext, private val settingsState: State<Settings>,
     private val contextState: State<MessageContext>
 ) : Plugin {
 

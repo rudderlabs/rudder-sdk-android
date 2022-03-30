@@ -15,6 +15,8 @@
 package com.rudderstack.android.core.internal
 
 import com.rudderstack.android.core.*
+import com.rudderstack.android.core.internal.plugins.*
+import com.rudderstack.android.core.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.core.internal.plugins.GDPRPlugin
 import com.rudderstack.android.core.internal.plugins.RudderOptionPlugin
 import com.rudderstack.android.core.internal.plugins.StoragePlugin
@@ -109,6 +111,7 @@ internal class AnalyticsDelegate(
     //plugins
     private val gdprPlugin = GDPRPlugin()
     private val storagePlugin = StoragePlugin(_storageDecorator)
+    private val fillDefaultsPlugin : FillDefaultsPlugin
     private val wakeupActionPlugin = WakeupActionPlugin(
         _storageDecorator,
         destConfigState = DestinationConfigState
@@ -124,6 +127,8 @@ internal class AnalyticsDelegate(
         if (shouldVerifySdk) {
             updateSourceConfig()
         }
+        fillDefaultsPlugin = FillDefaultsPlugin(_commonContext,
+            SettingsState, ContextState)
     }
 
 
@@ -192,6 +197,10 @@ internal class AnalyticsDelegate(
             _allPlugins.toMutableList().also {
             //after gdpr plugin
             it.add(1, RudderOptionPlugin(options ?: defaultOptions))
+                //after option plugin
+            it.add(2,ExtractStatePlugin(ContextState, SettingsState, options?: defaultOptions,
+            _storageDecorator)
+            )
         })
         lcc.process()
 
@@ -300,10 +309,12 @@ internal class AnalyticsDelegate(
     private fun initializePlugins() {
         // check if opted out
         _internalPrePlugins = _internalPrePlugins + gdprPlugin
+        // rudder option plugin followed by extract state plugin should be added by lifecycle
 
-        // add anonymous id to message
+        // add defaults to message
 //        _internalPrePlugins = _internalPrePlugins + anonymousIdPlugin
         // store for cloud destinations
+        _internalPrePlugins = _internalPrePlugins + fillDefaultsPlugin
         _internalPrePlugins = _internalPrePlugins + storagePlugin
 
         _internalPostPlugins = _internalPostPlugins + wakeupActionPlugin
