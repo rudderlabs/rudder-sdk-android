@@ -16,15 +16,12 @@ package com.rudderstack.android.core.internal
 
 import com.rudderstack.android.core.*
 import com.rudderstack.android.core.internal.plugins.*
-import com.rudderstack.android.core.internal.plugins.FillDefaultsPlugin
-import com.rudderstack.android.core.internal.plugins.GDPRPlugin
-import com.rudderstack.android.core.internal.plugins.RudderOptionPlugin
-import com.rudderstack.android.core.internal.plugins.StoragePlugin
-import com.rudderstack.android.core.internal.plugins.WakeupActionPlugin
 import com.rudderstack.android.core.internal.states.ContextState
 import com.rudderstack.android.core.internal.states.DestinationConfigState
 import com.rudderstack.android.core.internal.states.SettingsState
-import com.rudderstack.android.models.*
+import com.rudderstack.android.models.Message
+import com.rudderstack.android.models.MessageContext
+import com.rudderstack.android.models.RudderServerConfig
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
 import java.io.FileInputStream
@@ -44,10 +41,10 @@ internal class AnalyticsDelegate(
     private val sdkVerifyRetryStrategy: RetryStrategy,
     private val dataUploadService: DataUploadService,
     //can be null only if shouldVerifySdk is false
-    private val configDownloadService: ConfigDownloadService? ,
+    private val configDownloadService: ConfigDownloadService?,
     private val analyticsExecutor: ExecutorService,
     private val logger: Logger,
-    context:MessageContext,
+    context: MessageContext,
 ) : Controller {
 
 
@@ -111,11 +108,12 @@ internal class AnalyticsDelegate(
     //plugins
     private val gdprPlugin = GDPRPlugin()
     private val storagePlugin = StoragePlugin(_storageDecorator)
-    private val fillDefaultsPlugin : FillDefaultsPlugin
+    private val fillDefaultsPlugin: FillDefaultsPlugin
     private val wakeupActionPlugin = WakeupActionPlugin(
         _storageDecorator,
         destConfigState = DestinationConfigState
     )
+    private val destinationConfigurationPlugin = DestinationConfigurationPlugin()
 
     private var _serverConfig: RudderServerConfig? = null
 
@@ -127,8 +125,10 @@ internal class AnalyticsDelegate(
         if (shouldVerifySdk) {
             updateSourceConfig()
         }
-        fillDefaultsPlugin = FillDefaultsPlugin(_commonContext,
-            SettingsState, ContextState)
+        fillDefaultsPlugin = FillDefaultsPlugin(
+            _commonContext,
+            SettingsState, ContextState
+        )
     }
 
 
@@ -195,13 +195,16 @@ internal class AnalyticsDelegate(
     ) {
         val lcc = lifecycleController ?: LifecycleControllerImpl(message,
             _allPlugins.toMutableList().also {
-            //after gdpr plugin
-            it.add(1, RudderOptionPlugin(options ?: defaultOptions))
+                //after gdpr plugin
+                it.add(1, RudderOptionPlugin(options ?: defaultOptions))
                 //after option plugin
-            it.add(2,ExtractStatePlugin(ContextState, SettingsState, options?: defaultOptions,
-            _storageDecorator)
-            )
-        })
+                it.add(
+                    2, ExtractStatePlugin(
+                        ContextState, SettingsState, options ?: defaultOptions,
+                        _storageDecorator
+                    )
+                )
+            })
         lcc.process()
 
     }
@@ -284,7 +287,7 @@ internal class AnalyticsDelegate(
                     if (cachedConfig != null)
                         handleConfigData(cachedConfig)
                     else {
-                        logger.error( log = "SDK Initialization failed due to $lastErrorMsg")
+                        logger.error(log = "SDK Initialization failed due to $lastErrorMsg")
                         //log lastErrorMsg or isSourceEnabled
                         shutdown()
                     }
@@ -317,6 +320,7 @@ internal class AnalyticsDelegate(
         _internalPrePlugins = _internalPrePlugins + fillDefaultsPlugin
         _internalPrePlugins = _internalPrePlugins + storagePlugin
 
+        _internalPostPlugins + _internalPostPlugins + destinationConfigurationPlugin
         _internalPostPlugins = _internalPostPlugins + wakeupActionPlugin
         //if plugin update related configs are ready
         applyClosure {

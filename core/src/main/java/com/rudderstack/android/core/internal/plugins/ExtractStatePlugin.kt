@@ -15,7 +15,6 @@
 package com.rudderstack.android.core.internal.plugins
 
 import com.rudderstack.android.core.*
-import com.rudderstack.android.core.State
 import com.rudderstack.android.core.internal.KeyConstants
 import com.rudderstack.android.core.internal.ifNotNull
 import com.rudderstack.android.core.internal.optAdd
@@ -35,32 +34,74 @@ internal class ExtractStatePlugin(
 ) : Plugin {
     override fun intercept(chain: Plugin.Chain): Message {
         val message = chain.message()
-        var newContext : MessageContext? = null
-        if (message is IdentifyMessage) {
+        var newContext: MessageContext? = null
+
+        if (message is IdentifyMessage || message is AliasMessage) {
+            // alias message can change user id permanently
             //save and update traits
             //update userId
             //save and update external ids
-            message.context?.let {
-                newContext = it
-                contextState.update(newContext)
-                (it.getOrDefault(KeyConstants.CONTEXT_USER_ID_KEY, null))?.let { id ->
-                    settingsState.update(SettingsState.value?.copy(userId = id as String))
-                } ?: (it.getOrDefault(KeyConstants.CONTEXT_ID_KEY, null))?.let { id ->
+            newContext = message.context?.let {
+
+                //alias and identify messages are expected to contain user id.
+                //We check in context as well as context.traits with either keys "userId" and "id"
+                //user id can be retrieved if put directly in context or context.traits with the
+                //aforementioned ids
+                val newUserId = getUserId(it)
+
+                // in case of identify, the stored traits (if any) are replaced by the ones provided
+                if (message is IdentifyMessage) {
+                    it.traits ifNotNull storage::saveTraits
+                    it.externalIds ifNotNull storage::saveExternalIds
+                } else if (message is AliasMessage) {
+                    // in case of alias, we change the user id in traits
+
+                    newUserId?.let { newId ->
+                        mapOf(
+                            KeyConstants.CONTEXT_ID_KEY to
+                                    newId,
+                            KeyConstants.CONTEXT_USER_ID_KEY to
+                                    newId
+                        ) optAdd it.traits
+                    } ifNotNull storage::saveTraits
+
+                }
+                newUserId?.let { id ->
                     settingsState.update(SettingsState.value?.copy(userId = id as String))
                 }
-                it.traits ifNotNull storage::saveTraits
-                it.externalIds ifNotNull storage::saveExternalIds
+                //also in case of alias, user id in context should also change, given it's
+                // present there
+                if (message is AliasMessage) {
+                    it optAdd (it[KeyConstants.CONTEXT_USER_ID_KEY])?.let {
+                        mapOf(KeyConstants.CONTEXT_USER_ID_KEY to it)
+                    }
+                    it optAdd (it[KeyConstants.CONTEXT_ID_KEY])?.let {
+                        mapOf(KeyConstants.CONTEXT_ID_KEY to it)
+                    }
+
+                } else
+                    it
             }
-        }
-        //save and update external ids if available
-        if(!options.externalIds.isNullOrEmpty()){
-            newContext = mapOf("externalIds" to options.externalIds) optAdd newContext
+            //save and update external ids if available
+            if (message is IdentifyMessage && !options.externalIds.isNullOrEmpty()) {
+                newContext = mapOf("externalIds" to options.externalIds) optAdd newContext
+            }
+
+            newContext?.apply {
+                contextState.update(this optAdd contextState.value)
+            }
+
         }
 
-        newContext?.apply {
-            contextState.update(this optAdd contextState.value)
-        }
         return chain.proceed(message)
+    }
+
+    private fun getUserId(it: MessageContext): String? {
+        return (it.getOrDefault(KeyConstants.CONTEXT_USER_ID_KEY, null)
+            ?: (it.getOrDefault(KeyConstants.CONTEXT_ID_KEY, null))
+            ?: (it.traits?.getOrDefault(KeyConstants.CONTEXT_USER_ID_KEY, null))
+            ?: (it.traits?.getOrDefault(KeyConstants.CONTEXT_ID_KEY, null))
+                ) as? String?
     }
 
 }

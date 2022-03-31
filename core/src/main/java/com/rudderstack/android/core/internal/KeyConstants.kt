@@ -16,6 +16,6 @@ package com.rudderstack.android.core.internal
 
 internal object KeyConstants {
     const val CONTEXT_USER_ID_KEY = "user_id"
-    const val CONTEXT_ID_KEY = "user_id"
+    const val CONTEXT_ID_KEY = "id"
     const val CONTEXT_EXTERNAL_ID_KEY = "externalIds"
 }

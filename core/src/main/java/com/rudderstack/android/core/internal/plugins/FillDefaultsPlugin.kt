@@ -21,10 +21,7 @@ import com.rudderstack.android.core.internal.MissingPropertiesException
 import com.rudderstack.android.core.internal.optAdd
 import com.rudderstack.android.core.internal.states.ContextState
 import com.rudderstack.android.core.internal.states.SettingsState
-import com.rudderstack.android.models.IdentifyMessage
-import com.rudderstack.android.models.Message
-import com.rudderstack.android.models.MessageContext
-import com.rudderstack.android.models.TrackMessage
+import com.rudderstack.android.models.*
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 
 internal class FillDefaultsPlugin(
@@ -37,20 +34,26 @@ internal class FillDefaultsPlugin(
      * @throws [MissingPropertiesException] if neither of userId or anonymous id is present
      */
     @Throws(MissingPropertiesException::class)
-    fun <T : Message> T.withDefaults(): T {
+    inline fun <reified T : Message> T.withDefaults(): T {
         val anonId = this.anonymousId ?: settingsState.value?.anonymousId
-        val userId = this.userId ?: SettingsState.value?.userId
+        val userId = this.userId ?: settingsState.value?.userId
         if (anonId == null && userId == null)
             throw MissingPropertiesException("Either Anonymous Id or User Id must be present");
         //copying top level context to message context
-        return this.copy(
+        return (this.copy(
             context = defaultContext optAdd (context ?: contextState.value),
             anonymousId = anonId, userId = userId
-        ) as T
+        ) as T).also {
+            //for alias messages, we need to set previous id, if not already set
+            when(T :: class){
+                AliasMessage::class -> (it as AliasMessage).previousId = userId
+            }
+        }
     }
 
     override fun intercept(chain: Plugin.Chain): Message {
         val message = chain.message().let {
+
             if (it is IdentifyMessage)
                 it
             else it.withDefaults()
