@@ -32,14 +32,27 @@ fun interface RetryStrategy {
 //    val work : ()-> Boolean
 
     companion object {
+        /**
+         * An utility function to get [ExponentialRetryStrategy].
+         *
+         * @param maxAttempts
+         * @return [ExponentialRetryStrategy]
+         */
         fun exponential(
-            maxAttempts: Int = 20
+            maxAttempts: Int = 5
         ) = ExponentialRetryStrategy(maxAttempts)
 
     }
 
     fun perform(work: () -> Boolean,listener: (success: Boolean) -> Unit)
 
+    /**
+     * A retry strategy that increases the waiting time by exponents of 2
+     * The waiting time increases as (2^n),i.e 1,2,4,8....
+     *
+     * @property maxAttempts The max number of attempts to make. It will occur at 2^nth second after
+     * (n-1)th attempt
+     */
     class ExponentialRetryStrategy internal constructor(
         private val maxAttempts: Int,
     ) : RetryStrategy {
@@ -49,27 +62,27 @@ fun interface RetryStrategy {
             work: () -> Boolean,
             listener: (success: Boolean) -> Unit
         ) {
-            check(maxAttempts <= 0){
+            check(maxAttempts >= 0){
                 "Max attempts needs to be at least 1"
             }
-            check(retryCount.get() > 0){
+            check(retryCount.get() < 1){
                 "perform() can be called only once. Create another instance for a new job."
             }
             val executorService = ScheduledThreadPoolExecutor(2)
 
             fun scheduleWork() {
                 executorService.schedule({
+                    lastWaitTime.set((1 shl retryCount.getAndIncrement()) * 1000L) // 2 to the power of retry count
 
-                    lastWaitTime.set(lastWaitTime.get() + (1 shl retryCount.getAndIncrement()) * 1000L) // 2 to the power of retry count
                     val workDone = work.invoke()
                     if (workDone) {
                         listener.invoke(true)
                         executorService.shutdown()
                         return@schedule
                     } else {
-                        if(retryCount.get() >= maxAttempts){
-                            executorService.shutdown()
+                        if(retryCount.get() > maxAttempts){
                             listener.invoke(false)
+                            executorService.shutdown()
                             return@schedule
                         }
                         scheduleWork()

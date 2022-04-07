@@ -27,17 +27,21 @@ import java.net.URL
 import java.util.concurrent.*
 
 class WebServiceImpl internal constructor(
-    private val baseUrl: String,
+    baseUrl : String,
     private val jsonAdapter: JsonAdapter,
     private val defaultTimeout: Int = 10000,
     private val executor: ExecutorService = Executors.newCachedThreadPool()
 ) : WebService {
 
     private var _interceptor: HttpInterceptor? = null
+    private val baseUrl: String
 
     private enum class HttpMethod {
         POST,
         GET
+    }
+    init {
+        this.baseUrl = baseUrl.validatedBaseUrl
     }
 
     override fun <T : Any> get(
@@ -307,5 +311,6 @@ class WebServiceImpl internal constructor(
             "${it.key}=${it.value}"
         }?.reduce { acc, s -> "$acc&$s" } ?: ""
 
-
+    private val String.validatedBaseUrl
+    get() = if(this.endsWith('/')) this else "$this/"
 }

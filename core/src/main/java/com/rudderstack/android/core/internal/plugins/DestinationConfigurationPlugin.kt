@@ -36,12 +36,11 @@ internal class DestinationConfigurationPlugin : Plugin {
     private var _isConfigUpdated = false
     override fun intercept(chain: Plugin.Chain): Message {
         val msg = chain.message()
-        val destinationPlugins = chain.plugins.filterIsInstance<DestinationPlugin<*>>()
-
-        return  if (destinationPlugins.isNotEmpty()) {
-            val validPlugins = destinationPlugins.filter {
-               _isConfigUpdated && it.name !in _notAllowedDestinations
-            }
+        val validPlugins = chain.plugins.filter {
+            //either not a destination plugin or is allowed
+            it !is DestinationPlugin<*> || (_isConfigUpdated && it.name !in _notAllowedDestinations)
+        }
+        return  if (validPlugins.isNotEmpty()) {
             return chain.with(validPlugins).proceed(msg)
         } else
             chain.proceed(msg)

@@ -14,11 +14,9 @@
 
 package com.rudderstack.android.gsonrudderadapter
 
-import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
+import com.google.gson.Gson
+import org.junit.Assert.assertEquals
 import org.junit.Test
-
-import org.junit.Assert.*
-import java.lang.reflect.ParameterizedType
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -30,5 +28,18 @@ class ExampleUnitTest {
     fun addition_isCorrect() {
         assertEquals(4, 2 + 2)
     }
+    @Test
+    public fun whenDeserializingToSimpleObject_thenCorrect() {
+        val json = "{\"intValue\":\"2\",\"stringValue\":\"one\"}";
 
+        val targetObject = Gson().fromJson(json, Foo::class.java)
+
+        println("int value: ${targetObject.intValue}")
+        assertEquals(targetObject.intValue, 1);
+        assertEquals(targetObject.stringValue, "one");
+    }
+    class Foo {
+        var intValue = 0
+        var stringValue: String? = null // + standard equals and hashCode implementations
+    }
 }

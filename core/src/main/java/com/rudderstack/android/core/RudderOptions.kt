@@ -26,7 +26,7 @@ package com.rudderstack.android.core
  * @property customContexts Custom context elements that are going to be sent with message
  */
 class RudderOptions private constructor(
-    val externalIds: Map<String, Any>,
+    val externalIds: List<Map<String, String>>,
     val integrations: Map<String, Boolean>,
     val customContexts: Map<String, Any>,
 
@@ -36,7 +36,7 @@ class RudderOptions private constructor(
          * Default options
          *
          */
-        fun default() = RudderOptions(mapOf(), mapOf(), mapOf())
+        fun default() = RudderOptions(listOf(), mapOf(), mapOf())
     }
 
     /**
@@ -53,12 +53,12 @@ class RudderOptions private constructor(
      *
      */
     class Builder {
-        private var _externalIds: Map<String, Any> = mapOf()
+        private var _externalIds: List<Map<String, String>> = listOf()
         private var _integrations: Map<String, Boolean> = mapOf()
         private var _customContexts: Map<String, Any> = mapOf()
 
 
-        fun withExternalIds(externalIds: Map<String, Any>): Builder {
+        fun withExternalIds(externalIds: List<Map<String, String>>): Builder {
             this._externalIds = externalIds
             return this
         }

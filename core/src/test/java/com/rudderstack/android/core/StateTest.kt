@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 31/10/21, 12:09 AM Last modified: 31/10/21, 12:09 AM
- * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 04/04/22, 1:38 PM Last modified: 31/12/21, 11:32 AM
+ * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,9 +12,8 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.core.state.internal
+package com.rudderstack.android.core
 
-import com.rudderstack.android.core.State
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.Test

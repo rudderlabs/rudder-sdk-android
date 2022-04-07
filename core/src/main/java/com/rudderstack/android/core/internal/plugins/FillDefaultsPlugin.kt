@@ -52,12 +52,7 @@ internal class FillDefaultsPlugin(
     }
 
     override fun intercept(chain: Plugin.Chain): Message {
-        val message = chain.message().let {
-
-            if (it is IdentifyMessage)
-                it
-            else it.withDefaults()
-        }
+        val message = chain.message().withDefaults()
         return chain.proceed(message)
     }
 }

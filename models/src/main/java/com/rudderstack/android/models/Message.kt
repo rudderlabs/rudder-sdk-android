@@ -74,6 +74,7 @@ sealed class Message(
     @SerializedName("timestamp")
     @JsonProperty("timestamp")
     @Json(name = "timestamp")
+    //format - yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
     //@Expose
     val timestamp: String,
 

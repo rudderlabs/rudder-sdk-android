@@ -110,4 +110,5 @@ fun interface Plugin {
 
     fun updateRudderServerConfig(config: RudderServerConfig){}
 
+
 }

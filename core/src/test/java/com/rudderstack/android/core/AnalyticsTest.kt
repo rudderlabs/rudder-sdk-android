@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 18/01/22, 9:59 AM Last modified: 18/01/22, 9:59 AM
+ * Creator: Debanjan Chatterjee on 04/04/22, 1:38 PM Last modified: 04/04/22, 1:38 PM
  * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.core.plugins
+package com.rudderstack.android.core
 
-class GDPRPluginTest {
+class AnalyticsTest {
 }

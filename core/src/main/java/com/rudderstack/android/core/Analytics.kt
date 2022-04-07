@@ -35,7 +35,7 @@ import java.util.concurrent.Executors
  * to add context to messages.
  *
  * @constructor
- * TODO
+ *
  *
  * @param writeKey
  * @param settings
@@ -102,7 +102,14 @@ class Analytics(
         private const val CONTROL_PLANE_URL = "https://api.rudderlabs.com/"
 
     }
-
+    //TODO(ADD callback for messages, flush api)
+    /**
+     * Track with a built [TrackMessage]
+     * Date format should be yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
+     *
+     * @param message
+     * @param options
+     */
     fun track(message: TrackMessage, options: RudderOptions? = null) {
         processMessage(message, options)
     }

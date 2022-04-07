@@ -45,14 +45,14 @@ class FlowTest {
     }
 
     private var enteredPluginNo = 1
-    private val dummyPlugin1  = DestinationPlugin<Any>("dummy1") {
+    private val dummyPlugin1  = BaseDestinationPlugin<Any>("dummy1") {
         val msg = it.message()
         assertThat(enteredPluginNo ++, `is`(MAIN_PLUGIN_1_SL_NO))
         //message and original message should be different for destination plugin
         assertThat(msg, not(it.originalMessage))
         it.proceed(it.originalMessage)
     }
-    private val dummyPlugin2 = DestinationPlugin<Any>("dummy2") {
+    private val dummyPlugin2 = BaseDestinationPlugin<Any>("dummy2") {
         val msg = it.message()
         assertThat(enteredPluginNo ++, `is`(MAIN_PLUGIN_2_SL_NO))
 
@@ -84,7 +84,7 @@ class FlowTest {
 
     @Test
     fun testCentralPluginChain(){
-        val dummyMsg = TrackMessage("message_id",
+        val dummyMsg = TrackMessage.create("message_id",
             anonymousId = "anon_id", timestamp = Date().toString())
         CentralPluginChain(dummyMsg, listOf(
             dummyPlugin1, dummyPlugin2, dummyPlugin3) )
@@ -92,5 +92,7 @@ class FlowTest {
         //check if all plugins and sub plugins are called
         assertThat(enteredPluginNo , `is`(TOTAL_NO_OF_CALLS))
     }
+
+
 
 }

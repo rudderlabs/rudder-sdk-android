@@ -16,7 +16,9 @@ package com.rudderstack.android.core.internal.plugins
 
 import com.rudderstack.android.core.*
 import com.rudderstack.android.core.internal.KeyConstants
+import com.rudderstack.android.core.internal.KeyConstants.CONTEXT_EXTERNAL_ID_KEY
 import com.rudderstack.android.core.internal.ifNotNull
+import com.rudderstack.android.core.internal.minusWrtKeys
 import com.rudderstack.android.core.internal.optAdd
 import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.*
@@ -34,7 +36,7 @@ internal class ExtractStatePlugin(
 ) : Plugin {
     override fun intercept(chain: Plugin.Chain): Message {
         val message = chain.message()
-        var newContext: MessageContext? = null
+        var newContext: MessageContext?
 
         if (message is IdentifyMessage || message is AliasMessage) {
             // alias message can change user id permanently
@@ -52,7 +54,7 @@ internal class ExtractStatePlugin(
                 // in case of identify, the stored traits (if any) are replaced by the ones provided
                 if (message is IdentifyMessage) {
                     it.traits ifNotNull storage::saveTraits
-                    it.externalIds ifNotNull storage::saveExternalIds
+
                 } else if (message is AliasMessage) {
                     // in case of alias, we change the user id in traits
 
@@ -67,7 +69,7 @@ internal class ExtractStatePlugin(
 
                 }
                 newUserId?.let { id ->
-                    settingsState.update(SettingsState.value?.copy(userId = id as String))
+                    settingsState.update(SettingsState.value?.copy(userId = id))
                 }
                 //also in case of alias, user id in context should also change, given it's
                 // present there
@@ -83,10 +85,30 @@ internal class ExtractStatePlugin(
                     it
             }
             //save and update external ids if available
-            if (message is IdentifyMessage && !options.externalIds.isNullOrEmpty()) {
-                newContext = mapOf("externalIds" to options.externalIds) optAdd newContext
-            }
+            if (message is IdentifyMessage) {
+                //external ids can be present in both message or options.
+                //save concatenated external ids, if present with both message and options
+                val messageExternalIds = message.context?.externalIds
+                val updatedExternalIds : List<Map<String,String>>? = if (options.externalIds.isEmpty()) {
+                    if (messageExternalIds != null) {
+                        storage.saveExternalIds(messageExternalIds)
 
+                        message.context?.externalIds
+                    } else null
+                } else {
+                    if (messageExternalIds == null) {
+                        options.externalIds
+                    } else {//preference is given to external ids in Message
+                        val extraIdsInOptions = options.externalIds minusWrtKeys messageExternalIds
+                        //adding these to messageExternalIds gives our required ids
+                        messageExternalIds + extraIdsInOptions
+                    }
+                }
+                updatedExternalIds ifNotNull storage::saveExternalIds
+                newContext = updatedExternalIds?.let {
+                    mapOf(CONTEXT_EXTERNAL_ID_KEY to it) optAdd newContext
+                }?: newContext
+            }
             newContext?.apply {
                 contextState.update(this optAdd contextState.value)
             }
