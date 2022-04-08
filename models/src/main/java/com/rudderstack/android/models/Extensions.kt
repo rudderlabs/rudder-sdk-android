@@ -28,5 +28,5 @@ val Map<String, Any?>.externalIds : List<Map<String, String>>?
 /**
  * To be used to extract custom contexts from context of [Message]
  */
-val Map<String, Any?>.customContexts
-    get() = getOrDefault(Constants.CUSTOM_CONTEXT_MAP_ID, null)
+val Map<String, Any?>.customContexts : Map<String, Any?>?
+    get() = getOrDefault(Constants.CUSTOM_CONTEXT_MAP_ID, null) as? Map<String, Any>?

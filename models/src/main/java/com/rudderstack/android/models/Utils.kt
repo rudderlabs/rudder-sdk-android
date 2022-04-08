@@ -26,7 +26,7 @@ package com.rudderstack.android.models
 fun createContext(
     traits: Map<String, Any?>? = null,
     externalIds: List<Map<String, String>>? = null,
-    customContextMap: Map<String, Any>? = null
+    customContextMap: Map<String, Any?>? = null
 ) : MessageContext =
     mapOf(
         Constants.TRAITS_ID to traits,
