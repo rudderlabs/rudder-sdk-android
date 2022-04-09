@@ -17,7 +17,6 @@ package com.rudderstack.android.core.internal.plugins
 import com.rudderstack.android.core.DestinationPlugin
 import com.rudderstack.android.core.Plugin
 import com.rudderstack.android.core.RudderOptions
-import com.rudderstack.android.core.Storage
 import com.rudderstack.android.models.Message
 
 /**
@@ -36,31 +35,52 @@ internal class RudderOptionPlugin(private val options: RudderOptions) : Plugin {
         val msg = chain.message()
         val validIntegrations = validIntegrations()
         msg.integrations = validIntegrations
-        val destinationPlugins = chain.plugins.filterIsInstance<DestinationPlugin<*>>()
+//        val destinationPlugins = chain.plugins.filterIsInstance<DestinationPlugin<*>>()
+//        val normalPlugins = chain.plugins - destinationPlugins
         //fill external ids
 
-        return  if (destinationPlugins.isNotEmpty()) {
-            val validPlugins = filterDestinationPlugins(
-                destinationPlugins,
+        return  chain.plugins.takeIf {
+            it.isNotEmpty()
+        }?.let { plugins ->
+            val validPlugins = filterWithAllowedDestinationPlugins(
+                plugins,
                 msg.integrations ?: mapOf()
             )
             return chain.with(validPlugins).proceed(msg)
-        } else
-             chain.proceed(msg)
+        }?:chain.proceed(msg)
+
+
+
     }
 
-    private fun filterDestinationPlugins(
-        destinationPlugins: List<DestinationPlugin<*>>,
+    /**
+     * This filter approves any plugin that's either not a destination plugin, or is
+     * an allowed destination
+     *
+     * @param plugins the plugin list to filter
+     * @param integrations the map that contains relevant information
+     * @return the valid [Plugin] list
+     */
+    private fun filterWithAllowedDestinationPlugins(
+        plugins: List<Plugin>,
         integrations: Map<String, Boolean>
-    ): List<DestinationPlugin<*>> {
-        return destinationPlugins.toMutableList().also {
+    ): List<Plugin> {
+        return plugins.filter {
+            it !is DestinationPlugin<*> || integrations.getOrDefault(
+                it.name,
+                integrations.getOrDefault("All", true)//if destination name is not present
+            )
+        }
+
+    /*plugins.toMutableList().also {
             it.removeAll {
                 integrations.getOrDefault(
                     it.name,
                     integrations.getOrDefault("All", true)
                 ) //if destination name is not present
             }
-        }
+        }*/
+
     }
 
     private fun validIntegrations(): Map<String, Boolean> {
