@@ -87,7 +87,7 @@ internal class FillDefaultsPlugin(
                 (it minusWrtKeys (this.externalIds?: listOf())) + it
             }?: externalIds
 
-        return createContext(newTraits, newExternalIds, newCustomContexts).let {
+        createContext(newTraits, newExternalIds, newCustomContexts).let {
             //add the extra info from both contexts
             val extraThisContext = this - it.keys
             val extraOperandContext = context - it.keys

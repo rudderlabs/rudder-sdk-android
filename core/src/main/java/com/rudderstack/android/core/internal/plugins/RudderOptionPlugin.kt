@@ -49,8 +49,6 @@ internal class RudderOptionPlugin(private val options: RudderOptions) : Plugin {
             return chain.with(validPlugins).proceed(msg)
         }?:chain.proceed(msg)
 
-
-
     }
 
     /**
@@ -71,15 +69,6 @@ internal class RudderOptionPlugin(private val options: RudderOptions) : Plugin {
                 integrations.getOrDefault("All", true)//if destination name is not present
             )
         }
-
-    /*plugins.toMutableList().also {
-            it.removeAll {
-                integrations.getOrDefault(
-                    it.name,
-                    integrations.getOrDefault("All", true)
-                ) //if destination name is not present
-            }
-        }*/
 
     }
 

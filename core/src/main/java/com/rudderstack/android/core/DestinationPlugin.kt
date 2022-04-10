@@ -42,7 +42,7 @@ interface DestinationPlugin<T> : Plugin {
      */
     val isReady : Boolean
     val subPlugins: List<PluginInterceptor>
-    val onReadyCallbacks: List<(T, Boolean) -> Unit>
+    val onReadyCallbacks: List<(T?, Boolean) -> Unit>
 //    get() = ArrayList(field)
 
     /**
@@ -62,7 +62,7 @@ interface DestinationPlugin<T> : Plugin {
      * @param callbackOnReady called with the destination specific class object and
      * true or false depending on initialization success or failure
      */
-    fun addIsReadyCallback(callbackOnReady : (T, isUsable: Boolean) -> Unit)
+    fun addIsReadyCallback(callbackOnReady : (T?, isUsable: Boolean) -> Unit)
     /**
      * Marker Interface for sub-plugins that can be added to each individual plugin.
      * This is to discourage developers to intentionally/unintentionally adding main plugins as sub
@@ -79,19 +79,18 @@ interface DestinationPlugin<T> : Plugin {
  * [DestinationPlugin] with filled in boiler plate code.
  * Preferred way of constructing [DestinationPlugin] is by sub-classing it.
  *
- * @param T
+ * @param T type of destination in [Plugin]
  * @property name
  */
 abstract class BaseDestinationPlugin<T>(override val name: String) : DestinationPlugin<T>{
-
     private var _isReady = false
     private var _subPlugins = listOf<DestinationPlugin.PluginInterceptor>()
-    private var _onReadyCallbacks = listOf<(T, Boolean) -> Unit>()
+    private var _onReadyCallbacks = listOf<(T?, Boolean) -> Unit>()
 
     override val subPlugins: List<DestinationPlugin.PluginInterceptor>
         get() = _subPlugins
 
-    override val onReadyCallbacks: List<(T, Boolean) -> Unit>
+    override val onReadyCallbacks: List<(T?, Boolean) -> Unit>
         get() = _onReadyCallbacks
 
     override val isReady: Boolean
@@ -102,12 +101,15 @@ abstract class BaseDestinationPlugin<T>(override val name: String) : Destination
         _subPlugins = _subPlugins + plugin
     }
 
-    override fun addIsReadyCallback(callbackOnReady: (T, isUsable: Boolean) -> Unit) {
+    override fun addIsReadyCallback(callbackOnReady: (T?, isUsable: Boolean) -> Unit) {
         _onReadyCallbacks = _onReadyCallbacks+ callbackOnReady
     }
 
-    protected fun setReady(isReady : Boolean){
+    fun setReady(isReady : Boolean, destinationInstance : T? = null){
         _isReady = isReady
+        _onReadyCallbacks.forEach {
+            it.invoke( destinationInstance, isReady)
+        }
     }
 
     companion object {
@@ -123,10 +125,8 @@ abstract class BaseDestinationPlugin<T>(override val name: String) : Destination
          * }
          * ```
          */
-        inline operator fun<T> invoke(name: String,  crossinline block: (chain: Plugin.Chain) -> Message): DestinationPlugin<T> =
+        inline operator fun<T> invoke(name: String,  crossinline block: (chain: Plugin.Chain) -> Message): BaseDestinationPlugin<T> =
             object : BaseDestinationPlugin<T>(name) {
-                override val isReady: Boolean
-                    get() = true
                 override fun intercept(chain: Plugin.Chain): Message {
                     return block(chain)
                 }

@@ -14,5 +14,108 @@
 
 package com.rudderstack.android.core.internal.plugins
 
+import com.rudderstack.android.core.BaseDestinationPlugin
+import com.rudderstack.android.core.DestinationConfig
+import com.rudderstack.android.core.Utils
+import com.rudderstack.android.core.internal.BasicStorageImpl
+import com.rudderstack.android.core.internal.CentralPluginChain
+import com.rudderstack.android.core.internal.KotlinLogger
+import com.rudderstack.android.core.internal.states.DestinationConfigState
+import com.rudderstack.android.models.TrackMessage
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.*
+import org.junit.After
+import org.junit.Test
+
+/**
+ * Wake up action plugin forwards only those destination plugins, that have initialized.
+ * In case each destination plugin is not initialized, it stores the message in startup queue.
+ *
+ * The testing purpose would be to check if startup queue is storing the messages for late
+ * initialized destinations
+ */
 class WakeupActionPluginTest {
+    private val dest1 = BaseDestinationPlugin<Any>("dest-1") {
+        return@BaseDestinationPlugin it.proceed(it.message())
+    }
+
+    private val dest2 = BaseDestinationPlugin<Any>("dest-2") {
+        return@BaseDestinationPlugin it.proceed(it.message())
+    }
+    private val dest3 = BaseDestinationPlugin<Any>("dest-3") {
+        return@BaseDestinationPlugin it.proceed(it.message())
+    }
+    private val storage = BasicStorageImpl(logger = KotlinLogger)
+    private val wakeupActionPlugin = WakeupActionPlugin(storage)
+    private val testMessage = TrackMessage.create(
+        "ev-1", Utils.timeStamp,
+        traits = mapOf(
+            "age" to 31,
+            "office" to "Rudderstack"
+        ),
+        externalIds = listOf(
+            mapOf("some_id" to "s_id"),
+            mapOf("amp_id" to "amp_id"),
+        ),
+        customContextMap = null
+    )
+
+    @After
+    fun breakDown() {
+        dest1.setReady(false)
+        dest2.setReady(false)
+        dest3.setReady(false)
+
+        storage.clearStartupQueue()
+        //clear destination config
+        DestinationConfigState.update(DestinationConfig())
+    }
+
+    @Test
+    fun `check startup queue for uninitialized destinations`() {
+        dest1.setReady(false)
+        DestinationConfigState.update(
+            DestinationConfig(
+                mapOf(
+                    "dest-1" to dest1.isReady,
+                    "dest-2" to dest2.isReady,
+                    "dest-3" to dest3.isReady,
+                )
+            )
+        )
+        val plugins = listOf(wakeupActionPlugin)
+        val centralPluginChain = CentralPluginChain(testMessage, plugins)
+        centralPluginChain.proceed(testMessage)
+        //dest1 is not ready, hence message should be stored
+        assertThat(
+            storage.startupQueue, allOf(
+                iterableWithSize(1),
+                hasItem(testMessage)
+            )
+        )
+    }
+
+    @Test
+    fun `check startup queue for initialized destinations`() {
+        dest1.setReady(true)
+        dest2.setReady(true)
+        dest3.setReady(true)
+
+        DestinationConfigState.update(
+            DestinationConfig(
+                mapOf(
+                    "dest-1" to dest1.isReady,
+                    "dest-2" to dest2.isReady,
+                    "dest-3" to dest3.isReady,
+                )
+            )
+        )
+        val plugins = listOf(wakeupActionPlugin)
+        val centralPluginChain = CentralPluginChain(testMessage, plugins)
+        centralPluginChain.proceed(testMessage)
+        //dest1 is not ready, hence message should be stored
+        assertThat(storage.startupQueue, iterableWithSize(0))
+    }
+
+
 }
