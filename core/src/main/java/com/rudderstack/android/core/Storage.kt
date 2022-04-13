@@ -21,7 +21,7 @@ import com.rudderstack.android.models.RudderServerConfig
 /**
  * Requires specific implementation of how storage should be handled.
  * Can be customised according to requirements.
- *
+ * For custom modifications over queue based implementation one can extend [BasicStorageImpl]
  * Since we intend to sync the database at regular intervals, hence data volumes handled by storage
  * is pretty low.
  * That is the reason are avoiding any selection arguments.
@@ -33,12 +33,34 @@ interface Storage {
     }
 
     /**
+     * The max number of events that can be stored.
+     * Defaults to [MAX_STORAGE_CAPACITY]
+     * If storage overflows beyond this, data retention should be based on [BackPressureStrategy]
+     * @see setBackpressureStrategy
+     * @param storageCapacity
+     */
+    fun setStorageCapacity(storageCapacity : Int = MAX_STORAGE_CAPACITY)
+
+    /**
+     * The max number of [Message] that can be fetched at one go.
+     * Applies to [getData] and [DataListener.onDataChange]
+     * @param limit The number of messages to be set as limit, defaults to [MAX_FETCH_LIMIT]
+     */
+    fun setMaxFetchLimit(limit : Int = MAX_FETCH_LIMIT)
+    /**
      * Platform specific implementation for saving [Message]
+     * Is called from the same executor the plugins are processed on.
      *
      * @param messages A single or multiple messages to be saved
      */
     fun saveMessage(vararg messages: Message)
 
+    /**
+     * Default back pressure strategy is [BackPressureStrategy.Drop]
+     *
+     * @param strategy [BackPressureStrategy] for queueing [Message]
+     */
+    fun setBackpressureStrategy(strategy: BackPressureStrategy)
     /**
      * Delete Messages, preferably when no longer required
      *
@@ -48,19 +70,31 @@ interface Storage {
 
     /**
      * Add a data change listener that calls back when any changes to data is made.
+     * @see DataListener
      *
      * @param listener callback for the changed data
      */
-    fun addDataChangeListener(listener: (data: List<Message>) -> Unit)
+    fun addDataListener(listener: DataListener)
 
-    fun removeDataChangeListener(listener: (data: List<Message>) -> Unit)
+    fun removeDataListener(listener: DataListener)
 
     /**
-     * Asynchronous method to get the entire data present
+     * Asynchronous method to get the entire data present to a maximum of fetch limit
+     * @see setMaxFetchLimit
      *
+     * @param offset offset the fetch by the given amount, i.e elements from offset to size-1
      * @param callback returns the list of [Message]
      */
-    fun getData(callback: (List<Message>) -> Unit)
+    fun getData(offset : Int = 0, callback: (List<Message>) -> Unit)
+
+    /**
+     * synchronous method to get the entire data present to a maximum of fetch limit
+     * @see setMaxFetchLimit
+     * @param offset offset the fetch by the given amount, i.e elements from offset to size-1
+     *
+     * @return the list of messages.
+     */
+    fun getDataSync(offset: Int = 0) : List<Message>
 
     /**
      * Platform specific implementation of caching context. This can be done locally too.
@@ -181,4 +215,47 @@ interface Storage {
      * Anonymous id associated to the app instance
      */
     val anonymousId: String?
+
+
+    /**
+     * Data Listener for data change and on data dropped.
+     * Data Change listener is called whenever there's a change in data count
+     *
+     *
+     */
+    interface DataListener{
+        /**
+         * Called whenever there's a change in data count
+         *
+         * @param messages the number of messages, less than or equals the limit set in [setMaxFetchLimit]
+         */
+        fun onDataChange(messages : List<Message>)
+
+        /**
+         * Called when data is dropped to adhere to the backpressure strategy.
+         * @see [BackPressureStrategy]
+         * @see setBackpressureStrategy
+         *
+         * @param messages List of messages that have been dropped
+         * @param error [Throwable] to enhance on the reason
+         */
+        fun onDataDropped(messages: List<Message>, error : Throwable)
+    }
+    /**
+     * Back pressure strategy for handling message queue
+     *
+     */
+    enum class BackPressureStrategy{
+        /**
+         * Messages are dropped in case queue is full
+         *
+         */
+        Drop,
+
+        /**
+         * Keeps only the most recent item, oldest ones are dropped
+         *
+         */
+        Latest
+    }
 }

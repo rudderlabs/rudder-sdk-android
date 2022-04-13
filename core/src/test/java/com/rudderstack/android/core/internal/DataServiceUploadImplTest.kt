@@ -15,20 +15,18 @@
 package com.rudderstack.android.core.internal
 
 import com.rudderstack.android.core.DataUploadService
-import com.rudderstack.android.core.Settings
 import com.rudderstack.android.core.dataPlaneUrl
-import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.core.writeKey
 import com.rudderstack.android.gsonrudderadapter.GsonAdapter
 import com.rudderstack.android.jacksonrudderadapter.JacksonAdapter
-import com.rudderstack.android.models.*
+import com.rudderstack.android.models.Message
+import com.rudderstack.android.models.TrackMessage
 import com.rudderstack.android.moshirudderadapter.MoshiAdapter
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
-import com.rudderstack.android.web.WebService
 import junit.framework.TestSuite
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.`is`
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -71,16 +69,25 @@ abstract class DataServiceUploadImplTest {
         }
         Awaitility.await().atMost(1, TimeUnit.MINUTES).untilTrue(isComplete)
     }
+
+    @Test
+    fun testUploadSync() {
+        val success = dataServiceImpl.uploadSync(testMessagesList)
+        assertThat(success, `is`(true))
+
+    }
 }
 
 class DataServiceUploadTestWithJackson : DataServiceUploadImplTest() {
     override val jsonAdapter: JsonAdapter = JacksonAdapter()
 
 }
+
 class DataServiceUploadTestWithGson : DataServiceUploadImplTest() {
     override val jsonAdapter: JsonAdapter = GsonAdapter()
 
 }
+
 class DataServiceUploadTestWithMoshi : DataServiceUploadImplTest() {
     override val jsonAdapter: JsonAdapter = MoshiAdapter()
 

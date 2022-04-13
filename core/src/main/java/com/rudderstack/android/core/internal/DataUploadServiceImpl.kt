@@ -47,6 +47,8 @@ internal class DataUploadServiceImpl(
 
 
     override fun upload(data: List<Message>, extraInfo: Map<String,String>?, callback: (success: Boolean) -> Unit) {
+        if(networkExecutor.isShutdown || networkExecutor.isTerminated)
+            return
         val batchBody = mapOf<String, Any>("sentAt" to Utils.timeStamp,
         "batch" to data).let {
             if(extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
@@ -66,9 +68,30 @@ internal class DataUploadServiceImpl(
         }
     }
 
+    override fun uploadSync(data: List<Message>, extraInfo: Map<String, String>?): Boolean {
+        val batchBody = mapOf<String, Any>("sentAt" to Utils.timeStamp,
+            "batch" to data).let {
+            if(extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
+        }
+            .let {
+                jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String,Any>>(){})
+            }
+        val response = webService.post(mapOf(
+            "Content-Type" to "application/json",
+            "Authorization" to
+                    String.format(Locale.US, "Basic %s", encodedWriteKey),
+            "anonymousId" to (settingsState.value?.anonymousId?.let {  Base64.getEncoder().encodeToString(
+                it.toByteArray(charset("UTF-8"))
+            )}?:encodedWriteKey)),null, batchBody, "v1/batch", String::class.java ).get()
+        return response.status in 200..299
+    }
+
     override fun shutdown() {
         networkExecutor.shutdown()
     }
+
+    override val isShutdown: Boolean
+        get() = networkExecutor.isShutdown || networkExecutor.isTerminated
 
 
 }

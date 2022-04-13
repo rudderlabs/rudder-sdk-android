@@ -30,6 +30,7 @@ import java.util.*
 import java.util.concurrent.ExecutorService
 
 internal class AnalyticsDelegate(
+//    private val _writeKey : String,
     settings: Settings,
     storage: Storage,
     private val defaultOptions: RudderOptions,
@@ -88,9 +89,15 @@ internal class AnalyticsDelegate(
 
     )
 
+    override val isShutdown
+        get() = synchronized(this) {
+            analyticsExecutor.isShutdown || analyticsExecutor.isTerminated
+        }
 
+    //message callbacks
+    private var _callbacks = setOf<Callback>()
     private val _storageDecorator =
-        StorageDecorator(storage, SettingsState, this::onStorageDataChange)
+        StorageDecorator(storage, SettingsState, this::flushToServer)
 
     private var _customPlugins: List<Plugin> = listOf()
     private var _destinationPlugins: List<DestinationPlugin<*>> = listOf()
@@ -193,23 +200,68 @@ internal class AnalyticsDelegate(
         options: RudderOptions?,
         lifecycleController: LifecycleController?
     ) {
-        val lcc = lifecycleController ?: LifecycleControllerImpl(message,
-            _allPlugins.toMutableList().also {
-                //after gdpr plugin
-                it.add(1, RudderOptionPlugin(options ?: defaultOptions))
-                //after option plugin
-                it.add(
-                    2, ExtractStatePlugin(
-                        ContextState, SettingsState, options ?: defaultOptions,
-                        _storageDecorator
+        analyticsExecutor.submit {
+            val lcc = lifecycleController ?: LifecycleControllerImpl(message,
+                _allPlugins.toMutableList().also {
+                    //after gdpr plugin
+                    it.add(1, RudderOptionPlugin(options ?: defaultOptions))
+                    //after option plugin
+                    it.add(
+                        2, ExtractStatePlugin(
+                            ContextState, SettingsState, options ?: defaultOptions,
+                            _storageDecorator
+                        )
                     )
-                )
-            })
-        lcc.process()
+                })
+            lcc.process()
 
+        }
+    }
+
+    override fun addCallback(callback: Callback) {
+        _callbacks = _callbacks + callback
+    }
+
+    internal fun flush(){
+        if(isShutdown) return
+        forceFlush(dataUploadService, analyticsExecutor)
+    }
+    internal fun forceFlush(
+        alternateDataUploadService: DataUploadService,
+        alternateExecutor: ExecutorService,
+        clearDb: Boolean = true, callback: ((Boolean) -> Unit)? = null
+    ) {
+        alternateExecutor.submit {
+            blockFlush(alternateDataUploadService, clearDb).let {
+                callback?.invoke(it)
+            }
+        }
+    }
+
+    private fun blockFlush(
+        alternateDataUploadService: DataUploadService,
+        clearDb: Boolean
+    ): Boolean {
+        var latestData = _storageDecorator.getDataSync()
+        var offset = 0
+        while (latestData.isNotEmpty()) {
+            val success = alternateDataUploadService.uploadSync(latestData)
+            if (success) {
+                if (clearDb) {
+                    _storageDecorator.deleteMessages(latestData)
+                } else {
+                    offset += latestData.size
+                }
+                latestData = _storageDecorator.getDataSync(offset)
+            } else {
+                return false
+            }
+        }
+        return true
     }
 
     override fun shutdown() {
+        flush()
         //release memory
         _storageDecorator.shutdown()
         dataUploadService.shutdown()
@@ -328,7 +380,7 @@ internal class AnalyticsDelegate(
         }
     }
 
-    private fun onStorageDataChange(data: List<Message>) {
+    private fun flushToServer(data: List<Message>) {
         if (data.isEmpty() || _serverConfig == null) return // in case server config is
         // not yet downloaded
 

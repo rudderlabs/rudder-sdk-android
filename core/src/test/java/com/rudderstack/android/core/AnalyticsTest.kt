@@ -15,4 +15,8 @@
 package com.rudderstack.android.core
 
 class AnalyticsTest {
+    //test track, alias, identify, group
+    //wake up working,
+    //rudder options work
+    //complete flow
 }

@@ -17,7 +17,7 @@ package com.rudderstack.android.core.internal.plugins
 import com.rudderstack.android.core.BaseDestinationPlugin
 import com.rudderstack.android.core.DestinationConfig
 import com.rudderstack.android.core.Utils
-import com.rudderstack.android.core.internal.BasicStorageImpl
+import com.rudderstack.android.core.BasicStorageImpl
 import com.rudderstack.android.core.internal.CentralPluginChain
 import com.rudderstack.android.core.internal.KotlinLogger
 import com.rudderstack.android.core.internal.states.DestinationConfigState

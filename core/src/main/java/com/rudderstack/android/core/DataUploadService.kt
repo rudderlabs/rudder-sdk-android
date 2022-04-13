@@ -31,8 +31,22 @@ interface DataUploadService {
     fun upload(data: List<Message>, extraInfo : Map<String,String>? = null, callback: (success: Boolean) -> Unit)
 
     /**
+     * Uploads data synchronously
+     *
+     * @param data The list of messages to upload
+     * @param extraInfo If any data needs to be added to the body
+     * @return status of upload, true if success, false otherwise
+     */
+    fun uploadSync(data: List<Message>, extraInfo : Map<String,String>? = null) : Boolean
+
+    /**
      * Service no longer needed, release resources
      *
      */
     fun shutdown()
+
+    /**
+     * true if [shutdown] has been called on this object else false
+     */
+    val isShutdown: Boolean
 }

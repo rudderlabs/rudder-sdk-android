@@ -15,19 +15,16 @@
 package com.rudderstack.android.core.internal.plugins
 
 import com.rudderstack.android.core.RudderOptions
-import com.rudderstack.android.core.Storage
 import com.rudderstack.android.core.Utils
-import com.rudderstack.android.core.internal.BasicStorageImpl
+import com.rudderstack.android.core.BasicStorageImpl
 import com.rudderstack.android.core.internal.CentralPluginChain
 import com.rudderstack.android.core.internal.KotlinLogger
 import com.rudderstack.android.core.internal.states.ContextState
 import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.IdentifyMessage
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.*
 import org.junit.Test
-import org.mockito.Mockito
 
 /**
  * ExtractStatePlugin works for Identify and AliasMessage

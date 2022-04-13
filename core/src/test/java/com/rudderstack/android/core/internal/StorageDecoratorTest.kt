@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.core.internal
 
+import com.rudderstack.android.core.BasicStorageImpl
 import com.rudderstack.android.core.Settings
 import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.Message

@@ -14,10 +14,13 @@
 
 package com.rudderstack.android.core
 
+import com.rudderstack.android.core.internal.DataUploadServiceImpl
 import com.rudderstack.android.core.internal.MissingPropertiesException
 import com.rudderstack.android.models.Message
 import com.rudderstack.android.models.ScreenMessage
 import com.rudderstack.android.models.TrackMessage
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 /**
  * Handles all messages, assorting the plugins, keeping track of cache, to name a few of it's
@@ -93,6 +96,14 @@ interface Controller {
      */
     fun processMessage(message: Message, options: RudderOptions?, lifecycleController: LifecycleController? = null)
 
+    /**
+     * Add a [Callback] for getting notified when a message is processed
+     *
+     * @param callback An object of [Callback]
+     */
+    fun addCallback(callback: Callback)
+
+
     //fun reset()
     /**
      * Shuts down the Analytics. Once shutdown, a new instance needs to be created.
@@ -100,6 +111,10 @@ interface Controller {
      */
     fun shutdown()
 
+    /**
+     * true if [shutdown] is called, false otherwise
+     */
+    val isShutdown : Boolean
 
 
 }

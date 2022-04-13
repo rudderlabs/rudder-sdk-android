@@ -29,25 +29,35 @@ import java.util.*
  */
 internal class StorageDecorator(
     private val storage: Storage,
-    private val settingsState: State<Settings> = SettingsState, private val dataChangeListener: Listener? = null
+    private val settingsState: State<Settings> = SettingsState,
+    private val dataChangeListener: Listener? = null
 ) : Storage by storage {
     private val thresholdCountDownTimer = Timer("data_listen")
     private var periodicTaskScheduler: TimerTask? = null
 
-    private val onDataChange = { data : List<Message> ->
-        if (data.isNotEmpty() && settingsState.value?.flushQueueSize?:0 <= data.size){
-            dataChangeListener?.onDataChange(data)
-            rescheduleTimer(settingsState.value)
+    private val onDataChange = object : Storage.DataListener {
+        override fun onDataChange(messages: List<Message>) {
+            if (messages.isNotEmpty() && settingsState.value?.flushQueueSize ?: 0 <= messages.size) {
+                dataChangeListener?.onDataChange(messages)
+                rescheduleTimer(settingsState.value)
+            }
+        }
+
+        override fun onDataDropped(messages: List<Message>, error: Throwable) {
+            /**
+             * We won't be considering dropped events here
+             */
         }
     }
+
     init {
         settingsState.subscribe {
             rescheduleTimer(it)
         }
-        addDataChangeListener (onDataChange)
+        addDataListener(onDataChange)
     }
 
-    private fun rescheduleTimer(settings: Settings?){
+    private fun rescheduleTimer(settings: Settings?) {
         periodicTaskScheduler?.cancel()
         thresholdCountDownTimer.purge()
         if (settings != null) {
@@ -59,13 +69,17 @@ internal class StorageDecorator(
                     }
                 }
             }
-            thresholdCountDownTimer.schedule(periodicTaskScheduler, settings.maxFlushInterval, settings.maxFlushInterval)
+            thresholdCountDownTimer.schedule(
+                periodicTaskScheduler,
+                settings.maxFlushInterval,
+                settings.maxFlushInterval
+            )
         }
     }
 
-    override fun shutdown(){
+    override fun shutdown() {
         storage.shutdown()
-        removeDataChangeListener(onDataChange)
+        removeDataListener(onDataChange)
         thresholdCountDownTimer.cancel()
 
     }
