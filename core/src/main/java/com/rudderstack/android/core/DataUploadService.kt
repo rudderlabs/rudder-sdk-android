@@ -15,6 +15,7 @@
 package com.rudderstack.android.core
 
 import com.rudderstack.android.models.Message
+import com.rudderstack.android.web.HttpResponse
 
 /**
  * Class to handle data upload to server
@@ -28,7 +29,7 @@ interface DataUploadService {
      * @param extraInfo If any data needs to be added to the body
      * @param callback Callback providing either success or failure status of upload
      */
-    fun upload(data: List<Message>, extraInfo : Map<String,String>? = null, callback: (success: Boolean) -> Unit)
+    fun upload(data: List<Message>, extraInfo : Map<String,String>? = null, callback: (response: HttpResponse<out Any>) -> Unit)
 
     /**
      * Uploads data synchronously
@@ -37,7 +38,7 @@ interface DataUploadService {
      * @param extraInfo If any data needs to be added to the body
      * @return status of upload, true if success, false otherwise
      */
-    fun uploadSync(data: List<Message>, extraInfo : Map<String,String>? = null) : Boolean
+    fun uploadSync(data: List<Message>, extraInfo : Map<String,String>? = null) : HttpResponse<out Any>
 
     /**
      * Service no longer needed, release resources

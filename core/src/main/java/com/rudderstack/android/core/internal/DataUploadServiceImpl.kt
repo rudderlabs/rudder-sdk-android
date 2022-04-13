@@ -22,6 +22,7 @@ import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.Message
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
+import com.rudderstack.android.web.HttpResponse
 import com.rudderstack.android.web.WebServiceFactory
 import java.util.*
 import java.util.concurrent.Executor
@@ -46,7 +47,7 @@ internal class DataUploadServiceImpl(
     )
 
 
-    override fun upload(data: List<Message>, extraInfo: Map<String,String>?, callback: (success: Boolean) -> Unit) {
+    override fun upload(data: List<Message>, extraInfo: Map<String,String>?, callback: (response: HttpResponse<out Any>) -> Unit) {
         if(networkExecutor.isShutdown || networkExecutor.isTerminated)
             return
         val batchBody = mapOf<String, Any>("sentAt" to Utils.timeStamp,
@@ -64,11 +65,11 @@ internal class DataUploadServiceImpl(
             it.toByteArray(charset("UTF-8"))
         )}?:encodedWriteKey)),null, batchBody, "v1/batch", String::class.java ){
             println(it)
-            callback.invoke(it.status in 200..299)
+            callback.invoke(it)
         }
     }
 
-    override fun uploadSync(data: List<Message>, extraInfo: Map<String, String>?): Boolean {
+    override fun uploadSync(data: List<Message>, extraInfo: Map<String, String>?): HttpResponse<out Any> {
         val batchBody = mapOf<String, Any>("sentAt" to Utils.timeStamp,
             "batch" to data).let {
             if(extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
@@ -76,14 +77,14 @@ internal class DataUploadServiceImpl(
             .let {
                 jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String,Any>>(){})
             }
-        val response = webService.post(mapOf(
+        return webService.post(mapOf(
             "Content-Type" to "application/json",
             "Authorization" to
                     String.format(Locale.US, "Basic %s", encodedWriteKey),
             "anonymousId" to (settingsState.value?.anonymousId?.let {  Base64.getEncoder().encodeToString(
                 it.toByteArray(charset("UTF-8"))
             )}?:encodedWriteKey)),null, batchBody, "v1/batch", String::class.java ).get()
-        return response.status in 200..299
+
     }
 
     override fun shutdown() {

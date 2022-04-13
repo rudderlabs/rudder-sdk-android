@@ -26,7 +26,7 @@ import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import junit.framework.TestSuite
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -64,7 +64,7 @@ abstract class DataServiceUploadImplTest {
     fun testUpload() {
         val isComplete = AtomicBoolean(false)
         dataServiceImpl.upload(testMessagesList) {
-            assertThat(it, `is`(true))
+            assertThat(it.status, allOf(greaterThan(200) , lessThan(209)))
             isComplete.set(true)
         }
         Awaitility.await().atMost(1, TimeUnit.MINUTES).untilTrue(isComplete)
@@ -72,8 +72,8 @@ abstract class DataServiceUploadImplTest {
 
     @Test
     fun testUploadSync() {
-        val success = dataServiceImpl.uploadSync(testMessagesList)
-        assertThat(success, `is`(true))
+        val response = dataServiceImpl.uploadSync(testMessagesList)
+        assertThat(response.status, allOf(greaterThan(200) , lessThan(209)))
 
     }
 }

@@ -21,6 +21,7 @@ import com.rudderstack.android.web.HttpResponse
 import com.rudderstack.android.web.WebService
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
@@ -154,7 +155,7 @@ class WebServiceImpl internal constructor(
         _interceptor = httpInterceptor
     }
 
-    @Throws(Throwable::class)
+//    @Throws(Throwable::class)
     private fun <T : Any> httpCall(
         headers: Map<String, String>?,
         query: Map<String, String>?,
@@ -170,7 +171,7 @@ class WebServiceImpl internal constructor(
         })
     }
 
-    @Throws(Throwable::class)
+    @Throws(IOException::class)
     private fun <T> httpCall(
         headers: Map<String, String>?,
         query: Map<String, String>?,
@@ -185,7 +186,7 @@ class WebServiceImpl internal constructor(
         })
     }
 
-    @Throws(Throwable::class)
+
     private fun <T> rawHttpCall(
         headers: Map<String, String>?,
         query: Map<String, String>?,
@@ -194,7 +195,7 @@ class WebServiceImpl internal constructor(
         type: HttpMethod,
         deserializer: (String) -> T?
     ): HttpResponse<T> {
-//        try {
+        try {
 
         val httpConnection =
             createHttpConnection(endpoint, headers, type, query, body, defaultTimeout) {
@@ -242,14 +243,18 @@ class WebServiceImpl internal constructor(
 //                }
             return HttpResponse(httpConnection.responseCode, null, errorResp)
         }
-        /*} catch (ex : Exception) {
+        } catch (ex : Exception) {
 //            RudderLogger.logError(ex)
             ex.printStackTrace()
-
-        }*/
+            return HttpResponse(status = HttpResponse.HTTP_STATUS_NONE,
+            body = null,
+            errorBody = null,
+            error = ex)
+        }
 
     }
-
+//    @kotlin.jvm.Throws(IOException::class)
+    @Throws(IOException::class)
     private fun createHttpConnection(
         endpoint: String,
         headers: Map<String, String>?, type: HttpMethod,

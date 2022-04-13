@@ -24,6 +24,7 @@ import com.rudderstack.android.models.MessageContext
 import com.rudderstack.android.models.RudderServerConfig
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
+import com.rudderstack.android.web.HttpResponse
 import java.io.FileInputStream
 import java.io.IOException
 import java.util.*
@@ -222,10 +223,11 @@ internal class AnalyticsDelegate(
         _callbacks = _callbacks + callback
     }
 
-    internal fun flush(){
-        if(isShutdown) return
+    internal fun flush() {
+        if (isShutdown) return
         forceFlush(dataUploadService, analyticsExecutor)
     }
+
     internal fun forceFlush(
         alternateDataUploadService: DataUploadService,
         alternateExecutor: ExecutorService,
@@ -245,8 +247,9 @@ internal class AnalyticsDelegate(
         var latestData = _storageDecorator.getDataSync()
         var offset = 0
         while (latestData.isNotEmpty()) {
-            val success = alternateDataUploadService.uploadSync(latestData)
-            if (success) {
+            val response = alternateDataUploadService.uploadSync(latestData)
+            if (response.success) {
+                latestData.successCallback()
                 if (clearDb) {
                     _storageDecorator.deleteMessages(latestData)
                 } else {
@@ -254,6 +257,7 @@ internal class AnalyticsDelegate(
                 }
                 latestData = _storageDecorator.getDataSync(offset)
             } else {
+                latestData.failureCallback(response.errorThrowable)
                 return false
             }
         }
@@ -386,8 +390,13 @@ internal class AnalyticsDelegate(
 
         //post the data
         dataUploadService.upload(data, _commonContext) {
-            if (it) {
+            if (it.success) {
+                data.successCallback()
                 _storageDecorator.deleteMessages(data)
+            }else{
+                data.failureCallback(
+                    it.errorThrowable
+                )
             }
         }
 
@@ -412,4 +421,31 @@ internal class AnalyticsDelegate(
             plugin.updateRudderServerConfig(this@apply)
         }
     }
+
+    //extensions
+    private fun Iterable<Message>.successCallback() {
+        if (_callbacks.isEmpty()) return
+        forEach {
+            _callbacks.forEach { callback ->
+                callback.success(it)
+            }
+        }
+    }
+
+    private fun Iterable<Message>.failureCallback(throwable: Throwable) {
+        if (_callbacks.isEmpty()) return
+        forEach {
+            _callbacks.forEach { callback ->
+                callback.failure(it, throwable)
+            }
+        }
+    }
+
+    private val HttpResponse<*>.success: Boolean
+        get() = status in (200..209)
+
+    private val HttpResponse<*>.errorThrowable : Throwable
+        get() = error?: errorBody?.let {
+            Exception(it)
+        }?: Exception("Internal error")
 }

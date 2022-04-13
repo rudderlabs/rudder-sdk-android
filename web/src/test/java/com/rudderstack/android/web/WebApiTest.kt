@@ -244,6 +244,7 @@ open class WebApiTest {
         }
         Awaitility.await().atMost(1, TimeUnit.MINUTES).untilTrue(isComplete)
     }
+
 }
 class WebApiTestJackson : WebApiTest() {
     init {
