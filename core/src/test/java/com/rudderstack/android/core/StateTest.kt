@@ -63,20 +63,17 @@ class StateTest {
             }
         }
         //should get first, second and third messages
-        val observer3 = object : State.Observer<String> {
-            override fun onStateChange(state: String?) {
-                println("obs3: $state")
-                assertThat(
-                    state, anyOf(
-                        equalTo(INITIAL),
-                        equalTo(firstMessage),
-                        equalTo(secondMessage), equalTo(thirdMessage), emptyOrNullString()
-                    )
+        val observer3 = State.Observer<String> { state ->
+            println("obs3: $state")
+            assertThat(
+                state, anyOf(
+                    equalTo(INITIAL),
+                    equalTo(firstMessage),
+                    equalTo(secondMessage), equalTo(thirdMessage), emptyOrNullString()
                 )
-                //this observer is to be called always
-                isObserver3Called = true
-
-            }
+            )
+            //this observer is to be called always
+            isObserver3Called = true
         }
 
         DummyState.subscribe(observer1)

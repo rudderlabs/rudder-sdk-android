@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.core.internal.plugins
 
+import com.rudderstack.android.core.Logger
 import com.rudderstack.android.core.Plugin
 import com.rudderstack.android.core.Settings
 import com.rudderstack.android.core.State
@@ -39,7 +40,8 @@ import com.rudderstack.android.models.*
  */
 internal class FillDefaultsPlugin(
     private val defaultContext: MessageContext, private val settingsState: State<Settings>,
-    private val contextState: State<MessageContext>
+    private val contextState: State<MessageContext>,
+    private val logger : Logger
 ) : Plugin {
 
     /**
@@ -51,8 +53,12 @@ internal class FillDefaultsPlugin(
     private inline fun <reified T : Message> T.withDefaults(): T {
         val anonId = this.anonymousId ?: settingsState.value?.anonymousId
         val userId = this.userId ?: settingsState.value?.userId
-        if (anonId == null && userId == null)
-            throw MissingPropertiesException("Either Anonymous Id or User Id must be present");
+        if (anonId == null && userId == null) {
+            val ex = MissingPropertiesException("Either Anonymous Id or User Id must be present");
+            logger.error(log = "Missing both anonymous Id and user Id. Use settings to update " +
+                    "anonymous id in Analytics constructor", throwable = ex)
+            throw ex
+        }
         //copying top level context to message context
         return (this.copy(
             context =  (context selectiveReplace contextState.value) optAdd  defaultContext,

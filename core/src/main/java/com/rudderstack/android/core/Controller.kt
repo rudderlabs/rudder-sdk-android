@@ -14,6 +14,9 @@
 
 package com.rudderstack.android.core
 
+import com.rudderstack.android.core.Storage.BackPressureStrategy
+import com.rudderstack.android.core.Storage.Companion.MAX_FETCH_LIMIT
+import com.rudderstack.android.core.Storage.DataListener
 import com.rudderstack.android.core.internal.DataUploadServiceImpl
 import com.rudderstack.android.core.internal.MissingPropertiesException
 import com.rudderstack.android.models.Message
@@ -103,6 +106,20 @@ interface Controller {
      */
     fun addCallback(callback: Callback)
 
+    /**
+     * Removes an added [Callback]
+     * @see addCallback
+     *
+     * @param callback The callback to be removed
+     */
+    fun removeCallback(callback: Callback)
+
+    /**
+     * Removes all added [Callback]
+     * @see addCallback
+     *
+     */
+    fun removeAllCallbacks()
 
     //fun reset()
     /**
@@ -116,5 +133,23 @@ interface Controller {
      */
     val isShutdown : Boolean
 
+    /**
+     * clears the storage of all data
+     *
+     */
+    fun clearStorage()
+    /**
+     * The max number of [Message] that can be fetched and uploaded at one go.
+     * Delegates to [Storage.setMaxFetchLimit]
+     * @param limit The number of messages to be set as limit, defaults to [MAX_FETCH_LIMIT]
+     */
+    fun setMaxFetchLimit(limit : Int)
 
+    /**
+     * The maximum number of [Message] that can be stored. Beyond which, messages will be
+     * discarded based on [BackPressureStrategy] defaults to [BackPressureStrategy.Drop]
+     * Delegates to [Storage.setStorageCapacity] and [Storage.setBackpressureStrategy]
+     * @param limit The max number of [Message] that can be stored
+     */
+    fun setMaxStorageCapacity(limit: Int, backPressureStrategy: BackPressureStrategy = BackPressureStrategy.Drop)
 }

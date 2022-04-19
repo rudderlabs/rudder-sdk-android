@@ -15,11 +15,13 @@
 package com.rudderstack.android.core
 
 import com.rudderstack.android.core.internal.*
+import com.rudderstack.android.core.internal.states.ContextState
 import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.*
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+
 
 
 class Analytics private constructor(
@@ -36,20 +38,11 @@ class Analytics private constructor(
      * If this SDK is intended to be used in Android, refrain from using this class directly.
      * Also in case of using this class directly, developer has to add their own context plugin,
      * to add context to messages.
-     *
-     * @constructor
-     *
-     *
-     * @param writeKey
-     * @param settings
-     * @param jsonAdapter
-     * @param options
-     * @param dataPlaneUrl
-     * @param controlPlaneUrl
-     * @param storage
-     * @param analyticsExecutor
-     * @param networkExecutor
-     * @param dataUploadService
+     *  [analyticsExecutor] is by default [Executors.newSingleThreadExecutor] to maintain
+     *  synchronicity of events. Other executors are practically usable iff the difference between two events
+     *  is guaranteed to be at least a few ms.
+     * [defaultTraits] and [defaultExternalIds] are stored in [ContextState] but not in [Storage]
+     * Only [MessageContext] passed in [IdentifyMessage] are stored in [Storage]
      */
     constructor(
         writeKey: String,
@@ -57,13 +50,12 @@ class Analytics private constructor(
         jsonAdapter: JsonAdapter,
         shouldVerifySdk: Boolean = true,
         sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
-        options: RudderOptions = RudderOptions.default(),
         dataPlaneUrl: String = DATA_PLANE_URL,
         controlPlaneUrl: String = CONTROL_PLANE_URL,
         logger: Logger = KotlinLogger,
         storage: Storage = BasicStorageImpl(logger = logger),
-        analyticsExecutor: ExecutorService = Executors.newCachedThreadPool(),
-        networkExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
+        analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
+        networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
         dataUploadService: DataUploadService = DataUploadServiceImpl(
             writeKey,
             jsonAdapter,
@@ -79,13 +71,14 @@ class Analytics private constructor(
         ),
         defaultTraits: IdentifyTraits? = null,
         defaultExternalIds: List<Map<String, String>>? = null,
-        defaultContextMap: Map<String, Any>? = null
+        defaultContextMap: Map<String, Any>? = null,
+        //optional
+        initializationListener : ((success : Boolean, message : String?) -> Unit)? = null
     ) : this(
         _writeKey = writeKey, _jsonAdapter = jsonAdapter, _dataPlaneUrl = dataPlaneUrl,
         _delegate = AnalyticsDelegate(
             settings,
             storage,
-            options,
             jsonAdapter,
             shouldVerifySdk,
             sdkVerifyRetryStrategy,
@@ -93,7 +86,8 @@ class Analytics private constructor(
             configDownloadService,
             analyticsExecutor,
             logger,
-            createContext(defaultTraits, defaultExternalIds, defaultContextMap)
+            createContext(defaultTraits, defaultExternalIds, defaultContextMap),
+            initializationListener
 
         )
     )
@@ -107,7 +101,6 @@ class Analytics private constructor(
         private const val CONTROL_PLANE_URL = "https://api.rudderlabs.com/"
 
     }
-    //TODO(ADD callback for messages, flush api)
     /**
      * Track with a built [TrackMessage]
      * Date format should be yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
@@ -154,7 +147,6 @@ class Analytics private constructor(
     }
 
     fun identify(message: IdentifyMessage, options: RudderOptions? = null) {
-        //TODO(save userId)
         processMessage(message, options)
     }
 

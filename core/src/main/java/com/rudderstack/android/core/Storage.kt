@@ -19,6 +19,8 @@ import com.rudderstack.android.models.Message
 import com.rudderstack.android.models.RudderServerConfig
 
 /**
+ * Do not call these methods directly
+ * These are meant to be called from implementation of [Controller]
  * Requires specific implementation of how storage should be handled.
  * Can be customised according to requirements.
  * For custom modifications over queue based implementation one can extend [BasicStorageImpl]
@@ -39,14 +41,15 @@ interface Storage {
      * @see setBackpressureStrategy
      * @param storageCapacity
      */
-    fun setStorageCapacity(storageCapacity : Int = MAX_STORAGE_CAPACITY)
+    fun setStorageCapacity(storageCapacity: Int = MAX_STORAGE_CAPACITY)
 
     /**
      * The max number of [Message] that can be fetched at one go.
      * Applies to [getData] and [DataListener.onDataChange]
      * @param limit The number of messages to be set as limit, defaults to [MAX_FETCH_LIMIT]
      */
-    fun setMaxFetchLimit(limit : Int = MAX_FETCH_LIMIT)
+    fun setMaxFetchLimit(limit: Int = MAX_FETCH_LIMIT)
+
     /**
      * Platform specific implementation for saving [Message]
      * Is called from the same executor the plugins are processed on.
@@ -61,6 +64,7 @@ interface Storage {
      * @param strategy [BackPressureStrategy] for queueing [Message]
      */
     fun setBackpressureStrategy(strategy: BackPressureStrategy)
+
     /**
      * Delete Messages, preferably when no longer required
      *
@@ -85,7 +89,7 @@ interface Storage {
      * @param offset offset the fetch by the given amount, i.e elements from offset to size-1
      * @param callback returns the list of [Message]
      */
-    fun getData(offset : Int = 0, callback: (List<Message>) -> Unit)
+    fun getData(offset: Int = 0, callback: (List<Message>) -> Unit)
 
     /**
      * synchronous method to get the entire data present to a maximum of fetch limit
@@ -94,7 +98,7 @@ interface Storage {
      *
      * @return the list of messages.
      */
-    fun getDataSync(offset: Int = 0) : List<Message>
+    fun getDataSync(offset: Int = 0): List<Message>
 
     /**
      * Platform specific implementation of caching context. This can be done locally too.
@@ -133,14 +137,14 @@ interface Storage {
      *
      * @param traits A map of user traits sent through Identify call
      */
-    fun saveTraits(traits : IdentifyTraits)
+    fun saveTraits(traits: IdentifyTraits)
 
     /**
      * External Ids from identify call are persisted. Subsequent identify calls will replace the data
      *
      * @param externalIds Ids specifically targeted for different destinations.
      */
-    fun saveExternalIds(externalIds: List<Map<String,String>>)
+    fun saveExternalIds(externalIds: List<Map<String, String>>)
 
     /**
      * clear all external ids present
@@ -154,7 +158,7 @@ interface Storage {
      *
      * @param anonymousId String that's unique for this app instance
      */
-    fun saveAnonymousId(anonymousId : String)
+    fun saveAnonymousId(anonymousId: String)
 
     /**
      * [DestinationPlugin]s in general start up asynchronously, which means messages sent
@@ -178,6 +182,14 @@ interface Storage {
      *
      */
     fun shutdown()
+
+    /**
+     * Clears any and every persistent storage.
+     * Depending on the implementation one can clear the database or
+     * remove preferences
+     *
+     */
+    fun clearStorage()
 
     /**
      * @see saveStartupMessageInQueue
@@ -223,13 +235,13 @@ interface Storage {
      *
      *
      */
-    interface DataListener{
+    interface DataListener {
         /**
          * Called whenever there's a change in data count
          *
          * @param messages the number of messages, less than or equals the limit set in [setMaxFetchLimit]
          */
-        fun onDataChange(messages : List<Message>)
+        fun onDataChange(messages: List<Message>)
 
         /**
          * Called when data is dropped to adhere to the backpressure strategy.
@@ -239,13 +251,14 @@ interface Storage {
          * @param messages List of messages that have been dropped
          * @param error [Throwable] to enhance on the reason
          */
-        fun onDataDropped(messages: List<Message>, error : Throwable)
+        fun onDataDropped(messages: List<Message>, error: Throwable)
     }
+
     /**
      * Back pressure strategy for handling message queue
      *
      */
-    enum class BackPressureStrategy{
+    enum class BackPressureStrategy {
         /**
          * Messages are dropped in case queue is full
          *

@@ -34,9 +34,12 @@ internal class StorageDecorator(
 ) : Storage by storage {
     private val thresholdCountDownTimer = Timer("data_listen")
     private var periodicTaskScheduler: TimerTask? = null
+    private var _isShutDown = false
 
     private val onDataChange = object : Storage.DataListener {
         override fun onDataChange(messages: List<Message>) {
+            println("\non data change: $messages \nthread: ${Thread.currentThread().name}\n")
+
             if (messages.isNotEmpty() && settingsState.value?.flushQueueSize ?: 0 <= messages.size) {
                 dataChangeListener?.onDataChange(messages)
                 rescheduleTimer(settingsState.value)
@@ -69,15 +72,17 @@ internal class StorageDecorator(
                     }
                 }
             }
-            thresholdCountDownTimer.schedule(
-                periodicTaskScheduler,
-                settings.maxFlushInterval,
-                settings.maxFlushInterval
-            )
+            if (!_isShutDown)
+                thresholdCountDownTimer.schedule(
+                    periodicTaskScheduler,
+                    settings.maxFlushInterval,
+                    settings.maxFlushInterval
+                )
         }
     }
 
     override fun shutdown() {
+        _isShutDown = true
         storage.shutdown()
         removeDataListener(onDataChange)
         thresholdCountDownTimer.cancel()

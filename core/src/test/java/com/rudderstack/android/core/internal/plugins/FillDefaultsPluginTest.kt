@@ -17,6 +17,7 @@ package com.rudderstack.android.core.internal.plugins
 import com.rudderstack.android.core.Settings
 import com.rudderstack.android.core.Utils
 import com.rudderstack.android.core.internal.CentralPluginChain
+import com.rudderstack.android.core.internal.KotlinLogger
 import com.rudderstack.android.core.internal.states.ContextState
 import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.*
@@ -33,7 +34,7 @@ class FillDefaultsPluginTest {
     )
     private val fillDefaultsPlugin = FillDefaultsPlugin(
         commonContext,
-        SettingsState, ContextState
+        SettingsState, ContextState, KotlinLogger
     )
 
     /**

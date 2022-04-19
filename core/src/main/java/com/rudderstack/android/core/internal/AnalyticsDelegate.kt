@@ -34,7 +34,7 @@ internal class AnalyticsDelegate(
 //    private val _writeKey : String,
     settings: Settings,
     storage: Storage,
-    private val defaultOptions: RudderOptions,
+//    private val defaultOptions: RudderOptions,
 //    controlPlaneUrl: String,
     jsonAdapter: JsonAdapter,
     // implies if source config be downloaded. must for using device mode
@@ -47,6 +47,8 @@ internal class AnalyticsDelegate(
     private val analyticsExecutor: ExecutorService,
     private val logger: Logger,
     context: MessageContext,
+    //optional
+    private val initializationListener : ((success : Boolean, message : String?) -> Unit)? = null
 ) : Controller {
 
 
@@ -95,6 +97,22 @@ internal class AnalyticsDelegate(
             analyticsExecutor.isShutdown || analyticsExecutor.isTerminated
         }
 
+    override fun clearStorage() {
+        _storageDecorator.clearStorage()
+    }
+
+    override fun setMaxFetchLimit(limit: Int) {
+        _storageDecorator.setMaxFetchLimit(limit)
+    }
+
+    override fun setMaxStorageCapacity(
+        limit: Int,
+        backPressureStrategy: Storage.BackPressureStrategy
+    ) {
+        _storageDecorator.setStorageCapacity(limit)
+        _storageDecorator.setBackpressureStrategy(backPressureStrategy)
+    }
+
     //message callbacks
     private var _callbacks = setOf<Callback>()
     private val _storageDecorator =
@@ -129,14 +147,16 @@ internal class AnalyticsDelegate(
         SettingsState.update(settings)
         DestinationConfigState.update(DestinationConfig())
         ContextState.update(context)
+        fillDefaultsPlugin = FillDefaultsPlugin(
+            _commonContext,
+            SettingsState, ContextState,
+            logger
+        )
         initializePlugins()
         if (shouldVerifySdk) {
             updateSourceConfig()
         }
-        fillDefaultsPlugin = FillDefaultsPlugin(
-            _commonContext,
-            SettingsState, ContextState
-        )
+
     }
 
 
@@ -205,11 +225,13 @@ internal class AnalyticsDelegate(
             val lcc = lifecycleController ?: LifecycleControllerImpl(message,
                 _allPlugins.toMutableList().also {
                     //after gdpr plugin
-                    it.add(1, RudderOptionPlugin(options ?: defaultOptions))
+                    it.add(1, RudderOptionPlugin(options ?: SettingsState.value?.options?:
+                    RudderOptions.default()))
                     //after option plugin
                     it.add(
                         2, ExtractStatePlugin(
-                            ContextState, SettingsState, options ?: defaultOptions,
+                            ContextState, SettingsState, options ?: SettingsState.value?.options?:
+                            RudderOptions.default(),
                             _storageDecorator
                         )
                     )
@@ -221,6 +243,14 @@ internal class AnalyticsDelegate(
 
     override fun addCallback(callback: Callback) {
         _callbacks = _callbacks + callback
+    }
+
+    override fun removeCallback(callback: Callback) {
+        _callbacks = _callbacks - callback
+    }
+
+    override fun removeAllCallbacks() {
+        _callbacks = setOf()
     }
 
     internal fun flush() {
@@ -291,9 +321,8 @@ internal class AnalyticsDelegate(
                     )
                 }
                 val newDestinationConfig =
-                    (DestinationConfigState.value ?: DestinationConfig()).let {
-                        it.withIntegration(plugin.name, isReady)
-                    }
+                    (DestinationConfigState.value ?: DestinationConfig())
+                        .withIntegration(plugin.name, isReady)
                 DestinationConfigState.update(newDestinationConfig)
                 if (newDestinationConfig.allIntegrationsReady) {
                     //all integrations are ready, time to clear startup queue
@@ -304,9 +333,8 @@ internal class AnalyticsDelegate(
                 //remove from destination config, else all integrations ready won't be true anytime
 
                 val newDestinationConfig =
-                    (DestinationConfigState.value ?: DestinationConfig()).let {
-                        it.removeIntegration(plugin.name)
-                    }
+                    (DestinationConfigState.value ?: DestinationConfig())
+                        .removeIntegration(plugin.name)
                 DestinationConfigState.update(newDestinationConfig)
 
             }
@@ -328,7 +356,6 @@ internal class AnalyticsDelegate(
             "Config Download Service Not Set"
         }
         //configDownloadService is non-null
-
         configDownloadService.download(
             libDetails.getOrDefault(LIB_KEY_NAME, ""),
             libDetails.getOrDefault(LIB_KEY_VERSION, ""),
@@ -337,13 +364,17 @@ internal class AnalyticsDelegate(
         ) { success, rudderServerConfig, lastErrorMsg ->
             analyticsExecutor.submit {
                 if (success && rudderServerConfig != null && rudderServerConfig.source?.isSourceEnabled != false) {
+                    initializationListener?.invoke(true, null)
                     handleConfigData(rudderServerConfig)
                 } else {
                     val cachedConfig = _storageDecorator.serverConfig
-                    if (cachedConfig != null)
+                    if (cachedConfig != null) {
                         handleConfigData(cachedConfig)
+                        initializationListener?.invoke(true, "Downloading failed, using cached context")
+                    }
                     else {
                         logger.error(log = "SDK Initialization failed due to $lastErrorMsg")
+                        initializationListener?.invoke(false, "Downloading failed, Shutting down")
                         //log lastErrorMsg or isSourceEnabled
                         shutdown()
                     }
@@ -387,6 +418,7 @@ internal class AnalyticsDelegate(
     private fun flushToServer(data: List<Message>) {
         if (data.isEmpty() || _serverConfig == null) return // in case server config is
         // not yet downloaded
+        println("\nflush to server: $data \nthread: ${Thread.currentThread().name}\n")
 
         //post the data
         dataUploadService.upload(data, _commonContext) {

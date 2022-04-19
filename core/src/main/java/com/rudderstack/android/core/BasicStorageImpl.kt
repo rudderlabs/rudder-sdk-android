@@ -52,7 +52,7 @@ class BasicStorageImpl(
      */
     private val startupQ = LinkedList<Message>()
 
-    private val serverConfigFile = File("/temp/rudder-analytics/server_config")
+    private val serverConfigFile = File("temp/rudder-analytics/server_config")
     override fun setStorageCapacity(storageCapacity: Int) {
         _storageCapacity = storageCapacity
     }
@@ -62,59 +62,59 @@ class BasicStorageImpl(
     }
 
     override fun saveMessage(vararg messages: Message) {
-        val excessMessages = queue.size + messages.size - Storage.MAX_STORAGE_CAPACITY
-        if (excessMessages > 0) {
+        synchronized(this) {
+            val excessMessages = queue.size + messages.size - _storageCapacity
+            if (excessMessages > 0) {
 
-            //a block to call data listener
-            val dataFailBlock: List<Message>.() -> Unit = {
-                _dataChangeListeners.forEach {
-                    it.onDataDropped(this, IllegalArgumentException("Storage Capacity Exceeded"))
+                //a block to call data listener
+                val dataFailBlock: List<Message>.() -> Unit = {
+                    _dataChangeListeners.forEach {
+                        it.onDataDropped(
+                            this,
+                            IllegalArgumentException("Storage Capacity Exceeded")
+                        )
+                    }
                 }
-            }
 
-            if (backPressureStrategy == Storage.BackPressureStrategy.Drop) {
+                if (backPressureStrategy == Storage.BackPressureStrategy.Drop) {
 
-                logger.warn(log = "Max storage capacity reached, dropping last $excessMessages latest events")
+                    logger.warn(log = "Max storage capacity reached, dropping last $excessMessages latest events")
 
-                (messages.size - excessMessages).takeIf {
-                    it > 0
-                }?.apply {
-                    synchronized(this) {
+                    (messages.size - excessMessages).takeIf {
+                        it > 0
+                    }?.apply {
+
                         queue.addAll(messages.take(this))
-                    }
 
+
+                        //callback
+                        messages.takeLast(excessMessages).run(dataFailBlock)
+
+                    } ?: messages.toList().run(dataFailBlock)
+
+                } else {
+                    logger.warn(log = "Max storage capacity reached, dropping first $excessMessages oldest events")
+                    val tobeRemovedList = ArrayList<Message>(excessMessages)
+                    var counter = excessMessages
+                        while (counter > 0) {
+                            val item = queue.poll()
+                            if (item != null) {
+                                counter--
+                                tobeRemovedList.add(item)
+                            } else
+                                break
+                        }
                     //callback
-                    messages.takeLast(excessMessages).run(dataFailBlock)
-
-                } ?: messages.toList().run(dataFailBlock)
-
-            } else {
-                logger.warn(log = "Max storage capacity reached, dropping first $excessMessages oldest events")
-                val tobeRemovedList = ArrayList<Message>(excessMessages)
-                var counter = excessMessages
-                synchronized(this) {
-
-                    while (counter > 0) {
-                        val item = queue.poll()
-                        if (item != null) {
-                            counter--
-                            tobeRemovedList.add(item)
-                        } else
-                            break
-                    }
+                    tobeRemovedList.run(dataFailBlock)
                 }
-                //callback
-                tobeRemovedList.run(dataFailBlock)
-            }
-        } else {
-            synchronized(this) {
+            } else {
 
-                queue.addAll(messages)
+                    queue.addAll(messages)
             }
+
+            println("\nsaved msg: ${messages[0]} thread: ${Thread.currentThread().name}\n")
+            onDataChange()
         }
-
-
-        onDataChange()
     }
 
     override fun setBackpressureStrategy(strategy: Storage.BackPressureStrategy) {
@@ -123,8 +123,10 @@ class BasicStorageImpl(
 
     override fun deleteMessages(messages: List<Message>) {
         synchronized(this) {
-
-            queue.removeAll(messages)
+            val messageIdsToRemove = messages.map { it.messageId }
+            queue.removeAll {
+                it.messageId in messageIdsToRemove
+            }
         }
         onDataChange()
     }
@@ -142,7 +144,7 @@ class BasicStorageImpl(
             synchronized(this) {
                 if (queue.size <= offset) emptyList() else
                     queue.toMutableList().takeLast(queue.size - offset)
-                        .take(Storage.MAX_FETCH_LIMIT).toList()
+                        .take(_maxFetchLimit).toList()
             })
     }
 
@@ -210,8 +212,20 @@ class BasicStorageImpl(
     }
 
     override fun shutdown() {
+        //nothing much to do here
+
+    }
+
+    override fun clearStorage() {
         synchronized(this) {
             queue.clear()
+            startupQ.clear()
+            _anonymousId = null
+            _externalIds = null
+            _traits = null
+            _serverConfig = null
+            _cachedContext = mapOf()
+            serverConfigFile.delete()
         }
     }
 
@@ -236,11 +250,13 @@ class BasicStorageImpl(
         get() = _anonymousId
 
     private fun onDataChange() {
-        val msgs = synchronized(this) {
-            queue.take(Storage.MAX_FETCH_LIMIT).toList()
+        synchronized(this) {
+            val msgs =  queue.take(_maxFetchLimit).toList()
+            _dataChangeListeners.forEach {
+                it.onDataChange(msgs)
+            }
         }
-        _dataChangeListeners.forEach {
-            it.onDataChange(msgs)
-        }
+
     }
+
 }

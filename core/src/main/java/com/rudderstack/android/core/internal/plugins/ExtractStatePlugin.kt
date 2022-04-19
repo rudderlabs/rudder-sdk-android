@@ -89,25 +89,27 @@ internal class ExtractStatePlugin(
                 //external ids can be present in both message or options.
                 //save concatenated external ids, if present with both message and options
                 val messageExternalIds = message.context?.externalIds
-                val updatedExternalIds : List<Map<String,String>>? = if (options.externalIds.isEmpty()) {
-                    if (messageExternalIds != null) {
-                        storage.saveExternalIds(messageExternalIds)
+                val updatedExternalIds: List<Map<String, String>>? =
+                    if (options.externalIds.isEmpty()) {
+                        if (messageExternalIds != null) {
+                            storage.saveExternalIds(messageExternalIds)
 
-                        message.context?.externalIds
-                    } else null
-                } else {
-                    if (messageExternalIds == null) {
-                        options.externalIds
-                    } else {//preference is given to external ids in Message
-                        val extraIdsInOptions = options.externalIds minusWrtKeys messageExternalIds
-                        //adding these to messageExternalIds gives our required ids
-                        messageExternalIds + extraIdsInOptions
+                            message.context?.externalIds
+                        } else null
+                    } else {
+                        if (messageExternalIds == null) {
+                            options.externalIds
+                        } else {//preference is given to external ids in Message
+                            val extraIdsInOptions =
+                                options.externalIds minusWrtKeys messageExternalIds
+                            //adding these to messageExternalIds gives our required ids
+                            messageExternalIds + extraIdsInOptions
+                        }
                     }
-                }
                 updatedExternalIds ifNotNull storage::saveExternalIds
                 newContext = updatedExternalIds?.let {
                     mapOf(CONTEXT_EXTERNAL_ID_KEY to it) optAdd newContext
-                }?: newContext
+                } ?: newContext
             }
             newContext?.apply {
                 contextState.update(this optAdd contextState.value)
@@ -118,10 +120,23 @@ internal class ExtractStatePlugin(
         return chain.proceed(message)
     }
 
+    /**
+     * Checks in the order
+     * "user_id" key at root
+     * "user_id" key at context.traits
+     * "userId" key at root
+     * "userId" key at context.traits
+     * "id" key at root
+     * "id" key at context.traits
+     *
+     *
+     */
     private fun getUserId(it: MessageContext): String? {
         return (it.getOrDefault(KeyConstants.CONTEXT_USER_ID_KEY, null)
-            ?: (it.getOrDefault(KeyConstants.CONTEXT_ID_KEY, null))
             ?: (it.traits?.getOrDefault(KeyConstants.CONTEXT_USER_ID_KEY, null))
+            ?: (it.getOrDefault(KeyConstants.CONTEXT_USER_ID_KEY_ALIAS, null))
+            ?: (it.traits?.getOrDefault(KeyConstants.CONTEXT_USER_ID_KEY_ALIAS, null))
+            ?: (it.getOrDefault(KeyConstants.CONTEXT_ID_KEY, null))
             ?: (it.traits?.getOrDefault(KeyConstants.CONTEXT_ID_KEY, null))
                 ) as? String?
     }
