@@ -28,7 +28,8 @@ import com.rudderstack.android.web.HttpResponse
 import java.io.FileInputStream
 import java.io.IOException
 import java.util.*
-import java.util.concurrent.ExecutorService
+import java.util.concurrent.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 internal class AnalyticsDelegate(
 //    private val _writeKey : String,
@@ -48,7 +49,7 @@ internal class AnalyticsDelegate(
     private val logger: Logger,
     context: MessageContext,
     //optional
-    private val initializationListener : ((success : Boolean, message : String?) -> Unit)? = null
+    private val initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
 ) : Controller {
 
 
@@ -58,7 +59,24 @@ internal class AnalyticsDelegate(
         private const val LIB_KEY_VERSION = "rudderCoreSdkVersion"
         private const val LIB_KEY_PLATFORM = "platform"
         private const val LIB_KEY_OS_VERSION = "os_version"
+        //the number of flush calls that can be queued
+        //unit sized queue means only one flush call can wait for the ongoing to complete
+        private const val NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 2
     }
+
+    /**
+     * A handler for rejected tasks that discards the oldest unhandled request and then retries
+     * execute, unless the executor is shut down, in which case the task is discarded.
+     */
+    private val handler: RejectedExecutionHandler = ThreadPoolExecutor.DiscardOldestPolicy()
+    //used for flushing
+    // a single threaded executor by default for sequentially calling flush one after other
+    private val _flushExecutor = ThreadPoolExecutor(
+        1, 1,
+        0L, TimeUnit.MILLISECONDS,
+        LinkedBlockingQueue<Runnable>(NUMBER_OF_FLUSH_CALLS_IN_QUEUE),
+        handler
+    )
 
     private val libDetails: Map<String, String> by lazy {
         try {
@@ -116,7 +134,7 @@ internal class AnalyticsDelegate(
     //message callbacks
     private var _callbacks = setOf<Callback>()
     private val _storageDecorator =
-        StorageDecorator(storage, SettingsState, this::flushToServer)
+        StorageDecorator(storage, SettingsState, this::flush)
 
     private var _customPlugins: List<Plugin> = listOf()
     private var _destinationPlugins: List<DestinationPlugin<*>> = listOf()
@@ -221,17 +239,25 @@ internal class AnalyticsDelegate(
         options: RudderOptions?,
         lifecycleController: LifecycleController?
     ) {
+        if(isShutdown){
+            logger.warn(log = "Analytics has shut down, ignoring message $message")
+            return
+        }
         analyticsExecutor.submit {
             val lcc = lifecycleController ?: LifecycleControllerImpl(message,
                 _allPlugins.toMutableList().also {
                     //after gdpr plugin
-                    it.add(1, RudderOptionPlugin(options ?: SettingsState.value?.options?:
-                    RudderOptions.default()))
+                    it.add(
+                        1, RudderOptionPlugin(
+                            options ?: SettingsState.value?.options ?: RudderOptions.default()
+                        )
+                    )
                     //after option plugin
                     it.add(
                         2, ExtractStatePlugin(
-                            ContextState, SettingsState, options ?: SettingsState.value?.options?:
-                            RudderOptions.default(),
+                            ContextState,
+                            SettingsState,
+                            options ?: SettingsState.value?.options ?: RudderOptions.default(),
                             _storageDecorator
                         )
                     )
@@ -254,9 +280,15 @@ internal class AnalyticsDelegate(
     }
 
     internal fun flush() {
+        println("flush called thread: ${Thread.currentThread().name}\n st:")
+        Exception().stackTrace.forEach {
+            println("${ it.lineNumber }, ${it.methodName}, ${it.className}")
+        }
+        println()
         if (isShutdown) return
-        forceFlush(dataUploadService, analyticsExecutor)
+        forceFlush(dataUploadService, _flushExecutor)
     }
+    // works even after shutdown
 
     internal fun forceFlush(
         alternateDataUploadService: DataUploadService,
@@ -269,15 +301,17 @@ internal class AnalyticsDelegate(
             }
         }
     }
-
+    // works even after shutdown
     private fun blockFlush(
         alternateDataUploadService: DataUploadService,
         clearDb: Boolean
     ): Boolean {
         var latestData = _storageDecorator.getDataSync()
         var offset = 0
+        println("block flush called thread: ${Thread.currentThread().name}\n${latestData}")
+
         while (latestData.isNotEmpty()) {
-            val response = alternateDataUploadService.uploadSync(latestData)
+            val response = alternateDataUploadService.uploadSync(latestData, null)
             if (response.success) {
                 latestData.successCallback()
                 if (clearDb) {
@@ -295,11 +329,13 @@ internal class AnalyticsDelegate(
     }
 
     override fun shutdown() {
+        if(isShutdown) return
         flush()
         //release memory
         _storageDecorator.shutdown()
         dataUploadService.shutdown()
         analyticsExecutor.shutdown()
+        _flushExecutor.shutdown()
     }
 
 //    @Throws(MissingPropertiesException::class)
@@ -370,9 +406,11 @@ internal class AnalyticsDelegate(
                     val cachedConfig = _storageDecorator.serverConfig
                     if (cachedConfig != null) {
                         handleConfigData(cachedConfig)
-                        initializationListener?.invoke(true, "Downloading failed, using cached context")
-                    }
-                    else {
+                        initializationListener?.invoke(
+                            true,
+                            "Downloading failed, using cached context"
+                        )
+                    } else {
                         logger.error(log = "SDK Initialization failed due to $lastErrorMsg")
                         initializationListener?.invoke(false, "Downloading failed, Shutting down")
                         //log lastErrorMsg or isSourceEnabled
@@ -415,8 +453,8 @@ internal class AnalyticsDelegate(
         }
     }
 
-    private fun flushToServer(data: List<Message>) {
-        if (data.isEmpty() || _serverConfig == null) return // in case server config is
+    /*private fun onDataChange() {
+        *//*if (data.isEmpty() || _serverConfig == null || isFlushing.get()) return // in case server config is
         // not yet downloaded
         println("\nflush to server: $data \nthread: ${Thread.currentThread().name}\n")
 
@@ -430,10 +468,10 @@ internal class AnalyticsDelegate(
                     it.errorThrowable
                 )
             }
-        }
+        }*//*
 
 
-    }
+    }*/
 
     private fun applyUpdateClosures(plugin: Plugin) {
         //server config closure, if available
@@ -476,8 +514,8 @@ internal class AnalyticsDelegate(
     private val HttpResponse<*>.success: Boolean
         get() = status in (200..209)
 
-    private val HttpResponse<*>.errorThrowable : Throwable
-        get() = error?: errorBody?.let {
+    private val HttpResponse<*>.errorThrowable: Throwable
+        get() = error ?: errorBody?.let {
             Exception(it)
-        }?: Exception("Internal error")
+        } ?: Exception("Internal error")
 }

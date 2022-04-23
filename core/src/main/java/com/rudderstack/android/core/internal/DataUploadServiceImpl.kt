@@ -64,7 +64,6 @@ internal class DataUploadServiceImpl(
         "anonymousId" to (settingsState.value?.anonymousId?.let {  Base64.getEncoder().encodeToString(
             it.toByteArray(charset("UTF-8"))
         )}?:encodedWriteKey)),null, batchBody, "v1/batch", String::class.java ){
-            println(it)
             callback.invoke(it)
         }
     }

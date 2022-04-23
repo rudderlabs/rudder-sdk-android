@@ -50,11 +50,13 @@ class StorageDecoratorTest {
             maxFlushInterval = 500L
         ))
         var lastTime = 0L
+        val storage = BasicStorageImpl(logger = KotlinLogger)
         //we try to insert data and check for the time difference
         val storageDecorator = StorageDecorator(
-            BasicStorageImpl(logger = KotlinLogger)
+            storage
         ) {
-            assertThat(it, allOf(
+            val data = storage.getDataSync()
+            assertThat(data, allOf(
                 Matchers.iterableWithSize(testMessagesList.size),
                 Matchers.containsInAnyOrder(*testMessagesList.toTypedArray())
 
@@ -66,7 +68,7 @@ class StorageDecoratorTest {
                 )
             )
             isComplete.set(true)
-            println("list got - $it")
+            println("list got - $data")
         }
         lastTime = System.currentTimeMillis()
         storageDecorator.saveMessage(*testMessagesList.toTypedArray())

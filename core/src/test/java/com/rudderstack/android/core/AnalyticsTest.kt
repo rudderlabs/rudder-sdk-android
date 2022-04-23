@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.core
 
+import com.rudderstack.android.core.internal.DataUploadServiceImpl
 import com.rudderstack.android.core.internal.KotlinLogger
 import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.gsonrudderadapter.GsonAdapter
@@ -25,6 +26,7 @@ import com.rudderstack.android.web.HttpResponse
 import junit.framework.TestSuite
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.*
 import org.junit.After
 import org.junit.Before
@@ -32,9 +34,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
 import org.mockito.Mockito.*
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import org.mockito.kotlin.any
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 
 abstract class AnalyticsTest {
@@ -49,39 +55,44 @@ abstract class AnalyticsTest {
     private val mockedControlPlane = mock(ConfigDownloadService::class.java).also {
         `when`(it.download(anyString(), anyString(), anyString(), any(), any())).then {
 
-            it.getArgument<(success : Boolean, RudderServerConfig?, lastErrorMsg : String?) -> Unit>(4)
-                .invoke(true, RudderServerConfig(source =
-                RudderServerConfig.RudderServerConfigSource(isSourceEnabled = true)), null
+            it.getArgument<(success: Boolean, RudderServerConfig?, lastErrorMsg: String?) -> Unit>(4)
+                .invoke(
+                    true, RudderServerConfig(
+                        source =
+                        RudderServerConfig.RudderServerConfigSource(isSourceEnabled = true)
+                    ), null
                 )
         }
     }
-    private val mockedDataUploadService = mock(DataUploadService::class.java).also {
-        `when`(it.uploadSync(any(), any())).then {
-            val data = it.getArgument<List<Message>>(0)
-            storage.deleteMessages(data)
-            HttpResponse(200,null,null )
-        }
-        `when`(it.upload(any(), any(), any())).then {
-            val data = it.getArgument<List<Message>>(0)
-            storage.deleteMessages(data)
-            println("\nupload mock: $data \nthread: ${Thread.currentThread().name}\n")
-            it.getArgument<(response: HttpResponse<out Any>) -> Unit>(2).invoke(
-                HttpResponse(200, "OK", null, null)
-            )
-        }
-    }
+    private val mockedDataUploadService = mock(DataUploadService::class.java)
+
     @Before
     fun setup() {
+        val mockedResponse: HttpResponse<out Any> = HttpResponse(200, "OK", null)
+        mockedDataUploadService.let {
+
+            whenever(it.upload(any(), any(), any())).then {
+                val data = it.getArgument<List<Message>>(0)
+//            storage.deleteMessages(data)
+                it.getArgument<(response: HttpResponse<out Any>) -> Unit>(2).invoke(
+                    mockedResponse
+                )
+            }
+            `when`(it.uploadSync(any() as List<Message>, anyOrNull())).thenReturn(
+                mockedResponse
+            )
+        }
         analytics = Analytics(
             writeKey,
-            Settings(),
+            Settings(anonymousId = "anon_id"),
             jsonAdapter,
             storage = storage,
             initializationListener = { success, message ->
                 println("success")
                 assertThat(success, `is`(true))
             }, dataUploadService = mockedDataUploadService,
-        configDownloadService = mockedControlPlane)
+            configDownloadService = mockedControlPlane
+        )
     }
 
     @After
@@ -237,6 +248,7 @@ abstract class AnalyticsTest {
         }.start()
         Awaitility.await().atMost(20, TimeUnit.SECONDS).untilTrue(isDone)
         analytics.removeAllCallbacks()
+
     }
 
     @Test
@@ -246,31 +258,36 @@ abstract class AnalyticsTest {
             listOf(mapOf("some_id" to "id"))
         ).withIntegrations(mapOf("dest-1" to true, "All" to false)).build()
 
-        val dummyPlugin = BaseDestinationPlugin<Any>("dummy"){
+        val dummyPlugin = BaseDestinationPlugin<Any>("dummy") {
             assert(false)
             it.proceed(it.message())
         }
-        val assertdestination = BaseDestinationPlugin<Any>("dest-1"){
+        val assertdestination = BaseDestinationPlugin<Any>("dest-1") {
             val msg = it.message()
-            assertThat(msg.integrations, allOf(
-                aMapWithSize(2),
-                hasEntry("dest-1", true),
-                hasEntry("All", false),
-            ))
-            assertThat(msg.context?.externalIds, allOf(
-                notNullValue(),
-                iterableWithSize(1),
-                containsInAnyOrder(mapOf("some_id" to "id"))
-            ))
+            assertThat(
+                msg.integrations, allOf(
+                    aMapWithSize(2),
+                    hasEntry("dest-1", true),
+                    hasEntry("All", false),
+                )
+            )
+            assertThat(
+                msg.context?.externalIds, allOf(
+                    notNullValue(),
+                    iterableWithSize(1),
+                    containsInAnyOrder(mapOf("some_id" to "id"))
+                )
+            )
             isDone.set(true)
             it.proceed(it.message())
         }
         analytics.addPlugin(assertdestination, dummyPlugin)
-        analytics.track(eventName = "some", trackProperties =  mapOf(), options = rudderOptions)
+        analytics.track(eventName = "some", trackProperties = mapOf(), options = rudderOptions)
         Awaitility.await().atMost(20, TimeUnit.SECONDS).untilTrue(isDone)
 
 
     }
+
     @Suppress("UNCHECKED_CAST")
     @Test
     fun `test flush schedule`() {
@@ -286,35 +303,44 @@ abstract class AnalyticsTest {
         }
         val itemNamesThatShouldBePresent = items.take(newSettings.flushQueueSize)
             .map {
-            it.eventName
-        }
+                it.eventName
+            }
         val itemNamesThatShouldNotBePresent = items.map {
             it.eventName
         } - itemNamesThatShouldBePresent
         analytics.addCallback(
-            object : Callback{
+            object : Callback {
                 private var incomingMsgs = 0
                 override fun success(message: Message?) {
                     ++incomingMsgs
-                    println("incoming - $incomingMsgs, msg- ${message}\n time: " +
-                            "${System.currentTimeMillis()}, this: $this, thread: ${Thread.currentThread().name}\n")
-                    assertThat(message, allOf(
-                        notNullValue(), hasProperty("eventName", allOf(`in`(itemNamesThatShouldBePresent.toTypedArray()),
-                        not(`in`(itemNamesThatShouldNotBePresent)))),
+                    println(
+                        "incoming - $incomingMsgs, msg- ${message}\n time: " +
+                                "${System.currentTimeMillis()}, this: $this, thread: ${Thread.currentThread().name}\n"
+                    )
+                    assertThat(
+                        message, allOf(
+                            notNullValue(),
+                            hasProperty(
+                                "eventName", allOf(
+                                    `in`(itemNamesThatShouldBePresent.toTypedArray()),
+                                    not(`in`(itemNamesThatShouldNotBePresent))
+                                )
+                            ),
 
-                    ))
+                            )
+                    )
 
                     if (incomingMsgs > newSettings.flushQueueSize) {
                         assert(false)
                         isDone.set(true)
                     }
-                    if(incomingMsgs == newSettings.flushQueueSize)
-                    thread {
-                        Thread.sleep(100) // the time should be good enough to check if number of messages is
-                        //crossing max_fetch size, but should be less than it takes for an API call. since
-                        // after a success, the next batch will be fetched and uploaded
-                        isDone.set(true)
-                    }
+                    if (incomingMsgs == newSettings.flushQueueSize)
+                        thread {
+                            Thread.sleep(100) // the time should be good enough to check if number of messages is
+                            //crossing max_fetch size, but should be less than it takes for an API call. since
+                            // after a success, the next batch will be fetched and uploaded
+                            isDone.set(true)
+                        }
                 }
 
                 override fun failure(message: Message?, throwable: Throwable?) {
@@ -324,58 +350,303 @@ abstract class AnalyticsTest {
             }
         )
 
-        for (i in items){
+        for (i in items) {
             analytics.track(i)
             println("\ntrack $i\n")
         }
-//        Thread.sleep(newSettings.maxFlushInterval)
-//        val listArgumentCaptor : ArgumentCaptor<List<Message>> = ArgumentCaptor.forClass(List::class.java)
-//                as ArgumentCaptor<List<Message>>
-//        Thread.sleep(newSettings.maxFlushInterval + 100)
-//        verify(spyDataUploadService, times(1)).upload(listArgumentCaptor.capture(), any(), any())
-
-//        assertThat(listArgumentCaptor.value, allOf(
-//            iterableWithSize(3), everyItem(notNullValue()),
-//            contains(*items.toTypedArray())
-//        ))
-        Awaitility.await().atMost(newSettings.maxFlushInterval , TimeUnit.SECONDS)
+        Awaitility.await().atMost(newSettings.maxFlushInterval, TimeUnit.SECONDS)
             .untilTrue(isDone)
     }
+
     @Test
     fun `test multiple messages ordering`() {
+        // add a plugin to check, add some delay to it
+        val events = (1..10).map {
+            TrackMessage.create("event:$it", Utils.timeStamp)
+        }
+        val isDone = AtomicBoolean(false)
+        var msgCounter = 1
+        val assertionPlugin = Plugin {
+            val msg = it.message()
+            println("\nmsg arrived: $msg \nthread:${Thread.currentThread().name}")
+            assertThat(
+                msg, allOf(
+                    Matchers.isA(TrackMessage::class.java),
+                    hasProperty("eventName", `is`("event:${msgCounter++}"))
+                )
+            )
+            Thread.sleep(20L) //a minor delay
+            if (events.size < msgCounter)
+                isDone.set(true)
+            it.proceed(it.message())
+        }
 
+        analytics.addPlugin(assertionPlugin)
+        for (i in events) {
+            analytics.track(i)
+            println("\ntrack $i\n")
+        }
+        Awaitility.await().atMost(20, TimeUnit.SECONDS)
+            .untilTrue(isDone)
     }
 
+    @Test
     fun `test flush before shutdown`() {
+        //flush should be called prior to shutdown. and data uploaded
+        //we will track few events, less than flush_queue_size,
+        // call shutdown and wait for sometime to check the storage count.
+        val newSettings = SettingsState.value?.copy(
+            flushQueueSize = 20
+        ) ?: Settings(anonymousId = "anon_id", flushQueueSize = 20)
+        analytics.applySettings(newSettings)
+
+        val events = (1..10).map {
+            TrackMessage.create("event:$it", Utils.timeStamp)
+        }
+        for (i in events) {
+            analytics.track(i)
+            println("\ntrack $i\n")
+        }
+        Thread.sleep(1000)
+        assertThat(storage.getDataSync(), iterableWithSize(10))
+        analytics.shutdown()
+        Thread.sleep(5000)
+        val response = mockedDataUploadService.uploadSync(listOf(), null)
+        println("response: $response")
+        assertThat(storage.getDataSync(), anyOf(nullValue(), iterableWithSize(0)))
+    }
+
+    @Test
+    fun `test back pressure strategies`() {
+        //we check the storage directly
+        val events = (1..20).map {
+            TrackMessage.create("event:$it", Utils.timeStamp)
+        }
+        storage.setStorageCapacity(10)
+        storage.setBackpressureStrategy(Storage.BackPressureStrategy.Drop) // first 10 will be there
+        storage.saveMessage(*events.toTypedArray())
+        val first10Events = events.take(10).map { it.eventName }
+        val last10Events = events.takeLast(10).map { it.eventName }
+
+        assertThat(
+            storage.getDataSync(), allOf(
+                iterableWithSize(10),
+                everyItem(
+                    allOf(
+                        Matchers.isA(TrackMessage::class.java),
+                        hasProperty(
+                            "eventName", allOf(
+                                `in`(first10Events), not(`in`(last10Events))
+                            )
+                        )
+                    )
+                )
+//            contains(last10Events)
+            )
+        )
+        storage.clearStorage()
+        storage.setBackpressureStrategy(Storage.BackPressureStrategy.Latest) // last 10 will be there
+        storage.saveMessage(*events.toTypedArray())
+        assertThat(
+            storage.getDataSync(), allOf(
+                iterableWithSize(10),
+                everyItem(
+                    allOf(
+                        Matchers.isA(TrackMessage::class.java),
+                        hasProperty(
+                            "eventName", allOf(
+                                `in`(last10Events), not(`in`(first10Events))
+                            )
+                        )
+                    )
+                )
+//            contains(last10Events)
+            )
+        )
+    }
+
+    @Test
+    fun `test should verify sdk`() {
+        val spyControlPlane = spy(ConfigDownloadService::class.java)
+        Analytics(
+            writeKey,
+            Settings(),
+            jsonAdapter,
+            false,
+            configDownloadService = spyControlPlane
+        ).shutdown()
+        verify(spyControlPlane, times(0)).download(
+            any(), any(),
+            any(), any(), any()
+        )
 
     }
-    fun `test back pressure strategies`(){
 
-    }
-    fun `test should verify sdk`(){
-
-    }
+    @Test
     fun `test flush after shutdown`() {
+        val events = (1..5).map {
+            TrackMessage.create("event:$it", Utils.timeStamp)
+        }
+        events.forEach {
+            analytics.track(it)
+        }
+        analytics.shutdown()
+        //inserting some data
+        events.forEach {
+            storage.saveMessage(it)
+        }
+        analytics.flush()
+        verify(mockedDataUploadService, times(1)).uploadSync(any(), anyOrNull())
+        // 1 for shutdown call
 
     }
+    @Test
+    fun `test force flush after shutdown`() {
+        val events = (1..5).map {
+            TrackMessage.create("event:$it", Utils.timeStamp)
+        }
+        val someAnalytics = Analytics(
+            writeKey,
+            Settings(anonymousId = "anon_id"),
+            jsonAdapter,
+            storage = storage,
+            initializationListener = { success, message ->
+                println("success")
+                assertThat(success, `is`(true))
+            }, dataUploadService = mockedDataUploadService,
+            configDownloadService = mockedControlPlane
+        )
+        someAnalytics.shutdown()
+        //inserting some data to storage
+        events.forEach {
+            storage.saveMessage(it)
+        }
+        val spyDataUploadService = spy(DataUploadService::class.java)
+        someAnalytics.forceFlush(spyDataUploadService)
+        verify(spyDataUploadService, times(1)).uploadSync(any(), anyOrNull())
+    }
 
-    fun `test shutdown`() {}
+    @Test
+    fun `test shutdown`() {
+        val events = (1..5).map {
+            TrackMessage.create("event:$it", Utils.timeStamp)
+        }
+        val someAnalytics = Analytics(
+            writeKey,
+            Settings(anonymousId = "anon_id"),
+            jsonAdapter,
+            storage = storage,
+            initializationListener = { success, message ->
+                println("success")
+                assertThat(success, `is`(true))
+            }, dataUploadService = mockedDataUploadService,
+            configDownloadService = mockedControlPlane
+        )
+        someAnalytics.shutdown()
+        //we try pushing in events
+        events.forEach {
+            someAnalytics.track(it)
+        }
+        //all data should have been rejected
+        assertThat(storage.getDataSync(), allOf(
+            iterableWithSize(0)
+        ))
+    }
+    @Test
     fun `test periodic flush`() {
+        val isDone = AtomicBoolean(false)
+        val newSettings = SettingsState.value?.copy(maxFlushInterval = 1000,
+        flushQueueSize = 100)?: Settings(anonymousId = "anon_id", maxFlushInterval = 1000, flushQueueSize = 100)
+        analytics.applySettings(newSettings)
+        val events = (1..5).map {
+            TrackMessage.create("event:$it", Utils.timeStamp)
+        }
+        analytics.addCallback(object : Callback{
+            override fun success(message: Message?) {
+                assertThat(message, allOf(
+                    notNullValue(), hasProperty("eventName", `is`(events[0].eventName) )
+                ))
+                isDone.set(true)
+            }
+
+            override fun failure(message: Message?, throwable: Throwable?) {
+            }
+
+        })
+
+        events.forEach {
+            analytics.track(it)
+        }
+
+        Awaitility.await().atLeast(newSettings.maxFlushInterval, TimeUnit.MILLISECONDS).untilTrue(isDone)
+        analytics.removeAllCallbacks()
+    }
+    @Test
+    fun `test custom plugin`() {
+        val isDone = AtomicBoolean(false)
+        val customPlugin = Plugin {
+            isDone.set(true)
+            it.proceed(it.message())
+        }
+        analytics.addPlugin(customPlugin)
+        analytics.track("event", mapOf())
+        Awaitility.await().atMost(2, TimeUnit.SECONDS).untilTrue(isDone)
 
     }
-
-    fun `test message queue overflow`(){
-
-    }
-
-    fun `test custom plugin`() {}
-    fun `test custom sub plugin`() {
-
-    }
-
-    fun `test message thread safety`() {}
-    fun `test shutdown thread safety`() {
-
+    @Test
+    fun `test flush throttling`(){
+        analytics.shutdown()
+        Thread.sleep(500)
+        println("analytics shut down")
+        val isDone = AtomicBoolean(false)
+        //settings to make sure auto dump is off
+         val newSettings = SettingsState.value?.copy(maxFlushInterval = 15_000,
+            flushQueueSize = 100)?: Settings(anonymousId = "anon_id", maxFlushInterval = 15_000, flushQueueSize = 100)
+        //spy upload service to check for throttling
+        val counter = AtomicInteger(0) //will check number of times called
+        val spyUploadService = mock(DataUploadService::class.java)
+        `when`(spyUploadService.uploadSync(any(), anyOrNull())).then {
+            Thread.sleep(500)
+            HttpResponse(200, null, null)
+        }
+        val events = (1..5).map {
+            TrackMessage.create("event:$it", Utils.timeStamp)
+        }
+        val spyStorage = mock(Storage::class.java)
+        `when`(spyStorage.getDataSync(anyInt())).then {
+            println("spy called: ${counter.get()}")
+            val t = counter.incrementAndGet()
+            Thread.sleep(100)
+            assertThat(t, `is`(counter.get()))
+            if(counter.get() == 3) isDone.set(true)
+            events
+        }
+        val someAnalytics = Analytics(
+            writeKey,
+            newSettings,
+            jsonAdapter,
+            storage = spyStorage,
+            initializationListener = { success, message ->
+                println("success")
+                assertThat(success, `is`(true))
+            }, dataUploadService = mockedDataUploadService,
+            configDownloadService = mockedControlPlane
+        )
+        events.forEach {
+            someAnalytics.track(it)
+        }
+        Thread.sleep(1000) // let messages sink in
+        thread {
+            repeat((1..10).count()) {
+                someAnalytics.flush()
+            }
+        }
+        thread {
+            repeat((1..20).count()) {
+                someAnalytics.flush()
+            }
+        }
+        Awaitility.await().atMost(100, TimeUnit.SECONDS).untilTrue(isDone)
     }
 
 }

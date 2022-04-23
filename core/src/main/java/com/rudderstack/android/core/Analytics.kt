@@ -19,9 +19,7 @@ import com.rudderstack.android.core.internal.states.ContextState
 import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.*
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-
+import java.util.concurrent.*
 
 
 class Analytics private constructor(
@@ -73,7 +71,7 @@ class Analytics private constructor(
         defaultExternalIds: List<Map<String, String>>? = null,
         defaultContextMap: Map<String, Any>? = null,
         //optional
-        initializationListener : ((success : Boolean, message : String?) -> Unit)? = null
+        initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
     ) : this(
         _writeKey = writeKey, _jsonAdapter = jsonAdapter, _dataPlaneUrl = dataPlaneUrl,
         _delegate = AnalyticsDelegate(
@@ -101,6 +99,7 @@ class Analytics private constructor(
         private const val CONTROL_PLANE_URL = "https://api.rudderlabs.com/"
 
     }
+
     /**
      * Track with a built [TrackMessage]
      * Date format should be yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
@@ -221,17 +220,27 @@ class Analytics private constructor(
      */
     fun forceFlush(
         alternateDataUploadService: DataUploadService? = null,
-        alternateExecutor: ExecutorService = Executors.newCachedThreadPool(),
+        alternateExecutor: ExecutorService? = null,
         clearDb: Boolean = true
     ) {
-        val dataUploadService = alternateDataUploadService ?: DataUploadServiceImpl(_writeKey,
-            _jsonAdapter, dataPlaneUrl = _dataPlaneUrl)
-        _delegate.forceFlush( dataUploadService
-            , alternateExecutor, clearDb
+        val flushExecutor = alternateExecutor ?: ThreadPoolExecutor(
+            1, 1,
+            0L, TimeUnit.MILLISECONDS,
+            LinkedBlockingQueue<Runnable>(1),
+            ThreadPoolExecutor.DiscardOldestPolicy()
         )
-        //shut down if data uploader is initialized here
-        if(alternateDataUploadService == null)
+        val dataUploadService = alternateDataUploadService ?: DataUploadServiceImpl(
+            _writeKey,
+            _jsonAdapter, dataPlaneUrl = _dataPlaneUrl
+        )
+        _delegate.forceFlush(
+            dataUploadService, flushExecutor, clearDb
+        )
+        //shut down if data uploader/executor is initialized here
+        if (alternateDataUploadService == null)
             dataUploadService.shutdown()
+        if(alternateExecutor == null)
+            flushExecutor.shutdown()
     }
 
 }

@@ -20,6 +20,7 @@ import com.rudderstack.android.core.Storage
 import com.rudderstack.android.core.internal.states.SettingsState
 import com.rudderstack.android.models.Message
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Storage Decorator that invokes the listener based on the threshold set, with respect to time or
@@ -37,12 +38,13 @@ internal class StorageDecorator(
     private var _isShutDown = false
 
     private val onDataChange = object : Storage.DataListener {
-        override fun onDataChange(messages: List<Message>) {
-            println("\non data change: $messages \nthread: ${Thread.currentThread().name}\n")
-
-            if (messages.isNotEmpty() && settingsState.value?.flushQueueSize ?: 0 <= messages.size) {
-                dataChangeListener?.onDataChange(messages)
-                rescheduleTimer(settingsState.value)
+        override fun onDataChange() {
+            getCount {
+                if (it >= (settingsState.value?.flushQueueSize ?: 0)
+                ) {
+                    dataChangeListener?.onDataChange()
+                    rescheduleTimer(settingsState.value)
+                }
             }
         }
 
@@ -52,11 +54,14 @@ internal class StorageDecorator(
              */
         }
     }
+    private val _settingsObserver = { settings : Settings? ->
+        println("settings state listen this: $this")
+        rescheduleTimer(settings)
+    }
 
-    init {
-        settingsState.subscribe {
-            rescheduleTimer(it)
-        }
+
+        init {
+        settingsState.subscribe (_settingsObserver)
         addDataListener(onDataChange)
     }
 
@@ -66,10 +71,13 @@ internal class StorageDecorator(
         if (settings != null) {
             periodicTaskScheduler = object : TimerTask() {
                 override fun run() {
-                    getData { data ->
-                        if (data.isNotEmpty())
-                            dataChangeListener?.onDataChange(data)
-                    }
+                    /*getData { data ->
+                        if (data.isNotEmpty())*/
+                    println("periodic_task_call, $this, timer: $thresholdCountDownTimer, " +
+                            "decorator: ${this@StorageDecorator}")
+                    thresholdCountDownTimer
+                    dataChangeListener?.onDataChange()
+//                    }
                 }
             }
             if (!_isShutDown)
@@ -86,7 +94,7 @@ internal class StorageDecorator(
         storage.shutdown()
         removeDataListener(onDataChange)
         thresholdCountDownTimer.cancel()
-
+        settingsState.removeObserver(_settingsObserver)
     }
 
     /**
@@ -96,10 +104,10 @@ internal class StorageDecorator(
      */
     internal fun interface Listener {
         /**
-         * Data changed in database. Either the threshold time or threshold data count has elapsed
+         * Data changed in database. Either the threshold time elapsed or data count has changed
          *
-         * @param messages List of [Message]
+         *
          */
-        fun onDataChange(messages: List<Message>)
+        fun onDataChange()
     }
 }

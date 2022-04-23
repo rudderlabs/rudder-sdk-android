@@ -49,11 +49,13 @@ class StoragePluginTest {
     fun testStoragePluginWithQueueSize() {
         val settings = Settings(flushQueueSize = 11)
         SettingsState.update(settings)
+        val storage = BasicStorageImpl(logger = KotlinLogger)
         val storagePlugin = StoragePlugin(StorageDecorator(
-            BasicStorageImpl(logger = KotlinLogger),
+            storage
         ) {
+            val data = storage.getDataSync()
             assertThat(
-                it,
+                data,
                 allOf(
                     iterableWithSize(testMessagesList.size),
                     contains(*testMessagesList.toTypedArray())

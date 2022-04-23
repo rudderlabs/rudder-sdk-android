@@ -92,6 +92,13 @@ interface Storage {
     fun getData(offset: Int = 0, callback: (List<Message>) -> Unit)
 
     /**
+     * Data count, analogous to count(*)
+     *
+     * @param callback
+     */
+    fun getCount(callback : (Int) -> Unit)
+
+    /**
      * synchronous method to get the entire data present to a maximum of fetch limit
      * @see setMaxFetchLimit
      * @param offset offset the fetch by the given amount, i.e elements from offset to size-1
@@ -239,9 +246,8 @@ interface Storage {
         /**
          * Called whenever there's a change in data count
          *
-         * @param messages the number of messages, less than or equals the limit set in [setMaxFetchLimit]
          */
-        fun onDataChange(messages: List<Message>)
+        fun onDataChange()
 
         /**
          * Called when data is dropped to adhere to the backpressure strategy.

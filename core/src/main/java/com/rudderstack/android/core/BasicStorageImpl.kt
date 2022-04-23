@@ -104,6 +104,7 @@ class BasicStorageImpl(
                             } else
                                 break
                         }
+                    queue.addAll(messages.takeLast(_storageCapacity))
                     //callback
                     tobeRemovedList.run(dataFailBlock)
                 }
@@ -112,7 +113,6 @@ class BasicStorageImpl(
                     queue.addAll(messages)
             }
 
-            println("\nsaved msg: ${messages[0]} thread: ${Thread.currentThread().name}\n")
             onDataChange()
         }
     }
@@ -146,6 +146,10 @@ class BasicStorageImpl(
                     queue.toMutableList().takeLast(queue.size - offset)
                         .take(_maxFetchLimit).toList()
             })
+    }
+
+    override fun getCount(callback: (Int) -> Unit) {
+        queue.size.apply(callback)
     }
 
     override fun getDataSync(offset: Int): List<Message> {
@@ -251,10 +255,11 @@ class BasicStorageImpl(
 
     private fun onDataChange() {
         synchronized(this) {
-            val msgs =  queue.take(_maxFetchLimit).toList()
+//            val msgs =  queue.take(_maxFetchLimit).toList()
             _dataChangeListeners.forEach {
-                it.onDataChange(msgs)
+                it.onDataChange()
             }
+
         }
 
     }
