@@ -146,7 +146,6 @@ abstract class MessageParseTest {
         assertThat(track!!.properties!!["count"], `is`("1"))
         //serialization
         val trackJson = jsonAdapter.writeToJson(track)
-        println("track_json: $trackJson")
         JSONAssert.assertEquals(
             trackJson, JSONObject(TRACK_JSON).also {
                 it.put("channel", "server")
@@ -176,7 +175,6 @@ abstract class MessageParseTest {
             )
         )
         val aliasJson = jsonAdapter.writeToJson(alias!!)
-        println("alias_json: $aliasJson")
 
         JSONAssert.assertEquals(
             aliasJson, JSONObject(ALIAS_JSON).also {
@@ -202,7 +200,6 @@ abstract class MessageParseTest {
         assertThat(group!!.traits!!["group"], `is`("some_name"))
         assertThat(group.traits!!["journey"], `is`("Australia"))
         val groupJson = jsonAdapter.writeToJson(group)
-        println("group_json: $groupJson")
 
         JSONAssert.assertEquals(
             groupJson, JSONObject(GROUP_JSON).also {
@@ -227,7 +224,6 @@ abstract class MessageParseTest {
         )
         assertThat(screen!!.properties!!["count"], `is`("1"))
         val screenJson = jsonAdapter.writeToJson(screen)
-        println("screen_json: $screenJson")
 
         JSONAssert.assertEquals(
             screenJson, JSONObject(SCREEN_JSON).also {
@@ -253,7 +249,6 @@ abstract class MessageParseTest {
         )
         assertThat(page!!.properties!!["count"], `is`("1"))
         val pageJson = jsonAdapter.writeToJson(page)
-        println("page_json: $pageJson")
         JSONAssert.assertEquals(
             pageJson, JSONObject(PAGE_JSON).also {
                 it.put("channel", "server")
@@ -278,7 +273,6 @@ abstract class MessageParseTest {
         assertThat(identify.integrations!!["amplitude"], `is`(false))
 
         val identifyJson = jsonAdapter.writeToJson(identify)
-        println("identify_json: $identifyJson")
         JSONAssert.assertEquals(
             identifyJson, JSONObject(IDENTIFY_JSON).also {
                 it.put("channel", "server")

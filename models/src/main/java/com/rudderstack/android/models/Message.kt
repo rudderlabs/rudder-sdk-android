@@ -27,6 +27,7 @@ typealias PageProperties = Map<String, String>
 typealias ScreenProperties = Map<String, String>
 typealias TrackProperties = Map<String, String>
 typealias IdentifyTraits = Map<String, Any?>
+typealias IdentifyProperties = Map<String, String>
 //integrations might change from String,Boolean to String, Object at a later point of time
 typealias MessageIntegrations = Map<String, Boolean>
 typealias MessageDestinationProps = Map<String, Map<*, *>>
@@ -242,7 +243,7 @@ sealed class Message(
         anonymousId: String? = this.anonymousId,
         userId: String? = this.userId
     ): Message = when (this) {
-        is AliasMessage -> AliasMessage(
+        is AliasMessage -> copy(
 //            messageId,
             context,
             anonymousId,
@@ -252,7 +253,7 @@ sealed class Message(
 //            integrations,
             previousId
         )
-        is GroupMessage -> GroupMessage(
+        is GroupMessage -> copy(
 //            messageId,
             context,
             anonymousId,
@@ -263,7 +264,7 @@ sealed class Message(
             groupId,
             traits
         )
-        is IdentifyMessage -> IdentifyMessage(
+        is IdentifyMessage -> copy(
 //            messageId,
             context,
             anonymousId,
@@ -271,9 +272,9 @@ sealed class Message(
             timestamp,
             destinationProps,
 //            integrations,
-            traits
+            properties
         )
-        is PageMessage -> PageMessage(
+        is PageMessage -> copy(
 //            messageId,
             context,
             anonymousId,
@@ -285,7 +286,7 @@ sealed class Message(
             properties,
             category
         )
-        is ScreenMessage -> ScreenMessage(
+        is ScreenMessage -> copy(
 //            messageId,
             context,
             anonymousId,
@@ -297,7 +298,7 @@ sealed class Message(
             category,
             properties
         )
-        is TrackMessage -> TrackMessage(
+        is TrackMessage -> copy(
 //            messageId,
             context,
             anonymousId,
@@ -308,6 +309,8 @@ sealed class Message(
             eventName,
             properties
         )
+    }.also {
+        it.integrations = integrations
     }
 
     enum class EventType(val value: String) {
@@ -431,13 +434,13 @@ class AliasMessage internal constructor(
             anonymousId, userId, timestamp, destinationProps, previousId)
     }
 
-    override fun copy(
+    /*override fun copy(
         context: MessageContext?,
         anonymousId: String?,
         userId: String?
     ): AliasMessage {
         return super.copy(context, anonymousId, userId) as AliasMessage
-    }
+    }*/
 
     fun copy(
         context: MessageContext? = this.context,
@@ -529,13 +532,13 @@ class GroupMessage internal constructor(
         ) = GroupMessage(createContext(traits, externalIds, customContextMap),
             anonymousId, userId, timestamp, destinationProps, groupId, groupTraits)
     }
-    override fun copy(
+    /*override fun copy(
         context: MessageContext?,
         anonymousId: String?,
         userId: String?
     ): GroupMessage {
         return super.copy(context, anonymousId, userId) as GroupMessage
-    }
+    }*/
 
     fun copy(
         context: MessageContext? = this.context,
@@ -646,13 +649,13 @@ class PageMessage internal constructor(
             anonymousId, userId, timestamp, destinationProps, name, properties,
             category)
     }
-    override fun copy(
+    /*override fun copy(
         context: MessageContext?,
         anonymousId: String?,
         userId: String?
     ): PageMessage {
         return super.copy(context, anonymousId, userId) as PageMessage
-    }
+    }*/
 
     fun copy(
         context: MessageContext? = this.context,
@@ -771,13 +774,13 @@ class ScreenMessage internal constructor(
         properties
         )
     }
-    override fun copy(
+    /*override fun copy(
         context: MessageContext?,
         anonymousId: String?,
         userId: String?
     ): ScreenMessage {
         return super.copy(context, anonymousId, userId) as ScreenMessage
-    }
+    }*/
 
     fun copy(
         context: MessageContext? = this.context,
@@ -890,13 +893,13 @@ class TrackMessage internal constructor(
             properties
         )
     }
-    override fun copy(
+    /*override fun copy(
         context: MessageContext?,
         anonymousId: String?,
         userId: String?
     ): TrackMessage {
         return super.copy(context, anonymousId, userId) as TrackMessage
-    }
+    }*/
 
     fun copy(
         context: MessageContext? = this.context,
@@ -968,7 +971,7 @@ class IdentifyMessage internal constructor(
     @SerializedName("properties")
     @JsonProperty("properties")
     @Json(name = "properties")
-    val traits: IdentifyTraits? = null,
+    val properties: IdentifyProperties? = null,
 
     ) : Message(
     EventType.IDENTIFY,
@@ -987,22 +990,22 @@ class IdentifyMessage internal constructor(
             anonymousId: String? = null,
             userId: String? = null,
             timestamp: String,
-            properties: IdentifyTraits? = null,
+            properties: IdentifyProperties? = null,
             destinationProps: MessageDestinationProps? = null,
-            traits: Map<String, Any?>? = null,
+            traits: IdentifyTraits? = null,
             externalIds: List<Map<String, String>>? = null,
             customContextMap: Map<String, Any>? = null
             ) = IdentifyMessage(createContext(traits, externalIds, customContextMap),
             anonymousId, userId, timestamp, destinationProps, properties)
 
     }
-    override fun copy(
+    /*override fun copy(
         context: MessageContext?,
         anonymousId: String?,
         userId: String?
     ): IdentifyMessage {
         return super.copy(context, anonymousId, userId) as IdentifyMessage
-    }
+    }*/
 
     fun copy(
         context: MessageContext? = this.context,
@@ -1010,23 +1013,23 @@ class IdentifyMessage internal constructor(
         userId: String? = this.userId,
         timestamp: String = this.timestamp,
         destinationProps: MessageDestinationProps? = this.destinationProps,
-        properties: IdentifyTraits? = this.traits,
+        properties: IdentifyProperties? = this.properties,
 
         ) = IdentifyMessage(context, anonymousId, userId, timestamp, destinationProps, properties)
 
     override fun toString(): String {
         return "${super.toString()}, " +
-                "properties = $traits"
+                "properties = $properties"
     }
 
     override fun equals(other: Any?): Boolean {
         return super.equals(other) &&
                 other is IdentifyMessage &&
-                other.traits == traits
+                other.properties == properties
     }
 
     override fun hashCode(): Int {
-        return traits?.hashCode() ?: 0
+        return properties?.hashCode() ?: 0
     }
 }
 
