@@ -82,12 +82,14 @@ class Dao<T : Entity> internal constructor(
         conflictResolutionStrategy: ConflictResolutionStrategy
     ): List<Long> {
         return items.map {
-            db.insertWithOnConflict(
-                tableName,
-                it.nullHackColumn(),
-                it.generateContentValues(),
-                conflictResolutionStrategy.type
-            )
+            synchronized(this) {
+                db.insertWithOnConflict(
+                    tableName,
+                    it.nullHackColumn(),
+                    it.generateContentValues(),
+                    conflictResolutionStrategy.type
+                )
+            }
         }.also {
             val allData = getAllSync() ?: listOf()
             _dataChangeListeners.forEach {
@@ -162,7 +164,7 @@ class Dao<T : Entity> internal constructor(
         deleteCallback: ((numberOfRows: Int) -> Unit)? = null
     ) {
         runTransactionOrDeferToCreation { db ->
-            val deletedRows = db.delete(tableName, whereClause, args)
+            val deletedRows = synchronized(this){ db.delete(tableName, whereClause, args) }
             deleteCallback?.invoke(deletedRows)
         }
     }
@@ -233,7 +235,7 @@ class Dao<T : Entity> internal constructor(
         val fields = entityClass.getAnnotation(RudderEntity::class.java)?.fields
             ?: throw IllegalArgumentException("RudderEntity must have at least one field")
 
-        val cursor = db.rawQuery(query, arrayOf())
+        val cursor = synchronized(this) { db.rawQuery(query, arrayOf()) }
         val items = ArrayList<T>(cursor.count)
 
         if (cursor.moveToFirst()) {
@@ -263,12 +265,16 @@ class Dao<T : Entity> internal constructor(
     private fun runTransactionOrDeferToCreation(queryTransaction: (SQLiteDatabase) -> Unit) {
         _db?.let { db ->
             executorService.execute {
-                queryTransaction.invoke(db)
+                synchronized(this) {
+                    queryTransaction.invoke(db)
+                }
             }
         } ?: run {
             executorService.submit {
                 _db?.let {
-                    queryTransaction.invoke(it)
+                    synchronized(this) {
+                        queryTransaction.invoke(it)
+                    }
                 }
             }.also {
                 todoTransactions.add(it)
@@ -287,9 +293,11 @@ class Dao<T : Entity> internal constructor(
         _db = sqLiteDatabase
         //run all pending tasks
         executorService.execute {
-            sqLiteDatabase?.execSQL(createTableStmt)
-            indexStmt?.apply {
-                sqLiteDatabase?.execSQL(indexStmt)
+            synchronized(this) {
+                sqLiteDatabase?.execSQL(createTableStmt)
+                indexStmt?.apply {
+                    sqLiteDatabase?.execSQL(indexStmt)
+                }
             }
             todoTransactions.forEach {
                 it.get()

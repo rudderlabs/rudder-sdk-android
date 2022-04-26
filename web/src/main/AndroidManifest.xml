@@ -14,7 +14,7 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.rudderstack.android.web">
+    package="com.rudderstack.web">
 
     <application
         android:allowBackup="true"

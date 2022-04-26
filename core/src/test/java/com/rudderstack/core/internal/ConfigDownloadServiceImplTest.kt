@@ -17,10 +17,10 @@ package com.rudderstack.core.internal
 import com.rudderstack.core.RetryStrategy
 import com.rudderstack.core.controlPlaneUrl
 import com.rudderstack.core.writeKey
-import com.rudderstack.android.gsonrudderadapter.GsonAdapter
-import com.rudderstack.android.jacksonrudderadapter.JacksonAdapter
-import com.rudderstack.android.moshirudderadapter.MoshiAdapter
-import com.rudderstack.android.rudderjsonadapter.JsonAdapter
+import com.rudderstack.gsonrudderadapter.GsonAdapter
+import com.rudderstack.jacksonrudderadapter.JacksonAdapter
+import com.rudderstack.moshirudderadapter.MoshiAdapter
+import com.rudderstack.rudderjsonadapter.JsonAdapter
 import junit.framework.TestSuite
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat

@@ -14,13 +14,11 @@
 
 package com.rudderstack.core.internal.plugins
 
-import com.rudderstack.android.models.*
+import com.rudderstack.models.*
 import com.rudderstack.core.DestinationPlugin
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
-import com.rudderstack.core.internal.KeyConstants
 import com.rudderstack.core.internal.minusWrtKeys
-import com.rudderstack.core.internal.optAdd
 
 /**
  * Alters flow and adds values to [Message] depending on options.

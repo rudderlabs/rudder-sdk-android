@@ -21,7 +21,7 @@ import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.core.internal.states.ContextState
 import com.rudderstack.core.internal.states.SettingsState
-import com.rudderstack.android.models.IdentifyMessage
+import com.rudderstack.models.IdentifyMessage
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.Test

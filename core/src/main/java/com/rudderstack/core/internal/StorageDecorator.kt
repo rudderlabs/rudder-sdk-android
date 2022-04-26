@@ -18,7 +18,7 @@ import com.rudderstack.core.Settings
 import com.rudderstack.core.State
 import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.states.SettingsState
-import com.rudderstack.android.models.Message
+import com.rudderstack.models.Message
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 

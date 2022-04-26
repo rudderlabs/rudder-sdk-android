@@ -14,14 +14,13 @@
 
 package com.rudderstack.core
 
-import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.core.internal.states.SettingsState
-import com.rudderstack.android.gsonrudderadapter.GsonAdapter
-import com.rudderstack.android.jacksonrudderadapter.JacksonAdapter
-import com.rudderstack.android.models.*
-import com.rudderstack.android.moshirudderadapter.MoshiAdapter
-import com.rudderstack.android.rudderjsonadapter.JsonAdapter
-import com.rudderstack.android.web.HttpResponse
+import com.rudderstack.gsonrudderadapter.GsonAdapter
+import com.rudderstack.jacksonrudderadapter.JacksonAdapter
+import com.rudderstack.models.*
+import com.rudderstack.moshirudderadapter.MoshiAdapter
+import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.web.HttpResponse
 import junit.framework.TestSuite
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat

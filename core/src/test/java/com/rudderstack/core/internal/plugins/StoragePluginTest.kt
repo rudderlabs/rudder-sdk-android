@@ -20,7 +20,7 @@ import com.rudderstack.core.BasicStorageImpl
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.core.internal.StorageDecorator
 import com.rudderstack.core.internal.states.SettingsState
-import com.rudderstack.android.models.TrackMessage
+import com.rudderstack.models.TrackMessage
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*

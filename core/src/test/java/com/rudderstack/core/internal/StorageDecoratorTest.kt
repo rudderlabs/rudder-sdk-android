@@ -17,8 +17,8 @@ package com.rudderstack.core.internal
 import com.rudderstack.core.BasicStorageImpl
 import com.rudderstack.core.Settings
 import com.rudderstack.core.internal.states.SettingsState
-import com.rudderstack.android.models.Message
-import com.rudderstack.android.models.TrackMessage
+import com.rudderstack.models.Message
+import com.rudderstack.models.TrackMessage
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
