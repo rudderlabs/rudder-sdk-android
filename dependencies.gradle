@@ -42,6 +42,16 @@ ext {
             awaitility    : "org.awaitility:awaitility:${versions.awaitility}",
             robolectric   : "org.robolectric:robolectric:${versions.robolectric}",
             jsonAssert    : "org.skyscreamer:jsonassert:${versions.jsonAssert}",
-            mockito_kotlin: "org.mockito.kotlin:mockito-kotlin:${versions.mockito_kotlin}"
+            mockito_kotlin: "org.mockito.kotlin:mockito-kotlin:${versions.mockito_kotlin}",
+    ]
+
+    projects = [
+            core                  : ':core',
+            models                : ':models',
+            json_rudder_adapter   : ':rudderjsonadapter',
+            jackson_rudder_adapter: ':jacksonrudderadapter',
+            gson_rudder_adapter   : ':gsonrudderadapter',
+            moshi_rudder_adapter  : ':moshirudderadapter',
+            repository            : ':repository',
     ]
 }

@@ -52,8 +52,30 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.7.0'
 //    implementation 'androidx.appcompat:appcompat:1.3.1'
 //    implementation 'com.google.android.material:material:1.4.0'
-    implementation deps.work
+    //dependency on work manager
+    //user needs to provide dependency, in case work manager is used
+    compileOnly deps.work
+
+    //core kotlin project
+    api project(path: projects.core)
+    api project(path: projects.models)
+    api project(path: projects.repository)
+    compileOnly project(path: projects.jackson_rudder_adapter)
+    compileOnly project(path: projects.gson_rudder_adapter)
+    compileOnly project(path: projects.moshi_rudder_adapter)
+    compileOnly project(path: projects.json_rudder_adapter)
+
+    testImplementation project(path: projects.jackson_rudder_adapter)
+    testImplementation project(path: projects.gson_rudder_adapter)
+    testImplementation project(path: projects.moshi_rudder_adapter)
+    testImplementation project(path: projects.json_rudder_adapter)
+    testImplementation deps.hamcrest
+    testImplementation deps.mockito
+    testImplementation deps.mockito_kotlin
+    testImplementation deps.awaitility
+
     testImplementation 'junit:junit:4.+'
+
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }

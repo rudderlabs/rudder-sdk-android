@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 28/10/21, 8:15 PM Last modified: 28/10/21, 7:44 PM
+ * Creator: Debanjan Chatterjee on 19/10/21, 4:02 PM Last modified: 19/10/21, 4:02 PM
  * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,26 +12,21 @@
  * permissions and limitations under the License.
  */
 
-@file:JvmName("RudderClient")
+package com.rudderstack.android.sync
 
-package com.rudderstack.android.android
+import android.content.Context
+import androidx.work.Worker
+import androidx.work.WorkerParameters
 
-import android.app.Application
-
-object RudderClient {
-
-    private var application: Application? = null
-    private val mApplication: Application
-        get() = application ?: throw IllegalStateException("RudderClient has not been initialized")
-
-    private var mAdvertisingId : String? = null
-    private var mAnonymousId: String? = null
-
-    init {
-        //initialized
-//        RudderLogger.logVerbose("RudderClient: constructor invoked.")
-
+/**
+ * Syncs the data at an interval with rudder server
+ *
+ */
+class RudderSyncWorker(appContext: Context, workerParams: WorkerParameters) :
+    Worker(appContext, workerParams) {
+    override fun doWork(): Result {
+//        val unsentData = RudderDatabase.getDao()
+        return Result.success()
     }
-
 
 }
