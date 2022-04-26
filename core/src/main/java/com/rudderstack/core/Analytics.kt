@@ -48,8 +48,8 @@ class Analytics private constructor(
         jsonAdapter: JsonAdapter,
         shouldVerifySdk: Boolean = true,
         sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
-        dataPlaneUrl: String = DATA_PLANE_URL,
-        controlPlaneUrl: String = CONTROL_PLANE_URL,
+        dataPlaneUrl: String? = null, //defaults to https://hosted.rudderlabs.com
+        controlPlaneUrl: String? = null, //defaults to https://api.rudderlabs.com/
         logger: Logger = KotlinLogger,
         storage: Storage = BasicStorageImpl(logger = logger),
         analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
@@ -58,12 +58,12 @@ class Analytics private constructor(
             writeKey,
             jsonAdapter,
             SettingsState,
-            dataPlaneUrl,
+            dataPlaneUrl?: DATA_PLANE_URL,
             networkExecutor
         ),
         configDownloadService: ConfigDownloadService = ConfigDownloadServiceImpl(
             writeKey,
-            controlPlaneUrl,
+            controlPlaneUrl?: CONTROL_PLANE_URL,
             jsonAdapter,
             networkExecutor
         ),
@@ -73,7 +73,7 @@ class Analytics private constructor(
         //optional
         initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
     ) : this(
-        _writeKey = writeKey, _jsonAdapter = jsonAdapter, _dataPlaneUrl = dataPlaneUrl,
+        _writeKey = writeKey, _jsonAdapter = jsonAdapter, _dataPlaneUrl = dataPlaneUrl?: DATA_PLANE_URL,
         _delegate = AnalyticsDelegate(
             settings,
             storage,
