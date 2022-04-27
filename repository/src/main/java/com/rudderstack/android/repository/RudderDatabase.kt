@@ -79,10 +79,7 @@ object RudderDatabase {
         entityClass: Class<T>, executorService: ExecutorService = commonExecutor
 
     ): Dao<T> {
-        return registeredDaoList[entityClass]?./*.also {
-//            it.executorService.shutdown()
-            it.executorService = executorService
-        }?*/let {
+        return registeredDaoList[entityClass]?.let {
             it as Dao<T>
         } ?: Dao<T>(entityClass,  entityFactory, executorService).also{
             registeredDaoList[entityClass] = it
