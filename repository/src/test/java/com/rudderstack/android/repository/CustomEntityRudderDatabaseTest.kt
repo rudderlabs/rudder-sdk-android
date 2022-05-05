@@ -64,7 +64,7 @@ class CustomEntityRudderDatabaseTest {
     )
     class ModelEntity(val model: Model) : Entity {
         companion object {
-            fun create(values: Map<String, Any>): ModelEntity {
+            fun create(values: Map<String, Any?>): ModelEntity {
                 return ModelEntity(
                     Model(
                         values["model_name"] as String,
@@ -97,7 +97,7 @@ class CustomEntityRudderDatabaseTest {
 
     //entity factory
     class ModelEntityFactory : EntityFactory {
-        override fun <T : Entity> getEntity(entity: Class<T>, values: Map<String, Any>): T? {
+        override fun <T : Entity> getEntity(entity: Class<T>, values: Map<String, Any?>): T? {
             return when (entity) {
                 ModelEntity::class.java -> ModelEntity.create(values)
                 else -> null

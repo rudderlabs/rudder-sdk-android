@@ -15,6 +15,8 @@
 package com.rudderstack.android.repository
 
 import android.database.sqlite.SQLiteDatabase
+import androidx.core.database.getIntOrNull
+import androidx.core.database.getStringOrNull
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
 import java.util.concurrent.ExecutorService
@@ -44,6 +46,7 @@ class Dao<T : Entity> internal constructor(
     private var _db: SQLiteDatabase? = null
     private var todoTransactions: MutableList<Future<*>> = ArrayList(5)
     private val _dataChangeListeners = HashSet<DataChangeListener<T>>()
+
 
     /**
      * usage
@@ -242,11 +245,17 @@ class Dao<T : Entity> internal constructor(
             do {
                 fields.associate {
                     val value = when (it.type) {
-                        RudderField.Type.INTEGER -> cursor.getInt(
+                        RudderField.Type.INTEGER -> if(it.isNullable)cursor.getIntOrNull(
+                            cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
+                                ?: throw IllegalArgumentException("No such column ${it.fieldName}")
+                        )else cursor.getInt(
                             cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
                                 ?: throw IllegalArgumentException("No such column ${it.fieldName}")
                         )
-                        RudderField.Type.TEXT -> cursor.getString(
+                        RudderField.Type.TEXT -> if(it.isNullable)cursor.getStringOrNull(
+                            cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
+                                ?: throw IllegalArgumentException("No such column ${it.fieldName}"))
+                        else cursor.getString(
                             cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
                                 ?: throw IllegalArgumentException("No such column ${it.fieldName}"))
                     }

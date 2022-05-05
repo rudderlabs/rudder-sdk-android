@@ -18,7 +18,7 @@ import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.EntityFactory
 
 object TestEntityFactory : EntityFactory {
-    override fun <T : Entity> getEntity(entity: Class<T>, values: Map<String, Any>): T? {
+    override fun <T : Entity> getEntity(entity: Class<T>, values: Map<String, Any?>): T? {
         return when(entity){
             SampleAutoGenEntity::class.java -> SampleAutoGenEntity( values["name"] as String).also {
                 it.id = values["id"] as Int
