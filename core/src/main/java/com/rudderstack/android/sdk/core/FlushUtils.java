@@ -51,8 +51,8 @@ class FlushUtils {
         }
         Utils.NetworkResponses networkResponse;
         synchronized (MessageUploadLock.UPLOAD_LOCK) {
-            ArrayList<Integer> messageIds = new ArrayList<>();
-            ArrayList<String> messages = new ArrayList<>();
+            final ArrayList<Integer> messageIds = new ArrayList<>();
+            final ArrayList<String> messages = new ArrayList<>();
             RudderLogger.logDebug("EventRepository: flush: Fetching events to flush to server");
             //locks to prevent concurrent database access.
             synchronized (DB_LOCK) {

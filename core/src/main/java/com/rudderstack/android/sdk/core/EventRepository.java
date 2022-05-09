@@ -338,8 +338,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // initiate sleepCount
                 int sleepCount = 0;
                 Utils.NetworkResponses networkResponse = Utils.NetworkResponses.SUCCESS;
-                ArrayList<Integer> messageIds = new ArrayList<>();
-                ArrayList<String> messages = new ArrayList<>();
+                final ArrayList<Integer> messageIds = new ArrayList<>();
+                final ArrayList<String> messages = new ArrayList<>();
 
                 while (true) {
                     synchronized (MessageUploadLock.UPLOAD_LOCK) {
