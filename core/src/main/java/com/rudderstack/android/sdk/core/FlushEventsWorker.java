@@ -39,8 +39,6 @@ public class FlushEventsWorker extends Worker {
 
         return FlushUtils.flush(false,// worker is for cloud mode only
                 null,// for cloud mode only
-                new ArrayList<Integer>(),
-                new ArrayList<String>(),
                 flushConfig.flushQueueSize,
                 flushConfig.dataPlaneUrl,
                 dbManager,
