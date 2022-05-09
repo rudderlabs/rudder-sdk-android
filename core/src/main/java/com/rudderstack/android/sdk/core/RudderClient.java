@@ -743,9 +743,7 @@ public class RudderClient {
     /**
      * Flush Events in async manner.
      * This calls queues the requests on {@link RudderClient#flushExecutorService}
-     * @deprecated Use {@link RudderConfig.Builder#withFlushPeriodically(long, TimeUnit)} instead
      */
-    @Deprecated
     public void flush() {
         if (getOptOutStatus()) {
             return;

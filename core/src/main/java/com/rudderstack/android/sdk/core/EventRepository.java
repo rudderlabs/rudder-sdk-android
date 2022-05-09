@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
@@ -48,11 +49,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private RudderFlushWorkManager rudderFlushWorkManager;
     private Map<String, RudderIntegration<?>> integrationOperationsMap = new HashMap<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
-
-    // initiate lists for messageIds and messages
-    private ArrayList<Integer> messageIds = new ArrayList<>();
-    private ArrayList<String> messages = new ArrayList<>();
-
 
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
@@ -342,14 +338,16 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // initiate sleepCount
                 int sleepCount = 0;
                 Utils.NetworkResponses networkResponse = Utils.NetworkResponses.SUCCESS;
+                ArrayList<Integer> messageIds = new ArrayList<>();
+                ArrayList<String> messages = new ArrayList<>();
 
                 while (true) {
-                    synchronized (messageIds) {
+                    synchronized (MessageUploadLock.UPLOAD_LOCK) {
                         try {
                             // clear lists for reuse
                             messageIds.clear();
                             messages.clear();
-                            checkIfDBThresholdAttained();
+                            checkIfDBThresholdAttained(messageIds, messages);
                             // fetch enough events to form a batch
                             RudderLogger.logDebug("EventRepository: processor: Fetching events to flush to server");
                             dbManager.fetchEventsFromDB(messageIds, messages, config.getFlushQueueSize());
@@ -406,7 +404,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * check if the number of events in the db crossed the dbCountThreshold then delete the older events which are in excess.
      */
 
-    private void checkIfDBThresholdAttained() {
+    private void checkIfDBThresholdAttained(ArrayList<Integer> messageIds, ArrayList<String> messages) {
         // get current record count from db
         int recordCount = dbManager.getDBRecordCount();
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: checkIfDBThresholdAttained: DBRecordCount: %d", recordCount));
@@ -500,7 +498,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     void flushSync() {
 //        synchronized (this){
         FlushUtils.flush(areFactoriesInitialized, integrationOperationsMap,
-                messageIds, messages, config.getFlushQueueSize(), config.getDataPlaneUrl(),
+                config.getFlushQueueSize(), config.getDataPlaneUrl(),
                 dbManager, authHeaderString, anonymousIdHeaderString);
 //        }
     }
