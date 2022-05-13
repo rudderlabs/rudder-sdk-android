@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.repository
 
+import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import androidx.core.database.getIntOrNull
 import androidx.core.database.getStringOrNull
@@ -29,10 +30,11 @@ import java.util.concurrent.Future
  * @param T The type of entity this dao is associated to
  * @property entityClass
  * @property entityFactory An implementation of EntityFactory to provide Entities based on database stored values
- * @property executorService An executor service to run the database queries
+ * @property executorService An executor service to run the database queries.
  */
 class Dao<T : Entity> internal constructor(
     internal val entityClass: Class<T>,
+    private val useContentProvider : Boolean,
     private val entityFactory: EntityFactory,
     private val executorService: ExecutorService
 ) {
@@ -79,31 +81,11 @@ class Dao<T : Entity> internal constructor(
 
     }
 
-    private fun insertDbSync(
-        db: SQLiteDatabase,
-        items: List<T>,
-        conflictResolutionStrategy: ConflictResolutionStrategy
-    ): List<Long> {
-        return items.map {
-            synchronized(this) {
-                db.insertWithOnConflict(
-                    tableName,
-                    it.nullHackColumn(),
-                    it.generateContentValues(),
-                    conflictResolutionStrategy.type
-                )
-            }
-        }.also {
-            val allData = getAllSync() ?: listOf()
-            _dataChangeListeners.forEach {
-                it.onDataInserted(items, allData)
-            }
-        }
-    }
+
 
     fun List<T>.delete(deleteCallback: ((numberOfRows: Int) -> Unit)? = null) {
 
-        runTransactionOrDeferToCreation { db ->
+        runTransactionOrDeferToCreation { _ ->
             val fields = entityClass.getAnnotation(RudderEntity::class.java)?.fields
 
             val args = map {
@@ -135,6 +117,7 @@ class Dao<T : Entity> internal constructor(
 
         }
     }
+    //delete
     /**
      * val args = map {
     it.getPrimaryKeyValues()
@@ -167,9 +150,19 @@ class Dao<T : Entity> internal constructor(
         deleteCallback: ((numberOfRows: Int) -> Unit)? = null
     ) {
         runTransactionOrDeferToCreation { db ->
-            val deletedRows = synchronized(this){ db.delete(tableName, whereClause, args) }
+            val deletedRows = synchronized(this){ deleteFromDb(db, tableName, whereClause, args) }
             deleteCallback?.invoke(deletedRows)
         }
+    }
+    internal fun deleteFromDb(database: SQLiteDatabase,
+                              tableName: String, whereClause: String?,args: Array<out String>? ) : Int{
+        return database.delete(tableName, whereClause, args)
+    }
+
+    internal fun updateSync(database: SQLiteDatabase, tableName: String, values: ContentValues?,
+                        selection: String?,
+                        selectionArgs: Array<out String>?) : Int{
+        return database.update(tableName, values, selection, selectionArgs)
     }
 
     fun getAll(callback: (List<T>) -> Unit) {
@@ -233,6 +226,37 @@ class Dao<T : Entity> internal constructor(
         return getItems(_db ?: return null, query)
     }
 
+    //create/update
+    private fun insertDbSync(
+        db: SQLiteDatabase,
+        items: List<T>,
+        conflictResolutionStrategy: ConflictResolutionStrategy
+    ): List<Long> {
+        return items.map {
+            insertContentValues(db, tableName, it.generateContentValues(),null, conflictResolutionStrategy )
+        }.also {
+            val allData = getAllSync() ?: listOf()
+            _dataChangeListeners.forEach {
+                it.onDataInserted(items, allData)
+            }
+        }
+    }
+
+    internal fun insertContentValues(database: SQLiteDatabase,
+                                    tableName: String, contentValues: ContentValues, nullHackColumn: String?,
+                                    conflictResolutionStrategy: Dao.ConflictResolutionStrategy) : Long{
+        return synchronized(this) {
+            database.insertWithOnConflict(
+                tableName,
+                nullHackColumn,
+                contentValues,
+                conflictResolutionStrategy.type
+            )
+        }
+
+    }
+
+    //read
     private fun getItems(db: SQLiteDatabase, query: String): List<T> {
         //have to use factory
         val fields = entityClass.getAnnotation(RudderEntity::class.java)?.fields
