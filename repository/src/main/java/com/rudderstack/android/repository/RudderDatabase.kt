@@ -120,7 +120,7 @@ object RudderDatabase {
     internal fun <T : Entity> createNewDao(
         entityClass: Class<T>, executorService: ExecutorService
 
-    ): Dao<T> = Dao<T>(entityClass, entityFactory, executorService).also {
+    ): Dao<T> = Dao<T>(entityClass, true, entityFactory, executorService).also {
         registeredDaoList[entityClass] = it
         database?.apply {
             initDaoList(this, listOf(it))

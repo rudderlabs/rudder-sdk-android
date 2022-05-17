@@ -83,7 +83,7 @@ sealed class Message(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     //@Expose
-    protected var destinationProps: MessageDestinationProps? = null,
+    val destinationProps: MessageDestinationProps? = null,
 
 
 //    @Transient
@@ -342,7 +342,19 @@ sealed class Message(
         @SerializedName("Identify")
         @JsonProperty("Identify")
         @Json(name = "Identify")
-        IDENTIFY("Identify")
+        IDENTIFY("Identify");
+
+        companion object {
+            fun fromValue(value: String) = when (value) {
+                "Alias" -> EventType.ALIAS
+                "Group" -> EventType.GROUP
+                "Page" -> EventType.PAGE
+                "Screen" -> EventType.SCREEN
+                "Track" -> EventType.TRACK
+                "Identify" -> EventType.IDENTIFY
+                else -> throw IllegalArgumentException("Wrong value for event type")
+            }
+        }
     }
 
     override fun toString(): String {
@@ -430,8 +442,10 @@ class AliasMessage internal constructor(
             traits: Map<String, Any?>? = null,
             externalIds: List<Map<String, String>>? = null,
             customContextMap: Map<String, Any>? = null,
-        ) = AliasMessage(createContext(traits, externalIds, customContextMap),
-            anonymousId, userId, timestamp, destinationProps, previousId)
+        ) = AliasMessage(
+            createContext(traits, externalIds, customContextMap),
+            anonymousId, userId, timestamp, destinationProps, previousId
+        )
     }
 
     /*override fun copy(
@@ -516,7 +530,7 @@ class GroupMessage internal constructor(
     destinationProps,
 //    integrations
 ) {
-    companion object{
+    companion object {
         fun create(
             anonymousId: String? = null,
             userId: String? = null,
@@ -529,8 +543,10 @@ class GroupMessage internal constructor(
             traits: Map<String, Any?>? = null,
             externalIds: List<Map<String, String>>? = null,
             customContextMap: Map<String, Any>? = null,
-        ) = GroupMessage(createContext(traits, externalIds, customContextMap),
-            anonymousId, userId, timestamp, destinationProps, groupId, groupTraits)
+        ) = GroupMessage(
+            createContext(traits, externalIds, customContextMap),
+            anonymousId, userId, timestamp, destinationProps, groupId, groupTraits
+        )
     }
     /*override fun copy(
         context: MessageContext?,
@@ -632,7 +648,7 @@ class PageMessage internal constructor(
     destinationProps,
 //    integrations
 ) {
-    companion object{
+    companion object {
         fun create(
             anonymousId: String? = null,
             userId: String? = null,
@@ -644,10 +660,11 @@ class PageMessage internal constructor(
             traits: Map<String, Any?>? = null,
             externalIds: List<Map<String, String>>? = null,
             customContextMap: Map<String, Any>? = null
-            ) = PageMessage(
+        ) = PageMessage(
             createContext(traits, externalIds, customContextMap),
             anonymousId, userId, timestamp, destinationProps, name, properties,
-            category)
+            category
+        )
     }
     /*override fun copy(
         context: MessageContext?,
@@ -753,7 +770,7 @@ class ScreenMessage internal constructor(
     destinationProps,
 //    integrations
 ) {
-    companion object{
+    companion object {
         fun create(
 
             timestamp: String,
@@ -766,12 +783,12 @@ class ScreenMessage internal constructor(
             properties: ScreenProperties? = null,
 
             traits: Map<String, Any?>? = null,
-                   externalIds: List<Map<String, String>>? = null,
-                   customContextMap: Map<String, Any>? = null)
-         = ScreenMessage(
-        createContext(traits, externalIds, customContextMap),
+            externalIds: List<Map<String, String>>? = null,
+            customContextMap: Map<String, Any>? = null
+        ) = ScreenMessage(
+            createContext(traits, externalIds, customContextMap),
             anonymousId, userId, timestamp, destinationProps, category, name,
-        properties
+            properties
         )
     }
     /*override fun copy(
@@ -872,7 +889,7 @@ class TrackMessage internal constructor(
     destinationProps,
 //    integrations
 ) {
-    companion object{
+    companion object {
         fun create(
             eventName: String?,
             timestamp: String,
@@ -985,7 +1002,7 @@ class IdentifyMessage internal constructor(
 //    integrations
 ) {
 
-    companion object{
+    companion object {
         fun create(
             anonymousId: String? = null,
             userId: String? = null,
@@ -995,8 +1012,10 @@ class IdentifyMessage internal constructor(
             traits: IdentifyTraits? = null,
             externalIds: List<Map<String, String>>? = null,
             customContextMap: Map<String, Any>? = null
-            ) = IdentifyMessage(createContext(traits, externalIds, customContextMap),
-            anonymousId, userId, timestamp, destinationProps, properties)
+        ) = IdentifyMessage(
+            createContext(traits, externalIds, customContextMap),
+            anonymousId, userId, timestamp, destinationProps, properties
+        )
 
     }
     /*override fun copy(

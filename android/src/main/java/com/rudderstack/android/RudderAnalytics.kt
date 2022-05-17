@@ -14,26 +14,32 @@
 @file:Suppress("FunctionName")
 package com.rudderstack.android
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Logger
 import com.rudderstack.core.RetryStrategy
 import com.rudderstack.core.Settings
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.models.IdentifyTraits
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-
+//device info and stuff
+//multi process
+//bt stuff
+//tv,
+//work manager
 fun RudderAnalytics(
     writeKey: String,
     settings: Settings,
     jsonAdapter: JsonAdapter,
     shouldVerifySdk: Boolean = true,
     sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
-    dataPlaneUrl: String,
-    controlPlaneUrl: String,
+    dataPlaneUrl: String? = null,
+    controlPlaneUrl: String? = null,
     logger: Logger = KotlinLogger,
     defaultTraits: IdentifyTraits? = null,
     defaultExternalIds: List<Map<String, String>>? = null,
     defaultContextMap: Map<String, Any>? = null,
     initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
-){
-
+) : Analytics{
+//    return Analytics()
+    TODO()
 }

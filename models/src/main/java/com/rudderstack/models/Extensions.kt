@@ -18,15 +18,15 @@ package com.rudderstack.models
  * To be used to extract traits from context of [Message]
  */
 val Map<String, Any?>.traits : Map<String, Any?>?
-    get() = getOrDefault(Constants.TRAITS_ID, null) as? Map<String, Any?>?
+    get() = get(Constants.TRAITS_ID) as? Map<String, Any?>?
 
 /**
  * To be used to extract external ids from context of [Message]
  */
 val Map<String, Any?>.externalIds : List<Map<String, String>>?
-    get() = getOrDefault(Constants.EXTERNAL_ID, null) as? List<Map<String, String>>?
+    get() = get(Constants.EXTERNAL_ID) as? List<Map<String, String>>?
 /**
  * To be used to extract custom contexts from context of [Message]
  */
-val Map<String, Any?>.customContexts : Map<String, Any?>?
-    get() = getOrDefault(Constants.CUSTOM_CONTEXT_MAP_ID, null) as? Map<String, Any>?
+val Map<String, Any?>.customContexts : Map<String, Any>?
+    get() = get(Constants.CUSTOM_CONTEXT_MAP_ID) as? Map<String, Any>?

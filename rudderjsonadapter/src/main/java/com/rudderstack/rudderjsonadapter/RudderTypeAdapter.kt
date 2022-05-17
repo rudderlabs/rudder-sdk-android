@@ -25,4 +25,20 @@ import java.lang.reflect.ParameterizedType
 abstract class RudderTypeAdapter<T>  {
     val type
     get() = (this::class.java.genericSuperclass as? ParameterizedType)?.actualTypeArguments?.get(0)
+    companion object{
+        /**
+         * For ease of instantiation
+         * ```
+         * RudderTypeAdapter<SomeClass>{}
+         * ```
+         *
+         * @param T the Type or Class on which RudderTypeAdapter will act
+         * @param body Empty body to facilitate. Not used
+         * @return [RudderTypeAdapter]
+         */
+        inline operator fun<T> invoke( crossinline body : ()-> Unit) : RudderTypeAdapter<T> =
+            object : RudderTypeAdapter<T>(){}
+
+    }
+
 }

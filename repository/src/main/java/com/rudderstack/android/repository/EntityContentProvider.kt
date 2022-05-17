@@ -32,13 +32,14 @@ internal class EntityContentProvider : ContentProvider() {
 
     companion object {
 
-        internal const val ECP_TABLE_CODE = "db_table"
         internal const val ECP_ENTITY_CODE = "db_entity"
         private const val ECP_TABLE_URI_MATCHER_CODE = 1
         private const val ECP_TABLE_SUB_QUERY_URI_MATCHER_CODE = 2
 
         private var uriMatcher: UriMatcher = UriMatcher(UriMatcher.NO_MATCH)
         private var authority: String? = null
+        internal val AUTHORITY
+        get() = authority ?: throw UninitializedPropertyAccessException("onAttachInfo not called yet")
 
         private var sqLiteOpenHelper: SQLiteOpenHelper? = null
 
@@ -100,10 +101,9 @@ internal class EntityContentProvider : ContentProvider() {
     }
 
     override fun attachInfo(context: Context?, info: ProviderInfo?) {
-        authority =
-            info?.packageName + "." + this@EntityContentProvider::class.java.simpleName
-        uriMatcher =
-            UriMatcher(UriMatcher.NO_MATCH)
+        println("on attach info called: $info")
+        authority = info?.authority?:
+            info?.packageName?.let {  it + "." + this@EntityContentProvider::class.java.simpleName}
 
         /*_uriMatcher?.addURI(
             _authority,
@@ -190,14 +190,15 @@ internal class EntityContentProvider : ContentProvider() {
 
     private val Uri.initializedDao: Dao<out Entity>?
         get() {
-            return (((getQueryParameter(ECP_ENTITY_CODE))?.let {
-                Class.forName(it) as? Entity
-            } ?: return null)::class.java).let {
+            val entity = getQueryParameter(ECP_ENTITY_CODE)?.let {
+                Class.forName(it) as? Class<out Entity>
+            }
+            return ((entity ?: return null)).let {
                 RudderDatabase.createNewDao(it, _commonExecutor)
             }.also { dao ->
                 dao.setDatabase(sqLiteOpenHelper?.writableDatabase)
             }
         }
     private val Uri.tableName: String?
-        get() = getQueryParameter(ECP_TABLE_CODE)
+        get() = pathSegments[0]
 }
