@@ -11,10 +11,14 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 
+import androidx.annotation.VisibleForTesting;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Queue;
 
 /*
@@ -26,20 +30,56 @@ class DBPersistentManager extends SQLiteOpenHelper {
     // SQLite database file name
     private static final String DB_NAME = "rl_persistence.db";
     // SQLite database version number
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 2;
     static final String EVENTS_TABLE_NAME = "events";
     static final String MESSAGE = "message";
     private static final String MESSAGE_ID = "id";
+    private static final String STATUS_COL = "status";
     static final String UPDATED = "updated";
     DBInsertionHandlerThread dbInsertionHandlerThread;
     final Queue<Message> queue = new LinkedList<Message>();
+    private int _currentDbVersion = DB_VERSION;
+
+    //status values for database version 2 =. Check createSchema documentation for details.
+    private static final int STATUS_CLOUD_MODE_DONE = 0b10;
+    private static final int STATUS_DEVICE_MODE_DONE = 0b01;
+    private static final int STATUS_ALL_DONE = 0b11;
+    private static final int STATUS_NEW = 0b00;
+
+
+    //command to add status column. For details see onUpgrade or the documentation for createSchema
+    //for version 1 to 2
+    private static final String DATABASE_ALTER_ADD_STATUS = "ALTER TABLE "
+            + EVENTS_TABLE_NAME + " ADD COLUMN " + STATUS_COL + " INTEGER NOT NULL DEFAULT " + STATUS_DEVICE_MODE_DONE;
 
     /*
      * create table initially if not exists
+     * version -2 : adding status for device mode
+     * status will either be 2, 1 or 0.
+     * The events in Db will be used by both cloud and device mode.
+     * status -0x00 -> event is not used by any of cloud or device mode.
+     * 0x10 → cloud done/ device mode is pending (1st bit)
+     * 0x01 → device mode done/ cloud mode is pending (0th bit)
+     * 0x11 → both done, needs to be deleted.
+     * For checking if something is done we & and check for value < 1, meaning it's not done
+     * For updating the status perform | with the associated binary
+
      * */
     private void createSchema(SQLiteDatabase db) {
-        String createSchemaSQL = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS '%s' ('%s' INTEGER PRIMARY KEY AUTOINCREMENT, '%s' TEXT NOT NULL, '%s' INTEGER NOT NULL)",
-                EVENTS_TABLE_NAME, MESSAGE_ID, MESSAGE, UPDATED);
+        String createSchemaSQL;
+        switch (_currentDbVersion) {
+            case 1:
+                createSchemaSQL = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS '%s' " +
+                                "('%s' INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                "'%s' TEXT NOT NULL, '%s' INTEGER NOT NULL)",
+                        EVENTS_TABLE_NAME, MESSAGE_ID, MESSAGE, UPDATED);
+                break;
+            default:
+                createSchemaSQL = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS '%s' " +
+                                "('%s' INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                "'%s' TEXT NOT NULL, '%s' INTEGER NOT NULL, '%s' INTEGER NOT NULL)",
+                        EVENTS_TABLE_NAME, MESSAGE_ID, MESSAGE, UPDATED, STATUS_COL);
+        }
         RudderLogger.logVerbose(String.format(Locale.US, "DBPersistentManager: createSchema: createSchemaSQL: %s", createSchemaSQL));
         db.execSQL(createSchemaSQL);
         RudderLogger.logInfo("DBPersistentManager: createSchema: DB Schema created");
@@ -62,6 +102,13 @@ class DBPersistentManager extends SQLiteOpenHelper {
         } catch (Exception e) {
             RudderLogger.logError(e.getCause());
         }
+    }
+    @VisibleForTesting
+    void saveEventSync(String messageJson){
+        ContentValues insertValues = new ContentValues();
+        insertValues.put(DBPersistentManager.MESSAGE, messageJson.replaceAll("'", "\\\\\'"));
+        insertValues.put(DBPersistentManager.UPDATED, System.currentTimeMillis());
+        getWritableDatabase().insert(DBPersistentManager.EVENTS_TABLE_NAME, null, insertValues);
     }
 
     /*
@@ -127,14 +174,21 @@ class DBPersistentManager extends SQLiteOpenHelper {
     /*
      * returns messageIds and messages returned on executing the supplied SQL statement
      * */
-    void getEventsFromDB(List<Integer> messageIds, List<String> messages, String selectSQL) {
+    void getEventsFromDB(List<Integer> messageIds, List<String> messages,  String selectSQL) {
+        Map<Integer, Integer> messageIdStatusMap = new HashMap<>();
+        getEventsFromDB(messageIdStatusMap, messages, selectSQL);
+        messageIds.addAll(messageIdStatusMap.keySet());
+    }
+    void getEventsFromDB(Map<Integer, Integer> messageIdStatusMap,//(id (row_id), status)
+                         List<String> messages,
+                         String selectSQL) {
         // clear lists if not empty
-        if (!messageIds.isEmpty()) messageIds.clear();
+        if (!messageIdStatusMap.isEmpty()) messageIdStatusMap.clear();
         if (!messages.isEmpty()) messages.clear();
 
         try {
             // get readable database instance
-            SQLiteDatabase database = getReadableDatabase();
+            SQLiteDatabase database = getWritableDatabase();
             if (database.isOpen()) {
                 Cursor cursor = database.rawQuery(selectSQL, null);
                 if (cursor.moveToFirst()) {
@@ -142,10 +196,14 @@ class DBPersistentManager extends SQLiteOpenHelper {
                     while (!cursor.isAfterLast()) {
                         final int messageIdColIndex = cursor.getColumnIndex(MESSAGE_ID);
                         final int messageColIndex = cursor.getColumnIndex(MESSAGE);
-                        if(messageIdColIndex > -1)
-                            messageIds.add(cursor.getInt(messageIdColIndex));
-                        if(messageColIndex > -1)
-                            messages.add(cursor.getString(messageColIndex));
+                        final int statusColIndex = cursor.getColumnIndex(STATUS_COL);
+
+                        if (messageIdColIndex > -1)
+                            messageIdStatusMap.put(cursor.getInt(messageIdColIndex),
+                                    statusColIndex > -1 ?cursor.getInt(statusColIndex) : STATUS_DEVICE_MODE_DONE);
+                        if (messageColIndex > -1)
+                            messages.add(cursor.getString(messageColIndex)
+                                    );
                         cursor.moveToNext();
                     }
                 } else {
@@ -214,17 +272,23 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     private static DBPersistentManager instance;
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    static DBPersistentManager getInstance(Application application, int dbVersion) {
+        instance = new DBPersistentManager(application, dbVersion);
+        return instance;
+    }
+
     static DBPersistentManager getInstance(Application application) {
         if (instance == null) {
             RudderLogger.logInfo("DBPersistentManager: getInstance: creating instance");
-            instance = new DBPersistentManager(application);
+            return getInstance(application, DB_VERSION);
         }
         return instance;
     }
 
-    private DBPersistentManager(Application application) {
-        super(application, DB_NAME, null, DB_VERSION);
-
+    private DBPersistentManager(Application application, int version) {
+        super(application, DB_NAME, null, version);
+        _currentDbVersion = version;
         // Need to perform db operations on a separate thread to support strict mode.
         new Thread(new Runnable() {
             @Override
@@ -250,9 +314,19 @@ class DBPersistentManager extends SQLiteOpenHelper {
         createSchema(db);
     }
 
+    /**
+     * Details of method is provided in {@link SQLiteOpenHelper}
+     * We maintain here the updated versions.
+     * previous versions = none
+     * current version = 1
+     * updated version = 2 added status field values range from 0 to 0x11
+     */
     @Override
-    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-        // basically do nothing
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
+        //replace with switch when more upgrades creep in
+        if (oldVersion == 1 && newVersion >= 2) {
+            sqLiteDatabase.execSQL(DATABASE_ALTER_ADD_STATUS);
+        }
     }
 
     public void deleteAllEvents() {

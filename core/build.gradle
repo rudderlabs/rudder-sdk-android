@@ -8,6 +8,7 @@ android {
         targetSdkVersion 29
         versionCode 1
         versionName '1.5.1'
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'proguard-consumer-rules.pro'
     }
 
@@ -17,7 +18,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-consumer-rules.pro'
         }
     }
-
     testOptions {
         unitTests {
             includeAndroidResources = true
@@ -34,20 +34,25 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'androidx.annotation:annotation:1.1.0'
 
-    testImplementation 'com.android.support.test:rules:1.0.2'
+    testImplementation ('com.android.support.test:rules:1.0.2')
     testImplementation 'com.android.support.test:runner:1.0.2'
     testImplementation 'org.robolectric:robolectric:4.3'
-    testImplementation 'androidx.test:core-ktx:1.2.0'
+    testImplementation 'androidx.test:core-ktx:1.4.0'
     testImplementation "org.hamcrest:hamcrest:2.2"
-    testImplementation "org.mockito:mockito-core:3.11.2"
+    testImplementation "org.mockito:mockito-core:4.0.0"
     //issue - https://stackoverflow.com/a/58970042/5689605
 //    testImplementation "org.mockito:mockito-inline:3.11.2"
 
     testImplementation "org.powermock:powermock-core:2.0.9"
-    testImplementation "org.powermock:powermock-module-junit4:2.0.9"
+    testImplementation ("org.powermock:powermock-module-junit4:2.0.9"){
+        exclude group: 'org.hamcrest', module: 'hamcrest'
+    }
+
     testImplementation "org.powermock:powermock-api-mockito2:2.0.9"
     testImplementation 'org.awaitility:awaitility:4.2.0'
+//    androidTestImplementation "org.hamcrest:hamcrest:2.2"
 
+    androidTestImplementation ('androidx.test.ext:junit:1.1.3')
     compileOnly "androidx.work:work-runtime:2.7.1"
 
 }
@@ -57,6 +62,13 @@ ext {
     PUBLISH_VERSION = '1.5.1'
     PUBLISH_ARTIFACT_ID = 'core'
 }
-
+/*android.testVariants.all { variant ->
+    variant.getCompileConfiguration().exclude group: 'org.hamcrest', module: 'hamcrest'
+}*/
+//configurations.all {
+//    resolutionStrategy {
+//        force 'org.hamcrest:hamcrest:2.2'
+//    }
+//}
 //apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"
 
