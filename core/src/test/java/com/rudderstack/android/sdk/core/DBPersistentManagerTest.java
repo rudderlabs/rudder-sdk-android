@@ -8,6 +8,8 @@ import static org.hamcrest.Matchers.iterableWithSize;
 import static java.lang.Thread.sleep;
 
 import android.app.Application;
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -33,6 +35,7 @@ import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -71,7 +74,6 @@ public class DBPersistentManagerTest {
     public void testMigration() {
 
         final AtomicBoolean isFinished = new AtomicBoolean(false);
-//        ShadowLooper.
         final DBPersistentManager finalDbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider.<Application>getApplicationContext(),
                 1);
         new Thread(new Runnable() {
@@ -123,6 +125,38 @@ public class DBPersistentManagerTest {
             }
 
 
+        }).start();
+        Awaitility.await().atMost(1, TimeUnit.MINUTES).untilTrue(isFinished);
+
+    }
+
+    @Test
+    public void testEventTransformationGroupBy(){
+
+        final AtomicBoolean isFinished = new AtomicBoolean(false);
+        final DBPersistentManager finalDbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider.<Application>getApplicationContext(),
+                1);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    sleep(1000);
+                    SQLiteDatabase database = finalDbPersistentManager.getWritableDatabase();
+                    for (int i = 1; i <= 20; i++) {
+                        ContentValues eventTransformationValues = new ContentValues();
+                        eventTransformationValues.put(DBPersistentManager.EVENTS_TRANSFORMER_ROW_ID_COL_NAME,
+                                i % 5 + 1);
+                        eventTransformationValues.put(DBPersistentManager.EVENTS_TRANSFORMER_TRANSFORMATION_ID_COL_NAME,
+                                i);
+                        database.insert(DBPersistentManager.EVENTS_ROW_ID_TRANSFORMATION_ID_TABLE_NAME,null, eventTransformationValues);
+
+                    }
+                    finalDbPersistentManager.fetchTransformationIdsGroupByEventRowId(Arrays.asList(1,2,3,4,5));
+                    isFinished.set(true);
+                }catch (Exception e){
+
+                }
+            }
         }).start();
         Awaitility.await().atMost(1, TimeUnit.MINUTES).untilTrue(isFinished);
 

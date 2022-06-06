@@ -17,4 +17,7 @@ class RudderServerDestination implements Serializable {
     RudderServerDestinationDefinition destinationDefinition;
     @SerializedName("config")
     Object destinationConfig;
+    //added transformation id
+    @SerializedName("transformationId")
+    String transformationId;
 }

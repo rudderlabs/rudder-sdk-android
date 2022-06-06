@@ -56,7 +56,7 @@ class FlushUtils {
             RudderLogger.logDebug("EventRepository: flush: Fetching events to flush to server");
             //locks to prevent concurrent database access.
             synchronized (DB_LOCK) {
-                dbManager.fetchAllEventsFromDB(messageIds, messages);
+                dbManager.fetchAllCloudEventsFromDB(messageIds, messages);
             }
             int numberOfBatches = Utils.getNumberOfBatches(messages.size(), flushQueueSize);
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: %d batches of events to be flushed", numberOfBatches));
@@ -67,7 +67,7 @@ class FlushUtils {
                 while (retries-- > 0) {
                     List<Integer> batchMessageIds = Utils.getBatch(messageIds, flushQueueSize);
                     List<String> batchMessages = Utils.getBatch(messages, flushQueueSize);
-                    String payload = getPayloadFromMessages(batchMessageIds, batchMessages);
+                    String payload = getCloudPayloadFromMessages(batchMessageIds, batchMessages);
                     RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: payload: %s", payload));
                     RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: EventCount: %d", batchMessages.size()));
                     if (payload != null) {
@@ -182,7 +182,7 @@ class FlushUtils {
      * of deserialization and forming the payload object and creating the json string
      * again from the object
      * */
-    static String getPayloadFromMessages(List<Integer> messageIds, List<String> messages) {
+    static String getCloudPayloadFromMessages(List<Integer> messageIds, List<String> messages) {
         try {
             RudderLogger.logDebug("EventRepository: getPayloadFromMessages: recordCount: " + messages.size());
             String sentAtTimestamp = Utils.getTimeStamp();
@@ -236,4 +236,5 @@ class FlushUtils {
         }
         return null;
     }
+
 }

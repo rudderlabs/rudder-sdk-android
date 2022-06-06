@@ -2,7 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 import static com.rudderstack.android.sdk.core.FlushUtils.flushEventsToServer;
 import static com.rudderstack.android.sdk.core.FlushUtils.flushNativeSdks;
-import static com.rudderstack.android.sdk.core.FlushUtils.getPayloadFromMessages;
+import static com.rudderstack.android.sdk.core.FlushUtils.getCloudPayloadFromMessages;
 
 import android.app.Activity;
 import android.app.Application;
@@ -47,8 +47,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private RudderPreferenceManager preferenceManager;
     private RudderEventFilteringPlugin rudderEventFilteringPlugin;
     private RudderFlushWorkManager rudderFlushWorkManager;
-    private Map<String, RudderIntegration<?>> integrationOperationsMap = new HashMap<>();
-    private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
+    private final Map<String, RudderIntegration<?>> integrationOperationsMap = new HashMap<>();
+    private final Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
+    //required for device mode transform
+    private Map<String, String> destinationNameTransformationMap = null; //destinationId to transformationId
 
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
@@ -150,7 +152,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             if (isSDKEnabled) {
                                 // initiate processor
                                 RudderLogger.logDebug("EventRepository: initiateSDK: Initiating processor");
-                                Thread processorThread = new Thread(getProcessorRunnable());
+                                Thread processorThread = new Thread(getCloudFlushProcessorRunnable());
                                 processorThread.start();
 
                                 // initiate factories
@@ -158,6 +160,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                     initiateFactories(serverConfig.source.destinations);
                                     RudderLogger.logDebug("EventRepository: initiating event filtering plugin for device mode destinations");
                                     rudderEventFilteringPlugin = new RudderEventFilteringPlugin(serverConfig.source.destinations);
+                                    //device mode transform
+                                    destinationNameTransformationMap = mapDestinationNamesToTransformationIds(serverConfig.source.destinations);
+
                                 } else {
                                     RudderLogger.logDebug("EventRepository: initiateSDK: No native SDKs are found");
                                 }
@@ -188,6 +193,16 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
             }
         }).start();
+    }
+
+    private Map<String, String> mapDestinationNamesToTransformationIds(List<RudderServerDestination> destinations) {
+        Map<String, String> destinationIdsTransformationIdsMap = new HashMap<>();
+        for (RudderServerDestination destination :
+                destinations) {
+            if (destination.isDestinationEnabled)
+                destinationIdsTransformationIdsMap.put(destination.destinationName, destination.transformationId);
+        }
+        return destinationIdsTransformationIdsMap;
     }
 
     private void sendApplicationInstalled(int versionCode) {
@@ -331,7 +346,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
-    private Runnable getProcessorRunnable() {
+
+    private Runnable getCloudFlushProcessorRunnable() {
         return new Runnable() {
             @Override
             public void run() {
@@ -343,6 +359,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
                 while (true) {
                     synchronized (MessageUploadLock.UPLOAD_LOCK) {
+                        //cloud mode flush
                         try {
                             // clear lists for reuse
                             messageIds.clear();
@@ -350,14 +367,14 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             checkIfDBThresholdAttained(messageIds, messages);
                             // fetch enough events to form a batch
                             RudderLogger.logDebug("EventRepository: processor: Fetching events to flush to server");
-                            dbManager.fetchEventsFromDB(messageIds, messages, config.getFlushQueueSize());
+                            dbManager.fetchCloudEventsFromDB(messageIds, messages, config.getFlushQueueSize());
                             // if there are enough events to form a batch and flush to server
                             // OR
                             // sleepTimeOut seconds has elapsed since last successful flush and
                             // we have at least one event to flush to server
                             if (messages.size() >= config.getFlushQueueSize() || (!messages.isEmpty() && sleepCount >= config.getSleepTimeOut())) {
                                 // form payload JSON form the list of messages
-                                String payload = getPayloadFromMessages(messageIds, messages);
+                                String payload = getCloudPayloadFromMessages(messageIds, messages);
                                 RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processor: payload: %s", payload));
                                 RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: EventCount: %d", messageIds.size()));
                                 if (payload != null) {
@@ -400,24 +417,45 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         };
     }
 
+    //schedule it at given time
+    /*private Runnable getDeviceModeRunnable(){
+        return new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        };
+    }*/
+    /*private boolean performTransformationDump(){
+        dbManager.fetchDeviceModeEventsFromDb();
+        while ()
+    }*/
+
+
+
+
     /*
      * check if the number of events in the db crossed the dbCountThreshold then delete the older events which are in excess.
      */
 
     private void checkIfDBThresholdAttained(ArrayList<Integer> messageIds, ArrayList<String> messages) {
         // get current record count from db
-        int recordCount = dbManager.getDBRecordCount();
+        int recordCount = dbManager.getCloudDBRecordCount();
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: checkIfDBThresholdAttained: DBRecordCount: %d", recordCount));
         // if record count exceeds threshold count, remove older events
         if (recordCount > config.getDbCountThreshold()) {
             // fetch extra old events
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: checkIfDBThresholdAttained: OldRecordCount: %d", (recordCount - config.getDbCountThreshold())));
-            dbManager.fetchEventsFromDB(messageIds, messages, recordCount - config.getDbCountThreshold());
+            dbManager.fetchCloudEventsFromDB(messageIds, messages, recordCount - config.getDbCountThreshold());
             // remove events
             dbManager.clearEventsFromDB(messageIds);
         }
     }
 
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
+            .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
+            .create();
 
     /*
      * generic method for dumping all the events
@@ -443,18 +481,37 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (!message.getIntegrations().containsKey("All")) {
             message.setIntegrations(prepareIntegrations());
         }
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
-                .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
-                .create();
+
         String eventJson = gson.toJson(message);
-        makeFactoryDump(message, false);
+        //list of transformations the event should pass through
+        List<String> validTransformationIds = getValidTransformationIds(message, destinationNameTransformationMap);
+        //in case transformations are empty, we dump immediately,
+        //else we wait for batching
+        if (validTransformationIds.isEmpty())
+            makeFactoryDump(message, false);
+
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
         if (Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE) {
             RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
             return;
         }
-        dbManager.saveEvent(eventJson);
+        dbManager.saveEvent(eventJson, validTransformationIds);
+
+    }
+
+    // deduce the valid transformations for this message
+    // unit test this
+    private List<String> getValidTransformationIds(RudderMessage message, Map<String, String> destinationNameTransformationMap) {
+        Map<String, Object> integrations = message.getIntegrations();
+        List<String> validTids = new ArrayList<>();
+
+        for (Map.Entry<String, String> entry : destinationNameTransformationMap.entrySet()) {
+            if ((integrations.containsKey(entry.getKey()) && integrations.get(entry.getKey()).equals(true))
+                    || integrations.get("All").equals(true)) {
+                validTids.add(entry.getValue());
+            }
+        }
+        return validTids;
     }
 
     private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
