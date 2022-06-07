@@ -1,13 +1,15 @@
 package com.rudderstack.android.sdk.core;
 
+import androidx.annotation.Nullable;
+
 import java.util.List;
 
 public class TransformationResponse {
-    final String id;
+    @Nullable final String id; //transformer_id
     final int status;
-    final List<TransformedEvent> payload;
+    @Nullable final List<TransformedEvent> payload;
 
-    public TransformationResponse(String id, int status, List<TransformedEvent> payload) {
+    public TransformationResponse(@Nullable String id, int status,@Nullable List<TransformedEvent> payload) {
         this.id = id;
         this.status = status;
         this.payload = payload;

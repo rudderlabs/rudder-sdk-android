@@ -7,6 +7,8 @@ import androidx.annotation.VisibleForTesting;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
@@ -96,8 +98,8 @@ class DeviceModeUtils {
                 while ((res = bis.read()) != -1){
                     baos.write(res);
                 }
-                return new Result(Utils.NetworkResponses.SUCCESS, null, gson.<TransformationResponse>fromJson(baos.toString(),
-                        TransformationResponse.class));
+                return new Result(Utils.NetworkResponses.SUCCESS, null, gson.<List<TransformationResponse>>fromJson(baos.toString(),
+                        new TypeToken<List<TransformationResponse>>(){}.getType()));
             } else {
                 BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -160,9 +162,9 @@ class DeviceModeUtils {
         final Utils.NetworkResponses status;
         @Nullable
         final String error;
-        final TransformationResponse response;
+        final List<TransformationResponse> response;
 
-        public Result(Utils.NetworkResponses status, @Nullable String error, TransformationResponse response) {
+        public Result(Utils.NetworkResponses status, @Nullable String error, List<TransformationResponse> response) {
             this.status = status;
             this.error = error;
             this.response = response;

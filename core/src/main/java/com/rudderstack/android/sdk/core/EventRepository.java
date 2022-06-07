@@ -27,16 +27,22 @@ import com.rudderstack.android.sdk.core.util.Utils;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
  * utility class for event processing
  * */
 class EventRepository implements Application.ActivityLifecycleCallbacks {
+    //SIZE OF A BATCH FOR DEVICE MODE TRANSFORM
+    private static final int DMT_BATCH_SIZE = 12;
     private final List<RudderMessage> eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
     private String authHeaderString;
     private String anonymousIdHeaderString;
@@ -59,6 +65,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     private int noOfActivities;
 
+    //scheduled executor for device mode transformation
+    private final ScheduledExecutorService deviceModeExecutor = Executors.newScheduledThreadPool(2);
 
     /*
      * constructor to be called from RudderClient internally.
@@ -200,7 +208,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         for (RudderServerDestination destination :
                 destinations) {
             if (destination.isDestinationEnabled)
-                destinationIdsTransformationIdsMap.put(destination.destinationName, destination.transformationId);
+                destinationIdsTransformationIdsMap.put(destination.destinationDefinition.displayName, destination.transformationId);
         }
         return destinationIdsTransformationIdsMap;
     }
@@ -364,6 +372,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             // clear lists for reuse
                             messageIds.clear();
                             messages.clear();
+                            // run GC
+                            runGcForEvents();
+
                             checkIfDBThresholdAttained(messageIds, messages);
                             // fetch enough events to form a batch
                             RudderLogger.logDebug("EventRepository: processor: Fetching events to flush to server");
@@ -384,7 +395,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                     // if success received from server
                                     if (networkResponse == Utils.NetworkResponses.SUCCESS) {
                                         // remove events from DB
-                                        dbManager.clearEventsFromDB(messageIds);
+                                        dbManager.markCloudModeDone(messageIds);
                                         // reset sleep count to indicate successful flush
                                         sleepCount = 0;
                                     }
@@ -403,7 +414,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             break;
                         } else if (networkResponse == Utils.NetworkResponses.ERROR) {
                             RudderLogger.logInfo("flushEvents: Retrying in " + Math.abs(sleepCount - config.getSleepTimeOut()) + "s");
-                            Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000);
+                            Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000L);
                         } else {
                             // retry entire logic in 1 second
                             Thread.sleep(1000);
@@ -416,16 +427,113 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
         };
     }
-
+    private int deviceModeSleepCount = 0; // checking how many seconds passed since last successful transformation
     //schedule it at given time
-    /*private Runnable getDeviceModeRunnable(){
-        return new Runnable() {
-            @Override
-            public void run() {
+    private void startDeviceModeProcessor(){
+        deviceModeExecutor.scheduleAtFixedRate(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        //fetch messages
+                        long deviceModeEventsCount = dbManager.getDeviceModeRecordCount();
+                        if((deviceModeSleepCount >= config.getSleepTimeOut() && deviceModeEventsCount >= 0)
+                                || deviceModeEventsCount >= DMT_BATCH_SIZE){
+                            runGcForEvents();
+                            do {
+                                DeviceModeUtils.Result result =
+                                        DeviceModeUtils.transform(dbManager, DMT_BATCH_SIZE, config.getDataPlaneUrl(),
+                                        authHeaderString, anonymousIdHeaderString);
+                                if(result.status == Utils.NetworkResponses.WRITE_KEY_ERROR){
+                                    RudderLogger.logInfo("Wrong WriteKey. Aborting");
+                                    break;
+                                } else if(result.status == Utils.NetworkResponses.ERROR){
+                                    RudderLogger.logInfo("flushEvents: Retrying in " + Math.abs(deviceModeSleepCount - config.getSleepTimeOut()) + "s");
+                                    deviceModeSleepCount -= config.getSleepTimeOut();
+                                }
+                                else {
+                                    //success
+                                    sendTransformedData(result.response);
 
+                                }
+                            }while (dbManager.getDeviceModeRecordCount() > 0);
+                        }
+                        deviceModeSleepCount ++;
+                    }
+                }
+        , 1, 1, TimeUnit.SECONDS);
+    }
+
+    private void sendTransformedData(List<TransformationResponse> transformationResponses) {
+        //transformation to destination has one to many mapping.
+        //we find the destinations mapped to the transformer.
+        //order the events based on order no, which are same as row_ids
+        //dump to factories and change their status
+        List<RudderServerDestination> destinations = configManager.getConfig().source.destinations;
+        for (TransformationResponse transformationResponse: transformationResponses
+        ) {
+            processTransformedPayload(transformationResponse, destinations);
+        }
+    }
+
+    private void processTransformedPayload(TransformationResponse transformationResponse, List<RudderServerDestination> destinations) {
+
+        for (Map.Entry<String, String> entry: destinationNameTransformationMap.entrySet()
+        ) {
+
+            if(transformationResponse.status == 200 &&
+                    transformationResponse.payload != null
+                    && entry.getValue().equals(transformationResponse.id)){
+                processPayloadForTransformation(transformationResponse.payload,
+                        destinations, entry.getKey());
+                //
+                //delete it from row_id to transform_id table
+                dbManager.deleteFromRowIdTransformationIdTable(transformationResponse.id);
+                //update event
+                //check in rowId_eventId table then
+                Map<Integer, Integer> eventTransformationCountMap =
+                        dbManager.getTransformationCountMapForEvents(transformationResponse.payload);
+
+                List<TransformationResponse.TransformedEvent> transformedEventsWithCountZero = new ArrayList<>();
+
+                for (TransformationResponse.TransformedEvent te : transformationResponse.payload){
+                    if(eventTransformationCountMap.get(te.orderNo) <= 0)
+                        transformedEventsWithCountZero.add(te);
+                }
+
+                dbManager.markDeviceModeDone(transformedEventsWithCountZero);
             }
-        };
-    }*/
+        }
+    }
+
+    private void processPayloadForTransformation(List<TransformationResponse.TransformedEvent> payload,
+                                                 List<RudderServerDestination> destinations, String
+                                                 transformationName) {
+        Collections.sort(payload,
+                new Comparator<TransformationResponse.TransformedEvent>() {
+                    @Override
+                    public int compare(TransformationResponse.TransformedEvent o1,
+                                       TransformationResponse.TransformedEvent o2) {
+                        return o1.orderNo - o2.orderNo;
+                    }
+                });
+
+        for (RudderServerDestination destination:
+                destinations) {
+            if(destination.destinationDefinition.displayName.equals(transformationName)){
+                //check in second table if done
+                for (TransformationResponse.TransformedEvent transformedEvent :
+                        payload) {
+                    integrationOperationsMap.get(destination.destinationDefinition.displayName)
+                            .dump(transformedEvent.event);
+
+                }
+            }
+        }
+    }
+
+    private void runGcForEvents(){
+        dbManager.deleteDoneEvents();
+    }
     /*private boolean performTransformationDump(){
         dbManager.fetchDeviceModeEventsFromDb();
         while ()
@@ -440,15 +548,16 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     private void checkIfDBThresholdAttained(ArrayList<Integer> messageIds, ArrayList<String> messages) {
         // get current record count from db
-        int recordCount = dbManager.getCloudDBRecordCount();
+        int recordCount = dbManager.getDBRecordCount();
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: checkIfDBThresholdAttained: DBRecordCount: %d", recordCount));
         // if record count exceeds threshold count, remove older events
         if (recordCount > config.getDbCountThreshold()) {
             // fetch extra old events
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: checkIfDBThresholdAttained: OldRecordCount: %d", (recordCount - config.getDbCountThreshold())));
-            dbManager.fetchCloudEventsFromDB(messageIds, messages, recordCount - config.getDbCountThreshold());
+            /*dbManager.fetchCloudEventsFromDB(messageIds, messages, recordCount - config.getDbCountThreshold());
             // remove events
-            dbManager.clearEventsFromDB(messageIds);
+            dbManager.clearEventsFromDB(messageIds);*/
+            dbManager.deleteFirstEvents(recordCount -  config.getDbCountThreshold());
         }
     }
 

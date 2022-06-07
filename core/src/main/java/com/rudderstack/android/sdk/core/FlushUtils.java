@@ -79,7 +79,7 @@ class FlushUtils {
                             // remove events from DB
                             RudderLogger.logDebug(String.format("EventRepository: flush: Successfully sent batch %d/%d ", i, numberOfBatches));
                             RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: clearingEvents of batch %d from DB: %s", i, networkResponse));
-                            dbManager.clearEventsFromDB(batchMessageIds);
+                            dbManager.markCloudModeDone(batchMessageIds);
                             messageIds.removeAll(batchMessageIds);
                             messages.removeAll(batchMessages);
                             lastBatchFailed = false;
