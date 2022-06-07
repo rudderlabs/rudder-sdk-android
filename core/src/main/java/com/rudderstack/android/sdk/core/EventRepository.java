@@ -196,6 +196,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             Thread.sleep(retryCount * 2 * 1000);
                         }
                     }
+                    startDeviceModeProcessor();
                 } catch (Exception ex) {
                     RudderLogger.logError(ex);
                 }
