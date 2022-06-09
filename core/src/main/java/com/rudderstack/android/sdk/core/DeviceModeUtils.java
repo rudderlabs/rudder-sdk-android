@@ -46,12 +46,13 @@ class DeviceModeUtils {
         }
         String requestJson = createDeviceTransformPayload(dbManager, messageIds, messages);
 
-        return transformDataThroughServer(requestJson,dataPlaneUrl, authHeaderString, anonymousIdHeaderString );
+        return transformDataThroughServer(requestJson, dataPlaneUrl, authHeaderString, anonymousIdHeaderString);
     }
 
     @VisibleForTesting
     static Result transformDataThroughServer(String requestPayload, String dataPlaneUrl, String authHeaderString, String anonymousIdHeaderString) {
-        if(requestPayload == null) return new Result(Utils.NetworkResponses.ERROR, "Payload is Null", null);
+        if (requestPayload == null)
+            return new Result(Utils.NetworkResponses.ERROR, "Payload is Null", null);
 
         try {
             if (TextUtils.isEmpty(authHeaderString)) {
@@ -95,11 +96,13 @@ class DeviceModeUtils {
                 BufferedInputStream bis = new BufferedInputStream(httpConnection.getInputStream());
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 int res = -1;
-                while ((res = bis.read()) != -1){
+                while ((res = bis.read()) != -1) {
                     baos.write(res);
                 }
+
                 return new Result(Utils.NetworkResponses.SUCCESS, null, gson.<List<TransformationResponse>>fromJson(baos.toString(),
-                        new TypeToken<List<TransformationResponse>>(){}.getType()));
+                        new TypeToken<List<TransformationResponse>>() {
+                        }.getType()));
             } else {
                 BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -115,14 +118,14 @@ class DeviceModeUtils {
                 // return null as request made is not successful
                 if (errorResp.toLowerCase().contains("invalid write key")) {
 
-                    return new Result( Utils.NetworkResponses.WRITE_KEY_ERROR, errorResp, null);
+                    return new Result(Utils.NetworkResponses.WRITE_KEY_ERROR, errorResp, null);
                 }
-                return new Result( Utils.NetworkResponses.ERROR, errorResp, null);
+                return new Result(Utils.NetworkResponses.ERROR, errorResp, null);
 
             }
         } catch (Exception ex) {
             RudderLogger.logError(ex);
-            return new Result( Utils.NetworkResponses.ERROR, ex.getLocalizedMessage(), null);
+            return new Result(Utils.NetworkResponses.ERROR, ex.getLocalizedMessage(), null);
 
         }
 
@@ -147,7 +150,7 @@ class DeviceModeUtils {
             String msg = messages.get(i);
 
             deviceTransformRequestPayload.put(TRANSFORMATION_PAYLOAD_ORDER_NO_IDENTIFIER, rowId);
-            deviceTransformRequestPayload.put(TRANSFORMATION_PAYLOAD_EVENT_IDENTIFIER, msg);
+            deviceTransformRequestPayload.put(TRANSFORMATION_PAYLOAD_EVENT_IDENTIFIER, gson.fromJson(msg, Map.class));
 
             if (eventRowTransformationIdMap != null) {
                 List<String> transformationIds = eventRowTransformationIdMap.get(rowId);

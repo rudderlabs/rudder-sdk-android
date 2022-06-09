@@ -9,6 +9,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteStatement;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -32,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +45,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 class EventRepository implements Application.ActivityLifecycleCallbacks {
     //SIZE OF A BATCH FOR DEVICE MODE TRANSFORM
     private static final int DMT_BATCH_SIZE = 12;
-    private final List<RudderMessage> eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
+    private final Map<Integer, RudderMessage> eventReplayMessageQueue = Collections.synchronizedMap(new HashMap<Integer, RudderMessage>());
     private String authHeaderString;
     private String anonymousIdHeaderString;
     private Context context;
@@ -56,7 +58,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private final Map<String, RudderIntegration<?>> integrationOperationsMap = new HashMap<>();
     private final Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
     //required for device mode transform
-    private Map<String, String> destinationNameTransformationMap = null; //destinationId to transformationId
+    private Map<String, String> destinationNameTransformationMap = new HashMap<>(); //destinationId to transformationId
 
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
@@ -184,7 +186,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                 RudderLogger.logDebug("Flushing persisted events");
                                 dbManager.flushEvents();
                             }
-
                             isSDKInitialized = true;
                         } else if (receivedError == Utils.NetworkResponses.WRITE_KEY_ERROR) {
                             RudderLogger.logError("WRONG WRITE_KEY");
@@ -302,7 +303,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     if (destination != null && destination.isDestinationEnabled) {
                         Object destinationConfig = destination.destinationConfig;
                         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: Initiating %s native SDK factory", key));
-                        RudderIntegration<?> nativeOp = factory.create(destinationConfig, RudderClient.getInstance(), config);
+                        RudderIntegration<?> nativeOp = null;
+                        try {
+                            nativeOp = factory.create(destinationConfig, RudderClient.getInstance(), config);
+                        } catch (Exception e) {
+                            RudderLogger.logError(String.format(Locale.US, "EventRepository: initiateFactories: Failed to initiate %s native SDK Factory due to %s", key, e.getLocalizedMessage()));
+                        }
                         RudderLogger.logInfo(String.format(Locale.US, "EventRepository: initiateFactories: Initiated %s native SDK factory", key));
                         integrationOperationsMap.put(key, nativeOp);
                         handleCallBacks(key, nativeOp);
@@ -347,9 +353,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         synchronized (eventReplayMessageQueue) {
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: replayMessageQueue: replaying old messages with factories. Count: %d", eventReplayMessageQueue.size()));
             if (!eventReplayMessageQueue.isEmpty()) {
-                for (RudderMessage message : eventReplayMessageQueue) {
-                    makeFactoryDump(message, true);
+                TreeMap<Integer, RudderMessage> sortedEventReplayMessageQueue = new TreeMap<Integer, RudderMessage>();
+                sortedEventReplayMessageQueue.putAll(eventReplayMessageQueue);
+                for (Map.Entry<Integer, RudderMessage> entry : sortedEventReplayMessageQueue.entrySet()) {
+                    makeFactoryDump(entry.getKey(), entry.getValue(), true);
                 }
+                sortedEventReplayMessageQueue.clear();
             }
             eventReplayMessageQueue.clear();
         }
@@ -428,40 +437,41 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
         };
     }
+
     private int deviceModeSleepCount = 0; // checking how many seconds passed since last successful transformation
+
     //schedule it at given time
-    private void startDeviceModeProcessor(){
+    private void startDeviceModeProcessor() {
         deviceModeExecutor.scheduleAtFixedRate(
                 new Runnable() {
                     @Override
                     public void run() {
                         //fetch messages
                         long deviceModeEventsCount = dbManager.getDeviceModeRecordCount();
-                        if((deviceModeSleepCount >= config.getSleepTimeOut() && deviceModeEventsCount >= 0)
-                                || deviceModeEventsCount >= DMT_BATCH_SIZE){
+                        if ((deviceModeSleepCount >= config.getSleepTimeOut() && deviceModeEventsCount >= 0)
+                                || deviceModeEventsCount >= DMT_BATCH_SIZE) {
                             runGcForEvents();
                             do {
                                 DeviceModeUtils.Result result =
                                         DeviceModeUtils.transform(dbManager, DMT_BATCH_SIZE, config.getDataPlaneUrl(),
-                                        authHeaderString, anonymousIdHeaderString);
-                                if(result.status == Utils.NetworkResponses.WRITE_KEY_ERROR){
+                                                authHeaderString, anonymousIdHeaderString);
+                                if (result.status == Utils.NetworkResponses.WRITE_KEY_ERROR) {
                                     RudderLogger.logInfo("Wrong WriteKey. Aborting");
                                     break;
-                                } else if(result.status == Utils.NetworkResponses.ERROR){
+                                } else if (result.status == Utils.NetworkResponses.ERROR) {
                                     RudderLogger.logInfo("flushEvents: Retrying in " + Math.abs(deviceModeSleepCount - config.getSleepTimeOut()) + "s");
                                     deviceModeSleepCount -= config.getSleepTimeOut();
-                                }
-                                else {
+                                } else {
                                     //success
                                     sendTransformedData(result.response);
 
                                 }
-                            }while (dbManager.getDeviceModeRecordCount() > 0);
+                            } while (dbManager.getDeviceModeRecordCount() > 0);
                         }
-                        deviceModeSleepCount ++;
+                        deviceModeSleepCount++;
                     }
                 }
-        , 1, 1, TimeUnit.SECONDS);
+                , 1, 1, TimeUnit.SECONDS);
     }
 
     private void sendTransformedData(List<TransformationResponse> transformationResponses) {
@@ -470,7 +480,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         //order the events based on order no, which are same as row_ids
         //dump to factories and change their status
         List<RudderServerDestination> destinations = configManager.getConfig().source.destinations;
-        for (TransformationResponse transformationResponse: transformationResponses
+        for (TransformationResponse transformationResponse : transformationResponses
         ) {
             processTransformedPayload(transformationResponse, destinations);
         }
@@ -478,12 +488,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     private void processTransformedPayload(TransformationResponse transformationResponse, List<RudderServerDestination> destinations) {
 
-        for (Map.Entry<String, String> entry: destinationNameTransformationMap.entrySet()
+        for (Map.Entry<String, String> entry : destinationNameTransformationMap.entrySet()
         ) {
 
-            if(transformationResponse.status == 200 &&
+            if (transformationResponse.status == 200 &&
                     transformationResponse.payload != null
-                    && entry.getValue().equals(transformationResponse.id)){
+                    && entry.getValue().equals(transformationResponse.id)) {
                 processPayloadForTransformation(transformationResponse.payload,
                         destinations, entry.getKey());
                 //
@@ -496,8 +506,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
                 List<TransformationResponse.TransformedEvent> transformedEventsWithCountZero = new ArrayList<>();
 
-                for (TransformationResponse.TransformedEvent te : transformationResponse.payload){
-                    if(eventTransformationCountMap.get(te.orderNo) <= 0)
+                for (TransformationResponse.TransformedEvent te : transformationResponse.payload) {
+                    if (!eventTransformationCountMap.containsKey(te.orderNo) || eventTransformationCountMap.get(te.orderNo) <= 0)
                         transformedEventsWithCountZero.add(te);
                 }
 
@@ -508,7 +518,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     private void processPayloadForTransformation(List<TransformationResponse.TransformedEvent> payload,
                                                  List<RudderServerDestination> destinations, String
-                                                 transformationName) {
+                                                         transformationName) {
         Collections.sort(payload,
                 new Comparator<TransformationResponse.TransformedEvent>() {
                     @Override
@@ -518,9 +528,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     }
                 });
 
-        for (RudderServerDestination destination:
+        for (RudderServerDestination destination :
                 destinations) {
-            if(destination.destinationDefinition.displayName.equals(transformationName)){
+            if (destination.destinationDefinition.displayName.equals(transformationName)) {
                 //check in second table if done
                 for (TransformationResponse.TransformedEvent transformedEvent :
                         payload) {
@@ -532,7 +542,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
-    private void runGcForEvents(){
+    private void runGcForEvents() {
         dbManager.deleteDoneEvents();
     }
     /*private boolean performTransformationDump(){
@@ -558,7 +568,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             /*dbManager.fetchCloudEventsFromDB(messageIds, messages, recordCount - config.getDbCountThreshold());
             // remove events
             dbManager.clearEventsFromDB(messageIds);*/
-            dbManager.deleteFirstEvents(recordCount -  config.getDbCountThreshold());
+            dbManager.deleteFirstEvents(recordCount - config.getDbCountThreshold());
         }
     }
 
@@ -593,20 +603,38 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
 
         String eventJson = gson.toJson(message);
-        //list of transformations the event should pass through
-        List<String> validTransformationIds = getValidTransformationIds(message, destinationNameTransformationMap);
-        //in case transformations are empty, we dump immediately,
-        //else we wait for batching
-        if (validTransformationIds.isEmpty())
-            makeFactoryDump(message, false);
+//        //list of transformations the event should pass through
+//        List<String> validTransformationIds = getValidTransformationIds(message, destinationNameTransformationMap);
+//        //in case transformations are empty, we dump immediately,
+//        //else we wait for batching
+//        if (validTransformationIds.isEmpty()) {
+//            makeFactoryDump(message, false);
+//        }
 
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
         if (Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE) {
             RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
             return;
         }
-        dbManager.saveEvent(eventJson, validTransformationIds);
+        dbManager.saveEvent(eventJson, new EventInsertionCallback(message));
 
+    }
+
+    interface Callback {
+        void onInsertion(int rowId);
+    }
+
+    class EventInsertionCallback implements Callback {
+        RudderMessage message;
+
+        public EventInsertionCallback(RudderMessage message) {
+            this.message = message;
+        }
+
+        @Override
+        public void onInsertion(int rowId) {
+            makeFactoryDump(rowId, message, false);
+        }
     }
 
     // deduce the valid transformations for this message
@@ -624,40 +652,31 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         return validTids;
     }
 
-    private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
+    private void makeFactoryDump(int rowId, RudderMessage message, boolean fromHistory) {
         synchronized (eventReplayMessageQueue) {
             if (areFactoriesInitialized || fromHistory) {
-                //Fetch all the Integrations set by the user, for sending events to any specific device mode destinations
+
                 Map<String, Object> integrationOptions = message.getIntegrations();
-                //If 'All' is 'true'
-                if ((boolean) integrationOptions.get("All")) {
-                    for (String key : integrationOperationsMap.keySet()) {
+                for (String key : integrationOperationsMap.keySet()) {
+                    if ((((boolean) integrationOptions.get("All")) && (!integrationOptions.containsKey(key) || ((boolean) integrationOptions.get(key)))) || ((boolean) integrationOptions.get(key))) {
                         RudderIntegration<?> integration = integrationOperationsMap.get(key);
                         //If integration is not null and if key is either not present or it is set to true, then dump it.
-                        if (integration != null)
-                            if (!integrationOptions.containsKey(key) || (boolean) integrationOptions.get(key))
-                                if (rudderEventFilteringPlugin.isEventAllowed(key, message)) {
+                        if (integration != null) {
+                            if (rudderEventFilteringPlugin.isEventAllowed(key, message)) {
+                                if (!destinationNameTransformationMap.containsKey(key)) {
                                     RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
                                     integration.dump(message);
+                                } else {
+                                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: Destination %s needs transformation, hence saving it to the events_to_transform table", key));
+                                    dbManager.saveEventToTransformationMapping(rowId, destinationNameTransformationMap.get(key));
                                 }
-                    }
-                }
-                //If User has set any specific Option.
-                else {
-                    for (String key : integrationOperationsMap.keySet()) {
-                        RudderIntegration<?> integration = integrationOperationsMap.get(key);
-                        //If integration is not null and 'key' is set to 'true', then dump it.
-                        if (integration != null)
-                            if (integrationOptions.containsKey(key) && (boolean) integrationOptions.get(key))
-                                if (rudderEventFilteringPlugin.isEventAllowed(key, message)) {
-                                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: makeFactoryDump: dumping for %s", key));
-                                    integration.dump(message);
-                                }
+                            }
+                        }
                     }
                 }
             } else {
                 RudderLogger.logDebug("EventRepository: makeFactoryDump: factories are not initialized. dumping to replay queue");
-                eventReplayMessageQueue.add(message);
+                eventReplayMessageQueue.put(rowId, message);
             }
         }
     }
