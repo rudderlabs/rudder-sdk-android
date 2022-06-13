@@ -589,9 +589,11 @@ class DBPersistentManager extends SQLiteOpenHelper {
     }
 
     void deleteFirstEvents(int count) {
-        getWritableDatabase().delete(EVENTS_TABLE_NAME, MESSAGE_ID + " IN ( " +
-                "SELECT " + MESSAGE_ID + " FROM " + EVENTS_TABLE_NAME +
-                " ORDER BY " + MESSAGE_ID + " LIMIT " + count + ");", null);
+        synchronized (DB_LOCK) {
+            getWritableDatabase().delete(EVENTS_TABLE_NAME, MESSAGE_ID + " IN ( " +
+                    "SELECT " + MESSAGE_ID + " FROM " + EVENTS_TABLE_NAME +
+                    " ORDER BY " + MESSAGE_ID + " LIMIT " + count + ");", null);
+        }
     }
 }
 

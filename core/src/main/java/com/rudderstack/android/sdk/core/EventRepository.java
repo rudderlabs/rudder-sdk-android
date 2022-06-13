@@ -209,8 +209,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         Map<String, String> destinationIdsTransformationIdsMap = new HashMap<>();
         for (RudderServerDestination destination :
                 destinations) {
-            if (destination.isDestinationEnabled)
-                destinationIdsTransformationIdsMap.put(destination.destinationDefinition.displayName, destination.transformationId);
+            if (destination.isDestinationEnabled && destination.transformationsList != null && destination.transformationsList.size() > 0)
+                destinationIdsTransformationIdsMap.put(destination.destinationDefinition.displayName, destination.transformationsList.get(0).transformationId);
         }
         return destinationIdsTransformationIdsMap;
     }

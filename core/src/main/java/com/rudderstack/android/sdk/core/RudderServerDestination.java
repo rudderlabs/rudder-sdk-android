@@ -3,6 +3,7 @@ package com.rudderstack.android.sdk.core;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 class RudderServerDestination implements Serializable {
     @SerializedName("id")
@@ -18,6 +19,6 @@ class RudderServerDestination implements Serializable {
     @SerializedName("config")
     Object destinationConfig;
     //added transformation id
-    @SerializedName("transformationId")
-    String transformationId;
+    @SerializedName("transformationsList")
+    ArrayList<RudderTransformation> transformationsList;
 }
