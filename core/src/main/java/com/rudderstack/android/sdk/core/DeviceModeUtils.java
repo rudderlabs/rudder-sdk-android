@@ -138,27 +138,30 @@ class DeviceModeUtils {
     //shouldn't be called on main thread
     private static String createDeviceTransformPayload(DBPersistentManager dbPersistentManager,
                                                        List<Integer> rowIds, List<String> messages) {
-        if (rowIds.size() != messages.size()) return null;
-
         Map<Integer, List<String>> eventRowTransformationIdMap = dbPersistentManager.fetchTransformationIdsGroupByEventRowId(rowIds);
-        List<Map<String, Object>> request = new ArrayList<>(rowIds.size());
-
+        StringBuilder jsonPayload = new StringBuilder();
+        jsonPayload.append("[");
+        int totalBatchSize = Utils.getUTF8Length(jsonPayload) + 1;
+        if (rowIds.size() != messages.size()) return null;
         for (int i = 0; i < rowIds.size(); i++) {
-
-            Map<String, Object> deviceTransformRequestPayload = new HashMap<>(3);
-            int rowId = rowIds.get(i);
-            String msg = messages.get(i);
-
-            deviceTransformRequestPayload.put(TRANSFORMATION_PAYLOAD_ORDER_NO_IDENTIFIER, rowId);
-            deviceTransformRequestPayload.put(TRANSFORMATION_PAYLOAD_EVENT_IDENTIFIER, gson.fromJson(msg, Map.class));
-
-            if (eventRowTransformationIdMap != null) {
-                List<String> transformationIds = eventRowTransformationIdMap.get(rowId);
-                deviceTransformRequestPayload.put(TRANSFORMATION_PAYLOAD_TRANSFORMATION_IDENTIFIER, transformationIds);
+            StringBuilder message = new StringBuilder();
+            message.append("{");
+            message.append("\"orderNo\":").append(rowIds.get(i)).append(",");
+            message.append("\"event\":").append(messages.get(i)).append(",");
+            message.append("\"transformationIds\":").append(eventRowTransformationIdMap.get(rowIds.get(i)).toString());
+            message.append("}");
+            totalBatchSize += Utils.getUTF8Length(message);
+            if (totalBatchSize >= Utils.MAX_BATCH_SIZE) {
+                RudderLogger.logDebug(String.format(Locale.US, "DeviceModeUtils: createDeviceTransformPayload: MAX_BATCH_SIZE reached at index: %d | Total: %d", i, totalBatchSize));
+                break;
             }
-            request.add(deviceTransformRequestPayload);
+            jsonPayload.append(message);
         }
-        return gson.toJson(request);
+        if (jsonPayload.charAt(jsonPayload.length() - 1) == ',') {
+            jsonPayload.deleteCharAt(jsonPayload.length() - 1);
+        }
+        jsonPayload.append("]");
+        return jsonPayload.toString();
     }
 
     static class Result {

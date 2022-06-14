@@ -520,11 +520,17 @@ class DBPersistentManager extends SQLiteOpenHelper {
         }
     }
 
-    void deleteFromRowIdTransformationIdTable(String transformId) {
-//        String sql =
+    void deleteFromRowIdTransformationIdTable(String transformId, List<TransformationResponse.TransformedEvent> transformedEvents) {
+        int size = transformedEvents.size();
+        StringBuilder rowIdsQueryBuilder = new StringBuilder("(" + transformedEvents.get(0).orderNo);
+        if (size > 1)
+            for (int i = 1; i < size; i++) {
+                rowIdsQueryBuilder.append(",").append(transformedEvents.get(i).orderNo);
+            }
+        rowIdsQueryBuilder.append(")");
         getWritableDatabase().delete(DBPersistentManager.EVENTS_ROW_ID_TRANSFORMATION_ID_TABLE_NAME,
                 DBPersistentManager.EVENTS_TRANSFORMER_TRANSFORMATION_ID_COL_NAME + " = \""
-                        + transformId + "\"", null);
+                        + transformId + "\" AND "+DBPersistentManager.EVENTS_TRANSFORMER_ROW_ID_COL_NAME+" IN "+rowIdsQueryBuilder.toString(), null);
     }
 
     void saveEventToTransformationMapping(int rowId, String transformationId) {

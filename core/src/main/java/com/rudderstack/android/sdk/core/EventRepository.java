@@ -442,7 +442,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     //schedule it at given time
     private void startDeviceModeProcessor() {
-        deviceModeExecutor.scheduleAtFixedRate(
+        deviceModeExecutor.scheduleWithFixedDelay(
                 new Runnable() {
                     @Override
                     public void run() {
