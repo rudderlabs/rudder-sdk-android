@@ -10,7 +10,8 @@ class RudderPreferenceManager {
     private static final String RUDDER_SERVER_CONFIG_KEY = "rl_server_config";
     private static final String RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY = "rl_server_last_updated";
     private static final String RUDDER_TRAITS_KEY = "rl_traits";
-    private static final String RUDDER_APPLICATION_INFO_KEY = "rl_application_info_key";
+    private static final String RUDDER_APPLICATION_BUILD_KEY = "rl_application_build_key";
+    private static final String RUDDER_APPLICATION_VERSION_KEY = "rl_application_version_key";
     private static final String RUDDER_EXTERNAL_ID_KEY = "rl_external_id";
     private static final String RUDDER_OPT_STATUS_KEY = "rl_opt_status";
     private static final String RUDDER_OPT_IN_TIME_KEY = "rl_opt_in_time";
@@ -47,12 +48,20 @@ class RudderPreferenceManager {
         preferences.edit().putString(RUDDER_TRAITS_KEY, traitsJson).apply();
     }
 
-    int getBuildVersionCode() {
-        return preferences.getInt(RUDDER_APPLICATION_INFO_KEY, -1);
+    int getBuildNumber() {
+        return preferences.getInt(RUDDER_APPLICATION_BUILD_KEY, -1);
     }
 
-    void saveBuildVersionCode(int versionCode) {
-        preferences.edit().putInt(RUDDER_APPLICATION_INFO_KEY, versionCode).apply();
+    void saveBuildNumber(int versionCode) {
+        preferences.edit().putInt(RUDDER_APPLICATION_BUILD_KEY, versionCode).apply();
+    }
+
+    String getVersionName() {
+        return preferences.getString(RUDDER_APPLICATION_VERSION_KEY, null);
+    }
+
+    void saveVersionName(String versionName) {
+        preferences.edit().putString(RUDDER_APPLICATION_VERSION_KEY, versionName).apply();
     }
 
     String getExternalIds() {
