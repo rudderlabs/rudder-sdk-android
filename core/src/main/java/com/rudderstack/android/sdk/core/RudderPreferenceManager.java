@@ -4,6 +4,8 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.Locale;
+
 class RudderPreferenceManager {
     // keys
     private static final String RUDDER_PREFS = "rl_prefs";
@@ -11,6 +13,8 @@ class RudderPreferenceManager {
     private static final String RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY = "rl_server_last_updated";
     private static final String RUDDER_TRAITS_KEY = "rl_traits";
     private static final String RUDDER_APPLICATION_INFO_KEY = "rl_application_info_key";
+    private static final String RUDDER_APPLICATION_BUILD_KEY = "rl_application_build_key";
+    private static final String RUDDER_APPLICATION_VERSION_KEY = "rl_application_version_key";
     private static final String RUDDER_EXTERNAL_ID_KEY = "rl_external_id";
     private static final String RUDDER_OPT_STATUS_KEY = "rl_opt_status";
     private static final String RUDDER_OPT_IN_TIME_KEY = "rl_opt_in_time";
@@ -53,6 +57,26 @@ class RudderPreferenceManager {
 
     void saveBuildVersionCode(int versionCode) {
         preferences.edit().putInt(RUDDER_APPLICATION_INFO_KEY, versionCode).apply();
+    }
+
+    void deleteBuildVersionCode() {
+        preferences.edit().remove(RUDDER_APPLICATION_INFO_KEY).apply();
+    }
+
+    int getBuildNumber() {
+        return preferences.getInt(RUDDER_APPLICATION_BUILD_KEY, -1);
+    }
+
+    void saveBuildNumber(int versionCode) {
+        preferences.edit().putInt(RUDDER_APPLICATION_BUILD_KEY, versionCode).apply();
+    }
+
+    String getVersionName() {
+        return preferences.getString(RUDDER_APPLICATION_VERSION_KEY, null);
+    }
+
+    void saveVersionName(String versionName) {
+        preferences.edit().putString(RUDDER_APPLICATION_VERSION_KEY, versionName).apply();
     }
 
     String getExternalIds() {
@@ -105,6 +129,15 @@ class RudderPreferenceManager {
 
     String getPeriodicWorkRequestId() {
         return preferences.getString(RUDDER_PERIODIC_WORK_REQUEST_ID_KEY, null);
+    }
+
+    void performMigration() {
+        int versionCode = getBuildVersionCode();
+        if (versionCode != -1) {
+            RudderLogger.logDebug(String.format(Locale.US, "RudderPreferenceManager: performMigration: build number stored in %s key, migrating it to %s", RUDDER_APPLICATION_INFO_KEY, RUDDER_APPLICATION_BUILD_KEY));
+            deleteBuildVersionCode();
+            saveBuildNumber(versionCode);
+        }
     }
 
 
