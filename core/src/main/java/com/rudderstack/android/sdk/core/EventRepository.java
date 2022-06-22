@@ -85,6 +85,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         try {
             // initiate RudderPreferenceManager
             preferenceManager = RudderPreferenceManager.getInstance(_application);
+            preferenceManager.performMigration();
             if (preferenceManager.getOptStatus()) {
                 if (!TextUtils.isEmpty(_anonymousId)) {
                     _anonymousId = null;
