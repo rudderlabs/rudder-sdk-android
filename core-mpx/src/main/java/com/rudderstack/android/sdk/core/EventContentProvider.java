@@ -68,7 +68,7 @@ public class EventContentProvider extends ContentProvider {
             getContext().getContentResolver().notifyChange(_uri, null);
             return _uri;
         }
-
+        //TODO(check for root cause)
 //        throw new SQLException("Failed to add a record into " + uri);
             return null;
     }
