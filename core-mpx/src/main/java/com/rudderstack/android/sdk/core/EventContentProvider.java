@@ -69,7 +69,8 @@ public class EventContentProvider extends ContentProvider {
             return _uri;
         }
 
-        throw new SQLException("Failed to add a record into " + uri);
+//        throw new SQLException("Failed to add a record into " + uri);
+            return null;
     }
 
     @Override
