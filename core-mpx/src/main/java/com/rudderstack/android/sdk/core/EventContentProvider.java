@@ -68,8 +68,12 @@ public class EventContentProvider extends ContentProvider {
             getContext().getContentResolver().notifyChange(_uri, null);
             return _uri;
         }
-        //TODO(check for root cause)
-//        throw new SQLException("Failed to add a record into " + uri);
+        // TODO(check for root cause)
+        // throw new SQLException("Failed to add a record into " + uri);
+        // Returning null from the insert method of the content provider
+        // doesn't cause any issue. By design it's a nullable method.
+        // Content Provider documentation Ref:
+        // https://developer.android.com/reference/android/content/ContentProvider#insert(android.net.Uri,%20android.content.ContentValues)
             return null;
     }
 
