@@ -56,7 +56,7 @@ class FlushUtils {
             RudderLogger.logDebug("EventRepository: flush: Fetching events to flush to server");
             //locks to prevent concurrent database access.
             synchronized (DB_LOCK) {
-                dbManager.fetchAllCloudEventsFromDB(messageIds, messages);
+                dbManager.fetchAllCloudModeEventsFromDB(messageIds, messages);
             }
             int numberOfBatches = Utils.getNumberOfBatches(messages.size(), flushQueueSize);
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: %d batches of events to be flushed", numberOfBatches));

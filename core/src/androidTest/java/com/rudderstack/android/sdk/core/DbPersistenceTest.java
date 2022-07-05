@@ -1,6 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.DBPersistentManager.UPDATED;
+import static com.rudderstack.android.sdk.core.DBPersistentManager.UPDATED_COL;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;

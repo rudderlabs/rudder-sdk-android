@@ -7,8 +7,6 @@ import androidx.annotation.VisibleForTesting;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.TypeAdapter;
-import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
@@ -21,7 +19,6 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -46,13 +43,13 @@ class DeviceModeUtils {
         }
         String requestJson = createDeviceTransformPayload(dbManager, messageIds, messages);
 
-        return transformDataThroughServer(requestJson, dataPlaneUrl, authHeaderString, anonymousIdHeaderString);
+        return transformDataThroughServer(requestJson, dataPlaneUrl, authHeaderString, anonymousIdHeaderString, messageIds);
     }
 
     @VisibleForTesting
-    static Result transformDataThroughServer(String requestPayload, String dataPlaneUrl, String authHeaderString, String anonymousIdHeaderString) {
+    static Result transformDataThroughServer(String requestPayload, String dataPlaneUrl, String authHeaderString, String anonymousIdHeaderString, List<Integer> originalMessageIds) {
         if (requestPayload == null)
-            return new Result(Utils.NetworkResponses.ERROR, "Payload is Null", null);
+            return new Result(Utils.NetworkResponses.ERROR, "Payload is Null", null, originalMessageIds);
 
         try {
             if (TextUtils.isEmpty(authHeaderString)) {
@@ -100,9 +97,8 @@ class DeviceModeUtils {
                     baos.write(res);
                 }
 
-                return new Result(Utils.NetworkResponses.SUCCESS, null, gson.<List<TransformationResponse>>fromJson(baos.toString(),
-                        new TypeToken<List<TransformationResponse>>() {
-                        }.getType()));
+                return new Result(Utils.NetworkResponses.SUCCESS, null, gson.fromJson(baos.toString(),
+                        TransformationResponse.class), originalMessageIds);
             } else {
                 BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -118,14 +114,14 @@ class DeviceModeUtils {
                 // return null as request made is not successful
                 if (errorResp.toLowerCase().contains("invalid write key")) {
 
-                    return new Result(Utils.NetworkResponses.WRITE_KEY_ERROR, errorResp, null);
+                    return new Result(Utils.NetworkResponses.WRITE_KEY_ERROR, errorResp, null, originalMessageIds);
                 }
-                return new Result(Utils.NetworkResponses.ERROR, errorResp, null);
+                return new Result(Utils.NetworkResponses.ERROR, errorResp, null, originalMessageIds);
 
             }
         } catch (Exception ex) {
             RudderLogger.logError(ex);
-            return new Result(Utils.NetworkResponses.ERROR, ex.getLocalizedMessage(), null);
+            return new Result(Utils.NetworkResponses.ERROR, ex.getLocalizedMessage(), null, originalMessageIds);
 
         }
 
@@ -138,29 +134,43 @@ class DeviceModeUtils {
     //shouldn't be called on main thread
     private static String createDeviceTransformPayload(DBPersistentManager dbPersistentManager,
                                                        List<Integer> rowIds, List<String> messages) {
-        Map<Integer, List<String>> eventRowTransformationIdMap = dbPersistentManager.fetchTransformationIdsGroupByEventRowId(rowIds);
+        Map<Integer, List<String>> eventRowDestinationIdMap = dbPersistentManager.fetchDestinationIdsGroupByEventRowId(rowIds);
         StringBuilder jsonPayload = new StringBuilder();
+        jsonPayload.append("{");
+        jsonPayload.append("\"batch\" :");
         jsonPayload.append("[");
-        int totalBatchSize = Utils.getUTF8Length(jsonPayload) + 1;
+        int totalBatchSize = Utils.getUTF8Length(jsonPayload) + 2;
         if (rowIds.size() != messages.size()) return null;
-        for (int i = 0; i < rowIds.size(); i++) {
-            StringBuilder message = new StringBuilder();
-            message.append("{");
-            message.append("\"orderNo\":").append(rowIds.get(i)).append(",");
-            message.append("\"event\":").append(messages.get(i)).append(",");
-            message.append("\"transformationIds\":").append(eventRowTransformationIdMap.get(rowIds.get(i)).toString());
-            message.append("}");
-            totalBatchSize += Utils.getUTF8Length(message);
-            if (totalBatchSize >= Utils.MAX_BATCH_SIZE) {
-                RudderLogger.logDebug(String.format(Locale.US, "DeviceModeUtils: createDeviceTransformPayload: MAX_BATCH_SIZE reached at index: %d | Total: %d", i, totalBatchSize));
-                break;
+        try {
+            Gson gson = new Gson();
+            for (int i = 0; i < rowIds.size(); i++) {
+                List<String> destinationIdsForEvent = eventRowDestinationIdMap.get(rowIds.get(i));
+                if (destinationIdsForEvent == null || destinationIdsForEvent.size() == 0)
+                    continue;
+                String destinationIdsCSV = gson.toJson(destinationIdsForEvent);
+                StringBuilder message = new StringBuilder();
+                message.append("{");
+                message.append("\"orderNo\":").append(rowIds.get(i)).append(",");
+                message.append("\"event\":").append(messages.get(i)).append(",");
+
+                message.append("\"destinationIds\":").append(destinationIdsCSV);
+                message.append("}");
+                message.append(",");
+                totalBatchSize += Utils.getUTF8Length(message);
+                if (totalBatchSize >= Utils.MAX_BATCH_SIZE) {
+                    RudderLogger.logDebug(String.format(Locale.US, "DeviceModeUtils: createDeviceTransformPayload: MAX_BATCH_SIZE reached at index: %d | Total: %d", i, totalBatchSize));
+                    break;
+                }
+                jsonPayload.append(message);
             }
-            jsonPayload.append(message);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         if (jsonPayload.charAt(jsonPayload.length() - 1) == ',') {
             jsonPayload.deleteCharAt(jsonPayload.length() - 1);
         }
         jsonPayload.append("]");
+        jsonPayload.append("}");
         return jsonPayload.toString();
     }
 
@@ -168,12 +178,14 @@ class DeviceModeUtils {
         final Utils.NetworkResponses status;
         @Nullable
         final String error;
-        final List<TransformationResponse> response;
+        final TransformationResponse response;
+        final List<Integer> originalMessageIds;
 
-        public Result(Utils.NetworkResponses status, @Nullable String error, List<TransformationResponse> response) {
+        public Result(Utils.NetworkResponses status, @Nullable String error, TransformationResponse response, List<Integer> originalMessageIds) {
             this.status = status;
             this.error = error;
             this.response = response;
+            this.originalMessageIds = originalMessageIds;
         }
     }
 }

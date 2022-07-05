@@ -1,6 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.DBPersistentManager.UPDATED;
+import static com.rudderstack.android.sdk.core.DBPersistentManager.UPDATED_COL;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.iterableWithSize;
@@ -91,7 +91,7 @@ public class DBPersistentManagerTest {
 
                     String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC LIMIT %d",
                             DBPersistentManager.EVENTS_TABLE_NAME,
-                            UPDATED, 2);
+                            UPDATED_COL, 2);
                     finalDbPersistentManager.getEventsFromDB(idStatusMap, messages, selectSQL);
 
                     assertThat(idStatusMap, allOf(
@@ -144,14 +144,14 @@ public class DBPersistentManagerTest {
                     SQLiteDatabase database = finalDbPersistentManager.getWritableDatabase();
                     for (int i = 1; i <= 20; i++) {
                         ContentValues eventTransformationValues = new ContentValues();
-                        eventTransformationValues.put(DBPersistentManager.EVENTS_TRANSFORMER_ROW_ID_COL_NAME,
+                        eventTransformationValues.put(DBPersistentManager.EVENTS_DESTINATION_ROW_ID_COL_NAME,
                                 i % 5 + 1);
-                        eventTransformationValues.put(DBPersistentManager.EVENTS_TRANSFORMER_TRANSFORMATION_ID_COL_NAME,
+                        eventTransformationValues.put(DBPersistentManager.EVENTS_DESTINATION_DESTINATION_ID_COL_NAME,
                                 i);
-                        database.insert(DBPersistentManager.EVENTS_ROW_ID_TRANSFORMATION_ID_TABLE_NAME,null, eventTransformationValues);
+                        database.insert(DBPersistentManager.EVENTS_DESTINATION_ID_TABLE_NAME,null, eventTransformationValues);
 
                     }
-                    finalDbPersistentManager.fetchTransformationIdsGroupByEventRowId(Arrays.asList(1,2,3,4,5));
+                    finalDbPersistentManager.fetchDestinationIdsGroupByEventRowId(Arrays.asList(1,2,3,4,5));
                     isFinished.set(true);
                 }catch (Exception e){
 

@@ -249,4 +249,35 @@ public class Utils {
         }
     }
 
+    public static String getCSVString(List<Integer> integers) {
+        int size = integers.size();
+        if (size <= 0) return null;
+        StringBuilder sb = new StringBuilder("(" + integers.get(0));
+        if (size > 1)
+            for (int i = 1; i < size; i++) {
+                sb.append(",").append(integers.get(i));
+            }
+        sb.append(")");
+        return sb.toString();
+    }
+
+    public static <K, V> K getKeyForValueFromMap(Map<K, V> map, Object value) {
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            if (value.equals(entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    public static <K, V extends Object> boolean getBooleanFromMap(Map<K, V> map, K key) {
+        if (!map.containsKey(key))
+            return false;
+        V value = map.get(key);
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        return false;
+    }
+
 }
