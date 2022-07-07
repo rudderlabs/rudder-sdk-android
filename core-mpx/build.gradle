@@ -6,8 +6,8 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 2
-        versionName '1.1.1'
+        versionCode 1
+        versionName '1.1.0'
         consumerProguardFiles 'proguard-consumer-rules.pro'
     }
 
@@ -53,7 +53,7 @@ dependencies {
 
 ext {
     PUBLISH_GROUP_ID = 'com.rudderstack.android.sdk'
-    PUBLISH_VERSION = '1.1.1'
+    PUBLISH_VERSION = '1.1.0'
     PUBLISH_ARTIFACT_ID = 'core-mpx'
 }
 
