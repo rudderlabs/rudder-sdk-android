@@ -35,7 +35,7 @@ class RudderOptionPluginTest {
         return@BaseDestinationPlugin it.proceed(it.message())
     }
     private val message = TrackMessage.create(
-        "ev-1", Utils.timeStamp,
+        "ev-1", RudderUtils.timeStamp,
         traits = mapOf(
             "age" to 31,
             "office" to "Rudderstack"

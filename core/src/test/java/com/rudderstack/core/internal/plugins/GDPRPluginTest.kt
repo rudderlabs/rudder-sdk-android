@@ -16,7 +16,7 @@ package com.rudderstack.core.internal.plugins
 
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.Settings
-import com.rudderstack.core.Utils
+import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.models.TrackMessage
 import org.hamcrest.MatcherAssert.assertThat
@@ -26,7 +26,7 @@ import org.junit.Test
 class GDPRPluginTest {
     private val gdprPlugin = GDPRPlugin()
     private val message = TrackMessage.create(
-        "ev-1", Utils.timeStamp,
+        "ev-1", RudderUtils.timeStamp,
         traits = mapOf(
             "age" to 31,
             "office" to "Rudderstack"

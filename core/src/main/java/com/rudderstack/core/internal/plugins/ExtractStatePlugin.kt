@@ -41,7 +41,7 @@ internal class ExtractStatePlugin(
             //save and update traits
             //update userId
             //save and update external ids
-            message.context?.let {
+            val newContext = message.context?.let {
 
                 //alias and identify messages are expected to contain user id.
                 //We check in context as well as context.traits with either keys "userId" and "id"
@@ -54,20 +54,19 @@ internal class ExtractStatePlugin(
 
                 // in case of identify, the stored traits (if any) are replaced by the ones provided
                 when (message) {
-                    is IdentifyMessage -> {
-                        it.traits ifNotNull storage::saveTraits
-                        it.externalIds ifNotNull storage::saveExternalIds
-                        contextState.update(it)
-                        it
-                    }
                     is AliasMessage -> {
                         // in case of alias, we change the user id in traits
                         message.updateNewUserId(newUserId, it)
+
                     }
                     else -> it
                 }
-            }
+            }?.also {
 
+                storage.cacheContext(it)
+                contextState.update(it)
+
+            }
         }
 
         return chain.proceed(message)
@@ -94,22 +93,20 @@ internal class ExtractStatePlugin(
                 ) as? String?
     }
 
-    private fun AliasMessage.updateNewUserId(newUserId : String?, messageContext: MessageContext) : MessageContext{
-        newUserId?.let { newId ->
+    private fun AliasMessage.updateNewUserId(newUserId : String?, messageContext: MessageContext) : MessageContext {
+        val newTraits = newUserId?.let { newId ->
             mapOf(
                 KeyConstants.CONTEXT_ID_KEY to
                         newId,
                 KeyConstants.CONTEXT_USER_ID_KEY to
                         newId
             ) optAdd messageContext.traits
-        } ifNotNull storage::saveTraits
+        }
         //also in case of alias, user id in context should also change, given it's
         // present there
-       return messageContext optAdd (messageContext[KeyConstants.CONTEXT_USER_ID_KEY])?.let {
-            mapOf(KeyConstants.CONTEXT_USER_ID_KEY to it)
-        } optAdd (messageContext[KeyConstants.CONTEXT_ID_KEY])?.let {
-            mapOf(KeyConstants.CONTEXT_ID_KEY to it)
-        }
+        return messageContext.updateWith(traits =
+        newTraits)
     }
+
 
 }

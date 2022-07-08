@@ -22,7 +22,7 @@ package com.rudderstack.core.internal
  * @param value The nullable [Map] object to "add"
  * @return The "sum" of both maps if [value] is not null, else this
  */
-internal infix fun<K,V> Map<K,V>.optAdd(value : Map<K,V>?) : Map<K,V>{
+infix fun<K,V> Map<K,V>.optAdd(value : Map<K,V>?) : Map<K,V>{
     return value?.let {
         this + value
     }?: this

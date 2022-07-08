@@ -23,15 +23,15 @@ import com.squareup.moshi.Json
 import java.util.*
 
 typealias MessageContext = Map<String, Any?>
-typealias PageProperties = Map<String, String>
-typealias ScreenProperties = Map<String, String>
-typealias TrackProperties = Map<String, String>
+typealias PageProperties = Map<String, Any>
+typealias ScreenProperties = Map<String, Any>
+typealias TrackProperties = Map<String, Any>
 typealias IdentifyTraits = Map<String, Any?>
-typealias IdentifyProperties = Map<String, String>
+typealias IdentifyProperties = Map<String, Any>
 //integrations might change from String,Boolean to String, Object at a later point of time
 typealias MessageIntegrations = Map<String, Boolean>
 typealias MessageDestinationProps = Map<String, Map<*, *>>
-typealias GroupTraits = Map<String, String>
+typealias GroupTraits = Map<String, Any>
 
 @JsonIgnoreProperties("type\$models")
 sealed class Message(

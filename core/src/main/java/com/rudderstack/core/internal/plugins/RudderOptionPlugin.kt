@@ -103,6 +103,6 @@ internal class RudderOptionPlugin(private val options: RudderOptions) : Plugin {
                 }
             }
 
-        return createContext(context?.traits, updatedExternalIds, context?.customContexts)
+        return context?.updateWith(externalIds = updatedExternalIds)
     }
 }

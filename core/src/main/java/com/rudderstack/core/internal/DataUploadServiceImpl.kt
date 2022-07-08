@@ -17,7 +17,7 @@ package com.rudderstack.core.internal
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.Settings
 import com.rudderstack.core.State
-import com.rudderstack.core.Utils
+import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.states.SettingsState
 import com.rudderstack.models.Message
 import com.rudderstack.rudderjsonadapter.JsonAdapter
@@ -49,7 +49,7 @@ internal class DataUploadServiceImpl(
     override fun upload(data: List<Message>, extraInfo: Map<String,String>?, callback: (response: HttpResponse<out Any>) -> Unit) {
         if(networkExecutor.isShutdown || networkExecutor.isTerminated)
             return
-        val batchBody = mapOf<String, Any>("sentAt" to Utils.timeStamp,
+        val batchBody = mapOf<String, Any>("sentAt" to RudderUtils.timeStamp,
         "batch" to data).let {
             if(extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
         }
@@ -68,7 +68,7 @@ internal class DataUploadServiceImpl(
     }
 
     override fun uploadSync(data: List<Message>, extraInfo: Map<String, String>?): HttpResponse<out Any> {
-        val batchBody = mapOf<String, Any>("sentAt" to Utils.timeStamp,
+        val batchBody = mapOf<String, Any>("sentAt" to RudderUtils.timeStamp,
             "batch" to data).let {
             if(extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
         }

@@ -98,7 +98,7 @@ class RudderContext {
             preferenceManger.saveAnonymousId(anonymousId)
         }
         Companion.anonymousId = anonymousId
-        app = RudderApp(application)
+        app = RudderApp (application)
 
         // get saved traits from prefs. if not present create new one and save
         val traitsJson: String = preferenceManger.getTraits()

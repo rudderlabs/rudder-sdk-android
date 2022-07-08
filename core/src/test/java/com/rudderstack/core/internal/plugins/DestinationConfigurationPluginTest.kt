@@ -17,7 +17,7 @@ package com.rudderstack.core.internal.plugins
 import com.rudderstack.core.BaseDestinationPlugin
 import com.rudderstack.core.DestinationPlugin
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.Utils
+import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.models.TrackMessage
@@ -48,7 +48,7 @@ class DestinationConfigurationPluginTest {
             return@BaseDestinationPlugin it.proceed(it.message())
         }
     )
-    private val message = TrackMessage.create("some_event", timestamp = Utils.timeStamp)
+    private val message = TrackMessage.create("some_event", timestamp = RudderUtils.timeStamp)
 
     //test plugin
     private var destinationConfigurationPlugin: DestinationConfigurationPlugin? = null

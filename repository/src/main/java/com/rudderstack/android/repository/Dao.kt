@@ -15,13 +15,15 @@
 package com.rudderstack.android.repository
 
 import android.content.ContentValues
+import android.content.Context
+import android.database.Cursor
+import android.database.DatabaseUtils
 import android.database.sqlite.SQLiteDatabase
 import androidx.core.database.getIntOrNull
 import androidx.core.database.getStringOrNull
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 /**
@@ -34,7 +36,8 @@ import java.util.concurrent.Future
  */
 class Dao<T : Entity> internal constructor(
     internal val entityClass: Class<T>,
-    private val useContentProvider : Boolean,
+    private val useContentProvider: Boolean,
+    private val context: Context,
     private val entityFactory: EntityFactory,
     private val executorService: ExecutorService
 ) {
@@ -49,6 +52,11 @@ class Dao<T : Entity> internal constructor(
     private var todoTransactions: MutableList<Future<*>> = ArrayList(5)
     private val _dataChangeListeners = HashSet<DataChangeListener<T>>()
 
+    private val entityContentProviderUri by lazy {
+        EntityContentProvider.getContentUri(tableName, context).buildUpon().appendQueryParameter(
+            EntityContentProvider.ECP_ENTITY_CODE, entityClass.name
+        )
+    }
 
     /**
      * usage
@@ -82,7 +90,6 @@ class Dao<T : Entity> internal constructor(
     }
 
 
-
     fun List<T>.delete(deleteCallback: ((numberOfRows: Int) -> Unit)? = null) {
 
         runTransactionOrDeferToCreation { _ ->
@@ -105,13 +112,13 @@ class Dao<T : Entity> internal constructor(
             }?.reduce { acc, s -> "$acc AND $s" }
 
             // receives the number of deleted rows and fires callback
-           val extendedDeleteCb = { numberOfRows :Int ->
-               deleteCallback?.invoke(numberOfRows)
-               val allData = getAllSync() ?: listOf()
-               _dataChangeListeners.forEach {
-                   it.onDataDeleted(this.subList(0,numberOfRows), allData)
-               }
-           }
+            val extendedDeleteCb = { numberOfRows: Int ->
+                deleteCallback?.invoke(numberOfRows)
+                val allData = getAllSync() ?: listOf()
+                _dataChangeListeners.forEach {
+                    it.onDataDeleted(this.subList(0, numberOfRows), allData)
+                }
+            }
             delete(whereClause, null, extendedDeleteCb)
 
 
@@ -150,24 +157,40 @@ class Dao<T : Entity> internal constructor(
         deleteCallback: ((numberOfRows: Int) -> Unit)? = null
     ) {
         runTransactionOrDeferToCreation { db ->
-            val deletedRows = synchronized(this){ deleteFromDb(db, tableName, whereClause, args) }
+            val deletedRows = deleteFromDb(db, tableName, whereClause, args)
             deleteCallback?.invoke(deletedRows)
         }
     }
-    internal fun deleteFromDb(database: SQLiteDatabase,
-                              tableName: String, whereClause: String?,args: Array<out String>? ) : Int{
-        return database.delete(tableName, whereClause, args)
+
+    internal fun deleteFromDb(
+        database: SQLiteDatabase,
+        tableName: String, whereClause: String?, args: Array<out String>?
+    ): Int {
+        return if (useContentProvider) context.contentResolver.delete(
+            entityContentProviderUri.build(),
+            whereClause,
+            args
+        )
+        else synchronized(this) { database.delete(tableName, whereClause, args) }
     }
 
-    internal fun updateSync(database: SQLiteDatabase, tableName: String, values: ContentValues?,
-                        selection: String?,
-                        selectionArgs: Array<out String>?) : Int{
-        return database.update(tableName, values, selection, selectionArgs)
+    internal fun updateSync(
+        database: SQLiteDatabase, tableName: String, values: ContentValues?,
+        selection: String?,
+        selectionArgs: Array<out String>?
+    ): Int {
+        return if (useContentProvider) context.contentResolver.update(
+            entityContentProviderUri.build(),
+            values,
+            selection,
+            selectionArgs
+        )
+        else synchronized(this) { database.update(tableName, values, selection, selectionArgs) }
     }
 
     fun getAll(callback: (List<T>) -> Unit) {
         runTransactionOrDeferToCreation { db: SQLiteDatabase ->
-            callback.invoke(getItems(db, "SELECT * FROM $tableName"))
+            callback.invoke(getItems(db, null))
         }
 
     }
@@ -208,12 +231,15 @@ class Dao<T : Entity> internal constructor(
      * @return all data and null if database is not ready yet
      */
     fun getAllSync(): List<T>? {
-        return _db?.let { getItems(it, "SELECT * FROM $tableName") }
+        return _db?.let { getItems(it) }
     }
 
-    fun runGetQuery(query: String, callback: (List<T>) -> Unit) {
-        runTransactionOrDeferToCreation { db: SQLiteDatabase ->
-            callback.invoke(getItems(db, query))
+    fun runGetQuery(
+                    columns : Array<String>? = null,
+                    selection : String? = null, selectionArgs: Array<String>? = null, orderBy : String? = null, limit : String? = null,
+                    callback: (List<T>) -> Unit) {
+        runTransactionOrDeferToCreation { _: SQLiteDatabase ->
+            callback.invoke(runGetQuerySync(columns, selection, selectionArgs, orderBy, limit)?: listOf())
         }
     }
 
@@ -222,8 +248,23 @@ class Dao<T : Entity> internal constructor(
      *
      * @return all data and null if database is not ready yet
      */
-    fun runGetQuerySync(query: String): List<T>? {
-        return getItems(_db ?: return null, query)
+    fun runGetQuerySync(
+        columns : Array<String>? = null,
+        selection : String? = null, selectionArgs: Array<String>? = null, orderBy : String? = null, limit : String? = null,): List<T>? {
+        return getItems(_db ?: return null, columns, selection, selectionArgs, orderBy, limit)
+    }
+
+    fun getCount(selection: String? = null, selectionArgs: Array<String>? = null, callback: (Long) -> Unit){
+        runTransactionOrDeferToCreation { db ->
+            synchronized(this) {
+                DatabaseUtils.queryNumEntries(
+                    db,
+                    tableName,
+                    selection,
+                    selectionArgs
+                )
+            }.apply(callback)
+        }
     }
 
     //create/update
@@ -233,7 +274,13 @@ class Dao<T : Entity> internal constructor(
         conflictResolutionStrategy: ConflictResolutionStrategy
     ): List<Long> {
         return items.map {
-            insertContentValues(db, tableName, it.generateContentValues(),null, conflictResolutionStrategy )
+            insertContentValues(
+                db,
+                tableName,
+                it.generateContentValues(),
+                null,
+                conflictResolutionStrategy.type
+            )
         }.also {
             val allData = getAllSync() ?: listOf()
             _dataChangeListeners.forEach {
@@ -242,48 +289,52 @@ class Dao<T : Entity> internal constructor(
         }
     }
 
-    internal fun insertContentValues(database: SQLiteDatabase,
-                                    tableName: String, contentValues: ContentValues, nullHackColumn: String?,
-                                    conflictResolutionStrategy: Dao.ConflictResolutionStrategy) : Long{
+    internal fun insertContentValues(
+        database: SQLiteDatabase,
+        tableName: String, contentValues: ContentValues, nullHackColumn: String?,
+        conflictAlgorithm: Int
+    ): Long {
         return synchronized(this) {
-            database.insertWithOnConflict(
+            if (useContentProvider) (context.contentResolver.insert(
+                entityContentProviderUri
+                    .appendQueryParameter(
+                        EntityContentProvider.ECP_CONFLICT_RESOLUTION_CODE,
+                        conflictAlgorithm.toString()
+                    )
+                    .build(), contentValues
+            )?.let {
+                it.lastPathSegment?.toLongOrNull()
+            } ?: -1)
+            else database.insertWithOnConflict(
                 tableName,
                 nullHackColumn,
                 contentValues,
-                conflictResolutionStrategy.type
+                conflictAlgorithm
             )
         }
 
     }
 
     //read
-    private fun getItems(db: SQLiteDatabase, query: String): List<T> {
+    private fun getItems(db: SQLiteDatabase, columns : Array<String>? = null,
+     selection : String? = null, selectionArgs: Array<String>? = null, orderBy : String? = null, limit : String? = null): List<T> {
         //have to use factory
         val fields = entityClass.getAnnotation(RudderEntity::class.java)?.fields
             ?: throw IllegalArgumentException("RudderEntity must have at least one field")
 
-        val cursor = synchronized(this) { db.rawQuery(query, arrayOf()) }
+        val cursor = synchronized(this) {
+            if (useContentProvider) context.contentResolver.query(entityContentProviderUri
+                .appendQueryParameter(EntityContentProvider.ECP_LIMIT_CODE, limit).build(),
+            columns, selection, selectionArgs, orderBy)
+            else
+                db.query(tableName, columns, selection, selectionArgs, null, null, orderBy, limit)
+        }?: return listOf()
         val items = ArrayList<T>(cursor.count)
 
         if (cursor.moveToFirst()) {
             do {
                 fields.associate {
-                    val value = when (it.type) {
-                        RudderField.Type.INTEGER -> if(it.isNullable)cursor.getIntOrNull(
-                            cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
-                                ?: throw IllegalArgumentException("No such column ${it.fieldName}")
-                        )else cursor.getInt(
-                            cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
-                                ?: throw IllegalArgumentException("No such column ${it.fieldName}")
-                        )
-                        RudderField.Type.TEXT -> if(it.isNullable)cursor.getStringOrNull(
-                            cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
-                                ?: throw IllegalArgumentException("No such column ${it.fieldName}"))
-                        else cursor.getString(
-                            cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
-                                ?: throw IllegalArgumentException("No such column ${it.fieldName}"))
-                    }
-                    Pair(it.fieldName, value)
+                    Pair(it.fieldName, it.findValue(cursor))
                 }.let {
                     entityFactory.getEntity(entityClass, it)
                 }?.apply {
@@ -382,6 +433,22 @@ class Dao<T : Entity> internal constructor(
             "${it}_idx"
         }
         return "CREATE INDEX $indexName ON $tableName $indexFieldsStmt"
+    }
+
+    private fun RudderField.findValue(cursor : Cursor) = when (type) {
+        RudderField.Type.INTEGER -> if (isNullable) cursor.getIntOrNull(
+        cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
+            ?: throw IllegalArgumentException("No such column $fieldName")
+        ) else cursor.getInt(
+        cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
+            ?: throw IllegalArgumentException("No such column $fieldName")
+        )
+        RudderField.Type.TEXT -> if (isNullable) cursor.getStringOrNull(
+        cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
+            ?: throw IllegalArgumentException("No such column $fieldName"))
+        else cursor.getString(
+            cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
+                ?: throw IllegalArgumentException("No such column $fieldName"))
     }
 
     enum class ConflictResolutionStrategy(val type: Int) {

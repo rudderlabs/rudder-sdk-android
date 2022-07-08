@@ -14,12 +14,12 @@
 
 package com.rudderstack.core
 
+import com.rudderstack.core.internal.AnalyticsDelegate
 import com.rudderstack.models.IdentifyTraits
 import com.rudderstack.models.Message
+import com.rudderstack.models.MessageContext
 import com.rudderstack.models.RudderServerConfig
-import java.io.File
-import java.io.FileOutputStream
-import java.io.ObjectOutputStream
+import java.io.*
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -31,12 +31,20 @@ class BasicStorageImpl(
     private val queue: Queue<Message> = LinkedBlockingQueue(),
     private val logger: Logger
 ) : Storage {
+
+    companion object{
+        private const val PROPERTIES_FILE_NAME = "config.properties"
+        private const val LIB_KEY_NAME = "libraryName"
+        private const val LIB_KEY_VERSION = "rudderCoreSdkVersion"
+        private const val LIB_KEY_PLATFORM = "platform"
+        private const val LIB_KEY_OS_VERSION = "os_version"
+    }
     private var backPressureStrategy = Storage.BackPressureStrategy.Drop
 
     private var _storageCapacity = Storage.MAX_STORAGE_CAPACITY
     private var _maxFetchLimit = Storage.MAX_FETCH_LIMIT
 
-    private var _cachedContext: Map<String, Any> = mapOf()
+    private var _cachedContext: MessageContext? = null
     private var _dataChangeListeners = listOf<Storage.DataListener>()
     private var _isOptOut = false
     private var _optOutTime = -1L
@@ -44,8 +52,27 @@ class BasicStorageImpl(
 
     private var _serverConfig: RudderServerConfig? = null
     private var _traits: IdentifyTraits? = null
-    private var _externalIds: List<Map<String, String>>? = null
+//    private var _externalIds: List<Map<String, String>>? = null
     private var _anonymousId: String? = null
+
+    //library details
+    private val libDetails: Map<String, String> by lazy {
+        try {
+            Properties().let {
+                it.load(FileInputStream(PROPERTIES_FILE_NAME))
+                mapOf(
+                    LIB_KEY_NAME to it.getProperty(LIB_KEY_NAME),
+                    LIB_KEY_VERSION to it.getProperty(LIB_KEY_VERSION),
+                    LIB_KEY_PLATFORM to it.getProperty(LIB_KEY_PLATFORM),
+                    LIB_KEY_OS_VERSION to it.getProperty(LIB_KEY_OS_VERSION)
+                )
+            }
+        } catch (ex: IOException) {
+            logger.error(log = "Config fetch error", throwable = ex)
+            mapOf()
+        }
+
+    }
 
     /**
      * This queue holds the messages that are generated prior to destinations waking up
@@ -148,8 +175,8 @@ class BasicStorageImpl(
             })
     }
 
-    override fun getCount(callback: (Int) -> Unit) {
-        queue.size.apply(callback)
+    override fun getCount(callback: (Long) -> Unit) {
+        queue.size.toLong().apply(callback)
     }
 
     override fun getDataSync(offset: Int): List<Message> {
@@ -158,11 +185,11 @@ class BasicStorageImpl(
     }
 
 
-    override fun cacheContext(context: Map<String, Any>) {
+    override fun cacheContext(context: MessageContext) {
         _cachedContext = context
     }
 
-    override val context: Map<String, Any>
+    override val context: MessageContext?
         get() = _cachedContext
 
     override fun saveServerConfig(serverConfig: RudderServerConfig) {
@@ -191,17 +218,17 @@ class BasicStorageImpl(
             _optInTime = System.currentTimeMillis()
     }
 
-    override fun saveTraits(traits: IdentifyTraits) {
+    /*override fun saveTraits(traits: IdentifyTraits) {
         this._traits = traits
-    }
+    }*/
 
-    override fun saveExternalIds(externalIds: List<Map<String, String>>) {
+    /*override fun saveExternalIds(externalIds: List<Map<String, String>>) {
         _externalIds = externalIds
-    }
+    }*/
 
-    override fun clearExternalIds() {
+    /*override fun clearExternalIds() {
         _externalIds = listOf()
-    }
+    }*/
 
     override fun saveAnonymousId(anonymousId: String) {
         _anonymousId = anonymousId
@@ -225,7 +252,7 @@ class BasicStorageImpl(
             queue.clear()
             startupQ.clear()
             _anonymousId = null
-            _externalIds = null
+//            _externalIds = null
             _traits = null
             _serverConfig = null
             _cachedContext = mapOf()
@@ -235,7 +262,14 @@ class BasicStorageImpl(
 
 
     override val serverConfig: RudderServerConfig?
-        get() = _serverConfig
+        get() = _serverConfig?:
+            if (serverConfigFile.exists()){
+                val fis = FileInputStream(serverConfigFile)
+                val oos = ObjectInputStream(fis)
+                _serverConfig = oos.readObject() as RudderServerConfig?
+                _serverConfig
+            } else null
+
 
     override val startupQueue: List<Message>
         get() = startupQ
@@ -246,12 +280,24 @@ class BasicStorageImpl(
         get() = _optOutTime
     override val optInTime: Long
         get() = _optInTime
-    override val traits: IdentifyTraits?
+    /*override val traits: IdentifyTraits?
         get() = _traits
     override val externalIds: List<Map<String, String>>?
-        get() = _externalIds
+        get() = _externalIds*/
     override val anonymousId: String?
         get() = _anonymousId
+
+    override val libraryName: String
+        get() = libDetails.getOrDefault(LIB_KEY_NAME, "")
+
+    override val libraryVersion: String
+        get() = libDetails.getOrDefault(LIB_KEY_VERSION, "")
+
+    override val libraryPlatform: String
+        get() = libDetails.getOrDefault(LIB_KEY_PLATFORM, "")
+
+    override val libraryOsVersion: String
+        get() = libDetails.getOrDefault(LIB_KEY_OS_VERSION, "")
 
     private fun onDataChange() {
         synchronized(this) {

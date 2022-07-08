@@ -21,29 +21,29 @@ import com.rudderstack.core.Logger
  * Logger implementation specifically for android.
  *
  */
-internal class AndroidLogger : Logger {
-    private var _logLevel : Logger.LogLevel = Logger.LogLevel.Info
+internal object AndroidLogger : Logger {
+    private var logLevel : Logger.LogLevel = Logger.LogLevel.Info
     override fun activate(level: Logger.LogLevel) {
-        _logLevel = level
+        logLevel = level
     }
 
     override fun info(tag: String, log: String) {
-        if(Logger.LogLevel.Info >= _logLevel)
+        if(Logger.LogLevel.Info >= logLevel)
             Log.i(tag,log)
     }
 
     override fun debug(tag: String, log: String) {
-        if(Logger.LogLevel.Debug >= _logLevel)
+        if(Logger.LogLevel.Debug >= logLevel)
             Log.d(tag,log)
     }
 
     override fun warn(tag: String, log: String) {
-        if(Logger.LogLevel.Warn >= _logLevel)
+        if(Logger.LogLevel.Warn >= logLevel)
             Log.w(tag,log)
     }
 
     override fun error(tag: String, log: String, throwable: Throwable?) {
-        if(Logger.LogLevel.Error >= _logLevel)
+        if(Logger.LogLevel.Error >= logLevel)
             Log.e(tag,log, throwable)
     }
 }

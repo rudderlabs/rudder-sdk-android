@@ -54,11 +54,7 @@ internal class AnalyticsDelegate(
 
 
     companion object {
-        private const val PROPERTIES_FILE_NAME = "config.properties"
-        private const val LIB_KEY_NAME = "libraryName"
-        private const val LIB_KEY_VERSION = "rudderCoreSdkVersion"
-        private const val LIB_KEY_PLATFORM = "platform"
-        private const val LIB_KEY_OS_VERSION = "os_version"
+
         //the number of flush calls that can be queued
         //unit sized queue means only one flush call can wait for the ongoing to complete
         private const val NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 2
@@ -79,34 +75,10 @@ internal class AnalyticsDelegate(
         handler
     )
 
-    private val libDetails: Map<String, String> by lazy {
-        try {
-            Properties().let {
-                it.load(FileInputStream(PROPERTIES_FILE_NAME))
-                mapOf(
-                    LIB_KEY_NAME to it.getProperty(LIB_KEY_NAME),
-                    LIB_KEY_VERSION to it.getProperty(LIB_KEY_VERSION),
-                    LIB_KEY_PLATFORM to it.getProperty(LIB_KEY_PLATFORM),
-                    LIB_KEY_OS_VERSION to it.getProperty(LIB_KEY_OS_VERSION)
-                )
-            }
-        } catch (ex: IOException) {
-            logger.error(log = "Config fetch error", throwable = ex)
-            mapOf()
-        }
 
-    }
     private val _commonContext = mapOf<String, String>(
         "library" to (jsonAdapter.writeToJson(
-            libDetails.filter {
-                it.key in arrayOf(AnalyticsDelegate.LIB_KEY_NAME, AnalyticsDelegate.LIB_KEY_VERSION)
-            }.map {
-                when (it.key) {
-                    AnalyticsDelegate.LIB_KEY_NAME -> "name" to it.value
-                    AnalyticsDelegate.LIB_KEY_VERSION -> "version" to it.value
-                    else -> it.toPair()
-                }
-            }.toMap(),
+            mapOf("name" to storage.libraryName, "version" to storage.libraryVersion),
             object : RudderTypeAdapter<Map<String, String>>() {}) ?: "")
 
     )
@@ -202,11 +174,12 @@ internal class AnalyticsDelegate(
     }
 
     override fun optOut(optOut: Boolean) {
+        _storageDecorator.saveOptOut(optOut)
         applySettings(SettingsState.value?.copy(isOptOut = optOut) ?: Settings(isOptOut = optOut))
     }
 
     override val isOptedOut: Boolean
-        get() = SettingsState.value?.isOptOut ?: Settings().isOptOut
+        get() = SettingsState.value?.isOptOut ?: _storageDecorator.isOptedOut
 
     /*override fun putAdvertisingId(advertisingId: String) {
         _storageDecorator.cacheContext(_storageDecorator.context + ("advertisingId" to advertisingId))
@@ -254,9 +227,9 @@ internal class AnalyticsDelegate(
                             options ?: SettingsState.value?.options ?: RudderOptions.default()
                         )
                     )
-                    //after option plugin
+                    //after fill defaults plugin
                     it.add(
-                        2, ExtractStatePlugin(
+                        3, ExtractStatePlugin(
                             ContextState,
                             SettingsState,
 //                            options ?: SettingsState.value?.options ?: RudderOptions.default(),
@@ -399,9 +372,9 @@ internal class AnalyticsDelegate(
         }
         //configDownloadService is non-null
         configDownloadService.download(
-            libDetails.getOrDefault(LIB_KEY_NAME, ""),
-            libDetails.getOrDefault(LIB_KEY_VERSION, ""),
-            libDetails.getOrDefault(LIB_KEY_OS_VERSION, ""),
+            _storageDecorator.libraryName,
+            _storageDecorator.libraryVersion,
+            _storageDecorator.libraryOsVersion,
             sdkVerifyRetryStrategy
         ) { success, rudderServerConfig, lastErrorMsg ->
             analyticsExecutor.submit {

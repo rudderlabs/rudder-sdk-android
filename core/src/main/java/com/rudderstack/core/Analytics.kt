@@ -67,9 +67,10 @@ class Analytics private constructor(
             jsonAdapter,
             networkExecutor
         ),
-        defaultTraits: IdentifyTraits? = null,
-        defaultExternalIds: List<Map<String, String>>? = null,
+        defaultTraits: IdentifyTraits? = storage.context?.traits,
+        defaultExternalIds: List<Map<String, String>>? = storage.context?.externalIds,
         defaultContextMap: Map<String, Any>? = null,
+        contextAddOns: Map<String, Any> ?= null,
         //optional
         initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
     ) : this(
@@ -84,7 +85,11 @@ class Analytics private constructor(
             configDownloadService,
             analyticsExecutor,
             logger,
-            createContext(defaultTraits, defaultExternalIds, defaultContextMap),
+            storage.context?: createContext(defaultTraits, defaultExternalIds, defaultContextMap, contextAddOns).also {
+                analyticsExecutor.submit {
+                    storage.cacheContext(it)
+                }
+            },
             initializationListener
 
         )
@@ -119,7 +124,7 @@ class Analytics private constructor(
     ) {
         track(
             TrackMessage.create(
-                timestamp = Utils.timeStamp, eventName = eventName, properties = trackProperties,
+                timestamp = RudderUtils.timeStamp, eventName = eventName, properties = trackProperties,
                 userId = userID
             ), options
         )
@@ -139,7 +144,7 @@ class Analytics private constructor(
     ) {
         screen(
             ScreenMessage.create(
-                userId = userID, timestamp = Utils.timeStamp, category = category,
+                userId = userID, timestamp = RudderUtils.timeStamp, category = category,
                 name = screenName, properties = screenProperties
             ), options
         )
@@ -157,7 +162,7 @@ class Analytics private constructor(
         identify(
             IdentifyMessage.create(
                 userId = userID,
-                timestamp = Utils.timeStamp,
+                timestamp = RudderUtils.timeStamp,
                 traits = completeTraits,
             ), options
         )
@@ -173,7 +178,7 @@ class Analytics private constructor(
         options: RudderOptions? = null
     ) {
         alias(
-            AliasMessage.create(timestamp = Utils.timeStamp, userId = newId), options
+            AliasMessage.create(timestamp = RudderUtils.timeStamp, userId = newId), options
         )
     }
 
@@ -188,7 +193,7 @@ class Analytics private constructor(
     ) {
         group(
             GroupMessage.create(
-                timestamp = Utils.timeStamp, userId = userID,
+                timestamp = RudderUtils.timeStamp, userId = userID,
                 groupId = groupID, groupTraits = traits
             ), options
         )

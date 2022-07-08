@@ -15,33 +15,157 @@
 package com.rudderstack.android.storage
 
 import android.content.Context
+import com.rudderstack.android.internal.AndroidLogger
+import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.repository.Dao
 import com.rudderstack.android.repository.RudderDatabase
+import com.rudderstack.core.Logger
 import com.rudderstack.core.Storage
-import com.rudderstack.models.IdentifyTraits
 import com.rudderstack.models.Message
+import com.rudderstack.models.MessageContext
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import java.io.FileOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+import java.io.Serializable
+import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
-internal class AndroidStorage(private val androidContext: Context,
-                              private val jsonAdapter: JsonAdapter,
-                              private val enableMultiProcess: Boolean) : Storage {
+internal class AndroidStorage(
+    private val androidContext: Context,
+    private val jsonAdapter: JsonAdapter,
+    useContentProvider: Boolean,
+    private val logger: Logger = AndroidLogger
+) : Storage {
     private val dbName = "db_${androidContext.packageName}"
 
-    companion object{
+    companion object {
         private const val DB_VERSION = 1
+        private const val SERVER_CONFIG_FILE_NAME = "server_config"
+
+        private const val CONTEXT_FILE_NAME = "pref_context"
+
+        //file access
+        /**
+         *
+         *
+         * @param T
+         * @param obj
+         * @param context
+         * @param fileName
+         * @return
+         */
+        private fun <T : Serializable> saveObject(
+            obj: T,
+            context: Context,
+            fileName: String
+        ): Boolean {
+            try {
+                val fos: FileOutputStream = context.openFileOutput(
+                    fileName,
+                    Context.MODE_PRIVATE
+                )
+                val os = ObjectOutputStream(fos)
+                os.writeObject(obj)
+                os.close()
+                fos.close()
+                return true
+            } catch (e: Exception) {
+                AndroidLogger.error(
+                    log = "save object: Exception while saving Object to File",
+                    throwable = e
+                )
+                e.printStackTrace()
+            }
+            return false
+        }
+
+        /**
+         * TODO
+         *
+         * @param T
+         * @param context
+         * @param fileName
+         * @return
+         */
+        private fun <T : Serializable> getObject(context: Context, fileName: String): T? {
+            try {
+                val file = context.getFileStreamPath(fileName)
+                if (file != null && file.exists()
+                ) {
+                    val fis =
+                        context.openFileInput(fileName)
+                    val `is` = ObjectInputStream(fis)
+                    val obj = `is`.readObject() as? T?
+                    `is`.close()
+                    fis.close()
+                    return obj
+                }
+            } catch (e: Exception) {
+                AndroidLogger.error(
+                    log = "getObject: Failed to read Object from File",
+                    throwable = e
+                )
+                e.printStackTrace()
+            }
+            return null
+        }
+
     }
 
     private val messageDao: Dao<MessageEntity>
 
     private var _storageCapacity: Int = Storage.MAX_STORAGE_CAPACITY //default 2_000
     private var _maxFetchLimit: Int = Storage.MAX_FETCH_LIMIT
+    private var _storageListeners = listOf<Storage.DataListener>()
+
+    private var _backPressureStrategy = Storage.BackPressureStrategy.Drop
+
+    //this holds the count of rows in DB, this helps with the back pressure strategy
+    //we update this once on init and then on data change listener
+    private val _dataCount = AtomicLong()
+
+    private val _optOut = AtomicBoolean(false)
+    private val _optOutTime = AtomicLong(0L)
+    private val _optInTime = AtomicLong(System.currentTimeMillis())
+
+    private var _anonymousId: String? = null
+
+    /**
+     * This queue holds the messages that are generated prior to destinations waking up
+     */
+    private val startupQ = LinkedList<Message>()
+
+    private var _cachedContext: MessageContext? = null
+
+    //message table listener
+    private val _messageDataListener = object : Dao.DataChangeListener<MessageEntity> {
+        override fun onDataInserted(inserted: List<MessageEntity>, allData: List<MessageEntity>) {
+            onDataChange(allData.size.toLong())
+        }
+
+        override fun onDataDeleted(deleted: List<MessageEntity>, allData: List<MessageEntity>) {
+            onDataChange(allData.size.toLong())
+        }
+
+        private fun onDataChange(dataSize: Long) {
+            _dataCount.set(dataSize)
+            _storageListeners.forEach {
+                it.onDataChange()
+            }
+        }
+    }
+
     init {
-       RudderDatabase.init(androidContext, dbName, RudderEntityFactory(jsonAdapter),
-           DB_VERSION
-       )
+        RudderDatabase.init(
+            androidContext, dbName, RudderEntityFactory(jsonAdapter), useContentProvider,
+            DB_VERSION
+        )
         messageDao = RudderDatabase.getDao(MessageEntity::class.java)
-        messageDao.addDataChangeListener(MessageDataListener)
+        messageDao.addDataChangeListener(_messageDataListener)
+
     }
 
     override fun setStorageCapacity(storageCapacity: Int) {
@@ -53,112 +177,168 @@ internal class AndroidStorage(private val androidContext: Context,
     }
 
     override fun saveMessage(vararg messages: Message) {
-        val messageEntities = messages.map {
-            MessageEntity(it, jsonAdapter)
+        //handle backpressure TODO
+        val block = { count: Long ->
+            val excessMessages = count + messages.size - _storageCapacity
+            val messageEntities = if (excessMessages > 0) {
+                when (_backPressureStrategy) {
+                    Storage.BackPressureStrategy.Drop -> {
+                        messages.dropLast(excessMessages.toInt()).map {
+                            MessageEntity(it, jsonAdapter)
+                        }
+                    }
+                    Storage.BackPressureStrategy.Latest -> {
+                        messageDao.delete(
+                            "${MessageEntity.ColumnNames.messageId} IN (" +
+                                    //COMMAND FOR SELECTING FIRST $excessMessages to be removed from DB
+                                    "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${MessageEntity.TABLE_NAME} " +
+                                    "ORDER BY ${MessageEntity.ColumnNames.timestamp} LIMIT $excessMessages",
+                            null
+                        ) {}
+                        messages.map {
+                            MessageEntity(it, jsonAdapter)
+                        }
+                    }
+                }
+            } else
+                messages.map {
+                    MessageEntity(it, jsonAdapter)
+                }
+            with(messageDao) {
+                messageEntities.insert {
+                }
+            }
+        }
+        if (_dataCount.get() > 0) {
+            block.invoke(_dataCount.get())
+        } else {
+            messageDao.getCount {
+                _dataCount.set(it)
+                block.invoke(it)
+            }
         }
     }
 
     override fun setBackpressureStrategy(strategy: Storage.BackPressureStrategy) {
-        TODO("Not yet implemented")
+        _backPressureStrategy = strategy
     }
 
     override fun deleteMessages(messages: List<Message>) {
-        TODO("Not yet implemented")
+        with(messageDao) {
+            messages.entities.delete { }
+        }
     }
 
     override fun addDataListener(listener: Storage.DataListener) {
-        TODO("Not yet implemented")
+        _storageListeners = _storageListeners + listener
     }
 
     override fun removeDataListener(listener: Storage.DataListener) {
-        TODO("Not yet implemented")
+        _storageListeners = _storageListeners - listener
     }
 
     override fun getData(offset: Int, callback: (List<Message>) -> Unit) {
-        TODO("Not yet implemented")
+        messageDao.runGetQuery(limit = "$offset,$_maxFetchLimit") {
+            callback.invoke(it.map { it.message })
+        }
     }
 
-    override fun getCount(callback: (Int) -> Unit) {
-        TODO("Not yet implemented")
+    override fun getCount(callback: (Long) -> Unit) {
+        messageDao.getCount(callback = callback)
     }
 
     override fun getDataSync(offset: Int): List<Message> {
-        TODO("Not yet implemented")
+        return messageDao.runGetQuerySync(
+            null, null, null, null,
+            "$offset,$_maxFetchLimit"
+        )?.map {
+            it.message
+        } ?: listOf()
     }
 
-    override fun cacheContext(context: Map<String, Any>) {
-        TODO("Not yet implemented")
+    override fun cacheContext(context: MessageContext) {
+        context.save()
     }
 
-    override val context: Map<String, Any>
-        get() = TODO("Not yet implemented")
+    override val context: MessageContext?
+        get() = (if (_cachedContext == null) {
+            _cachedContext = getObject<HashMap<String, Any?>>(androidContext, CONTEXT_FILE_NAME)
+            _cachedContext
+        } else _cachedContext)
 
+    //for local caching
+    private var _serverConfig: RudderServerConfig? = null
     override fun saveServerConfig(serverConfig: RudderServerConfig) {
-        TODO("Not yet implemented")
+        synchronized(this) {
+            _serverConfig = serverConfig
+            saveObject(serverConfig, context = androidContext, SERVER_CONFIG_FILE_NAME)
+        }
     }
 
     override val serverConfig: RudderServerConfig?
-        get() = TODO("Not yet implemented")
+        get() = synchronized(this) {
+            if (_serverConfig == null) _serverConfig =
+                getObject(androidContext, SERVER_CONFIG_FILE_NAME)
+            _serverConfig
+        }
 
     override fun saveOptOut(optOut: Boolean) {
-        TODO("Not yet implemented")
-    }
-
-    override fun saveTraits(traits: IdentifyTraits) {
-        TODO("Not yet implemented")
-    }
-
-    override fun saveExternalIds(externalIds: List<Map<String, String>>) {
-        TODO("Not yet implemented")
-    }
-
-    override fun clearExternalIds() {
-        TODO("Not yet implemented")
+        _optOut.set(optOut)
+        if (optOut) {
+            _optOutTime.set(System.currentTimeMillis())
+        } else {
+            _optInTime.set(System.currentTimeMillis())
+        }
     }
 
     override fun saveAnonymousId(anonymousId: String) {
-        TODO("Not yet implemented")
+        _anonymousId = anonymousId
+        RudderPreferenceManager.saveAnonymousId(anonymousId)
     }
 
     override fun saveStartupMessageInQueue(message: Message) {
-        TODO("Not yet implemented")
+        startupQ.add(message)
     }
 
     override fun clearStartupQueue() {
-        TODO("Not yet implemented")
+        startupQ.clear()
     }
 
     override fun shutdown() {
-        TODO("Not yet implemented")
-    }
+        //nothing much to do here
+       }
 
     override fun clearStorage() {
-        TODO("Not yet implemented")
+        startupQ.clear()
+        messageDao.delete(null, null)
     }
 
     override val startupQueue: List<Message>
-        get() = TODO("Not yet implemented")
+        get() = startupQ
     override val isOptedOut: Boolean
-        get() = TODO("Not yet implemented")
+        get() = _optOut.get()
     override val optOutTime: Long
-        get() = TODO("Not yet implemented")
+        get() = _optOutTime.get()
     override val optInTime: Long
-        get() = TODO("Not yet implemented")
-    override val traits: IdentifyTraits?
-        get() = TODO("Not yet implemented")
-    override val externalIds: List<Map<String, String>>?
-        get() = TODO("Not yet implemented")
+        get() = _optInTime.get()
     override val anonymousId: String?
-        get() = TODO("Not yet implemented")
-
-    //message table listener
-    object MessageDataListener : Dao.DataChangeListener<MessageEntity>{
-        override fun onDataInserted(inserted: List<MessageEntity>, allData: List<MessageEntity>) {
-
+        get() {
+            if (_anonymousId == null) {
+                _anonymousId = RudderPreferenceManager.anonymousId
+            }
+            return _anonymousId
         }
 
-        override fun onDataDeleted(deleted: List<MessageEntity>, allData: List<MessageEntity>) {
-
+    private val Iterable<Message>.entities
+        get() = map {
+            it.entity
         }
+    private val Message.entity
+        get() = MessageEntity(this, jsonAdapter)
+
+    private fun MessageContext.save() {
+        saveObject(HashMap(this), androidContext, CONTEXT_FILE_NAME)
     }
+
+
 }

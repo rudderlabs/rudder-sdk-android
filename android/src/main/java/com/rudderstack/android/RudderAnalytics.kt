@@ -12,21 +12,27 @@
  * permissions and limitations under the License.
  */
 @file:Suppress("FunctionName")
+
 package com.rudderstack.android
 
+import android.app.Application
+import com.rudderstack.android.internal.AndroidLogger
+import com.rudderstack.android.internal.RudderPreferenceManager
+import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Logger
 import com.rudderstack.core.RetryStrategy
 import com.rudderstack.core.Settings
-import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.models.IdentifyTraits
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+
 //device info and stuff
 //multi process
 //bt stuff
 //tv,
 //work manager
 fun RudderAnalytics(
+    application: Application,
     writeKey: String,
     settings: Settings,
     jsonAdapter: JsonAdapter,
@@ -34,12 +40,55 @@ fun RudderAnalytics(
     sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
     dataPlaneUrl: String? = null,
     controlPlaneUrl: String? = null,
-    logger: Logger = KotlinLogger,
+    logger: Logger = AndroidLogger,
     defaultTraits: IdentifyTraits? = null,
     defaultExternalIds: List<Map<String, String>>? = null,
     defaultContextMap: Map<String, Any>? = null,
+    useContentProvider: Boolean = false,
+    isPeriodicFlushEnabled : Boolean = false,
+    trackLifecycleEvents : Boolean = false,
+    autoCollectAdvertId : Boolean = false,
+    recordScreenViews : Boolean = false,
     initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
-) : Analytics{
-//    return Analytics()
-    TODO()
+): Analytics {
+    initialize(application)
+    val storage = AndroidStorage(application, jsonAdapter, useContentProvider, logger)
+    return Analytics(
+        writeKey,
+        settings,
+        jsonAdapter,
+        shouldVerifySdk,
+        sdkVerifyRetryStrategy,
+        dataPlaneUrl,
+        controlPlaneUrl,
+        logger,
+        storage,
+        defaultTraits = defaultTraits,
+        defaultExternalIds = defaultExternalIds,
+        initializationListener = initializationListener,
+        defaultContextMap = defaultContextMap
+    )
+
 }
+
+/**
+ * Set the AdvertisingId yourself. If set, SDK will not capture idfa automatically
+ *
+ * @param advertisingId IDFA for the device
+ */
+fun Analytics.putAdvertisingId(advertisingId : String){
+    // sets into context plugin
+}
+
+/**
+ * Set the push token for the device to be passed to the downstream destinations
+ *
+ * @param deviceToken Push Token from FCM
+ */
+fun Analytics.putDeviceToken(deviceToken: String) {
+    //set device token in context plugin
+}
+private fun initialize(application: Application) {
+    RudderPreferenceManager.initialize(application)
+}
+

@@ -300,7 +300,7 @@ abstract class AnalyticsTest {
         analytics.applySettings(newSettings)
         analytics.setMaxFetchLimit(3)
         val items = (1..5).map {
-            TrackMessage.create("event:$it", Utils.timeStamp)
+            TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
         val itemNamesThatShouldBePresent = items.take(newSettings.flushQueueSize)
             .map {
@@ -359,7 +359,7 @@ abstract class AnalyticsTest {
     fun `test multiple messages ordering`() {
         // add a plugin to check, add some delay to it
         val events = (1..10).map {
-            TrackMessage.create("event:$it", Utils.timeStamp)
+            TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
         val isDone = AtomicBoolean(false)
         var msgCounter = 1
@@ -396,7 +396,7 @@ abstract class AnalyticsTest {
         analytics.applySettings(newSettings)
 
         val events = (1..10).map {
-            TrackMessage.create("event:$it", Utils.timeStamp)
+            TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
         for (i in events) {
             analytics.track(i)
@@ -413,7 +413,7 @@ abstract class AnalyticsTest {
     fun `test back pressure strategies`() {
         //we check the storage directly
         val events = (1..20).map {
-            TrackMessage.create("event:$it", Utils.timeStamp)
+            TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
         storage.setStorageCapacity(10)
         storage.setBackpressureStrategy(Storage.BackPressureStrategy.Drop) // first 10 will be there
@@ -481,10 +481,10 @@ abstract class AnalyticsTest {
         Settings(flushQueueSize = 100, maxFlushInterval = 10000, anonymousId = "anon_id")
         SettingsState.update(newSettings)
         val events = (1..5).map {
-            TrackMessage.create("event:$it", Utils.timeStamp)
+            TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
         val events2 = (6..10).map {
-            TrackMessage.create("event:$it", Utils.timeStamp)
+            TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
 
         events.forEach {
@@ -509,7 +509,7 @@ abstract class AnalyticsTest {
     @Test
     fun `test force flush after shutdown`() {
         val events = (1..5).map {
-            TrackMessage.create("event:$it", Utils.timeStamp)
+            TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
         val someAnalytics = Analytics(
             writeKey,
@@ -537,7 +537,7 @@ abstract class AnalyticsTest {
     @Test
     fun `test shutdown`() {
         val events = (1..5).map {
-            TrackMessage.create("event:$it", Utils.timeStamp)
+            TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
         val someAnalytics = Analytics(
             writeKey,
@@ -567,7 +567,7 @@ abstract class AnalyticsTest {
         flushQueueSize = 100)?: Settings(anonymousId = "anon_id", maxFlushInterval = 1000, flushQueueSize = 100)
         analytics.applySettings(newSettings)
         val events = (1..5).map {
-            TrackMessage.create("event:$it", Utils.timeStamp)
+            TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
         analytics.addCallback(object : Callback{
             override fun success(message: Message?) {
@@ -618,7 +618,7 @@ abstract class AnalyticsTest {
             HttpResponse(200, null, null)
         }
         val events = (1..5).map {
-            TrackMessage.create("event:$it", Utils.timeStamp)
+            TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
         val spyStorage = mock(Storage::class.java)
         `when`(spyStorage.getDataSync(anyInt())).then {

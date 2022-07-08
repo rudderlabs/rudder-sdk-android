@@ -60,34 +60,30 @@ internal class FillDefaultsPlugin(
         }
         //copying top level context to message context
         return (this.copy(
-            context =  (context selectiveReplace contextState.value) optAdd  defaultContext,
+            context =  (
+                    // in case of alias we purposefully remove traits from context
+                    contextState.value?.let {
+                        if(this is AliasMessage && this.userId != settingsState.value?.userId) it.updateWith(traits = mapOf()) else it
+                    } selectiveReplace
+                    context) optAdd  defaultContext,
             anonymousId = anonId, userId = userId
-        ) as T)/*.also {
-            //for alias messages, we need to set previous id, if not already set
-            when(T :: class){
-                AliasMessage::class -> (it as AliasMessage).previousId = userId
-            }
-            it.integrations = integrations
-        }*/
+        ) as T)
     }
     private infix fun MessageContext?.selectiveReplace(context: MessageContext?) : MessageContext?{
         if(this == null) return context else if (context == null) return this
-        // this gets priority
-        val newTraits = traits?:context.traits
-        val newCustomContexts = customContexts?:context.customContexts
-        val newExternalIds = externalIds?:context.externalIds
 
-        return createContext(newTraits, newExternalIds, newCustomContexts)
+
+        return this.updateWith(context)
     }
 
     private infix fun MessageContext?.optAdd(context: MessageContext?) : MessageContext?{
         //this gets priority
         if(this == null) return context else if (context == null) return this
             val newTraits = context.traits?.let {
-                (it - (this.traits?.keys?: setOf())) optAdd this.traits
+                (it - (this.traits?.keys?: setOf()).toSet()) optAdd this.traits
             }?: traits
             val newCustomContexts = context.customContexts?.let {
-                (it - (this.customContexts?.keys?: setOf())) optAdd this.customContexts
+                (it - (this.customContexts?.keys?: setOf()).toSet()) optAdd this.customContexts
             }?: customContexts
             val newExternalIds = context.externalIds?.let {
                 (it minusWrtKeys (this.externalIds?: listOf())) + it

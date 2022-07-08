@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.repository
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
@@ -23,11 +24,13 @@ import java.util.concurrent.Executors
 /**
  * Singleton class to act as the Database helper
  */
+@SuppressLint("StaticFieldLeak")
 object RudderDatabase {
     private var sqliteOpenHelper: SQLiteOpenHelper? = null
     private var database: SQLiteDatabase? = null
     private var registeredDaoList = HashMap<Class<out Entity>, Dao<out Entity>>(20)
-
+    private var context : Context? = null
+    private var useContentProvider = false
     private var dbDetailsListeners = listOf<(
         String, Int,
         databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)?
@@ -54,6 +57,7 @@ object RudderDatabase {
     fun init(
         context: Context, databaseName: String,
         entityFactory: EntityFactory,
+        useContentProvider: Boolean = this.useContentProvider,
         version: Int = 1,
         databaseCreatedCallback: ((SQLiteDatabase?) -> Unit)? = null,
         databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)? = null
@@ -61,7 +65,8 @@ object RudderDatabase {
         this.entityFactory = entityFactory
         if (sqliteOpenHelper != null)
             return
-//        context = application
+        this.useContentProvider = useContentProvider
+        this.context = context
         this.databaseName = databaseName
         this.databaseVersion = version
         this.databaseUpgradeCallback = databaseUpgradeCallback
@@ -110,7 +115,8 @@ object RudderDatabase {
     }
 
     /**
-     * TODO
+     * Creates a new [Dao] object for an entity.
+     * Usage of this method directly, is highly discouraged.
      *
      * @param T
      * @param entityClass
@@ -120,7 +126,9 @@ object RudderDatabase {
     internal fun <T : Entity> createNewDao(
         entityClass: Class<T>, executorService: ExecutorService
 
-    ): Dao<T> = Dao<T>(entityClass, true, entityFactory, executorService).also {
+    ): Dao<T> = Dao<T>(entityClass, useContentProvider, context?:
+    throw UninitializedPropertyAccessException("Did you call RudderDatabase.init?"),
+        entityFactory, executorService).also {
         registeredDaoList[entityClass] = it
         database?.apply {
             initDaoList(this, listOf(it))

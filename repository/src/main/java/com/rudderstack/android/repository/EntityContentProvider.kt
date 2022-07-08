@@ -33,6 +33,8 @@ internal class EntityContentProvider : ContentProvider() {
     companion object {
 
         internal const val ECP_ENTITY_CODE = "db_entity"
+        internal const val ECP_LIMIT_CODE = "query_limit"
+        internal const val ECP_CONFLICT_RESOLUTION_CODE = "query_limit"
         private const val ECP_TABLE_URI_MATCHER_CODE = 1
         private const val ECP_TABLE_SUB_QUERY_URI_MATCHER_CODE = 2
 
@@ -126,7 +128,12 @@ internal class EntityContentProvider : ContentProvider() {
         selectionArgs: Array<out String>?,
         sortOrder: String?
     ): Cursor? {
-        TODO("Not yet implemented")
+        if (uriMatcher.match(uri) == -1) return null
+
+        val tableName = uri.tableName ?: return null
+
+        return sqLiteOpenHelper?.writableDatabase?.query(tableName, projection, selection,
+            selectionArgs, null, null, sortOrder, uri.limit)
     }
 
     override fun getType(uri: Uri): String? {
@@ -143,7 +150,7 @@ internal class EntityContentProvider : ContentProvider() {
         val rowID = dao.insertContentValues(
             sqLiteOpenHelper?.writableDatabase ?: return null,
             tableName, values ?: return null,
-            null, Dao.ConflictResolutionStrategy.CONFLICT_REPLACE
+            null, uri.conflictAlgorithm?:SQLiteDatabase.CONFLICT_REPLACE
         )
         /**
          * If record is added successfully
@@ -201,4 +208,9 @@ internal class EntityContentProvider : ContentProvider() {
         }
     private val Uri.tableName: String?
         get() = pathSegments[0]
+    private val Uri.limit : String?
+    get() = getQueryParameter(ECP_LIMIT_CODE)
+
+    private val Uri.conflictAlgorithm : Int?
+    get() = getQueryParameter(ECP_CONFLICT_RESOLUTION_CODE)?.toIntOrNull()
 }

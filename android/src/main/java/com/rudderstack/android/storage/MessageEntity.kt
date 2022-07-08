@@ -18,6 +18,7 @@ import android.content.ContentValues
 import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
+import com.rudderstack.android.storage.MessageEntity.Companion.TABLE_NAME
 import com.rudderstack.models.*
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
@@ -27,29 +28,49 @@ import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
  *
  */
 @RudderEntity(
-    "message",
+    TABLE_NAME,
     [
-        RudderField(RudderField.Type.TEXT, "messageId", primaryKey = true),
-        RudderField(RudderField.Type.TEXT, "anonymousId"),
-        RudderField(RudderField.Type.TEXT, "userId"),
-        RudderField(RudderField.Type.TEXT, "timestamp"),
-        RudderField(RudderField.Type.TEXT, "channel"),
-        RudderField(RudderField.Type.TEXT, "type"),
-        RudderField(RudderField.Type.TEXT, "destinationProps"),
-        RudderField(RudderField.Type.TEXT, "integrations"),
-        RudderField(RudderField.Type.TEXT, "previousId"),
-        RudderField(RudderField.Type.TEXT, "context"),
-        RudderField(RudderField.Type.TEXT, "eventName"),
-        RudderField(RudderField.Type.TEXT, "groupId"),
-        RudderField(RudderField.Type.TEXT, "properties"),
-        RudderField(RudderField.Type.TEXT, "traits"),
-        RudderField(RudderField.Type.TEXT, "event"),
-        RudderField(RudderField.Type.TEXT, "properties"),
-        RudderField(RudderField.Type.TEXT, "category"),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.messageId, primaryKey = true),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.anonymousId),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.userId),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.timestamp),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.channel),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.type),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.destinationProps),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.integrations),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.previousId),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.context),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.eventName),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.groupId),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.properties),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.traits),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.event),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.properties),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.category),
     ]
 )
 internal class MessageEntity(val message: Message, private val jsonAdapter: JsonAdapter) :
     Entity {
+    object ColumnNames{
+        internal const val messageId = "messageId"
+        internal const val anonymousId = "anonymousId"
+        internal const val userId = "userId"
+        internal const val timestamp = "timestamp"
+        internal const val channel = "channel"
+        internal const val type = "type"
+        internal const val destinationProps = "destinationProps"
+        internal const val integrations = "integrations"
+        internal const val previousId = "previousId"
+        internal const val context = "context"
+        internal const val eventName = "eventName"
+        internal const val groupId = "groupId"
+        internal const val traits = "traits"
+        internal const val event = "event"
+        internal const val properties = "properties"
+        internal const val category = "category"
+    }
+
+
     override fun generateContentValues(): ContentValues {
         return ContentValues().also {
             it.put("messageId", message.messageId)
@@ -115,6 +136,9 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
     }
 
     companion object {
+
+        internal const val TABLE_NAME = "message"
+
         internal fun create(
             values: Map<String, Any?>,
             jsonAdapter: JsonAdapter

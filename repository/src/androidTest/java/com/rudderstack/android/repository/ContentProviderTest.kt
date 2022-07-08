@@ -16,6 +16,7 @@ package com.rudderstack.android.repository
 
 
 import android.content.ContentValues
+import android.database.Cursor
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.provider.ProviderTestRule
@@ -28,7 +29,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.lang.Exception
 
 @RunWith(AndroidJUnit4::class)
 class ContentProviderTest  {
@@ -138,16 +138,41 @@ class ContentProviderTest  {
     fun testContentProvider(){
         //let's start with insertion
         val modelEntity1 = ModelEntity(Model("event-1", arrayOf("1", "2")))
-        val model2 = ModelEntity( Model("event-2", arrayOf("2", "3")))
+        val modelEntity2 = ModelEntity( Model("event-2", arrayOf("2", "3")))
 
         val contentResolver = mProviderRule.resolver
-        //insert
-        val uri1 = contentResolver.insert(testUri.buildUpon().appendQueryParameter(
+        val modelTestUriBuilder = testUri.buildUpon().appendQueryParameter(
             EntityContentProvider.ECP_ENTITY_CODE, ModelEntity::class.java.name
-        ).build(), modelEntity1.generateContentValues())
+        )
+        //insert
+        val uri1 = contentResolver.insert(modelTestUriBuilder.build(), modelEntity1.generateContentValues())
         assertThat(uri1, allOf(
             notNullValue(),
         ))
+        val uri2 = contentResolver.insert(modelTestUriBuilder.build(), modelEntity2.generateContentValues())
+        assertThat(uri2, allOf(
+            notNullValue(),
+        ))
+        //Two elements present
+        val cursor = contentResolver.query(modelTestUriBuilder.build(), null, null, null,null )
+        assertThat(cursor?.count, allOf(
+            notNullValue(),
+            `is`(2)
+        ))
+        cursor?.close()
+        // fetch with limit 1
+        val cursor2 = contentResolver.query(modelTestUriBuilder
+            .appendQueryParameter(EntityContentProvider.ECP_LIMIT_CODE, "1")
+            .build(), null, null, null,null )
+        assertThat(cursor2?.count, allOf(
+            notNullValue(),
+            `is`(1)
+        ))
+        cursor2?.close()
+        //delete both
+        val delCount = contentResolver.delete(modelTestUriBuilder.build(), null, null)
+        //del count should be 2
+        assertThat(delCount, `is`(2))
     }
 
 }

@@ -16,7 +16,8 @@ package com.rudderstack.models
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.Json
-import java.io.Serializable
+import java.io.*
+import java.util.*
 
 /**
  * Configuration of the server
@@ -67,7 +68,7 @@ data class RudderServerConfig(
         @Json(name = "destinations")
         @JsonProperty("destinations")
         @SerializedName("destinations")
-        val destinations: List<RudderServerDestination>? = null
+        val destinations: LinkedList<RudderServerDestination>? = null
     ) : Serializable
 
     data class RudderServerDestination(

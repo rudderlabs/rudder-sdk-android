@@ -16,6 +16,7 @@ package com.rudderstack.core
 
 import com.rudderstack.models.IdentifyTraits
 import com.rudderstack.models.Message
+import com.rudderstack.models.MessageContext
 import com.rudderstack.models.RudderServerConfig
 
 /**
@@ -96,7 +97,7 @@ interface Storage {
      *
      * @param callback
      */
-    fun getCount(callback : (Int) -> Unit)
+    fun getCount(callback : (Long) -> Unit)
 
     /**
      * synchronous method to get the entire data present to a maximum of fetch limit
@@ -107,18 +108,18 @@ interface Storage {
      */
     fun getDataSync(offset: Int = 0): List<Message>
 
-    /**
+   /**
      * Platform specific implementation of caching context. This can be done locally too.
      *
      * @param context A map representing the context. Refer to [Message]
      */
-    fun cacheContext(context: Map<String, Any>)
+    fun cacheContext(context: MessageContext)
 
 
     /**
      * Retrieve the cached context
      */
-    val context: Map<String, Any>
+    val context: MessageContext?
 
     /**
      * CPU extensive operation, better to offload to a different thread
@@ -144,20 +145,20 @@ interface Storage {
      *
      * @param traits A map of user traits sent through Identify call
      */
-    fun saveTraits(traits: IdentifyTraits)
+//    fun saveTraits(traits: IdentifyTraits)
 
     /**
      * External Ids from identify call are persisted. Subsequent identify calls will replace the data
      *
      * @param externalIds Ids specifically targeted for different destinations.
      */
-    fun saveExternalIds(externalIds: List<Map<String, String>>)
+//    fun saveExternalIds(externalIds: List<Map<String, String>>)
 
     /**
      * clear all external ids present
      *
      */
-    fun clearExternalIds()
+//    fun clearExternalIds()
 
     /**
      * Persist anonymous Id for the app Instance.
@@ -222,19 +223,23 @@ interface Storage {
     /**
      * Returns traits
      */
-    val traits: IdentifyTraits?
+//    val traits: IdentifyTraits?
 
     /**
      * external ids persisted through identify calls.
      * Any external ids passed in other events will be merged with this.
      */
-    val externalIds: List<Map<String, String>>?
+//    val externalIds: List<Map<String, String>>?
 
     /**
      * Anonymous id associated to the app instance
      */
     val anonymousId: String?
 
+    val libraryName : String
+    val libraryVersion : String
+    val libraryPlatform : String
+    val libraryOsVersion : String
 
     /**
      * Data Listener for data change and on data dropped.

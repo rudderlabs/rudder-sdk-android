@@ -15,7 +15,7 @@
 package com.rudderstack.core.internal.plugins
 
 import com.rudderstack.core.RudderOptions
-import com.rudderstack.core.Utils
+import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.BasicStorageImpl
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.core.internal.KotlinLogger
@@ -44,7 +44,7 @@ class ExtractStatePluginTest {
             ContextState, SettingsState,
             /*options,*/ storage
         )
-        val identifyMsg = IdentifyMessage.create(timestamp = Utils.timeStamp,
+        val identifyMsg = IdentifyMessage.create(timestamp = RudderUtils.timeStamp,
         traits = mapOf("userId" to "userId"));
         val centralPluginChain = CentralPluginChain(identifyMsg, listOf(RudderOptionPlugin(options),
             extractStatePlugin))
@@ -70,7 +70,7 @@ class ExtractStatePluginTest {
             ContextState, SettingsState,
             /*options,*/ storage
         )
-        val identifyMsg = IdentifyMessage.create(timestamp = Utils.timeStamp,
+        val identifyMsg = IdentifyMessage.create(timestamp = RudderUtils.timeStamp,
         traits = mapOf("userId" to "userId"), externalIds = listOf(mapOf(
                 "dest-3" to "dest-3-id"
             ), mapOf(
@@ -104,7 +104,7 @@ class ExtractStatePluginTest {
             ContextState, SettingsState,
             /*options,*/ storage
         )
-        val identifyMsg = IdentifyMessage.create(timestamp = Utils.timeStamp,
+        val identifyMsg = IdentifyMessage.create(timestamp = RudderUtils.timeStamp,
         traits = mapOf("userId" to "userId"), externalIds = listOf(mapOf(
                 "dest-1" to "dest-1-id"
             )))

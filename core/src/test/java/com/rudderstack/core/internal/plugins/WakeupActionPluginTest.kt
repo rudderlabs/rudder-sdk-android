@@ -16,7 +16,7 @@ package com.rudderstack.core.internal.plugins
 
 import com.rudderstack.core.BaseDestinationPlugin
 import com.rudderstack.core.DestinationConfig
-import com.rudderstack.core.Utils
+import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.BasicStorageImpl
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.core.internal.KotlinLogger
@@ -48,7 +48,7 @@ class WakeupActionPluginTest {
     private val storage = BasicStorageImpl(logger = KotlinLogger)
     private val wakeupActionPlugin = WakeupActionPlugin(storage)
     private val testMessage = TrackMessage.create(
-        "ev-1", Utils.timeStamp,
+        "ev-1", RudderUtils.timeStamp,
         traits = mapOf(
             "age" to 31,
             "office" to "Rudderstack"
