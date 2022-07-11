@@ -41,7 +41,7 @@ class DeviceModeUtils {
         synchronized (MessageUploadLock.DEVICE_TRANSFORMATION_LOCK) {
             dbManager.fetchDeviceModeEventsFromDb(messageIds, messages, count);
         }
-        String requestJson = createDeviceTransformPayload(dbManager, messageIds, messages);
+        String requestJson = createDeviceTransformPayload(messageIds, messages);
 
         return transformDataThroughServer(requestJson, dataPlaneUrl, authHeaderString, anonymousIdHeaderString, messageIds);
     }
@@ -53,8 +53,8 @@ class DeviceModeUtils {
 
         try {
             if (TextUtils.isEmpty(authHeaderString)) {
-                RudderLogger.logError("EventRepository: flushEventsToServer: WriteKey was not correct. Aborting flush to server");
-                return null;
+                RudderLogger.logError("DeviceModeUtils: transformDataThroughServer: WriteKey was not correct. Aborting flush to server");
+                return new Result(Utils.NetworkResponses.ERROR, "Write Key is Invalid", null, originalMessageIds);
             }
 
             // get endPointUrl form config object
@@ -96,7 +96,6 @@ class DeviceModeUtils {
                 while ((res = bis.read()) != -1) {
                     baos.write(res);
                 }
-
                 return new Result(Utils.NetworkResponses.SUCCESS, null, gson.fromJson(baos.toString(),
                         TransformationResponse.class), originalMessageIds);
             } else {
@@ -113,11 +112,9 @@ class DeviceModeUtils {
                 RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + errorResp);
                 // return null as request made is not successful
                 if (errorResp.toLowerCase().contains("invalid write key")) {
-
                     return new Result(Utils.NetworkResponses.WRITE_KEY_ERROR, errorResp, null, originalMessageIds);
                 }
                 return new Result(Utils.NetworkResponses.ERROR, errorResp, null, originalMessageIds);
-
             }
         } catch (Exception ex) {
             RudderLogger.logError(ex);
@@ -127,33 +124,21 @@ class DeviceModeUtils {
 
     }
 
-    private static final String TRANSFORMATION_PAYLOAD_ORDER_NO_IDENTIFIER = "orderNo";
-    private static final String TRANSFORMATION_PAYLOAD_EVENT_IDENTIFIER = "event";
-    private static final String TRANSFORMATION_PAYLOAD_TRANSFORMATION_IDENTIFIER = "transformationIds";
-
     //shouldn't be called on main thread
-    private static String createDeviceTransformPayload(DBPersistentManager dbPersistentManager,
-                                                       List<Integer> rowIds, List<String> messages) {
-        Map<Integer, List<String>> eventRowDestinationIdMap = dbPersistentManager.fetchDestinationIdsGroupByEventRowId(rowIds);
+    private static String createDeviceTransformPayload(List<Integer> rowIds, List<String> messages) {
+        if (rowIds.size() == 0 || messages.size() == 0 || rowIds.size() != messages.size())
+            return null;
         StringBuilder jsonPayload = new StringBuilder();
         jsonPayload.append("{");
         jsonPayload.append("\"batch\" :");
         jsonPayload.append("[");
         int totalBatchSize = Utils.getUTF8Length(jsonPayload) + 2;
-        if (rowIds.size() != messages.size()) return null;
         try {
-            Gson gson = new Gson();
             for (int i = 0; i < rowIds.size(); i++) {
-                List<String> destinationIdsForEvent = eventRowDestinationIdMap.get(rowIds.get(i));
-                if (destinationIdsForEvent == null || destinationIdsForEvent.size() == 0)
-                    continue;
-                String destinationIdsCSV = gson.toJson(destinationIdsForEvent);
                 StringBuilder message = new StringBuilder();
                 message.append("{");
                 message.append("\"orderNo\":").append(rowIds.get(i)).append(",");
-                message.append("\"event\":").append(messages.get(i)).append(",");
-
-                message.append("\"destinationIds\":").append(destinationIdsCSV);
+                message.append("\"event\":").append(messages.get(i));
                 message.append("}");
                 message.append(",");
                 totalBatchSize += Utils.getUTF8Length(message);

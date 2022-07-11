@@ -450,7 +450,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                     public void run() {
                         //fetch messages
                         long deviceModeEventsCount = dbManager.getDeviceModeRecordCount();
-                        if ((deviceModeSleepCount >= config.getSleepTimeOut() && deviceModeEventsCount >= 0)
+                        if ((deviceModeSleepCount >= config.getSleepTimeOut() && deviceModeEventsCount > 0)
                                 || deviceModeEventsCount >= DMT_BATCH_SIZE) {
                             runGcForEvents();
                             do {

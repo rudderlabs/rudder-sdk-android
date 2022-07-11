@@ -18,6 +18,7 @@ import androidx.annotation.VisibleForTesting;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -202,6 +203,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         Map<Integer, Integer> messageIdStatusMap = new HashMap<>();
         getEventsFromDB(messageIdStatusMap, messages, selectSQL);
         messageIds.addAll(messageIdStatusMap.keySet());
+        Collections.sort(messageIds);
     }
 
     void getEventsFromDB(Map<Integer, Integer> messageIdStatusMap,//(id (row_id), status)
@@ -482,7 +484,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         String sql = "UPDATE " + DBPersistentManager.EVENTS_TABLE_NAME + " SET " +
                 DBPersistentManager.STATUS_COL + " = (" + DBPersistentManager.STATUS_COL + " | " + status +
                 ") WHERE " + MESSAGE_ID_COL + " IN "
-                + rowIdsCSVString +";";
+                + rowIdsCSVString + ";";
         synchronized (DB_LOCK) {
             getWritableDatabase().execSQL(sql);
         }
