@@ -140,14 +140,14 @@ public class Utils {
      * Returns referring_application, url and its query parameter.
      */
     @NonNull
-    public static RudderProperty trackDeepLink(Activity activity, AtomicBoolean isFirstLaunch, int versionCode) {
+    public static RudderProperty trackDeepLink(Activity activity, AtomicBoolean isFirstLaunch, String versionName) {
         RudderProperty rudderProperty = new RudderProperty()
                 .putValue("from_background", !isFirstLaunch.get());
         // If it is not firstLaunch then return RudderProperty instance
         if (!isFirstLaunch.getAndSet(false)) {
             return rudderProperty;
         }
-        rudderProperty.putValue("version", versionCode);
+        rudderProperty.putValue("version", versionName);
         try {
             Intent intent = activity.getIntent();
             if (intent == null || intent.getData() == null) {
