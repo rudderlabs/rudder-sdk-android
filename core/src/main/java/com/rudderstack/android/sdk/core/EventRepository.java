@@ -492,20 +492,20 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     private void sendTransformedData(TransformationResponse transformationResponse, List<Integer> originalMessageIds) {
         for (TransformationResponse.TransformedDestination transformedDestination : transformationResponse.transformedBatch) {
-            processTransformedPayload(transformedDestination.destination, originalMessageIds);
+            processTransformedPayload(transformedDestination, originalMessageIds);
         }
     }
 
-    private void processTransformedPayload(TransformationResponse.TransformedPayload transformedPayload, List<Integer> originalMessageIds) {
+    private void processTransformedPayload(TransformationResponse.TransformedDestination transformedDestination, List<Integer> originalMessageIds) {
 
-        String destinationName = Utils.getKeyForValueFromMap(destinationsWithTransformationsEnabled, transformedPayload.id);
+        String destinationName = Utils.getKeyForValueFromMap(destinationsWithTransformationsEnabled, transformedDestination.id);
         if (destinationsWithTransformationsEnabled.get(destinationName) != null) {
-            if (transformedPayload.status == 200 && transformedPayload.payload != null) {
-                processPayloadForTransformation(transformedPayload.payload, destinationName);
+            if (transformedDestination.status == 200 && transformedDestination.payload != null) {
+                processPayloadForTransformation(transformedDestination.payload, destinationName);
                 //
                 //delete it from row_id to transform_id table
                 // we are deleting all the events with that transformationId from the table, but we should delete only the ones which are processed
-                dbManager.deleteFromRowIdDestinationIdTable(transformedPayload.id, transformedPayload.payload);
+                dbManager.deleteFromRowIdDestinationIdTable(transformedDestination.id, transformedDestination.payload);
                 //update event
                 //check in rowId_eventId table then
                 Map<Integer, Integer> eventTransformationCountMap =
