@@ -53,7 +53,7 @@ allprojects {
 
 ```groovy
 
-implementation 'com.rudderstack.android.sdk:core:1.5.2'
+implementation 'com.rudderstack.android.sdk:core:1.6.0'
 ```
 
 ## Initializing ```RudderClient```
