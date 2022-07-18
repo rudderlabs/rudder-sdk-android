@@ -3,11 +3,13 @@ package com.rudderstack.android.sdk.core;
 import static com.rudderstack.android.sdk.core.DBPersistentManager.UPDATED_COL;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.notNullValue;
 import static java.lang.Thread.sleep;
 
 import android.app.Application;
@@ -156,7 +158,7 @@ public class DBPersistentManagerTest {
                 try {
                     sleep(1000);
                     SQLiteDatabase database = finalDbPersistentManager.getWritableDatabase();
-                    for (int i = 1; i <= 20; i++) {
+                    for (int i = 0; i < 20; i++) {
                         ContentValues eventTransformationValues = new ContentValues();
                         eventTransformationValues.put(DBPersistentManager.EVENTS_DESTINATION_ROW_ID_COL_NAME,
                                 i % 5 + 1);
@@ -165,13 +167,21 @@ public class DBPersistentManagerTest {
                         database.insert(DBPersistentManager.EVENTS_DESTINATION_ID_TABLE_NAME, null, eventTransformationValues);
 
                     }
-                    finalDbPersistentManager.fetchDestinationIdsGroupByEventRowId(Arrays.asList(1, 2, 3, 4, 5));
-                    isFinished.set(true);
-                } catch (Exception e) {
+                    Map<Integer, List<String>> eventToRowIdMapping = finalDbPersistentManager.fetchDestinationIdsGroupByEventRowId(Arrays.asList(1, 2, 3, 4, 5));
+                    //assert map is proper
+                    assertThat(eventToRowIdMapping.keySet(),allOf(notNullValue(), Matchers.<Integer>iterableWithSize(5),
+                            contains(1,2,3,4,5)));
+                    for (List<String> values:
+                    eventToRowIdMapping.values()){
+                        assertThat(values, Matchers.<String>iterableWithSize(4));
+                    }
 
+                } catch (Exception e) {
+                    assert false;
                 }
                 finally {
                     finalDbPersistentManager.close();
+                    isFinished.set(true);
                 }
             }
         }).start();
@@ -343,10 +353,6 @@ public class DBPersistentManagerTest {
 
     }
 
-    @Test
-    public void fetchDestinationIdsGroupByEventRowIdTest() {
-
-    }
 
     @Test
     public void deleteFirstEventsTest() throws InterruptedException {

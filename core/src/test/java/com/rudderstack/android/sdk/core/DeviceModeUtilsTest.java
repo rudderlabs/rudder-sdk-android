@@ -7,6 +7,7 @@ import org.junit.Test;
 public class DeviceModeUtilsTest {
 
     @Test
-    public void transformDataThroughServer() {
+    public void transformDataThroughServerTest() {
+        //TODO
     }
 }
