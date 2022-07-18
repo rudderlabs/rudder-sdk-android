@@ -53,7 +53,7 @@ public class RudderMessage {
         this.context = RudderElementCache.getCachedContext();
         this.anonymousId = RudderContext.getAnonymousId();
 
-        Map<String, Object> traits = context.getTraits();
+        Map<String, Object> traits = context!= null? context.getTraits() : null;
         if (traits != null && traits.containsKey("id")) {
             this.userId = String.valueOf(traits.get("id"));
         }

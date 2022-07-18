@@ -273,6 +273,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     /*
      * retrieve all messages from DB and store messageIds and messages separately
+     * note: message ids are added to existing messageIds list
      * */
     //unit test
     void fetchAllCloudModeEventsFromDB(List<Integer> messageIds, List<String> messages) {
@@ -402,6 +403,12 @@ class DBPersistentManager extends SQLiteOpenHelper {
         if (oldVersion == 1 && newVersion >= 2) {
             sqLiteDatabase.execSQL(DATABASE_ALTER_ADD_STATUS);
         }
+    }
+
+    @Override
+    public synchronized void close() {
+        super.close();
+        instance = null;
     }
 
     public void deleteAllEvents() {
