@@ -73,7 +73,9 @@ class Analytics private constructor(
         defaultContextMap: Map<String, Any>? = null,
         contextAddOns: Map<String, Any> ?= null,
         //optional
-        initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
+        initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
+        //optional called if shutdown is called
+        shutdownHook : (()-> Unit)? = null
     ) : this(
         _writeKey = writeKey, _jsonAdapter = jsonAdapter, _dataPlaneUrl = dataPlaneUrl?: DATA_PLANE_URL,
         _delegate = AnalyticsDelegate(
@@ -91,7 +93,8 @@ class Analytics private constructor(
                     storage.cacheContext(it)
                 }
             },
-            initializationListener
+            initializationListener,
+            shutdownHook
 
         ),
         analyticsExecutor = analyticsExecutor

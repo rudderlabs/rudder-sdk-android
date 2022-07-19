@@ -49,7 +49,9 @@ internal class AnalyticsDelegate(
     private val logger: Logger,
     context: MessageContext,
     //optional
-    private val initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
+    private val initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
+    //optional called if shutdown is called
+    private val shutdownHook : (()-> Unit)? = null
 ) : Controller {
 
 
@@ -315,6 +317,7 @@ internal class AnalyticsDelegate(
         dataUploadService.shutdown()
         analyticsExecutor.shutdown()
         _flushExecutor.shutdown()
+        shutdownHook?.invoke()
     }
 
 //    @Throws(MissingPropertiesException::class)
