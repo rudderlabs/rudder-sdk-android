@@ -23,13 +23,16 @@ android {
     compileSdk 31
 
     defaultConfig {
-        minSdk 21
-        targetSdk 31
-        versionCode 1
-        versionName "1.0"
+        minSdk library.min_sdk
+        targetSdk library.target_sdk
+        versionCode library.version_code
+        versionName library.version_name
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
+
+        //for code access
+        buildConfigField "String", "LIBRARY_VERSION_NAME", library.version_name
     }
 
     buildTypes {

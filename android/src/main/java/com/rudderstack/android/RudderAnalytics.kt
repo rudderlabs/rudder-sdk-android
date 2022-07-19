@@ -18,6 +18,7 @@ package com.rudderstack.android
 import android.app.Application
 import com.rudderstack.android.internal.AndroidLogger
 import com.rudderstack.android.internal.RudderPreferenceManager
+import com.rudderstack.android.internal.plugins.AndroidContextPlugin
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Logger
@@ -45,10 +46,10 @@ fun RudderAnalytics(
     defaultExternalIds: List<Map<String, String>>? = null,
     defaultContextMap: Map<String, Any>? = null,
     useContentProvider: Boolean = false,
-    isPeriodicFlushEnabled : Boolean = false,
-    trackLifecycleEvents : Boolean = false,
-    autoCollectAdvertId : Boolean = false,
-    recordScreenViews : Boolean = false,
+    isPeriodicFlushEnabled: Boolean = false,
+    trackLifecycleEvents: Boolean = false,
+    autoCollectAdvertId: Boolean = false,
+    recordScreenViews: Boolean = false,
     initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
 ): Analytics {
     initialize(application)
@@ -71,13 +72,19 @@ fun RudderAnalytics(
 
 }
 
+//android specific properties
+private var androidContextPlugin: AndroidContextPlugin? = null
+
 /**
  * Set the AdvertisingId yourself. If set, SDK will not capture idfa automatically
  *
  * @param advertisingId IDFA for the device
  */
-fun Analytics.putAdvertisingId(advertisingId : String){
+fun Analytics.putAdvertisingId(advertisingId: String) {
     // sets into context plugin
+    androidContextPlugin?.setAdvertisingId(advertisingId)?:AndroidLogger.warn(
+        log = "Analytics not initialized. Setting advertising id failed"
+    )
 }
 
 /**
@@ -87,8 +94,28 @@ fun Analytics.putAdvertisingId(advertisingId : String){
  */
 fun Analytics.putDeviceToken(deviceToken: String) {
     //set device token in context plugin
+    androidContextPlugin?.putDeviceToken(deviceToken)?:AndroidLogger.warn(
+            log = "Analytics not initialized. Setting device token failed"
+            )
 }
+
 private fun initialize(application: Application) {
     RudderPreferenceManager.initialize(application)
+}
+
+private fun Analytics.startup(
+    application: Application,
+    jsonAdapter: JsonAdapter,
+    isPeriodicFlushEnabled: Boolean,
+    trackLifecycleEvents: Boolean,
+    autoCollectAdvertId: Boolean,
+    recordScreenViews: Boolean
+) {
+    androidContextPlugin =
+        AndroidContextPlugin(application, autoCollectAdvertId, analyticsExecutor, jsonAdapter).also {
+            addPlugin(it)
+        }
+
+
 }
 

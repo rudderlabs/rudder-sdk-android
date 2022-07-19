@@ -15,6 +15,8 @@
 package com.rudderstack.android.storage
 
 import android.content.Context
+import android.os.Build
+import com.rudderstack.android.android.BuildConfig
 import com.rudderstack.android.internal.AndroidLogger
 import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.repository.Dao
@@ -49,7 +51,7 @@ internal class AndroidStorage(
 
         //file access
         /**
-         *
+         * Saves a serializable object in file
          *
          * @param T
          * @param obj
@@ -83,7 +85,7 @@ internal class AndroidStorage(
         }
 
         /**
-         * TODO
+         *
          *
          * @param T
          * @param context
@@ -328,6 +330,14 @@ internal class AndroidStorage(
             }
             return _anonymousId
         }
+    override val libraryName: String
+        get() = BuildConfig.LIBRARY_PACKAGE_NAME
+    override val libraryVersion: String
+        get() = BuildConfig.LIBRARY_VERSION_NAME
+    override val libraryPlatform: String
+        get() = "Android"
+    override val libraryOsVersion: String
+        get() = Build.VERSION.SDK_INT.toString()
 
     private val Iterable<Message>.entities
         get() = map {

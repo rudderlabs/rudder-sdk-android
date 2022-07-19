@@ -26,7 +26,8 @@ class Analytics private constructor(
     private val _writeKey: String,
     private val _jsonAdapter: JsonAdapter,
     private val _dataPlaneUrl: String,
-    private val _delegate: AnalyticsDelegate
+    private val _delegate: AnalyticsDelegate,
+    val analyticsExecutor: ExecutorService
 ) : Controller by _delegate {
     /**
      * Contains methods for sending messages over to device mode and cloud mode destinations.
@@ -92,7 +93,8 @@ class Analytics private constructor(
             },
             initializationListener
 
-        )
+        ),
+        analyticsExecutor = analyticsExecutor
     )
 
 

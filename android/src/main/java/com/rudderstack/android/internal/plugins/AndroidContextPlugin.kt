@@ -56,6 +56,7 @@ internal class AndroidContextPlugin(
     //if true collects advertising id automatically
     internal var autoCollectAdvertisingId = autoCollectAdvertId
         set(value) {
+            if(field == value) return
             field = value
             if (value)
                 collectAdvertisingId(application)
@@ -64,6 +65,9 @@ internal class AndroidContextPlugin(
             }
         }
 
+    private val defaultAndroidContext by lazy {
+        prepareDefaultAndroidContext(application)
+    }
     private var _advertisingId: String? = null
     private var _deviceToken: String? = null
 
@@ -74,7 +78,8 @@ internal class AndroidContextPlugin(
 
     override fun intercept(chain: Plugin.Chain): Message {
         val msg = chain.message()
-        return msg.copy()
+        val newMsg = msg.copy(context = msg.context optAdd  defaultAndroidContext)
+        return chain.proceed(newMsg)
     }
 
     /**
@@ -144,10 +149,19 @@ internal class AndroidContextPlugin(
         )
     }
 
-//    private fun prepareAndroidContext(application: Application): MessageContext {
-//
-//
-//    }
+    private fun prepareDefaultAndroidContext(application: Application): MessageContext {
+        return mapOf<String, Any?>(
+            "app" to getAppDetails(application),
+            "os" to getOsInfo(),
+            "screen" to getScreenInfo(application),
+            "userAgent" to userAgent,
+            "locale" to locale,
+            "device" to getDeviceInfo(application),
+            "network" to getRudderNetwork(application),
+            "timezone" to timeZone
+        )
+
+    }
 
     private fun getAppDetails(application: Application): String? {
         try {

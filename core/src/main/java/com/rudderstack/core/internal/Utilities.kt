@@ -22,10 +22,10 @@ package com.rudderstack.core.internal
  * @param value The nullable [Map] object to "add"
  * @return The "sum" of both maps if [value] is not null, else this
  */
-infix fun<K,V> Map<K,V>.optAdd(value : Map<K,V>?) : Map<K,V>{
-    return value?.let {
+infix fun <K, V> Map<K, V>?.optAdd(value: Map<K, V>?): Map<K, V> {
+    return if (this == null) value ?: mapOf() else value?.let {
         this + value
-    }?: this
+    } ?: this
 }
 
 /**
@@ -49,7 +49,7 @@ infix fun<K,V> Map<K,V>.optAdd(value : Map<K,V>?) : Map<K,V>{
  * @param block A lambda function that takes type T as parameter
  * @return The result of [block] applied to "this"
  */
-internal infix fun <T,R> T?.ifNotNull(block : (T) -> R) : R?{
+internal infix fun <T, R> T?.ifNotNull(block: (T) -> R): R? {
     return this?.let(block)
 }
 
@@ -72,9 +72,11 @@ internal infix fun <T,R> T?.ifNotNull(block : (T) -> R) : R?{
  * @return
  */
 
-internal infix fun<K, V> Iterable<Map<K,V>>.minusWrtKeys(operand :
-                                                  Iterable<Map<K, V>>) : List<Map<K, V>>{
-    operand.toSet().let { op->
+internal infix fun <K, V> Iterable<Map<K, V>>.minusWrtKeys(
+    operand:
+    Iterable<Map<K, V>>
+): List<Map<K, V>> {
+    operand.toSet().let { op ->
         return this.filterNot {
             op inWrtKeys it
         }
@@ -94,9 +96,9 @@ internal infix fun<K, V> Iterable<Map<K,V>>.minusWrtKeys(operand :
  * @param item The item to be checked
  * @return true if the map with same keys are present, false otherwise
  */
-internal infix fun<K, V> Iterable<Map<K,V>>.inWrtKeys(item : Map<K, V>) : Boolean{
+internal infix fun <K, V> Iterable<Map<K, V>>.inWrtKeys(item: Map<K, V>): Boolean {
     this.toSet().forEach {
-        if(it.keys.containsAll(item.keys))
+        if (it.keys.containsAll(item.keys))
             return true
     }
     return false
