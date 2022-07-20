@@ -17,6 +17,7 @@ package com.rudderstack.android
 
 import android.app.Application
 import com.rudderstack.android.internal.AndroidLogger
+import com.rudderstack.android.internal.LifecycleObserver
 import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.internal.plugins.AndroidContextPlugin
 import com.rudderstack.android.storage.AndroidStorage
@@ -24,7 +25,7 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.Logger
 import com.rudderstack.core.RetryStrategy
 import com.rudderstack.core.Settings
-import com.rudderstack.models.IdentifyTraits
+import com.rudderstack.models.*
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 
 //device info and stuff
@@ -67,13 +68,24 @@ fun RudderAnalytics(
         defaultTraits = defaultTraits,
         defaultExternalIds = defaultExternalIds,
         initializationListener = initializationListener,
-        defaultContextMap = defaultContextMap
-    )
+        defaultContextMap = defaultContextMap,
+        shutdownHook = ::shutdown
+    ).apply {
+        startup(
+            application,
+            jsonAdapter,
+            isPeriodicFlushEnabled,
+            trackLifecycleEvents,
+            autoCollectAdvertId,
+            recordScreenViews
+        )
+    }
 
 }
 
 //android specific properties
 private var androidContextPlugin: AndroidContextPlugin? = null
+private var lifecycleObserver: LifecycleObserver? = null
 
 /**
  * Set the AdvertisingId yourself. If set, SDK will not capture idfa automatically
@@ -81,8 +93,9 @@ private var androidContextPlugin: AndroidContextPlugin? = null
  * @param advertisingId IDFA for the device
  */
 fun Analytics.putAdvertisingId(advertisingId: String) {
+
     // sets into context plugin
-    androidContextPlugin?.setAdvertisingId(advertisingId)?:AndroidLogger.warn(
+    androidContextPlugin?.setAdvertisingId(advertisingId) ?: AndroidLogger.warn(
         log = "Analytics not initialized. Setting advertising id failed"
     )
 }
@@ -93,10 +106,11 @@ fun Analytics.putAdvertisingId(advertisingId: String) {
  * @param deviceToken Push Token from FCM
  */
 fun Analytics.putDeviceToken(deviceToken: String) {
+
     //set device token in context plugin
-    androidContextPlugin?.putDeviceToken(deviceToken)?:AndroidLogger.warn(
-            log = "Analytics not initialized. Setting device token failed"
-            )
+    androidContextPlugin?.putDeviceToken(deviceToken) ?: AndroidLogger.warn(
+        log = "Analytics not initialized. Setting device token failed"
+    )
 }
 
 private fun initialize(application: Application) {
@@ -111,11 +125,42 @@ private fun Analytics.startup(
     autoCollectAdvertId: Boolean,
     recordScreenViews: Boolean
 ) {
+    //lifecycle observer
+    lifecycleObserver = LifecycleObserver(
+        application,
+        trackLifecycleEvents,
+        recordScreenViews, ::send
+    )
+
+    //add android context
     androidContextPlugin =
-        AndroidContextPlugin(application, autoCollectAdvertId, analyticsExecutor, jsonAdapter).also {
+        AndroidContextPlugin(
+            application,
+            autoCollectAdvertId,
+            analyticsExecutor,
+            jsonAdapter
+        ).also {
             addPlugin(it)
         }
 
 
 }
+
+private fun Analytics.send(message: Message) {
+    when (message) {
+        is AliasMessage -> alias(message)
+        is GroupMessage -> group(message)
+        is IdentifyMessage -> identify(message)
+        is PageMessage -> {/**not supported in mobile**/}
+        is ScreenMessage -> screen(message)
+        is TrackMessage -> track(message)
+    }
+}
+
+private fun shutdown() {
+    androidContextPlugin = null
+    lifecycleObserver?.shutdown()
+    lifecycleObserver = null
+}
+
 
