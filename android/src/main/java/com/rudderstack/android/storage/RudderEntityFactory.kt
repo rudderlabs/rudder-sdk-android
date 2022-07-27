@@ -24,8 +24,8 @@ internal class RudderEntityFactory(private val jsonAdapter: JsonAdapter) : Entit
     override fun <T : Entity> getEntity(entity: Class<T>, values: Map<String, Any?>): T? {
 
         //we will check the class for conversion
-        return when(entity.superclass){
-            Message::class.java -> MessageEntity.create(values,jsonAdapter).message as? T?
+        return when(entity){
+            MessageEntity::class.java -> MessageEntity.create(values,jsonAdapter) as? T?
             else -> null
         }
     }

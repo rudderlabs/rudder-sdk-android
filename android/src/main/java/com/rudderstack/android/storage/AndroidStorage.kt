@@ -179,37 +179,34 @@ internal class AndroidStorage(
     }
 
     override fun saveMessage(vararg messages: Message) {
-        //handle backpressure TODO
         val block = { count: Long ->
             val excessMessages = count + messages.size - _storageCapacity
-            val messageEntities = if (excessMessages > 0) {
+            if (excessMessages > 0) {
                 when (_backPressureStrategy) {
                     Storage.BackPressureStrategy.Drop -> {
-                        messages.dropLast(excessMessages.toInt()).map {
-                            MessageEntity(it, jsonAdapter)
-                        }
+                        messages.dropLast(excessMessages.toInt())
+                            .saveToDb() //count can never exceed storage cap,
+                        //hence excess messages cannot be greater than messages.size
                     }
                     Storage.BackPressureStrategy.Latest -> {
+
                         messageDao.delete(
                             "${MessageEntity.ColumnNames.messageId} IN (" +
                                     //COMMAND FOR SELECTING FIRST $excessMessages to be removed from DB
                                     "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${MessageEntity.TABLE_NAME} " +
-                                    "ORDER BY ${MessageEntity.ColumnNames.timestamp} LIMIT $excessMessages",
+                                    "ORDER BY ${MessageEntity.ColumnNames.timestamp} LIMIT $excessMessages)",
                             null
-                        ) {}
-                        messages.map {
-                            MessageEntity(it, jsonAdapter)
+                        ) {
+                            //check messages exceed storage cap
+                            (if (messages.size > _storageCapacity) {
+                                messages.drop(messages.size - _storageCapacity)
+                            } else  messages.toList()).saveToDb()
                         }
                     }
                 }
             } else
-                messages.map {
-                    MessageEntity(it, jsonAdapter)
-                }
-            with(messageDao) {
-                messageEntities.insert {
-                }
-            }
+                messages.toList().saveToDb()
+
         }
         if (_dataCount.get() > 0) {
             block.invoke(_dataCount.get())
@@ -217,6 +214,18 @@ internal class AndroidStorage(
             messageDao.getCount {
                 _dataCount.set(it)
                 block.invoke(it)
+            }
+        }
+    }
+
+    private fun List<Message>.saveToDb() {
+        map {
+            MessageEntity(it, jsonAdapter)
+        }.apply {
+            with(messageDao) {
+                insert {
+                    println("inserted $it")
+                }
             }
         }
     }
@@ -307,8 +316,8 @@ internal class AndroidStorage(
     }
 
     override fun shutdown() {
-        //nothing much to do here
-       }
+        RudderDatabase.shutDown()
+    }
 
     override fun clearStorage() {
         startupQ.clear()

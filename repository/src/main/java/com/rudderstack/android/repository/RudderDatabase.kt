@@ -40,7 +40,7 @@ object RudderDatabase {
 
     private var databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)? = null
 
-    private val commonExecutor = Executors.newCachedThreadPool()
+    private lateinit var commonExecutor : ExecutorService
 
     private lateinit var entityFactory: EntityFactory
 
@@ -62,6 +62,7 @@ object RudderDatabase {
         databaseCreatedCallback: ((SQLiteDatabase?) -> Unit)? = null,
         databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)? = null
     ) {
+        commonExecutor = Executors.newCachedThreadPool()
         this.entityFactory = entityFactory
         if (sqliteOpenHelper != null)
             return
@@ -169,12 +170,20 @@ object RudderDatabase {
     }
 
     fun shutDown() {
-//        registeredDaoList.values.forEach {
-//            it.close()
-//        }
-        sqliteOpenHelper?.close()
+        registeredDaoList.clear() //clearing all cached dao
+        database?.apply{
+            //synchronizing on database allows other database users to synchronize on the same
+            synchronized(this) {
+                sqliteOpenHelper?.close()
+                database?.close()
+                database = null
+            }
+        }
         sqliteOpenHelper = null
-        commonExecutor?.shutdown()
+        commonExecutor.shutdown()
+        dbDetailsListeners = emptyList()
+        databaseUpgradeCallback = null
+        useContentProvider = false
     }
 
 }

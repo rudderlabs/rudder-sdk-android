@@ -28,11 +28,13 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 //@RunWith(RobolectricTestRunner::class)
 @RunWith(AndroidJUnit4::class)
+@Config(sdk = [29])
 class RudderDatabaseTest {
     //    private lateinit var
     @Before
@@ -149,7 +151,7 @@ class RudderDatabaseTest {
                 isCompleted.set(true)
             }
         }
-        Awaitility.await().atMost(500, TimeUnit.SECONDS).untilTrue(isCompleted)
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(isCompleted)
 
     }
     @Test
@@ -184,7 +186,7 @@ class RudderDatabaseTest {
                 isCompleted.set(true)
             }
         }
-        Awaitility.await().atMost(500, TimeUnit.SECONDS).untilTrue(isCompleted)
+        Awaitility.await().atMost(10, TimeUnit.SECONDS).untilTrue(isCompleted)
 
     }
 

@@ -45,7 +45,6 @@ import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
         RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.properties),
         RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.traits),
         RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.event),
-        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.properties),
         RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.category),
     ]
 )
@@ -81,13 +80,13 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
             it.put("type", message.getType().value)
 
             it.put("context", message.context?.let {
-                jsonAdapter.writeToJson(this, RudderTypeAdapter {})
+                jsonAdapter.writeToJson(it, RudderTypeAdapter {})
             })
             it.put("destinationProps", message.destinationProps?.let {
-                jsonAdapter.writeToJson(this, RudderTypeAdapter {})
+                jsonAdapter.writeToJson(it, RudderTypeAdapter {})
             })
             it.put("integrations", message.integrations?.let {
-                jsonAdapter.writeToJson(this, RudderTypeAdapter {})
+                jsonAdapter.writeToJson(it, RudderTypeAdapter {})
             })
 
             when (message) {

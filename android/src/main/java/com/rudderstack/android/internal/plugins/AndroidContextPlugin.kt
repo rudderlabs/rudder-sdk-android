@@ -54,7 +54,7 @@ internal class AndroidContextPlugin(
     private val jsonAdapter: JsonAdapter
 ) : Plugin {
     //if true collects advertising id automatically
-    internal var autoCollectAdvertisingId = autoCollectAdvertId
+    private var autoCollectAdvertisingId = autoCollectAdvertId
         set(value) {
             if(field == value) return
             field = value

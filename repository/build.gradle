@@ -19,11 +19,11 @@ plugins {
 apply from : "$rootDir/dependencies.gradle"
 
 android {
-    compileSdk 29
+    compileSdk library.target_sdk
 
     defaultConfig {
-        minSdk 21
-        targetSdk 29
+        minSdk library.min_sdk
+        targetSdk library.target_sdk
         versionCode 1
         versionName "1.0"
 
@@ -59,14 +59,14 @@ android {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.6.0'
-    implementation 'androidx.test.ext:junit-ktx:1.1.3'
-    implementation 'androidx.test:rules:1.4.0'
+    implementation deps.kotlinCore
+    implementation deps.androidXTestExtJunitKtx
+    implementation deps.androidXTestRules
 //    implementation 'androidx.appcompat:appcompat:1.3.1'
 //    implementation 'com.google.android.material:material:1.4.0'
 //    implementation(project(":rudderjsonadapter"))
 
-    testImplementation 'junit:junit:4.+'
+    testImplementation deps.junit
 //    testImplementation(project(':moshirudderadapter'))
 //    testImplementation(project(':gsonrudderadapter'))
 //    testImplementation(project(':jacksonrudderadapter'))
@@ -79,6 +79,6 @@ dependencies {
     testImplementation deps.mockito
     testImplementation deps.awaitility
     testImplementation deps.robolectric
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation deps.androidXTestExtJunitKtx
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }

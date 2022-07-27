@@ -14,35 +14,43 @@
 
 ext {
     versions = [
-            work          : "2.7.0",
-            gson          : "2.8.8",
-            jackson       : "2.12.4",
-            moshi         : "1.13.0",
-            hamcrest      : "2.2",
-            androidXTest  : "1.4.0",
-            mockito       : "1.10.19",
-            awaitility    : "4.1.0",
-            robolectric   : "4.4",
-            jsonAssert    : "1.5.0",
-            mockito_kotlin: "4.0.0"
+            work                   : "2.7.0",
+            gson                   : "2.8.8",
+            jackson                : "2.12.4",
+            moshi                  : "1.13.0",
+            "kotlinCore"           : "1.8.0",
+            hamcrest               : "2.2",
+            androidXTestRules      : "1.4.0",
+            androidXTest           : "1.4.0",
+            androidXTestExtJunitKtx: "1.1.3",
+            mockito                : "1.10.19",
+            junit                  : "4.+",
+            awaitility             : "4.1.0",
+            robolectric            : "4.4",
+            jsonAssert             : "1.5.0",
+            mockito_kotlin         : "4.0.0"
     ]
 
     deps = [
-            work          : "androidx.work:work-runtime:${versions.work}",
-            gson          : "com.google.code.gson:gson:${versions.gson}",
-            jackson       : "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
-            moshi         : [
+            work                   : "androidx.work:work-runtime:${versions.work}",
+            gson                   : "com.google.code.gson:gson:${versions.gson}",
+            jackson                : "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
+            moshi                  : [
                     kotlin : "com.squareup.moshi:moshi-kotlin:${versions.moshi}",
                     core   : "com.squareup.moshi:moshi:${versions.moshi}",
                     adapter: "com.squareup.moshi:moshi-adapters:${versions.moshi}"
             ],
-            androidXTest  : "androidx.test:core:${versions.androidXTest}",
-            hamcrest      : "org.hamcrest:hamcrest:${versions.hamcrest}",
-            mockito       : "org.mockito:mockito-core:${versions.mockito}",
-            awaitility    : "org.awaitility:awaitility:${versions.awaitility}",
-            robolectric   : "org.robolectric:robolectric:${versions.robolectric}",
-            jsonAssert    : "org.skyscreamer:jsonassert:${versions.jsonAssert}",
-            mockito_kotlin: "org.mockito.kotlin:mockito-kotlin:${versions.mockito_kotlin}",
+            kotlinCore             : "androidx.core:core-ktx:${versions.kotlinCore}",
+            androidXTest           : "androidx.test:core:${versions.androidXTest}",
+            androidXTestRules      : "androidx.test:rules:${versions.androidXTestRules}",
+            androidXTestExtJunitKtx: "androidx.test.ext:junit-ktx:${versions.androidXTestExtJunitKtx}",
+            hamcrest               : "org.hamcrest:hamcrest:${versions.hamcrest}",
+            mockito                : "org.mockito:mockito-core:${versions.mockito}",
+            awaitility             : "org.awaitility:awaitility:${versions.awaitility}",
+            robolectric            : "org.robolectric:robolectric:${versions.robolectric}",
+            junit                  : "junit:junit:${versions.junit}",
+            jsonAssert             : "org.skyscreamer:jsonassert:${versions.jsonAssert}",
+            mockito_kotlin         : "org.mockito.kotlin:mockito-kotlin:${versions.mockito_kotlin}",
     ]
 
     projects = [
@@ -55,9 +63,9 @@ ext {
             repository            : ':repository',
     ]
     library = [
-            min_sdk      : 21,
-            target_sdk   : 31,
-            version_name : '"2.0"',
-            version_code : 1
+            min_sdk     : 21,
+            target_sdk  : 31,
+            version_name: '"2.0"',
+            version_code: 1
     ]
 }
