@@ -232,4 +232,8 @@ public class RudderMessage {
     public Map<String, Object> getIntegrations() {
         return this.integrations;
     }
+
+    void setSession() {
+        this.context.setSession();
+    }
 }

@@ -453,6 +453,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (!message.getIntegrations().containsKey("All")) {
             message.setIntegrations(prepareIntegrations());
         }
+
+        // Session Tracking
+        message.setSession();
+
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
                 .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
@@ -613,6 +617,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 if (getOptStatus()) {
                     return;
                 }
+                // Session Tracking
+                // Automatic tracking session started
+                if (this.config.isAutoSessionTracking()) {
+                    RudderClient.getInstance().startSession(Utils.getCurrentTimeMillis());
+                }
                 RudderMessage trackMessage;
                 trackMessage = new RudderMessageBuilder()
                         .setEventName("Application Opened")
@@ -647,6 +656,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 RudderMessage message = new RudderMessageBuilder().setEventName("Application Backgrounded").build();
                 message.setType(MessageType.TRACK);
                 this.dump(message);
+
+                // Session Tracking
+                // Invalidate sessionId while background
+                if (RudderClient.getUserSession() != null) {
+                    RudderClient.getUserSession().clearSession();
+                }
             }
         }
     }

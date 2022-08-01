@@ -25,7 +25,8 @@ import java.util.concurrent.TimeUnit;
  * - trackLifecycleEvents -> whether track lifecycle events automatically
  * - recordScreenViews -> whether we should record screen views automatically
  * - controlPlaneUrl -> link to self-hosted sourceConfig
- *
+ * - autoSessionTracking -> whether we are tracking session automatically
+ * - sessionDuration -> duration of a session in minute
  * default values are set at Constants file
  *
  * */
@@ -42,6 +43,8 @@ public class RudderConfig {
     private boolean trackLifecycleEvents;
     private boolean autoCollectAdvertId;
     private boolean recordScreenViews;
+    private boolean autoSessionTracking;
+    private int sessionDuration;
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
@@ -60,6 +63,8 @@ public class RudderConfig {
                 Constants.TRACK_LIFECYCLE_EVENTS,
                 Constants.AUTO_COLLECT_ADVERT_ID,
                 Constants.RECORD_SCREEN_VIEWS,
+                Constants.AUTO_SESSION_TRACKING,
+                Constants.SESSION_DURATION,
                 Constants.CONTROL_PLANE_URL,
                 null,
                 null
@@ -79,6 +84,8 @@ public class RudderConfig {
             boolean trackLifecycleEvents,
             boolean autoCollectAdvertId,
             boolean recordScreenViews,
+            boolean autoSessionTracking,
+            int sessionDuration,
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
             List<RudderIntegration.Factory> customFactories
@@ -160,6 +167,13 @@ public class RudderConfig {
             if (!controlPlaneUrl.endsWith("/")) controlPlaneUrl += "/";
             this.controlPlaneUrl = controlPlaneUrl;
         }
+
+        if (sessionDuration > Constants.SESSION_DURATION) {
+            this.sessionDuration = sessionDuration;
+        } else {
+            this.sessionDuration = Constants.SESSION_DURATION;
+        }
+        this.autoSessionTracking = autoSessionTracking;
     }
 
     /**
@@ -286,6 +300,20 @@ public class RudderConfig {
         return controlPlaneUrl;
     }
 
+    /**
+     * @return autoSessionTracking (whether we are tracking session automatically)
+     */
+    public boolean isAutoSessionTracking() {
+        return autoSessionTracking;
+    }
+
+    /**
+     * @return sessionDuration (duration of a session in minute)
+     */
+    public int getSessionDuration() {
+        return sessionDuration;
+    }
+
     void setDataPlaneUrl(String dataPlaneUrl) {
         this.dataPlaneUrl = dataPlaneUrl;
     }
@@ -324,6 +352,14 @@ public class RudderConfig {
 
     void setRecordScreenViews(boolean recordScreenViews) {
         this.recordScreenViews = recordScreenViews;
+    }
+
+    void setSessionDuration(int sessionDuration) {
+        this.sessionDuration = sessionDuration;
+    }
+
+    void setAutoSessionTracking(boolean autoSessionTracking) {
+        this.autoSessionTracking = autoSessionTracking;
     }
 
     /**
@@ -586,6 +622,32 @@ public class RudderConfig {
             return this;
         }
 
+        private int sessionDuration = Constants.SESSION_DURATION;
+
+        /**
+         * @param sessionDuration (duration of a session in minute)
+         * @return RudderConfig.Builder
+         */
+        public Builder withSessionDuration(int sessionDuration) {
+            if (sessionDuration < Constants.SESSION_DURATION) {
+                RudderLogger.logError("Minimum sessionDuration is 5 minute.");
+                return this;
+            }
+            this.sessionDuration = sessionDuration;
+            return this;
+        }
+
+        private boolean autoSessionTracking = Constants.AUTO_SESSION_TRACKING;
+
+        /**
+         * @param autoSessionTracking (whether we are tracking session automatically)
+         * @return RudderConfig.Builder
+         */
+        public Builder withAutoSessionTracking(boolean autoSessionTracking) {
+            this.autoSessionTracking = autoSessionTracking;
+            return this;
+        }
+
         /**
          * Finalize your config building
          *
@@ -605,6 +667,8 @@ public class RudderConfig {
                     this.trackLifecycleEvents,
                     this.autoCollectAdvertId,
                     this.recordScreenViews,
+                    this.autoSessionTracking,
+                    this.sessionDuration,
                     this.controlPlaneUrl,
                     this.factories,
                     this.customFactories
