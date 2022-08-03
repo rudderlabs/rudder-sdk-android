@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static android.content.Context.UI_MODE_SERVICE;
@@ -59,8 +60,8 @@ public class Utils {
         return formatter.format(new Date());
     }
 
-    public static String getCurrentTimeMillis() {
-        return String.format(Locale.US, "%d", System.currentTimeMillis());
+    public static String getCurrentTimeSeconds() {
+        return String.format(Locale.US, "%d", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
     }
 
     public static String toDateString(Date date) {

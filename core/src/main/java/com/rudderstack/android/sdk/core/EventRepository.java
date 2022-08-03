@@ -455,6 +455,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
 
         // Session Tracking
+        // Invalidate sessionId while background
+        if (RudderClient.getUserSession() != null) {
+            RudderClient.getUserSession().checkSessionDuration();
+        }
         message.setSession();
 
         Gson gson = new GsonBuilder()
@@ -620,7 +624,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // Session Tracking
                 // Automatic tracking session started
                 if (this.config.isAutoSessionTracking()) {
-                    RudderClient.getInstance().startSession(Utils.getCurrentTimeMillis());
+                    RudderClient.getInstance().startSession(Utils.getCurrentTimeSeconds());
                 }
                 RudderMessage trackMessage;
                 trackMessage = new RudderMessageBuilder()

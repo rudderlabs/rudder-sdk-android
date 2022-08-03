@@ -89,5 +89,69 @@
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             android:text="Cancel" />
+
+        <Button
+            android:id="@+id/startSession"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:onClick="onStartSession"
+            android:text="Start Session" />
+
+        <Button
+            android:id="@+id/trackAfterNewSession"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:onClick="onTrackAfterNewSession"
+            android:text="Track After New Session" />
+
+        <Button
+            android:id="@+id/startSessionWithId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:onClick="onStartSessionWithId"
+            android:text="Start Session With Id" />
+
+        <Button
+            android:id="@+id/trackAfterNewSessionWithId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:onClick="onTrackAfterNewSessionWithId"
+            android:text="Track After New Session With Id" />
+
+        <Button
+            android:id="@+id/reset"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:onClick="onReset"
+            android:text="Reset" />
+
+        <Button
+            android:id="@+id/trackAfterReset"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:onClick="onTrackAfterReset"
+            android:text="Track After Reset" />
+
+        <Button
+            android:id="@+id/trackAfterBackground"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:onClick="onTrackAfterBackground"
+            android:text="Track After Background" />
+
+        <Button
+            android:id="@+id/incrementTrack"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:onClick="onIncrementTrack"
+            android:text="Increment Track" />
     </LinearLayout>
 </ScrollView>

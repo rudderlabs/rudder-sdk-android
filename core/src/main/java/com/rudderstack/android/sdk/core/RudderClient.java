@@ -11,7 +11,6 @@ import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -744,6 +743,10 @@ public class RudderClient {
         if (repository != null) {
             repository.reset();
         }
+
+        // Session Tracking
+        // sessionId will be reset. New sessionId will be generated.
+        startSession(Utils.getCurrentTimeSeconds());
     }
 
     /**
@@ -842,7 +845,7 @@ public class RudderClient {
     static RudderUserSession getUserSession() { return  userSession; }
 
     public void startSession() {
-        startSession(Utils.getCurrentTimeMillis());
+        startSession(Utils.getCurrentTimeSeconds());
     }
 
     public void startSession(String sessionId) {
