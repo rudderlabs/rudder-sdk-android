@@ -15,3 +15,8 @@ All notable changes to this project will be documented in this file.
 
 ## Changed
 - Removed Bluetooth permission from the Core SDK and from now the bluetooth status would be collected and sent as a part of the payload only if bluetooth permission is included in the SDK, so that from now bluetooth permission is not necessarily needed to make use of the SDK.
+
+## Version - 1.7.0 - 2022-08-04
+
+## Added
+- Session Tracking.
