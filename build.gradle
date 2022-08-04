@@ -21,6 +21,7 @@ allprojects {
     repositories {
         google()
         jcenter()
+        maven { url "https://appboy.github.io/appboy-android-sdk/sdk" }
     }
 }
 

@@ -217,7 +217,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
         return destinationsWithTransformationsEnabled;
     }
-    
+
     private void sendApplicationInstalled(int currentBuild, String currentVersion) {
         // If trackLifeCycleEvents is not allowed then discard the event
         if (!config.isTrackLifecycleEvents()) {
@@ -500,7 +500,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
         String destinationName = Utils.getKeyForValueFromMap(destinationsWithTransformationsEnabled, transformedDestination.id);
         if (destinationsWithTransformationsEnabled.get(destinationName) != null) {
-            if (transformedDestination.status == 200 && transformedDestination.payload != null) {
+            if (transformedDestination.payload != null) {
                 processPayloadForTransformation(transformedDestination.payload, destinationName);
                 //
                 //delete it from row_id to transform_id table
@@ -533,7 +533,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             }
         });
         for (TransformationResponse.TransformedEvent transformedEvent : payload) {
-            integrationOperationsMap.get(destinationName).dump(transformedEvent.event);
+            if (transformedEvent.status.equals("200")) {
+                integrationOperationsMap.get(destinationName).dump(transformedEvent.event);
+            }
         }
     }
 

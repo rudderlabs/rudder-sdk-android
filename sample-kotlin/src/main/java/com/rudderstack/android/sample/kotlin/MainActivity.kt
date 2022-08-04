@@ -13,6 +13,9 @@ import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderOption
 import com.rudderstack.android.sdk.core.RudderProperty
 import com.rudderstack.android.sdk.core.RudderTraits
+import com.rudderstack.android.sdk.core.ecomm.ECommerceCart
+import com.rudderstack.android.sdk.core.ecomm.ECommerceProduct
+import com.rudderstack.android.sdk.core.ecomm.events.CartViewedEvent
 import java.util.*
 import javax.net.ssl.SSLContext
 
@@ -24,18 +27,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT)
-            tlsBackport()
     }
 
     override fun onStart() {
         super.onStart()
-        MainApplication.rudderClient!!.track("first_event")
 
-        Handler().postDelayed({
-            RudderClient.putAdvertisingId("some_idfa_changed")
-            MainApplication.rudderClient!!.track("second_event")
-        }, 3000)
         val option = RudderOption()
             .putExternalId("brazeExternalId", "some_external_id_1")
             .putExternalId("braze_id", "some_braze_id_2")
@@ -51,51 +47,55 @@ class MainActivity : AppCompatActivity() {
             RudderTraits().putFirstName("Test First Name").putBirthday(Date()),
             option
         )
-//        MainApplication.rudderClient!!.reset()
-        val props = RudderProperty()
-        props.put("Name", "John")
-        props.put("city", "NYC")
-        MainApplication.rudderClient!!.track("test event john", props, option)
 
-        RudderClient.putDeviceToken("DEVTOKEN2")
-
-        MainApplication.rudderClient!!.track("Test Event")
-
-
-
-        MainApplication.rudderClient!!.onIntegrationReady(
-            "App Center",
-            NativeCallBack("App Center")
-        );
-
-        MainApplication.rudderClient!!.onIntegrationReady(
-            "Custom Factory",
-            NativeCallBack("Custom Factory")
-        );
-    }
-
-    private fun tlsBackport() {
-        try {
-            ProviderInstaller.installIfNeeded(this)
-            Log.e("Rudder", "Play present")
-            val sslContext: SSLContext = SSLContext.getInstance("TLSv1.2")
-            sslContext.init(null, null, null)
-            sslContext.createSSLEngine()
-        } catch (e: GooglePlayServicesRepairableException) {
-            // Prompt the user to install/update/enable Google Play services.
-            GoogleApiAvailability.getInstance()
-                .showErrorNotification(this, e.connectionStatusCode)
-            Log.e("Rudder", "Play install")
-        } catch (e: GooglePlayServicesNotAvailableException) {
-            // Indicates a non-recoverable error: let the user know.
-            Log.e("SecurityException", "Google Play Services not available.");
-            e.printStackTrace()
+        val option1 = RudderOption().putIntegration("All", false).putIntegration("Adjust", true)
+        val option2 = RudderOption().putIntegration("All", false).putIntegration("Amplitude", true)
+        for (i in 1..5) {
+            MainApplication.rudderClient!!.track("Test Event Amplitude $i", null, option1)
+            MainApplication.rudderClient!!.track("Test Event Adjust $i", null, option2)
         }
+
+        val productA = ECommerceProduct.Builder()
+            .withProductId("some_product_id_a")
+            .withSku("some_product_sku_a")
+            .withCurrency("USD")
+            .withPrice(2.99f)
+            .withName("Some Product Name A")
+            .withQuantity(1f)
+            .build()
+
+        val productB = ECommerceProduct.Builder()
+            .withProductId("some_product_id_b")
+            .withSku("some_product_sku_b")
+            .withCurrency("USD")
+            .withPrice(3.99f)
+            .withName("Some Product Name B")
+            .withQuantity(1f)
+            .build()
+
+        val productC = ECommerceProduct.Builder()
+            .withProductId("some_product_id_c")
+            .withSku("some_product_sku_c")
+            .withCurrency("USD")
+            .withPrice(4.99f)
+            .withName("Some Product Name C")
+            .withQuantity(1f)
+            .build()
+
+
+        // ECommerce Cart
+        val cart = ECommerceCart.Builder()
+            .withCartId("some_cart_id")
+            .withProduct(productA)
+            .withProduct(productB)
+            .withProduct(productC)
+            .build()
+
+
+        val cartViewedEvent = CartViewedEvent().withCart(cart)
+        MainApplication.rudderClient!!.track(cartViewedEvent.event(), cartViewedEvent.properties())
+
+
     }
 }
 
-internal class NativeCallBack(private val integrationName: String) : RudderClient.Callback {
-    override fun onReady(instance: Any) {
-        println("Call back of integration : " + integrationName + " is called");
-    }
-}

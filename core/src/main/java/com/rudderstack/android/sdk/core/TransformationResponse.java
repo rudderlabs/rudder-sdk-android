@@ -30,10 +30,12 @@ public class TransformationResponse {
 
     static class TransformedEvent {
         final int orderNo;
+        final String status;
         final RudderMessage event;
 
-        public TransformedEvent(int orderNo, RudderMessage event) {
+        public TransformedEvent(int orderNo, String status, RudderMessage event) {
             this.orderNo = orderNo;
+            this.status = status;
             this.event = event;
         }
     }

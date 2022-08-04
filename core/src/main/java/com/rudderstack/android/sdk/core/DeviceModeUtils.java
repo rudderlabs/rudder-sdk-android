@@ -25,7 +25,7 @@ import java.util.Map;
 
 class DeviceModeUtils {
 
-    private static final String TRANSFORMATION_ENDPOINT = "v1/transform";
+    private static final String TRANSFORMATION_ENDPOINT = "transform";
 
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
