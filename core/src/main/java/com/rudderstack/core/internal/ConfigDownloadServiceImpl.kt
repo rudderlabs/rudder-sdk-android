@@ -26,15 +26,13 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 internal class ConfigDownloadServiceImpl(
-    writeKey : String,
+    private val encodedWriteKey : String,
     controlPlaneUrl: String,
     jsonAdapter: JsonAdapter,
     private val executorService: ExecutorService = Executors.newCachedThreadPool()
 ) : ConfigDownloadService {
 
-    private val encodedWriteKey = Base64.getEncoder().encodeToString(
-        String.format(Locale.US, "%s:", writeKey).toByteArray(charset("UTF-8"))
-    )
+
     private val controlPlaneWebService = WebServiceFactory.getWebService(
         controlPlaneUrl,
         jsonAdapter = jsonAdapter, executor = executorService
@@ -66,8 +64,8 @@ internal class ConfigDownloadServiceImpl(
                     ), "sourceConfig", RudderServerConfig::class.java)
                 val response = ongoingConfigFuture?.get()
                 lastRudderServerConfig =  response?.body
-                lastErrorMsg = response?.errorBody
-                return@perform ongoingConfigFuture?.get()?.status?:-1 == 200
+                lastErrorMsg = response?.errorBody?: response?.error?.message
+                return@perform (ongoingConfigFuture?.get()?.status ?: -1) == 200
             }){
                 callback.invoke(it, lastRudderServerConfig, lastErrorMsg)
             }

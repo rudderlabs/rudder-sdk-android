@@ -19,6 +19,7 @@ import com.rudderstack.core.internal.states.ContextState
 import com.rudderstack.core.internal.states.SettingsState
 import com.rudderstack.models.*
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import java.util.*
 import java.util.concurrent.*
 
 
@@ -55,29 +56,36 @@ class Analytics private constructor(
         storage: Storage = BasicStorageImpl(logger = logger),
         analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
         networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
+        base64Generator: Base64Generator = Base64Generator {
+            Base64.getEncoder().encodeToString(
+                String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8"))
+            )
+        },
         dataUploadService: DataUploadService = DataUploadServiceImpl(
-            writeKey,
+            base64Generator.generateBase64(writeKey),
             jsonAdapter,
             SettingsState,
-            dataPlaneUrl?: DATA_PLANE_URL,
+            dataPlaneUrl ?: DATA_PLANE_URL,
             networkExecutor
         ),
         configDownloadService: ConfigDownloadService = ConfigDownloadServiceImpl(
-            writeKey,
-            controlPlaneUrl?: CONTROL_PLANE_URL,
+            base64Generator.generateBase64(writeKey),
+            controlPlaneUrl ?: CONTROL_PLANE_URL,
             jsonAdapter,
             networkExecutor
         ),
         defaultTraits: IdentifyTraits? = storage.context?.traits,
         defaultExternalIds: List<Map<String, String>>? = storage.context?.externalIds,
         defaultContextMap: Map<String, Any>? = null,
-        contextAddOns: Map<String, Any> ?= null,
+        contextAddOns: Map<String, Any>? = null,
         //optional
         initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
         //optional called if shutdown is called
-        shutdownHook : (()-> Unit)? = null
+        shutdownHook: (() -> Unit)? = null
     ) : this(
-        _writeKey = writeKey, _jsonAdapter = jsonAdapter, _dataPlaneUrl = dataPlaneUrl?: DATA_PLANE_URL,
+        _writeKey = writeKey,
+        _jsonAdapter = jsonAdapter,
+        _dataPlaneUrl = dataPlaneUrl ?: DATA_PLANE_URL,
         _delegate = AnalyticsDelegate(
             settings,
             storage,
@@ -88,7 +96,12 @@ class Analytics private constructor(
             configDownloadService,
             analyticsExecutor,
             logger,
-            storage.context?: createContext(defaultTraits, defaultExternalIds, defaultContextMap, contextAddOns).also {
+            storage.context ?: createContext(
+                defaultTraits,
+                defaultExternalIds,
+                defaultContextMap,
+                contextAddOns
+            ).also {
                 analyticsExecutor.submit {
                     storage.cacheContext(it)
                 }
@@ -129,7 +142,9 @@ class Analytics private constructor(
     ) {
         track(
             TrackMessage.create(
-                timestamp = RudderUtils.timeStamp, eventName = eventName, properties = trackProperties,
+                timestamp = RudderUtils.timeStamp,
+                eventName = eventName,
+                properties = trackProperties,
                 userId = userID
             ), options
         )
@@ -160,7 +175,7 @@ class Analytics private constructor(
     }
 
     fun identify(
-        userID: String, traits: Map<String, Any>? = null,
+        userID: String, traits: IdentifyTraits? = null,
         options: RudderOptions? = null,
     ) {
         val completeTraits = mapOf("userId" to userID) optAdd traits
@@ -249,7 +264,7 @@ class Analytics private constructor(
         //shut down if data uploader/executor is initialized here
         if (alternateDataUploadService == null)
             dataUploadService.shutdown()
-        if(alternateExecutor == null)
+        if (alternateExecutor == null)
             flushExecutor.shutdown()
     }
 

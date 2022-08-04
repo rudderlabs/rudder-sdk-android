@@ -11,6 +11,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+@file:Suppress("FunctionName")
 
 package com.rudderstack.models
 
@@ -28,8 +29,10 @@ typealias ScreenProperties = Map<String, Any>
 typealias TrackProperties = Map<String, Any>
 typealias IdentifyTraits = Map<String, Any?>
 typealias IdentifyProperties = Map<String, Any>
+
 //integrations might change from String,Boolean to String, Object at a later point of time
 typealias MessageIntegrations = Map<String, Boolean>
+
 typealias MessageDestinationProps = Map<String, Map<*, *>>
 typealias GroupTraits = Map<String, Any>
 
@@ -123,120 +126,6 @@ sealed class Message(
     @Json(name = "integrations")
     //@Expose
     var integrations: MessageIntegrations? = null
-    /*@Retention(AnnotationRetention.RUNTIME)
-    @JsonQualifier
-    annotation class ChannelMitigationMoshi
-
-    class ChannelMoshiAdapter {
-        @FromJson @ChannelMitigationMoshi fun fromJson(channel: String?):  String {
-            return channel?:"server"
-        }
-
-        @ToJson fun toJson(@ChannelMitigationMoshi channel: String) : String? {
-            return channel
-        }
-    }*/
-    /*@Transient
-    var rudderOption: RudderOption? = null
-        set(rudderOption) {
-            field = rudderOption
-            if (rudderOption != null) {
-                setIntegrations(rudderOption.getIntegrations())
-                setCustomContexts(rudderOption.getCustomContexts())
-            }
-        }
-*/
-    /*fun setPreviousId(previousId: String?) {
-        this.previousId = previousId
-    }*/
-
-    /*      fun setGroupTraits(groupTraits: RudderTraits?) {
-              traits = groupTraits
-          }
-
-          fun setProperty(property: RudderProperty?) {
-              if (property != null) properties = property.getMap()
-          }
-
-          fun setUserProperty(userProperty: RudderUserProperty) {
-              userProperties = userProperty.getMap()
-          }
-
-          fun updateTraits(traits: RudderTraits?) {
-              RudderElementCache.updateTraits(traits)
-              updateContext()
-          }
-
-          fun updateTraits(traits: Map<String?, Any?>?) {
-              RudderElementCache.updateTraits(traits)
-              updateContext()
-          }
-
-          fun updateExternalIds(option: RudderOption?) {
-              if (option != null) {
-                  val externalIds: List<Map<String, Any>> = option.getExternalIds()
-                  if (externalIds != null && !externalIds.isEmpty()) {
-                      RudderElementCache.updateExternalIds(externalIds)
-                      updateContext()
-                  }
-              }
-          }
-  */
-    /*fun addIntegrationProps(integrationKey: String, isEnabled: Boolean, props: Map<*, *>) {
-        integrations[integrationKey] = isEnabled
-        if (isEnabled) {
-            if (destinationProps == null) destinationProps = HashMap()
-            destinationProps!![integrationKey] = props
-        }
-    }
-
-    fun setIntegrations(integrations: Map<String, Any>?) {
-        if (integrations == null) return
-        for (key in integrations.keys) {
-            this.integrations[key] = integrations[key] as Any
-        }
-    }*/
-
-/*
-        fun setCustomContexts(customContexts: Map<String, Any>?) {
-            if (customContexts == null) return
-            this.customContexts = customContexts
-            context.setCustomContexts(customContexts)
-        }
-
-        fun getTraits(): Map<String, Any> {
-            return context.getTraits()
-        }
-*/
-
-    /**
-     * @return Returns message level context
-     *//*
-        fun getContext(): RudderContext {
-            return context
-        }
-
-        fun updateContext() {
-            context = RudderElementCache.getCachedContext()
-            if (customContexts != null) context.setCustomContexts(customContexts)
-        }
-
-        */
-    /**
-     * @return Integrations Map passed for the event
-     *//*
-        fun getIntegrations(): Map<String, Any?> {
-            return integrations
-        }
-
-        init {
-            context = RudderElementCache.getCachedContext()
-            anonymousId = RudderContext.getAnonymousId()
-            val traits: Map<String, Any> = context.getTraits()
-            if (traits != null && traits.containsKey("id")) {
-                userId = traits["id"].toString()
-            }
-        }*/
 
     open fun copy(
         context: MessageContext? = this.context,
@@ -244,68 +133,56 @@ sealed class Message(
         userId: String? = this.userId
     ): Message = when (this) {
         is AliasMessage -> copy(
-//            messageId,
             context,
             anonymousId,
             userId,
             timestamp,
             destinationProps,
-//            integrations,
             previousId
         )
         is GroupMessage -> copy(
-//            messageId,
             context,
             anonymousId,
             userId,
             timestamp,
             destinationProps,
-//            integrations,
             groupId,
             traits
         )
         is IdentifyMessage -> copy(
-//            messageId,
             context,
             anonymousId,
             userId,
             timestamp,
             destinationProps,
-//            integrations,
             properties
         )
         is PageMessage -> copy(
-//            messageId,
             context,
             anonymousId,
             userId,
             timestamp,
             destinationProps,
-//            integrations,
             name,
             properties,
             category
         )
         is ScreenMessage -> copy(
-//            messageId,
             context,
             anonymousId,
             userId,
             timestamp,
             destinationProps,
-//            integrations,
             name,
             category,
             properties
         )
         is TrackMessage -> copy(
-//            messageId,
             context,
             anonymousId,
             userId,
             timestamp,
             destinationProps,
-//            integrations,
             eventName,
             properties
         )
@@ -412,23 +289,17 @@ class AliasMessage internal constructor(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
-//    @JsonProperty("integrations")
-//    @Json(name = "integrations")
-//    integrations: MessageIntegrations = HashMap(),
     @SerializedName("previousId")
     @JsonProperty("previousId")
     @Json(name = "previousId")
     var previousId: String? = null,
-//    _channel : String? = null
 ) : Message(
     EventType.ALIAS,
-//    messageId,
     context,
     anonymousId,
     userId,
     timestamp,
     destinationProps,
-//    integrations,
 ) {
     companion object {
         fun create(
@@ -447,14 +318,6 @@ class AliasMessage internal constructor(
             anonymousId, userId, timestamp, destinationProps, previousId
         )
     }
-
-    /*override fun copy(
-        context: MessageContext?,
-        anonymousId: String?,
-        userId: String?
-    ): AliasMessage {
-        return super.copy(context, anonymousId, userId) as AliasMessage
-    }*/
 
     fun copy(
         context: MessageContext? = this.context,
@@ -502,9 +365,6 @@ class GroupMessage internal constructor(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
-//    @JsonProperty("integrations")
-//    @Json(name = "integrations")
-//    integrations: MessageIntegrations = HashMap(),
     /**
      * @return Group ID for the event
      */
@@ -521,14 +381,11 @@ class GroupMessage internal constructor(
 
     ) : Message(
     EventType.GROUP,
-//    messageId,
     context,
     anonymousId,
     userId,
     timestamp,
-//    channel,
     destinationProps,
-//    integrations
 ) {
     companion object {
         fun create(
@@ -548,13 +405,7 @@ class GroupMessage internal constructor(
             anonymousId, userId, timestamp, destinationProps, groupId, groupTraits
         )
     }
-    /*override fun copy(
-        context: MessageContext?,
-        anonymousId: String?,
-        userId: String?
-    ): GroupMessage {
-        return super.copy(context, anonymousId, userId) as GroupMessage
-    }*/
+
 
     fun copy(
         context: MessageContext? = this.context,
@@ -607,9 +458,6 @@ class PageMessage internal constructor(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
-//    @JsonProperty("integrations")
-//    @Json(name = "integrations")
-//    integrations: MessageIntegrations = HashMap(),
     /**
      * @return Name of the event tracked
      */
@@ -639,14 +487,11 @@ class PageMessage internal constructor(
 
     ) : Message(
     EventType.PAGE,
-//    messageId,
     context,
     anonymousId,
     userId,
     timestamp,
-//    channel,
     destinationProps,
-//    integrations
 ) {
     companion object {
         fun create(
@@ -666,13 +511,6 @@ class PageMessage internal constructor(
             category
         )
     }
-    /*override fun copy(
-        context: MessageContext?,
-        anonymousId: String?,
-        userId: String?
-    ): PageMessage {
-        return super.copy(context, anonymousId, userId) as PageMessage
-    }*/
 
     fun copy(
         context: MessageContext? = this.context,
@@ -731,9 +569,6 @@ class ScreenMessage internal constructor(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
-//    @JsonProperty("integrations")
-//    @Json(name = "integrations")
-//    integrations: MessageIntegrations = HashMap(),
 
     @JsonProperty("category")
     @Json(name = "category")
@@ -761,14 +596,11 @@ class ScreenMessage internal constructor(
 
     ) : Message(
     EventType.SCREEN,
-//    messageId,
     context,
     anonymousId,
     userId,
     timestamp,
-//    channel,
     destinationProps,
-//    integrations
 ) {
     companion object {
         fun create(
@@ -791,13 +623,6 @@ class ScreenMessage internal constructor(
             properties
         )
     }
-    /*override fun copy(
-        context: MessageContext?,
-        anonymousId: String?,
-        userId: String?
-    ): ScreenMessage {
-        return super.copy(context, anonymousId, userId) as ScreenMessage
-    }*/
 
     fun copy(
         context: MessageContext? = this.context,
@@ -855,9 +680,6 @@ class TrackMessage internal constructor(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
-//    @JsonProperty("integrations")
-//    @Json(name = "integrations")
-//    integrations: MessageIntegrations = HashMap(),
     /**
      * @return Name of the event tracked
      */
@@ -880,14 +702,11 @@ class TrackMessage internal constructor(
     val properties: TrackProperties? = null,
 ) : Message(
     EventType.TRACK,
-//    messageId,
     context,
     anonymousId,
     userId,
     timestamp,
-//    channel,
     destinationProps,
-//    integrations
 ) {
     companion object {
         fun create(
@@ -910,13 +729,7 @@ class TrackMessage internal constructor(
             properties
         )
     }
-    /*override fun copy(
-        context: MessageContext?,
-        anonymousId: String?,
-        userId: String?
-    ): TrackMessage {
-        return super.copy(context, anonymousId, userId) as TrackMessage
-    }*/
+
 
     fun copy(
         context: MessageContext? = this.context,
@@ -977,9 +790,6 @@ class IdentifyMessage internal constructor(
     @JsonProperty("destinationProps")
     @Json(name = "destinationProps")
     destinationProps: MessageDestinationProps? = null,
-//    @JsonProperty("integrations")
-//    @Json(name = "integrations")
-//    integrations: MessageIntegrations = HashMap(),
     /**
      * Get the properties back as set to the event
      * Always convert objects to it's json equivalent before setting it as values
@@ -992,14 +802,11 @@ class IdentifyMessage internal constructor(
 
     ) : Message(
     EventType.IDENTIFY,
-//    messageId,
     context,
     anonymousId,
     userId,
     timestamp,
-//    channel,
     destinationProps,
-//    integrations
 ) {
 
     companion object {
@@ -1018,13 +825,7 @@ class IdentifyMessage internal constructor(
         )
 
     }
-    /*override fun copy(
-        context: MessageContext?,
-        anonymousId: String?,
-        userId: String?
-    ): IdentifyMessage {
-        return super.copy(context, anonymousId, userId) as IdentifyMessage
-    }*/
+
 
     fun copy(
         context: MessageContext? = this.context,
@@ -1050,6 +851,8 @@ class IdentifyMessage internal constructor(
     override fun hashCode(): Int {
         return properties?.hashCode() ?: 0
     }
+
+
 }
 
 

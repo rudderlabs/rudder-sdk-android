@@ -16,7 +16,7 @@ package com.rudderstack.android.storage
 
 import android.content.Context
 import android.os.Build
-import com.rudderstack.android.android.BuildConfig
+import com.rudderstack.android.BuildConfig
 import com.rudderstack.android.internal.AndroidLogger
 import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.repository.Dao

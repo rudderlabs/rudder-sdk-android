@@ -25,9 +25,6 @@ import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
-import java.io.FileInputStream
-import java.io.IOException
-import java.util.*
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -51,7 +48,7 @@ internal class AnalyticsDelegate(
     //optional
     private val initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
     //optional called if shutdown is called
-    private val shutdownHook : (()-> Unit)? = null
+    private val shutdownHook: (() -> Unit)? = null
 ) : Controller {
 
 
@@ -60,14 +57,17 @@ internal class AnalyticsDelegate(
         //the number of flush calls that can be queued
         //unit sized queue means only one flush call can wait for the ongoing to complete
         private const val NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 2
+        private val PLUGIN_LOCK = Any()
     }
 
     private val _isShutDown = AtomicBoolean(false)
+
     /**
      * A handler for rejected tasks that discards the oldest unhandled request and then retries
      * execute, unless the executor is shut down, in which case the task is discarded.
      */
     private val handler: RejectedExecutionHandler = ThreadPoolExecutor.DiscardOldestPolicy()
+
     //used for flushing
     // a single threaded executor by default for sequentially calling flush one after other
     private val _flushExecutor = ThreadPoolExecutor(
@@ -162,8 +162,10 @@ internal class AnalyticsDelegate(
     }
 
     override fun applyClosure(closure: Plugin.() -> Unit) {
-        _allPlugins.forEach {
-            it.closure()
+        synchronized(PLUGIN_LOCK) {
+            _allPlugins.forEach {
+                it.closure()
+            }
         }
     }
 
@@ -192,20 +194,36 @@ internal class AnalyticsDelegate(
     }*/
 
     override fun addPlugin(vararg plugins: Plugin) {
+        synchronized(PLUGIN_LOCK) {
+            if (plugins.isEmpty()) return
+            plugins.forEach {
+                if (it is DestinationPlugin<*>) {
+                    _destinationPlugins = _destinationPlugins + it
+                    val newDestinationConfig =
+                        DestinationConfigState.value?.withIntegration(it.name, it.isReady)
+                            ?: DestinationConfig(mapOf(it.name to it.isReady))
+                    DestinationConfigState.update(newDestinationConfig)
+                    initDestinationPlugin(it)
+                } else
+                    _customPlugins = _customPlugins + it
 
-        if (plugins.isEmpty()) return
-        plugins.forEach {
-            if (it is DestinationPlugin<*>) {
-                _destinationPlugins = _destinationPlugins + it
-                val newDestinationConfig =
-                    DestinationConfigState.value?.withIntegration(it.name, it.isReady)
-                        ?: DestinationConfig(mapOf(it.name to it.isReady))
-                DestinationConfigState.update(newDestinationConfig)
-                initDestinationPlugin(it)
-            } else
-                _customPlugins = _customPlugins + it
+                applyUpdateClosures(it)
+            }
+        }
 
-            applyUpdateClosures(it)
+    }
+
+    override fun removePlugin(plugin: Plugin): Boolean {
+        if (plugin is DestinationPlugin<*>)
+            synchronized(PLUGIN_LOCK) {
+                val destinationPluginPrevSize = _destinationPlugins.size
+                _destinationPlugins = _destinationPlugins - plugin
+                return _destinationPlugins.size < destinationPluginPrevSize
+            }
+        synchronized(PLUGIN_LOCK) {
+            val customPluginPrevSize = _customPlugins.size
+            _customPlugins = _customPlugins - plugin
+            return (_customPlugins.size < customPluginPrevSize)
         }
 
     }
@@ -216,13 +234,13 @@ internal class AnalyticsDelegate(
         options: RudderOptions?,
         lifecycleController: LifecycleController?
     ) {
-        if(isShutdown){
+        if (isShutdown) {
             logger.warn(log = "Analytics has shut down, ignoring message $message")
             return
         }
         analyticsExecutor.submit {
             val lcc = lifecycleController ?: LifecycleControllerImpl(message,
-                _allPlugins.toMutableList().also {
+                synchronized(PLUGIN_LOCK) { _allPlugins.toMutableList() }.also {
                     //after gdpr plugin
                     it.add(
                         1, RudderOptionPlugin(
@@ -278,6 +296,7 @@ internal class AnalyticsDelegate(
             }
         }
     }
+
     // works even after shutdown
     private fun blockFlush(
         alternateDataUploadService: DataUploadService,
@@ -309,8 +328,8 @@ internal class AnalyticsDelegate(
     }
 
     override fun shutdown() {
-            flush()
-        if(_isShutDown.compareAndSet(false, true)) return
+        flush()
+        if (_isShutDown.compareAndSet(false, true)) return
         println("shutdown")
         //release memory
         _storageDecorator.shutdown()
@@ -394,7 +413,7 @@ internal class AnalyticsDelegate(
                         )
                     } else {
                         logger.error(log = "SDK Initialization failed due to $lastErrorMsg")
-                        initializationListener?.invoke(false, "Downloading failed, Shutting down")
+                        initializationListener?.invoke(false, "Downloading failed, Shutting down $lastErrorMsg")
                         //log lastErrorMsg or isSourceEnabled
                         shutdown()
                     }

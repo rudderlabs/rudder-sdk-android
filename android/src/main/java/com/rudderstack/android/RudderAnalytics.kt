@@ -16,17 +16,16 @@
 package com.rudderstack.android
 
 import android.app.Application
+import android.util.Base64
 import com.rudderstack.android.internal.AndroidLogger
 import com.rudderstack.android.internal.LifecycleObserver
 import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.internal.plugins.AndroidContextPlugin
 import com.rudderstack.android.storage.AndroidStorage
-import com.rudderstack.core.Analytics
-import com.rudderstack.core.Logger
-import com.rudderstack.core.RetryStrategy
-import com.rudderstack.core.Settings
+import com.rudderstack.core.*
 import com.rudderstack.models.*
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import java.util.*
 
 //device info and stuff
 //multi process
@@ -57,14 +56,21 @@ fun RudderAnalytics(
     val storage = AndroidStorage(application, jsonAdapter, useContentProvider, logger)
     return Analytics(
         writeKey,
-        settings,
+        settings.takeIf { it.anonymousId != null }
+            ?: settings.copy(anonymousId = AndroidUtils.getDeviceId(application)),
         jsonAdapter,
         shouldVerifySdk,
         sdkVerifyRetryStrategy,
+
         dataPlaneUrl,
         controlPlaneUrl,
         logger,
         storage,
+        base64Generator = Base64Generator{ Base64.encodeToString(
+            String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8")),
+            Base64.DEFAULT
+        )
+        },
         defaultTraits = defaultTraits,
         defaultExternalIds = defaultExternalIds,
         initializationListener = initializationListener,
@@ -151,7 +157,9 @@ private fun Analytics.send(message: Message) {
         is AliasMessage -> alias(message)
         is GroupMessage -> group(message)
         is IdentifyMessage -> identify(message)
-        is PageMessage -> {/**not supported in mobile**/}
+        is PageMessage -> {
+            /**not supported in mobile**/
+        }
         is ScreenMessage -> screen(message)
         is TrackMessage -> track(message)
     }

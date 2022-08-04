@@ -82,6 +82,13 @@ interface Controller {
      */
     fun addPlugin(vararg plugins: Plugin)
     /**
+     * Custom plugins to be removed.
+     *
+     * @param plugin  [Plugin] object
+     * @return true if successfully removed false otherwise
+     */
+    fun removePlugin(plugin: Plugin) : Boolean
+    /**
      * Submit a [Message] for processing.
      * The message is taken up by the controller and it passes through the set of timelines defined.
      * Refrain from using this unless you are sure about it. Use other utility methods for
