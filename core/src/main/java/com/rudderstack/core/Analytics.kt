@@ -28,7 +28,8 @@ class Analytics private constructor(
     private val _jsonAdapter: JsonAdapter,
     private val _dataPlaneUrl: String,
     private val _delegate: AnalyticsDelegate,
-    val analyticsExecutor: ExecutorService
+    val analyticsExecutor: ExecutorService,
+    private val base64Generator: Base64Generator
 ) : Controller by _delegate {
     /**
      * Contains methods for sending messages over to device mode and cloud mode destinations.
@@ -62,8 +63,9 @@ class Analytics private constructor(
             )
         },
         dataUploadService: DataUploadService = DataUploadServiceImpl(
-            base64Generator.generateBase64(writeKey),
+            writeKey,
             jsonAdapter,
+            base64Generator,
             SettingsState,
             dataPlaneUrl ?: DATA_PLANE_URL,
             networkExecutor
@@ -110,7 +112,8 @@ class Analytics private constructor(
             shutdownHook
 
         ),
-        analyticsExecutor = analyticsExecutor
+        analyticsExecutor = analyticsExecutor,
+        base64Generator = base64Generator
     )
 
 
@@ -246,7 +249,7 @@ class Analytics private constructor(
     fun forceFlush(
         alternateDataUploadService: DataUploadService? = null,
         alternateExecutor: ExecutorService? = null,
-        clearDb: Boolean = true
+        clearDb: Boolean = true, base64Generator: Base64Generator = this.base64Generator
     ) {
         val flushExecutor = alternateExecutor ?: ThreadPoolExecutor(
             1, 1,
@@ -256,7 +259,8 @@ class Analytics private constructor(
         )
         val dataUploadService = alternateDataUploadService ?: DataUploadServiceImpl(
             _writeKey,
-            _jsonAdapter, dataPlaneUrl = _dataPlaneUrl
+            _jsonAdapter, dataPlaneUrl = _dataPlaneUrl,
+            base64Generator = base64Generator
         )
         _delegate.forceFlush(
             dataUploadService, flushExecutor, clearDb

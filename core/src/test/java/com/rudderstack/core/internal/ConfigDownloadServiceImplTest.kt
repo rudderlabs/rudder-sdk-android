@@ -31,6 +31,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
+import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -41,7 +42,9 @@ abstract class ConfigDownloadServiceImplTest {
     @Before
     fun setup() {
         configDownloadServiceImpl = ConfigDownloadServiceImpl(
-            writeKey, controlPlaneUrl, jsonAdapter
+          Base64.getEncoder().encodeToString(
+            String.format(Locale.US, "%s:", writeKey).toByteArray(charset("UTF-8"))
+        ), controlPlaneUrl, jsonAdapter
         )
     }
 

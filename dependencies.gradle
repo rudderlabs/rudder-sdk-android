@@ -63,7 +63,7 @@ ext {
             repository            : ':repository',
     ]
     library = [
-            min_sdk     : 21,
+            min_sdk     : 19,
             target_sdk  : 31,
             version_name: '"2.0"',
             version_code: 1

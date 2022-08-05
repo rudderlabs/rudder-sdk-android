@@ -15,8 +15,6 @@
 package com.rudderstack.core.internal.plugins
 
 import com.rudderstack.core.*
-import com.rudderstack.core.DestinationConfig
-import com.rudderstack.core.State
 import com.rudderstack.core.internal.states.DestinationConfigState
 import com.rudderstack.models.Message
 
@@ -35,10 +33,10 @@ internal class WakeupActionPlugin(
             if (!destinationConfig.allIntegrationsReady || storage.startupQueue.isNotEmpty()) {
                 storage.saveStartupMessageInQueue(chain.message())
                 //remove all destination plugins that are not ready, for others the message flow is normal
-                val validPlugins = chain.plugins.toMutableList().apply {
-                    removeIf {
-                        it is DestinationPlugin<*> && !destinationConfig.isIntegrationReady(it.name)
-                    }
+                val validPlugins = chain.plugins.toMutableList().filterNot {
+
+                    it is DestinationPlugin<*> && !destinationConfig.isIntegrationReady(it.name)
+
                 }
                 chain.with(validPlugins)
             } else chain

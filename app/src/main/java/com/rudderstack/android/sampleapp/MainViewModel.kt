@@ -15,7 +15,6 @@
 package com.rudderstack.android.sampleapp
 
 import android.app.Application
-import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
@@ -70,6 +69,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     "Already initialized"
                 }else{
                     getApplication<MyApplication>().initializeRudderAnalytics(getApplication())
+                    rudderAnalytics.addPlugin(_loggingInterceptor)
                     "Initializing Rudder Analytics"
                 }
             }

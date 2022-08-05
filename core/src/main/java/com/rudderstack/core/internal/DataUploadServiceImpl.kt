@@ -14,10 +14,8 @@
 
 package com.rudderstack.core.internal
 
-import com.rudderstack.core.DataUploadService
-import com.rudderstack.core.Settings
+import com.rudderstack.core.*
 import com.rudderstack.core.State
-import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.states.SettingsState
 import com.rudderstack.models.Message
 import com.rudderstack.rudderjsonadapter.JsonAdapter
@@ -31,20 +29,17 @@ import java.util.concurrent.Executors
 internal class DataUploadServiceImpl(
     writeKey : String,
     private val jsonAdapter: JsonAdapter,
+    private val base64Generator: Base64Generator,
     private val settingsState: State<Settings> = SettingsState,
     dataPlaneUrl: String,
     private val networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
 
 ) : DataUploadService {
-
+    private val encodedWriteKey = base64Generator.generateBase64(writeKey)
     private val webService = WebServiceFactory.getWebService(
         dataPlaneUrl,
         jsonAdapter, executor = networkExecutor
     )
-    private val encodedWriteKey = Base64.getEncoder().encodeToString(
-        String.format(Locale.US, "%s:", writeKey).toByteArray(charset("UTF-8"))
-    )
-
 
     override fun upload(data: List<Message>, extraInfo: Map<String,String>?, callback: (response: HttpResponse<out Any>) -> Unit) {
         if(networkExecutor.isShutdown || networkExecutor.isTerminated)
@@ -60,9 +55,9 @@ internal class DataUploadServiceImpl(
             "Content-Type" to "application/json",
             "Authorization" to
             String.format(Locale.US, "Basic %s", encodedWriteKey),
-        "anonymousId" to (settingsState.value?.anonymousId?.let {  Base64.getEncoder().encodeToString(
-            it.toByteArray(charset("UTF-8"))
-        )}?:encodedWriteKey)),null, batchBody, "v1/batch", String::class.java ){
+        "anonymousId" to (settingsState.value?.anonymousId?.let {  base64Generator.generateBase64(
+            it)
+        }?:encodedWriteKey)),null, batchBody, "v1/batch", String::class.java ){
             callback.invoke(it)
         }
     }
@@ -79,9 +74,9 @@ internal class DataUploadServiceImpl(
             "Content-Type" to "application/json",
             "Authorization" to
                     String.format(Locale.US, "Basic %s", encodedWriteKey),
-            "anonymousId" to (settingsState.value?.anonymousId?.let {  Base64.getEncoder().encodeToString(
-                it.toByteArray(charset("UTF-8"))
-            )}?:encodedWriteKey)),null, batchBody, "v1/batch", String::class.java ).get()
+            "anonymousId" to (settingsState.value?.anonymousId?.let {  base64Generator.generateBase64(
+                it)
+            }?:encodedWriteKey)),null, batchBody, "v1/batch", String::class.java ).get()
 
     }
 
