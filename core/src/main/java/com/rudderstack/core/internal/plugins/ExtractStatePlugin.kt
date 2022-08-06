@@ -41,7 +41,7 @@ internal class ExtractStatePlugin(
             //save and update traits
             //update userId
             //save and update external ids
-            val newContext = message.context?.let {
+            message.context?.let {
 
                 //alias and identify messages are expected to contain user id.
                 //We check in context as well as context.traits with either keys "userId" and "id"
@@ -84,13 +84,12 @@ internal class ExtractStatePlugin(
      *
      */
     private fun getUserId(it: MessageContext): String? {
-        return (it.getOrDefault(KeyConstants.CONTEXT_USER_ID_KEY, null)
-            ?: (it.traits?.getOrDefault(KeyConstants.CONTEXT_USER_ID_KEY, null))
-            ?: (it.getOrDefault(KeyConstants.CONTEXT_USER_ID_KEY_ALIAS, null))
-            ?: (it.traits?.getOrDefault(KeyConstants.CONTEXT_USER_ID_KEY_ALIAS, null))
-            ?: (it.getOrDefault(KeyConstants.CONTEXT_ID_KEY, null))
-            ?: (it.traits?.getOrDefault(KeyConstants.CONTEXT_ID_KEY, null))
-                ) as? String?
+        return (it[KeyConstants.CONTEXT_USER_ID_KEY]
+            ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY))
+            ?: (it[KeyConstants.CONTEXT_USER_ID_KEY_ALIAS])
+            ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY_ALIAS))
+            ?: (it[KeyConstants.CONTEXT_ID_KEY])
+            ?: (it.traits?.get(KeyConstants.CONTEXT_ID_KEY))) as? String?
     }
 
     private fun AliasMessage.updateNewUserId(newUserId : String?, messageContext: MessageContext) : MessageContext {

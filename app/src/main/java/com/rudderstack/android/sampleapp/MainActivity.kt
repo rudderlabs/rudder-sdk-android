@@ -16,7 +16,6 @@ package com.rudderstack.android.sampleapp
 
 import android.app.Application
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -70,6 +69,9 @@ fun CreateButtonsTemplate(viewModel: MainViewModel){
         Spacer(modifier = Modifier.height(8.dp))
         CreateRowOfApis(names = arrayOf( Event.IDENTIFY,Event.GROUP), weight = .5f, viewModel = viewModel)
         Spacer(modifier = Modifier.height(8.dp))
+        CreateRowOfApis(names = arrayOf( Event.OPT_IN,Event.FORCE_FLUSH), weight = .5f, viewModel = viewModel)
+        Spacer(modifier = Modifier.height(8.dp))
+
         CreateLogcat(viewModel.logState.value)
     }
 }

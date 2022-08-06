@@ -20,9 +20,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import com.rudderstack.android.sampleapp.MainViewModel.Event.ALIAS
 import com.rudderstack.android.sampleapp.MainViewModel.Event.CLEAR
+import com.rudderstack.android.sampleapp.MainViewModel.Event.FORCE_FLUSH
 import com.rudderstack.android.sampleapp.MainViewModel.Event.GROUP
 import com.rudderstack.android.sampleapp.MainViewModel.Event.IDENTIFY
 import com.rudderstack.android.sampleapp.MainViewModel.Event.INITIALIZE
+import com.rudderstack.android.sampleapp.MainViewModel.Event.OPT_IN
 import com.rudderstack.android.sampleapp.MainViewModel.Event.SCREEN
 import com.rudderstack.android.sampleapp.MainViewModel.Event.SHUTDOWN
 import com.rudderstack.android.sampleapp.MainViewModel.Event.TRACK
@@ -41,6 +43,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         internal const val ALIAS = "alias"
         internal const val GROUP = "group"
         internal const val SCREEN = "screen"
+        internal const val OPT_IN = "opt in/out"
+        internal const val FORCE_FLUSH = "force flush"
     }
 
     private var _logState = mutableStateOf<List<LogData>>(listOf())
@@ -106,6 +110,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _logDataList = listOf()
                 _logState.value = _logDataList
                 ""
+            }
+            OPT_IN ->{
+                rudderAnalytics.optOut(!rudderAnalytics.isOptedOut)
+                "OPT ${if(rudderAnalytics.isOptedOut) "out" else "in"} pressed"
+            }
+            FORCE_FLUSH ->{
+                rudderAnalytics.forceFlush()
+                "Forcing a flush"
             }
             else -> "What's this?"
         }
