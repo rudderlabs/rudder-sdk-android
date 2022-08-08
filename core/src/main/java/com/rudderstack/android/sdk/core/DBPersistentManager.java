@@ -162,7 +162,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
         try {
             // get readable database instance
-            SQLiteDatabase database = getWritableDatabase();
+            SQLiteDatabase database = getReadableDatabase();
             if (database.isOpen()) {
                 Cursor cursor;
                 synchronized (DB_LOCK) {
@@ -360,7 +360,11 @@ class DBPersistentManager extends SQLiteOpenHelper {
         }
     }
 
-    void deleteDoneEvents() {
+    void runGcForEvents() {
+        deleteDoneEvents();
+    }
+
+    private void deleteDoneEvents() {
         synchronized (DB_LOCK) {
             getWritableDatabase().delete(EVENTS_TABLE_NAME,
                     DBPersistentManager.STATUS_COL + " = " + DBPersistentManager.STATUS_ALL_DONE,
@@ -412,7 +416,7 @@ class DBInsertionHandlerThread extends HandlerThread {
                 ContentValues insertValues = new ContentValues();
                 insertValues.put(DBPersistentManager.MESSAGE_COL, messageJson.replace("'", BACKSLASH));
                 insertValues.put(DBPersistentManager.UPDATED_COL, updatedTime);
-                database.insert(DBPersistentManager.EVENTS_TABLE_NAME, null, insertValues); //rowId will used
+                database.insert(DBPersistentManager.EVENTS_TABLE_NAME, null, insertValues);
                 RudderLogger.logInfo("DBPersistentManager: saveEvent: Event saved to DB");
             } else {
                 RudderLogger.logError("DBPersistentManager: saveEvent: database is not writable");

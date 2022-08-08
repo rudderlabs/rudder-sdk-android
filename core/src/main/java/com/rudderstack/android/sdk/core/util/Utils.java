@@ -17,6 +17,7 @@ import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.RudderLogger;
 import com.rudderstack.android.sdk.core.RudderProperty;
 
+
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -210,12 +211,6 @@ public class Utils {
                 && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
 
-    public enum NetworkResponses {
-        SUCCESS,
-        ERROR,
-        WRITE_KEY_ERROR
-    }
-
     /**
      * Returns the number of batches the given number of events can be split into considering the batch size configured.
      */
@@ -238,6 +233,10 @@ public class Utils {
         }
     }
 
+    /**
+     * @param integers the input list of integers which are to be converted into a csv string
+     * @return a string which is the csv format of the List<Integer> provided.
+     */
     public static String getCSVString(List<Integer> integers) {
         int size = integers.size();
         if (size <= 0) return null;
@@ -250,6 +249,13 @@ public class Utils {
         return sb.toString();
     }
 
+    /**
+     * @param map   the map on which we need to check for the key associated with the value provided.
+     * @param value the value for which we need to find the key associated with it.
+     * @param <K>   the type of the key
+     * @param <V>   the type of the value
+     * @return the key associated for the value in the map provided.
+     */
     public static <K, V> K getKeyForValueFromMap(Map<K, V> map, Object value) {
         for (Map.Entry<K, V> entry : map.entrySet()) {
             if (value.equals(entry.getValue())) {
@@ -259,6 +265,9 @@ public class Utils {
         return null;
     }
 
+    /**
+     * Returns the value associated with key in the map after casting it into boolean, if the key exists and casting it boolean is possible, else returns false.
+     */
     public static <K, V> boolean getBooleanFromMap(Map<K, V> map, K key) {
         if (!map.containsKey(key))
             return false;
@@ -268,5 +277,4 @@ public class Utils {
         }
         return false;
     }
-
 }

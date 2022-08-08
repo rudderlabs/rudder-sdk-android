@@ -39,8 +39,6 @@ dependencies {
     testImplementation 'androidx.test:core-ktx:1.4.0'
     testImplementation "org.hamcrest:hamcrest:2.2"
     testImplementation "org.mockito:mockito-core:4.0.0"
-    //issue - https://stackoverflow.com/a/58970042/5689605
-//    testImplementation "org.mockito:mockito-inline:3.11.2"
 
     testImplementation "org.powermock:powermock-core:2.0.9"
     testImplementation ("org.powermock:powermock-module-junit4:2.0.9"){
@@ -49,8 +47,6 @@ dependencies {
 
     testImplementation "org.powermock:powermock-api-mockito2:2.0.9"
     testImplementation 'org.awaitility:awaitility:4.2.0'
-//    androidTestImplementation "org.hamcrest:hamcrest:2.2"
-
     androidTestImplementation ('androidx.test.ext:junit:1.1.3')
     compileOnly "androidx.work:work-runtime:2.7.1"
 
@@ -61,13 +57,6 @@ ext {
     PUBLISH_VERSION = '1.5.2'
     PUBLISH_ARTIFACT_ID = 'core'
 }
-/*android.testVariants.all { variant ->
-    variant.getCompileConfiguration().exclude group: 'org.hamcrest', module: 'hamcrest'
-}*/
-//configurations.all {
-//    resolutionStrategy {
-//        force 'org.hamcrest:hamcrest:2.2'
-//    }
-//}
+
 //apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"
 

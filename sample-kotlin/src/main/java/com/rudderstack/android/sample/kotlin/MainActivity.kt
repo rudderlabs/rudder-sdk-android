@@ -48,11 +48,13 @@ class MainActivity : AppCompatActivity() {
             option
         )
 
-        val option1 = RudderOption().putIntegration("All", false).putIntegration("Adjust", true)
-        val option2 = RudderOption().putIntegration("All", false).putIntegration("Amplitude", true)
-        for (i in 1..5) {
-            MainApplication.rudderClient!!.track("Test Event Amplitude $i", null, option1)
-            MainApplication.rudderClient!!.track("Test Event Adjust $i", null, option2)
+        val properties = RudderProperty()
+        properties.put("data", true)
+        val option1 = RudderOption().putIntegration("All", false).putIntegration("Amplitude", true)
+        val option2 = RudderOption().putIntegration("All", false).putIntegration("Braze", true)
+        for (i in 1..2) {
+            MainApplication.rudderClient!!.track("Test Event Amplitude $i", properties, option1)
+            MainApplication.rudderClient!!.track("Test Event Braze $i", properties, option2)
         }
 
         val productA = ECommerceProduct.Builder()
