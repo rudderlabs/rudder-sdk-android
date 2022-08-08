@@ -18,12 +18,16 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 class DeviceModeUtils {
+
+    private DeviceModeUtils() {
+        throw new IllegalStateException("Utility class");
+    }
 
     private static final String TRANSFORMATION_ENDPOINT = "transform";
 
@@ -79,7 +83,7 @@ class DeviceModeUtils {
             OutputStream os = httpConnection.getOutputStream();
             //locks to prevent concurrent server access.
             synchronized (MessageUploadLock.DEVICE_TRANSFORMATION_LOCK) {
-                OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
+                OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
                 osw.write(requestPayload);
                 osw.flush();
                 osw.close();
@@ -126,7 +130,7 @@ class DeviceModeUtils {
 
     //shouldn't be called on main thread
     private static String createDeviceTransformPayload(List<Integer> rowIds, List<String> messages) {
-        if (rowIds.size() == 0 || messages.size() == 0 || rowIds.size() != messages.size())
+        if (rowIds.isEmpty() || messages.isEmpty() || rowIds.size() != messages.size())
             return null;
         StringBuilder jsonPayload = new StringBuilder();
         jsonPayload.append("{");

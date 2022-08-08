@@ -3,7 +3,6 @@ package com.rudderstack.android.sdk.core;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -17,7 +16,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -25,6 +23,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -37,11 +36,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class EventRepositoryTest {
 
     // data to be used
-    private final List<Integer> messageIds = new ArrayList<Integer>(ImmutableList.of(1, 2, 3, 4, 5));
-    private final List<String> messages = new ArrayList<String>(ImmutableList.of("{\"message\":\"m-1\"}",
+    private final List<Integer> messageIds = new ArrayList<>(ImmutableList.of(1, 2, 3, 4, 5));
+    private final List<String> messages = new ArrayList<>(ImmutableList.of("{\"message\":\"m-1\"}",
             "{\"message\":\"m-2\"}", "{\"message\":\"m-3\"}", "{\"message\":\"m-4\"}", "{\"message\":\"m-5\"}"));
-    private final List<Integer> messageIdsParams = new ArrayList<Integer>(5);
-    private final List<String> messagesParams = new ArrayList<String>(5);
+    private final List<Integer> messageIdsParams = new ArrayList<>(5);
+    private final List<String> messagesParams = new ArrayList<>(5);
 
     //database manager mock
     DBPersistentManager dbPersistentManager = PowerMockito.mock(DBPersistentManager.class);
@@ -58,10 +57,10 @@ public class EventRepositoryTest {
         //mocking timestamp
         PowerMockito.spy(Utils.class);
         PowerMockito.when(Utils.class, "getTimeStamp"
-        )
+                )
                 .thenAnswer(new Answer<String>() {
                     @Override
-                    public String answer(InvocationOnMock invocation) throws Throwable {
+                    public String answer(InvocationOnMock invocation) {
                         return "2022-03-14T06:46:41.365Z";
                     }
                 });
@@ -75,7 +74,7 @@ public class EventRepositoryTest {
         PowerMockito.when(dbPersistentManager, "fetchAllEventsFromDB", messageIdsParams, messagesParams)
                 .thenAnswer(new Answer<Void>() {
                     @Override
-                    public Void answer(InvocationOnMock invocation) throws Throwable {
+                    public Void answer(InvocationOnMock invocation) {
                         messageIdsParams.addAll(messageIds);
                         messagesParams.addAll(messages);
                         return null;
@@ -86,7 +85,7 @@ public class EventRepositoryTest {
         )
                 .thenAnswer(new Answer<Utils.NetworkResponses>() {
                     @Override
-                    public Utils.NetworkResponses answer(InvocationOnMock invocation) throws Throwable {
+                    public Utils.NetworkResponses answer(InvocationOnMock invocation) {
                         return Utils.NetworkResponses.SUCCESS;
                     }
                 });
@@ -136,10 +135,6 @@ public class EventRepositoryTest {
                 arg2.capture(),
                 arg3.capture(),
                 arg4.capture()
-//                Mockito.eq(expectedPayload.replace("\n", "").replace(" ", "")),
-//                Mockito.eq("api.rudderstack.com/"),
-//                Mockito.eq("auth_key"),
-//                Mockito.eq("anon_id")
                 );
         assertThat(result, Matchers.is(true));
         System.out.println(arg1.getValue());
@@ -182,7 +177,7 @@ public class EventRepositoryTest {
         )
                 .thenAnswer(new Answer<Utils.NetworkResponses>() {
                     @Override
-                    public Utils.NetworkResponses answer(InvocationOnMock invocation) throws Throwable {
+                    public Utils.NetworkResponses answer(InvocationOnMock invocation) {
                         return Utils.NetworkResponses.SUCCESS;
                     }
                 });
@@ -206,47 +201,13 @@ public class EventRepositoryTest {
                 }
             };
             t.start();
-//            t.join();
         }
         //await until finished
         await().atMost(10, SECONDS).until(new Callable<Boolean>() {
             @Override
-            public Boolean call() throws Exception {
+            public Boolean call() {
                 return threadsCalledDb.get() == numberOfThreads;
             }
         });
     }
-
-    /*public void partialMockTest() throws Exception {
-        assertThat(MockSample.returnNotMockIfNotMocked() , Matchers.is("noMock"));
-        PowerMockito.spy(MockSample.class);
-        PowerMockito.when(MockSample.class, "returnNotMockIfNotMocked").thenAnswer(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                return "mocked";
-            }
-        });
-        assertThat(MockSample.returnNotMockIfNotMocked() , Matchers.is("mocked"));
-        assertThat(MockSample.return2IfNotMocked(), Matchers.is(2));
-
-        *//*try (MockedStatic<MockSample> utilities = Mockito.mockStatic(MockSample.class)) {
-            utilities.when(new MockedStatic.Verification() {
-                @Override
-                public void apply() throws Throwable {
-                    MockSample.return2IfNotMocked();
-                }
-            }).thenReturn(*//**//*f.call(MockSample.class,new Object() , new Object[]{})*//**//*2);
-            utilities.when(new MockedStatic.Verification() {
-                @Override
-                public void apply() throws Throwable {
-                    MockSample.returnNotMockIfNotMocked();
-                }
-            }).thenReturn("mocked");
-            assertThat(MockSample.returnNotMockIfNotMocked() , Matchers.is("mocked"));
-            assertThat(MockSample.return2IfNotMocked(), Matchers.is(2));
-
-        }*//*
-
-//        assertThat(StaticUtils.name()).isEqualTo("Baeldung");
-    }*/
 }

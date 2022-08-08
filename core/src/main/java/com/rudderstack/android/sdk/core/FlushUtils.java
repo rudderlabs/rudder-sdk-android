@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -32,14 +33,14 @@ class FlushUtils {
     /**
      * Should not be called from main thread.
      *
-     * @param areFactoriesInitialized
-     * @param integrationOperationsMap
-     * @param flushQueueSize
-     * @param dataPlaneUrl
-     * @param dbManager
-     * @param authHeaderString
-     * @param anonymousIdHeaderString
-     * @return
+     * @param areFactoriesInitialized boolean indicating if the device mode factories are initialized or not.
+     * @param integrationOperationsMap map containing the destination definition name to its factory object.
+     * @param flushQueueSize queue size defined by the user on which the batch is flushed to the data plane.
+     * @param dataPlaneUrl dataPlaneUrl to which the events are flushed.
+     * @param dbManager Instance of the dbPersistentManager which is used to do all the operations with DB.
+     * @param authHeaderString Authentication header which is to be sent along when making a request to the data plane.
+     * @param anonymousIdHeaderString Anonymous header value which is to be sent along when making a request to the data plane.
+     * @return boolean indicating if the flush operation is successful or not.
      */
     static boolean flush(boolean areFactoriesInitialized, @Nullable Map<String, RudderIntegration<?>> integrationOperationsMap,
                          int flushQueueSize, String dataPlaneUrl,
@@ -77,7 +78,7 @@ class FlushUtils {
                         // if success received from server
                         if (networkResponse == Utils.NetworkResponses.SUCCESS) {
                             // remove events from DB
-                            RudderLogger.logDebug(String.format("EventRepository: flush: Successfully sent batch %d/%d ", i, numberOfBatches));
+                            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: Successfully sent batch %d/%d ", i, numberOfBatches));
                             RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: clearingEvents of batch %d from DB: %s", i, networkResponse));
                             dbManager.markCloudModeDone(batchMessageIds);
                             messageIds.removeAll(batchMessageIds);
@@ -86,10 +87,10 @@ class FlushUtils {
                             break;
                         }
                     }
-                    RudderLogger.logWarn(String.format("EventRepository: flush: Failed to send batch %d/%d retrying again, %d retries left", i, numberOfBatches, retries));
+                    RudderLogger.logWarn(String.format(Locale.US, "EventRepository: flush: Failed to send batch %d/%d retrying again, %d retries left", i, numberOfBatches, retries));
                 }
                 if (lastBatchFailed) {
-                    RudderLogger.logWarn(String.format("EventRepository: flush: Failed to send batch %d/%d after 3 retries , dropping the remaining batches as well", i, numberOfBatches));
+                    RudderLogger.logWarn(String.format(Locale.US, "EventRepository: flush: Failed to send batch %d/%d after 3 retries , dropping the remaining batches as well", i, numberOfBatches));
                     return false;
                 }
             }
@@ -142,7 +143,7 @@ class FlushUtils {
             OutputStream os = httpConnection.getOutputStream();
             //locks to prevent concurrent server access.
             synchronized (FLUSH_LOCK) {
-                OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
+                OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
                 osw.write(payload);
                 osw.flush();
                 osw.close();

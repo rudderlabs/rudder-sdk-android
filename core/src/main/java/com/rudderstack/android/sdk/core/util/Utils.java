@@ -18,7 +18,7 @@ import com.rudderstack.android.sdk.core.RudderLogger;
 import com.rudderstack.android.sdk.core.RudderProperty;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -66,17 +66,14 @@ public class Utils {
     }
 
     public static String getDeviceId(Application application) {
-        if (Build.VERSION.SDK_INT >= 17) {
-            String androidId = getString(application.getContentResolver(), ANDROID_ID);
-            if (!TextUtils.isEmpty(androidId)
-                    && !"9774d56d682e549c".equals(androidId)
-                    && !"unknown".equals(androidId)
-                    && !"000000000000000".equals(androidId)
-            ) {
-                return androidId;
-            }
+        String androidId = getString(application.getContentResolver(), ANDROID_ID);
+        if (!TextUtils.isEmpty(androidId)
+                && !"9774d56d682e549c".equals(androidId)
+                && !"unknown".equals(androidId)
+                && !"000000000000000".equals(androidId)
+        ) {
+            return androidId;
         }
-
         // If this still fails, generate random identifier that does not persist across installations
         return UUID.randomUUID().toString();
     }
@@ -105,14 +102,9 @@ public class Utils {
     }
 
     public static int getUTF8Length(String message) {
-        int utf8Length;
-        try {
-            utf8Length = message.getBytes("UTF-8").length;
-        } catch (UnsupportedEncodingException ex) {
-            RudderLogger.logError(ex);
-            utf8Length = -1;
-        }
-        return utf8Length;
+        if (message == null)
+            return 0;
+        return message.getBytes(StandardCharsets.UTF_8).length;
     }
 
     public static int getUTF8Length(StringBuilder message) {
@@ -130,10 +122,7 @@ public class Utils {
 
     public static boolean fileExists(Context context, String filename) {
         File file = context.getFileStreamPath(filename);
-        if (file == null || !file.exists()) {
-            return false;
-        }
-        return true;
+        return file != null && file.exists();
     }
 
     /**
@@ -245,7 +234,7 @@ public class Utils {
         if (messageDetails.size() <= flushQueueSize) {
             return messageDetails;
         } else {
-            return new ArrayList(messageDetails.subList(0, flushQueueSize));
+            return new ArrayList<>(messageDetails.subList(0, flushQueueSize));
         }
     }
 
@@ -270,7 +259,7 @@ public class Utils {
         return null;
     }
 
-    public static <K, V extends Object> boolean getBooleanFromMap(Map<K, V> map, K key) {
+    public static <K, V> boolean getBooleanFromMap(Map<K, V> map, K key) {
         if (!map.containsKey(key))
             return false;
         V value = map.get(key);
