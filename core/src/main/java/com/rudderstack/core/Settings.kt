@@ -38,9 +38,6 @@ data class Settings(
     val flushQueueSize: Int = FLUSH_QUEUE_SIZE,
     val maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
     val isOptOut : Boolean = false
-    //available in android only
-//    val trackLifecycleEvents: Boolean = false,
-//    val recordScreenViews: Boolean = false,
 ) {
     companion object {
         /**

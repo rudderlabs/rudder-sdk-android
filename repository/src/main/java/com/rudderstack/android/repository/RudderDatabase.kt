@@ -77,15 +77,17 @@ object RudderDatabase {
         }
         sqliteOpenHelper = object : SQLiteOpenHelper(context, databaseName, null, version) {
             init {
-                //listeners won't be fired else
-                writableDatabase
+                commonExecutor.execute {
+                    this@RudderDatabase.database = writableDatabase
+                    database?.let {
+                        initDaoList(it, registeredDaoList.values.toList())
+                    }
+                }
+
             }
 
             override fun onCreate(database: SQLiteDatabase?) {
-                this@RudderDatabase.database = database
-                database?.let {
-                    initDaoList(database, registeredDaoList.values.toList())
-                }
+
                 databaseCreatedCallback?.invoke(database)
             }
 

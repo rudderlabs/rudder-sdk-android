@@ -14,9 +14,11 @@
 
 package com.rudderstack.core.internal.plugins
 
-import com.rudderstack.core.*
+import com.rudderstack.core.Plugin
+import com.rudderstack.core.Settings
+import com.rudderstack.core.State
+import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.KeyConstants
-import com.rudderstack.core.internal.ifNotNull
 import com.rudderstack.core.internal.optAdd
 import com.rudderstack.core.internal.states.SettingsState
 import com.rudderstack.models.*
@@ -36,40 +38,47 @@ internal class ExtractStatePlugin(
         val message = chain.message()
 //        var newContext: MessageContext?
 
-        if (message is IdentifyMessage || message is AliasMessage) {
+        val newMsg = if (message is IdentifyMessage || message is AliasMessage) {
             // alias message can change user id permanently
             //save and update traits
             //update userId
             //save and update external ids
-            message.context?.let {
+            (message.context ?: createContext()).let {
 
                 //alias and identify messages are expected to contain user id.
                 //We check in context as well as context.traits with either keys "userId" and "id"
                 //user id can be retrieved if put directly in context or context.traits with the
                 //aforementioned ids
-                val newUserId = getUserId(it)
-                newUserId?.let { id ->
-                    settingsState.update(SettingsState.value?.copy(userId = id))
-                }
+                val newUserId = getUserId(message)
+
 
                 // in case of identify, the stored traits (if any) are replaced by the ones provided
                 when (message) {
                     is AliasMessage -> {
                         // in case of alias, we change the user id in traits
-                        message.updateNewUserId(newUserId, it)
+                        val prevId = settingsState.value?.let { it.userId ?: it.anonymousId } ?: ""
+                        message.updateNewAndPrevUserId(
+                            prevId,
+                            newUserId, it
+                        )
 
                     }
-                    else -> it
+                    else -> message
+                }.also {
+                    newUserId?.let { id ->
+                        settingsState.update(SettingsState.value?.copy(userId = id))
+                    }
                 }
-            }?.also {
-
-                storage.cacheContext(it)
-                contextState.update(it)
+            }.also { msg ->
+                msg.context?.let {
+                    storage.cacheContext(it)
+                    contextState.update(it)
+                }
 
             }
-        }
+        } else message
 
-        return chain.proceed(message)
+        return chain.proceed(newMsg)
     }
 
     /**
@@ -83,16 +92,22 @@ internal class ExtractStatePlugin(
      *
      *
      */
-    private fun getUserId(it: MessageContext): String? {
-        return (it[KeyConstants.CONTEXT_USER_ID_KEY]
-            ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY))
-            ?: (it[KeyConstants.CONTEXT_USER_ID_KEY_ALIAS])
-            ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY_ALIAS))
-            ?: (it[KeyConstants.CONTEXT_ID_KEY])
-            ?: (it.traits?.get(KeyConstants.CONTEXT_ID_KEY))) as? String?
+    private fun getUserId(message: Message): String? {
+        return message.userId ?: message.context?.let {
+            (it[KeyConstants.CONTEXT_USER_ID_KEY]
+                ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY))
+                ?: (it[KeyConstants.CONTEXT_USER_ID_KEY_ALIAS])
+                ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY_ALIAS))
+                ?: (it[KeyConstants.CONTEXT_ID_KEY])
+                ?: (it.traits?.get(KeyConstants.CONTEXT_ID_KEY))) as? String?
+        }
     }
 
-    private fun AliasMessage.updateNewUserId(newUserId : String?, messageContext: MessageContext) : MessageContext {
+    private fun AliasMessage.updateNewAndPrevUserId(
+        previousId: String,
+        newUserId: String?,
+        messageContext: MessageContext
+    ): AliasMessage {
         val newTraits = newUserId?.let { newId ->
             mapOf(
                 KeyConstants.CONTEXT_ID_KEY to
@@ -103,8 +118,12 @@ internal class ExtractStatePlugin(
         }
         //also in case of alias, user id in context should also change, given it's
         // present there
-        return messageContext.updateWith(traits =
-        newTraits)
+        return messageContext.updateWith(
+            traits =
+            newTraits
+        ).let {
+            this.copy(context = it, userId = newUserId, previousId = previousId)
+        }
     }
 
 

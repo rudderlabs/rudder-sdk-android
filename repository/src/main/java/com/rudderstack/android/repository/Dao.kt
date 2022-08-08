@@ -54,7 +54,7 @@ class Dao<T : Entity> internal constructor(
 
     private var _db: SQLiteDatabase? = null
         get() = if (field?.isOpen == true) field else null
-    private var todoTransactions: MutableList<Future<*>> = ArrayList(5)
+    private var todoTransactions: MutableList<Runnable> = ArrayList(5)
     private val _dataChangeListeners = HashSet<DataChangeListener<T>>()
 
     private val entityContentProviderUri by lazy {
@@ -101,12 +101,14 @@ class Dao<T : Entity> internal constructor(
             val fields = entityClass.getAnnotation(RudderEntity::class.java)?.fields
 
             val args = map {
-                it.getPrimaryKeyValues()
+                it.getPrimaryKeyValues().map {
+                    "\"${it}\""
+                }
             }.reduce { acc, strings ->
                 acc.mapIndexed { index, s ->
 
-                    "\"$s\", \"${strings[index]}\""
-                }.toTypedArray()
+                    "$s, ${strings[index]}"
+                }
             }
             val whereClause = fields?.takeIf {
                 it.isNotEmpty()
@@ -403,13 +405,13 @@ class Dao<T : Entity> internal constructor(
                 }
             }
         } ?: run {
-            executorService.takeUnless { it.isShutdown }?.submit {
+            Runnable {
                 _db?.let {
                     synchronized(DB_LOCK) {
                         queryTransaction.invoke(it)
                     }
                 }
-            }?.also {
+            }.also {
                 todoTransactions.add(it)
             }
         }
@@ -435,7 +437,7 @@ class Dao<T : Entity> internal constructor(
                 }
             }
             todoTransactions.forEach {
-                it.get()
+                executorService.takeUnless { it.isShutdown }?.submit(it)
             }
         }
     }

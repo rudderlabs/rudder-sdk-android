@@ -145,6 +145,7 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
             val type = Message.EventType.fromValue(
                 (values["type"] as? String) ?: throw IllegalArgumentException("type is null")
             )
+            val messageId = values["messageId"] as String
             val timeStamp = values["timestamp"] as String
             val anonId = values["anonymousId"] as? String?
             val userID = values["userId"] as? String?
@@ -159,6 +160,10 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
                 jsonAdapter.readJson(it, RudderTypeAdapter {})
             }
 
+                println("creating entity with id $messageId")
+
+
+
             val message = when (type) {
 
                 Message.EventType.ALIAS -> AliasMessage.create(
@@ -170,6 +175,7 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
                     context?.traits,
                     context?.externalIds,
                     context?.customContexts,
+                    _messageId = messageId
                 )
 
                 Message.EventType.GROUP -> GroupMessage.create(
@@ -178,7 +184,8 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
                     (values["traits"] as? String?)?.let {
                         jsonAdapter.readJson(it, RudderTypeAdapter {})
                     },
-                    context?.traits, context?.externalIds, context?.customContexts
+                    context?.traits, context?.externalIds, context?.customContexts,
+                    _messageId = messageId
                 )
 
                 Message.EventType.PAGE -> PageMessage.create(
@@ -193,7 +200,8 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
                     category,
                     context?.traits,
                     context?.externalIds,
-                    context?.customContexts
+                    context?.customContexts,
+                    _messageId = messageId
                 )
 
                 Message.EventType.SCREEN -> ScreenMessage.create(
@@ -208,7 +216,8 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
                     },
                     context?.traits,
                     context?.externalIds,
-                    context?.customContexts
+                    context?.customContexts,
+                    _messageId = messageId
                 )
 
                 Message.EventType.TRACK -> TrackMessage.create(
@@ -222,7 +231,8 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
                     destinationProps,
                     context?.traits,
                     context?.externalIds,
-                    context?.customContexts
+                    context?.customContexts,
+                    _messageId = messageId
                 )
 
                 Message.EventType.IDENTIFY -> IdentifyMessage.create(
@@ -235,7 +245,8 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
                     destinationProps,
                     context?.traits,
                     context?.externalIds,
-                    context?.customContexts
+                    context?.customContexts,
+                    _messageId = messageId
                 )
             }
             return MessageEntity(message, jsonAdapter)

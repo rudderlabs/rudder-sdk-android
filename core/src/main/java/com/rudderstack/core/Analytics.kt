@@ -264,12 +264,13 @@ class Analytics private constructor(
         )
         _delegate.forceFlush(
             dataUploadService, flushExecutor, clearDb
-        )
-        //shut down if data uploader/executor is initialized here
-        if (alternateDataUploadService == null)
-            dataUploadService.shutdown()
-        if (alternateExecutor == null)
-            flushExecutor.shutdown()
+        ) {
+            //shut down if data uploader/executor is initialized here
+            if (alternateDataUploadService == null)
+                dataUploadService.shutdown()
+            if (alternateExecutor == null)
+                flushExecutor.shutdown()
+        }
     }
 
 }

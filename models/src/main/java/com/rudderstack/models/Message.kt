@@ -90,15 +90,14 @@ sealed class Message(
 
 
 //    @Transient
+    _messageId: String? = null,
     _channel: String? = null
-
-
 ) {
     @SerializedName("messageId")
     @JsonProperty("messageId")
     @Json(name = "messageId")
     //@Expose
-    val messageId: String = String.format(
+    val messageId: String = _messageId?: String.format(
         Locale.US,
         "%d-%s",
         System.currentTimeMillis(),
@@ -127,6 +126,7 @@ sealed class Message(
     //@Expose
     var integrations: MessageIntegrations? = null
 
+
     open fun copy(
         context: MessageContext? = this.context,
         anonymousId: String? = this.anonymousId,
@@ -138,7 +138,7 @@ sealed class Message(
             userId,
             timestamp,
             destinationProps,
-            previousId
+            previousId,
         )
         is GroupMessage -> copy(
             context,
@@ -147,7 +147,7 @@ sealed class Message(
             timestamp,
             destinationProps,
             groupId,
-            traits
+            traits,
         )
         is IdentifyMessage -> copy(
             context,
@@ -155,7 +155,7 @@ sealed class Message(
             userId,
             timestamp,
             destinationProps,
-            properties
+            properties,
         )
         is PageMessage -> copy(
             context,
@@ -165,7 +165,7 @@ sealed class Message(
             destinationProps,
             name,
             properties,
-            category
+            category,
         )
         is ScreenMessage -> copy(
             context,
@@ -175,7 +175,7 @@ sealed class Message(
             destinationProps,
             name,
             category,
-            properties
+            properties,
         )
         is TrackMessage -> copy(
             context,
@@ -184,7 +184,7 @@ sealed class Message(
             timestamp,
             destinationProps,
             eventName,
-            properties
+            properties,
         )
     }.also {
         it.integrations = integrations
@@ -293,6 +293,7 @@ class AliasMessage internal constructor(
     @JsonProperty("previousId")
     @Json(name = "previousId")
     var previousId: String? = null,
+    _messageId: String?= null
 ) : Message(
     EventType.ALIAS,
     context,
@@ -300,6 +301,7 @@ class AliasMessage internal constructor(
     userId,
     timestamp,
     destinationProps,
+    _messageId
 ) {
     companion object {
         fun create(
@@ -313,9 +315,12 @@ class AliasMessage internal constructor(
             traits: Map<String, Any?>? = null,
             externalIds: List<Map<String, String>>? = null,
             customContextMap: Map<String, Any>? = null,
+            _messageId: String?= null
+
         ) = AliasMessage(
             createContext(traits, externalIds, customContextMap),
-            anonymousId, userId, timestamp, destinationProps, previousId
+            anonymousId, userId, timestamp, destinationProps, previousId,
+            _messageId
         )
     }
 
@@ -327,7 +332,9 @@ class AliasMessage internal constructor(
 
         destinationProps: MessageDestinationProps? = this.destinationProps,
         previousId: String? = this.previousId,
-    ) = AliasMessage(context, anonymousId, userId, timestamp, destinationProps, previousId)
+
+    ) = AliasMessage(context, anonymousId, userId, timestamp, destinationProps, previousId,
+        _messageId = this.messageId)
 
     override fun toString(): String {
         return "${super.toString()}, " +
@@ -377,15 +384,16 @@ class GroupMessage internal constructor(
     @JsonProperty("traits")
     @Json(name = "traits")
     val traits: GroupTraits? = null,
+    _messageId: String?= null
 
-
-    ) : Message(
+) : Message(
     EventType.GROUP,
     context,
     anonymousId,
     userId,
     timestamp,
     destinationProps,
+    _messageId
 ) {
     companion object {
         fun create(
@@ -400,9 +408,11 @@ class GroupMessage internal constructor(
             traits: Map<String, Any?>? = null,
             externalIds: List<Map<String, String>>? = null,
             customContextMap: Map<String, Any>? = null,
+            _messageId: String?= null
         ) = GroupMessage(
             createContext(traits, externalIds, customContextMap),
-            anonymousId, userId, timestamp, destinationProps, groupId, groupTraits
+            anonymousId, userId, timestamp, destinationProps, groupId, groupTraits,
+            _messageId
         )
     }
 
@@ -416,7 +426,8 @@ class GroupMessage internal constructor(
         destinationProps: MessageDestinationProps? = this.destinationProps,
         groupId: String? = this.groupId,
         traits: GroupTraits? = this.traits,
-    ) = GroupMessage(context, anonymousId, userId, timestamp, destinationProps, groupId, traits)
+    ) = GroupMessage(context, anonymousId, userId, timestamp, destinationProps, groupId, traits,
+    _messageId = this.messageId)
 
     override fun toString(): String {
         return "${super.toString()}, " +
@@ -484,7 +495,7 @@ class PageMessage internal constructor(
     @JsonProperty("category")
     @Json(name = "category")
     val category: String? = null,
-
+    _messageId: String?= null
     ) : Message(
     EventType.PAGE,
     context,
@@ -492,6 +503,7 @@ class PageMessage internal constructor(
     userId,
     timestamp,
     destinationProps,
+    _messageId
 ) {
     companion object {
         fun create(
@@ -504,11 +516,12 @@ class PageMessage internal constructor(
             category: String? = null,
             traits: Map<String, Any?>? = null,
             externalIds: List<Map<String, String>>? = null,
-            customContextMap: Map<String, Any>? = null
+            customContextMap: Map<String, Any>? = null,
+            _messageId: String?= null
         ) = PageMessage(
             createContext(traits, externalIds, customContextMap),
             anonymousId, userId, timestamp, destinationProps, name, properties,
-            category
+            category, _messageId
         )
     }
 
@@ -524,7 +537,7 @@ class PageMessage internal constructor(
 
         ) = PageMessage(
         context, anonymousId, userId, timestamp, destinationProps, name, properties,
-        category
+        category, _messageId = this.messageId
     )
 
     override fun toString(): String {
@@ -593,6 +606,7 @@ class ScreenMessage internal constructor(
     @JsonProperty("properties")
     @Json(name = "properties")
     val properties: ScreenProperties? = null,
+    _messageId: String?= null
 
     ) : Message(
     EventType.SCREEN,
@@ -601,6 +615,7 @@ class ScreenMessage internal constructor(
     userId,
     timestamp,
     destinationProps,
+    _messageId
 ) {
     companion object {
         fun create(
@@ -616,14 +631,15 @@ class ScreenMessage internal constructor(
 
             traits: Map<String, Any?>? = null,
             externalIds: List<Map<String, String>>? = null,
-            customContextMap: Map<String, Any>? = null
+            customContextMap: Map<String, Any>? = null,
+            _messageId: String?= null
         ) = ScreenMessage(
             createContext(traits, externalIds, customContextMap),
             anonymousId, userId, timestamp, destinationProps, category, name,
-            properties
+            properties,_messageId
         )
     }
-
+    
     fun copy(
         context: MessageContext? = this.context,
         anonymousId: String? = this.anonymousId,
@@ -637,7 +653,7 @@ class ScreenMessage internal constructor(
 
         ) = ScreenMessage(
         context, anonymousId, userId, timestamp, destinationProps, category, name,
-        properties
+        properties, _messageId = this.messageId
     )
 
     override fun toString(): String {
@@ -700,6 +716,7 @@ class TrackMessage internal constructor(
     @JsonProperty("properties")
     @Json(name = "properties")
     val properties: TrackProperties? = null,
+    _messageId: String?= null
 ) : Message(
     EventType.TRACK,
     context,
@@ -707,6 +724,7 @@ class TrackMessage internal constructor(
     userId,
     timestamp,
     destinationProps,
+    _messageId
 ) {
     companion object {
         fun create(
@@ -718,7 +736,8 @@ class TrackMessage internal constructor(
             destinationProps: MessageDestinationProps? = null,
             traits: Map<String, Any?>? = null,
             externalIds: List<Map<String, String>>? = null,
-            customContextMap: Map<String, Any>? = null
+            customContextMap: Map<String, Any>? = null,
+            _messageId: String?= null
         ) = TrackMessage(
             createContext(traits, externalIds, customContextMap),
             anonymousId,
@@ -726,7 +745,8 @@ class TrackMessage internal constructor(
             timestamp,
             destinationProps,
             eventName,
-            properties
+            properties,
+            _messageId
         )
     }
 
@@ -746,7 +766,8 @@ class TrackMessage internal constructor(
         timestamp,
         destinationProps,
         eventName,
-        properties
+        properties,
+        _messageId = this.messageId
     )
 
     override fun toString(): String {
@@ -799,7 +820,7 @@ class IdentifyMessage internal constructor(
     @JsonProperty("properties")
     @Json(name = "properties")
     val properties: IdentifyProperties? = null,
-
+    _messageId: String?= null
     ) : Message(
     EventType.IDENTIFY,
     context,
@@ -807,6 +828,7 @@ class IdentifyMessage internal constructor(
     userId,
     timestamp,
     destinationProps,
+    _messageId
 ) {
 
     companion object {
@@ -818,10 +840,11 @@ class IdentifyMessage internal constructor(
             destinationProps: MessageDestinationProps? = null,
             traits: IdentifyTraits? = null,
             externalIds: List<Map<String, String>>? = null,
-            customContextMap: Map<String, Any>? = null
+            customContextMap: Map<String, Any>? = null,
+            _messageId: String?= null
         ) = IdentifyMessage(
             createContext(traits, externalIds, customContextMap),
-            anonymousId, userId, timestamp, destinationProps, properties
+            anonymousId, userId, timestamp, destinationProps, properties,_messageId
         )
 
     }
@@ -835,7 +858,8 @@ class IdentifyMessage internal constructor(
         destinationProps: MessageDestinationProps? = this.destinationProps,
         properties: IdentifyProperties? = this.properties,
 
-        ) = IdentifyMessage(context, anonymousId, userId, timestamp, destinationProps, properties)
+        ) = IdentifyMessage(context, anonymousId, userId, timestamp, destinationProps,
+        properties, _messageId = messageId)
 
     override fun toString(): String {
         return "${super.toString()}, " +

@@ -41,7 +41,8 @@ class MyApplication : Application() {
     internal fun initializeRudderAnalytics(application: Application){
         _rudderAnalytics = RudderAnalytics(
             application,
-            properties.getProperty("writeKey"), Settings(),
+            properties.getProperty("writeKey"),
+            Settings(flushQueueSize = 15, maxFlushInterval = 50_000L),
             JacksonAdapter(),
             dataPlaneUrl = properties.getProperty("dataPlaneUrl"),
             controlPlaneUrl = properties.getProperty("controlPlaneUrl"),
