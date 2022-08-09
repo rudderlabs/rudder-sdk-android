@@ -8,15 +8,17 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses.ERROR;
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses.WRITE_KEY_ERROR;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
 
 public class RudderCloudModeManager {
 
-    private DBPersistentManager dbManager;
-    private RudderNetworkManager networkManager;
-    private RudderConfig config;
+    private final DBPersistentManager dbManager;
+    private final RudderNetworkManager networkManager;
+    private final RudderConfig config;
     static final String BATCH_ENDPOINT = "v1/batch";
 
     RudderCloudModeManager(DBPersistentManager dbManager, RudderNetworkManager networkManager, RudderConfig config) {
@@ -31,7 +33,7 @@ public class RudderCloudModeManager {
             public void run() {
                 super.run();
                 int sleepCount = 0;
-                NetworkResponses networkResponse = NetworkResponses.SUCCESS;
+                Result result = null;
                 final ArrayList<Integer> messageIds = new ArrayList<>();
                 final ArrayList<String> messages = new ArrayList<>();
                 while (true) {
@@ -39,6 +41,7 @@ public class RudderCloudModeManager {
                         // clear lists for reuse
                         messageIds.clear();
                         messages.clear();
+                        result = null;
                         checkIfDBThresholdAttained();
                         RudderLogger.logDebug("CloudModeManager: cloudModeProcessor: Fetching events to flush to server");
                         dbManager.fetchCloudModeEventsFromDB(messageIds, messages, config.getFlushQueueSize());
@@ -48,7 +51,7 @@ public class RudderCloudModeManager {
                             RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: payload: %s", payload));
                             RudderLogger.logInfo(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: %d", messageIds.size()));
                             if (payload != null) {
-                                Result result = networkManager.sendNetworkRequest(payload, addEndPoint(config.getDataPlaneUrl(), BATCH_ENDPOINT), RequestMethod.POST);
+                                result = networkManager.sendNetworkRequest(payload, addEndPoint("https://e582-2409-4070-2e8f-e60d-94ce-840b-d457-d541.ngrok.io", BATCH_ENDPOINT), RequestMethod.POST);
                                 RudderLogger.logInfo(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: ServerResponse: %d", result.statusCode));
                                 if (result.status == NetworkResponses.SUCCESS) {
                                     dbManager.markCloudModeDone(messageIds);
@@ -61,15 +64,22 @@ public class RudderCloudModeManager {
                     sleepCount += 1;
                     RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: SleepCount: %d", sleepCount));
                     try {
-                        if (networkResponse == NetworkResponses.WRITE_KEY_ERROR) {
-                            RudderLogger.logError("CloudModeManager: cloudModeProcessor: Wrong WriteKey. Terminating the Cloud Mode Processor");
-                            break;
-                        } else if (networkResponse == NetworkResponses.ERROR) {
-                            RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in " + Math.abs(sleepCount - config.getSleepTimeOut()) + "s");
-                            Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000L);
-                        } else {
+                        if (result == null) {
                             RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in 1s");
                             Thread.sleep(1000);
+                            continue;
+                        }
+                        switch (result.status) {
+                            case WRITE_KEY_ERROR:
+                                RudderLogger.logError("CloudModeManager: cloudModeProcessor: Wrong WriteKey. Terminating the Cloud Mode Processor");
+                                break;
+                            case ERROR:
+                                RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in " + Math.abs(sleepCount - config.getSleepTimeOut()) + "s");
+                                Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000L);
+                                break;
+                            default:
+                                RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in 1s");
+                                Thread.sleep(1000);
                         }
                     } catch (Exception ex) {
                         RudderLogger.logError(String.format("CloudModeManager: cloudModeProcessor: Exception while trying to send events to Data plane URL %s due to %s", config.getDataPlaneUrl(), ex.getLocalizedMessage()));

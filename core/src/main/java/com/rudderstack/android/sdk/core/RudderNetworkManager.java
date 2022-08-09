@@ -21,7 +21,7 @@ import java.util.Locale;
 
 public class RudderNetworkManager {
 
-    private String authHeaderString;
+    private final String authHeaderString;
     private String anonymousIdHeaderString;
 
     public enum NetworkResponses {
@@ -53,15 +53,15 @@ public class RudderNetworkManager {
      * @param requestPayload the payload which needs to be sent along in case of Post request and can be sent as null in case of Get Request
      * @param requestURL     the url to which the request should be sent
      * @param requestMethod  the http method which the request should be sent
-     * @return
+     * @return sends back a Result Object including the response payload, error payload, statusCode.
      */
     Result sendNetworkRequest(@Nullable String requestPayload, @NonNull String requestURL, @NonNull RequestMethod requestMethod) {
-        if (requestPayload == null)
-            return new Result(NetworkResponses.ERROR, -1, "Payload is Null", null);
+        if (requestMethod == RequestMethod.POST && requestPayload == null)
+            return new Result(NetworkResponses.ERROR, -1, null, "Payload is Null");
 
         if (TextUtils.isEmpty(authHeaderString)) {
             RudderLogger.logError(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: WriteKey was in-correct, hence aborting the request to %s", requestURL));
-            return new Result(NetworkResponses.ERROR, -1, "Write Key is Invalid", null);
+            return new Result(NetworkResponses.ERROR, -1, null, "Write Key is Invalid");
         }
 
         try {

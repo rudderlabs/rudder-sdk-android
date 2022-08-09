@@ -13,10 +13,10 @@ import java.util.Map;
 
 public class RudderDeviceModeManager {
 
-    private DBPersistentManager dbPersistentManager;
-    private RudderNetworkManager networkManager;
-    private RudderDeviceModeManager rudderDeviceModeManager;
-    private RudderConfig rudderConfig;
+    private final DBPersistentManager dbPersistentManager;
+    private final RudderNetworkManager networkManager;
+    private final RudderDeviceModeManager rudderDeviceModeManager;
+    private final RudderConfig rudderConfig;
     private RudderServerConfig serverConfig;
     private boolean areFactoriesInitialized;
     private RudderEventFilteringPlugin rudderEventFilteringPlugin;
@@ -26,18 +26,30 @@ public class RudderDeviceModeManager {
     //required for device mode transform
     private final Map<String, String> destinationsWithTransformationsEnabled = new HashMap<>(); //destination display name to destinationId
 
-    RudderDeviceModeManager(DBPersistentManager dbPersistentManager, RudderNetworkManager networkManager, RudderConfig rudderConfig, RudderServerConfig serverConfig) {
+    RudderDeviceModeManager(DBPersistentManager dbPersistentManager, RudderNetworkManager networkManager, RudderConfig rudderConfig) {
         this.dbPersistentManager = dbPersistentManager;
         this.networkManager = networkManager;
         this.rudderConfig = rudderConfig;
-        this.serverConfig = serverConfig;
         this.areFactoriesInitialized = false;
-        this.rudderEventFilteringPlugin = new RudderEventFilteringPlugin(serverConfig.source.destinations);
         this.integrationOperationsMap = new HashMap<>();
         this.integrationCallbacks = new HashMap<>();
         this.eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
         rudderDeviceModeManager = this;
+
+    }
+
+    void initiate(RudderServerConfig serverConfig) {
+        this.serverConfig = serverConfig;
+        this.rudderEventFilteringPlugin = new RudderEventFilteringPlugin(serverConfig.source.destinations);
         setDestinationsWithTransformationsEnabled(serverConfig);
+        initiateFactories(serverConfig.source.destinations);
+        initiateCustomFactories();
+        replayMessageQueue();
+        this.areFactoriesInitialized = true;
+        if (destinationsWithTransformationsEnabled.size() > 0) {
+            RudderDeviceModeTransformationManager deviceModeTransformationManager = new RudderDeviceModeTransformationManager(dbPersistentManager, networkManager, rudderDeviceModeManager, rudderConfig);
+            deviceModeTransformationManager.startDeviceModeTransformationProcessor();
+        }
     }
 
     private void setDestinationsWithTransformationsEnabled(RudderServerConfig serverConfig) {
@@ -46,17 +58,6 @@ public class RudderDeviceModeManager {
                 if (destination.isDestinationEnabled && destination.areTransformationsConnected)
                     destinationsWithTransformationsEnabled.put(destination.destinationDefinition.displayName, destination.destinationId);
             }
-    }
-
-    void initiate() {
-        initiateFactories(serverConfig.source.destinations);
-        initiateCustomFactories();
-        replayMessageQueue();
-        this.areFactoriesInitialized = true;
-        if (destinationsWithTransformationsEnabled.size() > 0) {
-            RudderDeviceModeTransformationManager deviceModeTransformationManager = new RudderDeviceModeTransformationManager(dbPersistentManager, networkManager, rudderDeviceModeManager, rudderConfig, serverConfig);
-            deviceModeTransformationManager.startDeviceModeTransformationProcessor();
-        }
     }
 
     private void initiateFactories(List<RudderServerDestination> destinations) {

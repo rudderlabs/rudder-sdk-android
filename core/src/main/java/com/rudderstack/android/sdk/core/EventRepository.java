@@ -57,8 +57,8 @@ class EventRepository {
      * 5. Initiate RudderNetWorkManager for making Network Requests
      * 6. initiate RudderServerConfigManager
      * 7. Initiate FlushWorkManager
-     * 8. Initiate ApplicationLifeCycleManager
-     * 9. Initiate Cloud Mode Manager and Device mode Manager
+     * 8. Initiate Cloud Mode Manager and Device mode Manager
+     * 9. Initiate ApplicationLifeCycleManager
      */
     EventRepository(Application _application, String _writeKey, RudderConfig _config, String _anonymousId, String _advertisingId, String _deviceToken) {
         // 1. set the values of writeKey, config
@@ -117,13 +117,16 @@ class EventRepository {
             RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(config.getDataPlaneUrl(), authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel());
             this.rudderFlushWorkManager = new RudderFlushWorkManager(context, config, preferenceManager, rudderFlushConfig);
 
-            // 8. Initiate ApplicationLifeCycleManager
+            // 8. Initiate Cloud Mode Manager and Device mode Manager
+            RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
+            this.cloudModeManager = new RudderCloudModeManager(dbManager, networkManager, config);
+            this.deviceModeManager = new RudderDeviceModeManager(dbManager, networkManager, config);
+            this.initiateSDK();
+
+            // 9. Initiate ApplicationLifeCycleManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
             this.applicationLifeCycleManager = new ApplicationLifeCycleManager(_application, preferenceManager, this, rudderFlushWorkManager, config);
 
-            // 9. Initiate Cloud Mode Manager and Device mode Manager
-            RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
-            this.initiateSDK();
         } catch (Exception ex) {
             RudderLogger.logError(String.format("EventRepository: constructor: Exception Initializing the EventRepository Instance due to %s", ex.getLocalizedMessage()));
         }
@@ -141,11 +144,9 @@ class EventRepository {
                             isSDKEnabled = serverConfig.source.isSourceEnabled;
                             if (isSDKEnabled) {
                                 RudderLogger.logDebug("EventRepository: initiateSDK: Initiating Cloud Mode processor");
-                                cloudModeManager = new RudderCloudModeManager(dbManager, networkManager, config);
                                 cloudModeManager.startCloudModeProcessor();
                                 RudderLogger.logDebug("EventRepository: initiateSDK: Initiating Device Mode Manager");
-                                deviceModeManager = new RudderDeviceModeManager(dbManager, networkManager, config, serverConfig);
-                                deviceModeManager.initiate();
+                                deviceModeManager.initiate(serverConfig);
                             } else {
                                 RudderLogger.logDebug("EventRepository: initiateSDK: source is disabled in the dashboard");
                                 RudderLogger.logDebug("EventRepository: initiateSDK: Flushing persisted events");

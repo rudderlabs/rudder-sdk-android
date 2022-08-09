@@ -18,24 +18,20 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
 
     private int noOfActivities;
     private final AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
-    private RudderPreferenceManager preferenceManager;
-    private EventRepository repository;
-    private RudderFlushWorkManager rudderFlushWorkManager;
-    private RudderConfig config;
+    private final RudderPreferenceManager preferenceManager;
+    private final EventRepository repository;
+    private final RudderFlushWorkManager rudderFlushWorkManager;
+    private final RudderConfig config;
 
 
     ApplicationLifeCycleManager(Application application, RudderPreferenceManager preferenceManager, EventRepository repository, RudderFlushWorkManager rudderFlushWorkManager, RudderConfig config) {
-        try {
-            this.preferenceManager = preferenceManager;
-            this.checkApplicationUpdateStatus(application);
-            this.repository = repository;
-            this.rudderFlushWorkManager = rudderFlushWorkManager;
-            this.config = config;
-            if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
-                application.registerActivityLifecycleCallbacks(this);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        this.preferenceManager = preferenceManager;
+        this.repository = repository;
+        this.rudderFlushWorkManager = rudderFlushWorkManager;
+        this.config = config;
+        this.checkApplicationUpdateStatus(application);
+        if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
+            application.registerActivityLifecycleCallbacks(this);
         }
     }
 

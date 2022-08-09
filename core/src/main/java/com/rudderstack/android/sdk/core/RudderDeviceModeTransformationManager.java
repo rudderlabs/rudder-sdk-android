@@ -10,10 +10,8 @@ import com.rudderstack.android.sdk.core.util.Utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -25,10 +23,10 @@ import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
 
 public class RudderDeviceModeTransformationManager {
 
-    private DBPersistentManager dbManager;
-    private RudderNetworkManager rudderNetworkManager;
-    private RudderDeviceModeManager rudderDeviceModeManager;
-    private RudderConfig config;
+    private final DBPersistentManager dbManager;
+    private final RudderNetworkManager rudderNetworkManager;
+    private final RudderDeviceModeManager rudderDeviceModeManager;
+    private final RudderConfig config;
     // batch size for device mode transformation
     private static final int DMT_BATCH_SIZE = 12;
     //scheduled executor for device mode transformation
@@ -44,7 +42,7 @@ public class RudderDeviceModeTransformationManager {
             .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
             .create();
 
-    RudderDeviceModeTransformationManager(DBPersistentManager dbManager, RudderNetworkManager rudderNetworkManager, RudderDeviceModeManager rudderDeviceModeManager, RudderConfig config, RudderServerConfig serverConfig) {
+    RudderDeviceModeTransformationManager(DBPersistentManager dbManager, RudderNetworkManager rudderNetworkManager, RudderDeviceModeManager rudderDeviceModeManager, RudderConfig config) {
         this.dbManager = dbManager;
         this.rudderNetworkManager = rudderNetworkManager;
         this.rudderDeviceModeManager = rudderDeviceModeManager;
@@ -61,6 +59,7 @@ public class RudderDeviceModeTransformationManager {
                     @Override
                     public void run() {
                         long deviceModeEventsCount = dbManager.getDeviceModeRecordCount();
+                        RudderLogger.logDebug("DeviceModeTransformationManager: DeviceModeTransformationProcessor: fetching device mode events to flush to transformation service");
                         if ((deviceModeSleepCount >= config.getSleepTimeOut() && deviceModeEventsCount > 0) || deviceModeEventsCount >= DMT_BATCH_SIZE) {
                             do {
                                 messages.clear();
@@ -71,10 +70,10 @@ public class RudderDeviceModeTransformationManager {
                                 String requestJson = createDeviceTransformPayload(messageIds, messages);
                                 Result result = rudderNetworkManager.sendNetworkRequest(requestJson, addEndPoint(config.getDataPlaneUrl(), TRANSFORMATION_ENDPOINT), RequestMethod.POST);
                                 if (result.status == NetworkResponses.WRITE_KEY_ERROR) {
-                                    RudderLogger.logInfo("DeviceModeTransformationProcessor: Wrong WriteKey. Aborting");
+                                    RudderLogger.logInfo("DeviceModeTransformationManager: DeviceModeTransformationProcessor: Wrong WriteKey. Aborting");
                                     break;
                                 } else if (result.status == NetworkResponses.ERROR) {
-                                    RudderLogger.logInfo("DeviceModeTransformationProcessor: Retrying in " + Math.abs(deviceModeSleepCount - config.getSleepTimeOut()) + "s");
+                                    RudderLogger.logInfo("DeviceModeTransformationManager: DeviceModeTransformationProcessor: Retrying in " + Math.abs(deviceModeSleepCount - config.getSleepTimeOut()) + "s");
                                     try {
                                         Thread.sleep(Math.abs(deviceModeSleepCount - config.getSleepTimeOut()) * 1000L);
                                     } catch (Exception e) {
