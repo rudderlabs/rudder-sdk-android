@@ -61,7 +61,6 @@ public class RudderFlushWorkManager {
     }
 
     void registerPeriodicFlushWorker() {
-
         if (config.isPeriodicFlushEnabled()) {
             if (!Utils.isOnClassPath("androidx.work.WorkManager")) {
                 RudderLogger.logWarn("EventRepository: registerPeriodicFlushWorker: WorkManager dependency not found, please add it to your build.gradle");

@@ -200,7 +200,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
      * */
     //unit test this
     void fetchCloudModeEventsFromDB(ArrayList<Integer> messageIds, ArrayList<String> messages, int count) {
-
+        // TODO: Remove this space
         String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) ORDER BY %s ASC LIMIT %d",
                 EVENTS_TABLE_NAME, DBPersistentManager.STATUS_COL, DBPersistentManager.STATUS_NEW,
                 DBPersistentManager.STATUS_DEVICE_MODE_DONE, UPDATED_COL, count);
@@ -360,6 +360,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         }
     }
 
+    // TODO: Can we provide useful comments for this method.
     void runGcForEvents() {
         deleteDoneEvents();
     }

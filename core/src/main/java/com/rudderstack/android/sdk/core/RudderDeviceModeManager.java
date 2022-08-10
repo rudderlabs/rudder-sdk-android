@@ -23,7 +23,7 @@ public class RudderDeviceModeManager {
     private final Map<String, RudderIntegration<?>> integrationOperationsMap;
     private final Map<String, RudderClient.Callback> integrationCallbacks;
     private final List<RudderMessage> eventReplayMessageQueue;
-    //required for device mode transform
+    // required for device mode transform
     private final Map<String, String> destinationsWithTransformationsEnabled = new HashMap<>(); //destination display name to destinationId
 
     RudderDeviceModeManager(DBPersistentManager dbPersistentManager, RudderNetworkManager networkManager, RudderConfig rudderConfig) {
@@ -35,7 +35,7 @@ public class RudderDeviceModeManager {
         this.integrationCallbacks = new HashMap<>();
         this.eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
         rudderDeviceModeManager = this;
-
+        // TODO: Remove this extra line
     }
 
     void initiate(RudderServerConfig serverConfig) {
@@ -132,7 +132,7 @@ public class RudderDeviceModeManager {
             }
         }
     }
-
+    // TODO: Remove extra line
 
     private void replayMessageQueue() {
         synchronized (eventReplayMessageQueue) {
@@ -155,7 +155,9 @@ public class RudderDeviceModeManager {
             if (areFactoriesInitialized || fromHistory) {
                 Map<String, Object> integrationOptions = message.getIntegrations();
                 for (String key : integrationOperationsMap.keySet()) {
-                    if ((getBooleanFromMap(integrationOptions, "All") && !integrationOptions.containsKey(key)) || getBooleanFromMap(integrationOptions, key)) {
+                    if ((getBooleanFromMap(integrationOptions, "All")
+                            && !integrationOptions.containsKey(key))
+                            || getBooleanFromMap(integrationOptions, key)) {
                         RudderIntegration<?> integration = integrationOperationsMap.get(key);
                         //If integration is not null and if key is either not present or it is set to true, then dump it.
                         if (integration != null && rudderEventFilteringPlugin.isEventAllowed(key, message)) {

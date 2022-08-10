@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
+// TODO: Remove extra line
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses.ERROR;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses.WRITE_KEY_ERROR;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
@@ -92,6 +93,7 @@ public class RudderCloudModeManager {
     /*
      * check if the number of events in the db crossed the dbCountThreshold then delete the older events which are in excess.
      */
+    // TODO: Improve the method name to:- maintainDBThreshold
     private void checkIfDBThresholdAttained() {
         // get current record count from db
         int recordCount = dbManager.getDBRecordCount();

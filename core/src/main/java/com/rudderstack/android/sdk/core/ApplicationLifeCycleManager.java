@@ -35,37 +35,23 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
         }
     }
 
+    /*
+     * Check if App is installed for the first time or it is updated.
+     * If it is the first time then make LifeCycle event: Application Installed.
+     * If it is updated then make LifeCycle event: Application Updated.
+     */
     private void checkApplicationUpdateStatus(Application application) {
-        try {
-            int previousBuild = preferenceManager.getBuildNumber();
-            String previousVersion = preferenceManager.getVersionName();
-            RudderLogger.logDebug("Previous Installed Version: " + previousVersion);
-            RudderLogger.logDebug("Previous Installed Build: " + previousBuild);
-            String packageName = application.getPackageName();
-            PackageManager packageManager = application.getPackageManager();
-            PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
-            int currentBuild;
-            String currentVersion = packageInfo.versionName;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                currentBuild = (int) packageInfo.getLongVersionCode();
-            } else {
-                currentBuild = packageInfo.versionCode;
-            }
-            RudderLogger.logDebug("Current Installed Version: " + currentVersion);
-            RudderLogger.logDebug("Current Installed Build: " + currentBuild);
-            if (previousBuild == -1) {
-                // application was not installed previously, Application Installed event
-                preferenceManager.saveBuildNumber(currentBuild);
-                preferenceManager.saveVersionName(currentVersion);
-                sendApplicationInstalled(currentBuild, currentVersion);
-                rudderFlushWorkManager.registerPeriodicFlushWorker();
-            } else if (previousBuild != currentBuild) {
-                preferenceManager.saveBuildNumber(currentBuild);
-                preferenceManager.saveVersionName(currentVersion);
-                sendApplicationUpdated(previousBuild, currentBuild, previousVersion, currentVersion);
-            }
-        } catch (PackageManager.NameNotFoundException ex) {
-            RudderLogger.logError(ex);
+        AppVersion appVersion = new AppVersion(application);
+        if (appVersion.previousBuild == -1) {
+            // application was not installed previously, now triggering Application Installed event
+            preferenceManager.saveBuildNumber(appVersion.currentBuild);
+            preferenceManager.saveVersionName(appVersion.currentVersion);
+            sendApplicationInstalled(appVersion.currentBuild, appVersion.currentVersion);
+            rudderFlushWorkManager.registerPeriodicFlushWorker();
+        } else if (appVersion.previousBuild != appVersion.currentBuild) {
+            preferenceManager.saveBuildNumber(appVersion.currentBuild);
+            preferenceManager.saveVersionName(appVersion.currentVersion);
+            sendApplicationUpdated(appVersion.previousBuild, appVersion.currentBuild, appVersion.previousVersion, appVersion.currentVersion);
         }
     }
 
@@ -177,5 +163,34 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
     @Override
     public void onActivityDestroyed(@NonNull Activity activity) {
         // Empty
+    }
+
+    private class AppVersion {
+        int previousBuild;
+        int currentBuild;
+        String previousVersion;
+        String currentVersion;
+
+        AppVersion(Application application) {
+            try {
+                previousBuild = preferenceManager.getBuildNumber();
+                previousVersion = preferenceManager.getVersionName();
+                RudderLogger.logDebug("Previous Installed Version: " + previousVersion);
+                RudderLogger.logDebug("Previous Installed Build: " + previousBuild);
+                String packageName = application.getPackageName();
+                PackageManager packageManager = application.getPackageManager();
+                PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
+                currentVersion = packageInfo.versionName;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    currentBuild = (int) packageInfo.getLongVersionCode();
+                } else {
+                    currentBuild = packageInfo.versionCode;
+                }
+                RudderLogger.logDebug("Current Installed Version: " + currentVersion);
+                RudderLogger.logDebug("Current Installed Build: " + currentBuild);
+            } catch (PackageManager.NameNotFoundException ex) {
+                RudderLogger.logError(ex);
+            }
+        }
     }
 }
