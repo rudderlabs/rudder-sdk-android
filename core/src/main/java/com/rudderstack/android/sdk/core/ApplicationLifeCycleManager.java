@@ -44,13 +44,11 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
         AppVersion appVersion = new AppVersion(application);
         if (appVersion.previousBuild == -1) {
             // application was not installed previously, now triggering Application Installed event
-            preferenceManager.saveBuildNumber(appVersion.currentBuild);
-            preferenceManager.saveVersionName(appVersion.currentVersion);
+            appVersion.storeCurrentBuildAndVersion();
             sendApplicationInstalled(appVersion.currentBuild, appVersion.currentVersion);
             rudderFlushWorkManager.registerPeriodicFlushWorker();
         } else if (appVersion.previousBuild != appVersion.currentBuild) {
-            preferenceManager.saveBuildNumber(appVersion.currentBuild);
-            preferenceManager.saveVersionName(appVersion.currentVersion);
+            appVersion.storeCurrentBuildAndVersion();
             sendApplicationUpdated(appVersion.previousBuild, appVersion.currentBuild, appVersion.previousVersion, appVersion.currentVersion);
         }
     }
@@ -191,6 +189,15 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
             } catch (PackageManager.NameNotFoundException ex) {
                 RudderLogger.logError(ex);
             }
+        }
+
+        /*
+        * Call this method to store the Current Build and Current Version of the app.
+        * In case of the LifeCycle events Application Installed or Application Updated only.
+         */
+        void storeCurrentBuildAndVersion() {
+            preferenceManager.saveBuildNumber(currentBuild);
+            preferenceManager.saveVersionName(currentVersion);
         }
     }
 }
