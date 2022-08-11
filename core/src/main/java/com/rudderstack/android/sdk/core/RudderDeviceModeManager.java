@@ -35,7 +35,6 @@ public class RudderDeviceModeManager {
         this.integrationCallbacks = new HashMap<>();
         this.eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
         rudderDeviceModeManager = this;
-        // TODO: Remove this extra line
     }
 
     void initiate(RudderServerConfig serverConfig) {
@@ -132,7 +131,6 @@ public class RudderDeviceModeManager {
             }
         }
     }
-    // TODO: Remove extra line
 
     private void replayMessageQueue() {
         synchronized (eventReplayMessageQueue) {
@@ -153,23 +151,19 @@ public class RudderDeviceModeManager {
     void makeFactoryDump(RudderMessage message, boolean fromHistory) {
         synchronized (eventReplayMessageQueue) {
             if (areFactoriesInitialized || fromHistory) {
-                Map<String, Object> integrationOptions = message.getIntegrations();
-                for (String key : integrationOperationsMap.keySet()) {
-                    if ((getBooleanFromMap(integrationOptions, "All")
-                            && !integrationOptions.containsKey(key))
-                            || getBooleanFromMap(integrationOptions, key)) {
-                        RudderIntegration<?> integration = integrationOperationsMap.get(key);
-                        //If integration is not null and if key is either not present or it is set to true, then dump it.
-                        if (integration != null && rudderEventFilteringPlugin.isEventAllowed(key, message)) {
-                            if (!destinationsWithTransformationsEnabled.containsKey(key)) {
+                for (String destinationName : integrationOperationsMap.keySet()) {
+                    if (isEventAllowed(message, destinationName)) {
+                        RudderIntegration<?> integration = integrationOperationsMap.get(destinationName);
+                        if (integration != null) {
+                            if (!destinationsWithTransformationsEnabled.containsKey(destinationName)) {
                                 try {
-                                    RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: dumping for %s", key));
+                                    RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: dumping for %s", destinationName));
                                     integration.dump(message);
                                 } catch (Exception e) {
-                                    RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Exception in dumping message %s to %s factory %s", message.getEventName(), key, e.getMessage()));
+                                    RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Exception in dumping message %s to %s factory %s", message.getEventName(), destinationName, e.getMessage()));
                                 }
                             } else {
-                                RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Destination %s needs transformation, hence it will be batched and sent to transformation service", key));
+                                RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Destination %s needs transformation, hence it will be batched and sent to transformation service", destinationName));
                             }
                         }
                     }
@@ -221,5 +215,20 @@ public class RudderDeviceModeManager {
         if (!integrationOperationsMap.containsKey(destinationName))
             return null;
         return integrationOperationsMap.get(destinationName);
+    }
+
+    private boolean isEventAllowed(RudderMessage message, String destinationName) {
+        Boolean isDestinationEnabledForMessage = isDestinationEnabled(destinationName, message);
+        Boolean isEventAllowedForDestination = rudderEventFilteringPlugin.isEventAllowed(destinationName, message);
+        return isDestinationEnabledForMessage && isEventAllowedForDestination;
+    }
+
+    private Boolean isDestinationEnabled(String destinationName, RudderMessage message) {
+        Map<String, Object> integrationOptions = message.getIntegrations();
+        // If All is set to true and the destination is absent in the integrations object
+        Boolean isAllTrueAndDestinationAbsent = (getBooleanFromMap(integrationOptions, "All") && !integrationOptions.containsKey(destinationName));
+        // If the destination is present and true in the integrations object
+        Boolean isDestinationEnabled = getBooleanFromMap(integrationOptions, destinationName);
+        return isAllTrueAndDestinationAbsent || isDestinationEnabled;
     }
 }
