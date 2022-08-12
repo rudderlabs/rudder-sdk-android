@@ -49,7 +49,6 @@ public class RudderDeviceModeTransformationManager {
         this.config = config;
     }
 
-
     // checking how many seconds passed since last successful transformation
     private int deviceModeSleepCount = 0;
 
@@ -95,7 +94,6 @@ public class RudderDeviceModeTransformationManager {
                 , 1, 1, TimeUnit.SECONDS);
     }
 
-
     private static String createDeviceTransformPayload(List<Integer> rowIds, List<String> messages) {
         if (rowIds.isEmpty() || messages.isEmpty() || rowIds.size() != messages.size())
             return null;
@@ -130,7 +128,6 @@ public class RudderDeviceModeTransformationManager {
         return jsonPayload.toString();
     }
 
-
     private void processTransformationResponse(TransformationResponse transformationResponse) {
         if (transformationResponse.transformedBatch != null) {
             for (TransformationResponse.TransformedDestination transformedDestination : transformationResponse.transformedBatch) {
@@ -161,6 +158,4 @@ public class RudderDeviceModeTransformationManager {
             }
         });
     }
-
-
 }

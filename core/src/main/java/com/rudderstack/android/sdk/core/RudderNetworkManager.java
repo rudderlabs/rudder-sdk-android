@@ -109,7 +109,6 @@ public class RudderNetworkManager {
                         networkResponse = NetworkResponses.WRITE_KEY_ERROR;
                     if (responseCode == 404)
                         networkResponse = NetworkResponses.RESOURCE_NOT_FOUND;
-
                 } catch (IOException e) {
                     RudderLogger.logError(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Failed to parse the response from endpoint %s due to %s", requestURL, e.getLocalizedMessage()));
                 }
@@ -136,7 +135,6 @@ public class RudderNetworkManager {
             return url + endPoint;
         return url + "/" + endPoint;
     }
-
 
     static class Result {
 

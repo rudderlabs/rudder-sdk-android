@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
-import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses.ERROR;
-import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses.WRITE_KEY_ERROR;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
@@ -42,7 +40,7 @@ public class RudderCloudModeManager {
                         messageIds.clear();
                         messages.clear();
                         result = null;
-                        checkIfDBThresholdAttained();
+                        maintainDBThreshold();
                         RudderLogger.logDebug("CloudModeManager: cloudModeProcessor: Fetching events to flush to server");
                         dbManager.fetchCloudModeEventsFromDB(messageIds, messages, config.getFlushQueueSize());
                         if (messages.size() >= config.getFlushQueueSize() || (!messages.isEmpty() && sleepCount >= config.getSleepTimeOut())) {
@@ -92,7 +90,7 @@ public class RudderCloudModeManager {
     /*
      * check if the number of events in the db crossed the dbCountThreshold then delete the older events which are in excess.
      */
-    private void checkIfDBThresholdAttained() {
+    private void maintainDBThreshold() {
         // get current record count from db
         int recordCount = dbManager.getDBRecordCount();
         RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: getPayloadFromMessages: DBRecordCount: %d", recordCount));

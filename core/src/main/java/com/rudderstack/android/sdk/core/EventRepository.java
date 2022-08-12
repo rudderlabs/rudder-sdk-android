@@ -16,7 +16,6 @@ import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
-
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Locale;
@@ -36,13 +35,11 @@ class EventRepository {
     private RudderCloudModeManager cloudModeManager;
     private RudderDeviceModeManager deviceModeManager;
     private RudderFlushWorkManager rudderFlushWorkManager;
-    private ApplicationLifeCycleManager applicationLifeCycleManager;
 
     static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
             .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
             .create();
-
 
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
@@ -125,7 +122,7 @@ class EventRepository {
 
             // 9. Initiate ApplicationLifeCycleManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
-            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(_application, preferenceManager, this, rudderFlushWorkManager, config);
+            new ApplicationLifeCycleManager(_application, preferenceManager, this, rudderFlushWorkManager, config);
 
         } catch (Exception ex) {
             RudderLogger.logError(String.format("EventRepository: constructor: Exception Initializing the EventRepository Instance due to %s", ex.getLocalizedMessage()));
