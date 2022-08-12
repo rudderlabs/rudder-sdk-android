@@ -83,7 +83,6 @@ public class RudderNetworkManager {
                 osw.close();
                 os.close();
             }
-            // Todo; check if the request is sent only after making the connect call
             synchronized (MessageUploadLock.REQUEST_LOCK) {
                 httpConnection.connect();
             }

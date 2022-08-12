@@ -78,11 +78,14 @@ public class RudderDeviceModeTransformationManager {
                                     } catch (Exception e) {
                                         RudderLogger.logError(e);
                                     }
-                                } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) {
-                                    // Todo; We should use or dump the original messages itself to the factories.
+                                } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
+                                    deviceModeSleepCount = 0;
+                                    rudderDeviceModeManager.dumpOriginalEvents(gson.fromJson(requestJson, TransformationRequest.class));
+                                    dbManager.markDeviceModeDone(messageIds);
+                                    dbManager.runGcForEvents();
                                 } else {
                                     deviceModeSleepCount = 0;
-                                    processTransformationResponse(gson.fromJson(result.response, TransformationResponse.class));
+                                    rudderDeviceModeManager.dumpTransformedEvents(gson.fromJson(result.response, TransformationResponse.class));
                                     dbManager.markDeviceModeDone(messageIds);
                                     dbManager.runGcForEvents();
                                 }
@@ -126,36 +129,5 @@ public class RudderDeviceModeTransformationManager {
         jsonPayload.append("]");
         jsonPayload.append("}");
         return jsonPayload.toString();
-    }
-
-    private void processTransformationResponse(TransformationResponse transformationResponse) {
-        if (transformationResponse.transformedBatch != null) {
-            for (TransformationResponse.TransformedDestination transformedDestination : transformationResponse.transformedBatch) {
-                processTransformedDestination(transformedDestination);
-            }
-        }
-    }
-
-    private void processTransformedDestination(TransformationResponse.TransformedDestination transformedDestination) {
-        RudderIntegration<?> rudderIntegration = rudderDeviceModeManager.getRudderIntegrationObject(transformedDestination.id);
-        if (rudderIntegration != null && transformedDestination.payload != null) {
-            List<TransformationResponse.TransformedEvent> transformedEvents = transformedDestination.payload;
-            sortTransformedEventBasedOnOrderNo(transformedEvents);
-            for (TransformationResponse.TransformedEvent transformedEvent : transformedEvents) {
-                if (transformedEvent.status.equals("200")) {
-                    rudderIntegration.dump(transformedEvent.event);
-                }
-            }
-        }
-    }
-
-    public static void sortTransformedEventBasedOnOrderNo
-            (List<TransformationResponse.TransformedEvent> transformedEvents) {
-        Collections.sort(transformedEvents, new Comparator<TransformationResponse.TransformedEvent>() {
-            @Override
-            public int compare(TransformationResponse.TransformedEvent o1, TransformationResponse.TransformedEvent o2) {
-                return o1.orderNo - o2.orderNo;
-            }
-        });
     }
 }

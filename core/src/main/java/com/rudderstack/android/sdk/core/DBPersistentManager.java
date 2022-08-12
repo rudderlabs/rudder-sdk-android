@@ -1,6 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
 import static com.rudderstack.android.sdk.core.DBPersistentManager.BACKSLASH;
+import static com.rudderstack.android.sdk.core.DBPersistentManager.EVENT;
 
 import android.app.Application;
 import android.content.ContentValues;
@@ -8,6 +9,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -37,6 +39,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
     private static final String DB_NAME = "rl_persistence.db";
     // SQLite database version number
     private static final int DB_VERSION = 2;
+    static final String EVENT = "EVENT";
     private int currentDbVersion = DB_VERSION;
 
     static final String EVENTS_TABLE_NAME = "events";
@@ -98,10 +101,13 @@ class DBPersistentManager extends SQLiteOpenHelper {
     /*
      * save individual messages to DB
      * */
-    void saveEvent(String messageJson) {
+    void saveEvent(String messageJson, EventInsertionCallback callback) {
         try {
             Message msg = Message.obtain();
-            msg.obj = messageJson;
+            msg.obj = callback;
+            Bundle eventBundle = new Bundle();
+            eventBundle.putString(EVENT, messageJson);
+            msg.setData(eventBundle);;
             if (dbInsertionHandlerThread == null) {
                 queue.add(msg);
                 return;
@@ -410,13 +416,16 @@ class DBInsertionHandlerThread extends HandlerThread {
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
             if (this.database.isOpen()) {
-                String messageJson = (String) msg.obj;
+                EventInsertionCallback callback = (EventInsertionCallback) msg.obj;
+                Bundle msgBundle = msg.getData();
+                String messageJson = msgBundle.getString(EVENT);
                 long updatedTime = System.currentTimeMillis();
                 RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: saveEvent: Inserting Message %s into table %s as Updated at %d", messageJson.replace("'", BACKSLASH), DBPersistentManager.EVENTS_TABLE_NAME, updatedTime));
                 ContentValues insertValues = new ContentValues();
                 insertValues.put(DBPersistentManager.MESSAGE_COL, messageJson.replace("'", BACKSLASH));
                 insertValues.put(DBPersistentManager.UPDATED_COL, updatedTime);
-                database.insert(DBPersistentManager.EVENTS_TABLE_NAME, null, insertValues);
+                long rowId = database.insert(DBPersistentManager.EVENTS_TABLE_NAME, null, insertValues); //rowId will used
+                callback.onInsertion((int) rowId);
                 RudderLogger.logInfo("DBPersistentManager: saveEvent: Event saved to DB");
             } else {
                 RudderLogger.logError("DBPersistentManager: saveEvent: database is not writable");

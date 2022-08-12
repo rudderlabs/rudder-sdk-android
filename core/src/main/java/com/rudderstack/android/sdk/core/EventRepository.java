@@ -196,8 +196,7 @@ class EventRepository {
             return;
         }
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
-        dbManager.saveEvent(eventJson);
-        deviceModeManager.makeFactoryDump(message, false);
+        dbManager.saveEvent(eventJson, new EventInsertionCallback(message, deviceModeManager));
     }
 
     void reset() {

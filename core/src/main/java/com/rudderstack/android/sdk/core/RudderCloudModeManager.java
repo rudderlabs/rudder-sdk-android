@@ -49,7 +49,7 @@ public class RudderCloudModeManager {
                             RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: payload: %s", payload));
                             RudderLogger.logInfo(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: %d", messageIds.size()));
                             if (payload != null) {
-                                result = networkManager.sendNetworkRequest(payload, addEndPoint("https://e582-2409-4070-2e8f-e60d-94ce-840b-d457-d541.ngrok.io", BATCH_ENDPOINT), RequestMethod.POST);
+                                result = networkManager.sendNetworkRequest(payload, addEndPoint(config.getDataPlaneUrl(), BATCH_ENDPOINT), RequestMethod.POST);
                                 RudderLogger.logInfo(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: ServerResponse: %d", result.statusCode));
                                 if (result.status == NetworkResponses.SUCCESS) {
                                     dbManager.markCloudModeDone(messageIds);
