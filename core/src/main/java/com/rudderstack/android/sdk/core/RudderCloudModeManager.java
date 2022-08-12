@@ -63,7 +63,6 @@ public class RudderCloudModeManager {
                     RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: SleepCount: %d", sleepCount));
                     try {
                         if (result == null) {
-                            RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in 1s");
                             Thread.sleep(1000);
                             continue;
                         }
