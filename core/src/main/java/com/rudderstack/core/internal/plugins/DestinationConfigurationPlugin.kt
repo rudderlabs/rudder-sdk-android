@@ -32,7 +32,7 @@ import com.rudderstack.models.RudderServerConfig
  * plugins that are disabled in destination config are filtered out.
  */
 internal class DestinationConfigurationPlugin : Plugin {
-    private var _notAllowedDestinations : List<String> = listOf()
+    private var _notAllowedDestinations : Set<String> = setOf()
     private var _isConfigUpdated = false
     override fun intercept(chain: Plugin.Chain): Message {
         val msg = chain.message()
@@ -52,7 +52,7 @@ internal class DestinationConfigurationPlugin : Plugin {
         _notAllowedDestinations = config.source?.destinations?.filter {
             !it.isDestinationEnabled
         }?.map {
-            it.destinationName?: it.destinationDefinition?.definitionName?:""
-        }?: listOf()
+            it.destinationDefinition?.definitionName?:it.destinationName?: ""
+        }?.toHashSet()?: setOf()
     }
 }

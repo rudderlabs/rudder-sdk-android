@@ -32,7 +32,7 @@ import com.rudderstack.models.Message
  */
 interface DestinationPlugin<T> : Plugin {
     /**
-     * An unique name for Destination plugin
+     * Destination definition name as given in control plane
      */
     val name : String
 

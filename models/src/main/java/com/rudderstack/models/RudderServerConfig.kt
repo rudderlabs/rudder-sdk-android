@@ -16,7 +16,7 @@ package com.rudderstack.models
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.Json
-import java.io.*
+import java.io.Serializable
 import java.util.*
 
 /**
@@ -100,7 +100,9 @@ data class RudderServerConfig(
         @Json(name = "config")
         @JsonProperty("config")
         @SerializedName("config")
-        val destinationConfig: Map<Any, Any>
+        val destinationConfig: Map<Any, Any>,
+        @SerializedName("areTransformationsConnected")
+        val areTransformationsConnected: Boolean = false
     ) : Serializable
 
     data class RudderServerDestinationDefinition(
