@@ -67,6 +67,8 @@ public class RudderDeviceModeTransformationManager {
                                     dbManager.fetchDeviceModeEventsFromDb(messageIds, messages, DMT_BATCH_SIZE);
                                 }
                                 String requestJson = createDeviceTransformPayload(messageIds, messages);
+                                RudderLogger.logVerbose(String.format(Locale.US, "DeviceModeTransformationManager: DeviceModeTransformationProcessor: Payload: %s", requestJson));
+                                RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: DeviceModeTransformationProcessor: EventCount: %d", messageIds.size()));
                                 Result result = rudderNetworkManager.sendNetworkRequest(requestJson, addEndPoint(config.getDataPlaneUrl(), TRANSFORMATION_ENDPOINT), RequestMethod.POST);
                                 if (result.status == NetworkResponses.WRITE_KEY_ERROR) {
                                     RudderLogger.logInfo("DeviceModeTransformationManager: DeviceModeTransformationProcessor: Wrong WriteKey. Aborting");
