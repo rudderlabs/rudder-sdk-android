@@ -1,5 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.List;
 
 public class TransformationRequest {
@@ -11,7 +13,9 @@ public class TransformationRequest {
 
     static class TransformationRequestEvent {
 
+        @SerializedName(value="rowId", alternate = {"orderNo"})
         final Integer rowId;
+        @SerializedName(value="message", alternate = {"event"})
         final RudderMessage message;
 
         private TransformationRequestEvent(Integer rowId, RudderMessage message) {
