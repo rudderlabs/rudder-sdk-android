@@ -158,14 +158,12 @@ public class RudderDeviceModeManager {
         synchronized (eventReplayMessageQueue) {
             if (areFactoriesInitialized || fromHistory) {
                 List<String> eligibleDestinations = getEligibleDestinations(message);
-                if (eligibleDestinations.size() > 0) {
-                    boolean isTransformationNeeded = isTransformationNeeded(eligibleDestinations);
-                    if (!isTransformationNeeded) {
-                        RudderLogger.logVerbose("EventRepository: makeFactoryDump: Marking event %s with rowId %d as DEVICE_MODE_PROCESSING DONE as it has no device mode destinations with transformations");
-                        dbPersistentManager.markDeviceModeDone(Arrays.asList(rowId));
-                    }
-                    dumpEventToDestinations(message, eligibleDestinations, false, "makeFactoryDump");
+                boolean isTransformationNeeded = isTransformationNeeded(eligibleDestinations);
+                if (!isTransformationNeeded) {
+                    RudderLogger.logVerbose("EventRepository: makeFactoryDump: Marking event %s with rowId %d as DEVICE_MODE_PROCESSING DONE as it has no device mode destinations with transformations");
+                    dbPersistentManager.markDeviceModeDone(Arrays.asList(rowId));
                 }
+                dumpEventToDestinations(message, eligibleDestinations, false, "makeFactoryDump");
             } else {
                 RudderLogger.logDebug("EventRepository: makeFactoryDump: factories are not initialized. dumping to replay queue");
                 eventReplayMessageQueue.put(rowId, message);
