@@ -65,7 +65,7 @@ public class RudderDeviceModeManager {
     }
 
     private void initiateFactories(List<RudderServerDestination> destinations) {
-        if (areFactoriesPassedInConfig()) {
+        if (!areFactoriesPassedInConfig()) {
             RudderLogger.logInfo("RudderDeviceModeManager: initiateFactories: No native SDK factory found");
             return;
         }
@@ -120,7 +120,7 @@ public class RudderDeviceModeManager {
     }
 
     private void initiateCustomFactories() {
-        if (areCustomFactoriesPassedInConfig()) {
+        if (!areCustomFactoriesPassedInConfig()) {
             RudderLogger.logInfo("RudderDeviceModeManager: initiateCustomFactories: No custom factory found");
             return;
         }
