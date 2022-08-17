@@ -227,6 +227,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     /*
      * retrieve all messages from DB and store messageIds and messages separately
+     * note: message ids are added to existing messageIds list
      * */
     //unit test
     void fetchAllCloudModeEventsFromDB(List<Integer> messageIds, List<String> messages) {
@@ -346,6 +347,31 @@ class DBPersistentManager extends SQLiteOpenHelper {
         }
     }
 
+    @Override
+    public synchronized void close() {
+        super.close();
+        instance = null;
+    }
+
+    public void deleteAllEvents() {
+        try {
+            SQLiteDatabase database = getWritableDatabase();
+            if (database.isOpen()) {
+                // remove events
+                String clearDBSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
+                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: deleteAllEvents: clearDBSQL: %s", clearDBSQL));
+                synchronized (DB_LOCK) {
+                    database.execSQL(clearDBSQL);
+                }
+                RudderLogger.logInfo("DBPersistentManager: deleteAllEvents: deleted all events");
+            } else {
+                RudderLogger.logError("DBPersistentManager: deleteAllEvents: database is not writable");
+            }
+        } catch (SQLiteDatabaseCorruptException ex) {
+            RudderLogger.logError(ex);
+        }
+    }
+    
     void markDeviceModeDone(List<Integer> rowIds) {
         String rowIdsCSVString = Utils.getCSVString(rowIds);
         if (rowIdsCSVString == null) return;
