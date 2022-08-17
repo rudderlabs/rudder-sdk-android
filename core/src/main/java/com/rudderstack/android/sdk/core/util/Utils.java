@@ -17,8 +17,9 @@ import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.RudderLogger;
 import com.rudderstack.android.sdk.core.RudderProperty;
 
+
 import java.io.File;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -66,17 +67,14 @@ public class Utils {
     }
 
     public static String getDeviceId(Application application) {
-        if (Build.VERSION.SDK_INT >= 17) {
-            String androidId = getString(application.getContentResolver(), ANDROID_ID);
-            if (!TextUtils.isEmpty(androidId)
-                    && !"9774d56d682e549c".equals(androidId)
-                    && !"unknown".equals(androidId)
-                    && !"000000000000000".equals(androidId)
-            ) {
-                return androidId;
-            }
+        String androidId = getString(application.getContentResolver(), ANDROID_ID);
+        if (!TextUtils.isEmpty(androidId)
+                && !"9774d56d682e549c".equals(androidId)
+                && !"unknown".equals(androidId)
+                && !"000000000000000".equals(androidId)
+        ) {
+            return androidId;
         }
-
         // If this still fails, generate random identifier that does not persist across installations
         return UUID.randomUUID().toString();
     }
@@ -105,14 +103,9 @@ public class Utils {
     }
 
     public static int getUTF8Length(String message) {
-        int utf8Length;
-        try {
-            utf8Length = message.getBytes("UTF-8").length;
-        } catch (UnsupportedEncodingException ex) {
-            RudderLogger.logError(ex);
-            utf8Length = -1;
-        }
-        return utf8Length;
+        if (message == null)
+            return 0;
+        return message.getBytes(StandardCharsets.UTF_8).length;
     }
 
     public static int getUTF8Length(StringBuilder message) {
@@ -130,10 +123,7 @@ public class Utils {
 
     public static boolean fileExists(Context context, String filename) {
         File file = context.getFileStreamPath(filename);
-        if (file == null || !file.exists()) {
-            return false;
-        }
-        return true;
+        return file != null && file.exists();
     }
 
     /**
@@ -221,12 +211,6 @@ public class Utils {
                 && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
 
-    public enum NetworkResponses {
-        SUCCESS,
-        ERROR,
-        WRITE_KEY_ERROR
-    }
-
     /**
      * Returns the number of batches the given number of events can be split into considering the batch size configured.
      */
@@ -245,10 +229,14 @@ public class Utils {
         if (messageDetails.size() <= flushQueueSize) {
             return messageDetails;
         } else {
-            return new ArrayList(messageDetails.subList(0, flushQueueSize));
+            return new ArrayList<>(messageDetails.subList(0, flushQueueSize));
         }
     }
 
+    /**
+     * @param integers the input list of integers which are to be converted into a csv string
+     * @return a string which is the csv format of the List<Integer> provided.
+     */
     public static String getCSVString(List<Integer> integers) {
         int size = integers.size();
         if (size <= 0) return null;
@@ -261,6 +249,13 @@ public class Utils {
         return sb.toString();
     }
 
+    /**
+     * @param map   the map on which we need to check for the key associated with the value provided.
+     * @param value the value for which we need to find the key associated with it.
+     * @param <K>   the type of the key
+     * @param <V>   the type of the value
+     * @return the key associated for the value in the map provided.
+     */
     public static <K, V> K getKeyForValueFromMap(Map<K, V> map, Object value) {
         for (Map.Entry<K, V> entry : map.entrySet()) {
             if (value.equals(entry.getValue())) {
@@ -270,7 +265,10 @@ public class Utils {
         return null;
     }
 
-    public static <K, V extends Object> boolean getBooleanFromMap(Map<K, V> map, K key) {
+    /**
+     * Returns the value associated with key in the map after casting it into boolean, if the key exists and casting it boolean is possible, else returns false.
+     */
+    public static <K, V> boolean getBooleanFromMap(Map<K, V> map, K key) {
         if (!map.containsKey(key))
             return false;
         V value = map.get(key);
@@ -279,5 +277,4 @@ public class Utils {
         }
         return false;
     }
-
 }
