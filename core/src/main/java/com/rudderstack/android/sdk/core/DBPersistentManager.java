@@ -396,7 +396,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         }
     }
 
-    // TODO: Can we provide useful comments for this method.
+    // Delete all events from the DB which have status as STATUS_ALL_DONE
     void runGcForEvents() {
         deleteDoneEvents();
     }
