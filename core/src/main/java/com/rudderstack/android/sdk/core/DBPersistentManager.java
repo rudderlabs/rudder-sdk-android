@@ -57,7 +57,9 @@ class DBPersistentManager extends SQLiteOpenHelper {
     //command to add status column. For details see onUpgrade or the documentation for createSchema
     //for version 1 to 2
     private static final String DATABASE_ALTER_ADD_STATUS = "ALTER TABLE "
-            + EVENTS_TABLE_NAME + " ADD COLUMN " + STATUS_COL + " INTEGER NOT NULL DEFAULT " + STATUS_DEVICE_MODE_DONE;
+            + EVENTS_TABLE_NAME + " ADD COLUMN " + STATUS_COL + " INTEGER NOT NULL DEFAULT " + STATUS_NEW;
+
+    private static final String SET_STATUS_FOR_EXISTING = "UPDATE " + EVENTS_TABLE_NAME + " SET " + STATUS_COL + " = " + STATUS_DEVICE_MODE_DONE;
 
     static final String BACKSLASH = "\\\\'";
 
@@ -107,7 +109,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
             msg.obj = callback;
             Bundle eventBundle = new Bundle();
             eventBundle.putString(EVENT, messageJson);
-            msg.setData(eventBundle);;
+            msg.setData(eventBundle);
             if (dbInsertionHandlerThread == null) {
                 queue.add(msg);
                 return;
@@ -337,7 +339,10 @@ class DBPersistentManager extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
         //replace with switch when more upgrades creep in
         if (oldVersion == 1 && newVersion >= 2) {
+            RudderLogger.logDebug("DBPersistentManager: onUpgrade: DB Version upgraded, hence adding the status column to the events table");
             sqLiteDatabase.execSQL(DATABASE_ALTER_ADD_STATUS);
+            RudderLogger.logDebug("DBPersistentManager: onUpgrade: DB Version upgraded, Setting the status to DEVICE_MODE_PROCESSING_DONE for the events existing already in the DB");
+            sqLiteDatabase.execSQL(SET_STATUS_FOR_EXISTING);
         }
     }
 
