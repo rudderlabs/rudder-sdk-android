@@ -10,3 +10,11 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Package name is changed from `com.rudderlabs.android.sdk.core` to `com.rudderstack.android.sdk.core`.
 - New field `userId` is supported to make it more compliant under `context->traits` for `identify` and all successive calls. Old filed for developer identification i.e. `id` is still supported. 
+
+## Version - 1.6.0 - 2022-07-11
+### Changed
+- Removed Bluetooth permission from the Core SDK and from now the bluetooth status would be collected and sent as a part of the payload only if bluetooth permission is included in the SDK, so that from now bluetooth permission is not necessarily needed to make use of the SDK.
+
+## Version - 1.6.1 - 2022-08-02
+### Changed
+- Removed the app_name from the string resources of the Core SDK.
