@@ -3,18 +3,14 @@ package com.rudderstack.android.sdk.core;
 import static com.rudderstack.android.sdk.core.DBPersistentManager.UPDATED_COL;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.notNullValue;
 import static java.lang.Thread.sleep;
 
 import android.app.Application;
-import android.content.ContentValues;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -28,7 +24,6 @@ import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import org.awaitility.Awaitility;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -36,7 +31,6 @@ import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -77,14 +71,6 @@ public class DBPersistentManagerTest {
             "      \"sentAt\": \"2022-07-14T06:46:42.365Z\"\n" +
             "    }\n";
 
-    @Before
-    public void start() {
-        /*RudderElementCache.cachedContext = new RudderContext(ApplicationProvider.<Application>getApplicationContext(),
-                "anon-id", "ad-id", "dev_token");
-        Mockito.mock(Utils.class);
-        Mockito.*/
-    }
-
     @Test
     public void testMigration() {
 
@@ -103,35 +89,40 @@ public class DBPersistentManagerTest {
                     sleep(500);
                     Map<Integer, Integer> idStatusMap = new HashMap<>();
                     ArrayList<String> messages = new ArrayList<String>();
-
                     String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC LIMIT %d",
                             DBPersistentManager.EVENTS_TABLE_NAME,
                             UPDATED_COL, 2);
                     finalDbPersistentManager.getEventsFromDB(idStatusMap, messages, selectSQL);
-
                     assertThat(idStatusMap, allOf(
                             hasKey(1),
                             hasKey(2)
                     ));
-//                    finalDbPersistentManager.close();
+
                     DBPersistentManager dbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider.<Application>getApplicationContext(), 2);
-//                    finalDbPersistentManager.onUpgrade(finalDbPersistentManager.getWritableDatabase(), 1, 2);
                     sleep(2000);
                     idStatusMap = new HashMap<>();
-                    messages = new ArrayList<String>();
+                    messages = new ArrayList<>();
                     dbPersistentManager.getEventsFromDB(idStatusMap, messages, selectSQL);
-
                     assertThat(idStatusMap.size(), CoreMatchers.is(2));
                     assertThat(idStatusMap, allOf(
                             hasEntry(1, 1),
                             hasEntry(2, 1)
                     ));
+
                     Map<String, Object> msg1FromDb = gson.fromJson(messages.get(0), new TypeToken<Map<String, Object>>() {
                     }.getType());
-//                    RudderMessage msg2FromDb = gson.fromJson(messages.get(1), RudderMessage.class);
-
                     assertThat((String) msg1FromDb.get("event"), CoreMatchers.is("mess-1"));
 
+                    finalDbPersistentManager.saveEventSync(MESSAGE_3);
+                    idStatusMap = new HashMap<>();
+                    messages = new ArrayList<>();
+                    dbPersistentManager.getEventsFromDB(idStatusMap, messages, selectSQL);
+                    assertThat(idStatusMap.size(), CoreMatchers.is(3));
+                    assertThat(idStatusMap, allOf(
+                            hasEntry(1, 1),
+                            hasEntry(2, 1),
+                            hasEntry(3, 0)
+                    ));
 
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -142,48 +133,6 @@ public class DBPersistentManagerTest {
             }
 
 
-        }).start();
-        Awaitility.await().atMost(1, TimeUnit.MINUTES).untilTrue(isFinished);
-
-    }
-
-    @Test
-    public void testEventTransformationGroupBy() {
-
-        final AtomicBoolean isFinished = new AtomicBoolean(false);
-        final DBPersistentManager finalDbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider.<Application>getApplicationContext());
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    sleep(1000);
-                    SQLiteDatabase database = finalDbPersistentManager.getWritableDatabase();
-                    for (int i = 0; i < 20; i++) {
-                        ContentValues eventTransformationValues = new ContentValues();
-                        eventTransformationValues.put(DBPersistentManager.EVENTS_DESTINATION_ROW_ID_COL_NAME,
-                                i % 5 + 1);
-                        eventTransformationValues.put(DBPersistentManager.EVENTS_DESTINATION_DESTINATION_ID_COL_NAME,
-                                i);
-                        database.insert(DBPersistentManager.EVENTS_DESTINATION_ID_TABLE_NAME, null, eventTransformationValues);
-
-                    }
-                    Map<Integer, List<String>> eventToRowIdMapping = finalDbPersistentManager.fetchDestinationIdsGroupByEventRowId(Arrays.asList(1, 2, 3, 4, 5));
-                    //assert map is proper
-                    assertThat(eventToRowIdMapping.keySet(),allOf(notNullValue(), Matchers.<Integer>iterableWithSize(5),
-                            contains(1,2,3,4,5)));
-                    for (List<String> values:
-                    eventToRowIdMapping.values()){
-                        assertThat(values, Matchers.<String>iterableWithSize(4));
-                    }
-
-                } catch (Exception e) {
-                    assert false;
-                }
-                finally {
-                    finalDbPersistentManager.close();
-                    isFinished.set(true);
-                }
-            }
         }).start();
         Awaitility.await().atMost(1, TimeUnit.MINUTES).untilTrue(isFinished);
 
@@ -296,7 +245,6 @@ public class DBPersistentManagerTest {
     @Test
     public void doneEventsTest() {
         final DBPersistentManager dbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider.<Application>getApplicationContext());
-//        dbPersistentManager.deleteAllEvents();
 
         //insert data into db
         dbPersistentManager.saveEventSync(MESSAGE_1);
@@ -357,7 +305,6 @@ public class DBPersistentManagerTest {
     @Test
     public void deleteFirstEventsTest() throws InterruptedException {
         final DBPersistentManager dbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider.<Application>getApplicationContext());
-//        dbPersistentManager.deleteAllEvents();
         sleep(500);
         //insert data into db
         dbPersistentManager.saveEventSync(MESSAGE_1);
