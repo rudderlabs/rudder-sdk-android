@@ -213,7 +213,8 @@ public class RudderDeviceModeManager {
             RudderIntegration<?> integration = integrationOperationsMap.get(destinationName);
             if (integration != null) {
                 try {
-                    RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: %s: dumping for %s and message: %s", logTag, destinationName, gson.toJson(message)));
+                    RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: %s: dumping for %s", logTag, destinationName));
+                    RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: Dumping: %s", gson.toJson(message)));
                     integration.dump(message);
                 } catch (Exception e) {
                     RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: %s: Exception in dumping message %s to %s factory %s", logTag, message.getEventName(), destinationName, e.getMessage()));
