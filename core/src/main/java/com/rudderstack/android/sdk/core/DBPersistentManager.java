@@ -225,15 +225,26 @@ class DBPersistentManager extends SQLiteOpenHelper {
     }
 
 
-    /*
-     * retrieve all messages from DB and store messageIds and messages separately
-     * note: message ids are added to existing messageIds list
-     * */
-    //unit test
     void fetchAllCloudModeEventsFromDB(List<Integer> messageIds, List<String> messages) {
         String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) ORDER BY %s ASC", EVENTS_TABLE_NAME,
                 DBPersistentManager.STATUS_COL, DBPersistentManager.STATUS_NEW, DBPersistentManager.STATUS_DEVICE_MODE_DONE, UPDATED_COL);
         RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchAllCloudModeEventsFromDB: selectSQL: %s", selectSQL));
+        getEventsFromDB(messageIds, messages, selectSQL);
+    }
+
+    @VisibleForTesting
+    void fetchAllDeviceModeEventsFromDB(List<Integer> messageIds, List<String> messages) {
+        String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) ORDER BY %s ASC", EVENTS_TABLE_NAME,
+                DBPersistentManager.STATUS_COL, DBPersistentManager.STATUS_NEW, DBPersistentManager.STATUS_CLOUD_MODE_DONE, UPDATED_COL);
+        RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchAllDeviceModeEventsFromDB: selectSQL: %s", selectSQL));
+        getEventsFromDB(messageIds, messages, selectSQL);
+    }
+
+    @VisibleForTesting
+    void fetchAllEventsFromDB(List<Integer> messageIds, List<String> messages) {
+        String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC", EVENTS_TABLE_NAME,
+                UPDATED_COL);
+        RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchAllEventsFromDB: selectSQL: %s", selectSQL));
         getEventsFromDB(messageIds, messages, selectSQL);
     }
 
@@ -371,7 +382,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
             RudderLogger.logError(ex);
         }
     }
-    
+
     void markDeviceModeDone(List<Integer> rowIds) {
         String rowIdsCSVString = Utils.getCSVString(rowIds);
         if (rowIdsCSVString == null) return;
@@ -396,7 +407,6 @@ class DBPersistentManager extends SQLiteOpenHelper {
         }
     }
 
-    // TODO: Can we provide useful comments for this method.
     void runGcForEvents() {
         deleteDoneEvents();
     }

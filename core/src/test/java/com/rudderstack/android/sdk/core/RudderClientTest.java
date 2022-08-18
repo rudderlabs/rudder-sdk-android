@@ -41,7 +41,7 @@ public class RudderClientTest {
             }
         });
         PowerMockito.spy(URLUtil.class);
-        PowerMockito.when(URLUtil.class, "isValidUrl", anyString()).thenReturn(new Answer<Boolean>() {
+        PowerMockito.when(URLUtil.class, "isValidUrl", anyString()).thenAnswer(new Answer<Boolean>() {
             @Override
             public Boolean answer(InvocationOnMock invocation) throws Throwable {
                 return true;

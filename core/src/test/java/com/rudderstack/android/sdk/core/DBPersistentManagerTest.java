@@ -85,13 +85,13 @@ public class DBPersistentManagerTest {
                     finalDbPersistentManager.saveEventSync(MESSAGE_1);
                     finalDbPersistentManager.saveEventSync(MESSAGE_2);
                     ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
-
                     sleep(500);
+
                     Map<Integer, Integer> idStatusMap = new HashMap<>();
                     ArrayList<String> messages = new ArrayList<String>();
                     String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC LIMIT %d",
                             DBPersistentManager.EVENTS_TABLE_NAME,
-                            UPDATED_COL, 2);
+                            UPDATED_COL, 3);
                     finalDbPersistentManager.getEventsFromDB(idStatusMap, messages, selectSQL);
                     assertThat(idStatusMap, allOf(
                             hasKey(1),
@@ -114,6 +114,8 @@ public class DBPersistentManagerTest {
                     assertThat((String) msg1FromDb.get("event"), CoreMatchers.is("mess-1"));
 
                     finalDbPersistentManager.saveEventSync(MESSAGE_3);
+                    ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
+                    sleep(500);
                     idStatusMap = new HashMap<>();
                     messages = new ArrayList<>();
                     dbPersistentManager.getEventsFromDB(idStatusMap, messages, selectSQL);
@@ -288,7 +290,7 @@ public class DBPersistentManagerTest {
         assertThat(messageIds, Matchers.<Integer>iterableWithSize(0));
 
         //delete done events
-        dbPersistentManager.deleteDoneEvents();
+        dbPersistentManager.runGcForEvents();
         messageIds.clear();
         messages.clear();
         dbPersistentManager.getEventsFromDB(messageIds, messageJsons, "SELECT * FROM " + DBPersistentManager.EVENTS_TABLE_NAME);
