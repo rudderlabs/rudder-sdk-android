@@ -18,6 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -33,7 +34,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
         RudderLogger.class,
-        TextUtils.class, Utils.class})
+        TextUtils.class, Utils.class,
+RudderNetworkManager.class})
 public class EventRepositoryTest {
 
     // data to be used
@@ -51,7 +53,6 @@ public class EventRepositoryTest {
     public void setup() throws Exception {
         messageIdsParams.clear();
         messagesParams.clear();
-
         //mocking timestamp
         PowerMockito.spy(Utils.class);
         PowerMockito.when(Utils.class, "getTimeStamp"
@@ -69,16 +70,27 @@ public class EventRepositoryTest {
      */
     @Test
     public void flush() throws Exception {
-
-        PowerMockito.when(dbPersistentManager, "fetchAllEventsFromDB", messageIdsParams, messagesParams)
+        final RudderNetworkManager.Result mockResult= new RudderNetworkManager.Result(RudderNetworkManager.NetworkResponses.SUCCESS,
+                200, "", null);
+        /*PowerMockito.when(dbPersistentManager, "fetchAllCloudModeEventsFromDB", messageIdsParams, messagesParams)
                 .thenAnswer(new Answer<Void>() {
                     @Override
-                    public Void answer(InvocationOnMock invocation) {
+                    public Void answer(InvocationOnMock invocation) throws Throwable {
                         messageIdsParams.addAll(messageIds);
                         messagesParams.addAll(messages);
                         return null;
                     }
-                });
+                });*/
+        PowerMockito.doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                List<Integer> msgIdParams = (List<Integer>) invocation.getArguments()[0];
+                List<String> msgParams = (List<String>) invocation.getArguments()[1];
+                msgIdParams.addAll(messageIds);
+                msgParams.addAll(messages);
+                return null;
+            }
+        }).when(dbPersistentManager).fetchAllCloudModeEventsFromDB(ArgumentMatchers.<List<Integer>>any(), ArgumentMatchers.<List<String>>any());
 
         PowerMockito.when(networkManager, "sendNetworkRequest",
                         anyString(), anyString(), any(RudderNetworkManager.RequestMethod.class)
@@ -86,10 +98,14 @@ public class EventRepositoryTest {
                 .thenAnswer(new Answer<RudderNetworkManager.Result>() {
                     @Override
                     public RudderNetworkManager.Result answer(InvocationOnMock invocation) {
-                        return new RudderNetworkManager.Result(RudderNetworkManager.NetworkResponses.SUCCESS, 200, anyString(), null);
+                        System.out.println(invocation.getArguments().length);
+                        return mockResult;
                     }
                 });
-
+//        PowerMockito.doReturn(mockResult).when(networkManager).sendNetworkRequest(anyString(), anyString(), any(RudderNetworkManager.RequestMethod.class));
+        /*PowerMockito.when(networkManager.sendNetworkRequest(anyString(), anyString(), ArgumentMatchers.any(RudderNetworkManager.RequestMethod.class)))
+                .thenReturn(mockResult);
+*/
         //expectation
         String expectedPayload = "{\n" +
                 "  \"sentAt\": \"2022-03-14T06:46:41.365Z\",\n" +
@@ -138,7 +154,7 @@ public class EventRepositoryTest {
         assertThat(arg1.getValue().replace(" ", ""),
                 Matchers.is(expectedPayload.replace("\n", "").replace(" ", "")));
         System.out.println(arg2.getValue());
-        assertThat(arg2.getValue().replace(" ", ""), Matchers.is("api.rudderstack.com/"));
+        assertThat(arg2.getValue().replace(" ", ""), Matchers.is("api.rudderstack.com/v1/batch"));
         System.out.println(arg3.getValue());
     }
 
@@ -149,16 +165,17 @@ public class EventRepositoryTest {
         final AtomicInteger threadsCalledDb = new AtomicInteger(0);
         //we add a sleep to db fetch to check for synchronicity
         // take a class level variable to check for thread access
-        PowerMockito.when(dbPersistentManager, "fetchAllEventsFromDB", messageIdsParams, messagesParams)
-                .thenAnswer(new Answer<Void>() {
+        PowerMockito.doAnswer(new Answer<Void>() {
                     @Override
                     public Void answer(InvocationOnMock invocation) throws Throwable {
+                        List<Integer> msgIdParams = (List<Integer>) invocation.getArguments()[0];
+                        List<String> msgParams = (List<String>) invocation.getArguments()[1];
                         ++dbFetchCalled;
                         System.out.println("fetchAllEvents called by: " + Thread.currentThread().getName());
                         //assert if called by multiple thread
                         assertThat(dbFetchCalled, Matchers.lessThan(2));
-                        messageIdsParams.addAll(messageIds);
-                        messagesParams.addAll(messages);
+                        msgIdParams.addAll(messageIds);
+                        msgParams.addAll(messages);
                         Thread.sleep(100);
                         --dbFetchCalled;
                         assertThat(dbFetchCalled, Matchers.lessThan(1));
@@ -166,7 +183,7 @@ public class EventRepositoryTest {
                         threadsCalledDb.incrementAndGet();
                         return null;
                     }
-                });
+                }).when(dbPersistentManager).fetchAllCloudModeEventsFromDB(ArgumentMatchers.<List<Integer>>any(), ArgumentMatchers.<List<String>>any());
         PowerMockito.when(networkManager, "sendNetworkRequest",
                         anyString(), anyString(), any(RudderNetworkManager.RequestMethod.class)
                 )
@@ -180,24 +197,26 @@ public class EventRepositoryTest {
         //starting multiple threads to access the same.
         final int numberOfThreads = 8;
         for (int n = 0; n < numberOfThreads; n++) {
+            final int finalN = n;
             Thread t = new Thread(new Runnable() {
 
                 @Override
                 public void run() {
+                    System.out.println("Thread running " + (finalN));
                     FlushUtils.flush(30, "api.rudderstack.com/",
                             dbPersistentManager, networkManager);
                 }
             }, "flush-thread-" + n) {
                 @Override
                 public synchronized void start() {
-                    super.start();
                     System.out.println("\nStarting thread: " + getName());
+                    super.start();
                 }
             };
             t.start();
         }
         //await until finished
-        await().atMost(2000, SECONDS).until(new Callable<Boolean>() {
+        await().atMost(200, SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() {
                 return threadsCalledDb.get() == numberOfThreads;
