@@ -842,15 +842,31 @@ public class RudderClient {
         void onReady(Object instance);
     }
 
+    /**
+     * Internal method
+     * @return instance of RudderUserSession
+     */
     static RudderUserSession getUserSession() { return  userSession; }
 
+    /**
+     * Public method for start a session.
+     */
     public void startSession() {
         startSession(Utils.getCurrentTimeSeconds());
     }
 
+    /**
+     * Public method for start a session with a unique id.
+     * @param sessionId Id of a session
+     */
     public void startSession(String sessionId) {
         userSession.startSession(sessionId);
     }
+
+    /**
+     * Public method for end an active session.
+     */
+    public void endSession() { userSession.clearSession(); }
 
     /*
      * RudderClient.Builder for building RudderClient with context, writeKey, endPointUrl

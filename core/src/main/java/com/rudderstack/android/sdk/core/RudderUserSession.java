@@ -30,6 +30,7 @@ class RudderUserSession {
     }
 
     public void checkSessionDuration() {
+        if (this.sessionStartTime == null) { return; }
         long prevSessionStartTime;
         synchronized (this) {
             prevSessionStartTime = this.sessionStartTime.getTime();
@@ -41,19 +42,15 @@ class RudderUserSession {
     }
 
     private void _startSession(String sessionId) {
-        if (config.isTrackLifecycleEvents()) {
-            if (sessionId.length() > 0) {
-                synchronized (this) {
-                    this.sessionId = sessionId;
-                    this.sessionStart = true;
-                    this.sessionStartTime = new Date();
-                }
-                RudderLogger.logDebug(String.format(Locale.US, "Starting new session with id: %s", sessionId));
-            } else {
-                RudderLogger.logDebug("sessionId can not be empty");
+        if (sessionId.length() > 0) {
+            synchronized (this) {
+                this.sessionId = sessionId;
+                this.sessionStart = true;
+                this.sessionStartTime = new Date();
             }
+            RudderLogger.logDebug(String.format(Locale.US, "Starting new session with id: %s", sessionId));
         } else {
-            RudderLogger.logDebug("Life cycle events tracking is off");
+            RudderLogger.logDebug("sessionId can not be empty");
         }
     }
 

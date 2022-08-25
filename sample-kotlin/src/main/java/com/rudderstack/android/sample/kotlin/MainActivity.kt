@@ -1,5 +1,6 @@
 package com.rudderstack.android.sample.kotlin
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -12,6 +13,7 @@ import com.google.android.gms.security.ProviderInstaller
 import com.rudderstack.android.sdk.core.RudderClient
 import java.util.*
 import javax.net.ssl.SSLContext
+
 
 
 class MainActivity : AppCompatActivity() {
@@ -90,37 +92,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun onStartSession(view: View) {
-        RudderClient.getInstance()!!.startSession()
-    }
-
-    fun onStartSessionWithId(view: View) {
-        RudderClient.getInstance()!!.startSession(UUID.randomUUID().toString().lowercase())
-    }
-
-    fun onTrackAfterNewSession(view: View) {
-        RudderClient.getInstance()!!.track("track_after_new_session")
-    }
-
-    fun onTrackAfterNewSessionWithId(view: View) {
-        RudderClient.getInstance()!!.track("track_after_new_session_with_id")
-    }
-
-    fun onReset(view: View) {
-        RudderClient.getInstance()!!.reset()
-    }
-
-    fun onTrackAfterReset(view: View) {
-        RudderClient.getInstance()!!.track("track_after_reset")
-    }
-
-    fun onTrackAfterBackground(view: View) {
-        RudderClient.getInstance()!!.track("track_after_background")
-    }
-
-    fun onIncrementTrack(view: View) {
-        count += 1
-        RudderClient.getInstance()!!.track(String.format("%s_%d", "simple_track", count))
+    fun onUserSession(view: View) {
+        startActivity(Intent(this, UserSessionActivity::class.java))
     }
 }
 

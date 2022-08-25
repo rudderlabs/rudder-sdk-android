@@ -25,6 +25,7 @@
         </activity>
         <activity android:name="com.rudderstack.android.sample.kotlin.FirstActivity" />
         <activity android:name="com.rudderstack.android.sample.kotlin.SecondActivity" />
+        <activity android:name="com.rudderstack.android.sample.kotlin.UserSessionActivity" />
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
