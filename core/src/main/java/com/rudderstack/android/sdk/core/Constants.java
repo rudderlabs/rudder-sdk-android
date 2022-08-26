@@ -32,8 +32,8 @@ class Constants {
     static final boolean TRACK_LIFECYCLE_EVENTS = true;
     // whether we should record screen views automatically
     static final boolean RECORD_SCREEN_VIEWS = false;
-    // default duration for session
-    static final int SESSION_DURATION = 5;
+    // default duration for session is 5 minutes
+    static final int MIN_SESSION_DURATION = 5;
     // default for automatic session tracking
     static final boolean AUTO_SESSION_TRACKING = true;
     // current version of the library

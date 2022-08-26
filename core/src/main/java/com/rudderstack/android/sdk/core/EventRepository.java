@@ -456,8 +456,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
         // Session Tracking
         // Invalidate sessionId while background
-        if (RudderClient.getUserSession() != null) {
-            RudderClient.getUserSession().checkSessionDuration();
+        if (RudderClient.userSession != null) {
+            RudderClient.userSession.checkSessionDuration();
         }
         message.setSession();
 
@@ -663,8 +663,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
                 // Session Tracking
                 // Invalidate sessionId while background
-                if (RudderClient.getUserSession() != null) {
-                    RudderClient.getUserSession().clearSession();
+                if (RudderClient.userSession != null) {
+                    RudderClient.userSession.clearSession();
                 }
             }
         }

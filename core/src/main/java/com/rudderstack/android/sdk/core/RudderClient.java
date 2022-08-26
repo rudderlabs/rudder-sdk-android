@@ -25,7 +25,7 @@ public class RudderClient {
     // repository instance
     private static EventRepository repository;
     // userSession instance
-    private static RudderUserSession userSession;
+    static RudderUserSession userSession;
 
     private static Application application;
     private static String _advertisingId;
@@ -841,12 +841,6 @@ public class RudderClient {
     public interface Callback {
         void onReady(Object instance);
     }
-
-    /**
-     * Internal method
-     * @return instance of RudderUserSession
-     */
-    static RudderUserSession getUserSession() { return  userSession; }
 
     /**
      * Public method for start a session.

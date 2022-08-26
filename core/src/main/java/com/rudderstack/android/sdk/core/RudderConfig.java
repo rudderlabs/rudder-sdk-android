@@ -64,7 +64,7 @@ public class RudderConfig {
                 Constants.AUTO_COLLECT_ADVERT_ID,
                 Constants.RECORD_SCREEN_VIEWS,
                 Constants.AUTO_SESSION_TRACKING,
-                Constants.SESSION_DURATION,
+                Constants.MIN_SESSION_DURATION,
                 Constants.CONTROL_PLANE_URL,
                 null,
                 null
@@ -168,10 +168,10 @@ public class RudderConfig {
             this.controlPlaneUrl = controlPlaneUrl;
         }
 
-        if (sessionDuration > Constants.SESSION_DURATION) {
+        if (sessionDuration > Constants.MIN_SESSION_DURATION) {
             this.sessionDuration = sessionDuration;
         } else {
-            this.sessionDuration = Constants.SESSION_DURATION;
+            this.sessionDuration = Constants.MIN_SESSION_DURATION;
         }
         this.autoSessionTracking = autoSessionTracking;
     }
@@ -622,14 +622,14 @@ public class RudderConfig {
             return this;
         }
 
-        private int sessionDuration = Constants.SESSION_DURATION;
+        private int sessionDuration = Constants.MIN_SESSION_DURATION;
 
         /**
          * @param sessionDuration (duration of a session in minute)
          * @return RudderConfig.Builder
          */
         public Builder withSessionDuration(int sessionDuration) {
-            if (sessionDuration < Constants.SESSION_DURATION) {
+            if (sessionDuration < Constants.MIN_SESSION_DURATION) {
                 RudderLogger.logError("Minimum sessionDuration is 5 minute.");
                 return this;
             }
