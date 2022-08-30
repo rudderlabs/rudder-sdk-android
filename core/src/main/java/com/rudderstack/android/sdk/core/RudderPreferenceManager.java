@@ -4,6 +4,9 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.annotation.Nullable;
+
+import java.util.Date;
 import java.util.Locale;
 
 class RudderPreferenceManager {
@@ -21,6 +24,9 @@ class RudderPreferenceManager {
     private static final String RUDDER_OPT_OUT_TIME_KEY = "rl_opt_out_time";
     private static final String RUDDER_ANONYMOUS_ID_KEY = "rl_anonymous_id_key";
     private static final String RUDDER_PERIODIC_WORK_REQUEST_ID_KEY = "rl_periodic_work_request_key";
+    private static final String RUDDER_SESSION_TIMEOUT_KEY = "rl_session_timeout_key";
+    private static final String RUDDER_SESSION_ID_KEY = "rl_session_id_key";
+    private static final String RUDDER_AUTO_SESSION_TRACKING_STATUS_KEY = "rl_auto_session_tracking_status_key";
 
     private static SharedPreferences preferences;
     private static RudderPreferenceManager instance;
@@ -129,6 +135,33 @@ class RudderPreferenceManager {
 
     String getPeriodicWorkRequestId() {
         return preferences.getString(RUDDER_PERIODIC_WORK_REQUEST_ID_KEY, null);
+    }
+
+    void saveInactivityStartTime(long time) {
+        preferences.edit().putLong(RUDDER_SESSION_TIMEOUT_KEY, time).apply();
+    }
+
+    @Nullable
+    Long getInactivityStartTime() {
+        long time = preferences.getLong(RUDDER_SESSION_TIMEOUT_KEY, -1);
+        return (time == -1) ? null : time;
+    }
+
+    void saveSessionId(String sessionId) {
+        preferences.edit().putString(RUDDER_SESSION_ID_KEY, sessionId).apply();
+    }
+
+    boolean getAutoSessionTrackingStatus() {
+        return preferences.getBoolean(RUDDER_AUTO_SESSION_TRACKING_STATUS_KEY, true);
+    }
+
+    void saveAutoSessionTrackingStatus(boolean status) {
+        preferences.edit().putBoolean(RUDDER_AUTO_SESSION_TRACKING_STATUS_KEY, status).apply();
+    }
+
+    @Nullable
+    String getSessionId() {
+        return preferences.getString(RUDDER_SESSION_ID_KEY, null);
     }
 
     void performMigration() {

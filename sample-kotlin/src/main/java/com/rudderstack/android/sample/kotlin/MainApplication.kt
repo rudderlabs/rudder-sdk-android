@@ -14,7 +14,7 @@ class MainApplication : Application(), Configuration.Provider {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://d8b9-103-242-191-10.in.ngrok.io" //"https://6dbd-175-101-36-4.ngrok.io"
+        const val DATA_PLANE_URL = "https://07cc-103-242-191-10.in.ngrok.io" //"https://6dbd-175-101-36-4.ngrok.io"
         const val CONTROL_PLANE_URL = "https://0e741f50e567.ngrok.io"
         const val WRITE_KEY = "1wvsoF3Kx2SczQNlx1dvcqW9ODW" //"1pAKRv50y15Ti6UWpYroGJaO0Dj"
     }
@@ -46,13 +46,14 @@ class MainApplication : Application(), Configuration.Provider {
             WRITE_KEY,
             RudderConfig.Builder()
                 .withDataPlaneUrl(DATA_PLANE_URL)
-                .withLogLevel(RudderLogger.RudderLogLevel.NONE)
-                .withTrackLifecycleEvents(false)
+                .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
+                .withTrackLifecycleEvents(true)
+                .withAutoSessionTracking(true)
                 .withRecordScreenViews(false)
                 .withAutoCollectAdvertId(false)
                 .withCustomFactory(CustomFactory.FACTORY)
                 .withSleepCount(4)
-                .withSessionDuration(10)
+                .withSessionTimeoutMillis(60000)
                 .build()
         )
 

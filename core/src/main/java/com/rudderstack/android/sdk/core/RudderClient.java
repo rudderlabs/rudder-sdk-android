@@ -149,12 +149,12 @@ public class RudderClient {
 
             // initiate EventRepository class
             if (application != null) {
+                RudderLogger.logVerbose("getInstance: creating RudderUserSession.");
+                userSession = new RudderUserSession(application, config);
+
                 RudderLogger.logVerbose("getInstance: creating EventRepository.");
                 repository = new EventRepository(application, writeKey, config, _anonymousId, _advertisingId, _deviceToken);
             }
-
-            // initiate RudderUserSession class
-            userSession = new RudderUserSession(config);
         }
         return instance;
     }

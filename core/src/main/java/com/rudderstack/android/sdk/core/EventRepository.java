@@ -27,6 +27,7 @@ import com.rudderstack.android.sdk.core.util.Utils;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -53,6 +54,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
     private boolean areFactoriesInitialized = false;
+    private boolean applicationInstalledOrUpdated = false;
     private AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
 
     private int noOfActivities;
@@ -127,6 +129,17 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
             this.initiateSDK();
 
+            // Session Tracking
+            // 7. clear session if automatic session tracking was enabled previously
+            // but disabled presently or vice versa.
+            boolean previousAutoSessionTrackingStatus = preferenceManager.getAutoSessionTrackingStatus();
+            if (previousAutoSessionTrackingStatus != config.isTrackAutoSession()) {
+                if (RudderClient.userSession != null) {
+                    RudderClient.userSession.clearSession();
+                }
+            }
+            preferenceManager.saveAutoSessionTrackingStatus(config.isTrackAutoSession());
+
             // check for lifeCycleEvents
             this.checkApplicationUpdateStatus(_application);
             if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
@@ -196,6 +209,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (!config.isTrackLifecycleEvents()) {
             return;
         }
+        // Session Tracking
+        // Automatic tracking session started
+        if (config.isTrackAutoSession()) {
+            RudderClient.getInstance().startSession(Utils.getCurrentTimeSeconds());
+        }
+
         RudderLogger.logDebug("Tracking Application Installed");
         RudderMessage message = new RudderMessageBuilder()
                 .setEventName("Application Installed")
@@ -213,6 +232,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (getOptStatus() || !config.isTrackLifecycleEvents()) {
             return;
         }
+        // Session Tracking
+        // Automatic tracking session started
+        if (config.isTrackAutoSession()) {
+            RudderClient.getInstance().startSession(Utils.getCurrentTimeSeconds());
+        }
+
         // Application Updated event
         RudderLogger.logDebug("Tracking Application Updated");
         RudderMessage message = new RudderMessageBuilder().setEventName("Application Updated")
@@ -247,11 +272,13 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug("Current Installed Build: " + currentBuild);
             if (previousBuild == -1) {
                 // application was not installed previously, Application Installed event
+                applicationInstalledOrUpdated = true;
                 preferenceManager.saveBuildNumber(currentBuild);
                 preferenceManager.saveVersionName(currentVersion);
                 sendApplicationInstalled(currentBuild, currentVersion);
                 rudderFlushWorkManager.registerPeriodicFlushWorker();
             } else if (previousBuild != currentBuild) {
+                applicationInstalledOrUpdated = true;
                 preferenceManager.saveBuildNumber(currentBuild);
                 preferenceManager.saveVersionName(currentVersion);
                 sendApplicationUpdated(previousBuild, currentBuild, previousVersion, currentVersion);
@@ -455,11 +482,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
 
         // Session Tracking
-        // Invalidate sessionId while background
-        if (RudderClient.userSession != null) {
-            RudderClient.userSession.checkSessionDuration();
-        }
         message.setSession();
+        if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
+            if (RudderClient.userSession != null) {
+                RudderClient.userSession.startInactivityTime(new Date().getTime());
+            }
+        }
 
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
@@ -623,8 +651,14 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
                 // Session Tracking
                 // Automatic tracking session started
-                if (this.config.isAutoSessionTracking()) {
-                    RudderClient.getInstance().startSession(Utils.getCurrentTimeSeconds());
+                if (config.isTrackAutoSession()) {
+                    if (!applicationInstalledOrUpdated) {
+                        if (RudderClient.userSession != null) {
+                            RudderClient.userSession.checkSessionTimeoutDuration();
+                        }
+                    } else {
+                        applicationInstalledOrUpdated = false;
+                    }
                 }
                 RudderMessage trackMessage;
                 trackMessage = new RudderMessageBuilder()
@@ -660,12 +694,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 RudderMessage message = new RudderMessageBuilder().setEventName("Application Backgrounded").build();
                 message.setType(MessageType.TRACK);
                 this.dump(message);
-
-                // Session Tracking
-                // Invalidate sessionId while background
-                if (RudderClient.userSession != null) {
-                    RudderClient.userSession.clearSession();
-                }
             }
         }
     }

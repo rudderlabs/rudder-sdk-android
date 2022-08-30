@@ -43,8 +43,8 @@ public class RudderConfig {
     private boolean trackLifecycleEvents;
     private boolean autoCollectAdvertId;
     private boolean recordScreenViews;
-    private boolean autoSessionTracking;
-    private int sessionDuration;
+    private boolean trackAutoSession;
+    private int sessionTimeout;
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
@@ -64,7 +64,7 @@ public class RudderConfig {
                 Constants.AUTO_COLLECT_ADVERT_ID,
                 Constants.RECORD_SCREEN_VIEWS,
                 Constants.AUTO_SESSION_TRACKING,
-                Constants.MIN_SESSION_DURATION,
+                Constants.DEFAULT_SESSION_TIMEOUT,
                 Constants.CONTROL_PLANE_URL,
                 null,
                 null
@@ -84,8 +84,8 @@ public class RudderConfig {
             boolean trackLifecycleEvents,
             boolean autoCollectAdvertId,
             boolean recordScreenViews,
-            boolean autoSessionTracking,
-            int sessionDuration,
+            boolean trackAutoSession,
+            int sessionTimeout,
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
             List<RudderIntegration.Factory> customFactories
@@ -168,12 +168,12 @@ public class RudderConfig {
             this.controlPlaneUrl = controlPlaneUrl;
         }
 
-        if (sessionDuration > Constants.MIN_SESSION_DURATION) {
-            this.sessionDuration = sessionDuration;
+        if (sessionTimeout >= Constants.MIN_SESSION_TIMEOUT) {
+            this.sessionTimeout = sessionTimeout;
         } else {
-            this.sessionDuration = Constants.MIN_SESSION_DURATION;
+            this.sessionTimeout = Constants.DEFAULT_SESSION_TIMEOUT;
         }
-        this.autoSessionTracking = autoSessionTracking;
+        this.trackAutoSession = trackAutoSession;
     }
 
     /**
@@ -301,17 +301,17 @@ public class RudderConfig {
     }
 
     /**
-     * @return autoSessionTracking (whether we are tracking session automatically)
+     * @return trackAutoSession (whether we are tracking session automatically)
      */
-    public boolean isAutoSessionTracking() {
-        return autoSessionTracking;
+    public boolean isTrackAutoSession() {
+        return trackAutoSession;
     }
 
     /**
      * @return sessionDuration (duration of a session in minute)
      */
-    public int getSessionDuration() {
-        return sessionDuration;
+    public int getSessionTimeout() {
+        return sessionTimeout;
     }
 
     void setDataPlaneUrl(String dataPlaneUrl) {
@@ -354,12 +354,12 @@ public class RudderConfig {
         this.recordScreenViews = recordScreenViews;
     }
 
-    void setSessionDuration(int sessionDuration) {
-        this.sessionDuration = sessionDuration;
+    void setSessionTimeout(int sessionTimeout) {
+        this.sessionTimeout = sessionTimeout;
     }
 
-    void setAutoSessionTracking(boolean autoSessionTracking) {
-        this.autoSessionTracking = autoSessionTracking;
+    void setTrackAutoSession(boolean trackAutoSession) {
+        this.trackAutoSession = trackAutoSession;
     }
 
     /**
@@ -622,18 +622,18 @@ public class RudderConfig {
             return this;
         }
 
-        private int sessionDuration = Constants.MIN_SESSION_DURATION;
+        private int sessionTimeout = Constants.DEFAULT_SESSION_TIMEOUT;
 
         /**
-         * @param sessionDuration (duration of a session in minute)
+         * @param sessionTimeout (duration of inactivity of session in milliseconds)
          * @return RudderConfig.Builder
          */
-        public Builder withSessionDuration(int sessionDuration) {
-            if (sessionDuration < Constants.MIN_SESSION_DURATION) {
-                RudderLogger.logError("Minimum sessionDuration is 5 minute.");
+        public Builder withSessionTimeoutMillis(int sessionTimeout) {
+            if (sessionTimeout < Constants.MIN_SESSION_TIMEOUT) {
+                RudderLogger.logError(String.format("Minimum sessionTimeout is %s millisecond.", Constants.MIN_SESSION_TIMEOUT));
                 return this;
             }
-            this.sessionDuration = sessionDuration;
+            this.sessionTimeout = sessionTimeout;
             return this;
         }
 
@@ -668,7 +668,7 @@ public class RudderConfig {
                     this.autoCollectAdvertId,
                     this.recordScreenViews,
                     this.autoSessionTracking,
-                    this.sessionDuration,
+                    this.sessionTimeout,
                     this.controlPlaneUrl,
                     this.factories,
                     this.customFactories
