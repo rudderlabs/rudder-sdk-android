@@ -32,6 +32,7 @@ public class RudderClient {
     private static String _anonymousId;
     private static RudderOption defaultOptions;
     private static String _deviceToken;
+    private RudderConfig config;
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
 
@@ -140,12 +141,13 @@ public class RudderClient {
                     config.setSleepTimeOut(Constants.SLEEP_TIMEOUT);
                 }
             }
-
             // get application from provided context
             application = (Application) context.getApplicationContext();
 
             // initiate RudderClient instance
             instance = new RudderClient();
+
+            instance.config = config;
 
             // initiate EventRepository class
             if (application != null) {
@@ -854,6 +856,14 @@ public class RudderClient {
      * @param sessionId Id of a session
      */
     public void startSession(String sessionId) {
+        if (instance != null) {
+            if (instance.config != null) {
+                if (instance.config.isTrackAutoSession()) {
+                    endSession();
+                    instance.config.setTrackAutoSession(false);
+                }
+            }
+        }
         userSession.startSession(sessionId);
     }
 
