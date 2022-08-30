@@ -856,12 +856,11 @@ public class RudderClient {
      * @param sessionId Id of a session
      */
     public void startSession(String sessionId) {
-        if (instance != null) {
-            if (instance.config != null) {
-                if (instance.config.isTrackAutoSession()) {
-                    endSession();
-                    instance.config.setTrackAutoSession(false);
-                }
+        if (userSession == null) { return; }
+        if (config != null) {
+            if (config.isTrackAutoSession()) {
+                endSession();
+                config.setTrackAutoSession(false);
             }
         }
         userSession.startSession(sessionId);
@@ -870,7 +869,10 @@ public class RudderClient {
     /**
      * Public method for end an active session.
      */
-    public void endSession() { userSession.clearSession(); }
+    public void endSession() {
+        if (userSession == null) { return; }
+        userSession.clearSession();
+    }
 
     /*
      * RudderClient.Builder for building RudderClient with context, writeKey, endPointUrl
