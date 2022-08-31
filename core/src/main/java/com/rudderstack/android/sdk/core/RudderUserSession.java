@@ -21,8 +21,17 @@ class RudderUserSession {
         this.lastEventTimeStamp = _preferenceManager.getLastEventTimeStamp();
     }
 
-    public synchronized void startSession(String sessionId) {
-        this._startSession(sessionId);
+    public void startSession(String sessionId) {
+        if (sessionId.length() > 0) {
+            synchronized (this) {
+                this.sessionId = sessionId;
+                this.sessionStart = true;
+                this.preferenceManager.saveSessionId(sessionId);
+            }
+            RudderLogger.logDebug(String.format(Locale.US, "Starting new session with id: %s", sessionId));
+        } else {
+            RudderLogger.logDebug("sessionId can not be empty");
+        }
     }
 
     public synchronized void setSessionStart(boolean sessionStart) {
@@ -48,19 +57,6 @@ class RudderUserSession {
     public synchronized void setLastEventTimeStamp(Long time) {
         this.lastEventTimeStamp = time;
         this.preferenceManager.saveLastEventTimeStamp( (time == null) ? -1 : time);
-    }
-
-    private void _startSession(String sessionId) {
-        if (sessionId.length() > 0) {
-            synchronized (this) {
-                this.sessionId = sessionId;
-                this.sessionStart = true;
-                this.preferenceManager.saveSessionId(sessionId);
-            }
-            RudderLogger.logDebug(String.format(Locale.US, "Starting new session with id: %s", sessionId));
-        } else {
-            RudderLogger.logDebug("sessionId can not be empty");
-        }
     }
 
     @Nullable
