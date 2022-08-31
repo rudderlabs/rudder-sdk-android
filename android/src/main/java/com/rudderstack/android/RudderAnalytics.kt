@@ -21,6 +21,8 @@ import com.rudderstack.android.internal.AndroidLogger
 import com.rudderstack.android.internal.LifecycleObserver
 import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.internal.plugins.AndroidContextPlugin
+import com.rudderstack.android.internal.sync.RudderWorkerConfig
+import com.rudderstack.android.internal.sync.registerWorkManager
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.core.*
 import com.rudderstack.models.*
@@ -50,6 +52,8 @@ fun RudderAnalytics(
     trackLifecycleEvents: Boolean = false,
     autoCollectAdvertId: Boolean = false,
     recordScreenViews: Boolean = false,
+    multiProcessEnabled: Boolean = false,
+    defaultProcessName: String? = null,
     initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
 ): Analytics {
     initialize(application)
@@ -66,10 +70,11 @@ fun RudderAnalytics(
         controlPlaneUrl,
         logger,
         storage,
-        base64Generator = Base64Generator{ Base64.encodeToString(
-            String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8")),
-            Base64.DEFAULT
-        )
+        base64Generator = Base64Generator {
+            Base64.encodeToString(
+                String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8")),
+                Base64.DEFAULT
+            )
         },
         defaultTraits = defaultTraits,
         defaultExternalIds = defaultExternalIds,
@@ -83,7 +88,9 @@ fun RudderAnalytics(
             isPeriodicFlushEnabled,
             trackLifecycleEvents,
             autoCollectAdvertId,
-            recordScreenViews
+            recordScreenViews,
+            writeKey, dataPlaneUrl, controlPlaneUrl, logger,
+            if (multiProcessEnabled) defaultProcessName else null
         )
     }
 
@@ -129,7 +136,12 @@ private fun Analytics.startup(
     isPeriodicFlushEnabled: Boolean,
     trackLifecycleEvents: Boolean,
     autoCollectAdvertId: Boolean,
-    recordScreenViews: Boolean
+    recordScreenViews: Boolean,
+    writeKey: String,
+    dataPlaneUrl: String?,
+    controlPlaneUrl: String?,
+    logger: Logger,
+    defaultProcessName: String? = null
 ) {
     //lifecycle observer
     lifecycleObserver = LifecycleObserver(
@@ -148,8 +160,13 @@ private fun Analytics.startup(
         ).also {
             addPlugin(it)
         }
-
-
+    if (isPeriodicFlushEnabled)
+        application.registerWorkManager(
+            this, RudderWorkerConfig(
+                writeKey, defaultProcessName != null,
+                dataPlaneUrl, controlPlaneUrl, jsonAdapter, logger, defaultProcessName
+            )
+        )
 }
 
 private fun Analytics.send(message: Message) {

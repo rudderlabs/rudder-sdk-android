@@ -12,20 +12,34 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.sync
+package com.rudderstack.android.internal.sync
 
+import android.app.Application
 import android.content.Context
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+//import androidx.work.Worker
+//import androidx.work.WorkerParameters
+import com.rudderstack.core.Analytics
+import com.rudderstack.core.Settings
+import com.rudderstack.rudderjsonadapter.JsonAdapter
+import java.lang.ref.WeakReference
 
 /**
  * Syncs the data at an interval with rudder server
- *
+ * @param analytics - The Analytics object will be used in a weak reference to reduce memory leaks
  */
-class RudderSyncWorker(appContext: Context, workerParams: WorkerParameters) :
+internal class RudderSyncWorker( /*analytics: Analytics,
+                                 private val writeKey : String,
+                                 private val settings: Settings,
+                                 private val jsonAdapter: JsonAdapter,*/
+                                 appContext: Context, workerParams: WorkerParameters
+) :
     Worker(appContext, workerParams) {
+
     override fun doWork(): Result {
-//        val unsentData = RudderDatabase.getDao()
+//        .forceFlush()
+        (applicationContext as? Application)?.sinkAnalytics?.blockingFlush()
         return Result.success()
     }
 

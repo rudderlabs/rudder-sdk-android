@@ -60,26 +60,8 @@ interface Controller {
      */
     val isOptedOut : Boolean
 
-   /* *//**
-     * Advertising id(if any) to be sent over to destinations
-     *
-     * @param advertisingId Advertising id for sending to destinations
-     *//*
-    fun putAdvertisingId(advertisingId: String)
+    val currentSettings : Settings?
 
-    *//**
-     * Set FCM device token
-     *
-     * @param token device token for FCM
-     *//*
-    fun putDeviceToken(token : String)
-*/ //android
-    /**
-     * Custom plugins to be added.
-     * These can be used to log/transform messages
-     *
-     * @param plugins  [Plugin] objects
-     */
     fun addPlugin(vararg plugins: Plugin)
     /**
      * Custom plugins to be removed.
@@ -155,4 +137,5 @@ interface Controller {
      * @param limit The max number of [Message] that can be stored
      */
     fun setMaxStorageCapacity(limit: Int, backPressureStrategy: BackPressureStrategy = BackPressureStrategy.Drop)
+
 }

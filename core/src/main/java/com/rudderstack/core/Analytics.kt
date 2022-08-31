@@ -273,4 +273,23 @@ class Analytics private constructor(
         }
     }
 
+    /**
+     * This blocks the thread till events are flushed.
+     * Users should prefer [forceFlush]
+     *
+     * @param alternateDataUploadService Should be sent as null unless separate implementation is provided
+     * @param clearDb true to clear database after a successful flush, false otherwise
+     * @param base64Generator To be provided in case any separate implementation is required other than the one used to
+     * initialize the class.
+     *
+     */
+    fun blockingFlush(alternateDataUploadService: DataUploadService? = null,
+                      clearDb: Boolean = true, base64Generator: Base64Generator = this.base64Generator) : Boolean{
+        val dataUploadService = alternateDataUploadService ?: DataUploadServiceImpl(
+            _writeKey,
+            _jsonAdapter, dataPlaneUrl = _dataPlaneUrl,
+            base64Generator = base64Generator
+        )
+        return _delegate.blockFlush(dataUploadService, clearDb)
+    }
 }

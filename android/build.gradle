@@ -74,6 +74,10 @@ dependencies {
     compileOnly project(path: projects.moshi_rudder_adapter)
     compileOnly project(path: projects.json_rudder_adapter)
 
+    //work manager
+    compileOnly deps.work
+    compileOnly deps.workMultiprocess
+
     testImplementation project(path: projects.jackson_rudder_adapter)
     testImplementation project(path: projects.gson_rudder_adapter)
     testImplementation project(path: projects.moshi_rudder_adapter)

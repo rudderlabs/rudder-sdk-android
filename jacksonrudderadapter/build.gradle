@@ -29,6 +29,7 @@ dependencies {
     implementation project(':rudderjsonadapter')
     implementation project(':models')
     api deps.jackson
+    api deps.jacksonKotlin
 
     testImplementation deps.hamcrest
     testImplementation 'junit:junit:4.+'

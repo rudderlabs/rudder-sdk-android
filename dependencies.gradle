@@ -17,6 +17,7 @@ ext {
             work                   : "2.7.0",
             gson                   : "2.8.8",
             jackson                : "2.12.4",
+            jacksonKotlin          : "2.13.3",
             moshi                  : "1.13.0",
             "kotlinCore"           : "1.8.0",
             hamcrest               : "2.2",
@@ -33,8 +34,10 @@ ext {
 
     deps = [
             work                   : "androidx.work:work-runtime:${versions.work}",
+            workMultiprocess       : "androidx.work:work-multiprocess:${versions.work}",
             gson                   : "com.google.code.gson:gson:${versions.gson}",
             jackson                : "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
+            jacksonKotlin          : "com.fasterxml.jackson.module:jackson-module-kotlin:${versions.jackson}",
             moshi                  : [
                     kotlin : "com.squareup.moshi:moshi-kotlin:${versions.moshi}",
                     core   : "com.squareup.moshi:moshi:${versions.moshi}",
@@ -51,6 +54,8 @@ ext {
             junit                  : "junit:junit:${versions.junit}",
             jsonAssert             : "org.skyscreamer:jsonassert:${versions.jsonAssert}",
             mockito_kotlin         : "org.mockito.kotlin:mockito-kotlin:${versions.mockito_kotlin}",
+            workTest               : "androidx.work:work-testing:${versions.work}",
+
     ]
 
     projects = [

@@ -184,6 +184,8 @@ internal class AnalyticsDelegate(
 
     override val isOptedOut: Boolean
         get() = SettingsState.value?.isOptOut ?: _storageDecorator.isOptedOut
+    override val currentSettings: Settings?
+        get() = SettingsState.value
 
     /*override fun putAdvertisingId(advertisingId: String) {
         _storageDecorator.cacheContext(_storageDecorator.context + ("advertisingId" to advertisingId))
@@ -298,7 +300,7 @@ internal class AnalyticsDelegate(
     }
 
     // works even after shutdown
-    private fun blockFlush(
+    internal fun blockFlush(
         alternateDataUploadService: DataUploadService,
         clearDb: Boolean
     ): Boolean {

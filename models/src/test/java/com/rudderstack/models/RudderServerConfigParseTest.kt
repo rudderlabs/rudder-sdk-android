@@ -290,7 +290,132 @@ open class RudderServerConfigParseTest {
                 "    }\n" +
                 "  }\n" +
                 "}"
-
+        private const val testJson2 = "{\n" +
+                "  \"isHosted\": true,\n" +
+                "  \"source\": {\n" +
+                "    \"config\": {\n" +
+                "      \"statsCollection\": {\n" +
+                "        \"errorReports\": {\n" +
+                "          \"enabled\": false\n" +
+                "        },\n" +
+                "        \"metrics\": {\n" +
+                "          \"enabled\": false\n" +
+                "        }\n" +
+                "      }\n" +
+                "    },\n" +
+                "    \"liveEventsConfig\": {\n" +
+                "      \"eventUpload\": false,\n" +
+                "      \"eventUploadTS\": 1659967927971\n" +
+                "    },\n" +
+                "    \"id\": \"1xXCuf5lPxC0FjFeZD3udJjYY98\",\n" +
+                "    \"name\": \"TestAndroid\",\n" +
+                "    \"writeKey\": \"1xXCubSHWXbpBI2h6EpCjKOsxmQ\",\n" +
+                "    \"enabled\": true,\n" +
+                "    \"sourceDefinitionId\": \"1QGzOQGVLM35GgtteFH1vYCE0WT\",\n" +
+                "    \"createdBy\": \"1xXC9Q9pYMrw0OON9Aw2AFeBsUp\",\n" +
+                "    \"workspaceId\": \"1xXCSVsmPjqFKhRlpajnDXkGwYX\",\n" +
+                "    \"deleted\": false,\n" +
+                "    \"transient\": false,\n" +
+                "    \"secretVersion\": null,\n" +
+                "    \"createdAt\": \"2021-09-01T10:31:09.414Z\",\n" +
+                "    \"updatedAt\": \"2022-08-08T14:12:07.974Z\",\n" +
+                "    \"connections\": [\n" +
+                "      {\n" +
+                "        \"id\": \"20NBaKc9N7u13PPOVb3CNfozNvo\",\n" +
+                "        \"sourceId\": \"1xXCuf5lPxC0FjFeZD3udJjYY98\",\n" +
+                "        \"destinationId\": \"20NBa9wa4Zb5ZHkJHO2IEiw8eWl\",\n" +
+                "        \"enabled\": true,\n" +
+                "        \"deleted\": false,\n" +
+                "        \"createdAt\": \"2021-11-02T17:47:06.381Z\",\n" +
+                "        \"updatedAt\": \"2021-11-02T17:47:06.381Z\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"id\": \"20Pa0p59biSDa8y0cgjLh7JTP05\",\n" +
+                "        \"sourceId\": \"1xXCuf5lPxC0FjFeZD3udJjYY98\",\n" +
+                "        \"destinationId\": \"20Pa0T3VoQZZYPgh5LQS2vuwg3N\",\n" +
+                "        \"enabled\": true,\n" +
+                "        \"deleted\": false,\n" +
+                "        \"createdAt\": \"2021-11-03T14:07:35.341Z\",\n" +
+                "        \"updatedAt\": \"2021-11-03T14:07:35.341Z\"\n" +
+                "      }\n" +
+                "    ],\n" +
+                "    \"destinations\": [\n" +
+                "      {\n" +
+                "        \"config\": {},\n" +
+                "        \"liveEventsConfig\": null,\n" +
+                "        \"secretConfig\": {},\n" +
+                "        \"id\": \"20NBa9wa4Zb5ZHkJHO2IEiw8eWl\",\n" +
+                "        \"name\": \"androidTest-firebase\",\n" +
+                "        \"enabled\": true,\n" +
+                "        \"workspaceId\": \"1xXCSVsmPjqFKhRlpajnDXkGwYX\",\n" +
+                "        \"deleted\": false,\n" +
+                "        \"createdAt\": \"2021-11-02T17:47:05.153Z\",\n" +
+                "        \"updatedAt\": \"2022-05-25T11:34:17.873Z\",\n" +
+                "        \"revisionId\": \"29efQiNb1Cwh7GO9dfuuFZ7UN3Q\",\n" +
+                "        \"secretVersion\": null,\n" +
+                "        \"transformations\": [],\n" +
+                "        \"destinationDefinition\": {\n" +
+                "          \"config\": {\n" +
+                "            \"destConfig\": {\n" +
+                "              \"ios\": [\n" +
+                "                \"useNativeSDK\"\n" +
+                "              ],\n" +
+                "              \"unity\": [\n" +
+                "                \"useNativeSDK\"\n" +
+                "              ],\n" +
+                "              \"android\": [\n" +
+                "                \"useNativeSDK\"\n" +
+                "              ],\n" +
+                "              \"reactnative\": [\n" +
+                "                \"useNativeSDK\"\n" +
+                "              ],\n" +
+                "              \"defaultConfig\": [\n" +
+                "                \"blacklistedEvents\",\n" +
+                "                \"whitelistedEvents\",\n" +
+                "                \"eventFilteringOption\"\n" +
+                "              ]\n" +
+                "            },\n" +
+                "            \"secretKeys\": [],\n" +
+                "            \"excludeKeys\": [],\n" +
+                "            \"includeKeys\": [\n" +
+                "              \"blacklistedEvents\",\n" +
+                "              \"whitelistedEvents\",\n" +
+                "              \"eventFilteringOption\"\n" +
+                "            ],\n" +
+                "            \"transformAt\": \"processor\",\n" +
+                "            \"transformAtV1\": \"processor\",\n" +
+                "            \"supportedSourceTypes\": [\n" +
+                "              \"android\",\n" +
+                "              \"ios\",\n" +
+                "              \"unity\",\n" +
+                "              \"reactnative\"\n" +
+                "            ],\n" +
+                "            \"saveDestinationResponse\": false\n" +
+                "          },\n" +
+                "          \"configSchema\": null,\n" +
+                "          \"responseRules\": null,\n" +
+                "          \"options\": null,\n" +
+                "          \"id\": \"1YL4j4RpSLloVaMwKrOoXLfiryj\",\n" +
+                "          \"name\": \"FIREBASE\",\n" +
+                "          \"displayName\": \"Firebase\",\n" +
+                "          \"category\": null,\n" +
+                "          \"createdAt\": \"2020-02-26T09:17:52.231Z\",\n" +
+                "          \"updatedAt\": \"2022-05-13T09:31:26.459Z\"\n" +
+                "        },\n" +
+                "        \"areTransformationsConnected\": true\n" +
+                "      }\n" +
+                "    ],\n" +
+                "    \"sourceDefinition\": {\n" +
+                "      \"options\": null,\n" +
+                "      \"id\": \"1QGzOQGVLM35GgtteFH1vYCE0WT\",\n" +
+                "      \"name\": \"Android\",\n" +
+                "      \"displayName\": \"Android\",\n" +
+                "      \"category\": null,\n" +
+                "      \"createdAt\": \"2019-09-02T08:08:08.373Z\",\n" +
+                "      \"updatedAt\": \"2020-06-18T11:54:00.449Z\"\n" +
+                "    }\n" +
+                "  }\n" +
+                "}"
     }
     @Test
     fun testDeserialization(){
@@ -303,6 +428,21 @@ open class RudderServerConfigParseTest {
         ))
         assertThat(res?.source?.destinations?.get(1)?.destinationConfig?.get("apiKey"), allOf(
         notNullValue(), `is`("1234abcd")))
+
+    }
+    @Test
+    fun testDeserialization2(){
+        //deserialize
+        val rta = object : RudderTypeAdapter<RudderServerConfig>() {}
+        val res = jsonAdapter.readJson<RudderServerConfig>(testJson2, rta)
+        assert(res != null)
+        assertThat(res?.source?.destinations?.get(0), allOf(
+            notNullValue(), isA(RudderServerConfig.RudderServerDestination::class.java)
+        ))
+        assertThat(res?.source?.destinations?.get(0)?.destinationId, allOf(
+        notNullValue(), `is`("20NBa9wa4Zb5ZHkJHO2IEiw8eWl")))
+        assertThat(res?.source?.destinations?.get(0)?.areTransformationsConnected, allOf(
+        notNullValue(), `is`(true)))
 
     }
 }
