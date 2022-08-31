@@ -362,14 +362,14 @@ public class RudderContext {
         _anonymousId = anonymousId;
     }
 
-    void setSession() {
+    void setSession(RudderUserSession userSession) {
         // Session Tracking
-        if (RudderClient.userSession != null) {
-            if (RudderClient.userSession.getSessionId() != null) {
-                this.sessionId = RudderClient.userSession.getSessionId();
-                if (RudderClient.userSession.getSessionStart()) {
+        if (userSession != null) {
+            if (userSession.getSessionId() != null) {
+                this.sessionId = userSession.getSessionId();
+                if (userSession.getSessionStart()) {
                     this.sessionStart = Boolean.TRUE;
-                    RudderClient.userSession.sessionStart(false);
+                    userSession.setSessionStart(false);
                 }
             }
         }

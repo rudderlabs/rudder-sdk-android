@@ -1,7 +1,5 @@
 package com.rudderstack.android.sdk.core;
 
-import android.app.Application;
-
 import androidx.annotation.Nullable;
 
 import com.rudderstack.android.sdk.core.util.Utils;
@@ -13,49 +11,43 @@ class RudderUserSession {
     private final RudderConfig config;
     private String sessionId;
     private boolean sessionStart;
-    private Long inactivityStartTime;
-    RudderPreferenceManager preferenceManager;
+    private Long lastEventTimeStamp;
+    private RudderPreferenceManager preferenceManager;
 
-    RudderUserSession(Application _application, RudderConfig _config) {
+    RudderUserSession(RudderPreferenceManager _preferenceManager, RudderConfig _config) {
         this.config = _config;
-        this.preferenceManager = RudderPreferenceManager.getInstance(_application);
-        this.sessionId = preferenceManager.getSessionId();
-        this.inactivityStartTime = preferenceManager.getInactivityStartTime();
+        this.preferenceManager = _preferenceManager;
+        this.sessionId = _preferenceManager.getSessionId();
+        this.lastEventTimeStamp = _preferenceManager.getLastEventTimeStamp();
     }
 
-    public void startSession(String sessionId) {
-        synchronized (this) {
-            this._startSession(sessionId);
-        }
+    public synchronized void startSession(String sessionId) {
+        this._startSession(sessionId);
     }
 
-    public void sessionStart(boolean sessionStart) {
-        synchronized (this) {
-            this.sessionStart = sessionStart;
-        }
+    public synchronized void setSessionStart(boolean sessionStart) {
+        this.sessionStart = sessionStart;
     }
 
-    public void checkSessionTimeoutDuration() {
-        if (this.inactivityStartTime == null) {
+    public void startSessionIfNeeded() {
+        if (this.lastEventTimeStamp == null) {
             this.startSession(Utils.getCurrentTimeSeconds());
         } else {
-            long previousInactivityStartTime;
+            long previousLastEventTimeStamp;
             synchronized (this) {
-                previousInactivityStartTime = this.inactivityStartTime;
+                previousLastEventTimeStamp = this.lastEventTimeStamp;
             }
-            final long timeDifference = Math.abs((new Date()).getTime() - previousInactivityStartTime);
+            final long timeDifference = Math.abs((new Date()).getTime() - previousLastEventTimeStamp);
             if (timeDifference > this.config.getSessionTimeout()) {
                 this.startSession(Utils.getCurrentTimeSeconds());
-                this.startInactivityTime(null);
+                this.setLastEventTimeStamp(null);
             }
         }
     }
 
-    public void startInactivityTime(Long time) {
-        synchronized (this) {
-            this.inactivityStartTime = time;
-            this.preferenceManager.saveInactivityStartTime( (time == null) ? -1 : time);
-        }
+    public synchronized void setLastEventTimeStamp(Long time) {
+        this.lastEventTimeStamp = time;
+        this.preferenceManager.saveLastEventTimeStamp( (time == null) ? -1 : time);
     }
 
     private void _startSession(String sessionId) {
@@ -80,14 +72,11 @@ class RudderUserSession {
         return this.sessionStart;
     }
 
-    public void clearSession() {
-        synchronized (this) {
-            this.sessionId = null;
-            this.sessionStart = true;
-            this.inactivityStartTime = null;
-            this.preferenceManager.saveSessionId(null);
-            this.startInactivityTime(null);
-        }
-
+    public synchronized void clearSession() {
+        this.sessionId = null;
+        this.sessionStart = true;
+        this.lastEventTimeStamp = null;
+        this.preferenceManager.saveSessionId(null);
+        this.setLastEventTimeStamp(null);
     }
 }

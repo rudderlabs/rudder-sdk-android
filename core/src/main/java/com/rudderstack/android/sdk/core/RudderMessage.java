@@ -233,7 +233,7 @@ public class RudderMessage {
         return this.integrations;
     }
 
-    void setSession() {
-        this.context.setSession();
+    void setSession(RudderUserSession userSession) {
+        this.context.setSession(userSession);
     }
 }

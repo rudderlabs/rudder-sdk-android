@@ -48,6 +48,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private RudderPreferenceManager preferenceManager;
     private RudderEventFilteringPlugin rudderEventFilteringPlugin;
     private RudderFlushWorkManager rudderFlushWorkManager;
+    private RudderUserSession userSession;
     private Map<String, RudderIntegration<?>> integrationOperationsMap = new HashMap<>();
     private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
 
@@ -130,13 +131,15 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             this.initiateSDK();
 
             // Session Tracking
-            // 7. clear session if automatic session tracking was enabled previously
+            // 7. initiate RudderUserSession
+            RudderLogger.logDebug("EventRepository: constructor: Initiating RudderUserSession");
+            userSession = new RudderUserSession(preferenceManager, config);
+
+            // 8. clear session if automatic session tracking was enabled previously
             // but disabled presently or vice versa.
             boolean previousAutoSessionTrackingStatus = preferenceManager.getAutoSessionTrackingStatus();
             if (previousAutoSessionTrackingStatus != config.isTrackAutoSession()) {
-                if (RudderClient.userSession != null) {
-                    RudderClient.userSession.clearSession();
-                }
+                userSession.clearSession();
             }
             preferenceManager.saveAutoSessionTrackingStatus(config.isTrackAutoSession());
 
@@ -482,10 +485,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
 
         // Session Tracking
-        message.setSession();
+        message.setSession(userSession);
         if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
-            if (RudderClient.userSession != null) {
-                RudderClient.userSession.startInactivityTime(new Date().getTime());
+            if (userSession != null) {
+                userSession.setLastEventTimeStamp(new Date().getTime());
             }
         }
 
@@ -653,8 +656,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 // Automatic tracking session started
                 if (config.isTrackAutoSession()) {
                     if (!applicationInstalledOrUpdated) {
-                        if (RudderClient.userSession != null) {
-                            RudderClient.userSession.checkSessionTimeoutDuration();
+                        if (userSession != null) {
+                            userSession.startSessionIfNeeded();
                         }
                     } else {
                         applicationInstalledOrUpdated = false;
@@ -714,4 +717,19 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
+    public void startSession(String sessionId) {
+        if (userSession == null) { return; }
+        if (config != null) {
+            if (config.isTrackAutoSession()) {
+                endSession();
+                config.setTrackAutoSession(false);
+            }
+        }
+        userSession.startSession(sessionId);
+    }
+
+    public void endSession() {
+        if (userSession == null) { return; }
+        userSession.clearSession();
+    }
 }

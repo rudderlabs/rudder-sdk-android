@@ -24,8 +24,6 @@ public class RudderClient {
     private static RudderClient instance;
     // repository instance
     private static EventRepository repository;
-    // userSession instance
-    static RudderUserSession userSession;
 
     private static Application application;
     private static String _advertisingId;
@@ -151,9 +149,6 @@ public class RudderClient {
 
             // initiate EventRepository class
             if (application != null) {
-                RudderLogger.logVerbose("getInstance: creating RudderUserSession.");
-                userSession = new RudderUserSession(application, config);
-
                 RudderLogger.logVerbose("getInstance: creating EventRepository.");
                 repository = new EventRepository(application, writeKey, config, _anonymousId, _advertisingId, _deviceToken);
             }
@@ -856,22 +851,16 @@ public class RudderClient {
      * @param sessionId Id of a session
      */
     public void startSession(String sessionId) {
-        if (userSession == null) { return; }
-        if (config != null) {
-            if (config.isTrackAutoSession()) {
-                endSession();
-                config.setTrackAutoSession(false);
-            }
-        }
-        userSession.startSession(sessionId);
+        if (repository == null) { return; }
+        repository.startSession(sessionId);
     }
 
     /**
      * Public method for end an active session.
      */
     public void endSession() {
-        if (userSession == null) { return; }
-        userSession.clearSession();
+        if (repository == null) { return; }
+        repository.endSession();
     }
 
     /*
