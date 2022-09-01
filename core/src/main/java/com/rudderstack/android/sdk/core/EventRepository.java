@@ -141,7 +141,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             }
             preferenceManager.saveAutoSessionTrackingStatus(config.isTrackAutoSession());
             // starting automatic session tracking if enabled.
-            if (config.isTrackAutoSession()) {
+            if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
                 userSession.startSession(Utils.getCurrentTimeSeconds());
             }
 
@@ -720,6 +720,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
         if (config != null) {
             if (config.isTrackAutoSession()) {
+                // why are we setting this to false again
                 config.setTrackAutoSession(false);
             }
         }
