@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.rudderstack.android.sdk.core.RudderContext;
-import com.rudderstack.android.sdk.core.RudderSessionInfo;
 
 import java.lang.reflect.Type;
 import java.util.Map;
@@ -20,15 +19,6 @@ public class RudderContextSerializer implements JsonSerializer<RudderContext> {
             Gson gson = new Gson();
             JsonObject outputContext = new JsonObject();
             JsonObject inputContext = (JsonObject) gson.toJsonTree(rudderContext);
-            JsonElement sessionInfoJsonElement = inputContext.get("session");
-            if (sessionInfoJsonElement != null) {
-                JsonObject sessionInfoJsonObject = sessionInfoJsonElement.getAsJsonObject();
-                if (sessionInfoJsonObject != null) {
-                    if (sessionInfoJsonObject.get("id") == null) {
-                        inputContext.remove("session");
-                    }
-                }
-            }
             for (Map.Entry<String, JsonElement> entry : inputContext.entrySet()) {
                 if (entry.getKey().equals("customContextMap")) {
                     JsonObject customContextMapObject = (JsonObject) gson.toJsonTree(entry.getValue());
