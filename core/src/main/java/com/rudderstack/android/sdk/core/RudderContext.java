@@ -44,9 +44,13 @@ public class RudderContext {
     private RudderNetwork networkInfo;
     @SerializedName("timezone")
     private String timezone;
-    @Nullable
-    @SerializedName("session")
-    private RudderSessionInfo sessionInfo = null;
+//    @Nullable
+//    @SerializedName("session")
+//    private RudderSessionInfo sessionInfo = null;
+    @Nullable @SerializedName("sessionId")
+    private String sessionId = null;
+    @Nullable @SerializedName("sessionStart")
+    private Boolean sessionStart = null;
     @SerializedName("externalId")
     private List<Map<String, Object>> externalIds = null;
     public Map<String, Object> customContextMap = null;
@@ -364,20 +368,13 @@ public class RudderContext {
     void setSession(RudderUserSession userSession) {
         // Session Tracking
         if (userSession != null) {
-            if (sessionInfo == null) {
-                sessionInfo = new RudderSessionInfo();
-            }
             if (userSession.getSessionId() != null) {
-                sessionInfo.setId(userSession.getSessionId());
+                this.sessionId = userSession.getSessionId();
                 if (userSession.getSessionStart()) {
-                    sessionInfo.setStart(Boolean.TRUE);
+                    this.sessionStart = Boolean.TRUE;
                     userSession.setSessionStart(false);
-                } else {
-                    sessionInfo.setStart(null);
                 }
             }
-        } else {
-            sessionInfo = null;
         }
     }
 

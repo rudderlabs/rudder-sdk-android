@@ -20,15 +20,6 @@ public class RudderContextSerializer implements JsonSerializer<RudderContext> {
             Gson gson = new Gson();
             JsonObject outputContext = new JsonObject();
             JsonObject inputContext = (JsonObject) gson.toJsonTree(rudderContext);
-            JsonElement sessionInfoJsonElement = inputContext.get("session");
-            if (sessionInfoJsonElement != null) {
-                JsonObject sessionInfoJsonObject = sessionInfoJsonElement.getAsJsonObject();
-                if (sessionInfoJsonObject != null) {
-                    if (sessionInfoJsonObject.get("id") == null) {
-                        inputContext.remove("session");
-                    }
-                }
-            }
             for (Map.Entry<String, JsonElement> entry : inputContext.entrySet()) {
                 if (entry.getKey().equals("customContextMap")) {
                     JsonObject customContextMapObject = (JsonObject) gson.toJsonTree(entry.getValue());
