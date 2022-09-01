@@ -44,9 +44,6 @@ public class RudderContext {
     private RudderNetwork networkInfo;
     @SerializedName("timezone")
     private String timezone;
-//    @Nullable
-//    @SerializedName("session")
-//    private RudderSessionInfo sessionInfo = null;
     @Nullable @SerializedName("sessionId")
     private String sessionId = null;
     @Nullable @SerializedName("sessionStart")

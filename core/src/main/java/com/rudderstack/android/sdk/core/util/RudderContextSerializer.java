@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.rudderstack.android.sdk.core.RudderContext;
-import com.rudderstack.android.sdk.core.RudderSessionInfo;
 
 import java.lang.reflect.Type;
 import java.util.Map;
