@@ -215,7 +215,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         // Session Tracking
         // Automatic tracking session started
         if (config.isTrackAutoSession()) {
-            RudderClient.getInstance().startSession(Utils.getCurrentTimeSeconds());
+            userSession.startSession(Utils.getCurrentTimeSeconds());
         }
 
         RudderLogger.logDebug("Tracking Application Installed");
@@ -238,7 +238,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         // Session Tracking
         // Automatic tracking session started
         if (config.isTrackAutoSession()) {
-            RudderClient.getInstance().startSession(Utils.getCurrentTimeSeconds());
+            userSession.startSession(Utils.getCurrentTimeSeconds());
         }
 
         // Application Updated event
@@ -730,6 +730,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     public void endSession() {
         if (userSession == null) { return; }
+        if (config != null) {
+            if (config.isTrackAutoSession()) {
+                config.setTrackAutoSession(false);
+            }
+        }
         userSession.clearSession();
     }
 }
