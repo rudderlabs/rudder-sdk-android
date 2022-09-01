@@ -44,12 +44,9 @@ public class RudderContext {
     private RudderNetwork networkInfo;
     @SerializedName("timezone")
     private String timezone;
-    @Nullable @SerializedName("session")
+    @Nullable
+    @SerializedName("session")
     private RudderSessionInfo sessionInfo = null;
-//    @Nullable @SerializedName("sessionId")
-//    private String sessionId = null;
-//    @Nullable @SerializedName("sessionStart")
-//    private Boolean sessionStart = null;
     @SerializedName("externalId")
     private List<Map<String, Object>> externalIds = null;
     public Map<String, Object> customContextMap = null;
