@@ -142,7 +142,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             preferenceManager.saveAutoSessionTrackingStatus(config.isTrackAutoSession());
             // starting automatic session tracking if enabled.
             if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
-                userSession.startSession(Utils.getCurrentTimeSeconds());
+                userSession.startSession();
             }
 
             // check for lifeCycleEvents
@@ -550,6 +550,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     void reset() {
         RudderLogger.logDebug("EventRepository: reset: resetting the SDK");
+        userSession.clearSession();
+        userSession.startSession();
         if (areFactoriesInitialized) {
             RudderLogger.logDebug("EventRepository: resetting native SDKs");
             for (String key : integrationOperationsMap.keySet()) {

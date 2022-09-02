@@ -21,6 +21,10 @@ class RudderUserSession {
         this.lastEventTimeStamp = _preferenceManager.getLastEventTimeStamp();
     }
 
+    public void startSession() {
+        startSession(Utils.getCurrentTimeSeconds());
+    }
+
     public void startSession(String sessionId) {
         if (sessionId.length() > 0) {
             synchronized (this) {
@@ -56,7 +60,7 @@ class RudderUserSession {
 
     public synchronized void setLastEventTimeStamp(Long time) {
         this.lastEventTimeStamp = time;
-        this.preferenceManager.saveLastEventTimeStamp( (time == null) ? -1 : time);
+        this.preferenceManager.saveLastEventTimeStamp((time == null) ? -1 : time);
     }
 
     @Nullable

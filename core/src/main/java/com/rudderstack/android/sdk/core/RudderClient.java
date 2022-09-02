@@ -740,9 +740,6 @@ public class RudderClient {
         if (repository != null) {
             repository.reset();
         }
-
-        // Existing Session will be reset whenever reset is called.
-        endSession();
     }
 
     /**
