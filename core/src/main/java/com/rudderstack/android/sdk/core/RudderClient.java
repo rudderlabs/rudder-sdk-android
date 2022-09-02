@@ -741,9 +741,8 @@ public class RudderClient {
             repository.reset();
         }
 
-        // Session Tracking
-        // sessionId will be reset. New sessionId will be generated.
-        startSession(Utils.getCurrentTimeSeconds());
+        // Existing Session will be reset whenever reset is called.
+        endSession();
     }
 
     /**
