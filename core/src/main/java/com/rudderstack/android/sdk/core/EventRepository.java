@@ -644,8 +644,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
                 // Session Tracking
                 // Automatic tracking session started
-                if (config.isTrackAutoSession() && userSession != null) {
-                    userSession.startSessionIfNeeded();
+                if (!isFirstLaunch.get()) {
+                    if (config.isTrackAutoSession() && userSession != null) {
+                        userSession.startSessionIfNeeded();
+                    }
                 }
                 RudderMessage trackMessage;
                 trackMessage = new RudderMessageBuilder()
