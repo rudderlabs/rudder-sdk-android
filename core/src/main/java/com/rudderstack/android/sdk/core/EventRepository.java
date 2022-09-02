@@ -475,11 +475,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
 
         // Session Tracking
-        message.setSession(userSession);
+        if (userSession.getSessionId() != null) {
+            message.setSession(userSession);
+        }
         if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
-            if (userSession != null) {
-                userSession.setLastEventTimeStamp(new Date().getTime());
-            }
+            userSession.updateLastEventTimeStamp();
         }
 
         Gson gson = new GsonBuilder()
@@ -550,8 +550,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     void reset() {
         RudderLogger.logDebug("EventRepository: reset: resetting the SDK");
-        userSession.clearSession();
-        userSession.startSession();
+        if (userSession.getSessionId() != null) {
+            userSession.refreshSession();
+        }
         if (areFactoriesInitialized) {
             RudderLogger.logDebug("EventRepository: resetting native SDKs");
             for (String key : integrationOperationsMap.keySet()) {
@@ -706,27 +707,16 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     }
 
     public void startSession(String sessionId) {
-        if (userSession == null) {
-            return;
-        }
-        if (config != null) {
-            if (config.isTrackAutoSession()) {
-                endSession();
-                config.setTrackAutoSession(false);
-            }
+        if (config.isTrackAutoSession()) {
+            endSession();
+            config.setTrackAutoSession(false);
         }
         userSession.startSession(sessionId);
     }
 
     public void endSession() {
-        if (userSession == null) {
-            return;
-        }
-        if (config != null) {
-            if (config.isTrackAutoSession()) {
-                // why are we setting this to false again
-                config.setTrackAutoSession(false);
-            }
+        if (config.isTrackAutoSession()) {
+            config.setTrackAutoSession(false);
         }
         userSession.clearSession();
     }

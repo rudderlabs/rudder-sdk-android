@@ -64,6 +64,10 @@ public class Utils {
         return String.format(Locale.US, "%d", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
     }
 
+    public static Long getCurrentTimeInMilliSeconds() {
+        return new Long(new Date().getTime());
+    }
+
     public static String toDateString(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         formatter.setCalendar(new GregorianCalendar());

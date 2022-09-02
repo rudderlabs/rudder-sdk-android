@@ -4,7 +4,6 @@ import androidx.annotation.Nullable;
 
 import com.rudderstack.android.sdk.core.util.Utils;
 
-import java.util.Date;
 import java.util.Locale;
 
 class RudderUserSession {
@@ -38,29 +37,28 @@ class RudderUserSession {
         }
     }
 
-    public synchronized void setSessionStart(boolean sessionStart) {
-        this.sessionStart = sessionStart;
-    }
-
     public void startSessionIfNeeded() {
         if (this.lastEventTimeStamp == null) {
-            this.startSession(Utils.getCurrentTimeSeconds());
-        } else {
-            long previousLastEventTimeStamp;
-            synchronized (this) {
-                previousLastEventTimeStamp = this.lastEventTimeStamp;
-            }
-            final long timeDifference = Math.abs((new Date()).getTime() - previousLastEventTimeStamp);
-            if (timeDifference > this.config.getSessionTimeout()) {
-                this.startSession(Utils.getCurrentTimeSeconds());
-                this.setLastEventTimeStamp(null);
-            }
+            this.startSession();
+            return;
+        }
+        final long timeDifference;
+        synchronized (this) {
+            timeDifference = Math.abs((Utils.getCurrentTimeInMilliSeconds() - this.lastEventTimeStamp));
+        }
+        if (timeDifference > this.config.getSessionTimeout()) {
+            refreshSession();
         }
     }
 
-    public synchronized void setLastEventTimeStamp(Long time) {
-        this.lastEventTimeStamp = time;
-        this.preferenceManager.saveLastEventTimeStamp((time == null) ? -1 : time);
+    public void refreshSession() {
+        this.clearSession();
+        this.startSession();
+    }
+
+    public synchronized void updateLastEventTimeStamp() {
+        this.lastEventTimeStamp = Utils.getCurrentTimeInMilliSeconds();
+        this.preferenceManager.saveLastEventTimeStamp(this.lastEventTimeStamp);
     }
 
     @Nullable
@@ -72,11 +70,15 @@ class RudderUserSession {
         return this.sessionStart;
     }
 
+    public synchronized void setSessionStart(boolean sessionStart) {
+        this.sessionStart = sessionStart;
+    }
+
     public synchronized void clearSession() {
         this.sessionId = null;
+        this.preferenceManager.saveSessionId(null);
         this.sessionStart = true;
         this.lastEventTimeStamp = null;
-        this.preferenceManager.saveSessionId(null);
-        this.setLastEventTimeStamp(null);
+        this.preferenceManager.saveLastEventTimeStamp(-1);
     }
 }
