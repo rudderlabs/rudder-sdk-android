@@ -30,7 +30,6 @@ public class RudderClient {
     private static String _anonymousId;
     private static RudderOption defaultOptions;
     private static String _deviceToken;
-    private RudderConfig config;
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
 
@@ -144,8 +143,6 @@ public class RudderClient {
 
             // initiate RudderClient instance
             instance = new RudderClient();
-
-            instance.config = config;
 
             // initiate EventRepository class
             if (application != null) {

@@ -142,7 +142,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             preferenceManager.saveAutoSessionTrackingStatus(config.isTrackAutoSession());
             // starting automatic session tracking if enabled.
             if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
-                userSession.startSession();
+                userSession.startSessionIfNeeded();
             }
 
             // check for lifeCycleEvents
