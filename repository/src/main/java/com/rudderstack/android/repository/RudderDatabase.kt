@@ -74,27 +74,32 @@ object RudderDatabase {
         //calling the database name listeners
         synchronized(this) {
             dbDetailsListeners.forEach { it.invoke(databaseName, version, databaseUpgradeCallback) }
-        }
-        sqliteOpenHelper = object : SQLiteOpenHelper(context, databaseName, null, version) {
-            init {
-                commonExecutor.execute {
-                    this@RudderDatabase.database = writableDatabase
-                    database?.let {
-                        initDaoList(it, registeredDaoList.values.toList())
+
+            sqliteOpenHelper = object : SQLiteOpenHelper(context, databaseName, null, version) {
+                init {
+                    commonExecutor.execute {
+                        this@RudderDatabase.database = writableDatabase
+                        database?.let {
+                            initDaoList(it, registeredDaoList.values.toList())
+                        }
                     }
+
+                }
+
+                override fun onCreate(database: SQLiteDatabase?) {
+
+                    databaseCreatedCallback?.invoke(database)
+                }
+
+                override fun onUpgrade(
+                    database: SQLiteDatabase?,
+                    oldVersion: Int,
+                    newVersion: Int
+                ) {
+                    databaseUpgradeCallback?.invoke(database, oldVersion, newVersion)
                 }
 
             }
-
-            override fun onCreate(database: SQLiteDatabase?) {
-
-                databaseCreatedCallback?.invoke(database)
-            }
-
-            override fun onUpgrade(database: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-                databaseUpgradeCallback?.invoke(database, oldVersion, newVersion)
-            }
-
         }
 
     }

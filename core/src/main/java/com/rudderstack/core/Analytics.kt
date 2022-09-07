@@ -284,11 +284,11 @@ class Analytics private constructor(
      *
      */
     fun blockingFlush(alternateDataUploadService: DataUploadService? = null,
-                      clearDb: Boolean = true, base64Generator: Base64Generator = this.base64Generator) : Boolean{
+                      clearDb: Boolean = true, base64Generator: Base64Generator?= null) : Boolean{
         val dataUploadService = alternateDataUploadService ?: DataUploadServiceImpl(
             _writeKey,
             _jsonAdapter, dataPlaneUrl = _dataPlaneUrl,
-            base64Generator = base64Generator
+            base64Generator = base64Generator?:this.base64Generator
         )
         return _delegate.blockFlush(dataUploadService, clearDb)
     }

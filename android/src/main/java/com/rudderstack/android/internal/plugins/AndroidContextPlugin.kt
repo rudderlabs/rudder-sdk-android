@@ -249,12 +249,8 @@ internal class AndroidContextPlugin(
             val tm = application.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
             val isCellularEnabled =
                 if (tm != null && tm.simState == TelephonyManager.SIM_STATE_READY) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
 
-                        Settings.Global.getInt(application.contentResolver, "mobile_data", 1) == 1
-                    } else {
-                        Settings.Secure.getInt(application.contentResolver, "mobile_data", 1) == 1
-                    }
+                    Settings.Global.getInt(application.contentResolver, "mobile_data", 1) == 1
                 } else null
             val networkMap = HashMap<String, String>()
             if (carrier != null) {

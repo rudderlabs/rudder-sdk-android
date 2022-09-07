@@ -299,11 +299,12 @@ internal class AnalyticsDelegate(
         }
     }
 
-    // works even after shutdown
     internal fun blockFlush(
         alternateDataUploadService: DataUploadService,
         clearDb: Boolean
     ): Boolean {
+        if(_isShutDown.get())
+            return false
         var latestData = _storageDecorator.getDataSync()
         var offset = 0
 //        println("block flush called thread: ${Thread.currentThread().name}\n${latestData}")

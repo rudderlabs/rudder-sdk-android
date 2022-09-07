@@ -35,22 +35,23 @@ private var analyticsRef: WeakReference<Analytics>? = null
 private const val WORK_MANAGER_TAG = "rudder_sink"
 private const val WORK_NAME = "rudder_sink_work"
 private const val REPEAT_INTERVAL_IN_MINS = 15L
+
 internal val Application.sinkAnalytics
-    get() = analyticsRef?.get() ?: latestConfig?.let {
-        RudderAnalytics(
-            this,
-            it.writeKey,
-            Settings(),
-            it.jsonAdapter,
-            dataPlaneUrl = it.dataPlaneUrl,
-            controlPlaneUrl = it.controlPlaneUrl,
-            logger = it.logger,
-            defaultProcessName = it.processName,
-            multiProcessEnabled = it.processName != null
-        )
-    }.also {
-        analyticsRef = WeakReference(it)
-    }
+    get() = analyticsRef?.get()?.takeUnless { it.isShutdown }
+
+internal fun Application.createSinkAnalytics() = latestConfig?.let {
+    RudderAnalytics(
+        this,
+        it.writeKey,
+        Settings(),
+        it.jsonAdapter,
+        dataPlaneUrl = it.dataPlaneUrl,
+        controlPlaneUrl = it.controlPlaneUrl,
+        logger = it.logger,
+        defaultProcessName = it.processName,
+        multiProcessEnabled = it.processName != null
+    )
+}
 
 private var latestConfig: RudderWorkerConfig? = null
 
@@ -67,11 +68,13 @@ private val sinkWorker by lazy {
         .addTag(WORK_MANAGER_TAG)
         .build()
 }
-
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<HANDLE MEMORY LEAK>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<block flush works after shutdown>>>>>>>>>>>>>>>>>>>>>>>>>>
 internal fun Application.registerWorkManager(
     analytics: Analytics,
     rudderWorkerConfig: RudderWorkerConfig
 ) {
+    //if analytics object has changed, shutting it down is not this method's responsibility
     analyticsRef = WeakReference(analytics)
     latestConfig = rudderWorkerConfig
 
@@ -84,7 +87,7 @@ internal fun Application.registerWorkManager(
             it.setExecutor(this)
         }
     }
-        .takeIf { rudderWorkerConfig.processName != null || rudderWorkerConfig.networkExecutorService != null }
+//        .takeIf { rudderWorkerConfig.processName != null || rudderWorkerConfig.networkExecutorService != null }
         ?.let {
             WorkManager.initialize(this, it.build())
         }

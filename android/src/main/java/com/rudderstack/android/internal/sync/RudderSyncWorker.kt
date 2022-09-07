@@ -27,20 +27,23 @@ import java.lang.ref.WeakReference
 
 /**
  * Syncs the data at an interval with rudder server
- * @param analytics - The Analytics object will be used in a weak reference to reduce memory leaks
+ *
  */
-internal class RudderSyncWorker( /*analytics: Analytics,
-                                 private val writeKey : String,
-                                 private val settings: Settings,
-                                 private val jsonAdapter: JsonAdapter,*/
-                                 appContext: Context, workerParams: WorkerParameters
+internal class RudderSyncWorker(appContext: Context, workerParams: WorkerParameters
 ) :
     Worker(appContext, workerParams) {
 
     override fun doWork(): Result {
 //        .forceFlush()
-        (applicationContext as? Application)?.sinkAnalytics?.blockingFlush()
-        return Result.success()
+        (applicationContext as? Application)?.let {
+            val weakSinkAnalytics = it.sinkAnalytics
+            val sinkAnalytics = (weakSinkAnalytics?:it.createSinkAnalytics())
+            val success = sinkAnalytics?.blockingFlush()
+            if(weakSinkAnalytics == null)
+                sinkAnalytics?.shutdown()
+            return if(success == true) Result.success() else Result.failure()
+        }
+        return Result.failure()
     }
 
 }
