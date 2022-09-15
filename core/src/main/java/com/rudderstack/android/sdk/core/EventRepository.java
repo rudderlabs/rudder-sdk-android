@@ -706,7 +706,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
     }
 
-    public void startSession(String sessionId) {
+    public void startSession(Long sessionId) {
         if (config.isTrackAutoSession()) {
             endSession();
             config.setTrackAutoSession(false);

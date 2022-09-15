@@ -656,7 +656,6 @@ public class RudderClient {
      * <b>Call this method before initializing the RudderClient</b>
      *
      * @param advertisingId IDFA for the device
-     *
      * @deprecated Will be removed soon
      */
     public static void updateWithAdvertisingId(@NonNull String advertisingId) {
@@ -703,7 +702,6 @@ public class RudderClient {
      * Set the anonymousId for the device to be used further
      *
      * @param anonymousId AnonymousId you want to use for the application
-     *
      * @deprecated Will be removed soon
      */
     public static void setAnonymousId(@NonNull String anonymousId) {
@@ -759,7 +757,7 @@ public class RudderClient {
     }
 
     public void cancelPeriodicWorkRequest() {
-        if(repository != null) {
+        if (repository != null) {
             repository.cancelPeriodicFlushWorker();
         }
     }
@@ -799,7 +797,7 @@ public class RudderClient {
      * Stops this instance from accepting further requests.
      */
     public void shutdown() {
-        if(repository != null)
+        if (repository != null)
             repository.shutDown();
     }
 
@@ -836,15 +834,22 @@ public class RudderClient {
      * Public method for start a session.
      */
     public void startSession() {
-        startSession(Utils.getCurrentTimeSeconds());
+        startSession(Utils.getCurrentTimeInSecondsLong());
     }
 
     /**
      * Public method for start a session with a unique id.
+     *
      * @param sessionId Id of a session
      */
-    public void startSession(String sessionId) {
-        if (repository == null) { return; }
+    public void startSession(@NonNull Long sessionId) {
+        if (repository == null) {
+            return;
+        }
+        if (Long.toString(sessionId).length() < 10) {
+            RudderLogger.logError("RudderClient: startSession: Length of the session Id supplied should be atleast 10, hence ignoring it");
+            return;
+        }
         repository.startSession(sessionId);
     }
 
@@ -852,7 +857,9 @@ public class RudderClient {
      * Public method for end an active session.
      */
     public void endSession() {
-        if (repository == null) { return; }
+        if (repository == null) {
+            return;
+        }
         repository.endSession();
     }
 

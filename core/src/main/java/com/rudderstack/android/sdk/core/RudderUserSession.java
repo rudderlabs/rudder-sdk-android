@@ -8,7 +8,7 @@ import java.util.Locale;
 
 class RudderUserSession {
     private final RudderConfig config;
-    private String sessionId;
+    private Long sessionId;
     private boolean sessionStart;
     private Long lastEventTimeStamp;
     private RudderPreferenceManager preferenceManager;
@@ -21,21 +21,18 @@ class RudderUserSession {
     }
 
     public void startSession() {
-        startSession(Utils.getCurrentTimeSeconds());
+        startSession(Utils.getCurrentTimeInSecondsLong());
     }
 
-    public void startSession(String sessionId) {
-        if (sessionId.length() > 0) {
-            synchronized (this) {
-                this.sessionId = sessionId;
-                this.sessionStart = true;
-                this.preferenceManager.saveSessionId(sessionId);
-            }
-            RudderLogger.logDebug(String.format(Locale.US, "Starting new session with id: %s", sessionId));
-        } else {
-            RudderLogger.logDebug("sessionId can not be empty");
+    public void startSession(Long sessionId) {
+        synchronized (this) {
+            this.sessionId = sessionId;
+            this.sessionStart = true;
+            this.preferenceManager.saveSessionId(sessionId);
         }
+        RudderLogger.logDebug(String.format(Locale.US, "Starting new session with id: %s", sessionId));
     }
+
 
     public void startSessionIfNeeded() {
         if (this.lastEventTimeStamp == null) {
@@ -62,7 +59,7 @@ class RudderUserSession {
     }
 
     @Nullable
-    public String getSessionId() {
+    public Long getSessionId() {
         return this.sessionId;
     }
 
@@ -76,9 +73,9 @@ class RudderUserSession {
 
     public synchronized void clearSession() {
         this.sessionId = null;
-        this.preferenceManager.saveSessionId(null);
+        this.preferenceManager.clearSessionId();
         this.sessionStart = true;
         this.lastEventTimeStamp = null;
-        this.preferenceManager.saveLastEventTimeStamp(-1);
+        this.preferenceManager.clearLastEventTimeStamp();
     }
 }

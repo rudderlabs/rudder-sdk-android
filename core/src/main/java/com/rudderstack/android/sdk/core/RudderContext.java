@@ -46,7 +46,7 @@ public class RudderContext {
     private String timezone;
     @Nullable
     @SerializedName("sessionId")
-    private String sessionId = null;
+    private Long sessionId = null;
     @Nullable
     @SerializedName("sessionStart")
     private Boolean sessionStart = null;

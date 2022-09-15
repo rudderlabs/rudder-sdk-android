@@ -28,7 +28,7 @@ class UserSessionActivity: AppCompatActivity() {
     }
 
     fun onStartSessionWithId(view: View) {
-        RudderClient.getInstance()!!.startSession(UUID.randomUUID().toString().lowercase())
+        RudderClient.getInstance()!!.startSession(1663273895)
     }
 
     fun onReset(view: View) {
@@ -119,7 +119,7 @@ class UserSessionActivity: AppCompatActivity() {
         } else if (index % 9 == 5) {
             RudderClient.getInstance()!!.startSession()
         } else if (index % 9 == 6) {
-            RudderClient.getInstance()!!.startSession(UUID.randomUUID().toString().lowercase())
+            RudderClient.getInstance()!!.startSession(1663273899)
         } else if (index % 9 == 7) {
             RudderClient.getInstance()!!.endSession()
         } else if (index % 9 == 8) {

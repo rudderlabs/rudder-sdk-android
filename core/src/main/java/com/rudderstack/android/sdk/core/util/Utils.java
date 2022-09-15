@@ -60,6 +60,12 @@ public class Utils {
         return formatter.format(new Date());
     }
 
+    public static Long getCurrentTimeInSecondsLong() {
+        long currentTimeInMilliSeconds = System.currentTimeMillis();
+        long currentTimeInSeconds = TimeUnit.MILLISECONDS.toSeconds(currentTimeInMilliSeconds);
+        return new Long(currentTimeInSeconds);
+    }
+
     public static String getCurrentTimeSeconds() {
         return String.format(Locale.US, "%d", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
     }
