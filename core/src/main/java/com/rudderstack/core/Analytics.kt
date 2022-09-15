@@ -25,7 +25,7 @@ import java.util.concurrent.*
 
 class Analytics private constructor(
     private val _writeKey: String,
-    private val _jsonAdapter: JsonAdapter,
+    internal val jsonAdapter: JsonAdapter,
     private val _dataPlaneUrl: String,
     private val _delegate: AnalyticsDelegate,
     val analyticsExecutor: ExecutorService,
@@ -86,7 +86,7 @@ class Analytics private constructor(
         shutdownHook: (() -> Unit)? = null
     ) : this(
         _writeKey = writeKey,
-        _jsonAdapter = jsonAdapter,
+        jsonAdapter = jsonAdapter,
         _dataPlaneUrl = dataPlaneUrl ?: DATA_PLANE_URL,
         _delegate = AnalyticsDelegate(
             settings,
@@ -125,7 +125,9 @@ class Analytics private constructor(
         private const val CONTROL_PLANE_URL = "https://api.rudderlabs.com/"
 
     }
-
+    init {
+        _delegate.startup(this)
+    }
     /**
      * Track with a built [TrackMessage]
      * Date format should be yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
@@ -192,7 +194,6 @@ class Analytics private constructor(
     }
 
     fun alias(message: AliasMessage, options: RudderOptions? = null) {
-        //TODO(change userId)
         processMessage(message, options)
     }
 
@@ -259,7 +260,7 @@ class Analytics private constructor(
         )
         val dataUploadService = alternateDataUploadService ?: DataUploadServiceImpl(
             _writeKey,
-            _jsonAdapter, dataPlaneUrl = _dataPlaneUrl,
+            jsonAdapter, dataPlaneUrl = _dataPlaneUrl,
             base64Generator = base64Generator
         )
         _delegate.forceFlush(
@@ -287,7 +288,7 @@ class Analytics private constructor(
                       clearDb: Boolean = true, base64Generator: Base64Generator?= null) : Boolean{
         val dataUploadService = alternateDataUploadService ?: DataUploadServiceImpl(
             _writeKey,
-            _jsonAdapter, dataPlaneUrl = _dataPlaneUrl,
+            jsonAdapter, dataPlaneUrl = _dataPlaneUrl,
             base64Generator = base64Generator?:this.base64Generator
         )
         return _delegate.blockFlush(dataUploadService, clearDb)

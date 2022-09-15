@@ -30,7 +30,12 @@ import com.rudderstack.android.sampleapp.MainViewModel.Event.SHUTDOWN
 import com.rudderstack.android.sampleapp.MainViewModel.Event.TRACK
 import com.rudderstack.android.sampleapp.MyApplication.Companion.rudderAnalytics
 import com.rudderstack.android.sampleapp.models.LogData
-import com.rudderstack.core.*
+import com.rudderstack.core.Plugin
+import com.rudderstack.core.RudderOptions
+import com.rudderstack.models.GroupTraits
+import com.rudderstack.models.IdentifyTraits
+import com.rudderstack.models.ScreenProperties
+import com.rudderstack.models.TrackProperties
 import java.util.*
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {

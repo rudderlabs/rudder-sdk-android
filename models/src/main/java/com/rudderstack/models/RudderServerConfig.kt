@@ -100,7 +100,7 @@ data class RudderServerConfig(
         @Json(name = "config")
         @JsonProperty("config")
         @SerializedName("config")
-        val destinationConfig: Map<Any, Any>,
+        val destinationConfig: Map<String, Any>,
         @JsonProperty("areTransformationsConnected")
         @Json(name = "areTransformationsConnected")
         val areTransformationsConnected : Boolean = false

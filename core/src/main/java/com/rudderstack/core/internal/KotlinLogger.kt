@@ -20,6 +20,7 @@ object KotlinLogger : Logger {
 
     private var logLevel = Logger.LogLevel.Info
         @Synchronized set
+        @Synchronized get
 
     override fun activate(level: Logger.LogLevel) {
         logLevel = level
@@ -48,6 +49,9 @@ object KotlinLogger : Logger {
             println("$tag-error : $log")
         }
     }
+
+    override val level: Logger.LogLevel
+        get() = logLevel
 
     private fun log(logLevel: Logger.LogLevel, log : () -> Unit){
         if(logLevel.level >= this.logLevel.level)

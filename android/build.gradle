@@ -17,7 +17,7 @@ plugins {
     id 'kotlin-android'
 }
 
-apply from : "$rootDir/dependencies.gradle"
+apply from : "$projectDir/../dependencies.gradle"
 
 android {
     compileSdk library.target_sdk

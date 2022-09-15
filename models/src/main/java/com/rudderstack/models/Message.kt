@@ -878,6 +878,24 @@ class IdentifyMessage internal constructor(
 
 
 }
+//verbose methods
+//verbose methods
+
+fun TrackProperties(vararg keyPropertyPair: Pair<String, Any>) : TrackProperties = mapOf(*keyPropertyPair)
+
+fun PageProperties(vararg keyPropertyPair: Pair<String, Any>) : PageProperties = mapOf(*keyPropertyPair)
+
+fun ScreenProperties(vararg keyPropertyPair: Pair<String, Any>) : ScreenProperties = mapOf(*keyPropertyPair)
+
+fun IdentifyProperties(vararg keyPropertyPair: Pair<String, Any>) : IdentifyProperties = mapOf(*keyPropertyPair)
+
+fun MessageIntegrations(vararg keyPropertyPair: Pair<String, Boolean>) : MessageIntegrations = mapOf(*keyPropertyPair)
+
+fun MessageDestinationProps(vararg keyPropertyPair: Pair<String, Map<*,*>>) : MessageDestinationProps = mapOf(*keyPropertyPair)
+
+fun IdentifyTraits(vararg keyPropertyPair: Pair<String, Any?>) : IdentifyTraits = mapOf(*keyPropertyPair)
+
+fun GroupTraits(vararg keyPropertyPair: Pair<String, Any>) : GroupTraits = mapOf(*keyPropertyPair)
 
 
 

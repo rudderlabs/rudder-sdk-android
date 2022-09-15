@@ -73,6 +73,12 @@ interface DestinationPlugin<T> : Plugin {
      *
      */
     fun interface PluginInterceptor : Plugin
+
+    /**
+     * Called when flush is triggered.
+     *
+     */
+    fun flush(){}
 }
 
 /**

@@ -22,28 +22,34 @@ import com.rudderstack.core.Logger
  *
  */
 internal object AndroidLogger : Logger {
-    private var logLevel : Logger.LogLevel = Logger.LogLevel.Info
+    private var logLevel: Logger.LogLevel = Logger.LogLevel.Info
+        @Synchronized set
+        @Synchronized get
+
     override fun activate(level: Logger.LogLevel) {
         logLevel = level
     }
 
     override fun info(tag: String, log: String) {
-        if(Logger.LogLevel.Info >= logLevel)
-            Log.i(tag,log)
+        if (Logger.LogLevel.Info >= logLevel)
+            Log.i(tag, log)
     }
 
     override fun debug(tag: String, log: String) {
-        if(Logger.LogLevel.Debug >= logLevel)
-            Log.d(tag,log)
+        if (Logger.LogLevel.Debug >= logLevel)
+            Log.d(tag, log)
     }
 
     override fun warn(tag: String, log: String) {
-        if(Logger.LogLevel.Warn >= logLevel)
-            Log.w(tag,log)
+        if (Logger.LogLevel.Warn >= logLevel)
+            Log.w(tag, log)
     }
 
     override fun error(tag: String, log: String, throwable: Throwable?) {
-        if(Logger.LogLevel.Error >= logLevel)
-            Log.e(tag,log, throwable)
+        if (Logger.LogLevel.Error >= logLevel)
+            Log.e(tag, log, throwable)
     }
+
+    override val level: Logger.LogLevel
+        get() = logLevel
 }

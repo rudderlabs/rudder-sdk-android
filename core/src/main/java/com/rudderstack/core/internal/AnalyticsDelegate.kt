@@ -19,9 +19,7 @@ import com.rudderstack.core.internal.plugins.*
 import com.rudderstack.core.internal.states.ContextState
 import com.rudderstack.core.internal.states.DestinationConfigState
 import com.rudderstack.core.internal.states.SettingsState
-import com.rudderstack.models.Message
-import com.rudderstack.models.MessageContext
-import com.rudderstack.models.RudderServerConfig
+import com.rudderstack.models.*
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
@@ -43,7 +41,7 @@ internal class AnalyticsDelegate(
     //can be null only if shouldVerifySdk is false
     private val configDownloadService: ConfigDownloadService?,
     private val analyticsExecutor: ExecutorService,
-    private val logger: Logger,
+    override val logger: Logger,
     context: MessageContext,
     //optional
     private val initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
@@ -93,6 +91,13 @@ internal class AnalyticsDelegate(
 
     override fun clearStorage() {
         _storageDecorator.clearStorage()
+    }
+
+    override fun reset() {
+        ContextState.update(createContext(customContextMap = ContextState.value?.customContexts))
+        applyClosure {
+            this.reset()
+        }
     }
 
     override fun setMaxFetchLimit(limit: Int) {
@@ -187,13 +192,6 @@ internal class AnalyticsDelegate(
     override val currentSettings: Settings?
         get() = SettingsState.value
 
-    /*override fun putAdvertisingId(advertisingId: String) {
-        _storageDecorator.cacheContext(_storageDecorator.context + ("advertisingId" to advertisingId))
-    }
-
-    override fun putDeviceToken(token: String) {
-        TODO("Not yet implemented")
-    }*/
 
     override fun addPlugin(vararg plugins: Plugin) {
         synchronized(PLUGIN_LOCK) {
@@ -303,8 +301,13 @@ internal class AnalyticsDelegate(
         alternateDataUploadService: DataUploadService,
         clearDb: Boolean
     ): Boolean {
-        if(_isShutDown.get())
+        if (_isShutDown.get())
             return false
+        //inform plugins
+        applyClosure {
+            if (this is DestinationPlugin<*>)
+                this.flush()
+        }
         var latestData = _storageDecorator.getDataSync()
         var offset = 0
 //        println("block flush called thread: ${Thread.currentThread().name}\n${latestData}")
@@ -334,6 +337,10 @@ internal class AnalyticsDelegate(
         flush()
         if (_isShutDown.compareAndSet(false, true)) return
         println("shutdown")
+        //inform plugins
+        applyClosure {
+            onShutDown()
+        }
         //release memory
         _storageDecorator.shutdown()
         dataUploadService.shutdown()
@@ -341,9 +348,6 @@ internal class AnalyticsDelegate(
         _flushExecutor.shutdown()
         shutdownHook?.invoke()
     }
-
-//    @Throws(MissingPropertiesException::class)
-//    override fun <T : Message> T.withDefaults(): T
 
 
     private fun initDestinationPlugin(plugin: DestinationPlugin<*>) {
@@ -416,7 +420,10 @@ internal class AnalyticsDelegate(
                         )
                     } else {
                         logger.error(log = "SDK Initialization failed due to $lastErrorMsg")
-                        initializationListener?.invoke(false, "Downloading failed, Shutting down $lastErrorMsg")
+                        initializationListener?.invoke(
+                            false,
+                            "Downloading failed, Shutting down $lastErrorMsg"
+                        )
                         //log lastErrorMsg or isSourceEnabled
                         shutdown()
                     }
@@ -451,33 +458,28 @@ internal class AnalyticsDelegate(
 
         _internalPostPlugins + _internalPostPlugins + destinationConfigurationPlugin
         _internalPostPlugins = _internalPostPlugins + wakeupActionPlugin
+
+    }
+
+    /**
+     * Any initialization that requires [Analytics] is to be done here
+     *
+     * @param analytics
+     */
+    internal fun startup(analytics: Analytics) {
+        //apply startup closure
+        applyClosure {
+            setup(analytics)
+        }
         //if plugin update related configs are ready
         applyClosure {
             applyUpdateClosures(this)
         }
     }
 
-    /*private fun onDataChange() {
-        *//*if (data.isEmpty() || _serverConfig == null || isFlushing.get()) return // in case server config is
-        // not yet downloaded
-        println("\nflush to server: $data \nthread: ${Thread.currentThread().name}\n")
-
-        //post the data
-        dataUploadService.upload(data, _commonContext) {
-            if (it.success) {
-                data.successCallback()
-                _storageDecorator.deleteMessages(data)
-            }else{
-                data.failureCallback(
-                    it.errorThrowable
-                )
-            }
-        }*//*
-
-
-    }*/
-
     private fun applyUpdateClosures(plugin: Plugin) {
+        //apply setupClosures
+
         //server config closure, if available
         applyServerConfigClosure(plugin)
         //settings closure
@@ -488,6 +490,10 @@ internal class AnalyticsDelegate(
         SettingsState.value?.apply {
             plugin.updateSettings(this)
         }
+    }
+
+    private fun applySetupClosure(plugin: Plugin, analytics: Analytics) {
+        plugin.setup(analytics = analytics)
     }
 
     private fun applyServerConfigClosure(plugin: Plugin) {
@@ -522,4 +528,6 @@ internal class AnalyticsDelegate(
         get() = error ?: errorBody?.let {
             Exception(it)
         } ?: Exception("Internal error")
+
+
 }

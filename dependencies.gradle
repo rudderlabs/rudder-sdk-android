@@ -39,7 +39,7 @@ ext {
             workMultiprocess       : "androidx.work:work-multiprocess:${versions.work}",
             gson                   : "com.google.code.gson:gson:${versions.gson}",
             jackson                : "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
-            jacksonKotlin          : "com.fasterxml.jackson.module:jackson-module-kotlin:${versions.jackson}",
+            jacksonKotlin          : "com.fasterxml.jackson.module:jackson-module-kotlin:${versions.jacksonKotlin}",
             moshi                  : [
                     kotlin : "com.squareup.moshi:moshi-kotlin:${versions.moshi}",
                     core   : "com.squareup.moshi:moshi:${versions.moshi}",

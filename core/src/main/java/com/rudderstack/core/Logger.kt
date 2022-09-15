@@ -51,4 +51,5 @@ interface Logger {
         Error(3),
         None(4),
     }
+    val level: LogLevel
 }

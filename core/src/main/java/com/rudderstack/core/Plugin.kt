@@ -43,7 +43,8 @@ fun interface Plugin {
          * [Chain.proceed] should be called with this message so as to discard any
          * alteration to the message by [DestinationPlugin]
          */
-        val originalMessage : Message
+        val originalMessage: Message
+
         /**
          * Indicates that processing of this plugin is over and now the message is ready to be taken forward.
          * If changes made to the message object is local to plugin and is not intended to be moved forward,
@@ -62,20 +63,21 @@ fun interface Plugin {
          *
          * @return the set of plugins that this Chain operates on
          */
-        val plugins : List<Plugin>
+        val plugins: List<Plugin>
 
         /**
          * Index of the plugin that is being operated.
          * Generally if called from inside a plugin, this denotes the index of the plugin
          */
-        val index : Int
+        val index: Int
 
         /**
          * Create a copy of [Chain] with updated set of plugins.
          *
          * @param plugins
          */
-        fun with(plugins: List<Plugin>) : Chain
+        fun with(plugins: List<Plugin>): Chain
+
     }
     /*companion object {
         */
@@ -92,23 +94,39 @@ fun interface Plugin {
         inline operator fun invoke(crossinline block: (chain: Chain) -> Message): Plugin =
             Plugin { block(it) }
     }*/
-    fun  intercept(chain: Chain): Message
+    fun intercept(chain: Chain): Message
 
     /**
      * Setup code for this plugin
      * Helps in changing settings, etc.
      * @param analytics The analytics object this plugin is added to.
      */
-    fun setup(analytics: Analytics){}
+    fun setup(analytics: Analytics) {}
 
     /**
      * Called when settings is updated
      *
      * @param settings [Settings] globally set for the sdk
      */
-    fun updateSettings(settings: Settings){}
+    fun updateSettings(settings: Settings) {}
 
-    fun updateRudderServerConfig(config: RudderServerConfig){}
+    fun updateRudderServerConfig(config: RudderServerConfig) {}
 
+    /**
+     * Called when shutDOwn is triggered in [Analytics]
+     *
+     */
+    fun onShutDown(){}
+
+    /**
+     * Called when reset is triggered in Analytics
+     *
+     */
+    fun reset(){}
+
+
+
+    val Analytics.jsonAdapter
+        get() = jsonAdapter
 
 }

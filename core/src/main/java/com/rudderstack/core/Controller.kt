@@ -119,10 +119,21 @@ interface Controller {
     val isShutdown : Boolean
 
     /**
+     * The logger set upfront or default [Logger]
+     */
+    val logger : Logger
+
+    /**
      * clears the storage of all data
      *
      */
     fun clearStorage()
+
+    /**
+     * Resets the device mode destinations. Resets any traits and external ids attached to context
+     *
+     */
+    fun reset()
     /**
      * The max number of [Message] that can be fetched and uploaded at one go.
      * Delegates to [Storage.setMaxFetchLimit]
