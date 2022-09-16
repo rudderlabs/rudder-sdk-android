@@ -61,9 +61,7 @@ public class Utils {
     }
 
     public static Long getCurrentTimeInSecondsLong() {
-        long currentTimeInMilliSeconds = System.currentTimeMillis();
-        long currentTimeInSeconds = TimeUnit.MILLISECONDS.toSeconds(currentTimeInMilliSeconds);
-        return new Long(currentTimeInSeconds);
+        return new Long(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
     }
 
     public static String getCurrentTimeSeconds() {
