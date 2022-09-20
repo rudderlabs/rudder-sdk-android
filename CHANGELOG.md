@@ -18,3 +18,7 @@ All notable changes to this project will be documented in this file.
 ## Version - 1.6.1 - 2022-08-02
 ### Changed
 - Removed the app_name from the string resources of the Core SDK.
+
+## Version - 1.7.0 - 2022-08-04
+### Added
+- Session Tracking.

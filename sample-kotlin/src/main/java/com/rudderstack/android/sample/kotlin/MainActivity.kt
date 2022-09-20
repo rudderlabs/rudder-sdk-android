@@ -1,20 +1,19 @@
 package com.rudderstack.android.sample.kotlin
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
 import com.rudderstack.android.sdk.core.RudderClient
-import com.rudderstack.android.sdk.core.RudderOption
-import com.rudderstack.android.sdk.core.RudderProperty
-import com.rudderstack.android.sdk.core.RudderTraits
 import java.util.*
 import javax.net.ssl.SSLContext
+
 
 
 class MainActivity : AppCompatActivity() {
@@ -30,7 +29,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        MainApplication.rudderClient!!.track("first_event")
+        /*MainApplication.rudderClient!!.track("first_event")
 
         Handler().postDelayed({
             RudderClient.putAdvertisingId("some_idfa_changed")
@@ -71,7 +70,7 @@ class MainActivity : AppCompatActivity() {
         MainApplication.rudderClient!!.onIntegrationReady(
             "Custom Factory",
             NativeCallBack("Custom Factory")
-        );
+        );*/
     }
 
     private fun tlsBackport() {
@@ -91,6 +90,10 @@ class MainActivity : AppCompatActivity() {
             Log.e("SecurityException", "Google Play Services not available.");
             e.printStackTrace()
         }
+    }
+
+    fun onUserSession(view: View) {
+        startActivity(Intent(this, UserSessionActivity::class.java))
     }
 }
 

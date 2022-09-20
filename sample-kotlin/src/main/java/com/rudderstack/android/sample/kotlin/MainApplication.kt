@@ -14,9 +14,9 @@ class MainApplication : Application(), Configuration.Provider {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://6dbd-175-101-36-4.ngrok.io"
+        const val DATA_PLANE_URL = "https://rudderstacz.dataplane.rudderstack.com" //"https://6dbd-175-101-36-4.ngrok.io"
         const val CONTROL_PLANE_URL = "https://0e741f50e567.ngrok.io"
-        const val WRITE_KEY = "1pAKRv50y15Ti6UWpYroGJaO0Dj"
+        const val WRITE_KEY = "1wvsoF3Kx2SczQNlx1dvcqW9ODW" //"1pAKRv50y15Ti6UWpYroGJaO0Dj"
     }
 
     override fun onCreate() {
@@ -38,19 +38,22 @@ class MainApplication : Application(), Configuration.Provider {
 //            rudderConfig
 //        )
 
-        RudderClient.putAnonymousId("anonymous_id_1")
-        RudderClient.putDeviceToken("DevToken2")
+//        RudderClient.putAnonymousId("anonymous_id_1")
+//        RudderClient.putDeviceToken("DevToken2")
 
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,
             RudderConfig.Builder()
                 .withDataPlaneUrl(DATA_PLANE_URL)
-                .withLogLevel(RudderLogger.RudderLogLevel.DEBUG)
+                .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withTrackLifecycleEvents(true)
-                .withRecordScreenViews(true)
+                .withAutoSessionTracking(true)
+                .withRecordScreenViews(false)
                 .withAutoCollectAdvertId(false)
                 .withCustomFactory(CustomFactory.FACTORY)
+                .withSleepCount(4)
+                .withSessionTimeoutMillis(60000)
                 .build()
         )
 
