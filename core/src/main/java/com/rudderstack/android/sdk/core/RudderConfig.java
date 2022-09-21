@@ -628,7 +628,7 @@ public class RudderConfig {
          * @param sessionTimeout (duration of inactivity of session in milliseconds)
          * @return RudderConfig.Builder
          */
-        public Builder withSessionTimeoutMillis(int sessionTimeout) {
+        public Builder withSessionTimeoutMillis(long sessionTimeout) {
             if (sessionTimeout < Constants.MIN_SESSION_TIMEOUT) {
                 RudderLogger.logError(String.format("Minimum sessionTimeout is %s millisecond.", Constants.MIN_SESSION_TIMEOUT));
                 return this;
