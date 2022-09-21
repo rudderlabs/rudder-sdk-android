@@ -44,7 +44,7 @@ public class RudderConfig {
     private boolean autoCollectAdvertId;
     private boolean recordScreenViews;
     private boolean trackAutoSession;
-    private int sessionTimeout;
+    private long sessionTimeout;
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
@@ -85,7 +85,7 @@ public class RudderConfig {
             boolean autoCollectAdvertId,
             boolean recordScreenViews,
             boolean trackAutoSession,
-            int sessionTimeout,
+            long sessionTimeout,
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
             List<RudderIntegration.Factory> customFactories
@@ -310,7 +310,7 @@ public class RudderConfig {
     /**
      * @return sessionDuration (duration of a session in minute)
      */
-    public int getSessionTimeout() {
+    public long getSessionTimeout() {
         return sessionTimeout;
     }
 
@@ -354,7 +354,7 @@ public class RudderConfig {
         this.recordScreenViews = recordScreenViews;
     }
 
-    void setSessionTimeout(int sessionTimeout) {
+    void setSessionTimeout(long sessionTimeout) {
         this.sessionTimeout = sessionTimeout;
     }
 
@@ -622,7 +622,7 @@ public class RudderConfig {
             return this;
         }
 
-        private int sessionTimeout = Constants.DEFAULT_SESSION_TIMEOUT;
+        private long sessionTimeout = Constants.DEFAULT_SESSION_TIMEOUT;
 
         /**
          * @param sessionTimeout (duration of inactivity of session in milliseconds)

@@ -33,9 +33,9 @@ class Constants {
     // whether we should record screen views automatically
     static final boolean RECORD_SCREEN_VIEWS = false;
     // minimum duration for inactivity is 0 milliseconds
-    static final int MIN_SESSION_TIMEOUT = 0;
+    static final long MIN_SESSION_TIMEOUT = 0;
     // default duration for inactivity is 5 minutes or 300000 milliseconds
-    static final int DEFAULT_SESSION_TIMEOUT = 300000;
+    static final long DEFAULT_SESSION_TIMEOUT = 300000;
     // default for automatic session tracking
     static final boolean AUTO_SESSION_TRACKING = true;
     // current version of the library
