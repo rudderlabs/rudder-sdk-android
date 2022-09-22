@@ -60,6 +60,9 @@ internal class AnalyticsDelegate(
 
     private val _isShutDown = AtomicBoolean(false)
 
+    //keep track of Analytics object
+    private var _analytics: Analytics? = null
+
     /**
      * A handler for rejected tasks that discards the oldest unhandled request and then retries
      * execute, unless the executor is shut down, in which case the task is discarded.
@@ -206,7 +209,10 @@ internal class AnalyticsDelegate(
                     initDestinationPlugin(it)
                 } else
                     _customPlugins = _customPlugins + it
-
+                //startup
+                _analytics?.apply {
+                    it.setup(this)
+                }
                 applyUpdateClosures(it)
             }
         }
@@ -475,6 +481,7 @@ internal class AnalyticsDelegate(
         applyClosure {
             applyUpdateClosures(this)
         }
+        _analytics = analytics
     }
 
     private fun applyUpdateClosures(plugin: Plugin) {
@@ -490,10 +497,6 @@ internal class AnalyticsDelegate(
         SettingsState.value?.apply {
             plugin.updateSettings(this)
         }
-    }
-
-    private fun applySetupClosure(plugin: Plugin, analytics: Analytics) {
-        plugin.setup(analytics = analytics)
     }
 
     private fun applyServerConfigClosure(plugin: Plugin) {

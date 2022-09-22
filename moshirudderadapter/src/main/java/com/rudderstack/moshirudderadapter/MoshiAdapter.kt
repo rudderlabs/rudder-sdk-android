@@ -18,12 +18,14 @@ import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import java.lang.reflect.Type
+
 /**
  * @see JsonAdapter
  *
  * A Moshi based implementation of JsonAdapter
  */
-class MoshiAdapter(private val moshi : Moshi = Moshi.Builder()
+class MoshiAdapter(private var moshi : Moshi = Moshi.Builder()
     .addLast(KotlinJsonAdapterFactory())
     .build()) : JsonAdapter {
 
@@ -70,6 +72,20 @@ class MoshiAdapter(private val moshi : Moshi = Moshi.Builder()
 
         }
 
+    }
+    fun add(factory: com.squareup.moshi.JsonAdapter.Factory){
+       moshi = moshi.newBuilder().add(factory).build()
+    }
+    fun <T> add(type: Type, jsonAdapter: com.squareup.moshi.JsonAdapter<T>) {
+        moshi = moshi.newBuilder().add(type, jsonAdapter).build()
+    }
+
+    fun <T> add(
+        type: Type,
+        annotation: Class<out Annotation?>,
+        jsonAdapter: com.squareup.moshi.JsonAdapter<T>
+    ){
+        moshi = moshi.newBuilder().add(type, annotation, jsonAdapter).build()
     }
 
     private fun <T : Any> createMoshiAdapter(

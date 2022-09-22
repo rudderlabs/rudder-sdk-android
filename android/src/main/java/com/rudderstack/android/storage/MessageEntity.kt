@@ -96,33 +96,33 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
                 is GroupMessage -> {
                     it.put("groupId", message.groupId)
                     it.put("traits", message.traits?.let {
-                        jsonAdapter.writeToJson(this, RudderTypeAdapter {})
+                        jsonAdapter.writeToJson(it, RudderTypeAdapter {})
                     })
 
                 }
                 is PageMessage -> {
                     it.put("eventName", message.name)
                     it.put("properties", message.properties?.let {
-                        jsonAdapter.writeToJson(this, RudderTypeAdapter {})
+                        jsonAdapter.writeToJson(it, RudderTypeAdapter {})
                     })
                     it.put("category", message.category)
                 }
                 is ScreenMessage -> {
                     it.put("eventName", message.name)
                     it.put("properties", message.properties?.let {
-                        jsonAdapter.writeToJson(this, RudderTypeAdapter {})
+                        jsonAdapter.writeToJson(it, RudderTypeAdapter {})
                     })
                     it.put("category", message.category)
                 }
                 is TrackMessage -> {
                     it.put("eventName", message.eventName)
                     it.put("properties", message.properties?.let {
-                        jsonAdapter.writeToJson(this, RudderTypeAdapter {})
+                        jsonAdapter.writeToJson(it, RudderTypeAdapter {})
                     })
                 }
                 is IdentifyMessage -> {
                     it.put("properties", message.properties?.let {
-                        jsonAdapter.writeToJson(this, RudderTypeAdapter {})
+                        jsonAdapter.writeToJson(it, RudderTypeAdapter {})
                     })
                 }
             }
