@@ -4,6 +4,8 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.annotation.Nullable;
+
 import java.util.Locale;
 
 class RudderPreferenceManager {
@@ -21,6 +23,9 @@ class RudderPreferenceManager {
     private static final String RUDDER_OPT_OUT_TIME_KEY = "rl_opt_out_time";
     private static final String RUDDER_ANONYMOUS_ID_KEY = "rl_anonymous_id_key";
     private static final String RUDDER_PERIODIC_WORK_REQUEST_ID_KEY = "rl_periodic_work_request_key";
+    private static final String RUDDER_LAST_EVENT_TIMESTAMP_KEY = "rl_last_event_timestamp_key";
+    private static final String RUDDER_SESSION_ID_KEY = "rl_session_id_key";
+    private static final String RUDDER_AUTO_SESSION_TRACKING_STATUS_KEY = "rl_auto_session_tracking_status_key";
 
     private static SharedPreferences preferences;
     private static RudderPreferenceManager instance;
@@ -129,6 +134,43 @@ class RudderPreferenceManager {
 
     String getPeriodicWorkRequestId() {
         return preferences.getString(RUDDER_PERIODIC_WORK_REQUEST_ID_KEY, null);
+    }
+
+    void saveLastEventTimeStamp(Long time) {
+        preferences.edit().putLong(RUDDER_LAST_EVENT_TIMESTAMP_KEY, time).apply();
+    }
+
+    @Nullable
+    Long getLastEventTimeStamp() {
+        long time = preferences.getLong(RUDDER_LAST_EVENT_TIMESTAMP_KEY, -1);
+        return (time == -1) ? null : new Long(time);
+    }
+
+    void clearLastEventTimeStamp() {
+        preferences.edit().remove(RUDDER_LAST_EVENT_TIMESTAMP_KEY).apply();
+    }
+
+    void saveSessionId(Long sessionId) {
+        preferences.edit().putLong(RUDDER_SESSION_ID_KEY, sessionId).apply();
+    }
+
+    void clearSessionId() {
+        preferences.edit().remove(RUDDER_SESSION_ID_KEY).apply();
+    }
+
+    @Nullable
+    Long getSessionId() {
+        long sessionId = preferences.getLong(RUDDER_SESSION_ID_KEY, -1);
+        if (sessionId == -1) return null;
+        else return new Long(sessionId);
+    }
+
+    boolean getAutoSessionTrackingStatus() {
+        return preferences.getBoolean(RUDDER_AUTO_SESSION_TRACKING_STATUS_KEY, true);
+    }
+
+    void saveAutoSessionTrackingStatus(boolean status) {
+        preferences.edit().putBoolean(RUDDER_AUTO_SESSION_TRACKING_STATUS_KEY, status).apply();
     }
 
     void performMigration() {
