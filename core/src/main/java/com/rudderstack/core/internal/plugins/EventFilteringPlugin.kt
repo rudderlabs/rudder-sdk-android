@@ -72,7 +72,7 @@ object EventFilteringPlugin : Plugin {
                     eventFilteringStatus.takeIf { it != DISABLE }
                         ?.let { destination.destinationConfig[it] as? List<Map<String, String>>? }
                         ?.mapNotNull {
-                            it["eventName"]
+                            it[EVENT_NAME]
                         }?.toHashSet() ?: setOf()
                 )
                 filteredEventsMap =
