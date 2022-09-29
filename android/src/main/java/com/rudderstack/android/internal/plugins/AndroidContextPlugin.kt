@@ -27,6 +27,7 @@ import android.util.DisplayMetrics
 import android.view.WindowManager
 import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.AndroidUtils.isTv
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.internal.optAdd
 import com.rudderstack.models.Message
@@ -71,6 +72,7 @@ internal class AndroidContextPlugin(
     private var _advertisingId: String? = null
     private var _deviceToken: String? = null
 
+    private var _analytics : Analytics? = null
     init {
         if (autoCollectAdvertId)
             collectAdvertisingId(application)
@@ -82,6 +84,10 @@ internal class AndroidContextPlugin(
         return chain.proceed(newMsg)
     }
 
+    override fun setup(analytics: Analytics) {
+        super.setup(analytics)
+        _analytics = analytics
+    }
     /**
      * Overriding advertising id, will disable auto collection if it's on
      *
@@ -126,7 +132,7 @@ internal class AndroidContextPlugin(
         val isLimitAdTrackingEnabled = advertisingInfo.javaClass
             .getMethod("isLimitAdTrackingEnabled").invoke(advertisingInfo) as? Boolean
         if (isLimitAdTrackingEnabled == true) {
-//            RudderLogger.logDebug("Not collecting advertising ID because isLimitAdTrackingEnabled (Google Play Services) is true.")
+            _analytics?.logger?.debug(log = "Not collecting advertising ID because isLimitAdTrackingEnabled (Google Play Services) is true.")
 //            this.deviceInfo.setAdTrackingEnabled(false)
             return null
         }
@@ -139,7 +145,7 @@ internal class AndroidContextPlugin(
         val contentResolver: ContentResolver = application.contentResolver
         val limitAdTracking = Settings.Secure.getInt(contentResolver, "limit_ad_tracking") != 0
         if (limitAdTracking) {
-//            RudderLogger.logDebug("Not collecting advertising ID because limit_ad_tracking (Amazon Fire OS) is true.")
+            _analytics?.logger?.debug(log = "Not collecting advertising ID because limit_ad_tracking (Amazon Fire OS) is true.")
 //            this.deviceInfo.setAdTrackingEnabled(false)
             return null
         }

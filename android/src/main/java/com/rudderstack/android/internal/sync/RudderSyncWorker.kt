@@ -24,6 +24,7 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.Settings
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import java.lang.ref.WeakReference
+import kotlin.math.log
 
 /**
  * Syncs the data at an interval with rudder server
@@ -39,6 +40,7 @@ internal class RudderSyncWorker(appContext: Context, workerParams: WorkerParamet
             val weakSinkAnalytics = it.sinkAnalytics
             val sinkAnalytics = (weakSinkAnalytics?:it.createSinkAnalytics())
             val success = sinkAnalytics?.blockingFlush()
+            sinkAnalytics?.logger?.debug(log = "Data upload through worker. success: $success")
             if(weakSinkAnalytics == null)
                 sinkAnalytics?.shutdown()
             return if(success == true) Result.success() else Result.failure()

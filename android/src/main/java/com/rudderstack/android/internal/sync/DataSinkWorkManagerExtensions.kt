@@ -74,6 +74,7 @@ internal fun Application.registerWorkManager(
     analytics: Analytics,
     rudderWorkerConfig: RudderWorkerConfig
 ) {
+    analytics.logger.debug(log= "Initializing work manager with config $rudderWorkerConfig")
     //if analytics object has changed, shutting it down is not this method's responsibility
     analyticsRef = WeakReference(analytics)
     latestConfig = rudderWorkerConfig
@@ -88,7 +89,7 @@ internal fun Application.registerWorkManager(
         }
     }
 //        .takeIf { rudderWorkerConfig.processName != null || rudderWorkerConfig.networkExecutorService != null }
-        ?.let {
+        .let {
             WorkManager.initialize(this, it.build())
         }
     if (rudderWorkerConfig.processName != null) {
@@ -96,7 +97,7 @@ internal fun Application.registerWorkManager(
             WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE,
             sinkWorker
         )
-    }
+    }else
     WorkManager.getInstance(this).enqueueUniquePeriodicWork(
         WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE,
         sinkWorker

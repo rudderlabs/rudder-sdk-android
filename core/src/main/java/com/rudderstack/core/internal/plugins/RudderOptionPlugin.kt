@@ -70,10 +70,7 @@ internal class RudderOptionPlugin(private val options: RudderOptions) : Plugin {
         integrations: Map<String, Boolean>
     ): List<Plugin> {
         return plugins.filter {
-            it !is DestinationPlugin<*> || integrations.getOrDefault(
-                it.name,
-                integrations.getOrDefault("All", true)//if destination name is not present
-            )
+            it !is DestinationPlugin<*> || (integrations[it.name] ?: integrations["All"] ?:true)
         }
 
     }

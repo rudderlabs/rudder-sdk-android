@@ -62,7 +62,8 @@ internal class AndroidStorage(
         private fun <T : Serializable> saveObject(
             obj: T,
             context: Context,
-            fileName: String
+            fileName: String,
+            logger: Logger = AndroidLogger
         ): Boolean {
             try {
                 val fos: FileOutputStream = context.openFileOutput(
@@ -75,7 +76,7 @@ internal class AndroidStorage(
                 fos.close()
                 return true
             } catch (e: Exception) {
-                AndroidLogger.error(
+                logger.error(
                     log = "save object: Exception while saving Object to File",
                     throwable = e
                 )
@@ -92,7 +93,8 @@ internal class AndroidStorage(
          * @param fileName
          * @return
          */
-        private fun <T : Serializable> getObject(context: Context, fileName: String): T? {
+        private fun <T : Serializable> getObject(context: Context, fileName: String,
+        logger: Logger = AndroidLogger): T? {
             try {
                 val file = context.getFileStreamPath(fileName)
                 if (file != null && file.exists()
@@ -106,7 +108,7 @@ internal class AndroidStorage(
                     return obj
                 }
             } catch (e: Exception) {
-                AndroidLogger.error(
+                logger.error(
                     log = "getObject: Failed to read Object from File",
                     throwable = e
                 )
@@ -273,7 +275,7 @@ internal class AndroidStorage(
 
     override val context: MessageContext?
         get() = (if (_cachedContext == null) {
-            _cachedContext = getObject<HashMap<String, Any?>>(androidContext, CONTEXT_FILE_NAME)
+            _cachedContext = getObject<HashMap<String, Any?>>(androidContext, CONTEXT_FILE_NAME, logger)
             _cachedContext
         } else _cachedContext)
 
@@ -282,14 +284,14 @@ internal class AndroidStorage(
     override fun saveServerConfig(serverConfig: RudderServerConfig) {
         synchronized(this) {
             _serverConfig = serverConfig
-            saveObject(serverConfig, context = androidContext, SERVER_CONFIG_FILE_NAME)
+            saveObject(serverConfig, context = androidContext, SERVER_CONFIG_FILE_NAME, logger)
         }
     }
 
     override val serverConfig: RudderServerConfig?
         get() = synchronized(this) {
             if (_serverConfig == null) _serverConfig =
-                getObject(androidContext, SERVER_CONFIG_FILE_NAME)
+                getObject(androidContext, SERVER_CONFIG_FILE_NAME, logger)
             _serverConfig
         }
 
@@ -356,7 +358,7 @@ internal class AndroidStorage(
         get() = MessageEntity(this, jsonAdapter)
 
     private fun MessageContext.save() {
-        saveObject(HashMap(this), androidContext, CONTEXT_FILE_NAME)
+        saveObject(HashMap(this), androidContext, CONTEXT_FILE_NAME, logger)
     }
 
 

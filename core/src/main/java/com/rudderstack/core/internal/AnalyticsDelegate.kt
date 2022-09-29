@@ -25,6 +25,7 @@ import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.log
 
 internal class AnalyticsDelegate(
 //    private val _writeKey : String,
@@ -163,6 +164,7 @@ internal class AnalyticsDelegate(
 
 
     override fun applySettings(settings: Settings) {
+        logger.debug(log = "Settings updated: $settings")
         SettingsState.update(settings)
         applyClosure {
             applySettingsClosure(this)
@@ -178,6 +180,7 @@ internal class AnalyticsDelegate(
     }
 
     override fun setAnonymousId(anonymousId: String) {
+
         applySettings(
             SettingsState.value?.copy(anonymousId = anonymousId)
                 ?: Settings(anonymousId = anonymousId)
@@ -285,7 +288,7 @@ internal class AnalyticsDelegate(
         /*Exception().stackTrace.forEach {
             println("${ it.lineNumber }, ${it.methodName}, ${it.className}")
         }*/
-        println()
+        logger.info(log = "Flush called")
         if (isShutdown) return
         forceFlush(dataUploadService, _flushExecutor)
     }
@@ -342,7 +345,7 @@ internal class AnalyticsDelegate(
     override fun shutdown() {
         flush()
         if (_isShutDown.compareAndSet(false, true)) return
-        println("shutdown")
+        logger.info(log = "shutdown")
         //inform plugins
         applyClosure {
             onShutDown()
@@ -402,8 +405,12 @@ internal class AnalyticsDelegate(
     }
 
     private fun updateSourceConfig() {
-        check(configDownloadService != null) {
+        /*check(configDownloadService != null) {
             "Config Download Service Not Set"
+        }*/
+        if(configDownloadService == null){
+            logger.error(log = "Config Download Service Not Set")
+            return
         }
         //configDownloadService is non-null
         configDownloadService.download(
@@ -424,6 +431,7 @@ internal class AnalyticsDelegate(
                             true,
                             "Downloading failed, using cached context"
                         )
+                        logger.warn(log = "Downloading failed, using cached context")
                     } else {
                         logger.error(log = "SDK Initialization failed due to $lastErrorMsg")
                         initializationListener?.invoke(
@@ -459,6 +467,7 @@ internal class AnalyticsDelegate(
         // add defaults to message
 //        _internalPrePlugins = _internalPrePlugins + anonymousIdPlugin
         // store for cloud destinations
+        _internalPrePlugins = _internalPrePlugins + EventFilteringPlugin
         _internalPrePlugins = _internalPrePlugins + fillDefaultsPlugin
         _internalPrePlugins = _internalPrePlugins + storagePlugin
 
@@ -495,6 +504,7 @@ internal class AnalyticsDelegate(
 
     private fun applySettingsClosure(plugin: Plugin) {
         SettingsState.value?.apply {
+            logger.debug(log = "Settings update: $this")
             plugin.updateSettings(this)
         }
     }

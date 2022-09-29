@@ -14,10 +14,8 @@
 
 package com.rudderstack.core.internal.plugins
 
-import com.rudderstack.core.Plugin
-import com.rudderstack.core.Settings
+import com.rudderstack.core.*
 import com.rudderstack.core.State
-import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.KeyConstants
 import com.rudderstack.core.internal.optAdd
 import com.rudderstack.core.internal.states.SettingsState
@@ -31,9 +29,14 @@ internal class ExtractStatePlugin(
     private val contextState:
     State<MessageContext>,
     private val settingsState: State<Settings>,
-//    private val options: RudderOptions,
     private val storage: Storage
 ) : Plugin {
+
+    private var _analytics : Analytics? = null
+    override fun setup(analytics: Analytics) {
+        super.setup(analytics)
+        _analytics = analytics
+    }
     override fun intercept(chain: Plugin.Chain): Message {
         val message = chain.message()
 //        var newContext: MessageContext?
@@ -51,7 +54,7 @@ internal class ExtractStatePlugin(
                 //aforementioned ids
                 val newUserId = getUserId(message)
 
-
+                _analytics?.logger?.debug(log = "New user id detected: $newUserId")
                 // in case of identify, the stored traits (if any) are replaced by the ones provided
                 when (message) {
                     is AliasMessage -> {

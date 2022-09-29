@@ -14,6 +14,7 @@
 
 package com.rudderstack.core.internal.plugins
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.Settings
 import com.rudderstack.models.Message
@@ -24,12 +25,19 @@ import com.rudderstack.models.Message
  */
 internal class GDPRPlugin : Plugin {
     private var isOptOut = false
+    private var _analytics : Analytics? = null
     override fun intercept(chain: Plugin.Chain): Message {
-        return if (isOptOut)
+        return if (isOptOut) {
             chain.message()
+        }
         else
             chain.proceed(chain.message())
 
+    }
+
+    override fun setup(analytics: Analytics) {
+        super.setup(analytics)
+        _analytics = analytics
     }
 
     override fun updateSettings(settings: Settings) {

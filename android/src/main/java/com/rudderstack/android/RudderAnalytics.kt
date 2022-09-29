@@ -108,7 +108,7 @@ private var lifecycleObserver: LifecycleObserver? = null
 fun Analytics.putAdvertisingId(advertisingId: String) {
 
     // sets into context plugin
-    androidContextPlugin?.setAdvertisingId(advertisingId) ?: AndroidLogger.warn(
+    androidContextPlugin?.setAdvertisingId(advertisingId) ?: logger.warn(
         log = "Analytics not initialized. Setting advertising id failed"
     )
 }
@@ -121,7 +121,7 @@ fun Analytics.putAdvertisingId(advertisingId: String) {
 fun Analytics.putDeviceToken(deviceToken: String) {
 
     //set device token in context plugin
-    androidContextPlugin?.putDeviceToken(deviceToken) ?: AndroidLogger.warn(
+    androidContextPlugin?.putDeviceToken(deviceToken) ?: logger.warn(
         log = "Analytics not initialized. Setting device token failed"
     )
 }
@@ -176,6 +176,7 @@ private fun Analytics.send(message: Message) {
         is IdentifyMessage -> identify(message)
         is PageMessage -> {
             /**not supported in mobile**/
+            logger.warn(log = "Page Message is not supported")
         }
         is ScreenMessage -> screen(message)
         is TrackMessage -> track(message)
