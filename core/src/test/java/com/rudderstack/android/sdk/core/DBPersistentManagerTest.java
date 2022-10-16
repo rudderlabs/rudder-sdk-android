@@ -91,7 +91,7 @@ public class DBPersistentManagerTest {
                     ArrayList<String> messages = new ArrayList<String>();
                     String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC LIMIT %d",
                             DBPersistentManager.EVENTS_TABLE_NAME,
-                            UPDATED_COL, 2);
+                            UPDATED_COL, 3);
                     finalDbPersistentManager.getEventsFromDB(idStatusMap, messages, selectSQL);
                     assertThat(idStatusMap, allOf(
                             hasKey(1),
@@ -151,8 +151,8 @@ public class DBPersistentManagerTest {
         dbPersistentManager.saveEventSync(MESSAGE_4);
 
 
-        List<Integer> messageIds = new ArrayList<>();
-        List<String> messageJsons = new ArrayList<>();
+        ArrayList<Integer> messageIds = new ArrayList<>();
+        ArrayList<String> messageJsons = new ArrayList<>();
         dbPersistentManager.fetchAllCloudModeEventsFromDB(messageIds, messageJsons);
         List<RudderMessage> messages = parse(messageJsons);
 
@@ -180,7 +180,7 @@ public class DBPersistentManagerTest {
         //device modes shouldn't be empty
         messageIds.clear();
         messages.clear();
-        dbPersistentManager.fetchAllDeviceModeEventsFromDB(messageIds, messageJsons);
+        dbPersistentManager.fetchDeviceModeEventsFromDb(messageIds, messageJsons, 5);
 
         //list shouldn't be empty
         assertThat(messageIds, Matchers.<Integer>iterableWithSize(4));
@@ -204,9 +204,9 @@ public class DBPersistentManagerTest {
         dbPersistentManager.saveEventSync(MESSAGE_4);
 
 
-        List<Integer> messageIds = new ArrayList<>();
-        List<String> messageJsons = new ArrayList<>();
-        dbPersistentManager.fetchAllDeviceModeEventsFromDB(messageIds, messageJsons);
+        ArrayList<Integer> messageIds = new ArrayList<>();
+        ArrayList<String> messageJsons = new ArrayList<>();
+        dbPersistentManager.fetchDeviceModeEventsFromDb(messageIds, messageJsons, 5);
         List<RudderMessage> messages = parse(messageJsons);
 
         //test if events are available
@@ -225,7 +225,7 @@ public class DBPersistentManagerTest {
         //fetch again
         messageIds.clear();
         messages.clear();
-        dbPersistentManager.fetchAllDeviceModeEventsFromDB(messageIds, messageJsons);
+        dbPersistentManager.fetchDeviceModeEventsFromDb(messageIds, messageJsons, 5);
 
         //list should be empty
         assertThat(messageIds, Matchers.<Integer>iterableWithSize(0));
@@ -253,9 +253,9 @@ public class DBPersistentManagerTest {
         dbPersistentManager.saveEventSync(MESSAGE_4);
 
 
-        List<Integer> messageIds = new ArrayList<>();
-        List<String> messageJsons = new ArrayList<>();
-        dbPersistentManager.fetchAllDeviceModeEventsFromDB(messageIds, messageJsons);
+        ArrayList<Integer> messageIds = new ArrayList<>();
+        ArrayList<String> messageJsons = new ArrayList<>();
+        dbPersistentManager.fetchDeviceModeEventsFromDb(messageIds, messageJsons, 5);
         List<RudderMessage> messages = parse(messageJsons);
 
         //test if events are available
@@ -275,7 +275,7 @@ public class DBPersistentManagerTest {
         //fetch again
         messageIds.clear();
         messages.clear();
-        dbPersistentManager.fetchAllDeviceModeEventsFromDB(messageIds, messageJsons);
+        dbPersistentManager.fetchDeviceModeEventsFromDb(messageIds, messageJsons, 5);
 
         //list should be empty
         assertThat(messageIds, Matchers.<Integer>iterableWithSize(0));
@@ -288,7 +288,7 @@ public class DBPersistentManagerTest {
         assertThat(messageIds, Matchers.<Integer>iterableWithSize(0));
 
         //delete done events
-        dbPersistentManager.deleteDoneEvents();
+        dbPersistentManager.runGcForEvents();
         messageIds.clear();
         messages.clear();
         dbPersistentManager.getEventsFromDB(messageIds, messageJsons, "SELECT * FROM " + DBPersistentManager.EVENTS_TABLE_NAME);
