@@ -28,6 +28,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /*
  * Helper class for SQLite operations
@@ -40,7 +45,6 @@ class DBPersistentManager extends SQLiteOpenHelper {
     // SQLite database version number
     private static final int DB_VERSION = 2;
     static final String EVENT = "EVENT";
-    private int currentDbVersion = DB_VERSION;
 
     static final String EVENTS_TABLE_NAME = "events";
     private static final String MESSAGE_ID_COL = "id";
@@ -84,7 +88,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
      * */
     private void createSchemas(SQLiteDatabase db) {
         String createEventSchemaSQL;
-        if (currentDbVersion == 1) {
+        if (DB_VERSION == 1) {
             createEventSchemaSQL = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS '%s' " +
                             "('%s' INTEGER PRIMARY KEY AUTOINCREMENT, " +
                             "'%s' TEXT NOT NULL, '%s' INTEGER NOT NULL)",
@@ -297,42 +301,49 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     private static DBPersistentManager instance;
 
-    @VisibleForTesting()
-    static DBPersistentManager getInstance(Application application, int dbVersion) {
-        instance = new DBPersistentManager(application, dbVersion);
-        return instance;
-    }
+//    @VisibleForTesting()
+//    static DBPersistentManager getInstance(Application application, int dbVersion) {
+//        instance = new DBPersistentManager(application, dbVersion);
+//        return instance;
+//    }
 
     static DBPersistentManager getInstance(Application application) {
         if (instance == null) {
             RudderLogger.logInfo("DBPersistentManager: getInstance: creating instance");
-            return getInstance(application, DB_VERSION);
+            return new DBPersistentManager(application);
         }
         return instance;
     }
 
-    private DBPersistentManager(Application application, int version) {
-        super(application, DB_NAME, null, version);
-        currentDbVersion = version;
+    private DBPersistentManager(Application application) {
+        super(application, DB_NAME, null, 1);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
         // Need to perform db operations on a separate thread to support strict mode.
-        new Thread(new Runnable() {
+        Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 try {
-                    DBPersistentManager.this.getWritableDatabase();
+                    SQLiteDatabase database = DBPersistentManager.this.getWritableDatabase();
                     synchronized (DBPersistentManager.this) {
                         dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread",
-                                DBPersistentManager.this.getWritableDatabase());
+                                database);
                         dbInsertionHandlerThread.start();
                         for (Message msg : queue) {
                             dbInsertionHandlerThread.addMessage(msg);
                         }
                     }
                 } catch (SQLiteDatabaseCorruptException ex) {
-                    RudderLogger.logError(ex);
+                    RudderLogger.logError("DBPersistentManager: constructor: Exception while initializing, due to " + ex.getLocalizedMessage());
                 }
             }
-        }).start();
+        };
+        Future future = executor.submit(runnable);
+        try {
+            // todo: shall we add some timeout here ?
+            future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            RudderLogger.logError("DBPersistentManager: constructor: Exception while initializing the DBInsertionHandlerThread due to " + e.getLocalizedMessage());
+        }
     }
 
     @Override
@@ -340,22 +351,60 @@ class DBPersistentManager extends SQLiteOpenHelper {
         createSchemas(db);
     }
 
-    /**
-     * Details of method is provided in {@link SQLiteOpenHelper}
-     * We maintain here the updated versions.
-     * previous versions = none
-     * current version = 1
-     * updated version = 2 added status field values range from 0 to 0x11
-     */
     @Override
-    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
-        //replace with switch when more upgrades creep in
-        if (oldVersion == 1 && newVersion >= 2) {
-            RudderLogger.logDebug("DBPersistentManager: onUpgrade: DB Version upgraded, hence adding the status column to the events table");
-            sqLiteDatabase.execSQL(DATABASE_ALTER_ADD_STATUS);
-            RudderLogger.logDebug("DBPersistentManager: onUpgrade: DB Version upgraded, Setting the status to DEVICE_MODE_PROCESSING_DONE for the events existing already in the DB");
-            sqLiteDatabase.execSQL(SET_STATUS_FOR_EXISTING);
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        //
+    }
+
+    void checkForMigrations() {
+        SQLiteDatabase database = getWritableDatabase();
+        if (!checkIfStatusColumnExists(database)) {
+            RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column doesn't exist in the events table, hence performing the migration now");
+            performMigration(database);
+            return;
         }
+        RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column exists in the table already, hence no migration required");
+    }
+
+    private void performMigration(SQLiteDatabase database) {
+        try {
+            if (database.isOpen()) {
+                RudderLogger.logDebug("DBPersistentManager: performMigration: Adding the status column to the events table");
+                database.execSQL(DATABASE_ALTER_ADD_STATUS);
+                RudderLogger.logDebug("DBPersistentManager: performMigration: Setting the status to DEVICE_MODE_PROCESSING_DONE for the events existing already in the DB");
+                database.execSQL(SET_STATUS_FOR_EXISTING);
+            } else {
+                RudderLogger.logError("DBPersistentManager: performMigration: database is not readable, hence migration cannot be performed");
+            }
+        } catch (Exception e) {
+            RudderLogger.logError("DBPersistentManager: performMigration: Exception while performing the migration due to " + e.getLocalizedMessage());
+        }
+    }
+
+    private boolean checkIfStatusColumnExists(SQLiteDatabase database) {
+        String checkIfStatusExistsSqlString = "PRAGMA table_info(events)";
+        try {
+            // get readable database instance
+            if (database.isOpen()) {
+                Cursor allRows = database.rawQuery(checkIfStatusExistsSqlString, null);
+                if (allRows.moveToFirst()) {
+                    do {
+                        int index = allRows.getColumnIndex("name");
+                        if (index > -1) {
+                            String columnName = allRows.getString(index);
+                            if (columnName.equals(STATUS_COL))
+                                return true;
+                        }
+                    } while (allRows.moveToNext());
+                }
+                allRows.close();
+            } else {
+                RudderLogger.logError("DBPersistentManager: checkIfStatusColumnExists: database is not readable, hence we cannot check the existence of status column");
+            }
+        } catch (SQLiteDatabaseCorruptException ex) {
+            RudderLogger.logError("DBPersistentManager: checkIfStatusColumnExists: Exception while checking the presence of status column due to " + ex.getLocalizedMessage());
+        }
+        return false;
     }
 
     @Override
@@ -407,6 +456,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         }
     }
 
+    // Delete all events from the DB which have status as STATUS_ALL_DONE
     void runGcForEvents() {
         deleteDoneEvents();
     }

@@ -26,8 +26,6 @@ public class SerializationTest {
             "            \"eventName\": \"\"\n" +
             "        }\n" +
             "    ],\n" +
-            "    \"blackListedEvents\": {\n" +
-            "    },\n" +
             "    \"dataCenter\": \"EU-01\",\n" +
             "    \"eventDelivery\": false,\n" +
             "    \"eventDeliveryTS\": 16425.0,\n" +
@@ -52,31 +50,27 @@ public class SerializationTest {
             "        {\n" +
             "            \"eventName\": \"\"\n" +
             "        }\n" +
-            "    ],\n" +
-            "    \"whiteListedEvents\": {\n" +
-            "    }\n" +
+            "    ]\n" +
             "}";
     private static final String INCOMING_JSON =
             "{\n" +
                     "\"source\" : {" +
-                    "           \"id\" : \"23\",\n" +
-                    "           \"name\" : \"dummy\",\n" +
-                    "           \"enabled\" : true,\n" +
-                    "           \"updatedAt\" : \"23-10-23\",\n" +
-                    "           \"destinations\" : [\n" +
-                    "               {   \n" +
-                    "                   \"id\" : \"1234\",\n" +
-                    "                   \"name\" : \"der\",\n" +
-                    "                   \"enabled\" : true,\n" +
-                    "                   \"updatedAt\" : \"23-10-22\",\n" +
-                    "                   \"config\" : " + INCOMING_JSON_SERVER_CONFIG + ",\n" +
-                    "                   \"areTransformationsConnected\" : false " +
-                    "" +
-                    "           }" +
-                    "       ]\n" +
-                    "   }\n" +
-                    "}";
-
+            "           \"id\" : \"23\",\n" +
+            "           \"name\" : \"dummy\",\n" +
+            "           \"enabled\" : true,\n" +
+            "           \"updatedAt\" : \"23-10-23\",\n" +
+            "           \"destinations\" : [\n" +
+            "               {   \n" +
+            "                   \"id\" : \"1234\",\n" +
+            "                   \"name\" : \"der\",\n" +
+            "                   \"enabled\" : true,\n" +
+            "                   \"updatedAt\" : \"23-10-22\",\n" +
+            "                   \"config\" : " + INCOMING_JSON_SERVER_CONFIG + ",\n" +
+            "\"areTransformationsConnected\":false" +
+            "           }" +
+            "       ]\n" +
+            "   }\n" +
+            "}";
     @Test
     public void testObjectOutputStream() throws IOException, ClassNotFoundException {
         System.out.println(INCOMING_JSON);

@@ -67,14 +67,14 @@ public class RudderDeviceModeTransformationManager {
                                     dbManager.fetchDeviceModeEventsFromDb(messageIds, messages, DMT_BATCH_SIZE);
                                 }
                                 String requestJson = createDeviceTransformPayload(messageIds, messages);
-                                RudderLogger.logVerbose(String.format(Locale.US, "DeviceModeTransformationManager: DeviceModeTransformationProcessor: Payload: %s", requestJson));
-                                RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: DeviceModeTransformationProcessor: EventCount: %d", messageIds.size()));
+                                RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: Payload: %s", requestJson));
+                                RudderLogger.logInfo(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: EventCount: %d", messageIds.size()));
                                 Result result = rudderNetworkManager.sendNetworkRequest(requestJson, addEndPoint(config.getDataPlaneUrl(), TRANSFORMATION_ENDPOINT), RequestMethod.POST);
                                 if (result.status == NetworkResponses.WRITE_KEY_ERROR) {
-                                    RudderLogger.logInfo("DeviceModeTransformationManager: DeviceModeTransformationProcessor: Wrong WriteKey. Aborting");
+                                    RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Wrong WriteKey. Aborting");
                                     break;
                                 } else if (result.status == NetworkResponses.ERROR) {
-                                    RudderLogger.logInfo("DeviceModeTransformationManager: DeviceModeTransformationProcessor: Retrying in " + Math.abs(deviceModeSleepCount - config.getSleepTimeOut()) + "s");
+                                    RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Retrying in " + Math.abs(deviceModeSleepCount - config.getSleepTimeOut()) + "s");
                                     try {
                                         Thread.sleep(Math.abs(deviceModeSleepCount - config.getSleepTimeOut()) * 1000L);
                                     } catch (Exception e) {
@@ -83,16 +83,20 @@ public class RudderDeviceModeTransformationManager {
                                 } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
                                     deviceModeSleepCount = 0;
                                     rudderDeviceModeManager.dumpOriginalEvents(gson.fromJson(requestJson, TransformationRequest.class));
+                                    RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: Updating status as DEVICE_MODE_PROCESSING DONE for events %s", messageIds));
                                     dbManager.markDeviceModeDone(messageIds);
                                     dbManager.runGcForEvents();
                                 } else {
                                     deviceModeSleepCount = 0;
                                     rudderDeviceModeManager.dumpTransformedEvents(gson.fromJson(result.response, TransformationResponse.class));
+                                    RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: Updating status as DEVICE_MODE_PROCESSING DONE for events %s", messageIds));
                                     dbManager.markDeviceModeDone(messageIds);
                                     dbManager.runGcForEvents();
                                 }
+                                RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: SleepCount: %d", deviceModeSleepCount));
                             } while (dbManager.getDeviceModeRecordCount() > 0);
                         }
+                        RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: SleepCount: %d", deviceModeSleepCount));
                         deviceModeSleepCount++;
                     }
                 }

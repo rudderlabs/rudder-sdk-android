@@ -100,6 +100,7 @@ class EventRepository {
             // 4. Initiate DBPersistentManager for SQLite operations
             RudderLogger.logDebug("EventRepository: constructor: Initiating DBPersistentManager");
             this.dbManager = DBPersistentManager.getInstance(_application);
+            this.dbManager.checkForMigrations();
 
             // 5. Initiate RudderNetWorkManager for making Network Requests
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderNetworkManager");
