@@ -18,3 +18,9 @@ All notable changes to this project will be documented in this file.
 ## Version - 1.6.1 - 2022-08-02
 ### Changed
 - Removed the app_name from the string resources of the Core SDK.
+
+## Version - 1.8.0-beta.1 - 2022-10-16
+### Added
+- Device Mode Transformation. Now transformations can be added to device mode destinations in control plane.
+  - SDK will pull in those transformations.
+  - Only available for enterprise account

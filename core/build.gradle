@@ -1,13 +1,13 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 33
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 29
-        versionCode 1
-        versionName '1.6.1'
+        targetSdkVersion 33
+        versionCode 2
+        versionName '1.8.0-beta.1'
         consumerProguardFiles 'proguard-consumer-rules.pro'
     }
 
@@ -54,7 +54,7 @@ dependencies {
 
 ext {
     PUBLISH_GROUP_ID = 'com.rudderstack.android.sdk'
-    PUBLISH_VERSION = '1.6.1'
+    PUBLISH_VERSION = '1.8.0-beta.1'
     PUBLISH_ARTIFACT_ID = 'core'
 }
 

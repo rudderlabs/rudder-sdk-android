@@ -11,9 +11,9 @@ class MainApplication : Application() {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://shadowfax-dataplane.dev-rudder.rudderlabs.com/"
-        const val CONTROL_PLANE_URL = "https://api.dev.rudderlabs.com"
-        const val WRITE_KEY = "2CZ4Yh3XHKfn6LCWDFk3leBvFdM"
+        const val DATA_PLANE_URL = "your_dataplane_url"
+        const val CONTROL_PLANE_URL = "your_control_plane_url"
+        const val WRITE_KEY = "write_key"
     }
 
     override fun onCreate() {
