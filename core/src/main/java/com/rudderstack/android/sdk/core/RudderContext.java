@@ -44,6 +44,12 @@ public class RudderContext {
     private RudderNetwork networkInfo;
     @SerializedName("timezone")
     private String timezone;
+    @Nullable
+    @SerializedName("sessionId")
+    private Long sessionId = null;
+    @Nullable
+    @SerializedName("sessionStart")
+    private Boolean sessionStart = null;
     @SerializedName("externalId")
     private List<Map<String, Object>> externalIds = null;
     public Map<String, Object> customContextMap = null;
@@ -356,6 +362,14 @@ public class RudderContext {
 
     static void updateAnonymousId(@NonNull String anonymousId) {
         _anonymousId = anonymousId;
+    }
+
+    void setSession(RudderUserSession userSession) {
+        this.sessionId = userSession.getSessionId();
+        if (userSession.getSessionStart()) {
+            this.sessionStart = Boolean.TRUE;
+            userSession.setSessionStart(false);
+        }
     }
 
     RudderContext copy() {

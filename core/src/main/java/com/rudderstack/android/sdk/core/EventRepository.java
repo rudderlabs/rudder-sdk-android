@@ -40,6 +40,7 @@ class EventRepository {
             .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
             .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
             .create();
+    private RudderUserSession userSession;
 
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
@@ -121,10 +122,26 @@ class EventRepository {
             this.deviceModeManager = new RudderDeviceModeManager(dbManager, networkManager, config);
             this.initiateSDK();
 
-            // 9. Initiate ApplicationLifeCycleManager
+            // 9. initiate RudderUserSession for tracking sessions
+            RudderLogger.logDebug("EventRepository: constructor: Initiating RudderUserSession");
+            userSession = new RudderUserSession(preferenceManager, config);
+
+            // clear session if automatic session tracking was enabled previously
+            // but disabled presently or vice versa.
+            boolean previousAutoSessionTrackingStatus = preferenceManager.getAutoSessionTrackingStatus();
+            if (previousAutoSessionTrackingStatus != config.isTrackAutoSession()) {
+                userSession.clearSession();
+            }
+            preferenceManager.saveAutoSessionTrackingStatus(config.isTrackAutoSession());
+            
+            // starting automatic session tracking if enabled.
+            if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
+                userSession.startSessionIfNeeded();
+            }
+
+            // 10. Initiate ApplicationLifeCycleManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
             new ApplicationLifeCycleManager(_application, preferenceManager, this, rudderFlushWorkManager, config);
-
         } catch (Exception ex) {
             RudderLogger.logError(String.format("EventRepository: constructor: Exception Initializing the EventRepository Instance due to %s", ex.getLocalizedMessage()));
         }
@@ -191,6 +208,15 @@ class EventRepository {
         if (!message.getIntegrations().containsKey("All")) {
             message.setIntegrations(prepareIntegrations());
         }
+
+        // Session Tracking
+        if (userSession.getSessionId() != null) {
+            message.setSession(userSession);
+        }
+        if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
+            userSession.updateLastEventTimeStamp();
+        }
+
         String eventJson = gson.toJson(message);
         if (Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE) {
             RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
@@ -202,6 +228,9 @@ class EventRepository {
 
     void reset() {
         deviceModeManager.reset();
+        if (userSession.getSessionId() != null) {
+            userSession.refreshSession();
+        }
     }
 
     void flushSync() {
@@ -263,5 +292,20 @@ class EventRepository {
 
     public void shutDown() {
         deviceModeManager.flush();
+    }
+
+    public void startSession(Long sessionId) {
+        if (config.isTrackAutoSession()) {
+            endSession();
+            config.setTrackAutoSession(false);
+        }
+        userSession.startSession(sessionId);
+    }
+
+    public void endSession() {
+        if (config.isTrackAutoSession()) {
+            config.setTrackAutoSession(false);
+        }
+        userSession.clearSession();
     }
 }

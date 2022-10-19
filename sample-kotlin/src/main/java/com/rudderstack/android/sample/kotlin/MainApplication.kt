@@ -26,10 +26,12 @@ class MainApplication : Application() {
                 .withControlPlaneUrl(CONTROL_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withTrackLifecycleEvents(true)
-                .withRecordScreenViews(true)
+                .withAutoSessionTracking(true)
+                .withRecordScreenViews(false)
                 .withAutoCollectAdvertId(false)
                 .withFactory(AmplitudeIntegrationFactory.FACTORY)
                 .withFactory(BrazeIntegrationFactory.FACTORY)
+                .withSessionTimeoutMillis(60000)
                 .build()
         )
 

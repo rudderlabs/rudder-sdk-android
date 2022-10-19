@@ -1,9 +1,10 @@
 package com.rudderstack.android.sample.kotlin
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
@@ -18,6 +19,7 @@ import com.rudderstack.android.sdk.core.ecomm.ECommerceProduct
 import com.rudderstack.android.sdk.core.ecomm.events.CartViewedEvent
 import java.util.*
 import javax.net.ssl.SSLContext
+
 
 
 class MainActivity : AppCompatActivity() {
@@ -98,6 +100,10 @@ class MainActivity : AppCompatActivity() {
         MainApplication.rudderClient!!.track(cartViewedEvent.event(), cartViewedEvent.properties())
 
 
+    }
+
+    fun onUserSession(view: View) {
+        startActivity(Intent(this, UserSessionActivity::class.java))
     }
 }
 
