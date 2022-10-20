@@ -87,7 +87,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 "Rudder Analytics is shutting down. Init again if needed. This might take a second"
             }
             TRACK -> {
-                rudderAnalytics.track("Track at ${Date()}", TrackProperties("key1" to "prop1", "key2" to "prop2"),
+                rudderAnalytics.track("Track at ${Date()}", trackProperties =  TrackProperties("key1" to "prop1", "key2" to "prop2"),
                 options = RudderOptions.Builder().withIntegrations(mapOf("firebase" to false)).withExternalIds(
                     listOf(mapOf("fb_id" to "1234"))).build() )
                 "Track message sent"
@@ -103,7 +103,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             }
             GROUP -> {
-                rudderAnalytics.group("group_id", GroupTraits("g_t1" to "t-1", "g_t2" to "t-2"), )
+                rudderAnalytics.group("group_id", traits = GroupTraits("g_t1" to "t-1", "g_t2" to "t-2"), )
                 "Group called"
             }
             SCREEN -> {
