@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script>
+        rudderanalytics = window.rudderanalytics = [];
+        var methods = [
+          "load",
+          "page",
+          "track",
+          "identify",
+          "alias",
+          "group",
+          "ready",
+          "reset",
+          "getAnonymousId",
+          "setAnonymousId",
+          "getUserId",
+          "getUserTraits",
+          "getGroupId",
+          "getGroupTraits"
+        ];
+        for (var i = 0; i < methods.length; i++) {
+          var method = methods[i];
+          rudderanalytics[method] = (function (methodName) {
+            return function () {
+              rudderanalytics.push(
+                [methodName].concat(Array.prototype.slice.call(arguments))
+              );
+            };
+          })(method);
+        }
+      
+        rudderanalytics.load('25YL7MIwWWL3HPeEFT53GI5MxVh','https://rudderstacgwyx.dataplane.rudderstack.com',
+{configUrl: 'https://api.rudderstack.com'});
+        rudderanalytics.page('Login page');
+      </script>
+      
+      <script src="https://cdn.rudderlabs.com/v1.1/rudder-analytics.min.js"></script>
+      <script>
+        rudderanalytics.identify('sample-user-html');
+        rudderanalytics.track('Track login button click-html');
+      </script>
+  </head>
+  <body>
+    'I am body'
+  </body>
+</html>

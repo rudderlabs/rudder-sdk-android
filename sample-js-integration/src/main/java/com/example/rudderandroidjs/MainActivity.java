@@ -2,13 +2,22 @@
 
     import android.annotation.SuppressLint;
     import android.app.Activity;
+    import android.net.http.SslError;
     import android.os.Build;
     import android.os.Bundle;
+    import android.util.Log;
     import android.view.KeyEvent;
     import android.view.Window;
+    import android.webkit.SslErrorHandler;
+    import android.webkit.WebChromeClient;
+    import android.webkit.WebResourceRequest;
+    import android.webkit.WebResourceResponse;
     import android.webkit.WebSettings;
     import android.webkit.WebView;
     import android.webkit.WebViewClient;
+
+    import androidx.annotation.Nullable;
+
     import com.rudderstack.android.sdk.core.*;
 
     import java.util.Date;
@@ -77,15 +86,30 @@
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
                 mWebView.getSettings().setDatabasePath("/data/data/" + mWebView.getContext().getPackageName() + "/databases/");
             }
+            mWebView.setWebChromeClient(new WebChromeClient());
             mWebView.addJavascriptInterface(new WebAppInterface(this), "Android");
-            mWebView.loadUrl("https://odd-rat-19.loca.lt/Rectified.html");
+//            mWebView.loadUrl("https://odd-rat-19.loca.lt/Rectified.html");
+
             mWebView.setWebViewClient(new WebViewClient() {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                    view.loadUrl(url);
-                    return true;
+                    return false;
+                }
+
+                @Nullable
+                @Override
+                public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                    Log.e("webview", request.getUrl().toString());
+                    return super.shouldInterceptRequest(view, request);
+                }
+
+                @Override
+                public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                    Log.e("webview", "SSL error" + error.toString());
+                    super.onReceivedSslError(view, handler, error);
                 }
             });
+            mWebView.loadUrl("file:///android_asset/sample.html");
         }
 
         @Override
