@@ -27,9 +27,10 @@
             this.setContentView(R.layout.main_activity);
             RudderClient rudderClient = RudderClient.getInstance(
                     this,
-                    "1ohEl9hhSa1MaYADabIWBaqxqWQ",
+                    "25YL7MIwWWL3HPeEFT53GI5MxVh",
                     new RudderConfig.Builder()
-                            .withDataPlaneUrl("https://1b91e549e016.ngrok.io")
+                            .withControlPlaneUrl("https://api.rudderstack.com")
+                            .withDataPlaneUrl("https://rudderstacgwyx.dataplane.rudderstack.com")
                             .withTrackLifecycleEvents(true)
                             .withLogLevel(1)
                             .withRecordScreenViews(true)

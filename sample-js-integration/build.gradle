@@ -40,5 +40,6 @@ dependencies {
     implementation 'com.google.code.gson:gson:2+'
 }
 repositories {
-    maven { url  "https://dl.bintray.com/rudderstack/rudderstack" }
+//    maven { url  "https://dl.bintray.com/rudderstack/rudderstack" }
+    mavenCentral()
 }
