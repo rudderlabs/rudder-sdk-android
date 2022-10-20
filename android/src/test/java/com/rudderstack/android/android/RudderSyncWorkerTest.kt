@@ -60,12 +60,12 @@ class RudderSyncWorkerTest {
 
     @Test
     fun testRudderSyncWorker(){
-        every{analytics.blockingFlush(null, true, any())} returns true
+        every{analytics.blockingFlush( true, any(), null)} returns true
         every { analytics.isShutdown } returns false
         val worker = TestWorkerBuilder.from(application, RudderSyncWorker::class.java, executorService).build()
         val result = worker.doWork()
         verify(exactly = 1){
-            analytics.blockingFlush(any(), true, org.mockito.kotlin.any<Base64Generator>())
+            analytics.blockingFlush(true,  org.mockito.kotlin.any<Base64Generator>(), any())
         }
     }
 }

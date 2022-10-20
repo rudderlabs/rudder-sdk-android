@@ -158,7 +158,10 @@ internal class AnalyticsDelegate(
         initializePlugins()
         if (shouldVerifySdk) {
             updateSourceConfig()
+        }else{
+            initializationListener?.invoke(true, null)
         }
+
 
     }
 

@@ -304,7 +304,7 @@ class AliasMessage internal constructor(
     _messageId
 ) {
     companion object {
-        fun create(
+         @JvmStatic fun create(
             timestamp: String,
 
             anonymousId: String? = null,
@@ -396,7 +396,7 @@ class GroupMessage internal constructor(
     _messageId
 ) {
     companion object {
-        fun create(
+         @JvmStatic fun create(
             anonymousId: String? = null,
             userId: String? = null,
             timestamp: String,
@@ -506,7 +506,7 @@ class PageMessage internal constructor(
     _messageId
 ) {
     companion object {
-        fun create(
+         @JvmStatic fun create(
             anonymousId: String? = null,
             userId: String? = null,
             timestamp: String,
@@ -618,7 +618,7 @@ class ScreenMessage internal constructor(
     _messageId
 ) {
     companion object {
-        fun create(
+         @JvmStatic fun create(
 
             timestamp: String,
             anonymousId: String? = null,
@@ -727,7 +727,7 @@ class TrackMessage internal constructor(
     _messageId
 ) {
     companion object {
-        fun create(
+         @JvmStatic fun create(
             eventName: String?,
             timestamp: String,
             properties: TrackProperties? = null,
@@ -832,7 +832,7 @@ class IdentifyMessage internal constructor(
 ) {
 
     companion object {
-        fun create(
+         @JvmStatic fun create(
             anonymousId: String? = null,
             userId: String? = null,
             timestamp: String,
@@ -883,7 +883,7 @@ class IdentifyMessage internal constructor(
 
 fun TrackProperties(vararg keyPropertyPair: Pair<String, Any>) : TrackProperties = mapOf(*keyPropertyPair)
 
-fun PageProperties(vararg keyPropertyPair: Pair<String, Any>) : PageProperties = mapOf(*keyPropertyPair)
+//fun PageProperties(vararg keyPropertyPair: Pair<String, Any>) : PageProperties = mapOf(*keyPropertyPair)
 
 fun ScreenProperties(vararg keyPropertyPair: Pair<String, Any>) : ScreenProperties = mapOf(*keyPropertyPair)
 

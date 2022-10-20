@@ -21,7 +21,6 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "Rudder-Android-Libs"
-include ':app'
 include ':web'
 include ':gsonrudderadapter'
 include ':repository'
@@ -32,3 +31,8 @@ include ':moshirudderadapter'
 include ':core'
 include ':dummy'
 include ':android'
+//samples
+include ':samples:sample-android-java'
+include ':samples:sample-kotlin-android'
+include ':sample-java'
+

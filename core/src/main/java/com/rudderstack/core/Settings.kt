@@ -31,7 +31,7 @@ package com.rudderstack.core
 // * @property recordScreenViews Will record screen views if true.
  * @property isOptOut GDPR implementation. Data won't be sent if GDPR is true
  */
-data class Settings(
+data class Settings @JvmOverloads constructor(
     val anonymousId : String? = null,
     val userId : String? = null,
     val options: RudderOptions = RudderOptions.default(),
@@ -39,6 +39,11 @@ data class Settings(
     val maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
     val isOptOut : Boolean = false
 ) {
+
+    constructor(flushQueueSize: Int,
+                maxFlushInterval: Long) : this(null, flushQueueSize = flushQueueSize,
+        maxFlushInterval = maxFlushInterval)
+    constructor(isOptOut: Boolean) : this(null, isOptOut = isOptOut)
     companion object {
         /**
          * Default values for settings
@@ -61,5 +66,10 @@ data class Settings(
      */
     private val String.formattedUrl
         get() = if (this.endsWith('/')) this else "$this/"
-
+    fun copy(flushQueueSize: Int,
+             maxFlushInterval: Long) = copy(anonymousId = this.anonymousId, flushQueueSize = flushQueueSize,
+        maxFlushInterval = maxFlushInterval)
+    fun copy(isOptOut: Boolean) = copy(anonymousId = this.anonymousId, isOptOut = isOptOut)
+    fun copy(userId: String?) = copy(anonymousId = this.anonymousId, userId = userId)
+    fun copy(options: RudderOptions) = copy(anonymousId = this.anonymousId, options = options)
 }

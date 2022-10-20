@@ -119,10 +119,10 @@ class Analytics private constructor(
 
     companion object {
         // default base url or rudder-backend-server
-        private const val DATA_PLANE_URL = "https://hosted.rudderlabs.com"
+        internal const val DATA_PLANE_URL = "https://hosted.rudderlabs.com"
 
         // config-plane url to get the config for the writeKey
-        private const val CONTROL_PLANE_URL = "https://api.rudderlabs.com/"
+        internal const val CONTROL_PLANE_URL = "https://api.rudderlabs.com/"
 
     }
     init {
@@ -139,11 +139,11 @@ class Analytics private constructor(
         processMessage(message, options)
     }
 
-    fun track(
+    @JvmOverloads fun track(
         eventName: String,
-        trackProperties: TrackProperties,
+        options: RudderOptions? = null,
+        trackProperties: TrackProperties? = null,
         userID: String? = null,
-        options: RudderOptions? = null
     ) {
         track(
             TrackMessage.create(
@@ -156,10 +156,48 @@ class Analytics private constructor(
 
     }
 
+    /**
+     * DSL format for track call
+     *
+     * analytics.track {
+     *   event { +"event" }
+     *   //or event("event")
+     *   trackProperties {
+     *       //use any of these
+     *       +("property1" to "value1")
+     *       +mapOf("property2" to "value2")
+     *       add("property3" to "value3")
+     *       add(mapOf("property4" to "value4"))
+     *  }
+     *  userId("user_id")
+     *  rudderOptions {
+     *       customContexts {
+     *          +("cc1" to "cp1")
+     *          +("cc2" to "cp2")
+     *       }
+     *       externalIds {
+     *          +(mapOf("ext-1" to "ex1"))
+     *          +(mapOf("ext-2" to "ex2"))
+     *          +listOf(mapOf("ext-3" to "ex3"))
+     *       }
+     *       integrations {
+     *          +("firebase" to true)
+     *          +("amplitude" to false)
+     *       }
+     *    }
+     * }
+     * @param scope
+     */
+    fun track(scope: TrackScope.() -> Unit){
+        val trackScope = TrackScope()
+        trackScope.scope()
+        track(trackScope.message, trackScope.options)
+    }
+
     fun screen(message: ScreenMessage, options: RudderOptions? = null) {
         processMessage(message, options)
     }
-
+    @JvmOverloads
     fun screen(
         screenName: String,
         category: String,
@@ -174,11 +212,16 @@ class Analytics private constructor(
             ), options
         )
     }
+    fun screen(scope: ScreenScope.() -> Unit){
+        val screenScope = ScreenScope()
+        screenScope.scope()
+        screen(screenScope.message, screenScope.options)
+    }
 
     fun identify(message: IdentifyMessage, options: RudderOptions? = null) {
         processMessage(message, options)
     }
-
+    @JvmOverloads
     fun identify(
         userID: String, traits: IdentifyTraits? = null,
         options: RudderOptions? = null,
@@ -192,11 +235,16 @@ class Analytics private constructor(
             ), options
         )
     }
+    fun identify(scope: IdentifyScope.() -> Unit){
+        val identifyScope = IdentifyScope()
+        identifyScope.scope()
+        identify(identifyScope.message, identifyScope.options)
+    }
 
     fun alias(message: AliasMessage, options: RudderOptions? = null) {
         processMessage(message, options)
     }
-
+    @JvmOverloads
     fun alias(
         newId: String,
         options: RudderOptions? = null
@@ -206,14 +254,21 @@ class Analytics private constructor(
         )
     }
 
+    fun alias(scope: AliasScope.() -> Unit){
+        val aliasScope = AliasScope()
+        aliasScope.scope()
+        alias(aliasScope.message, aliasScope.options)
+    }
     fun group(message: GroupMessage, options: RudderOptions? = null) {
         processMessage(message, options)
     }
-
+    @JvmOverloads
     fun group(
-        groupID: String, traits: GroupTraits? = null,
-        userID: String? = null,
-        options: RudderOptions? = null
+        groupID: String,
+        options: RudderOptions? = null,
+        traits: GroupTraits? = null,
+        userID: String? = null
+
     ) {
         group(
             GroupMessage.create(
@@ -223,6 +278,11 @@ class Analytics private constructor(
         )
     }
 
+    fun group(scope: GroupScope.() -> Unit){
+        val groupScope = GroupScope()
+        groupScope.scope()
+        group(groupScope.message, groupScope.options)
+    }
     /**
      * Flush the remaining data from storage.
      * However flush returns immediately if  analytics is shutdown
@@ -247,10 +307,11 @@ class Analytics private constructor(
      * @param alternateExecutor The flush will be processed on this [ExecutorService]
      * @param clearDb Uploaded data will be cleared from [Storage] if true, else not.
      */
+    @JvmOverloads
     fun forceFlush(
-        alternateDataUploadService: DataUploadService? = null,
+        clearDb: Boolean = true, base64Generator: Base64Generator = this.base64Generator,
         alternateExecutor: ExecutorService? = null,
-        clearDb: Boolean = true, base64Generator: Base64Generator = this.base64Generator
+        alternateDataUploadService: DataUploadService? = null
     ) {
         val flushExecutor = alternateExecutor ?: ThreadPoolExecutor(
             1, 1,
@@ -284,8 +345,9 @@ class Analytics private constructor(
      * initialize the class.
      *
      */
-    fun blockingFlush(alternateDataUploadService: DataUploadService? = null,
-                      clearDb: Boolean = true, base64Generator: Base64Generator?= null) : Boolean{
+    @JvmOverloads
+    fun blockingFlush(clearDb: Boolean = true, base64Generator: Base64Generator?= null,
+                      alternateDataUploadService: DataUploadService? = null,) : Boolean{
         val dataUploadService = alternateDataUploadService ?: DataUploadServiceImpl(
             _writeKey,
             jsonAdapter, dataPlaneUrl = _dataPlaneUrl,
@@ -293,4 +355,6 @@ class Analytics private constructor(
         )
         return _delegate.blockFlush(dataUploadService, clearDb)
     }
+
+
 }

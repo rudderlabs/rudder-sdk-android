@@ -17,8 +17,6 @@ package com.rudderstack.android.sampleapp
 import android.app.Application
 import android.content.res.AssetManager
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.rudderstack.android.RudderAnalytics
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Settings
@@ -33,12 +31,14 @@ class MyApplication : Application() {
         val rudderAnalytics
             get() = _rudderAnalytics
     }
-    var initializationCallback : ((InitializationResponse) -> Unit) ?= null
+
+    var initializationCallback: ((InitializationResponse) -> Unit)? = null
     override fun onCreate() {
         super.onCreate()
-       initializeRudderAnalytics(this)
+        initializeRudderAnalytics(this)
     }
-    internal fun initializeRudderAnalytics(application: Application){
+
+    internal fun initializeRudderAnalytics(application: Application) {
         _rudderAnalytics = RudderAnalytics(
             application,
             properties.getProperty("writeKey"),
@@ -46,10 +46,10 @@ class MyApplication : Application() {
             JacksonAdapter(),
             dataPlaneUrl = properties.getProperty("dataPlaneUrl"),
             controlPlaneUrl = properties.getProperty("controlPlaneUrl"),
-            recordScreenViews = true
-        ) { success, message ->
-            initializationCallback?.invoke(InitializationResponse(success, message))
-        }
+            recordScreenViews = true)
+            { success, message ->
+                initializationCallback?.invoke(InitializationResponse(success, message))
+            }
     }
 
     private val properties by lazy {
@@ -67,5 +67,6 @@ class MyApplication : Application() {
             }
         }
     }
+
     data class InitializationResponse(val success: Boolean, val message: String?)
 }

@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 26/04/22, 3:06 PM Last modified: 26/04/22, 3:05 PM
+ * Creator: Debanjan Chatterjee on 08/10/22, 4:12 PM Last modified: 08/10/22, 4:12 PM
  * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,26 +12,20 @@
  * permissions and limitations under the License.
  */
 
-@file:JvmName("RudderClient")
+package com.rudderstack.android.sample_java;
 
-package com.rudderstack.android.compat
+import org.junit.Test;
 
-import android.app.Application
+import static org.junit.Assert.*;
 
-object RudderClient {
-
-    private var application: Application? = null
-    private val mApplication: Application
-        get() = application ?: throw IllegalStateException("RudderClient has not been initialized")
-
-    private var mAdvertisingId : String? = null
-    private var mAnonymousId: String? = null
-
-    init {
-        //initialized
-//        RudderLogger.logVerbose("RudderClient: constructor invoked.")
-
+/**
+ * Example local unit test, which will execute on the development machine (host).
+ *
+ * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ */
+public class ExampleUnitTest {
+    @Test
+    public void addition_isCorrect() {
+        assertEquals(4, 2 + 2);
     }
-
-
 }

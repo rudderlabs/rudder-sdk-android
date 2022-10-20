@@ -1,3 +1,4 @@
+@file:JvmName("MessageUtils")
 /*
  * Creator: Debanjan Chatterjee on 29/03/22, 11:15 AM Last modified: 29/03/22, 11:15 AM
  * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
@@ -11,7 +12,6 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-@file:JvmName("ModelExtensions")
 package com.rudderstack.models
 
 /**

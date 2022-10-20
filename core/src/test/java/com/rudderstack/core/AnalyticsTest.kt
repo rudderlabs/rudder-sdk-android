@@ -49,7 +49,7 @@ abstract class AnalyticsTest {
     //complete flow
     protected abstract val jsonAdapter: JsonAdapter
     private lateinit var analytics: Analytics
-    private lateinit var storage : Storage
+    private lateinit var storage: Storage
     private val mockedControlPlane = mock(ConfigDownloadService::class.java).also {
         `when`(it.download(anyString(), anyString(), anyString(), any(), any())).then {
 
@@ -66,7 +66,7 @@ abstract class AnalyticsTest {
 
     @Before
     fun setup() {
-        storage =  BasicStorageImpl(logger = com.rudderstack.core.internal.KotlinLogger)
+        storage = BasicStorageImpl(logger = com.rudderstack.core.internal.KotlinLogger)
         val mockedResponse: HttpResponse<out Any> = HttpResponse(200, "OK", null)
         mockedDataUploadService.let {
 
@@ -477,8 +477,12 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test flush after shutdown`() {
-        val newSettings = SettingsState.value?.copy(flushQueueSize = 100, maxFlushInterval = 10000)?:
-        Settings(flushQueueSize = 100, maxFlushInterval = 10000, anonymousId = "anon_id")
+        val newSettings =
+            SettingsState.value?.copy(flushQueueSize = 100, maxFlushInterval = 10000) ?: Settings(
+                flushQueueSize = 100,
+                maxFlushInterval = 10000,
+                anonymousId = "anon_id"
+            )
         SettingsState.update(newSettings)
         val events = (1..5).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
@@ -506,6 +510,7 @@ abstract class AnalyticsTest {
         // 1 for shutdown call
 
     }
+
     @Test
     fun `test force flush after shutdown`() {
         val events = (1..5).map {
@@ -526,10 +531,10 @@ abstract class AnalyticsTest {
         Thread.sleep(500)
         //inserting some data to storage
 
-            storage.saveMessage(*events.toTypedArray())
+        storage.saveMessage(*events.toTypedArray())
 
         val spyDataUploadService = spy(DataUploadService::class.java)
-        someAnalytics.forceFlush(spyDataUploadService)
+        someAnalytics.forceFlush(alternateDataUploadService = spyDataUploadService)
         Thread.sleep(250)
         verify(spyDataUploadService, times(1)).uploadSync(any(), anyOrNull())
     }
@@ -556,24 +561,31 @@ abstract class AnalyticsTest {
             someAnalytics.track(it)
         }
         //all data should have been rejected
-        assertThat(storage.getDataSync(), allOf(
-            iterableWithSize(0)
-        ))
+        assertThat(
+            storage.getDataSync(), allOf(
+                iterableWithSize(0)
+            )
+        )
     }
+
     @Test
     fun `test periodic flush`() {
         val isDone = AtomicBoolean(false)
-        val newSettings = SettingsState.value?.copy(maxFlushInterval = 1000,
-        flushQueueSize = 100)?: Settings(anonymousId = "anon_id", maxFlushInterval = 1000, flushQueueSize = 100)
+        val newSettings = SettingsState.value?.copy(
+            maxFlushInterval = 1000,
+            flushQueueSize = 100
+        ) ?: Settings(anonymousId = "anon_id", maxFlushInterval = 1000, flushQueueSize = 100)
         analytics.applySettings(newSettings)
         val events = (1..5).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
-        analytics.addCallback(object : Callback{
+        analytics.addCallback(object : Callback {
             override fun success(message: Message?) {
-                assertThat(message, allOf(
-                    notNullValue(), hasProperty("eventName", `is`(events[0].eventName) )
-                ))
+                assertThat(
+                    message, allOf(
+                        notNullValue(), hasProperty("eventName", `is`(events[0].eventName))
+                    )
+                )
                 isDone.set(true)
             }
 
@@ -586,9 +598,11 @@ abstract class AnalyticsTest {
             analytics.track(it)
         }
 
-        Awaitility.await().atLeast(newSettings.maxFlushInterval, TimeUnit.MILLISECONDS).untilTrue(isDone)
+        Awaitility.await().atLeast(newSettings.maxFlushInterval, TimeUnit.MILLISECONDS)
+            .untilTrue(isDone)
         analytics.removeAllCallbacks()
     }
+
     @Test
     fun `test custom plugin`() {
         val isDone = AtomicBoolean(false)
@@ -597,19 +611,50 @@ abstract class AnalyticsTest {
             it.proceed(it.message())
         }
         analytics.addPlugin(customPlugin)
-        analytics.track("event", mapOf())
+
+        analytics.track {
+            event { +"event" }
+            //or event("event")
+            trackProperties {
+                //use any of these
+                +("property1" to "value1")
+                +mapOf("property2" to "value2")
+                add("property3" to "value3")
+                add(mapOf("property4" to "value4"))
+            }
+            userId("user_id")
+            rudderOptions {
+                customContexts {
+                    +("cc1" to "cp1")
+                    +("cc2" to "cp2")
+                }
+                externalIds {
+                    +(mapOf("ext-1" to "ex1"))
+                    +(mapOf("ext-2" to "ex2"))
+                    +listOf(mapOf("ext-3" to "ex3"))
+                }
+                integrations {
+                    +("firebase" to true)
+                    +("amplitude" to false)
+                }
+            }
+        }
+
         Awaitility.await().atMost(2, TimeUnit.SECONDS).untilTrue(isDone)
 
     }
+
     @Test
-    fun `test flush throttling`(){
+    fun `test flush throttling`() {
         analytics.shutdown()
         Thread.sleep(500)
         println("analytics shut down")
         val isDone = AtomicBoolean(false)
         //settings to make sure auto dump is off
-         val newSettings = SettingsState.value?.copy(maxFlushInterval = 15_000,
-            flushQueueSize = 100)?: Settings(anonymousId = "anon_id", maxFlushInterval = 15_000, flushQueueSize = 100)
+        val newSettings = SettingsState.value?.copy(
+            maxFlushInterval = 15_000,
+            flushQueueSize = 100
+        ) ?: Settings(anonymousId = "anon_id", maxFlushInterval = 15_000, flushQueueSize = 100)
         //spy upload service to check for throttling
         val counter = AtomicInteger(0) //will check number of times called
         val spyUploadService = mock(DataUploadService::class.java)
@@ -625,7 +670,7 @@ abstract class AnalyticsTest {
             val t = counter.incrementAndGet()
             Thread.sleep(100)
             assertThat(t, `is`(counter.get()))
-            if(counter.get() == 3) isDone.set(true)
+            if (counter.get() == 3) isDone.set(true)
             events
         }
         val someAnalytics = Analytics(

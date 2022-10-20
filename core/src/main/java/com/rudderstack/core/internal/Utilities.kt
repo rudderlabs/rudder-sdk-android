@@ -24,9 +24,21 @@ package com.rudderstack.core.internal
  */
 infix fun <K, V> Map<K, V>?.optAdd(value: Map<K, V>?): Map<K, V> {
     return if (this == null) value ?: mapOf() else value?.let {
-        this + value
+        this + it
     } ?: this
 }
+
+/**
+ * See [optAdd]
+ *
+ */
+infix fun <K, V> Map<K, V>?.optAdd(value: Pair<K, V>?): Map<K, V> {
+    return if (this != null) value?.let {
+        this + it
+    } ?: this else value?.let { mapOf(it) } ?: mapOf()
+}
+
+
 
 /**
  * Operator to perform a block on it, only if it's not null

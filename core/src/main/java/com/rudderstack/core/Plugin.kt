@@ -125,8 +125,7 @@ fun interface Plugin {
     fun reset(){}
 
 
-
     val Analytics.jsonAdapter
-        get() = jsonAdapter
+       @get:JvmName("getJsonAdapter") get() = jsonAdapter
 
 }

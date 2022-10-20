@@ -11,6 +11,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+@file:JvmName("AnalyticsFactory")
 @file:Suppress("FunctionName")
 
 package com.rudderstack.android
@@ -39,21 +40,21 @@ fun RudderAnalytics(
     writeKey: String,
     settings: Settings,
     jsonAdapter: JsonAdapter,
-    shouldVerifySdk: Boolean = true,
-    sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
     dataPlaneUrl: String? = null,
+    shouldVerifySdk: Boolean = true,
     controlPlaneUrl: String? = null,
-    logger: Logger = AndroidLogger,
+    trackLifecycleEvents: Boolean = false,
+    recordScreenViews: Boolean = false,
+    isPeriodicFlushEnabled: Boolean = false,
+    autoCollectAdvertId: Boolean = false,
+    multiProcessEnabled: Boolean = false,
+    defaultProcessName: String? = null,
+    useContentProvider: Boolean = multiProcessEnabled,
     defaultTraits: IdentifyTraits? = null,
     defaultExternalIds: List<Map<String, String>>? = null,
     defaultContextMap: Map<String, Any>? = null,
-    useContentProvider: Boolean = false,
-    isPeriodicFlushEnabled: Boolean = false,
-    trackLifecycleEvents: Boolean = false,
-    autoCollectAdvertId: Boolean = false,
-    recordScreenViews: Boolean = false,
-    multiProcessEnabled: Boolean = false,
-    defaultProcessName: String? = null,
+    logger: Logger = AndroidLogger,
+    sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
     initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
 ): Analytics {
     initialize(application)
