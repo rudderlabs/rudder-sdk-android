@@ -17,7 +17,7 @@ interface RedisTransformationHandlerInterface {
     void handleNetworkResponse(@Nullable RedisStoreResponse redisStoreResponse);
 }
 
-class RedisTransformationHandler implements RedisTransformationHandlerInterface, Callable<RedisTransformationHandlerInterface> {
+class RedisTransformationHandler implements RedisTransformationHandlerInterface, Callable {
     private final RudderNetworkManager rudderNetworkManager;
     private Map<String, Object> inputData;
     @NonNull final RedisCallback callback;
@@ -65,9 +65,17 @@ class RedisTransformationHandler implements RedisTransformationHandlerInterface,
     }
 
     @Override
-    public RedisTransformationHandlerInterface call() {
+    public Boolean call() throws InterruptedException {
+//        RedisStoreResponse redisStoreResponse = makeNetworkRequest();
+//        handleNetworkResponse(redisStoreResponse);
+        try {
+            Thread.sleep(1000 * 1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         RedisStoreResponse redisStoreResponse = makeNetworkRequest();
         handleNetworkResponse(redisStoreResponse);
-        return null;
+//        throw new InterruptedException();
+        return true;
     }
 }

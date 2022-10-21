@@ -55,28 +55,28 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         val file = createFile("AbhishekLogfile2.txt")
         clearFile(file)
-        val noOfTimes = 100
+        val noOfTimes = 1000
         var map = emptyMap<String, Any>()
         Thread {
             map = mapOf(
                 "nextStep" to "",
                 "event" to "Passed Event - 1",
             )
+
             Thread {
                 for (i in 1..noOfTimes)
                     makeTransformAPICall(map, 0, i, "a0", file)
             }.start()
 
+            Thread.sleep(10000)
             Thread {
+
                 for (j in 1..noOfTimes)
                     makeTransformAPICall(map, 1, j, "a1", file)
             }.start()
-//
+
             Thread {
-                map = mapOf(
-                    "key-1" to "Should be transformed",
-                    "key-2" to true,
-                )
+//                Thread.sleep(10000)
                 for (k in 1..noOfTimes)
                     makeTransformAPICall(map, 1, k, "a2", file)
             }.start()

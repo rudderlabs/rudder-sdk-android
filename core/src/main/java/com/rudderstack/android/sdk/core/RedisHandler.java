@@ -10,8 +10,11 @@ import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 
 class RedisHandler {
@@ -26,6 +29,8 @@ class RedisHandler {
     private static ServerConfig status = ServerConfig.EMPTY;
 
     private final ExecutorService redisService = Executors.newFixedThreadPool(2);
+    // TODO: Need to make sure that: We want the transform API call to be made in a sequential order or not
+    // If it could be async then use `newFixedThreadPool(2);` in place of `newSingleThreadExecutor();`
     private final ExecutorService cacheEvents = Executors.newSingleThreadExecutor();
     private static RedisHandler instance = null;
     private final RudderNetworkManager rudderNetworkManager;
@@ -60,7 +65,6 @@ class RedisHandler {
                                 callback
                                 )
                 );
-                flushCachedEvents();
             } else if (isRedisDestinationPresent()) {
                 redisService.execute(
                         () -> {
@@ -110,12 +114,24 @@ class RedisHandler {
 
     private void flushCachedEvents() {
         if (!cacheEvents.isTerminated()) {
-            System.out.println("Length is: " + tasks.size());
+            Future futureTasks = null;
             for (RedisTransformationHandler task : tasks) {
-                cacheEvents.submit(task);
+                futureTasks = cacheEvents.submit(task);
             }
-            tasks.clear();
-            cacheEvents.shutdown();
+
+            try {
+                if (futureTasks != null) {
+                    if ((Boolean) futureTasks.get()) {
+                        RudderLogger.logDebug("All the transform API request made before the config object could be fetched are executed successfully.");
+                    }
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                RudderLogger.logDebug("Some error occurred while processing transform API call made before config got initialised.");
+                e.printStackTrace();
+            } finally {
+                tasks.clear();
+                cacheEvents.shutdown();
+            }
         }
     }
 
