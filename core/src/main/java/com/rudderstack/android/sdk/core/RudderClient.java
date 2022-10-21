@@ -11,7 +11,6 @@ import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -30,6 +29,7 @@ public class RudderClient {
     private static String _anonymousId;
     private static RudderOption defaultOptions;
     private static String _deviceToken;
+    private static RedisHandler redisHandler;
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
 
@@ -802,6 +802,13 @@ public class RudderClient {
     public void shutdown() {
         if(repository != null)
             repository.shutDown();
+    }
+
+    public void transform(@NonNull Map<String, Object> inputData, int i, @NonNull RedisCallback callBack) {
+        if (repository != null) {
+//            repository
+            RedisHandler.getInstance().process(inputData, callBack);
+        }
     }
 
     /**

@@ -53,6 +53,8 @@ class RudderServerConfigManager {
                 if (serverConfig == null) {
                     RudderLogger.logError("Failed to fetch server config");
                 }
+                RedisHandler.getInstance().setRedisDestinationPresent(serverConfig);
+//                RedisHandler.getInstance().setRedisDestinationPresent(null);
                 lock.unlock();
             }
         });

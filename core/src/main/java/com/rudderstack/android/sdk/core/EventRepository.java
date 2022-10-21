@@ -25,6 +25,7 @@ import java.util.Map;
  * utility class for event processing
  * */
 class EventRepository {
+    private RedisHandler redisHandler;
     private String authHeaderString;
     private String anonymousIdHeaderString;
     private RudderConfig config;
@@ -119,6 +120,8 @@ class EventRepository {
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
             this.cloudModeManager = new RudderCloudModeManager(dbManager, networkManager, config);
             this.deviceModeManager = new RudderDeviceModeManager(dbManager, networkManager, config);
+            // initialise RedisHandler class
+            this.redisHandler = RedisHandler.getInstance(networkManager, context);
             this.initiateSDK();
 
             // 9. Initiate ApplicationLifeCycleManager

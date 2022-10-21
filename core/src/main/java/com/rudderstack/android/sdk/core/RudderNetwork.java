@@ -25,6 +25,10 @@ class RudderNetwork {
     @SerializedName("cellular")
     private boolean isCellularEnabled = false;
 
+    boolean isInternetAvailable() {
+        return isWifiEnabled || isCellularEnabled;
+    }
+
     @SuppressLint("MissingPermission")
     RudderNetwork(Application application) {
         try {

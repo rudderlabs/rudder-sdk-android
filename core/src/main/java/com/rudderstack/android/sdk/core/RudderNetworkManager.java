@@ -121,6 +121,69 @@ public class RudderNetworkManager {
         }
     }
 
+    Result sendNetworkRequest2(@Nullable String requestPayload, @NonNull String requestURL, @NonNull RequestMethod requestMethod) {
+        if (requestMethod == RequestMethod.POST && requestPayload == null)
+            return new Result(NetworkResponses.ERROR, -1, null, "Payload is Null");
+
+        if (TextUtils.isEmpty(authHeaderString)) {
+            RudderLogger.logError(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: WriteKey was in-correct, hence aborting the request to %s", requestURL));
+            return new Result(NetworkResponses.ERROR, -1, null, "Write Key is Invalid");
+        }
+
+        try {
+            URL url = new URL(requestURL);
+            HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+            httpConnection.setRequestProperty("Authorization", String.format(Locale.US, authHeaderString));
+            if (requestMethod == RequestMethod.GET) {
+                httpConnection.setRequestMethod("GET");
+            } else {
+                httpConnection.setDoOutput(true);
+                httpConnection.setRequestMethod("POST");
+                httpConnection.setRequestProperty("Content-Type", "application/json");
+                OutputStream os = httpConnection.getOutputStream();
+                OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
+                osw.write(requestPayload);
+                osw.flush();
+                osw.close();
+                os.close();
+            }
+            synchronized (MessageUploadLock.REQUEST_LOCK) {
+                httpConnection.connect();
+            }
+
+            String responsePayload = null;
+            String errorPayload = null;
+            NetworkResponses networkResponse = null;
+
+            int responseCode = httpConnection.getResponseCode();
+            if (responseCode == 200) {
+                try {
+                    responsePayload = getResponse(httpConnection.getInputStream());
+                    RudderLogger.logInfo(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Request to endpoint %s was successful with status code %d and response is %s", requestURL, responseCode, responsePayload));
+                    networkResponse = NetworkResponses.SUCCESS;
+                } catch (IOException e) {
+                    RudderLogger.logError(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Failed to parse the response from endpoint %s due to %s", requestURL, e.getLocalizedMessage()));
+                }
+            } else {
+                try {
+                    errorPayload = getResponse(httpConnection.getErrorStream());
+                    RudderLogger.logError(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Request to endpoint %s failed with status code %d and error %s", requestURL, responseCode, errorPayload));
+                    if (errorPayload.toLowerCase().contains("invalid write key"))
+                        networkResponse = NetworkResponses.WRITE_KEY_ERROR;
+                    if (responseCode == 404)
+                        networkResponse = NetworkResponses.RESOURCE_NOT_FOUND;
+                } catch (IOException e) {
+                    RudderLogger.logError(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Failed to parse the response from endpoint %s due to %s", requestURL, e.getLocalizedMessage()));
+                }
+            }
+            return new Result(networkResponse == null ? NetworkResponses.ERROR : networkResponse, responseCode, responsePayload, errorPayload);
+        } catch (Exception ex) {
+            RudderLogger.logError(ex);
+            return new Result(NetworkResponses.ERROR, -1, null, ex.getLocalizedMessage());
+        }
+    }
+
+
     String getResponse(InputStream stream) throws IOException {
         BufferedInputStream bis = new BufferedInputStream(stream);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
