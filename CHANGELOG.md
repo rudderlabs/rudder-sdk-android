@@ -22,3 +22,6 @@ All notable changes to this project will be documented in this file.
 ## Version - 1.7.0 - 2022-08-04
 ### Added
 - Session Tracking.
+
+## Version - 1.8.0 - 2022-10-28
+- Data Residency

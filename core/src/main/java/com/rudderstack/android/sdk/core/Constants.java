@@ -39,7 +39,7 @@ class Constants {
     // default for automatic session tracking
     static final boolean AUTO_SESSION_TRACKING = true;
     // current version of the library
-    static final String RUDDER_LIBRARY_VERSION = "1.7.0";
+    static final String RUDDER_LIBRARY_VERSION = "1.8.0";
     // default residency server
     static final ResidencyServer RESIDENCY_SERVER = ResidencyServer.US;
 }
