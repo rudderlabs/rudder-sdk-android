@@ -21,6 +21,32 @@ class RudderDataResidency {
         this.residencyServer = config.getResidencyServer();
     }
 
+    /**
+     * This API will update the dataPlane URL present in the config, just after sourceConfig was fetched successfully.
+     *
+     * <p>Preference of dataPlane URL is decided as follows:</p>
+     * <ul>
+     *     <li>First look for the Residency server (which was set while SDK initialisation) in the source config.</li>
+     *     <li>If Residency server was not set while SDK initialisation then fallback to default US residency server.</li>
+     *     <li>If residency server list is empty or null then fallback to dataPlane URL (which was set while SDK initialisation).</li>
+     *     <li>If dataPlane URL was not passed while SDK initialisation then as a last resort fallback to the default dataPlane URL.</li>
+     * </ul>
+     * <p>
+     * Default Residency server is US.
+     * <p>
+     * Use the below code snippet to set the Data Residency:
+     * <pre>
+     *     {@code
+     *     rudderClient = RudderClient.getInstance(
+     *             this,
+     *             WRITE_KEY,
+     *             RudderConfig.Builder()
+     *                 .withResidencyServer(ResidencyServer.US)
+     *                 .build()
+     *     )
+     *      }
+     * </pre>
+     */
     void handleDataPlaneUrl() {
         if (residencyServer == ResidencyServer.US) {
             handleDefaultServer();
@@ -29,6 +55,12 @@ class RudderDataResidency {
         }
     }
 
+    /**
+     * Handle all server other than US.
+     * If passed server is not present then fallback to US server.
+     *
+     * @param residencyServer Residency server set while SDK initialisation
+     */
     @VisibleForTesting
     void handleOtherServer(@NonNull ResidencyServer residencyServer) {
         // TODO: Decide upper or lower case
@@ -40,6 +72,12 @@ class RudderDataResidency {
         }
     }
 
+    /**
+     * Handle default US server
+     *
+     * If default US server is also not present then no need to do any extra things,
+     * as dataPlaneUrl logic is already handled while config object is build.
+     */
     @VisibleForTesting
     void handleDefaultServer() {
         // TODO: Decide upper or lower case
@@ -49,6 +87,12 @@ class RudderDataResidency {
         }
     }
 
+    /**
+     * Look for the region in the data residency list.
+     *
+     * @param region Data Residency region set while SDK initialisation.
+     * @return Corresponding residency URL if present else null.
+     */
     @VisibleForTesting
     @Nullable
     String getDataResidencyUrl(@Nullable String region) {
