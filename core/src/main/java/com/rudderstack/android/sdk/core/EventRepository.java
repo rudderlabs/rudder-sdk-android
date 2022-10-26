@@ -27,7 +27,6 @@ import com.rudderstack.android.sdk.core.util.Utils;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -167,6 +166,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         if (serverConfig != null) {
                             isSDKEnabled = serverConfig.source.isSourceEnabled;
                             if (isSDKEnabled) {
+                                // Initialise dataPlaneUrl based on Residency server
+                                RudderDataResidency rudderDataResidency = new RudderDataResidency(serverConfig, config);
+                                rudderDataResidency.handleDataPlaneUrl();
                                 // initiate processor
                                 RudderLogger.logDebug("EventRepository: initiateSDK: Initiating processor");
                                 Thread processorThread = new Thread(getProcessorRunnable());

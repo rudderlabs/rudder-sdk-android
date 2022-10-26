@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 class RudderServerConfigSource implements Serializable {
     @SerializedName("id")
@@ -16,4 +17,6 @@ class RudderServerConfigSource implements Serializable {
     String updatedAt;
     @SerializedName("destinations")
     List<RudderServerDestination> destinations;
+    @SerializedName("dataPlaneUrls")
+    Map<String, String> dataResidencyUrls;
 }

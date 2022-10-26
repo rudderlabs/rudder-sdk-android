@@ -48,6 +48,7 @@ public class RudderConfig {
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
+    private ResidencyServer residencyServer;
 
     RudderConfig() {
         this(
@@ -67,7 +68,8 @@ public class RudderConfig {
                 Constants.DEFAULT_SESSION_TIMEOUT,
                 Constants.CONTROL_PLANE_URL,
                 null,
-                null
+                null,
+                Constants.RESIDENCY_SERVER
         );
     }
 
@@ -88,7 +90,8 @@ public class RudderConfig {
             long sessionTimeout,
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
-            List<RudderIntegration.Factory> customFactories
+            List<RudderIntegration.Factory> customFactories,
+            ResidencyServer residencyServer
     ) {
         RudderLogger.init(logLevel);
 
@@ -174,6 +177,8 @@ public class RudderConfig {
             this.sessionTimeout = Constants.DEFAULT_SESSION_TIMEOUT;
         }
         this.trackAutoSession = trackAutoSession;
+
+        this.residencyServer = residencyServer;
     }
 
     /**
@@ -314,6 +319,13 @@ public class RudderConfig {
         return sessionTimeout;
     }
 
+    /**
+     * @return residencyServer (your residency-server url)
+     */
+    public ResidencyServer getResidencyServer() {
+        return residencyServer;
+    }
+
     void setDataPlaneUrl(String dataPlaneUrl) {
         this.dataPlaneUrl = dataPlaneUrl;
     }
@@ -360,6 +372,10 @@ public class RudderConfig {
 
     void setTrackAutoSession(boolean trackAutoSession) {
         this.trackAutoSession = trackAutoSession;
+    }
+
+    void setResidencyServer(ResidencyServer residencyServer) {
+        this.residencyServer = residencyServer;
     }
 
     /**
@@ -467,6 +483,17 @@ public class RudderConfig {
                 return this;
             }
             this.dataPlaneUrl = dataPlaneUrl;
+            return this;
+        }
+
+        private ResidencyServer residencyServer = Constants.RESIDENCY_SERVER;
+
+        /**
+         * @param server Your residency-server url
+         * @return RudderConfig.Builder
+         */
+        public Builder withResidencyServer(@NonNull ResidencyServer server) {
+            this.residencyServer = server;
             return this;
         }
 
@@ -671,7 +698,8 @@ public class RudderConfig {
                     this.sessionTimeout,
                     this.controlPlaneUrl,
                     this.factories,
-                    this.customFactories
+                    this.customFactories,
+                    this.residencyServer
             );
         }
     }
