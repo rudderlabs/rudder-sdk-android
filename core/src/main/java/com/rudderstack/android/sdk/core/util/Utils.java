@@ -36,6 +36,7 @@ import static android.provider.Settings.Secure.ANDROID_ID;
 import static android.provider.Settings.System.getString;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class Utils {
 
@@ -262,4 +263,17 @@ public class Utils {
         }
     }
 
+    @NonNull
+    public static String processDataPlaneUrl(@NonNull String dataPlaneUrl) {
+        if (!dataPlaneUrl.endsWith("/")) dataPlaneUrl += "/";
+        return dataPlaneUrl;
+    }
+
+    public static boolean isNotEmpty(@Nullable Map<String, String> value) {
+        return !(value == null || value.isEmpty());
+    }
+    
+    public static boolean isNotEmpty(@Nullable String value) {
+        return !(value == null || value.isEmpty());
+    }
 }

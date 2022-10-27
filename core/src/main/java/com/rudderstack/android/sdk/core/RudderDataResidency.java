@@ -1,5 +1,8 @@
 package com.rudderstack.android.sdk.core;
 
+import static com.rudderstack.android.sdk.core.util.Utils.isNotEmpty;
+import static com.rudderstack.android.sdk.core.util.Utils.processDataPlaneUrl;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -109,22 +112,5 @@ class RudderDataResidency {
                 }
             }
         return null;
-    }
-
-    @VisibleForTesting
-    @NonNull
-    String processDataPlaneUrl(@NonNull String dataPlaneUrl) {
-        if (!dataPlaneUrl.endsWith("/")) dataPlaneUrl += "/";
-        return dataPlaneUrl;
-    }
-
-    @VisibleForTesting
-    boolean isNotEmpty(@Nullable Map<String, String> value) {
-        return !(value == null || value.isEmpty());
-    }
-
-    @VisibleForTesting
-    boolean isNotEmpty(@Nullable String value) {
-        return !(value == null || value.isEmpty());
     }
 }
