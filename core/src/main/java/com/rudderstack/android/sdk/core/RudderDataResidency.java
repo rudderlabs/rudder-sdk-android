@@ -1,6 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.util.Utils.isNotEmpty;
+import static com.rudderstack.android.sdk.core.util.Utils.isEmpty;
 import static com.rudderstack.android.sdk.core.util.Utils.processDataPlaneUrl;
 
 import androidx.annotation.NonNull;
@@ -77,7 +77,7 @@ class RudderDataResidency {
 
     /**
      * Handle default US server
-     *
+     * <p>
      * If default US server is also not present then no need to do any extra things,
      * as dataPlaneUrl logic is already handled while config object is build.
      */
@@ -98,19 +98,19 @@ class RudderDataResidency {
      */
     @VisibleForTesting
     @Nullable
-    String getDataResidencyUrl(@Nullable String region) {
-        if (region != null)
-            if (isNotEmpty(dataResidencyUrls)) {
-                for (String key : dataResidencyUrls.keySet()) {
-                    if (key.equalsIgnoreCase(region)) {
-                        String dataResidencyUrl = dataResidencyUrls.get(key);
-                        if (isNotEmpty(dataResidencyUrl)) {
-                            return processDataPlaneUrl(dataResidencyUrl);
-                        }
-                        break;
-                    }
+    String getDataResidencyUrl(String region) {
+        if (isEmpty(dataResidencyUrls)) {
+            return null;
+        }
+        for (String key : dataResidencyUrls.keySet()) {
+            if (key.equalsIgnoreCase(region)) {
+                String dataResidencyUrl = dataResidencyUrls.get(key);
+                if (!isEmpty(dataResidencyUrl)) {
+                    return processDataPlaneUrl(dataResidencyUrl);
                 }
+                break;
             }
+        }
         return null;
     }
 }

@@ -269,11 +269,11 @@ public class Utils {
         return dataPlaneUrl;
     }
 
-    public static boolean isNotEmpty(@Nullable Map<String, String> value) {
-        return !(value == null || value.isEmpty());
+    public static boolean isEmpty(@Nullable Map<String, String> value) {
+        return (value == null || value.isEmpty());
     }
-    
-    public static boolean isNotEmpty(@Nullable String value) {
-        return !(value == null || value.isEmpty());
+
+    public static boolean isEmpty(@Nullable String value) {
+        return (value == null || value.isEmpty());
     }
 }
