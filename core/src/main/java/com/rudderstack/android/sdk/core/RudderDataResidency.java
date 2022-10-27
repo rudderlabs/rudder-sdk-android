@@ -10,14 +10,13 @@ import androidx.annotation.VisibleForTesting;
 import java.util.Map;
 
 class RudderDataResidency {
-    private final RudderConfig config;
     @VisibleForTesting
     Map<String, String> dataResidencyUrls = null;
     @VisibleForTesting
     DataResidencyServer dataResidencyServer;
+    private String dataPlaneUrl = null;
 
     RudderDataResidency(@Nullable RudderServerConfig serverConfig, @NonNull RudderConfig config) {
-        this.config = config;
         if (serverConfig != null && serverConfig.source != null && serverConfig.source.dataResidencyUrls != null) {
             this.dataResidencyUrls = serverConfig.source.dataResidencyUrls;
         }
@@ -25,7 +24,7 @@ class RudderDataResidency {
     }
 
     /**
-     * This API will update the dataPlane URL present in the config, just after sourceConfig was fetched successfully.
+     * This API will fetch the dataPlane URL present from the sourceConfig based on the Residency Server region.
      *
      * <p>Preference of dataPlane URL is decided as follows:</p>
      * <ul>
@@ -50,7 +49,7 @@ class RudderDataResidency {
      *      }
      * </pre>
      */
-    void handleDataPlaneUrl() {
+    void processDataPlaneUrl() {
         if (dataResidencyServer == DataResidencyServer.US) {
             handleDefaultServer();
         } else {
@@ -69,7 +68,7 @@ class RudderDataResidency {
         // TODO: Decide upper or lower case
         String dataResidencyUrl = getDataResidencyUrl(dataResidencyServer.name());
         if (dataResidencyUrl != null) {
-            config.setDataPlaneUrl(dataResidencyUrl);
+            setDataPlaneUrl(dataResidencyUrl);
         } else {
             handleDefaultServer();
         }
@@ -86,7 +85,7 @@ class RudderDataResidency {
         // TODO: Decide upper or lower case
         String dataResidencyUrl = getDataResidencyUrl(DataResidencyServer.US.name());
         if (dataResidencyUrl != null) {
-            config.setDataPlaneUrl(dataResidencyUrl);
+            setDataPlaneUrl(dataResidencyUrl);
         }
     }
 
@@ -112,5 +111,24 @@ class RudderDataResidency {
             }
         }
         return null;
+    }
+
+    // Getter and Setter
+
+    /**
+     *
+     * @return dataPlaneUrl from the sourceConfig based on the ResidencyServer region.
+     *
+     * If either required region is not present in the sourceConfig or sourceConfig is null
+     * then return null.
+     */
+    @Nullable
+    String getDataPlaneUrl() {
+        return this.dataPlaneUrl;
+    }
+
+    @VisibleForTesting
+    void setDataPlaneUrl(String dataPlaneUrl) {
+        this.dataPlaneUrl = dataPlaneUrl;
     }
 }

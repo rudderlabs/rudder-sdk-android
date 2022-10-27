@@ -57,6 +57,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
 
     private int noOfActivities;
+    private String dataPlaneUrl;
 
 
     /*
@@ -120,8 +121,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
             this.configManager = new RudderServerConfigManager(_application, _writeKey, _config);
 
+            dataPlaneUrl = config.getDataPlaneUrl();
             // 5. initiate FlushWorkManager
-            RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(config.getDataPlaneUrl(), authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel());
+            RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel());
             this.rudderFlushWorkManager = new RudderFlushWorkManager(context, config, preferenceManager, rudderFlushConfig);
 
             // 6. start processor thread
@@ -168,7 +170,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             if (isSDKEnabled) {
                                 // Initialise dataPlaneUrl based on Residency server
                                 RudderDataResidency rudderDataResidency = new RudderDataResidency(serverConfig, config);
-                                rudderDataResidency.handleDataPlaneUrl();
+                                rudderDataResidency.processDataPlaneUrl();
+                                if (rudderDataResidency.getDataPlaneUrl() != null) {
+                                    dataPlaneUrl = rudderDataResidency.getDataPlaneUrl();
+                                }
                                 // initiate processor
                                 RudderLogger.logDebug("EventRepository: initiateSDK: Initiating processor");
                                 Thread processorThread = new Thread(getProcessorRunnable());
@@ -394,7 +399,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                 RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: EventCount: %d", messageIds.size()));
                                 if (payload != null) {
                                     // send payload to server if it is not null
-                                    networkResponse = flushEventsToServer(payload, config.getDataPlaneUrl(), authHeaderString, anonymousIdHeaderString);
+                                    networkResponse = flushEventsToServer(payload, dataPlaneUrl, authHeaderString, anonymousIdHeaderString);
                                     RudderLogger.logInfo(String.format(Locale.US, "EventRepository: processor: ServerResponse: %s", networkResponse));
                                     // if success received from server
                                     if (networkResponse == Utils.NetworkResponses.SUCCESS) {
@@ -539,7 +544,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     void flushSync() {
 //        synchronized (this){
         FlushUtils.flush(areFactoriesInitialized, integrationOperationsMap,
-                config.getFlushQueueSize(), config.getDataPlaneUrl(),
+                config.getFlushQueueSize(), dataPlaneUrl,
                 dbManager, authHeaderString, anonymousIdHeaderString);
 //        }
     }
