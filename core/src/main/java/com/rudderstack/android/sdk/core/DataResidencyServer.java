@@ -1,6 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
-public enum ResidencyServer {
+public enum DataResidencyServer {
     US,
     EU
 }

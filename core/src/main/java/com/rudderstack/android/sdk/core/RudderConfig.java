@@ -48,7 +48,7 @@ public class RudderConfig {
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
-    private ResidencyServer residencyServer;
+    private DataResidencyServer dataResidencyServer;
 
     RudderConfig() {
         this(
@@ -91,7 +91,7 @@ public class RudderConfig {
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
             List<RudderIntegration.Factory> customFactories,
-            ResidencyServer residencyServer
+            DataResidencyServer dataResidencyServer
     ) {
         RudderLogger.init(logLevel);
 
@@ -178,7 +178,7 @@ public class RudderConfig {
         }
         this.trackAutoSession = trackAutoSession;
 
-        this.residencyServer = residencyServer;
+        this.dataResidencyServer = dataResidencyServer;
     }
 
     /**
@@ -320,10 +320,10 @@ public class RudderConfig {
     }
 
     /**
-     * @return residencyServer (your residency-server url)
+     * @return dataResidencyServer (your residency-server url)
      */
-    public ResidencyServer getResidencyServer() {
-        return residencyServer;
+    public DataResidencyServer getDataResidencyServer() {
+        return dataResidencyServer;
     }
 
     void setDataPlaneUrl(String dataPlaneUrl) {
@@ -374,8 +374,8 @@ public class RudderConfig {
         this.trackAutoSession = trackAutoSession;
     }
 
-    void setResidencyServer(ResidencyServer residencyServer) {
-        this.residencyServer = residencyServer;
+    void setDataResidencyServer(DataResidencyServer dataResidencyServer) {
+        this.dataResidencyServer = dataResidencyServer;
     }
 
     /**
@@ -486,14 +486,14 @@ public class RudderConfig {
             return this;
         }
 
-        private ResidencyServer residencyServer = Constants.RESIDENCY_SERVER;
+        private DataResidencyServer dataResidencyServer = Constants.RESIDENCY_SERVER;
 
         /**
-         * @param server Your residency-server url
+         * @param dataResidencyServer Your dataResidencyServer url
          * @return RudderConfig.Builder
          */
-        public Builder withResidencyServer(@NonNull ResidencyServer server) {
-            this.residencyServer = server;
+        public Builder withDataResidencyServer(@NonNull DataResidencyServer dataResidencyServer) {
+            this.dataResidencyServer = dataResidencyServer;
             return this;
         }
 
@@ -699,7 +699,7 @@ public class RudderConfig {
                     this.controlPlaneUrl,
                     this.factories,
                     this.customFactories,
-                    this.residencyServer
+                    this.dataResidencyServer
             );
         }
     }
