@@ -1,7 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
 import static com.rudderstack.android.sdk.core.util.Utils.isEmpty;
-import static com.rudderstack.android.sdk.core.util.Utils.processDataPlaneUrl;
+import static com.rudderstack.android.sdk.core.util.Utils.appendSlashToUrl;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -106,7 +106,7 @@ class RudderDataResidency {
             if (key.equalsIgnoreCase(region)) {
                 String dataResidencyUrl = dataResidencyUrls.get(key);
                 if (!isEmpty(dataResidencyUrl)) {
-                    return processDataPlaneUrl(dataResidencyUrl);
+                    return appendSlashToUrl(dataResidencyUrl);
                 }
                 break;
             }

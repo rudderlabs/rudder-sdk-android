@@ -264,7 +264,7 @@ public class Utils {
     }
 
     @NonNull
-    public static String processDataPlaneUrl(@NonNull String dataPlaneUrl) {
+    public static String appendSlashToUrl(@NonNull String dataPlaneUrl) {
         if (!dataPlaneUrl.endsWith("/")) dataPlaneUrl += "/";
         return dataPlaneUrl;
     }
