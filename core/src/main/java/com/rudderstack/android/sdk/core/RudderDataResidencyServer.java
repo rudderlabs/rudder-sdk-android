@@ -1,6 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
-public enum DataResidencyServer {
+public enum RudderDataResidencyServer {
     US,
     EU
 }

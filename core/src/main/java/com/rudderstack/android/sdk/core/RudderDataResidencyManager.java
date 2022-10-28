@@ -13,14 +13,14 @@ class RudderDataResidencyManager {
     @VisibleForTesting
     Map<String, String> dataResidencyUrls = null;
     @VisibleForTesting
-    DataResidencyServer dataResidencyServer;
+    RudderDataResidencyServer rudderDataResidencyServer;
     private String dataPlaneUrl = null;
 
     RudderDataResidencyManager(@Nullable RudderServerConfig serverConfig, @NonNull RudderConfig config) {
         if (serverConfig != null && serverConfig.source != null && serverConfig.source.dataResidencyUrls != null) {
             this.dataResidencyUrls = serverConfig.source.dataResidencyUrls;
         }
-        this.dataResidencyServer = config.getDataResidencyServer();
+        this.rudderDataResidencyServer = config.getDataResidencyServer();
     }
 
     /**
@@ -50,10 +50,10 @@ class RudderDataResidencyManager {
      * </pre>
      */
     void processDataPlaneUrl() {
-        if (dataResidencyServer == DataResidencyServer.US) {
+        if (rudderDataResidencyServer == RudderDataResidencyServer.US) {
             handleDefaultServer();
         } else {
-            handleOtherServer(dataResidencyServer);
+            handleOtherServer(rudderDataResidencyServer);
         }
     }
 
@@ -61,12 +61,12 @@ class RudderDataResidencyManager {
      * Handle all server other than US.
      * If passed server is not present then fallback to US server.
      *
-     * @param dataResidencyServer Residency server set while SDK initialisation
+     * @param rudderDataResidencyServer Residency server set while SDK initialisation
      */
     @VisibleForTesting
-    void handleOtherServer(@NonNull DataResidencyServer dataResidencyServer) {
+    void handleOtherServer(@NonNull RudderDataResidencyServer rudderDataResidencyServer) {
         // TODO: Decide upper or lower case
-        String dataResidencyUrl = getDataResidencyUrl(dataResidencyServer.name());
+        String dataResidencyUrl = getDataResidencyUrl(rudderDataResidencyServer.name());
         if (dataResidencyUrl != null) {
             setDataPlaneUrl(dataResidencyUrl);
         } else {
@@ -83,7 +83,7 @@ class RudderDataResidencyManager {
     @VisibleForTesting
     void handleDefaultServer() {
         // TODO: Decide upper or lower case
-        String dataResidencyUrl = getDataResidencyUrl(DataResidencyServer.US.name());
+        String dataResidencyUrl = getDataResidencyUrl(RudderDataResidencyServer.US.name());
         if (dataResidencyUrl != null) {
             setDataPlaneUrl(dataResidencyUrl);
         }
