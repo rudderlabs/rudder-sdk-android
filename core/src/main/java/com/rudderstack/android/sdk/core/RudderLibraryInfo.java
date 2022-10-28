@@ -6,5 +6,5 @@ class RudderLibraryInfo {
     @SerializedName("name")
     private String name = BuildConfig.LIBRARY_PACKAGE_NAME;
     @SerializedName("version")
-    private String version = "1.8.0";
+    private String version = Constants.RUDDER_LIBRARY_VERSION;
 }

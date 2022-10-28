@@ -41,5 +41,5 @@ class Constants {
     // current version of the library
     static final String RUDDER_LIBRARY_VERSION = "1.8.0";
     // default residency server
-    static final DataResidencyServer RESIDENCY_SERVER = DataResidencyServer.US;
+    static final RudderDataResidencyServer DATA_RESIDENCY_SERVER = RudderDataResidencyServer.US;
 }
