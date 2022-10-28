@@ -9,14 +9,14 @@ import androidx.annotation.VisibleForTesting;
 
 import java.util.Map;
 
-class RudderDataResidency {
+class RudderDataResidencyManager {
     @VisibleForTesting
     Map<String, String> dataResidencyUrls = null;
     @VisibleForTesting
     DataResidencyServer dataResidencyServer;
     private String dataPlaneUrl = null;
 
-    RudderDataResidency(@Nullable RudderServerConfig serverConfig, @NonNull RudderConfig config) {
+    RudderDataResidencyManager(@Nullable RudderServerConfig serverConfig, @NonNull RudderConfig config) {
         if (serverConfig != null && serverConfig.source != null && serverConfig.source.dataResidencyUrls != null) {
             this.dataResidencyUrls = serverConfig.source.dataResidencyUrls;
         }

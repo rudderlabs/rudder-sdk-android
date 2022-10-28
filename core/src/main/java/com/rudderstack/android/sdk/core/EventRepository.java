@@ -169,10 +169,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             isSDKEnabled = serverConfig.source.isSourceEnabled;
                             if (isSDKEnabled) {
                                 // Initialise dataPlaneUrl based on Residency server
-                                RudderDataResidency rudderDataResidency = new RudderDataResidency(serverConfig, config);
-                                rudderDataResidency.processDataPlaneUrl();
-                                if (rudderDataResidency.getDataPlaneUrl() != null) {
-                                    dataPlaneUrl = rudderDataResidency.getDataPlaneUrl();
+                                RudderDataResidencyManager rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
+                                rudderDataResidencyManager.processDataPlaneUrl();
+                                if (rudderDataResidencyManager.getDataPlaneUrl() != null) {
+                                    dataPlaneUrl = rudderDataResidencyManager.getDataPlaneUrl();
                                 }
                                 // initiate processor
                                 RudderLogger.logDebug("EventRepository: initiateSDK: Initiating processor");
