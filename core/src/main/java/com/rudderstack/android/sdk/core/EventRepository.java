@@ -121,10 +121,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
             this.configManager = new RudderServerConfigManager(_application, _writeKey, _config);
 
-            dataPlaneUrl = config.getDataPlaneUrl();
             // 5. initiate FlushWorkManager
-            RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel());
-            this.rudderFlushWorkManager = new RudderFlushWorkManager(context, config, preferenceManager, rudderFlushConfig);
+            rudderFlushWorkManager = new RudderFlushWorkManager(context, config, preferenceManager);
 
             // 6. start processor thread
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
@@ -173,7 +171,14 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                 rudderDataResidency.processDataPlaneUrl();
                                 if (rudderDataResidency.getDataPlaneUrl() != null) {
                                     dataPlaneUrl = rudderDataResidency.getDataPlaneUrl();
+                                } else {
+                                    dataPlaneUrl = config.getDataPlaneUrl();
                                 }
+
+                                // save flush config
+                                RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel());
+                                rudderFlushWorkManager.saveRudderFlushConfig(rudderFlushConfig);
+
                                 // initiate processor
                                 RudderLogger.logDebug("EventRepository: initiateSDK: Initiating processor");
                                 Thread processorThread = new Thread(getProcessorRunnable());

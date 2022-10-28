@@ -22,14 +22,13 @@ public class RudderFlushWorkManager {
     RudderPreferenceManager preferenceManager;
     static final String RUDDER_FLUSH_CONFIG_FILE_NAME = "RudderFlushConfig";
 
-    RudderFlushWorkManager(Context context, RudderConfig config, RudderPreferenceManager preferenceManager, RudderFlushConfig rudderFlushConfig) {
+    RudderFlushWorkManager(Context context, RudderConfig config, RudderPreferenceManager preferenceManager) {
         this.context = context;
         this.config = config;
         this.preferenceManager = preferenceManager;
-        RudderFlushWorkManager.saveRudderFlushConfig(context, rudderFlushConfig);
     }
 
-    static void saveRudderFlushConfig(Context context, RudderFlushConfig rudderFlushConfig) {
+    void saveRudderFlushConfig(RudderFlushConfig rudderFlushConfig) {
         try {
             FileOutputStream fos = context.openFileOutput(RUDDER_FLUSH_CONFIG_FILE_NAME, Context.MODE_PRIVATE);
             ObjectOutputStream os = new ObjectOutputStream(fos);
