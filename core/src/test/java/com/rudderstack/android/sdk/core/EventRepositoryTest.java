@@ -2,6 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -26,6 +27,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -58,7 +60,7 @@ public class EventRepositoryTest {
         //mocking timestamp
         PowerMockito.spy(Utils.class);
         PowerMockito.when(Utils.class, "getTimeStamp"
-        )
+                )
                 .thenAnswer(new Answer<String>() {
                     @Override
                     public String answer(InvocationOnMock invocation) throws Throwable {
@@ -66,24 +68,25 @@ public class EventRepositoryTest {
                     }
                 });
     }
+
     /**
      * test flushEventsToServer is called properly
      */
     @Test
     public void flush() throws Exception {
 
-        PowerMockito.when(dbPersistentManager, "fetchAllEventsFromDB", messageIdsParams, messagesParams)
+        PowerMockito.when(dbPersistentManager, "fetchAllEventsFromDB", anyList(), anyList())
                 .thenAnswer(new Answer<Void>() {
                     @Override
                     public Void answer(InvocationOnMock invocation) throws Throwable {
-                        messageIdsParams.addAll(messageIds);
-                        messagesParams.addAll(messages);
+                        ((ArrayList) invocation.getArgument(0)).addAll(messageIds);
+                        ((ArrayList) invocation.getArgument(1)).addAll(messages);
                         return null;
                     }
                 });
         PowerMockito.when(FlushUtils.class, "flushEventsToServer",
-                anyString(), anyString(), anyString(), anyString()
-        )
+                        anyString(), anyString(), anyString(), anyString()
+                )
                 .thenAnswer(new Answer<Utils.NetworkResponses>() {
                     @Override
                     public Utils.NetworkResponses answer(InvocationOnMock invocation) throws Throwable {
@@ -140,7 +143,7 @@ public class EventRepositoryTest {
 //                Mockito.eq("api.rudderstack.com/"),
 //                Mockito.eq("auth_key"),
 //                Mockito.eq("anon_id")
-                );
+        );
         assertThat(result, Matchers.is(true));
         System.out.println(arg1.getValue());
         assertThat(arg1.getValue().replace(" ", ""),
@@ -152,6 +155,7 @@ public class EventRepositoryTest {
         System.out.println(arg4.getValue());
         assertThat(arg4.getValue(), Matchers.is("anon_id"));
     }
+
     private int dbFetchCalled = 0;
 
     @Test
@@ -159,7 +163,7 @@ public class EventRepositoryTest {
         final AtomicInteger threadsCalledDb = new AtomicInteger(0);
         //we add a sleep to db fetch to check for synchronicity
         // take a class level variable to check for thread access
-        PowerMockito.when(dbPersistentManager, "fetchAllEventsFromDB", messageIdsParams, messagesParams)
+        PowerMockito.when(dbPersistentManager, "fetchAllEventsFromDB", anyList(), anyList())
                 .thenAnswer(new Answer<Void>() {
                     @Override
                     public Void answer(InvocationOnMock invocation) throws Throwable {
@@ -167,8 +171,8 @@ public class EventRepositoryTest {
                         System.out.println("fetchAllEvents called by: " + Thread.currentThread().getName());
                         //assert if called by multiple thread
                         assertThat(dbFetchCalled, Matchers.lessThan(2));
-                        messageIdsParams.addAll(messageIds);
-                        messagesParams.addAll(messages);
+                        ((ArrayList) invocation.getArgument(0)).addAll(messageIds);
+                        ((ArrayList) invocation.getArgument(1)).addAll(messages);
                         Thread.sleep(100);
                         --dbFetchCalled;
                         assertThat(dbFetchCalled, Matchers.lessThan(1));
@@ -178,8 +182,8 @@ public class EventRepositoryTest {
                     }
                 });
         PowerMockito.when(FlushUtils.class, "flushEventsToServer",
-                anyString(), anyString(), anyString(), anyString()
-        )
+                        anyString(), anyString(), anyString(), anyString()
+                )
                 .thenAnswer(new Answer<Utils.NetworkResponses>() {
                     @Override
                     public Utils.NetworkResponses answer(InvocationOnMock invocation) throws Throwable {
@@ -198,7 +202,7 @@ public class EventRepositoryTest {
                             30, "api.rudderstack.com/", dbPersistentManager
                             , "auth_key", "anon_id");
                 }
-            }, "flush-thread-" + n){
+            }, "flush-thread-" + n) {
                 @Override
                 public synchronized void start() {
                     super.start();
