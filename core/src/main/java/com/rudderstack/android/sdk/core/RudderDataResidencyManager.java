@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import java.util.Locale;
 import java.util.Map;
 
 class RudderDataResidencyManager {
@@ -101,13 +102,11 @@ class RudderDataResidencyManager {
         if (isEmpty(dataResidencyUrls)) {
             return null;
         }
-        for (String key : dataResidencyUrls.keySet()) {
-            if (key.equalsIgnoreCase(region)) {
-                String dataResidencyUrl = dataResidencyUrls.get(key);
-                if (!isEmpty(dataResidencyUrl)) {
-                    return appendSlashToUrl(dataResidencyUrl);
-                }
-                break;
+        region = region.toLowerCase(Locale.ROOT);
+        if (dataResidencyUrls.containsKey(region)) {
+            String dataResidencyUrl = dataResidencyUrls.get(region);
+            if (!isEmpty(dataResidencyUrl)) {
+                return appendSlashToUrl(dataResidencyUrl);
             }
         }
         return null;

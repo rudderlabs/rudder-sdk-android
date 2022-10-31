@@ -40,8 +40,8 @@ public class RudderDataResidencyManagerTest {
 
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
 
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put("eu", euDataPlaneUrl);
+        dataResidencyUrls.put("us", usDataPlaneUrl);
     }
 
     @Test
@@ -50,8 +50,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.US);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", null);
+        dataResidencyUrls.put("eu", euDataPlaneUrl);
+        dataResidencyUrls.put("us", null);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         rudderDataResidencyManager.processDataPlaneUrl();
 
@@ -65,8 +65,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.US);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", null);
+        dataResidencyUrls.put("eu", euDataPlaneUrl);
+        dataResidencyUrls.put("us", null);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         rudderDataResidencyManager.processDataPlaneUrl();
 
@@ -79,8 +79,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.US);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put("eu", euDataPlaneUrl);
+        dataResidencyUrls.put("us", usDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         rudderDataResidencyManager.processDataPlaneUrl();
 
@@ -94,8 +94,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.US);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put("eu", euDataPlaneUrl);
+        dataResidencyUrls.put("us", usDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         rudderDataResidencyManager.processDataPlaneUrl();
 
@@ -109,7 +109,7 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.US);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
+        dataResidencyUrls.put("eu", euDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         rudderDataResidencyManager.processDataPlaneUrl();
 
@@ -119,7 +119,7 @@ public class RudderDataResidencyManagerTest {
         config = new RudderConfig();
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
+        dataResidencyUrls.put("eu", euDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         rudderDataResidencyManager.processDataPlaneUrl();
 
@@ -132,8 +132,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.EU);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", null);
+        dataResidencyUrls.put("eu", euDataPlaneUrl);
+        dataResidencyUrls.put("us", null);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         rudderDataResidencyManager.processDataPlaneUrl();
 
@@ -146,8 +146,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.EU);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", null);
-        dataResidencyUrls.put("US", null);
+        dataResidencyUrls.put("eu", null);
+        dataResidencyUrls.put("us", null);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         rudderDataResidencyManager.processDataPlaneUrl();
 
@@ -161,8 +161,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.EU);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", null);
+        dataResidencyUrls.put("eu", euDataPlaneUrl);
+        dataResidencyUrls.put("us", null);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         rudderDataResidencyManager.processDataPlaneUrl();
 
@@ -176,8 +176,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.EU);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", null);
-        dataResidencyUrls.put("US", null);
+        dataResidencyUrls.put("eu", null);
+        dataResidencyUrls.put("us", null);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         rudderDataResidencyManager.processDataPlaneUrl();
 
@@ -190,8 +190,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.EU);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", null);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put("eu", null);
+        dataResidencyUrls.put("us", usDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         rudderDataResidencyManager.processDataPlaneUrl();
 
@@ -205,8 +205,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.EU);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", null);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put("eu", null);
+        dataResidencyUrls.put("us", usDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         rudderDataResidencyManager.processDataPlaneUrl();
 
@@ -218,8 +218,8 @@ public class RudderDataResidencyManagerTest {
         config = new RudderConfig();
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put("eu", euDataPlaneUrl);
+        dataResidencyUrls.put("us", usDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         rudderDataResidencyManager.processDataPlaneUrl();
 
@@ -358,8 +358,8 @@ public class RudderDataResidencyManagerTest {
         assertNull(rudderDataResidencyManager.getDataResidencyUrl(region));
 
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", null);
+        dataResidencyUrls.put("eu", euDataPlaneUrl);
+        dataResidencyUrls.put("us", null);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         region = "US";
         assertNull(rudderDataResidencyManager.getDataResidencyUrl(region));
@@ -367,8 +367,8 @@ public class RudderDataResidencyManagerTest {
         assertEquals(euDataPlaneUrl + '/', rudderDataResidencyManager.getDataResidencyUrl(region));
 
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", null);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put("eu", null);
+        dataResidencyUrls.put("us", usDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
         region = "EU";
         assertNull(rudderDataResidencyManager.getDataResidencyUrl(region));
