@@ -42,18 +42,12 @@ public class EventRepositoryTest {
     private final List<Integer> messageIds = new ArrayList<Integer>(ImmutableList.of(1, 2, 3, 4, 5));
     private final List<String> messages = new ArrayList<String>(ImmutableList.of("{\"message\":\"m-1\"}",
             "{\"message\":\"m-2\"}", "{\"message\":\"m-3\"}", "{\"message\":\"m-4\"}", "{\"message\":\"m-5\"}"));
-    private final List<Integer> messageIdsParams = new ArrayList<Integer>(5);
-    private final List<String> messagesParams = new ArrayList<String>(5);
 
     //database manager mock
     DBPersistentManager dbPersistentManager = PowerMockito.mock(DBPersistentManager.class);
 
     @Before
     public void setup() throws Exception {
-        messageIdsParams.clear();
-        messagesParams.clear();
-
-
         // creating static mocks
         PowerMockito.spy(FlushUtils.class);
 
