@@ -33,7 +33,7 @@ public class RudderDataResidencyManagerTest {
     @Before
     public void setup() throws Exception {
         serverConfig = PowerMockito.mock(RudderServerConfig.class);
-        config = spy(PowerMockito.mock(RudderConfig.class));
+        config = PowerMockito.mock(RudderConfig.class);
         rudderDataResidencyServer = PowerMockito.mock(RudderDataResidencyServer.class);
 
         when(config, "getDataResidencyServer").thenReturn(RudderDataResidencyServer.US);
