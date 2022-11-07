@@ -1,0 +1,35 @@
+name: Snapshot
+
+on:
+  pull_request:
+    branches: [ 'master' ]
+    types: [ 'opened', 'reopened', 'edited', 'synchronize' ]
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    environment: deployment
+    steps:
+      - uses: actions/checkout@v2
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: cache gradle dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-core-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-core-
+      - name: Publish snapshot to sonatype
+        run: ./gradlew publishToSonatype
+        env:
+          SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+
+          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.NEXUS_PASSWORD }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          SIGNING_PRIVATE_KEY_BASE64: ${{ secrets.SIGNING_PRIVATE_KEY_BASE64 }}
