@@ -11,7 +11,6 @@ import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -26,6 +25,7 @@ public class RudderClient {
     private static RudderClient instance;
     // repository instance
     private static EventRepository repository;
+
     private static Application application;
     private static String _advertisingId;
     private static String _anonymousId;
@@ -144,7 +144,6 @@ public class RudderClient {
                     config.setSleepTimeOut(Constants.SLEEP_TIMEOUT);
                 }
             }
-
             // get application from provided context
             application = (Application) context.getApplicationContext();
 
@@ -663,7 +662,6 @@ public class RudderClient {
      * <b>Call this method before initializing the RudderClient</b>
      *
      * @param advertisingId IDFA for the device
-     *
      * @deprecated Will be removed soon
      */
     public static void updateWithAdvertisingId(@NonNull String advertisingId) {
@@ -710,7 +708,6 @@ public class RudderClient {
      * Set the anonymousId for the device to be used further
      *
      * @param anonymousId AnonymousId you want to use for the application
-     *
      * @deprecated Will be removed soon
      */
     public static void setAnonymousId(@NonNull String anonymousId) {
@@ -749,9 +746,7 @@ public class RudderClient {
     /**
      * Flush Events in async manner.
      * This calls queues the requests on {@link RudderClient#flushExecutorService}
-     * @deprecated Use {@link RudderConfig.Builder#withFlushPeriodically(long, TimeUnit)} instead
      */
-    @Deprecated
     public void flush() {
         if (getOptOutStatus()) {
             return;
@@ -768,7 +763,7 @@ public class RudderClient {
     }
 
     public void cancelPeriodicWorkRequest() {
-        if(repository != null) {
+        if (repository != null) {
             repository.cancelPeriodicFlushWorker();
         }
     }
@@ -808,7 +803,7 @@ public class RudderClient {
      * Stops this instance from accepting further requests.
      */
     public void shutdown() {
-        if(repository != null)
+        if (repository != null)
             repository.shutDown();
     }
 
@@ -839,6 +834,39 @@ public class RudderClient {
      */
     public interface Callback {
         void onReady(Object instance);
+    }
+
+    /**
+     * Public method for start a session.
+     */
+    public void startSession() {
+        startSession(Utils.getCurrentTimeInSecondsLong());
+    }
+
+    /**
+     * Public method for start a session with a unique id.
+     *
+     * @param sessionId Id of a session
+     */
+    public void startSession(@NonNull Long sessionId) {
+        if (repository == null) {
+            return;
+        }
+        if (Long.toString(sessionId).length() < 10) {
+            RudderLogger.logError("RudderClient: startSession: Length of the session Id supplied should be atleast 10, hence ignoring it");
+            return;
+        }
+        repository.startSession(sessionId);
+    }
+
+    /**
+     * Public method for end an active session.
+     */
+    public void endSession() {
+        if (repository == null) {
+            return;
+        }
+        repository.endSession();
     }
 
     /*

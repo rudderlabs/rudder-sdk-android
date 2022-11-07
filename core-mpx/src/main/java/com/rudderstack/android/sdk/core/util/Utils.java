@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import static android.content.Context.UI_MODE_SERVICE;
 import static android.provider.Settings.Secure.ANDROID_ID;
@@ -56,6 +57,18 @@ public class Utils {
         formatter.setCalendar(new GregorianCalendar());
         formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         return formatter.format(new Date());
+    }
+
+    public static Long getCurrentTimeInSecondsLong() {
+        return new Long(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+    }
+
+    public static String getCurrentTimeSeconds() {
+        return String.format(Locale.US, "%d", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+    }
+
+    public static Long getCurrentTimeInMilliSeconds() {
+        return new Long(new Date().getTime());
     }
 
     public static String toDateString(Date date) {
@@ -139,14 +152,14 @@ public class Utils {
      * Returns referring_application, url and its query parameter.
      */
     @NonNull
-    public static RudderProperty trackDeepLink(Activity activity, AtomicBoolean isFirstLaunch, int versionCode) {
+    public static RudderProperty trackDeepLink(Activity activity, AtomicBoolean isFirstLaunch, String versionName) {
         RudderProperty rudderProperty = new RudderProperty()
                 .putValue("from_background", !isFirstLaunch.get());
         // If it is not firstLaunch then return RudderProperty instance
         if (!isFirstLaunch.getAndSet(false)) {
             return rudderProperty;
         }
-        rudderProperty.putValue("version", versionCode);
+        rudderProperty.putValue("version", versionName);
         try {
             Intent intent = activity.getIntent();
             if (intent == null || intent.getData() == null) {

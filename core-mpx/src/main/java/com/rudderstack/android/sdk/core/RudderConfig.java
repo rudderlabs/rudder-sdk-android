@@ -25,7 +25,8 @@ import java.util.concurrent.TimeUnit;
  * - trackLifecycleEvents -> whether track lifecycle events automatically
  * - recordScreenViews -> whether we should record screen views automatically
  * - controlPlaneUrl -> link to self-hosted sourceConfig
- *
+ * - autoSessionTracking -> whether we are tracking session automatically
+ * - sessionDuration -> duration of a session in minute
  * default values are set at Constants file
  *
  * */
@@ -40,7 +41,10 @@ public class RudderConfig {
     private long repeatInterval;
     private TimeUnit repeatIntervalTimeUnit;
     private boolean trackLifecycleEvents;
+    private boolean autoCollectAdvertId;
     private boolean recordScreenViews;
+    private boolean trackAutoSession;
+    private long sessionTimeout;
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
@@ -57,7 +61,10 @@ public class RudderConfig {
                 Constants.REPEAT_INTERVAL,
                 Constants.REPEAT_INTERVAL_TIME_UNIT,
                 Constants.TRACK_LIFECYCLE_EVENTS,
+                Constants.AUTO_COLLECT_ADVERT_ID,
                 Constants.RECORD_SCREEN_VIEWS,
+                Constants.AUTO_SESSION_TRACKING,
+                Constants.DEFAULT_SESSION_TIMEOUT,
                 Constants.CONTROL_PLANE_URL,
                 null,
                 null
@@ -75,7 +82,10 @@ public class RudderConfig {
             long repeatInterval,
             TimeUnit repeatIntervalTimeUnit,
             boolean trackLifecycleEvents,
+            boolean autoCollectAdvertId,
             boolean recordScreenViews,
+            boolean trackAutoSession,
+            long sessionTimeout,
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
             List<RudderIntegration.Factory> customFactories
@@ -118,22 +128,26 @@ public class RudderConfig {
         }
 
         if (sleepTimeOut < Utils.MIN_SLEEP_TIMEOUT) {
+            RudderLogger.logError("invalid sleepTimeOut. Set to default");
             this.sleepTimeOut = Constants.SLEEP_TIMEOUT;
         } else {
             this.sleepTimeOut = sleepTimeOut;
-            this.isPeriodicFlushEnabled = isPeriodicFlushEnabled;
+        }
 
-            if (repeatIntervalTimeUnit == TimeUnit.MINUTES && repeatInterval < 15) {
+        this.isPeriodicFlushEnabled = isPeriodicFlushEnabled;
+
+        if (repeatIntervalTimeUnit == TimeUnit.MINUTES && repeatInterval < 15) {
                 RudderLogger.logError("RudderConfig: the repeat Interval for Flushing Periodically should be atleast 15 minutes, falling back to default of 1 hour");
                 this.repeatInterval = Constants.REPEAT_INTERVAL;
                 this.repeatIntervalTimeUnit = Constants.REPEAT_INTERVAL_TIME_UNIT;
-            } else {
+        } else {
                 this.repeatInterval = repeatInterval;
                 this.repeatIntervalTimeUnit = repeatIntervalTimeUnit;
-            }
+        }
 
-            this.trackLifecycleEvents = trackLifecycleEvents;
-            this.recordScreenViews = recordScreenViews;
+        this.trackLifecycleEvents = trackLifecycleEvents;
+        this.autoCollectAdvertId = autoCollectAdvertId;
+        this.recordScreenViews = recordScreenViews;
 
             if (factories != null && !factories.isEmpty()) {
                 this.factories = factories;
@@ -154,6 +168,13 @@ public class RudderConfig {
                 this.controlPlaneUrl = controlPlaneUrl;
             }
         }
+
+        if (sessionTimeout >= Constants.MIN_SESSION_TIMEOUT) {
+            this.sessionTimeout = sessionTimeout;
+        } else {
+            this.sessionTimeout = Constants.DEFAULT_SESSION_TIMEOUT;
+        }
+        this.trackAutoSession = trackAutoSession;
     }
 
     /**
@@ -237,6 +258,12 @@ public class RudderConfig {
     }
 
     /**
+     * @return autoCollectAdvertId (whether we are automatically collecting the advertisingId if the
+     * com.google.android.gms.ads.identifier.AdvertisingIdClient is found on the classpath.
+     */
+    public boolean isAutoCollectAdvertId() { return autoCollectAdvertId; }
+
+    /**
      * @return recordScreenViews (whether we are recording the screen views automatically)
      */
     public boolean isRecordScreenViews() {
@@ -272,6 +299,20 @@ public class RudderConfig {
      */
     public String getControlPlaneUrl() {
         return controlPlaneUrl;
+    }
+
+    /**
+     * @return trackAutoSession (whether we are tracking session automatically)
+     */
+    public boolean isTrackAutoSession() {
+        return trackAutoSession;
+    }
+
+    /**
+     * @return sessionDuration (duration of a session in minute)
+     */
+    public long getSessionTimeout() {
+        return sessionTimeout;
     }
 
     void setDataPlaneUrl(String dataPlaneUrl) {
@@ -312,6 +353,14 @@ public class RudderConfig {
 
     void setRecordScreenViews(boolean recordScreenViews) {
         this.recordScreenViews = recordScreenViews;
+    }
+
+    void setSessionTimeout(long sessionTimeout) {
+        this.sessionTimeout = sessionTimeout;
+    }
+
+    void setTrackAutoSession(boolean trackAutoSession) {
+        this.trackAutoSession = trackAutoSession;
     }
 
     /**
@@ -541,6 +590,18 @@ public class RudderConfig {
             return this;
         }
 
+        private boolean autoCollectAdvertId = Constants.AUTO_COLLECT_ADVERT_ID;
+
+        /**
+         * @param shouldAutoCollectAdvertId (whether we should automatically collecting the advertisingId if the
+         * com.google.android.gms.ads.identifier.AdvertisingIdClient is found on the classpath.
+         * @return RudderConfig.Builder
+         */
+        public Builder withAutoCollectAdvertId(boolean shouldAutoCollectAdvertId) {
+            this.autoCollectAdvertId = shouldAutoCollectAdvertId;
+            return this;
+        }
+
         private String controlPlaneUrl = Constants.CONTROL_PLANE_URL;
 
         /**
@@ -562,6 +623,32 @@ public class RudderConfig {
             return this;
         }
 
+        private long sessionTimeout = Constants.DEFAULT_SESSION_TIMEOUT;
+
+        /**
+         * @param sessionTimeout (duration of inactivity of session in milliseconds)
+         * @return RudderConfig.Builder
+         */
+        public Builder withSessionTimeoutMillis(long sessionTimeout) {
+            if (sessionTimeout < Constants.MIN_SESSION_TIMEOUT) {
+                RudderLogger.logError(String.format("Minimum sessionTimeout is %s millisecond.", Constants.MIN_SESSION_TIMEOUT));
+                return this;
+            }
+            this.sessionTimeout = sessionTimeout;
+            return this;
+        }
+
+        private boolean autoSessionTracking = Constants.AUTO_SESSION_TRACKING;
+
+        /**
+         * @param autoSessionTracking (whether we are tracking session automatically)
+         * @return RudderConfig.Builder
+         */
+        public Builder withAutoSessionTracking(boolean autoSessionTracking) {
+            this.autoSessionTracking = autoSessionTracking;
+            return this;
+        }
+
         /**
          * Finalize your config building
          *
@@ -579,7 +666,10 @@ public class RudderConfig {
                     this.repeatInterval,
                     this.repeatIntervalTimeUnit,
                     this.trackLifecycleEvents,
+                    this.autoCollectAdvertId,
                     this.recordScreenViews,
+                    this.autoSessionTracking,
+                    this.sessionTimeout,
                     this.controlPlaneUrl,
                     this.factories,
                     this.customFactories

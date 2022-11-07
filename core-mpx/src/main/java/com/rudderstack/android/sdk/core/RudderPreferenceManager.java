@@ -4,6 +4,10 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.annotation.Nullable;
+
+import java.util.Locale;
+
 class RudderPreferenceManager {
     // keys
     private static final String RUDDER_PREFS = "rl_prefs";
@@ -11,12 +15,17 @@ class RudderPreferenceManager {
     private static final String RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY = "rl_server_last_updated";
     private static final String RUDDER_TRAITS_KEY = "rl_traits";
     private static final String RUDDER_APPLICATION_INFO_KEY = "rl_application_info_key";
+    private static final String RUDDER_APPLICATION_BUILD_KEY = "rl_application_build_key";
+    private static final String RUDDER_APPLICATION_VERSION_KEY = "rl_application_version_key";
     private static final String RUDDER_EXTERNAL_ID_KEY = "rl_external_id";
     private static final String RUDDER_OPT_STATUS_KEY = "rl_opt_status";
     private static final String RUDDER_OPT_IN_TIME_KEY = "rl_opt_in_time";
     private static final String RUDDER_OPT_OUT_TIME_KEY = "rl_opt_out_time";
     private static final String RUDDER_ANONYMOUS_ID_KEY = "rl_anonymous_id_key";
     private static final String RUDDER_PERIODIC_WORK_REQUEST_ID_KEY = "rl_periodic_work_request_key";
+    private static final String RUDDER_LAST_EVENT_TIMESTAMP_KEY = "rl_last_event_timestamp_key";
+    private static final String RUDDER_SESSION_ID_KEY = "rl_session_id_key";
+    private static final String RUDDER_AUTO_SESSION_TRACKING_STATUS_KEY = "rl_auto_session_tracking_status_key";
 
     private static SharedPreferences preferences;
     private static RudderPreferenceManager instance;
@@ -53,6 +62,26 @@ class RudderPreferenceManager {
 
     void saveBuildVersionCode(int versionCode) {
         preferences.edit().putInt(RUDDER_APPLICATION_INFO_KEY, versionCode).apply();
+    }
+
+    void deleteBuildVersionCode() {
+        preferences.edit().remove(RUDDER_APPLICATION_INFO_KEY).apply();
+    }
+
+    int getBuildNumber() {
+        return preferences.getInt(RUDDER_APPLICATION_BUILD_KEY, -1);
+    }
+
+    void saveBuildNumber(int versionCode) {
+        preferences.edit().putInt(RUDDER_APPLICATION_BUILD_KEY, versionCode).apply();
+    }
+
+    String getVersionName() {
+        return preferences.getString(RUDDER_APPLICATION_VERSION_KEY, null);
+    }
+
+    void saveVersionName(String versionName) {
+        preferences.edit().putString(RUDDER_APPLICATION_VERSION_KEY, versionName).apply();
     }
 
     String getExternalIds() {
@@ -98,7 +127,7 @@ class RudderPreferenceManager {
     long getOptOutTime() {
         return preferences.getLong(RUDDER_OPT_OUT_TIME_KEY, -1);
     }
-  
+
     void savePeriodicWorkRequestId(String periodicWorkRequestId) {
         preferences.edit().putString(RUDDER_PERIODIC_WORK_REQUEST_ID_KEY, periodicWorkRequestId).apply();
     }
@@ -106,4 +135,52 @@ class RudderPreferenceManager {
     String getPeriodicWorkRequestId() {
         return preferences.getString(RUDDER_PERIODIC_WORK_REQUEST_ID_KEY, null);
     }
+
+    void saveLastEventTimeStamp(Long time) {
+        preferences.edit().putLong(RUDDER_LAST_EVENT_TIMESTAMP_KEY, time).apply();
+    }
+
+    @Nullable
+    Long getLastEventTimeStamp() {
+        long time = preferences.getLong(RUDDER_LAST_EVENT_TIMESTAMP_KEY, -1);
+        return (time == -1) ? null : new Long(time);
+    }
+
+    void clearLastEventTimeStamp() {
+        preferences.edit().remove(RUDDER_LAST_EVENT_TIMESTAMP_KEY).apply();
+    }
+
+    void saveSessionId(Long sessionId) {
+        preferences.edit().putLong(RUDDER_SESSION_ID_KEY, sessionId).apply();
+    }
+
+    void clearSessionId() {
+        preferences.edit().remove(RUDDER_SESSION_ID_KEY).apply();
+    }
+
+    @Nullable
+    Long getSessionId() {
+        long sessionId = preferences.getLong(RUDDER_SESSION_ID_KEY, -1);
+        if (sessionId == -1) return null;
+        else return new Long(sessionId);
+    }
+
+    boolean getAutoSessionTrackingStatus() {
+        return preferences.getBoolean(RUDDER_AUTO_SESSION_TRACKING_STATUS_KEY, true);
+    }
+
+    void saveAutoSessionTrackingStatus(boolean status) {
+        preferences.edit().putBoolean(RUDDER_AUTO_SESSION_TRACKING_STATUS_KEY, status).apply();
+    }
+
+    void performMigration() {
+        int versionCode = getBuildVersionCode();
+        if (versionCode != -1) {
+            RudderLogger.logDebug(String.format(Locale.US, "RudderPreferenceManager: performMigration: build number stored in %s key, migrating it to %s", RUDDER_APPLICATION_INFO_KEY, RUDDER_APPLICATION_BUILD_KEY));
+            deleteBuildVersionCode();
+            saveBuildNumber(versionCode);
+        }
+    }
+
+
 }

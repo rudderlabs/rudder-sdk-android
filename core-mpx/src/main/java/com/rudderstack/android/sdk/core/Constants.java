@@ -26,10 +26,18 @@ class Constants {
     static final long REPEAT_INTERVAL = 1;
     // the TimeUnit in which the repeatInterval is specified. It can be either minutes / hours.
     static final TimeUnit REPEAT_INTERVAL_TIME_UNIT = TimeUnit.HOURS;
+    // whether we should automatically collect advertisement Id.
+    static final boolean AUTO_COLLECT_ADVERT_ID = false;
     // whether we should trackLifecycle events
     static final boolean TRACK_LIFECYCLE_EVENTS = true;
     // whether we should record screen views automatically
     static final boolean RECORD_SCREEN_VIEWS = false;
+    // minimum duration for inactivity is 0 milliseconds
+    static final long MIN_SESSION_TIMEOUT = 0;
+    // default duration for inactivity is 5 minutes or 300000 milliseconds
+    static final long DEFAULT_SESSION_TIMEOUT = 300000;
+    // default for automatic session tracking
+    static final boolean AUTO_SESSION_TRACKING = true;
     // current version of the library
     static final String RUDDER_LIBRARY_VERSION = "1.1.1";
 }

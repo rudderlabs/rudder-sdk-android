@@ -116,7 +116,7 @@ public class EventRepositoryTest {
                 "  ]\n" +
                 "}";
         //when
-        boolean result = FlushUtils.flush(false, null, messageIdsParams, messagesParams,
+        boolean result = FlushUtils.flush(false, null,
                 30, "api.rudderstack.com/", dbPersistentManager
                 , "auth_key", "anon_id");
 
@@ -192,7 +192,7 @@ public class EventRepositoryTest {
 
                 @Override
                 public void run() {
-                    FlushUtils.flush(false, null, messageIdsParams, messagesParams,
+                    FlushUtils.flush(false, null,
                             30, "api.rudderstack.com/", dbPersistentManager
                             , "auth_key", "anon_id");
                 }
