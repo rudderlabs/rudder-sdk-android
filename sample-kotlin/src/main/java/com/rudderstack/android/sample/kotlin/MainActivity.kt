@@ -6,6 +6,10 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException
+import com.google.android.gms.common.GooglePlayServicesRepairableException
+import com.google.android.gms.security.ProviderInstaller
 import com.rudderstack.android.integrations.appcenter.AppcenterIntegrationFactory
 import com.rudderstack.android.sample.kotlin.MainApplication.Companion.tlsBackport
 import com.rudderstack.android.sdk.core.RudderClient

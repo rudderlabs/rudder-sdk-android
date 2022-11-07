@@ -167,7 +167,7 @@ public class RudderConfig {
                 if (!controlPlaneUrl.endsWith("/")) controlPlaneUrl += "/";
                 this.controlPlaneUrl = controlPlaneUrl;
             }
-        }
+
 
         if (sessionTimeout >= Constants.MIN_SESSION_TIMEOUT) {
             this.sessionTimeout = sessionTimeout;
