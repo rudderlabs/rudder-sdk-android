@@ -5,6 +5,8 @@ import android.app.Application;
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.ParseException;
 import android.net.Uri;
@@ -36,6 +38,7 @@ import static android.provider.Settings.Secure.ANDROID_ID;
 import static android.provider.Settings.System.getString;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class Utils {
 
@@ -260,6 +263,18 @@ public class Utils {
         } else {
             return new ArrayList(messageDetails.subList(0, flushQueueSize));
         }
+    }
+
+    public static String getVersionName(Application application, @Nullable String defaultValue){
+        try {
+            String packageName = application.getPackageName();
+            PackageManager packageManager = application.getPackageManager();
+            PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
+            return packageInfo.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return defaultValue;
     }
 
 }
