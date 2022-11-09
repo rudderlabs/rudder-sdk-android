@@ -10,6 +10,7 @@ import android.net.ParseException;
 import android.net.Uri;
 import android.os.BadParcelableException;
 import android.os.Build;
+import android.provider.Settings;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
@@ -33,7 +34,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static android.content.Context.UI_MODE_SERVICE;
 import static android.provider.Settings.Secure.ANDROID_ID;
-import static android.provider.Settings.System.getString;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -81,7 +81,7 @@ public class Utils {
 
     public static String getDeviceId(Application application) {
         if (Build.VERSION.SDK_INT >= 17) {
-            String androidId = getString(application.getContentResolver(), ANDROID_ID);
+            String androidId = Settings.System.getString(application.getContentResolver(), ANDROID_ID);
             if (!TextUtils.isEmpty(androidId)
                     && !"9774d56d682e549c".equals(androidId)
                     && !"unknown".equals(androidId)
@@ -269,11 +269,57 @@ public class Utils {
         return dataPlaneUrl;
     }
 
-    public static boolean isEmpty(@Nullable Map<String, String> value) {
+    public static boolean isEmpty(@Nullable Map value) {
         return (value == null || value.isEmpty());
     }
 
     public static boolean isEmpty(@Nullable String value) {
         return (value == null || value.isEmpty());
+    }
+
+    public static boolean isEmpty(@Nullable List value) {
+        return (value == null || value.isEmpty());
+    }
+
+    public static String getString(@Nullable Object value) {
+        if (value == null) {
+            return null;
+        }
+        switch (getType(value)) {
+            case "Byte":
+            case "Short":
+            case "Integer":
+            case "Long":
+            case "Float":
+            case "Double":
+            case "Boolean":
+            case "Character":
+            case "ArrayList":
+            case "HashMap":
+                return value.toString();
+            case "String":
+                return (String) value;
+            case "Array":
+                return new Gson().toJson(value);
+            default:
+                return null;
+        }
+    }
+
+    public static boolean getBoolean(@Nullable Object value) {
+        if (value == null) {
+            return false;
+        }
+        switch (getType(value)) {
+            case "Boolean": return (boolean) value;
+            default: return false;
+        }
+    }
+
+    private static String getType(Object object) {
+        if (object.getClass().isArray()) {
+            return "Array";
+        }
+        return object.getClass().getSimpleName();
     }
 }
