@@ -3,7 +3,7 @@ name: Release
 on:
   pull_request:
     branches:
-      - master
+      - [ 'master', 'master-mpx' ]
     types:
       - closed
 jobs:

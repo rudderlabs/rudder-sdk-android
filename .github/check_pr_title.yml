@@ -1,7 +1,7 @@
 name: Check PR title
 on:
   pull_request:
-    branches: ['master', 'develop']
+    branches: ['master', 'develop', 'master-mpx', 'develop-mpx']
     types: ['opened', 'reopened', 'edited', 'synchronize']
 
 jobs:

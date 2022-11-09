@@ -11,11 +11,15 @@ jobs:
   create-branch:
     name: Create new branch
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/master-mpx'
     steps:
       - name: Create branch
         uses: peterjgrainger/action-create-branch@v2.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
-        with:
-          branch: 'hotfix/${{ github.event.inputs.hotfix_name }}'
+        if: github.ref == 'refs/heads/master'
+          with:
+            branch: 'hotfix/${{ github.event.inputs.hotfix_name }}'
+        else:
+          with:
+            branch: 'hotfix-mpx/${{ github.event.inputs.hotfix_name }}'

@@ -7,7 +7,7 @@ jobs:
   draft-new-release:
     name: Draft a new release
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/hotfix/')
+    if: startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/hotfix/') || startsWith(github.ref, 'refs/heads/develop-mpx') || startsWith(github.ref, 'refs/heads/hotfix-mpx')
     steps:
       - name: Checkout source branch
         uses: actions/checkout@v3
@@ -35,16 +35,19 @@ jobs:
         run: |
           source_branch_name=${GITHUB_REF##*/}
           release_type=release
+          main_branch=master
           grep -q "hotfix/" <<< "${GITHUB_REF}" && release_type=hotfix-release
-          git fetch origin main --depth=1
-          git merge origin/main
-          current_version=$(jq -r .version package.json)
+          grep -q "mpx" <<< "${GITHUB_REF}" && branch_type=-mpx && main_branch=master-mpx
+          
+          git fetch origin "${main_branch}" --depth=1
+          git merge origin/"${main_branch}"
+          current_version=$(`cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2`)
           
           npm run release -- --skip.commit --skip.tag --skip.changelog
-          new_version=$(jq -r .version package.json)
+          new_version=$(`cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2`)
           git reset --hard
 
-          branch_name="${release_type}/${new_version}"
+          branch_name="${release_type}${branch-type}/${new_version}"
 
           echo "Source branch for new release is $source_branch_name"
           echo "Current version is $current_version"
@@ -76,8 +79,8 @@ jobs:
         uses: repo-sync/pull-request@v2
         with:
           source_branch: ${{ steps.create-release.outputs.branch_name }}
-          destination_branch: 'main'
+          destination_branch: ${{ steps.create-release.outputs.main_branch }}
           github_token: ${{ secrets.PAT }}
-          pr_title: "chore(release): pulling ${{ steps.create-release.outputs.branch_name }} into main"
+          pr_title: "chore(release): pulling ${{ steps.create-release.outputs.branch_name }} into ${{ steps.create-release.outputs.main_branch }}"
           pr_body: ":crown: *An automated PR*\n\n${{ steps.finish-release.outputs.commit_summary }}"
           pr_reviewer: 'itsdebs'

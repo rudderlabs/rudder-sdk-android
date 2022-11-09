@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ 'master','master-mpx' ]
   pull_request:
-    branches: [ 'master', 'develop' ]
+    branches: [ 'master', 'develop', 'develop-mpx', 'master-mpx']
     types: [ 'opened', 'reopened', 'edited', 'synchronize' ]
   workflow_dispatch:
 
