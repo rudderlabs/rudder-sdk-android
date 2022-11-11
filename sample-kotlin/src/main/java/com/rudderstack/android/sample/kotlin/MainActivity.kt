@@ -1,104 +1,47 @@
 package com.rudderstack.android.sample.kotlin
 
-import android.content.Intent
-import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.gms.common.GoogleApiAvailability
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException
-import com.google.android.gms.common.GooglePlayServicesRepairableException
-import com.google.android.gms.security.ProviderInstaller
-import com.rudderstack.android.sdk.core.RudderClient
-import java.util.*
-import javax.net.ssl.SSLContext
-
+import com.rudderstack.android.sdk.core.RudderLogger
 
 
 class MainActivity : AppCompatActivity() {
-    private var count = 0
 
+    companion object {
+        var count: Int = 0;
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT)
-            tlsBackport()
     }
 
     override fun onStart() {
         super.onStart()
-        /*MainApplication.rudderClient!!.track("first_event")
+        count++
+//        TestCase #6
+//        MainApplication.rudderClient!!.track("Test Event ${count}");
+//        if(count == 3) {
+//            RudderLogger.logDebug("Ending the manual session on ${count+1} App Open")
+//            MainApplication.rudderClient!!.endSession();
+//        }
 
-        Handler().postDelayed({
-            RudderClient.putAdvertisingId("some_idfa_changed")
-            MainApplication.rudderClient!!.track("second_event")
-        }, 3000)
-        val option = RudderOption()
-            .putExternalId("brazeExternalId", "some_external_id_1")
-            .putExternalId("braze_id", "some_braze_id_2")
-            .putIntegration("GA", true).putIntegration("Amplitude", true)
-            .putCustomContext(
-                "customContext", mapOf(
-                    "version" to "1.0.0",
-                    "language" to "kotlin"
-                )
-            )
-        MainApplication.rudderClient!!.identify(
-            "userId",
-            RudderTraits().putFirstName("Test First Name").putBirthday(Date()),
-            option
-        )
-//        MainApplication.rudderClient!!.reset()
-        val props = RudderProperty()
-        props.put("Name", "John")
-        props.put("city", "NYC")
-        MainApplication.rudderClient!!.track("test event john", props, option)
+//        TestCase #7
+//          MainApplication.rudderClient!!.track("Test Event ${count}");
+//        if(count == 2) {
+//            RudderLogger.logDebug("Starting the manual session on ${count+1} App Open")
+//            MainApplication.rudderClient!!.startSession();
+//        }
 
-        RudderClient.putDeviceToken("DEVTOKEN2")
+//        TestCase #26, 27
+//        MainApplication.rudderClient!!.track("Activity Started ${count}");
 
-        MainApplication.rudderClient!!.track("Test Event")
+    //        TestCase #28
+//        MainApplication.rudderClient!!.track("Activity Started ${count}");
+//        if (count == 2) {
+//            RudderLogger.logDebug("User is opting back for tracking his activity on ${count + 1} App Open")
+//            MainApplication.rudderClient!!.optOut(false);
+//        }
 
-
-
-        MainApplication.rudderClient!!.onIntegrationReady(
-            "App Center",
-            NativeCallBack("App Center")
-        );
-
-        MainApplication.rudderClient!!.onIntegrationReady(
-            "Custom Factory",
-            NativeCallBack("Custom Factory")
-        );*/
-    }
-
-    private fun tlsBackport() {
-        try {
-            ProviderInstaller.installIfNeeded(this)
-            Log.e("Rudder", "Play present")
-            val sslContext: SSLContext = SSLContext.getInstance("TLSv1.2")
-            sslContext.init(null, null, null)
-            sslContext.createSSLEngine()
-        } catch (e: GooglePlayServicesRepairableException) {
-            // Prompt the user to install/update/enable Google Play services.
-            GoogleApiAvailability.getInstance()
-                .showErrorNotification(this, e.connectionStatusCode)
-            Log.e("Rudder", "Play install")
-        } catch (e: GooglePlayServicesNotAvailableException) {
-            // Indicates a non-recoverable error: let the user know.
-            Log.e("SecurityException", "Google Play Services not available.");
-            e.printStackTrace()
-        }
-    }
-
-    fun onUserSession(view: View) {
-        startActivity(Intent(this, UserSessionActivity::class.java))
-    }
-}
-
-internal class NativeCallBack(private val integrationName: String) : RudderClient.Callback {
-    override fun onReady(instance: Any) {
-        println("Call back of integration : " + integrationName + " is called");
     }
 }

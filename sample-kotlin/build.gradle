@@ -52,10 +52,14 @@ dependencies {
     implementation 'com.google.android.material:material:1.1.0'
 
     implementation project(':core')
+    implementation 'com.rudderstack.android.integration:appcenter:1.0.1'
+    def appCenterSdkVersion = '4.1.0'
+    implementation "com.microsoft.appcenter:appcenter-analytics:${appCenterSdkVersion}"
 
     implementation 'com.google.code.gson:gson:2.8.6'
 
-    implementation 'com.google.android.gms:play-services-ads:19.3.0'
+    // TestCase #35
+//    implementation 'com.google.android.gms:play-services-ads:19.3.0'
 
     implementation "androidx.work:work-runtime:2.7.1"
     //multidex

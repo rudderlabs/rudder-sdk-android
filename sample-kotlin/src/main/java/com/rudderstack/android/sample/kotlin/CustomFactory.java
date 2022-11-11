@@ -25,17 +25,17 @@ public class CustomFactory extends RudderIntegration<CustomFactory> {
     };
 
     private CustomFactory(@NonNull RudderClient client, RudderConfig config) {
-
+        RudderLogger.logDebug("CustomFactory: Initializing the Custom Factory");
     }
 
     private void processRudderEvent(RudderMessage element) {
-        System.out.println("Processing RudderEvent of type "+element.getType());
+        RudderLogger.logDebug("CustomFactory: Processing RudderEvent of type "+element.getType());
 
     }
 
     @Override
     public void reset() {
-        System.out.println("Reset being called");
+        RudderLogger.logDebug("CustomFactory: Reset being called");
     }
 
     @Override

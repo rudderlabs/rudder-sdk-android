@@ -220,7 +220,6 @@ public class RudderContext {
         if (advertisingInfo == null) {
             return false;
         }
-
         Boolean isLimitAdTrackingEnabled = (Boolean) advertisingInfo.getClass()
                 .getMethod("isLimitAdTrackingEnabled").invoke(advertisingInfo);
 
