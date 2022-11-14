@@ -1,9 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.util.Utils.getBoolean;
-import static com.rudderstack.android.sdk.core.util.Utils.getString;
-import static com.rudderstack.android.sdk.core.util.Utils.isEmpty;
 import static com.rudderstack.android.sdk.core.util.Utils.appendSlashToUrl;
+import static com.rudderstack.android.sdk.core.util.Utils.isEmpty;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,7 +12,7 @@ import java.util.Map;
 
 class RudderDataResidencyManager {
     @VisibleForTesting
-    Map<String, List<Map<String, Object>>> dataResidencyUrls = null;
+    Map<RudderDataResidencyServer, List<RudderDataResidencyUrls>> dataResidencyUrls = null;
     @VisibleForTesting
     RudderDataResidencyServer rudderDataResidencyServer;
 
@@ -56,9 +54,9 @@ class RudderDataResidencyManager {
     @Nullable
     String getDataResidencyUrl() {
         if (rudderDataResidencyServer == RudderDataResidencyServer.US) {
-            return handleDefaultServer();
+            return handleDefaultRegion();
         } else {
-            return handleOtherServer(rudderDataResidencyServer);
+            return handleOtherRegion(rudderDataResidencyServer);
         }
     }
 
@@ -69,20 +67,20 @@ class RudderDataResidencyManager {
      * @param rudderDataResidencyServer Residency server set while SDK initialisation
      */
     @Nullable
-    private String handleOtherServer(@NonNull RudderDataResidencyServer rudderDataResidencyServer) {
-        String dataResidencyUrl = getDataResidencyUrl(rudderDataResidencyServer.name());
+    private String handleOtherRegion(@NonNull RudderDataResidencyServer rudderDataResidencyServer) {
+        String dataResidencyUrl = fetchUrlFromRegion(rudderDataResidencyServer);
         if (!isEmpty(dataResidencyUrl)) {
             return dataResidencyUrl;
         }
-        return handleDefaultServer();
+        return handleDefaultRegion();
     }
 
     /**
      * Handle default server US.
      */
     @Nullable
-    private String handleDefaultServer() {
-        return getDataResidencyUrl(RudderDataResidencyServer.US.name());
+    private String handleDefaultRegion() {
+        return fetchUrlFromRegion(RudderDataResidencyServer.US);
     }
 
     /**
@@ -93,41 +91,20 @@ class RudderDataResidencyManager {
      */
     @VisibleForTesting
     @Nullable
-    String getDataResidencyUrl(@NonNull String region) {
+    String fetchUrlFromRegion(@NonNull RudderDataResidencyServer region) {
         if (isEmpty(dataResidencyUrls) ||
                 !dataResidencyUrls.containsKey(region) || isEmpty(dataResidencyUrls.get(region))) {
             return null;
         }
-        for (Map<String, Object> dataResidencyUrl : dataResidencyUrls.get(region)) {
-            ResidencyUrl residencyUrl = getResidencyUrl(dataResidencyUrl);
-            if (residencyUrl.defaultTo) {
-                if (!isEmpty(residencyUrl.url)) {
-                    return appendSlashToUrl(residencyUrl.url);
+        for (RudderDataResidencyUrls dataResidencyUrl : dataResidencyUrls.get(region)) {
+            if (dataResidencyUrl.defaultTo) {
+                if (!isEmpty(dataResidencyUrl.url)) {
+                    return appendSlashToUrl(dataResidencyUrl.url);
                 }
                 // It is decided that for any region there will be only one url defaulted to true
                 break;
             }
         }
         return null;
-    }
-
-    private static class ResidencyUrl {
-        String url = null;
-        boolean defaultTo = false;
-    }
-
-    @NonNull
-    private ResidencyUrl getResidencyUrl(Map<String, Object> dataResidencyUrl) {
-        ResidencyUrl residencyUrl = new ResidencyUrl();
-        if (isEmpty(dataResidencyUrl)) {
-            return residencyUrl;
-        }
-        if (dataResidencyUrl.containsKey("url")) {
-            residencyUrl.url = getString(dataResidencyUrl.get("url"));
-        }
-        if (dataResidencyUrl.containsKey("default")) {
-            residencyUrl.defaultTo = getBoolean(dataResidencyUrl.get("default"));
-        }
-        return residencyUrl;
     }
 }

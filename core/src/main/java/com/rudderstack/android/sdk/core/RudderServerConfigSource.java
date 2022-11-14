@@ -18,5 +18,5 @@ class RudderServerConfigSource implements Serializable {
     @SerializedName("destinations")
     List<RudderServerDestination> destinations;
     @SerializedName("dataplanes")
-    Map<String, List<Map<String, Object>>> dataResidencyUrls;
+    Map<RudderDataResidencyServer, List<RudderDataResidencyUrls>> dataResidencyUrls;
 }

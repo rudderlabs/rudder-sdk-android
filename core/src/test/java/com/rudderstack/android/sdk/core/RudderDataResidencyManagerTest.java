@@ -25,22 +25,18 @@ public class RudderDataResidencyManagerTest {
     private RudderConfig config;
     private final String usUrl = "https://us-dataplane.com";
     private final String euUrl = "https://eu-dataplane.com";
-    private final List<Map<String, Object>> usDataPlaneUrl = getDataResidencyUrl(usUrl, true);
-    private final List<Map<String, Object>> euDataPlaneUrl = getDataResidencyUrl(euUrl, true);
-    private Map<String, List<Map<String, Object>>> dataResidencyUrls = new HashMap<>();
+    private final List<RudderDataResidencyUrls> usDataPlaneUrl = getDataResidencyUrl(usUrl, true);
+    private final List<RudderDataResidencyUrls> euDataPlaneUrl = getDataResidencyUrl(euUrl, true);
+    private Map<RudderDataResidencyServer, List<RudderDataResidencyUrls>> dataResidencyUrls = new HashMap<>();
 
-    private List<Map<String, Object>> getDataResidencyUrl(@Nullable final String url, @Nullable final Object defaultTo) {
-        final Map<String, Object> residencyUrl = new HashMap<String, Object>() {
+    private List<RudderDataResidencyUrls> getDataResidencyUrl(@Nullable final String url, final boolean defaultTo) {
+        final RudderDataResidencyUrls rudderDataResidencyUrls = new RudderDataResidencyUrls();
+        rudderDataResidencyUrls.url = url;
+        rudderDataResidencyUrls.defaultTo = defaultTo;
+        
+        return new LinkedList<RudderDataResidencyUrls>() {
             {
-                {
-                    put("url", url);
-                    put("default", defaultTo);
-                }
-            }
-        };
-        return new LinkedList<Map<String, Object>>() {
-            {
-                add(residencyUrl);
+                add(rudderDataResidencyUrls);
             }
         };
     }
@@ -53,21 +49,21 @@ public class RudderDataResidencyManagerTest {
         when(config, "getDataResidencyServer").thenReturn(RudderDataResidencyServer.US);
 
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, euDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.US, usDataPlaneUrl);
     }
 
     @Test
     public void EUUrl_DefaultToIsFalse() {
-        List<Map<String, Object>> usDataPlaneUrl = getDataResidencyUrl(usUrl, true);
-        List<Map<String, Object>> euDataPlaneUrl = getDataResidencyUrl(euUrl, false);
+        List<RudderDataResidencyUrls> usDataPlaneUrl = getDataResidencyUrl(usUrl, true);
+        List<RudderDataResidencyUrls> euDataPlaneUrl = getDataResidencyUrl(euUrl, false);
 
         config = new RudderConfig();
         config.setDataResidencyServer(RudderDataResidencyServer.EU);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, euDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.US, usDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
 
         assertEquals(usUrl + "/", rudderDataResidencyManager.getDataResidencyUrl());
@@ -75,15 +71,15 @@ public class RudderDataResidencyManagerTest {
 
     @Test
     public void USUrl_DefaultToIsFalse() {
-        List<Map<String, Object>> usDataPlaneUrl = getDataResidencyUrl(usUrl, false);
-        List<Map<String, Object>> euDataPlaneUrl = getDataResidencyUrl(euUrl, true);
+        List<RudderDataResidencyUrls> usDataPlaneUrl = getDataResidencyUrl(usUrl, false);
+        List<RudderDataResidencyUrls> euDataPlaneUrl = getDataResidencyUrl(euUrl, true);
 
         config = new RudderConfig();
         config.setDataResidencyServer(RudderDataResidencyServer.EU);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, euDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.US, usDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
 
         assertEquals(euUrl + "/", rudderDataResidencyManager.getDataResidencyUrl());
@@ -91,15 +87,15 @@ public class RudderDataResidencyManagerTest {
 
     @Test
     public void EUUrl_USUrl_DefaultToIsFalse() {
-        List<Map<String, Object>> usDataPlaneUrl = getDataResidencyUrl(usUrl, false);
-        List<Map<String, Object>> euDataPlaneUrl = getDataResidencyUrl(euUrl, false);
+        List<RudderDataResidencyUrls> usDataPlaneUrl = getDataResidencyUrl(usUrl, false);
+        List<RudderDataResidencyUrls> euDataPlaneUrl = getDataResidencyUrl(euUrl, false);
 
         config = new RudderConfig();
         config.setDataResidencyServer(RudderDataResidencyServer.EU);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, euDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.US, usDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
 
         assertNull(rudderDataResidencyManager.getDataResidencyUrl());
@@ -111,8 +107,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.US);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", null);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, euDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.US, null);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
 
         assertNull(rudderDataResidencyManager.getDataResidencyUrl());
@@ -124,8 +120,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.US);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, euDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.US, usDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
 
         assertEquals(usUrl + '/', rudderDataResidencyManager.getDataResidencyUrl());
@@ -138,7 +134,7 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.US);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, euDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
 
         assertNull(rudderDataResidencyManager.getDataResidencyUrl());
@@ -147,7 +143,7 @@ public class RudderDataResidencyManagerTest {
         config = new RudderConfig();
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, euDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
 
         assertNull(rudderDataResidencyManager.getDataResidencyUrl());
@@ -159,8 +155,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.EU);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", null);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, euDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.US, null);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
 
         assertEquals(euUrl + '/', rudderDataResidencyManager.getDataResidencyUrl());
@@ -172,8 +168,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.EU);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", null);
-        dataResidencyUrls.put("US", null);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, null);
+        dataResidencyUrls.put(RudderDataResidencyServer.US, null);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
 
         assertNull(rudderDataResidencyManager.getDataResidencyUrl());
@@ -185,8 +181,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.EU);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", null);
-        dataResidencyUrls.put("US", null);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, null);
+        dataResidencyUrls.put(RudderDataResidencyServer.US, null);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
 
         assertNull(rudderDataResidencyManager.getDataResidencyUrl());
@@ -198,8 +194,8 @@ public class RudderDataResidencyManagerTest {
         config.setDataResidencyServer(RudderDataResidencyServer.EU);
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", null);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, null);
+        dataResidencyUrls.put(RudderDataResidencyServer.US, usDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
 
         assertEquals(usUrl + '/', rudderDataResidencyManager.getDataResidencyUrl());
@@ -210,8 +206,8 @@ public class RudderDataResidencyManagerTest {
         config = new RudderConfig();
         rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, euDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.US, usDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
 
         assertEquals(usUrl + '/', rudderDataResidencyManager.getDataResidencyUrl());
@@ -244,55 +240,36 @@ public class RudderDataResidencyManagerTest {
     }
 
     @Test
-    public void getDataResidencyUrl() {
+    public void fetchUrlFromRegion() {
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
-        String region;
 
         // Different cases of US region
-        region = "US";
-        assertEquals(usUrl + '/', rudderDataResidencyManager.getDataResidencyUrl(region));
-        region = "us";
-        assertNull(rudderDataResidencyManager.getDataResidencyUrl(region));
-        region = "Us";
-        assertNull(rudderDataResidencyManager.getDataResidencyUrl(region));
+        assertEquals(usUrl + '/', rudderDataResidencyManager.fetchUrlFromRegion(RudderDataResidencyServer.US));
 
-        // Different cases of EU region
-        region = "eu";
-        assertNull(rudderDataResidencyManager.getDataResidencyUrl(region));
-        region = "EU";
-        assertEquals(euUrl + '/', rudderDataResidencyManager.getDataResidencyUrl(region));
-        region = "eU";
-        assertNull(rudderDataResidencyManager.getDataResidencyUrl(region));
-
-        // Region not present in the residency list
-        region = "IN";
-        assertNull(rudderDataResidencyManager.getDataResidencyUrl(region));
+        assertEquals(euUrl + '/', rudderDataResidencyManager.fetchUrlFromRegion(RudderDataResidencyServer.EU));
 
         // When EU is present but not US
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", euDataPlaneUrl);
-        dataResidencyUrls.put("US", null);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, euDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.US, null);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
-        region = "US";
-        assertNull(rudderDataResidencyManager.getDataResidencyUrl(region));
-        region = "EU";
-        assertEquals(euUrl + '/', rudderDataResidencyManager.getDataResidencyUrl(region));
+
+        assertNull(rudderDataResidencyManager.fetchUrlFromRegion(RudderDataResidencyServer.US));
+        assertEquals(euUrl + '/', rudderDataResidencyManager.fetchUrlFromRegion(RudderDataResidencyServer.EU));
 
         // When US is present but not EU
         dataResidencyUrls = new HashMap<>();
-        dataResidencyUrls.put("EU", null);
-        dataResidencyUrls.put("US", usDataPlaneUrl);
+        dataResidencyUrls.put(RudderDataResidencyServer.EU, null);
+        dataResidencyUrls.put(RudderDataResidencyServer.US, usDataPlaneUrl);
         rudderDataResidencyManager.dataResidencyUrls = dataResidencyUrls;
-        region = "EU";
-        assertNull(rudderDataResidencyManager.getDataResidencyUrl(region));
-        region = "US";
-        assertEquals(usUrl + '/', rudderDataResidencyManager.getDataResidencyUrl(region));
+
+        assertNull(rudderDataResidencyManager.fetchUrlFromRegion(RudderDataResidencyServer.EU));
+        assertEquals(usUrl + '/', rudderDataResidencyManager.fetchUrlFromRegion(RudderDataResidencyServer.US));
 
         // When residency url is null
         rudderDataResidencyManager.dataResidencyUrls = null;
-        region = "EU";
-        assertNull(rudderDataResidencyManager.getDataResidencyUrl(region));
-        region = "US";
-        assertNull(rudderDataResidencyManager.getDataResidencyUrl(region));
+
+        assertNull(rudderDataResidencyManager.fetchUrlFromRegion(RudderDataResidencyServer.EU));
+        assertNull(rudderDataResidencyManager.fetchUrlFromRegion(RudderDataResidencyServer.US));
     }
 }
