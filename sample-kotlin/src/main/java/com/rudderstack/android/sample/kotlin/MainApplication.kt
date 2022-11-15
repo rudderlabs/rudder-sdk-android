@@ -22,25 +22,6 @@ class MainApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
-//        val rudderConfig = RudderConfig.Builder()
-//            .withDataPlaneUrl(MainApplication.DATA_PLANE_URL)
-//            .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
-//            .withTrackLifecycleEvents(false)
-//            .withFlushPeriodically(15, TimeUnit.MINUTES)
-//            .withFlushQueueSize(90)
-//            .withSleepCount(180)
-//            .withRecordScreenViews(false)
-//            .build()
-//
-//        rudderClient = RudderClient.getInstance(
-//            this,
-//            WRITE_KEY,
-//            rudderConfig
-//        )
-
-//        RudderClient.putAnonymousId("anonymous_id_1")
-//        RudderClient.putDeviceToken("DevToken2")
-
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,
@@ -48,12 +29,7 @@ class MainApplication : Application(), Configuration.Provider {
                 .withDataPlaneUrl(DATA_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withTrackLifecycleEvents(true)
-                .withAutoSessionTracking(true)
                 .withRecordScreenViews(false)
-                .withAutoCollectAdvertId(false)
-                .withCustomFactory(CustomFactory.FACTORY)
-                .withSleepCount(4)
-                .withSessionTimeoutMillis(60000)
                 .build()
         )
 
