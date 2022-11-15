@@ -92,8 +92,7 @@ class RudderDataResidencyManager {
     @VisibleForTesting
     @Nullable
     String fetchUrlFromRegion(@NonNull RudderDataResidencyServer region) {
-        if (isEmpty(dataResidencyUrls) ||
-                !dataResidencyUrls.containsKey(region) || isEmpty(dataResidencyUrls.get(region))) {
+        if (isEmpty(dataResidencyUrls) || isEmpty(dataResidencyUrls.get(region))) {
             return null;
         }
         for (RudderDataResidencyUrls dataResidencyUrl : dataResidencyUrls.get(region)) {
