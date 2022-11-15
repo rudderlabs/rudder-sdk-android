@@ -168,10 +168,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             if (isSDKEnabled) {
                                 // Initialise dataPlaneUrl based on Residency server
                                 RudderDataResidencyManager rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
-                                rudderDataResidencyManager.processDataPlaneUrl();
-                                if (rudderDataResidencyManager.getDataPlaneUrl() != null) {
-                                    dataPlaneUrl = rudderDataResidencyManager.getDataPlaneUrl();
+                                dataPlaneUrl = rudderDataResidencyManager.getDataResidencyUrl();
+                                if (Utils.isEmpty(dataPlaneUrl)) {
+                                    dataPlaneUrl = config.getDataPlaneUrl();
                                 }
+                                RudderLogger.logDebug("DataPlaneUrl is set to: " + dataPlaneUrl);
 
                                 // save flush config
                                 RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel());

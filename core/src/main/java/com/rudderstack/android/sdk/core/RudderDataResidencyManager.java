@@ -1,24 +1,23 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.util.Utils.isEmpty;
 import static com.rudderstack.android.sdk.core.util.Utils.appendSlashToUrl;
+import static com.rudderstack.android.sdk.core.util.Utils.isEmpty;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import java.util.Locale;
+import java.util.List;
 import java.util.Map;
 
 class RudderDataResidencyManager {
     @VisibleForTesting
-    Map<String, String> dataResidencyUrls = null;
+    Map<RudderDataResidencyServer, List<RudderDataResidencyUrls>> dataResidencyUrls = null;
     @VisibleForTesting
     RudderDataResidencyServer rudderDataResidencyServer;
-    private String dataPlaneUrl = null;
 
     RudderDataResidencyManager(@Nullable RudderServerConfig serverConfig, @NonNull RudderConfig config) {
-        if (serverConfig != null && serverConfig.source != null && serverConfig.source.dataResidencyUrls != null) {
+        if (serverConfig != null && serverConfig.source != null) {
             this.dataResidencyUrls = serverConfig.source.dataResidencyUrls;
         }
         this.rudderDataResidencyServer = config.getDataResidencyServer();
@@ -27,12 +26,12 @@ class RudderDataResidencyManager {
     /**
      * This API will fetch the dataPlane URL present from the sourceConfig based on the Residency Server region.
      *
-     * <p>Preference of dataPlane URL is decided as follows:</p>
+     * <p>Preference of dataPlane URL is based on below logic:</p>
      * <ul>
      *     <li>First look for the Residency server (which was set while SDK initialisation) in the source config.</li>
      *     <li>If Residency server was not set while SDK initialisation then fallback to default US residency server.</li>
      *     <li>If residency server list is empty or null then fallback to dataPlane URL (which was set while SDK initialisation).</li>
-     *     <li>If dataPlane URL was not passed while SDK initialisation then as a last resort fallback to the default dataPlane URL.</li>
+     *     <li>If dataPlane URL was not set while SDK initialisation then as a last resort fallback to the default dataPlane URL.</li>
      * </ul>
      * <p>
      * Default Residency server is US.
@@ -47,14 +46,17 @@ class RudderDataResidencyManager {
      *                 .withResidencyServer(ResidencyServer.US)
      *                 .build()
      *     )
-     *      }
+     *     }
      * </pre>
+     *
+     * @return Data Residency URL if present otherwise null
      */
-    void processDataPlaneUrl() {
+    @Nullable
+    String getDataResidencyUrl() {
         if (rudderDataResidencyServer == RudderDataResidencyServer.US) {
-            handleDefaultServer();
+            return handleDefaultRegion();
         } else {
-            handleOtherServer(rudderDataResidencyServer);
+            return handleOtherRegion(rudderDataResidencyServer);
         }
     }
 
@@ -64,70 +66,44 @@ class RudderDataResidencyManager {
      *
      * @param rudderDataResidencyServer Residency server set while SDK initialisation
      */
-    @VisibleForTesting
-    void handleOtherServer(@NonNull RudderDataResidencyServer rudderDataResidencyServer) {
-        // TODO: Decide upper or lower case
-        String dataResidencyUrl = getDataResidencyUrl(rudderDataResidencyServer.name());
-        if (dataResidencyUrl != null) {
-            setDataPlaneUrl(dataResidencyUrl);
-        } else {
-            handleDefaultServer();
+    @Nullable
+    private String handleOtherRegion(@NonNull RudderDataResidencyServer rudderDataResidencyServer) {
+        String dataResidencyUrl = fetchUrlFromRegion(rudderDataResidencyServer);
+        if (!isEmpty(dataResidencyUrl)) {
+            return dataResidencyUrl;
         }
+        return handleDefaultRegion();
     }
 
     /**
-     * Handle default US server
-     * <p>
-     * If default US server is also not present then no need to do any extra things,
-     * as dataPlaneUrl logic is already handled while config object is build.
+     * Handle default server US.
      */
-    @VisibleForTesting
-    void handleDefaultServer() {
-        // TODO: Decide upper or lower case
-        String dataResidencyUrl = getDataResidencyUrl(RudderDataResidencyServer.US.name());
-        if (dataResidencyUrl != null) {
-            setDataPlaneUrl(dataResidencyUrl);
-        }
+    @Nullable
+    private String handleDefaultRegion() {
+        return fetchUrlFromRegion(RudderDataResidencyServer.US);
     }
 
     /**
      * Look for the region in the data residency list.
      *
-     * @param region Data Residency region set while SDK initialisation.
-     * @return Corresponding residency URL if present else null.
+     * @param region Data Residency region which is set while SDK initialisation.
+     * @return Corresponding residency URL if present otherwise null.
      */
     @VisibleForTesting
     @Nullable
-    String getDataResidencyUrl(String region) {
-        if (isEmpty(dataResidencyUrls)) {
+    String fetchUrlFromRegion(@NonNull RudderDataResidencyServer region) {
+        if (isEmpty(dataResidencyUrls) || isEmpty(dataResidencyUrls.get(region))) {
             return null;
         }
-        region = region.toLowerCase(Locale.ROOT);
-        if (dataResidencyUrls.containsKey(region)) {
-            String dataResidencyUrl = dataResidencyUrls.get(region);
-            if (!isEmpty(dataResidencyUrl)) {
-                return appendSlashToUrl(dataResidencyUrl);
+        for (RudderDataResidencyUrls dataResidencyUrl : dataResidencyUrls.get(region)) {
+            if (dataResidencyUrl.defaultTo) {
+                if (!isEmpty(dataResidencyUrl.url)) {
+                    return appendSlashToUrl(dataResidencyUrl.url);
+                }
+                // It is decided that for any region there will be only one url defaulted to true
+                break;
             }
         }
         return null;
-    }
-
-    // Getter and Setter
-
-    /**
-     *
-     * @return dataPlaneUrl from the sourceConfig based on the ResidencyServer region.
-     *
-     * If either required region is not present in the sourceConfig or sourceConfig is null
-     * then return null.
-     */
-    @Nullable
-    String getDataPlaneUrl() {
-        return this.dataPlaneUrl;
-    }
-
-    @VisibleForTesting
-    void setDataPlaneUrl(String dataPlaneUrl) {
-        this.dataPlaneUrl = dataPlaneUrl;
     }
 }
