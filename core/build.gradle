@@ -6,8 +6,6 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 1
-        versionName '1.7.0'
         consumerProguardFiles 'proguard-consumer-rules.pro'
     }
 
@@ -50,12 +48,6 @@ dependencies {
 
     compileOnly "androidx.work:work-runtime:2.7.1"
 
-}
-
-ext {
-    PUBLISH_GROUP_ID = 'com.rudderstack.android.sdk'
-    PUBLISH_VERSION = '1.7.0'
-    PUBLISH_ARTIFACT_ID = 'core'
 }
 
 //apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"

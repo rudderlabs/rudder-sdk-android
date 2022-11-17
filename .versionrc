@@ -1,0 +1,9 @@
+{
+  "bumpFiles": [
+    {
+      "filename": "gradle.properties",
+      "updater": "gradle-updater.js"
+    }
+  ]
+}
+

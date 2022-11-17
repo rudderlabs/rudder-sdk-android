@@ -100,7 +100,7 @@ public class RudderContext {
         this.deviceInfo = new RudderDeviceInfo(advertisingId, deviceToken);
         this.networkInfo = new RudderNetwork(application);
         this.osInfo = new RudderOSInfo();
-        this.libraryInfo = new RudderLibraryInfo();
+        this.libraryInfo = new RudderLibraryInfo(Utils.getVersionName(application, "NA"));
         this.locale = Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
         this.timezone = Utils.getTimeZone();
     }

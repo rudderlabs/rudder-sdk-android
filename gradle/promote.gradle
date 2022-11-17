@@ -1,0 +1,63 @@
+apply from: rootProject.file('gradle/versioning.gradle')
+
+group GROUP
+version getVersionName()
+//project.logger.info("Signing id: ${hasProperty("signing.keyId")}")
+// Create variables with empty default values
+ext["signing.keyId"] = ''
+ext["signing.password"] = ''
+ext["signing.key"] = ''
+ext["ossrhUsername"] = ''
+ext["ossrhPassword"] = ''
+ext["sonatypeStagingProfileId"] = ''
+
+File secretPropsFile = project.rootProject.file('local.properties')
+if (secretPropsFile.exists()) {
+    // Read local.properties file first if it exists
+    Properties p = new Properties()
+    new FileInputStream(secretPropsFile).withCloseable { is -> p.load(is) }
+    p.each { name, value -> ext[name] = value }
+    println("read from local.props")
+} else {
+    // Use system environment variables
+    ext["ossrhUsername"] = System.getenv('NEXUS_USERNAME')
+    ext["ossrhPassword"] = System.getenv('NEXUS_PASSWORD')
+    ext["sonatypeStagingProfileId"] = System.getenv('SONATYPE_STAGING_PROFILE_ID')
+//    ext["signing.keyId"] = System.getenv('SIGNING_KEY_ID')
+    ext["signing.password"] = System.getenv('SIGNING_PASSWORD')
+    ext["signing.key"] = System.getenv('SIGNING_PRIVATE_KEY_BASE64')
+    println("read from environmenrt: ${ext["ossrhUsername"]}")
+
+}
+//println("Signing id: ${hasProperty("signing.keyId")}")
+////if (!hasProperty("signing.keyId")) {
+//
+//    def pgpKeyContent = ext["signing.keyId"]
+//    if (pgpKeyContent != null) {
+//        def tmpDir = new File("$rootProject.rootDir/tmp")
+//        logger.warn("temp dir, $tmpDir")
+//        mkdir tmpDir
+//        def keyFile = new File("$tmpDir/key.pgp")
+//        keyFile.createNewFile()
+//        def os = keyFile.newDataOutputStream()
+//        os.write(pgpKeyContent.decodeBase64())
+//        os.close()
+//
+//        ext['signing.secretKeyRingFile'] = keyFile.absolutePath
+//        println("secret key file: ${getProperty("signing.secretKeyRingFile")}")
+//
+//    }
+//}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            stagingProfileId = System.getenv("SONATYPE_STAGING_PROFILE_ID")
+            username = System.getenv('NEXUS_USERNAME')
+            password = System.getenv('NEXUS_PASSWORD')
+
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+        }
+    }
+}

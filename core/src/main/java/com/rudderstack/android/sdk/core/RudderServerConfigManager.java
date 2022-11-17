@@ -2,7 +2,8 @@ package com.rudderstack.android.sdk.core;
 
 import android.app.Application;
 import android.content.Context;
-import android.os.Build;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.text.TextUtils;
 import android.util.Base64;
 
@@ -11,7 +12,6 @@ import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
@@ -32,7 +32,7 @@ class RudderServerConfigManager {
     private Map<String, Object> integrationsMap = null;
     private Utils.NetworkResponses receivedError = Utils.NetworkResponses.SUCCESS;
     private static final String RUDDER_SERVER_CONFIG_FILE_NAME = "RudderServerConfig";
-
+    private final String buildVersion;
     private static Context context;
 
 
@@ -42,6 +42,8 @@ class RudderServerConfigManager {
         context = _application.getApplicationContext();
         // fetch server config
         fetchConfig(_writeKey);
+        buildVersion = Utils.getVersionName(_application, "NA");
+
     }
 
     // update config if it is older than an day
@@ -88,7 +90,8 @@ class RudderServerConfigManager {
         int retryCount = 0;
         while (!isDone && retryCount <= 3) {
             try {
-                String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig?p=android&v=" + Constants.RUDDER_LIBRARY_VERSION + "&bv=" + android.os.Build.VERSION.SDK_INT;
+
+                String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig?p=android&v=" + buildVersion + "&bv=" + android.os.Build.VERSION.SDK_INT;
                 RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configUrl: %s", configUrl));
                 // create url object
                 URL url = new URL(configUrl);
