@@ -18,6 +18,7 @@ jobs:
         run: |
           BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           VERSION=${BRANCH_NAME#hotfix-}
+          VERSION=${VERSION#release-mpx/}
           VERSION=${VERSION#release/}
           
           echo "release_version=$VERSION" >> $GITHUB_OUTPUT
@@ -40,15 +41,27 @@ jobs:
           CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.PAT }}
         run: |
           npx conventional-github-releaser -p angular
+
       - name: Create pull request into develop
         uses: repo-sync/pull-request@v2
+        if: (startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release/'))
         with:
-          source_branch: 'main'
+          source_branch: 'master'
           destination_branch: 'develop'
           github_token: ${{ secrets.PAT }}
           pr_title: "chore(release): pulling main into develop post release v${{ steps.extract-version.outputs.release_version }}"
           pr_body: ':crown: *An automated PR*'
           pr_reviewer: 'itsdebs'
+      - name: Create pull request into develop-mpx
+          uses: repo-sync/pull-request@v2
+            if: (startsWith(github.event.pull_request.head.ref, 'release-mpx/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/'))
+              with:
+                source_branch: 'master'
+                destination_branch: 'develop'
+                github_token: ${{ secrets.PAT }}
+                pr_title: "chore(release): pulling main into develop post release v${{ steps.extract-version.outputs.release_version }}"
+                pr_body: ':crown: *An automated PR*'
+                pr_reviewer: 'itsdebs'
 
       - name: Delete hotfix release branch
         uses: koj-co/delete-merged-action@master
@@ -61,6 +74,21 @@ jobs:
       - name: Delete release branch
         uses: koj-co/delete-merged-action@master
         if: startsWith(github.event.pull_request.head.ref, 'release/')
+        with:
+          branches: 'release/*'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Delete hotfix release branch -mpx
+        uses: koj-co/delete-merged-action@master
+        if: startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/')
+        with:
+          branches: 'hotfix-release/*'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete release branch -mpx
+        uses: koj-co/delete-merged-action@master
+        if: startsWith(github.event.pull_request.head.ref, 'release-mpx/')
         with:
           branches: 'release/*'
         env:
