@@ -34,16 +34,18 @@ jobs:
           key: ${{ runner.os }}-gradle-core-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-core-
+      - name: Set env MODULE_NAME
+        run: |
+            BRANCH="${{ github.event.pull_request.head.ref }}"
+            if [[ $BRANCH == 'master-mpx' || $BRANCH == 'develop-mpx' ]]; then
+                echo "MODULE_NAME=core-mpx" >> "$GITHUB_ENV"
+            else
+                echo "MODULE_NAME=core" >> "$GITHUB_ENV"
+            fi
       - name: Run Tests
-        if: github.ref == 'refs/heads/master-mpx' || github.ref == 'refs/heads/develop-mpx'
-          run: ./gradlew core-mpx:test
-        else:
-          run: ./gradlew core:test
+        run: ./gradlew $MODULE_NAME:test
       - name: Generate coverage report
-        if: github.ref == 'refs/heads/master-mpx' || github.ref == 'refs/heads/develop-mpx'
-          run: ./gradlew core-mpx:codeCoverageReport
-        else:
-          run: ./gradlew core:codeCoverageReport
+        run: ./gradlew $MODULE_NAME:codeCoverageReport
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
 
