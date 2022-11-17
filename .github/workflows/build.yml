@@ -17,7 +17,7 @@ jobs:
         with:
           workflow_id: ${{ github.event.workflow.id }}
 
-  snowplow-migrator-test:
+  unit-test:
     needs: cancel_previous
     runs-on: ubuntu-latest
 
@@ -35,9 +35,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-core-
       - name: Run Tests
-        run: ./gradlew rudder-snowplow-adapter:test
+        if: github.ref == 'refs/heads/master-mpx' || github.ref == 'refs/heads/develop-mpx'
+          run: ./gradlew core-mpx:test
+        else:
+          run: ./gradlew core:test
       - name: Generate coverage report
-        run: ./gradlew rudder-snowplow-adapter:codeCoverageReport
+        if: github.ref == 'refs/heads/master-mpx' || github.ref == 'refs/heads/develop-mpx'
+          run: ./gradlew core-mpx:codeCoverageReport
+        else:
+          run: ./gradlew core:codeCoverageReport
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
 
