@@ -44,10 +44,10 @@ jobs:
             fi
       - name: Run Tests
         run: ./gradlew $MODULE_NAME:test
-      - name: Generate coverage report
-        run: ./gradlew $MODULE_NAME:codeCoverageReport
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+#      - name: Generate coverage report
+#        run: ./gradlew $MODULE_NAME:codeCoverageReport
+#      - name: Upload coverage to Codecov
+#        uses: codecov/codecov-action@v2
 
 #  android-test:
 #    needs: cancel_previous
