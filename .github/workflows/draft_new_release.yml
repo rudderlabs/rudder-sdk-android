@@ -14,11 +14,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set Node 16
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
+#      - name: Set Node 16
+#        uses: actions/setup-node@v3
+#        with:
+#          node-version: 16
+#          cache: 'npm'
 
       # In order to make a commit, we need to initialize a user.
       # You may choose to write something less generic here if you want, it doesn't matter functionality wise.
