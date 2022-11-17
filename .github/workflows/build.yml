@@ -36,6 +36,7 @@ jobs:
             ${{ runner.os }}-gradle-core-
       - name: Set env MODULE_NAME
           run: |
+            BRANCH="${{ github.event.pull_request.head.ref }}"
             if [[ $BRANCH == 'master-mpx' || $BRANCH == 'develop-mpx' ]]; then
                 echo "MODULE_NAME=core-mpx" >> "$GITHUB_ENV"
             else
