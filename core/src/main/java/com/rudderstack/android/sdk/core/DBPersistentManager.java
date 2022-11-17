@@ -51,9 +51,6 @@ class DBPersistentManager extends SQLiteOpenHelper {
     // command to drop the old events table
     private static final String DATABASE_DROP_OLD_EVENTS_TABLE = "DROP TABLE " + OLD_EVENTS_TABLE;
 
-    //synchronizing database access
-    private static final Object DB_LOCK = new Object();
-
     DBInsertionHandlerThread dbInsertionHandlerThread;
     final Queue<Message> queue = new LinkedList<Message>();
 
@@ -287,18 +284,16 @@ class DBPersistentManager extends SQLiteOpenHelper {
     private void deleteStatusColumn(SQLiteDatabase database) {
         if (database.isOpen()) {
             try {
-                synchronized (DB_LOCK) {
-                    database.beginTransaction();
-                    // 1. renaming the existing events table to events_old
-                    database.execSQL(DATABASE_RENAME_EVENTS_TABLE);
-                    // 2. creating new events table which doesn't have the status column
-                    database.execSQL(DATABASE_EVENTS_TABLE_SCHEMA_V1);
-                    // 3. copying the data from events_old to events
-                    database.execSQL(DATABASE_COPY_EVENTS_FROM_OLD_TO_NEW);
-                    // 4. dropping the events_old table
-                    database.execSQL(DATABASE_DROP_OLD_EVENTS_TABLE);
-                    database.setTransactionSuccessful();
-                }
+                database.beginTransaction();
+                // 1. renaming the existing events table to events_old
+                database.execSQL(DATABASE_RENAME_EVENTS_TABLE);
+                // 2. creating new events table which doesn't have the status column
+                database.execSQL(DATABASE_EVENTS_TABLE_SCHEMA_V1);
+                // 3. copying the data from events_old to events
+                database.execSQL(DATABASE_COPY_EVENTS_FROM_OLD_TO_NEW);
+                // 4. dropping the events_old table
+                database.execSQL(DATABASE_DROP_OLD_EVENTS_TABLE);
+                database.setTransactionSuccessful();
                 RudderLogger.logDebug("DBPersistentManager: deleteStatusColumn: status column is deleted successfully");
             } catch (SQLiteDatabaseCorruptException ex) {
                 RudderLogger.logError("DBPersistentManager: deleteStatusColumn: Exception while deleting the status column due to " + ex.getLocalizedMessage());
