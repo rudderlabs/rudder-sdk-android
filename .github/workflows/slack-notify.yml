@@ -13,7 +13,7 @@ jobs:
         id: slack
         uses: slackapi/slack-github-action@v1.23.0
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_RELEASE_CHANNEL_ID }}
           PROJECT_NAME: "Android SDK"
         with:
           channel-id: 'CTAGMVC3C'
