@@ -55,13 +55,13 @@ jobs:
       - name: Create pull request into develop-mpx
         uses: repo-sync/pull-request@v2
         if: (startsWith(github.event.pull_request.head.ref, 'release-mpx/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/'))
-          with:
-            source_branch: 'master'
-            destination_branch: 'develop'
-            github_token: ${{ secrets.PAT }}
-            pr_title: "chore(release): pulling main into develop post release v${{ steps.extract-version.outputs.release_version }}"
-            pr_body: ':crown: *An automated PR*'
-            pr_reviewer: 'itsdebs'
+        with:
+          source_branch: 'master'
+          destination_branch: 'develop'
+          github_token: ${{ secrets.PAT }}
+          pr_title: "chore(release): pulling main into develop post release v${{ steps.extract-version.outputs.release_version }}"
+          pr_body: ':crown: *An automated PR*'
+          pr_reviewer: 'itsdebs'
 
       - name: Delete hotfix release branch
         uses: koj-co/delete-merged-action@master
