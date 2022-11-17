@@ -41,10 +41,10 @@ jobs:
           
           git fetch origin "$main_branch" --depth=1
           git merge "origin/$main_branch"
-          current_version=$(`cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2`)
+          current_version=$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)
           
-          npm run release -- --skip.commit --skip.tag --skip.changelog
-          new_version=$(`cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2`)
+          npx standard-version --skip.commit --skip.tag --skip.changelog
+          new_version=$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)
           git reset --hard
 
           branch_name="${release_type}${branch-type}/${new_version}"
