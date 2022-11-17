@@ -11,6 +11,7 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
 import com.rudderstack.android.sdk.core.RudderClient
+import com.rudderstack.android.sdk.core.RudderTraits
 import java.util.*
 import javax.net.ssl.SSLContext
 
@@ -29,48 +30,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        /*MainApplication.rudderClient!!.track("first_event")
-
-        Handler().postDelayed({
-            RudderClient.putAdvertisingId("some_idfa_changed")
-            MainApplication.rudderClient!!.track("second_event")
-        }, 3000)
-        val option = RudderOption()
-            .putExternalId("brazeExternalId", "some_external_id_1")
-            .putExternalId("braze_id", "some_braze_id_2")
-            .putIntegration("GA", true).putIntegration("Amplitude", true)
-            .putCustomContext(
-                "customContext", mapOf(
-                    "version" to "1.0.0",
-                    "language" to "kotlin"
-                )
-            )
-        MainApplication.rudderClient!!.identify(
-            "userId",
-            RudderTraits().putFirstName("Test First Name").putBirthday(Date()),
-            option
-        )
-//        MainApplication.rudderClient!!.reset()
-        val props = RudderProperty()
-        props.put("Name", "John")
-        props.put("city", "NYC")
-        MainApplication.rudderClient!!.track("test event john", props, option)
-
-        RudderClient.putDeviceToken("DEVTOKEN2")
-
+        MainApplication.rudderClient!!.identify("testUserId1", RudderTraits().putName("Test User"), null)
         MainApplication.rudderClient!!.track("Test Event")
-
-
-
-        MainApplication.rudderClient!!.onIntegrationReady(
-            "App Center",
-            NativeCallBack("App Center")
-        );
-
-        MainApplication.rudderClient!!.onIntegrationReady(
-            "Custom Factory",
-            NativeCallBack("Custom Factory")
-        );*/
+        MainApplication.rudderClient!!.screen("Main Screen")
     }
 
     private fun tlsBackport() {
