@@ -35,7 +35,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-core-
       - name: Set env MODULE_NAME
-          run: |
+        run: |
             BRANCH="${{ github.event.pull_request.head.ref }}"
             if [[ $BRANCH == 'master-mpx' || $BRANCH == 'develop-mpx' ]]; then
                 echo "MODULE_NAME=core-mpx" >> "$GITHUB_ENV"
@@ -43,9 +43,9 @@ jobs:
                 echo "MODULE_NAME=core" >> "$GITHUB_ENV"
             fi
       - name: Run Tests
-          run: ./gradlew $MODULE_NAME:test
+        run: ./gradlew $MODULE_NAME:test
       - name: Generate coverage report
-          run: ./gradlew $MODULE_NAME:codeCoverageReport
+        run: ./gradlew $MODULE_NAME:codeCoverageReport
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
 
