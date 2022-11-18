@@ -32,7 +32,6 @@ class RudderServerConfigManager {
     private Map<String, Object> integrationsMap = null;
     private Utils.NetworkResponses receivedError = Utils.NetworkResponses.SUCCESS;
     private static final String RUDDER_SERVER_CONFIG_FILE_NAME = "RudderServerConfig";
-    private final String buildVersion;
     private static Context context;
 
 
@@ -42,8 +41,6 @@ class RudderServerConfigManager {
         context = _application.getApplicationContext();
         // fetch server config
         fetchConfig(_writeKey);
-        buildVersion = Utils.getVersionName(_application, "NA");
-
     }
 
     // update config if it is older than an day
@@ -91,7 +88,7 @@ class RudderServerConfigManager {
         while (!isDone && retryCount <= 3) {
             try {
 
-                String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig?p=android&v=" + buildVersion + "&bv=" + android.os.Build.VERSION.SDK_INT;
+                String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig?p=android&v=" + BuildConfig.VERSION_NAME + "&bv=" + android.os.Build.VERSION.SDK_INT;
                 RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configUrl: %s", configUrl));
                 // create url object
                 URL url = new URL(configUrl);
