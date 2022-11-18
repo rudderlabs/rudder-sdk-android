@@ -264,17 +264,4 @@ public class Utils {
             return new ArrayList(messageDetails.subList(0, flushQueueSize));
         }
     }
-
-    public static String getVersionName(Application application, @Nullable String defaultValue){
-        try {
-            String packageName = application.getPackageName();
-            PackageManager packageManager = application.getPackageManager();
-            PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
-            return packageInfo.versionName;
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        return defaultValue;
-    }
-
 }
