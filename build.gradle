@@ -28,7 +28,7 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-apply from: "${rootDir}/scripts/publish-root.gradle"
+//apply from: "${rootDir}/scripts/publish-root.gradle"
 
-//apply from: rootProject.file('gradle/promote.gradle')
-//apply from: rootProject.file('gradle/codecov.gradle')
+apply from: rootProject.file('gradle/promote.gradle')
+apply from: rootProject.file('gradle/codecov.gradle')
