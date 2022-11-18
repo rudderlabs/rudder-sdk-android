@@ -62,14 +62,12 @@ jobs:
           echo "::set-output name=new_version::$new_version"
 
       - name: Update changelog & bump version
+        id: finish-release
         env:
           HUSKY: 0
         run: |
-          npm i -g conventional-changelog-cli
-          SUMMARY=$(((npx conventional-changelog -u) 2>&1) | sed "s/*/<br> */g" | sed "s/#/ /g" | tr -d '\n' || true)
-          echo $SUMMARY
-          echo "::set-output name=commit_summary::$SUMMARY"
-          npm run release
+          
+          npx standard-version -a
 
       - name: Push new version in release branch & tag
         run: |
@@ -82,5 +80,5 @@ jobs:
           destination_branch: ${{ steps.create-release.outputs.main_branch }}
           github_token: ${{ secrets.PAT }}
           pr_title: "chore(release): pulling ${{ steps.create-release.outputs.branch_name }} into ${{ steps.create-release.outputs.main_branch }}"
-          pr_body: ":crown: *An automated PR*\n\n${{ steps.finish-release.outputs.commit_summary }}"
+          pr_body:  ":crown: *An automated PR*"
           pr_reviewer: 'itsdebs'
