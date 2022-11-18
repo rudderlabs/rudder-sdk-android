@@ -1,4 +1,38 @@
 # Changelog
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+## [1.1.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.0.9...v1.1.0) (2022-11-18)
+
+
+### Features
+
+* added gradle files ([fabfaf5](https://github.com/rudderlabs/rudder-sdk-android/commit/fabfaf549dc5a77a91ecfe6354148b02f81c81e2))
+* refactored version name to a single source ([e1cf1e8](https://github.com/rudderlabs/rudder-sdk-android/commit/e1cf1e803a0bae7c1671633ad0869c0f43b3587c))
+
+
+### Bug Fixes
+
+* added gradle scripts ([fcfb0b0](https://github.com/rudderlabs/rudder-sdk-android/commit/fcfb0b050b7a8aac4c5d8d3769998192f17bc3b4))
+* added pull request and slack notify ([84842b5](https://github.com/rudderlabs/rudder-sdk-android/commit/84842b5201602abb899e4e8502ba5e148ee9122d))
+* changed library version to numeric in gradle.properties files ([#169](https://github.com/rudderlabs/rudder-sdk-android/issues/169)) ([43979c1](https://github.com/rudderlabs/rudder-sdk-android/commit/43979c167350410d82dd93b0101bb7a1d071fdee))
+* commented code coverage ([fe69391](https://github.com/rudderlabs/rudder-sdk-android/commit/fe69391c1ebbfcd62a01d1b19fcf196ddcdfd96a))
+* downgraded manually incremented version ([#170](https://github.com/rudderlabs/rudder-sdk-android/issues/170)) ([3bb5d2a](https://github.com/rudderlabs/rudder-sdk-android/commit/3bb5d2a31cb097e9ba23b1529faa51a5be311af6))
+* fix draft new release ([3c776b9](https://github.com/rudderlabs/rudder-sdk-android/commit/3c776b9bbc667f0380dafb3c78042fb5423c1946))
+* fix slack channel secret ([3ba89bb](https://github.com/rudderlabs/rudder-sdk-android/commit/3ba89bb7172569b98456851cb5609388554bed1b))
+* fix slack secret ([45ec458](https://github.com/rudderlabs/rudder-sdk-android/commit/45ec458b715fa72d95793699853c59f452723162))
+* fix workflows ([269e562](https://github.com/rudderlabs/rudder-sdk-android/commit/269e56214a8352fc151771af539a2af4625b0fab))
+* fix workflows branch name ([5fba79f](https://github.com/rudderlabs/rudder-sdk-android/commit/5fba79f68adeb33c71fba80d18fadbcb5fce6440))
+* fixed bash scripts to include mpx ([9f455f0](https://github.com/rudderlabs/rudder-sdk-android/commit/9f455f0c4311bad3ef07479cb301566350c44d54))
+* fixed issues in release scripts ([#166](https://github.com/rudderlabs/rudder-sdk-android/issues/166)) ([0fa3810](https://github.com/rudderlabs/rudder-sdk-android/commit/0fa3810abe47ce16d2c8980d0cc23e70c5cf44c7))
+* handled db downgrade issue by removing the extra status column ([#158](https://github.com/rudderlabs/rudder-sdk-android/issues/158)) ([b4e5d36](https://github.com/rudderlabs/rudder-sdk-android/commit/b4e5d36b0a5418101cc264a7dd4bf99c35b20522))
+* indentation ([0b47f8e](https://github.com/rudderlabs/rudder-sdk-android/commit/0b47f8ec414987dbac844a6bc6b95b1dbe9289e8))
+* release yaml ([2e1d678](https://github.com/rudderlabs/rudder-sdk-android/commit/2e1d67823d13d5659224b2304a607b167988f5e3))
+* remove node ([#161](https://github.com/rudderlabs/rudder-sdk-android/issues/161)) ([8da800f](https://github.com/rudderlabs/rudder-sdk-android/commit/8da800f6d0ccb7599adb07162b6868e80e2d3681))
+* slack-notify ([214d0c0](https://github.com/rudderlabs/rudder-sdk-android/commit/214d0c0b7d8734bfc5cc2c19fa2bf173e7a02ace))
+* token ([225ec7c](https://github.com/rudderlabs/rudder-sdk-android/commit/225ec7c6ecee1155c48c775763b0dcd82cbed54b))
+
+# Changelog
 All notable changes to this project will be documented in this file.
 
 ## Version - 1.0 - 2020-02-10
@@ -22,4 +56,3 @@ All notable changes to this project will be documented in this file.
 ## Version - 1.7.0 - 2022-08-04
 ### Added
 - Session Tracking.
-
