@@ -23,3 +23,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Session Tracking.
 
+## Version -1.7.1 - 2022-11-17
+### Fixed
+- Db downgrade issues when the SDK is downgraded from DMT versions (1.8.0-beta.1) to previous versions
+
