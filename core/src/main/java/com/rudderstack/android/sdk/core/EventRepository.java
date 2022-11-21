@@ -27,6 +27,7 @@ import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -103,14 +104,13 @@ class EventRepository {
             this.dbManager.checkForMigrations();
             this.dbManager.startHandlerThread();
 
-
             // 4. initiate RudderServerConfigManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
             this.configManager = new RudderServerConfigManager(_application, _config, networkManager);
 
             // 5. Initiate RudderNetWorkManager for making Network Requests
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderNetworkManager");
-            this.networkManager = new RudderNetworkManager(authHeaderString, anonymousIdHeaderString);
+            this.networkManager = new RudderNetworkManager(authHeaderString, anonymousIdHeaderString, getSavedAuthToken());
 
             // 6. initiate FlushWorkManager
             rudderFlushWorkManager = new RudderFlushWorkManager(context, config, preferenceManager);
@@ -558,8 +558,12 @@ class EventRepository {
         } else {
             RudderLogger.logDebug("EventRepository: reset: factories are not initialized. ignored");
         }
+        refreshAuthToken();
     }
-
+    void refreshAuthToken() {
+        preferenceManager.saveAuthToken(null);
+        networkManager.updateDMTHeaderString(null);
+    }
     void cancelPeriodicFlushWorker() {
         rudderFlushWorkManager.cancelPeriodicFlushWorker();
     }
@@ -568,6 +572,16 @@ class EventRepository {
         deviceModeManager.addCallBackForIntegration(key, callback);
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: onIntegrationReady: callback registered for %s", key));
         integrationCallbacks.put(key, callback);
+    }
+
+    void updateAuthToken(@NonNull String authToken) {
+        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: updateAuthToken: Updating AuthToken: %s", authToken));
+        preferenceManager.saveAuthToken(authToken);
+        networkManager.updateDMTHeaderString(authToken);
+    }
+
+    private @Nullable String getSavedAuthToken(){
+        return preferenceManager.getAuthToken();
     }
 
     /**
@@ -610,6 +624,7 @@ class EventRepository {
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
+        networkManager.updateAnonymousIdHeaderString();
     }
 
     public void shutDown() {

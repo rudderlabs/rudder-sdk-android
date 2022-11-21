@@ -26,10 +26,10 @@ public class RudderClient {
     private static EventRepository repository;
 
     private static Application application;
-    private static String _advertisingId;
-    private static String _anonymousId;
+    private static String advertisingId;
+    private static String anonymousId;
     private static RudderOption defaultOptions;
-    private static String _deviceToken;
+    private static String deviceToken;
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
 
@@ -92,7 +92,8 @@ public class RudderClient {
      * @return RudderClient instance to be used further
      */
     @NonNull
-    public static RudderClient getInstance(@NonNull Context context, @Nullable String writeKey, @NonNull RudderConfig config, @Nullable RudderOption option) {
+    public static RudderClient getInstance(@NonNull Context context, @Nullable String writeKey,
+                                           @NonNull RudderConfig config, @Nullable RudderOption option) {
         defaultOptions = option;
         return getInstance(context, writeKey, config);
     }
@@ -107,7 +108,8 @@ public class RudderClient {
      * @return RudderClient instance to be used further
      */
     @NonNull
-    public static RudderClient getInstance(@NonNull Context context, @Nullable String writeKey, @Nullable RudderConfig config) {
+    public static RudderClient getInstance(@NonNull Context context, @Nullable String writeKey,
+                                           @Nullable RudderConfig config) {
 
         // check if instance is already initiated
         if (instance == null) {
@@ -133,7 +135,7 @@ public class RudderClient {
             if (application != null) {
                 RudderLogger.logVerbose("getInstance: creating EventRepository.");
                 EventRepository.Identifiers identifiers = new EventRepository
-                        .Identifiers(writeKey,_deviceToken, _anonymousId, _advertisingId);
+                        .Identifiers(writeKey, deviceToken, anonymousId, advertisingId);
                 repository = new EventRepository(application,  config, identifiers);
             }
         }
@@ -574,7 +576,7 @@ public class RudderClient {
         dumpMessage(message);
     }
 
-    
+
 
     private void dumpMessage(@NonNull RudderMessage message) {
         if (repository != null) {
@@ -678,7 +680,7 @@ public class RudderClient {
     public static void putAdvertisingId(@NonNull String advertisingId) {
         if (instance == null) {
             // rudder sdk is not initialised yet. let's use the advertisingId from the beginning
-            _advertisingId = advertisingId;
+            RudderClient.advertisingId = advertisingId;
             return;
         }
         if (getOptOutStatus()) {
@@ -695,7 +697,7 @@ public class RudderClient {
     public static void putDeviceToken(@NonNull String deviceToken) {
         if (instance == null) {
             // rudder sdk is not initialised yet. let's use the deviceToken from the beginning
-            _deviceToken = deviceToken;
+            RudderClient.deviceToken = deviceToken;
             return;
         }
         if (getOptOutStatus()) {
@@ -722,7 +724,7 @@ public class RudderClient {
     public static void putAnonymousId(@NonNull String anonymousId) {
         if (instance == null) {
             // rudder sdk is not initialised yet. let's use the anonymousId from the beginning
-            _anonymousId = anonymousId;
+            RudderClient.anonymousId = anonymousId;
             return;
         }
         if (getOptOutStatus()) {
@@ -730,6 +732,15 @@ public class RudderClient {
         }
         if (repository != null) {
             repository.updateAnonymousId(anonymousId);
+        }
+    }
+
+    public void putAuthToken(@NonNull String authToken) {
+        if (getOptOutStatus()) {
+            return;
+        }
+        if (repository != null) {
+            repository.updateAuthToken(authToken);
         }
     }
 
