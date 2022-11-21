@@ -67,7 +67,8 @@ jobs:
           HUSKY: 0
         run: |
           
-          npx standard-version -a
+          npx standard-version
+          git add. and git commit --amend --no-edit
 
       - name: Push new version in release branch & tag
         run: |
