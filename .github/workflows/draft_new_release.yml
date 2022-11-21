@@ -36,6 +36,7 @@ jobs:
           source_branch_name=${GITHUB_REF##*/}
           release_type=release
           main_branch=master
+          branch_type=''
           grep -q "hotfix/" <<< "${GITHUB_REF}" && release_type=hotfix-release
           grep -q "mpx" <<< "${GITHUB_REF}" && branch_type=-mpx && main_branch=master-mpx
           
