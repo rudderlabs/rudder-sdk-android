@@ -9,6 +9,7 @@ import android.text.TextUtils;
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -27,6 +28,7 @@ import java.util.Map;
 class EventRepository {
     private String authHeaderString;
     private String anonymousIdHeaderString;
+    @Nullable private String dmtAuthHeaderString;
     private RudderConfig config;
     private RudderNetworkManager networkManager;
     private DBPersistentManager dbManager;
@@ -58,7 +60,7 @@ class EventRepository {
      * 8. Initiate Cloud Mode Manager and Device mode Manager
      * 9. Initiate ApplicationLifeCycleManager
      */
-    EventRepository(Application _application, String _writeKey, RudderConfig _config, String _anonymousId, String _advertisingId, String _deviceToken) {
+    EventRepository(Application _application, String _writeKey, RudderConfig _config, String _anonymousId, String _advertisingId, String _deviceToken, @Nullable String _dmtAuthToken) {
         // 1. set the values of writeKey, config
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: writeKey: %s", _writeKey));
         this.authHeaderString = Base64.encodeToString((String.format(Locale.US, "%s:", _writeKey)).getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
@@ -98,6 +100,17 @@ class EventRepository {
             this.anonymousIdHeaderString = Base64.encodeToString(anonymousId.getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousIdHeaderString: %s", this.anonymousIdHeaderString));
 
+            // Handle AuthToken
+            String dmtAuthToken = preferenceManager.getAuthToken();
+            if (_dmtAuthToken != null) {
+                preferenceManager.saveAuthToken(_dmtAuthToken);
+                dmtAuthToken = _dmtAuthToken;
+            }
+            if (dmtAuthToken != null) {
+                this.dmtAuthHeaderString = Base64.encodeToString((String.format(Locale.US, "%s:", dmtAuthToken)).getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
+                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: dmtAuthTokenString: %s", this.dmtAuthHeaderString));
+            }
+
             // 4. Initiate DBPersistentManager for SQLite operations
             RudderLogger.logDebug("EventRepository: constructor: Initiating DBPersistentManager");
             this.dbManager = DBPersistentManager.getInstance(_application);
@@ -105,7 +118,7 @@ class EventRepository {
 
             // 5. Initiate RudderNetWorkManager for making Network Requests
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderNetworkManager");
-            this.networkManager = new RudderNetworkManager(authHeaderString, anonymousIdHeaderString);
+            this.networkManager = new RudderNetworkManager(authHeaderString, anonymousIdHeaderString, dmtAuthHeaderString);
 
             // 6. initiate RudderServerConfigManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
@@ -231,6 +244,12 @@ class EventRepository {
         if (userSession.getSessionId() != null) {
             userSession.refreshSession();
         }
+        refreshAuthToken();
+    }
+
+    void refreshAuthToken() {
+        preferenceManager.saveAuthToken(null);
+        networkManager.updateDMTHeaderString(null);
     }
 
     void flushSync() {
@@ -257,6 +276,12 @@ class EventRepository {
         RudderElementCache.updateAnonymousId(anonymousId);
         preferenceManager.saveAnonymousId(RudderContext.getAnonymousId());
         networkManager.updateAnonymousIdHeaderString();
+    }
+
+    void updateAuthToken(@NonNull String authToken) {
+        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: updateAuthToken: Updating AuthToken: %s", authToken));
+        preferenceManager.saveAuthToken(authToken);
+        networkManager.updateDMTHeaderString(authToken);
     }
 
     /**

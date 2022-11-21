@@ -28,6 +28,8 @@ public class RudderClient {
     private static Application application;
     private static String _advertisingId;
     private static String _anonymousId;
+    @Nullable
+    private static String _authToken;
     private static RudderOption defaultOptions;
     private static String _deviceToken;
 
@@ -147,7 +149,7 @@ public class RudderClient {
             // initiate EventRepository class
             if (application != null) {
                 RudderLogger.logVerbose("getInstance: creating EventRepository.");
-                repository = new EventRepository(application, writeKey, config, _anonymousId, _advertisingId, _deviceToken);
+                repository = new EventRepository(application, writeKey, config, _anonymousId, _advertisingId, _deviceToken, _authToken);
             }
         }
         return instance;
@@ -724,6 +726,20 @@ public class RudderClient {
         }
         if (repository != null) {
             repository.updateAnonymousId(anonymousId);
+        }
+    }
+
+    public static void putAuthToken(@NonNull String authToken) {
+        if (instance == null) {
+            // rudder sdk is not initialised yet. let's use the authToken from the beginning
+            _authToken = authToken;
+            return;
+        }
+        if (getOptOutStatus()) {
+            return;
+        }
+        if (repository != null) {
+            repository.updateAuthToken(authToken);
         }
     }
 

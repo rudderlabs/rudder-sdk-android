@@ -24,6 +24,8 @@ public class RudderNetworkManager {
 
     private final String authHeaderString;
     private String anonymousIdHeaderString;
+    @Nullable
+    private String dmtHeaderString;
 
     public enum NetworkResponses {
         SUCCESS,
@@ -31,6 +33,12 @@ public class RudderNetworkManager {
         WRITE_KEY_ERROR,
         RESOURCE_NOT_FOUND
     }
+
+//    TODO ("Remove  below code")
+//    public enum UrlType {
+//        DMT_URL,
+//        CLOUD_URL
+//    }
 
     public enum RequestMethod {
         POST,
@@ -42,12 +50,33 @@ public class RudderNetworkManager {
         this.anonymousIdHeaderString = anonymousIdHeaderString;
     }
 
+    public RudderNetworkManager(String authHeaderString, String anonymousIdHeaderString, @Nullable String dmtHeaderString) {
+        this(authHeaderString, anonymousIdHeaderString);
+        this.dmtHeaderString = dmtHeaderString;
+    }
+
     void updateAnonymousIdHeaderString() {
         try {
             this.anonymousIdHeaderString = Base64.encodeToString(RudderContext.getAnonymousId().getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
+    }
+
+    void updateDMTHeaderString(@Nullable String dmtHeaderString) {
+        if (dmtHeaderString == null) {
+            this.dmtHeaderString = null;
+            return;
+        }
+        try {
+            this.dmtHeaderString = Base64.encodeToString(dmtHeaderString.getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
+        } catch (Exception ex) {
+            RudderLogger.logError(ex.getCause());
+        }
+    }
+
+    Result sendNetworkRequest(@Nullable String requestPayload, @NonNull String requestURL, @NonNull RequestMethod requestMethod) {
+        return sendNetworkRequest(requestPayload, requestURL, requestMethod, false);
     }
 
     /**
@@ -57,7 +86,7 @@ public class RudderNetworkManager {
      * @return sends back a Result Object including the response payload, error payload, statusCode.
      */
     @VisibleForTesting
-    Result sendNetworkRequest(@Nullable String requestPayload, @NonNull String requestURL, @NonNull RequestMethod requestMethod) {
+    Result sendNetworkRequest(@Nullable String requestPayload, @NonNull String requestURL, @NonNull RequestMethod requestMethod, boolean isDMTRequest) {
         if (requestMethod == RequestMethod.POST && requestPayload == null)
             return new Result(NetworkResponses.ERROR, -1, null, "Payload is Null");
 
@@ -78,6 +107,9 @@ public class RudderNetworkManager {
                 httpConnection.setRequestMethod("POST");
                 httpConnection.setRequestProperty("Content-Type", "application/json");
                 httpConnection.setRequestProperty("AnonymousId", anonymousIdHeaderString);
+                if (dmtHeaderString != null && isDMTRequest) {
+                    httpConnection.setRequestProperty("X-Auth-DMT", dmtHeaderString);
+                }
                 OutputStream os = httpConnection.getOutputStream();
                 OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
                 osw.write(requestPayload);
