@@ -45,7 +45,7 @@ All notable changes to this project will be documented in this file.
 - A new header `anonymousId` is added to the request to `data-plane` along with `writeKey` to handle sticky-session at the server.
 ### Changed
 - Package name is changed from `com.rudderlabs.android.sdk.core` to `com.rudderstack.android.sdk.core`.
-- New field `userId` is supported to make it more compliant under `context->traits` for `identify` and all successive calls. Old filed for developer identification i.e. `id` is still supported. 
+- New field `userId` is supported to make it more compliant under `context->traits` for `identify` and all successive calls. Old filed for developer identification i.e. `id` is still supported.
 
 ## Version - 1.6.0 - 2022-07-11
 ### Changed
