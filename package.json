@@ -1,2 +1,6 @@
-{"version": "1.7.1","dependencies":{"properties-reader":"^2.2.0"}}
-
+{
+  "version": "1.8.0",
+  "dependencies": {
+    "properties-reader": "^2.2.0"
+  }
+}
