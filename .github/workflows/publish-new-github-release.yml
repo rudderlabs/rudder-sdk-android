@@ -36,7 +36,6 @@ jobs:
       - name: Create Github Release
         id: create_release
         env:
-          HUSKY: 0
           GITHUB_TOKEN: ${{ secrets.PAT }}
           CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.PAT }}
         run: |

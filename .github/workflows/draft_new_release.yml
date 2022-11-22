@@ -30,8 +30,6 @@ jobs:
       # Calculate the next release version based on conventional semantic release
       - name: Create release branch
         id: create-release
-        env:
-          HUSKY: 0
         run: |
           source_branch_name=${GITHUB_REF##*/}
           release_type=release
@@ -44,6 +42,7 @@ jobs:
           git merge "origin/$main_branch"
           current_version=$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)
           
+          npm -i -g properties-reader
           npx standard-version --skip.commit --skip.tag --skip.changelog
           new_version=$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)
           git reset --hard
@@ -64,12 +63,10 @@ jobs:
 
       - name: Update changelog & bump version
         id: finish-release
-        env:
-          HUSKY: 0
         run: |
-          
+          npm -i -g properties-reader
           npx standard-version
-          git add. and git commit --amend --no-edit
+          git add . && git commit --amend --no-edit
 
       - name: Push new version in release branch & tag
         run: |
