@@ -42,11 +42,12 @@ jobs:
           git merge "origin/$main_branch"
           current_version=$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)
           
-          npm i -g properties-reader
+          npm ci
           npx standard-version --skip.commit --skip.tag --skip.changelog
           new_version=$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)
           git reset --hard
-
+          
+          echo "Branch type is is $branch-type"
           branch_name="${release_type}${branch-type}/${new_version}"
 
           echo "Source branch for new release is $source_branch_name"
@@ -64,7 +65,7 @@ jobs:
       - name: Update changelog & bump version
         id: finish-release
         run: |
-          npm i -g properties-reader
+          npm ci
           npx standard-version
           git add . && git commit --amend --no-edit
 
