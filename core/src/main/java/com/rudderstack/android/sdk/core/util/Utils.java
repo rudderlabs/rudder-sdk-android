@@ -5,6 +5,8 @@ import android.app.Application;
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.ParseException;
 import android.net.Uri;

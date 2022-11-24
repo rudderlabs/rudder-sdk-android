@@ -52,7 +52,8 @@ allprojects {
 2. Then, add the dependency under `dependencies` as shown:
 
 ```groovy
-implementation 'com.rudderstack.android.sdk:core:1.8.0'
+
+implementation 'com.rudderstack.android.sdk:core:1.x.x'
 ```
 
 ## Initializing ```RudderClient```
