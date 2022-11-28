@@ -117,7 +117,15 @@ public class RudderClientTest {
         }).start();
 
         // wait until all the Flush API call has been made
-        while (blockMoreThan2FlushApiCall.get() < 3);
+        long previousTime = System.currentTimeMillis();
+        while (blockMoreThan2FlushApiCall.get() < 3) {
+            Thread.sleep(1000);
+            // safety mechanism to ensure loop doesn't run infinitely
+            if (System.currentTimeMillis() - previousTime >= 50000L) {
+                break;
+            }
+        }
+
         assertThat(isDone.get(), Matchers.is(true));
     }
 
