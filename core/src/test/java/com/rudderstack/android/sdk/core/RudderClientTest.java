@@ -1,9 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
-import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.app.Application;
 import android.content.Context;
@@ -22,6 +20,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({RudderClient.class, URLUtil.class})
@@ -61,46 +60,71 @@ public class RudderClientTest {
 
     }
 
-    private long lastInvokedAt = 0L;
     private int numberOfTimesFlushSyncCalled = 0;
 
     @Test
-    public void flush() throws Exception {
-        final int threadCount = 16;
+    public void makeEventsToTestThrottlingOfFlushApiCalls() throws Exception {
         final AtomicBoolean isDone = new AtomicBoolean(false);
+        final AtomicInteger blockMoreThan2FlushApiCall = new AtomicInteger(0);
 
         PowerMockito.when(repository, "flushSync").thenAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                assertThat((System.currentTimeMillis() - lastInvokedAt), Matchers.greaterThan(1000L));
-                lastInvokedAt = System.currentTimeMillis();
-                System.out.println("last invoked " + lastInvokedAt);
+            public Void answer(InvocationOnMock invocation) {
                 ++numberOfTimesFlushSyncCalled;
-                //we assume, the threads have all started by now
-                // this should be the the last thread or the first thread
-                assertThat(numberOfTimesFlushSyncCalled, Matchers.lessThanOrEqualTo(2));
+                System.out.println("System.out.println: " + numberOfTimesFlushSyncCalled);
 
-                Thread.sleep(1000);
+                blockMoreThan2FlushApiCall.addAndGet(1);
+
                 isDone.set(numberOfTimesFlushSyncCalled == 2);
+
+                // block the first flush API call, until unblocked in the third flush API call
+                while (blockMoreThan2FlushApiCall.get() < 1);
 
                 return null;
             }
         });
-        final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
 
-        for (int num = 0; num < threadCount; num++) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    System.out.println("Running thread : " + Thread.currentThread().getName() + " \ncalling at: " + System.currentTimeMillis());
-                    client.flush();
-                }
-            }, "t-num-" + num).start();
-        }
-        //if within 10 secs other thread calls, that will be caught
-        Thread.sleep(9000);
-//        await().atMost(10, SECONDS).untilTrue(isDone);
-        assertThat(isDone.get(), Matchers.is(true));
+        final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
+        // Making first Flush API call
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Running thread : " + Thread.currentThread().getName());
+                client.flush();
+            }
+        }).start();
+
+        // Making second Flush API call - it'll not be blocked, since Executor service queue list is 1
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Running thread : " + Thread.currentThread().getName());
+                client.flush();
+            }
+        }).start();
+
+        // This flush API call will technically replace the second one (There is no way to verify that directly)
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Running thread : " + Thread.currentThread().getName());
+                client.flush();
+                // wait until first flush API starts executing
+                while (!(blockMoreThan2FlushApiCall.get() == 1));
+                // unblock the flush API call
+                blockMoreThan2FlushApiCall.addAndGet(1);
+            }
+        }).start();
+
+        // Thread to test the behaviour
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // wait until all the Flush API call has been made
+                while (blockMoreThan2FlushApiCall.get() < 3);
+                assertThat(isDone.get(), Matchers.is(true));
+            }
+        }).start();
     }
 
     @After
