@@ -73,11 +73,10 @@ public class RudderClientTest {
                 ++numberOfTimesFlushSyncCalled;
                 System.out.println("System.out.println: " + numberOfTimesFlushSyncCalled);
 
-                blockMoreThan2FlushApiCall.addAndGet(1);
-
                 isDone.set(numberOfTimesFlushSyncCalled == 2);
 
                 // block the first flush API call, until unblocked in the third flush API call
+                blockMoreThan2FlushApiCall.addAndGet(1);
                 while (blockMoreThan2FlushApiCall.get() < 1);
 
                 return null;
@@ -119,7 +118,7 @@ public class RudderClientTest {
         // wait until all the Flush API call has been made
         long previousTime = System.currentTimeMillis();
         while (blockMoreThan2FlushApiCall.get() < 3) {
-            Thread.sleep(1000);
+            Thread.sleep(100);
         }
 
         assertThat(isDone.get(), Matchers.is(true));
