@@ -116,15 +116,9 @@ public class RudderClientTest {
             }
         }).start();
 
-        // Thread to test the behaviour
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // wait until all the Flush API call has been made
-                while (blockMoreThan2FlushApiCall.get() < 3);
-                assertThat(isDone.get(), Matchers.is(true));
-            }
-        }).start();
+        // wait until all the Flush API call has been made
+        while (blockMoreThan2FlushApiCall.get() < 3);
+        assertThat(isDone.get(), Matchers.is(true));
     }
 
     @After
