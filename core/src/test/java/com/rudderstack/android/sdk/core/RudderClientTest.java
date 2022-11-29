@@ -1,9 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
-import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.app.Application;
 import android.content.Context;
@@ -21,7 +19,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({RudderClient.class, URLUtil.class})
@@ -61,46 +59,29 @@ public class RudderClientTest {
 
     }
 
-    private long lastInvokedAt = 0L;
-    private int numberOfTimesFlushSyncCalled = 0;
-
     @Test
-    public void flush() throws Exception {
-        final int threadCount = 16;
-        final AtomicBoolean isDone = new AtomicBoolean(false);
+    public void testFlushThrottling() throws Exception {
+        final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
 
+        final AtomicInteger flushSyncCalls = new AtomicInteger();
         PowerMockito.when(repository, "flushSync").thenAnswer(new Answer<Void>() {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                assertThat((System.currentTimeMillis() - lastInvokedAt), Matchers.greaterThan(1000L));
-                lastInvokedAt = System.currentTimeMillis();
-                System.out.println("last invoked " + lastInvokedAt);
-                ++numberOfTimesFlushSyncCalled;
-                //we assume, the threads have all started by now
-                // this should be the the last thread or the first thread
-                assertThat(numberOfTimesFlushSyncCalled, Matchers.lessThanOrEqualTo(2));
-
-                Thread.sleep(1000);
-                isDone.set(numberOfTimesFlushSyncCalled == 2);
-
+            public Void answer(InvocationOnMock invocation) throws InterruptedException {
+                int countBeforeSleep = flushSyncCalls.incrementAndGet();
+                System.out.println("System.out.println: " + flushSyncCalls.get());
+                Thread.sleep(500L);
+                assertThat(flushSyncCalls.get(), Matchers.is(countBeforeSleep));
                 return null;
             }
         });
-        final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
 
-        for (int num = 0; num < threadCount; num++) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    System.out.println("Running thread : " + Thread.currentThread().getName() + " \ncalling at: " + System.currentTimeMillis());
-                    client.flush();
-                }
-            }, "t-num-" + num).start();
+        for (int counter = 0; counter < 6; counter++) {
+            client.flush();
+            Thread.sleep(105);
         }
-        //if within 10 secs other thread calls, that will be caught
-        Thread.sleep(9000);
-//        await().atMost(10, SECONDS).untilTrue(isDone);
-        assertThat(isDone.get(), Matchers.is(true));
+        //105millis waiting x 6, whereas flush sync waits everytime for 500millis
+        //flushSyncCalls hence, should be exactly 2
+        assertThat(flushSyncCalls.get(), Matchers.is(2));
     }
 
     @After
