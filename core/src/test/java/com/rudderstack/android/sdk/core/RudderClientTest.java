@@ -2,6 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 
 import android.app.Application;
 import android.content.Context;
@@ -119,6 +120,30 @@ public class RudderClientTest {
         while (blockMoreThan2FlushApiCall.get() < 3);
 
         assertThat(isDone.get(), Matchers.is(true));
+    }
+    @Test
+    public void testFlushThrottling() throws Exception {
+        final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
+
+        final AtomicInteger flushSyncCalls = new AtomicInteger();
+        PowerMockito.when(repository, "flushSync").thenAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws InterruptedException {
+                int countBeforeSleep = flushSyncCalls.incrementAndGet();
+                System.out.println("System.out.println: " + flushSyncCalls.get());
+                Thread.sleep(500L);
+                assertThat(flushSyncCalls.get(), Matchers.is(countBeforeSleep));
+                return null;
+            }
+        });
+
+        for (int counter = 0; counter < 6; counter++) {
+            client.flush();
+            Thread.sleep(105);
+        }
+        //105millis waiting x 6, whereas flush sync waits everytime for 500millis
+        //flushSyncCalls hence, should be exactly 2
+        assertThat(flushSyncCalls.get(), Matchers.is(2));
     }
 
     @After
