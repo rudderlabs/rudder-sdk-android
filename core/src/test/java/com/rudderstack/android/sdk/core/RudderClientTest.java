@@ -61,66 +61,6 @@ public class RudderClientTest {
 
     }
 
-    private int numberOfTimesFlushSyncCalled = 0;
-
-    @Test
-    public void makeEventsToTestThrottlingOfFlushApiCalls() throws Exception {
-        final AtomicBoolean isDone = new AtomicBoolean(false);
-        final AtomicInteger blockMoreThan2FlushApiCall = new AtomicInteger(0);
-
-        PowerMockito.when(repository, "flushSync").thenAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) {
-                ++numberOfTimesFlushSyncCalled;
-                System.out.println("System.out.println: " + numberOfTimesFlushSyncCalled);
-
-                isDone.set(numberOfTimesFlushSyncCalled == 2);
-
-                // block the first flush API call, until unblocked in the third flush API call
-                blockMoreThan2FlushApiCall.addAndGet(1);
-                while (blockMoreThan2FlushApiCall.get() < 1);
-
-                return null;
-            }
-        });
-
-        final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
-        // Making first Flush API call
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Running thread : " + Thread.currentThread().getName());
-                client.flush();
-            }
-        }).start();
-
-        // Making second Flush API call - it'll not be blocked, since Executor service queue list is 1
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Running thread : " + Thread.currentThread().getName());
-                client.flush();
-            }
-        }).start();
-
-        // This flush API call will technically replace the second one (There is no way to verify that directly)
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("Running thread : " + Thread.currentThread().getName());
-                client.flush();
-                // wait until first flush API starts executing
-                while (!(blockMoreThan2FlushApiCall.get() == 1));
-                // unblock the flush API call
-                blockMoreThan2FlushApiCall.addAndGet(1);
-            }
-        }).start();
-
-        // wait until all the Flush API call has been made
-        while (blockMoreThan2FlushApiCall.get() < 3);
-
-        assertThat(isDone.get(), Matchers.is(true));
-    }
     @Test
     public void testFlushThrottling() throws Exception {
         final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
