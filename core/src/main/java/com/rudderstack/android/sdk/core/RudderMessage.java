@@ -14,7 +14,7 @@ import java.util.UUID;
 
 public class RudderMessage {
     @SerializedName("messageId")
-    private String messageId = String.format(Locale.US, "%d-%s", System.currentTimeMillis(), UUID.randomUUID().toString());
+    private String messageId = UUID.randomUUID().toString();
     @SerializedName("channel")
     private String channel = "mobile";
     @SerializedName("context")
