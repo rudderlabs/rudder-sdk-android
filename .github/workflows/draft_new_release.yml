@@ -60,6 +60,7 @@ jobs:
           echo "::set-output name=source_branch_name::$source_branch_name"
           echo "::set-output name=branch_name::$branch_name"
           echo "::set-output name=new_version::$new_version"
+          echo "::set-output name=main_branch::$main_branch"
 
       - name: Update changelog & bump version
         id: finish-release
