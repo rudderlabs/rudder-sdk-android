@@ -1,0 +1,29 @@
+name: Create new hotfix branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      hotfix_name:
+        description: Hotfix branch name
+        required: true
+
+jobs:
+  create-branch:
+    name: Create new branch
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/master-mpx'
+    steps:
+      - name: Set env BRANCH_NAME
+        run: |
+              BRANCH="${{ github.event.pull_request.head.ref }}"
+              if [[ BRANCH == 'master-mpx' || $BRANCH == 'develop-mpx' ]]; then
+                  echo "BRANCH_NAME=hotfix-mpx" >> "$GITHUB_ENV"
+              else
+                  echo "BRANCH_NAME=hotfix" >> "$GITHUB_ENV"
+              fi
+      - name: Create branch
+        uses: peterjgrainger/action-create-branch@v2.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
+          with:
+            branch: '${{ BRANCH_NAME }}/${{ github.event.inputs.hotfix_name }}'

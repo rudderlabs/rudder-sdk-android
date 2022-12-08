@@ -6,9 +6,8 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 1
-        versionName '1.7.1'
         consumerProguardFiles 'proguard-consumer-rules.pro'
+        buildConfigField("String", "VERSION_NAME", "\"${VERSION_NAME}\"")
     }
 
     buildTypes {
@@ -52,11 +51,9 @@ dependencies {
 
 }
 
-ext {
-    PUBLISH_GROUP_ID = 'com.rudderstack.android.sdk'
-    PUBLISH_VERSION = '1.7.1'
-    PUBLISH_ARTIFACT_ID = 'core'
-}
+
 
 //apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"
 
+apply from: rootProject.file('gradle/mvn-publish.gradle')
+apply from: rootProject.file('gradle/codecov.gradle')
