@@ -1,27 +1,14 @@
 name: Release
 
 on:
-  pull_request:
-    branches: [ 'master', 'master-mpx' ]
-    types:
-      - closed
+  release:
+    types: [created]
 jobs:
   release:
     runs-on: ubuntu-latest
     environment: deployment
     steps:
-      - uses: actions/checkout@v2
-      - name: Get tag
-        id: vars
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
-      - name: Verify tag
-        run: |
-          VERSION=$(grep VERSION_NAME gradle.properties | awk -F= '{ print $2 }' | sed "s/-SNAPSHOT//")
-          if [ "${{ steps.vars.outputs.tag }}" != "$VERSION" ]; then {
-            echo "Tag ${{ steps.vars.outputs.tag }} does not match the package version ($VERSION)"
-            exit 1
-          } fi
-
+      - uses: actions/checkout@v3
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: cache gradle dependencies

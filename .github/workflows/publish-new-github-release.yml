@@ -1,9 +1,9 @@
 name: Publish new github release
 
 on:
+  workflow_dispatch:
   pull_request:
-    branches:
-      - master
+    branches: [ 'master', 'master-mpx' ]
     types:
       - closed
 
@@ -30,13 +30,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version: 16
 
       - name: Create Github Release
         id: create_release
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.PAT }}
         run: |
           npx conventional-github-releaser -p angular
