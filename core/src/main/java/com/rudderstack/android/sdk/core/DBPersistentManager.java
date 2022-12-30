@@ -71,11 +71,11 @@ class DBPersistentManager extends SQLiteOpenHelper {
         try {
             Message msg = new Message().obtain();
             msg.obj = messageJson;
-            if (dbInsertionHandlerThread == null) {
-                queue.add(msg);
-                return;
-            }
             synchronized (this) {
+                if (dbInsertionHandlerThread == null) {
+                    queue.add(msg);
+                    return;
+                }
                 dbInsertionHandlerThread.addMessage(msg);
             }
         } catch (Exception e) {
