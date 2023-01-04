@@ -12,6 +12,7 @@ import android.os.Looper;
 import android.os.Message;
 
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -70,11 +71,11 @@ class DBPersistentManager extends SQLiteOpenHelper {
         try {
             Message msg = new Message().obtain();
             msg.obj = messageJson;
-            if (dbInsertionHandlerThread == null) {
-                queue.add(msg);
-                return;
-            }
             synchronized (this) {
+                if (dbInsertionHandlerThread == null) {
+                    queue.add(msg);
+                    return;
+                }
                 dbInsertionHandlerThread.addMessage(msg);
             }
         } catch (Exception e) {
@@ -257,6 +258,10 @@ class DBPersistentManager extends SQLiteOpenHelper {
                         }
                     }
                 } catch (SQLiteDatabaseCorruptException ex) {
+                    RudderLogger.logError(ex);
+                } catch (ConcurrentModificationException ex) {
+                    RudderLogger.logError(ex);
+                } catch (NullPointerException ex) {
                     RudderLogger.logError(ex);
                 }
             }
