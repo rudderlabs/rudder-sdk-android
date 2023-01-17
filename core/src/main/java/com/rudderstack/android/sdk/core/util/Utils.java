@@ -12,6 +12,7 @@ import android.net.ParseException;
 import android.net.Uri;
 import android.os.BadParcelableException;
 import android.os.Build;
+import android.os.Message;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
@@ -150,6 +151,12 @@ public class Utils {
             return false;
         }
         return true;
+    }
+
+    public static Message getMessageObject(String strMessage) {
+        Message msg = Message.obtain();
+        msg.obj = strMessage;
+        return msg;
     }
 
     /**

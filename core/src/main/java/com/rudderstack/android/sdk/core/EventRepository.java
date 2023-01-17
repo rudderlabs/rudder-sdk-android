@@ -27,7 +27,6 @@ import com.rudderstack.android.sdk.core.util.Utils;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -114,8 +113,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousIdHeaderString: %s", this.anonymousIdHeaderString));
 
             // 3. initiate DBPersistentManager for SQLite operations
-            RudderLogger.logDebug("EventRepository: constructor: Initiating DBPersistentManager");
+            RudderLogger.logDebug("EventRepository: constructor: Initiating DBPersistentManager and starting Handler thread");
             this.dbManager = DBPersistentManager.getInstance(_application);
+            this.dbManager.startHandlerThread();
 
             // 4. initiate RudderServerConfigManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");

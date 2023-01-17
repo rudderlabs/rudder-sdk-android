@@ -11,12 +11,15 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 
+import com.rudderstack.android.sdk.core.util.Utils;
+
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
  * Helper class for SQLite operations
@@ -55,6 +58,8 @@ class DBPersistentManager extends SQLiteOpenHelper {
     DBInsertionHandlerThread dbInsertionHandlerThread;
     final Queue<Message> queue = new LinkedList<Message>();
 
+    public static final Object QUEUE_LOCK = new Object();
+
     /*
      * create table initially if not exists
      * */
@@ -65,22 +70,25 @@ class DBPersistentManager extends SQLiteOpenHelper {
     }
 
     /*
-     * save individual messages to DB
+     * Receives message from Repository, and passes it to the Handler thread if it exists, else adds it to a queue for replay
+     * once Handler thread is initialized.
      * */
     void saveEvent(String messageJson) {
-        try {
-            Message msg = new Message().obtain();
-            msg.obj = messageJson;
-            synchronized (this) {
-                if (dbInsertionHandlerThread == null) {
-                    queue.add(msg);
-                    return;
-                }
-                dbInsertionHandlerThread.addMessage(msg);
+        Message msg = Utils.getMessageObject(messageJson);
+        synchronized (DBPersistentManager.QUEUE_LOCK) {
+            if (dbInsertionHandlerThread == null) {
+                queue.add(msg);
+                return;
             }
-        } catch (Exception e) {
-            RudderLogger.logError(e.getCause());
+            addMessageToHandlerThread(msg);
         }
+    }
+
+    /*
+       Passes the input message to the Handler thread.
+     */
+    void addMessageToHandlerThread(Message msg) {
+        dbInsertionHandlerThread.addMessage(msg);
     }
 
     /*
@@ -243,18 +251,23 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     private DBPersistentManager(Application application) {
         super(application, DB_NAME, null, DB_VERSION);
+    }
 
+    /*
+       Starts the Handler thread, which is responsible for storing the messages in its internal queue, and
+       save them to the sqlite db sequentially.
+     */
+    void startHandlerThread() {
         // Need to perform db operations on a separate thread to support strict mode.
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    DBPersistentManager.this.getWritableDatabase();
-                    synchronized (DBPersistentManager.this) {
+                    synchronized (DBPersistentManager.QUEUE_LOCK) {
                         dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", DBPersistentManager.this.getWritableDatabase());
                         dbInsertionHandlerThread.start();
                         for (Message msg : queue) {
-                            dbInsertionHandlerThread.addMessage(msg);
+                            addMessageToHandlerThread(msg);
                         }
                     }
                 } catch (SQLiteDatabaseCorruptException ex) {
