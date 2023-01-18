@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public final class ConsentFilter {
-    private Collection<Interceptor> interceptorList;
+    private final Collection<Interceptor> interceptorList;
 
     public ConsentFilter(Collection<Interceptor> interceptorList) {
         this.interceptorList = interceptorList;
@@ -28,8 +28,18 @@ public final class ConsentFilter {
         interceptorList.clear();
     }
 
-    public void applyConsent(RudderConfig config, RudderMessage message){
+    public RudderMessage applyConsent(RudderConfig config, RudderMessage message){
+        if(interceptorList.isEmpty())
+            return message;
+        return runInterceptorsOnMessage(message, config, interceptorList);
+    }
 
+    private RudderMessage runInterceptorsOnMessage(RudderMessage message, RudderConfig config, Collection<Interceptor> interceptorList) {
+        RudderMessage updatedMessage = message;
+        for (Interceptor interceptor: interceptorList) {
+            updatedMessage = interceptor.intercept(config, updatedMessage);
+        }
+        return updatedMessage;
     }
 
 }

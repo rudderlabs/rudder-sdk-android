@@ -1,12 +1,15 @@
 package com.rudderstack.android.sdk.core.consent;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 import com.rudderstack.android.sdk.core.RudderConfig;
 import com.rudderstack.android.sdk.core.RudderMessage;
 import com.rudderstack.android.sdk.core.RudderMessageBuilder;
 
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -18,12 +21,16 @@ public class ConsentFilterTest {
     private List<Interceptor> interceptorTestList;
     private ConsentFilter consentFilter;
 
-    private final Interceptor voidInterceptor = (config, rudderMessage) -> {};
+    private final Interceptor voidInterceptor = (config, rudderMessage) -> rudderMessage;
 
     @Before
-    public void setup(){
+    public void setup() {
         interceptorTestList = new LinkedList<>();
         consentFilter = new ConsentFilter(interceptorTestList);
+    }
+    @After
+    public void breakdown(){
+        interceptorTestList.clear();
     }
 
     @Test
@@ -62,12 +69,43 @@ public class ConsentFilterTest {
 
     }
 
+    @Test
+    public void testApplyConsentWithEmptyInterceptorList(){
+        RudderConfig config = new RudderConfig.Builder().build();
+        RudderMessage rudderMessage = new RudderMessageBuilder().setUserId("u").build();
+        RudderMessage updatedMessage = consentFilter.applyConsent(config, rudderMessage);
+
+        assertThat(updatedMessage, Matchers.is(rudderMessage));
+        assertThat(updatedMessage, Matchers.hasProperty("userId", is("u")));
+    }
 
     @Test
     public void applyConsent() {
-        Interceptor testInterceptor1 = (config, rudderMessage) -> {
-//            rudderMessage.getIntegrations();
-        };
+        Interceptor testInterceptor1 = (config, rudderMessage) -> new RudderMessageBuilder()
+                .setUserId("u-1").build();
+        interceptorTestList.add(testInterceptor1);
+        RudderConfig config = new RudderConfig.Builder().build();
+        RudderMessage rudderMessage = new RudderMessageBuilder().setUserId("u").build();
+        RudderMessage updatedMessage = consentFilter.applyConsent(config, rudderMessage);
+
+        assertThat(updatedMessage, not(Matchers.is(rudderMessage)));
+        assertThat(updatedMessage, Matchers.hasProperty("userId", is("u-1")));
+
+        Interceptor testInterceptor2 = (config2, rudderMessage2) -> new RudderMessageBuilder()
+                .setUserId(rudderMessage2.getUserId()+"-2").build();
+        interceptorTestList.add(testInterceptor2);
+
+        updatedMessage = consentFilter.applyConsent(config, rudderMessage);
+
+        assertThat(updatedMessage, not(Matchers.is(rudderMessage)));
+        assertThat(updatedMessage, Matchers.hasProperty("userId", is("u-1-2")));
+
+        interceptorTestList.remove(testInterceptor1);
+        updatedMessage = consentFilter.applyConsent(config, rudderMessage);
+
+        assertThat(updatedMessage, not(Matchers.is(rudderMessage)));
+        assertThat(updatedMessage, Matchers.hasProperty("userId", is("u-2")));
+
     }
 
 }

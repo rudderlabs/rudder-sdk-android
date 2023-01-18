@@ -6,5 +6,5 @@ import com.rudderstack.android.sdk.core.RudderMessage;
 
 @FunctionalInterface
 public interface Interceptor {
-    void intercept(RudderConfig config, RudderMessage rudderMessage);
+    RudderMessage intercept(RudderConfig config, RudderMessage rudderMessage);
 }

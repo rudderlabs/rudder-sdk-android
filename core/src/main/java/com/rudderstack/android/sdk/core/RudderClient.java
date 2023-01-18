@@ -7,6 +7,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.rudderstack.android.sdk.core.consent.ConsentFilter;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Map;
@@ -32,6 +33,10 @@ public class RudderClient {
     private static String _deviceToken;
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
+
+    private @Nullable
+    ConsentFilter consentFilter = null;
+    private RudderConfig config;
 
     /*
      * private constructor
@@ -143,6 +148,7 @@ public class RudderClient {
 
             // initiate RudderClient instance
             instance = new RudderClient();
+            instance.config = config;
 
             // initiate EventRepository class
             if (application != null) {
@@ -211,9 +217,8 @@ public class RudderClient {
             return;
         }
         message.setType(MessageType.TRACK);
-        if (repository != null) {
-            repository.dump(message);
-        }
+        processMessage(message);
+
     }
 
     /**
@@ -289,9 +294,8 @@ public class RudderClient {
             return;
         }
         message.setType(MessageType.SCREEN);
-        if (repository != null) {
-            repository.dump(message);
-        }
+        processMessage(message);
+
     }
 
     /**
@@ -376,10 +380,8 @@ public class RudderClient {
             return;
         }
         message.setType(MessageType.IDENTIFY);
-        // dump to repository
-        if (repository != null) {
-            repository.dump(message);
-        }
+        processMessage(message);
+
     }
 
     /**
@@ -490,9 +492,8 @@ public class RudderClient {
             return;
         }
         message.setType(MessageType.ALIAS);
-        if (repository != null) {
-            repository.dump(message);
-        }
+        processMessage(message);
+
     }
 
     /**
@@ -553,6 +554,7 @@ public class RudderClient {
      * @param builder RudderMessageBuilder
      * @deprecated Will be removed soon
      */
+    @Deprecated
     public void group(@NonNull RudderMessageBuilder builder) {
         if (getOptOutStatus()) {
             return;
@@ -566,11 +568,33 @@ public class RudderClient {
      * @param message RudderMessage
      * @deprecated Will be removed soon
      */
+    @Deprecated
     public void group(@NonNull RudderMessage message) {
         if (getOptOutStatus()) {
             return;
         }
         message.setType(MessageType.GROUP);
+        processMessage(message);
+    }
+
+    private void processMessage(@NonNull RudderMessage message) {
+        RudderMessage updatedMessage = updateMessageWithConsentedDestinations(message);
+        dumpMessage(updatedMessage);
+    }
+
+    private RudderMessage updateMessageWithConsentedDestinations(RudderMessage message) {
+        if (consentFilter == null) {
+            return message;
+        }
+        return applyConsentFiltersToMessage(message, consentFilter);
+    }
+
+    private @NonNull
+    RudderMessage applyConsentFiltersToMessage(@NonNull RudderMessage rudderMessage, @NonNull ConsentFilter consentFilter) {
+        return consentFilter.applyConsent(config, rudderMessage);
+    }
+
+    private void dumpMessage(@NonNull RudderMessage message) {
         if (repository != null) {
             repository.dump(message);
         }
@@ -823,6 +847,16 @@ public class RudderClient {
         return defaultOptions;
     }
 
+    @Nullable
+    public ConsentFilter getConsentFilter() {
+        return consentFilter;
+    }
+
+    public void setConsentFilter(@Nullable ConsentFilter consentFilter) {
+        this.consentFilter = consentFilter;
+    }
+
+
     /**
      * RudderClient.Callback for getting callback when native SDK integration is ready
      */
@@ -903,7 +937,6 @@ public class RudderClient {
             this.writeKey = writeKey;
         }
 
-        private boolean trackLifecycleEvents = false;
 
         /**
          * @return get your builder back
@@ -916,7 +949,6 @@ public class RudderClient {
             return this;
         }
 
-        private boolean recordScreenViews = false;
 
         /**
          * @return get your builder back

@@ -2,12 +2,16 @@ package com.rudderstack.android.sdk.core;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.app.Application;
 import android.content.Context;
 import android.webkit.URLUtil;
+
+import com.rudderstack.android.sdk.core.consent.ConsentFilter;
+import com.rudderstack.android.sdk.core.consent.Interceptor;
 
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -106,5 +110,21 @@ public class RudderClientTest {
     @After
     public void clearMocks() {
         Mockito.framework().clearInlineMocks();
+    }
+
+    @Test
+    public void consentFilterTest() throws Exception {
+        EventRepository spyRepo = Mockito.spy(repository);
+        Mockito.doNothing().when(spyRepo).dump(any(RudderMessage.class));
+        PowerMockito.whenNew(EventRepository.class).withAnyArguments().thenReturn(spyRepo);
+
+        final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
+        final RudderMessage interceptedDummyMessage = new RudderMessageBuilder().setUserId("c-1").build();
+        ConsentFilter consentFilter = new ConsentFilter();
+        client.setConsentFilter(consentFilter);
+        consentFilter.addInterceptor((config, rudderMessage) -> interceptedDummyMessage);
+
+        client.track("placeholder");
+        Mockito.verify(spyRepo).dump(interceptedDummyMessage);
     }
 }
