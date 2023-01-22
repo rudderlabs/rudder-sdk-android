@@ -16,9 +16,11 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.rudderstack.android.sdk.core.consent.ConsentFilter;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
@@ -27,7 +29,6 @@ import com.rudderstack.android.sdk.core.util.Utils;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -58,6 +59,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
 
     private int noOfActivities;
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
+            .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
+            .create();
 
 
     /*
@@ -154,6 +159,12 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             RudderLogger.logError(ex.getCause());
         }
     }
+    //used for testing purpose
+    @VisibleForTesting
+    EventRepository(){
+        //using this constructor requires mocking of all objects that are initialised in
+        //proper constructor
+    }
 
     private void initiateSDK() {
         new Thread(new Runnable() {
@@ -224,7 +235,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                 .putValue("build", currentBuild)
                 ).build();
         message.setType(MessageType.TRACK);
-        dump(message);
+        processMessage(message);
     }
 
     private void sendApplicationUpdated(int previousBuild, int currentBuild, String previousVersion, String currentVersion) {
@@ -244,7 +255,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                                 .putValue("build", currentBuild)
                 ).build();
         message.setType(MessageType.TRACK);
-        dump(message);
+        processMessage(message);
     }
 
     private void checkApplicationUpdateStatus(Application application) {
@@ -452,12 +463,31 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     /*
      * generic method for dumping all the events
      * */
-    void dump(@NonNull RudderMessage message) {
+    void processMessage(@NonNull RudderMessage message) {
         if (!isSDKEnabled) {
             return;
         }
-
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: eventName: %s", message.getEventName()));
+
+        applyRudderOptionsToMessageIntegrations(message);
+        RudderMessage updatedMessage = updateMessageWithConsentedDestinations(message);
+        applySessionTracking(updatedMessage, config, userSession);
+
+        String eventJson = gson.toJson(updatedMessage);
+        makeFactoryDump(updatedMessage, false);
+        RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
+        if (isMessageJsonExceedingMaxSize(eventJson)) {
+            RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
+            return;
+        }
+        dbManager.saveEvent(eventJson);
+    }
+
+    private boolean isMessageJsonExceedingMaxSize(String eventJson) {
+        return Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE;
+    }
+    @VisibleForTesting
+    void applyRudderOptionsToMessageIntegrations(RudderMessage message){
         // if no integrations were set in the RudderOption object passed in that particular event
         // we would fall back to check for the integrations in the RudderOption object passed while initializing the sdk
         if (message.getIntegrations().size() == 0) {
@@ -473,7 +503,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (!message.getIntegrations().containsKey("All")) {
             message.setIntegrations(prepareIntegrations());
         }
+    }
 
+    @VisibleForTesting
+    void applySessionTracking(RudderMessage message, RudderConfig config, RudderUserSession userSession){
         // Session Tracking
         if (userSession.getSessionId() != null) {
             message.setSession(userSession);
@@ -481,19 +514,6 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
             userSession.updateLastEventTimeStamp();
         }
-
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
-                .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
-                .create();
-        String eventJson = gson.toJson(message);
-        makeFactoryDump(message, false);
-        RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
-        if (Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE) {
-            RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
-            return;
-        }
-        dbManager.saveEvent(eventJson);
     }
 
     private void makeFactoryDump(RudderMessage message, boolean fromHistory) {
@@ -635,7 +655,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             ScreenPropertyBuilder screenPropertyBuilder = new ScreenPropertyBuilder().setScreenName(activity.getLocalClassName()).isAtomatic(true);
             RudderMessage screenMessage = new RudderMessageBuilder().setEventName(activity.getLocalClassName()).setProperty(screenPropertyBuilder.build()).build();
             screenMessage.setType(MessageType.SCREEN);
-            this.dump(screenMessage);
+            this.processMessage(screenMessage);
         }
         if (this.config.isTrackLifecycleEvents()) {
             noOfActivities += 1;
@@ -658,7 +678,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         .setProperty(Utils.trackDeepLink(activity, isFirstLaunch, preferenceManager.getVersionName()))
                         .build();
                 trackMessage.setType(MessageType.TRACK);
-                this.dump(trackMessage);
+                this.processMessage(trackMessage);
             }
         }
     }
@@ -685,7 +705,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
                 RudderMessage message = new RudderMessageBuilder().setEventName("Application Backgrounded").build();
                 message.setType(MessageType.TRACK);
-                this.dump(message);
+                this.processMessage(message);
             }
         }
     }
@@ -720,4 +740,30 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         }
         userSession.clearSession();
     }
+
+    private RudderMessage updateMessageWithConsentedDestinations(RudderMessage message) {
+        RudderClient rudderClient = RudderClient.getInstance();
+        if(rudderClient == null)
+            return message;
+        ConsentFilter consentFilter = rudderClient.getConsentFilter();
+        if (consentFilter == null) {
+            return message;
+        }
+        return applyConsentFiltersToMessage(message, consentFilter, configManager.getConfig());
+    }
+
+    @VisibleForTesting
+    @NonNull
+    RudderMessage applyConsentFiltersToMessage(@NonNull RudderMessage rudderMessage,
+                                               @NonNull ConsentFilter consentFilter,
+                                               RudderServerConfig serverConfig) {
+        if(serverConfig == null){
+            return rudderMessage;
+        }
+        RudderServerConfigSource sourceConfig = serverConfig.source;
+        if(sourceConfig == null)
+            return rudderMessage;
+        return consentFilter.applyConsent(sourceConfig, rudderMessage);
+    }
+
 }

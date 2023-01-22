@@ -1,11 +1,20 @@
 package com.rudderstack.android.sdk.core;
 
+import androidx.annotation.Nullable;
+
 import java.util.Map;
 
 /*
  * builder for RudderElement (alias RudderEvent)
  * */
 public class RudderMessageBuilder {
+    private RudderMessage parentMessage;
+
+    public static RudderMessageBuilder from(RudderMessage message){
+        RudderMessageBuilder builder =  new RudderMessageBuilder();
+        builder.parentMessage = message;
+        return builder;
+    }
 
     private String groupId = null;
 
@@ -82,7 +91,7 @@ public class RudderMessageBuilder {
     }
 
     public RudderMessage build() {
-        RudderMessage message = new RudderMessage();
+        RudderMessage message = parentMessage== null? new RudderMessage() : new RudderMessage(parentMessage);
         if (this.userId != null) {
             message.setUserId(this.userId);
         }

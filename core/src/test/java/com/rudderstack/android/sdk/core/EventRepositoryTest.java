@@ -2,15 +2,20 @@ package com.rudderstack.android.sdk.core;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.text.TextUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.rudderstack.android.sdk.core.consent.ConsentFilter;
+import com.rudderstack.android.sdk.core.consent.ConsentInterceptor;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import org.hamcrest.Matchers;
@@ -18,7 +23,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -26,8 +30,9 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -215,6 +220,79 @@ public class EventRepositoryTest {
         });
     }
 
+    @Test
+    public void applyRudderOptionsToMessageIntegrations() {
+        EventRepository repo = new EventRepository();
+
+        RudderOption options = new RudderOption();
+        options.putIntegration("Dummy-Integration-1", false);
+        options.putIntegration("Dummy-Integration-2", false);
+
+        RudderMessage message = new RudderMessageBuilder()
+                .setUserId("u-id")
+                .setRudderOption(options)
+                .build();
+        repo.applyRudderOptionsToMessageIntegrations(message);
+
+        assertThat("All: true should be added", message.getIntegrations(),
+                allOf(hasEntry("Dummy-Integration-1", false),
+                        hasEntry("Dummy-Integration-2", false),
+                        hasEntry("All", true)
+                ));
+    }
+
+    @Test
+    public void applySessionTracking() {
+        RudderUserSession userSession = Mockito.mock(RudderUserSession.class);
+        Mockito.doReturn(123L).when(userSession).getSessionId();
+
+        RudderConfig mockConfig = Mockito.mock(RudderConfig.class);
+        Mockito.doReturn(false).when(mockConfig).isTrackLifecycleEvents();
+//        Mockito.doReturn()
+        EventRepository repo = new EventRepository();
+        RudderMessage message = new RudderMessageBuilder().setUserId("u-1").build();
+        RudderMessage spyMessage = Mockito.spy(message);
+        Mockito.doNothing().when(spyMessage).setSession(userSession);
+
+        repo.applySessionTracking(spyMessage, mockConfig, userSession);
+        Mockito.verify(spyMessage).setSession(userSession);
+    }
+
+    @Test
+    public void updateMessageWithConsentedDestinations() throws NoSuchFieldException, IllegalAccessException {
+        RudderOption options = new RudderOption();
+        options.putIntegration("Dummy-Integration-1", true);
+        options.putIntegration("Dummy-Integration-2", true);
+        options.putIntegration("Dummy-Integration-3", true);
+
+        RudderOption consentedOptions = new RudderOption();
+        consentedOptions.putIntegration("Dummy-Integration-2", false);
+        consentedOptions.putIntegration("Dummy-Integration-3", false);
+        consentedOptions.putIntegration("Dummy-Integration-4", false);
+
+        ConsentInterceptor testConsentInterceptor = (rudderServerConfigSource,
+                                                     rudderMessage) ->
+                RudderMessageBuilder.from(rudderMessage)
+                .setRudderOption(consentedOptions)
+                        .build();
+        ConsentFilter testConsentFilter= new ConsentFilter(Collections.singletonList(testConsentInterceptor));
+        RudderServerConfig serverConfig = new RudderServerConfig();
+        serverConfig.source = new RudderServerConfigSource();
+        RudderMessage testMessage = new RudderMessageBuilder().setUserId("u-1")
+                .setRudderOption(options)
+                .build();
+
+        EventRepository repo = new EventRepository();
+        RudderMessage updatedMsg = repo.applyConsentFiltersToMessage(testMessage, testConsentFilter, serverConfig);
+
+        assertThat(updatedMsg, not(is(testMessage)));
+        assertThat(updatedMsg.getUserId(), is(testMessage.getUserId()));
+
+        assertThat(MessageReflectionUtils.getMessageId(updatedMsg), is(MessageReflectionUtils.getMessageId(testMessage)));
+        assertThat(MessageReflectionUtils.getTimestamp(updatedMsg), is(MessageReflectionUtils.getTimestamp(testMessage)));
+
+    }
+
     /*public void partialMockTest() throws Exception {
         assertThat(MockSample.returnNotMockIfNotMocked() , Matchers.is("noMock"));
         PowerMockito.spy(MockSample.class);
@@ -247,4 +325,6 @@ public class EventRepositoryTest {
 
 //        assertThat(StaticUtils.name()).isEqualTo("Baeldung");
     }*/
+
+
 }

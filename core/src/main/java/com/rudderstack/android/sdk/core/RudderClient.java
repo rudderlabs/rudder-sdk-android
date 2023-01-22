@@ -36,7 +36,6 @@ public class RudderClient {
 
     private @Nullable
     ConsentFilter consentFilter = null;
-    private RudderConfig config;
 
     /*
      * private constructor
@@ -148,7 +147,6 @@ public class RudderClient {
 
             // initiate RudderClient instance
             instance = new RudderClient();
-            instance.config = config;
 
             // initiate EventRepository class
             if (application != null) {
@@ -217,7 +215,7 @@ public class RudderClient {
             return;
         }
         message.setType(MessageType.TRACK);
-        processMessage(message);
+        dumpMessage(message);
 
     }
 
@@ -294,7 +292,7 @@ public class RudderClient {
             return;
         }
         message.setType(MessageType.SCREEN);
-        processMessage(message);
+        dumpMessage(message);
 
     }
 
@@ -380,7 +378,7 @@ public class RudderClient {
             return;
         }
         message.setType(MessageType.IDENTIFY);
-        processMessage(message);
+        dumpMessage(message);
 
     }
 
@@ -492,7 +490,7 @@ public class RudderClient {
             return;
         }
         message.setType(MessageType.ALIAS);
-        processMessage(message);
+        dumpMessage(message);
 
     }
 
@@ -574,29 +572,14 @@ public class RudderClient {
             return;
         }
         message.setType(MessageType.GROUP);
-        processMessage(message);
+        dumpMessage(message);
     }
 
-    private void processMessage(@NonNull RudderMessage message) {
-        RudderMessage updatedMessage = updateMessageWithConsentedDestinations(message);
-        dumpMessage(updatedMessage);
-    }
-
-    private RudderMessage updateMessageWithConsentedDestinations(RudderMessage message) {
-        if (consentFilter == null) {
-            return message;
-        }
-        return applyConsentFiltersToMessage(message, consentFilter);
-    }
-
-    private @NonNull
-    RudderMessage applyConsentFiltersToMessage(@NonNull RudderMessage rudderMessage, @NonNull ConsentFilter consentFilter) {
-        return consentFilter.applyConsent(config, rudderMessage);
-    }
+    
 
     private void dumpMessage(@NonNull RudderMessage message) {
         if (repository != null) {
-            repository.dump(message);
+            repository.processMessage(message);
         }
     }
 
@@ -770,12 +753,7 @@ public class RudderClient {
             return;
         }
         if (repository != null) {
-            flushExecutorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    repository.flushSync();
-                }
-            });
+            flushExecutorService.submit(() -> repository.flushSync());
 
         }
     }

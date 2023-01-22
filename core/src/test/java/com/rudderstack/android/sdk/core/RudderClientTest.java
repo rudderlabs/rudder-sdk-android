@@ -4,14 +4,12 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.app.Application;
 import android.content.Context;
 import android.webkit.URLUtil;
 
 import com.rudderstack.android.sdk.core.consent.ConsentFilter;
-import com.rudderstack.android.sdk.core.consent.Interceptor;
 
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -22,6 +20,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.api.mockito.verification.PrivateMethodVerification;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -114,17 +113,20 @@ public class RudderClientTest {
 
     @Test
     public void consentFilterTest() throws Exception {
-        EventRepository spyRepo = Mockito.spy(repository);
-        Mockito.doNothing().when(spyRepo).dump(any(RudderMessage.class));
+        EventRepository spyRepo = PowerMockito.spy(repository);
+        Mockito.doNothing().when(spyRepo).processMessage(any(RudderMessage.class));
         PowerMockito.whenNew(EventRepository.class).withAnyArguments().thenReturn(spyRepo);
 
         final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
-        final RudderMessage interceptedDummyMessage = new RudderMessageBuilder().setUserId("c-1").build();
-        ConsentFilter consentFilter = new ConsentFilter();
-        client.setConsentFilter(consentFilter);
-        consentFilter.addInterceptor((config, rudderMessage) -> interceptedDummyMessage);
-
+//        final RudderMessage interceptedDummyMessage = new RudderMessageBuilder().setUserId("c-1").build();
+//        ConsentFilter consentFilter = new ConsentFilter();
+//        client.setConsentFilter(consentFilter);
+//        consentFilter.addInterceptor((config, rudderMessage) -> interceptedDummyMessage);
+        RudderMessage rudderMessage = new RudderMessageBuilder().setUserId("c-1").build();
+//        PrivateMethodVerification privateMethodVerification = PowerMockito.verifyPrivate(spyRepo);
         client.track("placeholder");
-        Mockito.verify(spyRepo).dump(interceptedDummyMessage);
+//        privateMethodVerification.invoke("makeFactoryDump", interceptedDummyMessage, false);
+        //we only check if messages reach event repository.processMessage
+        Mockito.verify(spyRepo).processMessage(rudderMessage);
     }
 }
