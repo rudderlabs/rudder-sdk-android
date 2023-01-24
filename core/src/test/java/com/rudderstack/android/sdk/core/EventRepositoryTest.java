@@ -19,6 +19,7 @@ import com.rudderstack.android.sdk.core.consent.ConsentInterceptor;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,12 +61,11 @@ public class EventRepositoryTest {
         PowerMockito.spy(Utils.class);
         PowerMockito.when(Utils.class, "getTimeStamp"
                 )
-                .thenAnswer(new Answer<String>() {
-                    @Override
-                    public String answer(InvocationOnMock invocation) throws Throwable {
-                        return "2022-03-14T06:46:41.365Z";
-                    }
-                });
+                .thenAnswer((Answer<String>) invocation -> "2022-03-14T06:46:41.365Z");
+    }
+    @After
+    public void clearMocks() {
+        Mockito.framework().clearInlineMocks();
     }
 
     /**
@@ -243,16 +243,16 @@ public class EventRepositoryTest {
 
     @Test
     public void applySessionTracking() {
-        RudderUserSession userSession = Mockito.mock(RudderUserSession.class);
-        Mockito.doReturn(123L).when(userSession).getSessionId();
+        RudderUserSession userSession = PowerMockito.mock(RudderUserSession.class);
+        PowerMockito.doReturn(123L).when(userSession).getSessionId();
 
-        RudderConfig mockConfig = Mockito.mock(RudderConfig.class);
-        Mockito.doReturn(false).when(mockConfig).isTrackLifecycleEvents();
+        RudderConfig mockConfig = PowerMockito.mock(RudderConfig.class);
+        PowerMockito.doReturn(false).when(mockConfig).isTrackLifecycleEvents();
 //        Mockito.doReturn()
         EventRepository repo = new EventRepository();
         RudderMessage message = new RudderMessageBuilder().setUserId("u-1").build();
-        RudderMessage spyMessage = Mockito.spy(message);
-        Mockito.doNothing().when(spyMessage).setSession(userSession);
+        RudderMessage spyMessage = PowerMockito.spy(message);
+        PowerMockito.doNothing().when(spyMessage).setSession(userSession);
 
         repo.applySessionTracking(spyMessage, mockConfig, userSession);
         Mockito.verify(spyMessage).setSession(userSession);
@@ -293,38 +293,7 @@ public class EventRepositoryTest {
 
     }
 
-    /*public void partialMockTest() throws Exception {
-        assertThat(MockSample.returnNotMockIfNotMocked() , Matchers.is("noMock"));
-        PowerMockito.spy(MockSample.class);
-        PowerMockito.when(MockSample.class, "returnNotMockIfNotMocked").thenAnswer(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                return "mocked";
-            }
-        });
-        assertThat(MockSample.returnNotMockIfNotMocked() , Matchers.is("mocked"));
-        assertThat(MockSample.return2IfNotMocked(), Matchers.is(2));
 
-        *//*try (MockedStatic<MockSample> utilities = Mockito.mockStatic(MockSample.class)) {
-            utilities.when(new MockedStatic.Verification() {
-                @Override
-                public void apply() throws Throwable {
-                    MockSample.return2IfNotMocked();
-                }
-            }).thenReturn(*//**//*f.call(MockSample.class,new Object() , new Object[]{})*//**//*2);
-            utilities.when(new MockedStatic.Verification() {
-                @Override
-                public void apply() throws Throwable {
-                    MockSample.returnNotMockIfNotMocked();
-                }
-            }).thenReturn("mocked");
-            assertThat(MockSample.returnNotMockIfNotMocked() , Matchers.is("mocked"));
-            assertThat(MockSample.return2IfNotMocked(), Matchers.is(2));
-
-        }*//*
-
-//        assertThat(StaticUtils.name()).isEqualTo("Baeldung");
-    }*/
 
 
 }

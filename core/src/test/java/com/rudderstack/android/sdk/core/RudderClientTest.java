@@ -51,12 +51,7 @@ public class RudderClientTest {
             }
         });
         PowerMockito.spy(RudderClient.class);
-        PowerMockito.when(RudderClient.class, "getOptOutStatus").thenAnswer(new Answer<Boolean>() {
-            @Override
-            public Boolean answer(InvocationOnMock invocation) throws Throwable {
-                return false;
-            }
-        });
+        PowerMockito.when(RudderClient.class, "getOptOutStatus").thenAnswer((Answer<Boolean>) invocation -> false);
         config = PowerMockito.mock(RudderConfig.class);
         PowerMockito.whenNew(RudderConfig.class).withNoArguments().thenReturn(config);
         repository = PowerMockito.mock(EventRepository.class);
@@ -72,22 +67,19 @@ public class RudderClientTest {
         final int threadCount = 16;
         final AtomicBoolean isDone = new AtomicBoolean(false);
 
-        PowerMockito.when(repository, "flushSync").thenAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                assertThat((System.currentTimeMillis() - lastInvokedAt), Matchers.greaterThan(1000L));
-                lastInvokedAt = System.currentTimeMillis();
-                System.out.println("last invoked " + lastInvokedAt);
-                ++numberOfTimesFlushSyncCalled;
-                //we assume, the threads have all started by now
-                // this should be the the last thread or the first thread
-                assertThat(numberOfTimesFlushSyncCalled, Matchers.lessThanOrEqualTo(2));
+        PowerMockito.when(repository, "flushSync").thenAnswer((Answer<Void>) invocation -> {
+            assertThat((System.currentTimeMillis() - lastInvokedAt), Matchers.greaterThan(1000L));
+            lastInvokedAt = System.currentTimeMillis();
+            System.out.println("last invoked " + lastInvokedAt);
+            ++numberOfTimesFlushSyncCalled;
+            //we assume, the threads have all started by now
+            // this should be the the last thread or the first thread
+            assertThat(numberOfTimesFlushSyncCalled, Matchers.lessThanOrEqualTo(2));
 
-                Thread.sleep(1000);
-                isDone.set(numberOfTimesFlushSyncCalled == 2);
+            Thread.sleep(1000);
+            isDone.set(numberOfTimesFlushSyncCalled == 2);
 
-                return null;
-            }
+            return null;
         });
         final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
 
@@ -108,25 +100,18 @@ public class RudderClientTest {
 
     @After
     public void clearMocks() {
+        RudderClient.getInstance().shutdown();
+        RudderClient.setSingletonInstance(null);
         Mockito.framework().clearInlineMocks();
     }
 
     @Test
     public void consentFilterTest() throws Exception {
-        EventRepository spyRepo = PowerMockito.spy(repository);
-        Mockito.doNothing().when(spyRepo).processMessage(any(RudderMessage.class));
-        PowerMockito.whenNew(EventRepository.class).withAnyArguments().thenReturn(spyRepo);
 
         final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
-//        final RudderMessage interceptedDummyMessage = new RudderMessageBuilder().setUserId("c-1").build();
-//        ConsentFilter consentFilter = new ConsentFilter();
-//        client.setConsentFilter(consentFilter);
-//        consentFilter.addInterceptor((config, rudderMessage) -> interceptedDummyMessage);
-        RudderMessage rudderMessage = new RudderMessageBuilder().setUserId("c-1").build();
-//        PrivateMethodVerification privateMethodVerification = PowerMockito.verifyPrivate(spyRepo);
-        client.track("placeholder");
-//        privateMethodVerification.invoke("makeFactoryDump", interceptedDummyMessage, false);
+        RudderMessage rudderMessage = new RudderMessageBuilder().setEventName("e-1").setUserId("c-1").build();
+        client.track(rudderMessage);
         //we only check if messages reach event repository.processMessage
-        Mockito.verify(spyRepo).processMessage(rudderMessage);
+        Mockito.verify(repository).processMessage(rudderMessage);
     }
 }

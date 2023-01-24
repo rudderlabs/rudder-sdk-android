@@ -258,18 +258,6 @@ public class RudderMessage {
         return this.integrations;
     }
 
-    /*public RudderMessageBuilder newBuilder(){
-        return new RudderMessageBuilder()
-                .setEventName(this.getEventName())
-                .setGroupId(this.getGroupId())
-                .setProperty(this.getProperties())
-                .setGroupTraits(this.traits)
-                .setPreviousId(this.previousId)
-                .setRudderOption(this.getRudderOption())
-                .setUserId(this.getUserId())
-                .setUserProperty(this.getUserProperties())
-                ;
-    }*/
 
     void setSession(RudderUserSession userSession) {
         this.context.setSession(userSession);
