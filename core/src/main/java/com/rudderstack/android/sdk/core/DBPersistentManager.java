@@ -74,7 +74,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
      * once Handler thread is initialized.
      * */
     void saveEvent(String messageJson) {
-        Message msg = Utils.getMessageObject(messageJson);
+        Message msg = Utils.deserializeMessage(messageJson);
         synchronized (DBPersistentManager.QUEUE_LOCK) {
             if (dbInsertionHandlerThread == null) {
                 queue.add(msg);

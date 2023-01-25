@@ -153,7 +153,7 @@ public class Utils {
         return true;
     }
 
-    public static Message getMessageObject(String strMessage) {
+    public static Message deserializeMessage(String strMessage) {
         Message msg = Message.obtain();
         msg.obj = strMessage;
         return msg;
