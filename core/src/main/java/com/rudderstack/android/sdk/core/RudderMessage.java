@@ -239,7 +239,7 @@ public class RudderMessage {
 
     void updateContext() {
         this.context = RudderElementCache.getCachedContext();
-        if (this.customContexts != null)
+        if (this.customContexts != null && this.context != null)
             this.context.setCustomContexts(this.customContexts);
     }
 
