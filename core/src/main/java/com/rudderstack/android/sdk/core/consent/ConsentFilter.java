@@ -11,33 +11,45 @@ public final class ConsentFilter {
     private final Collection<ConsentInterceptor> interceptorList;
 
     public ConsentFilter(Collection<ConsentInterceptor> interceptorList) {
-        this.interceptorList = interceptorList;
+        synchronized (this) {
+            this.interceptorList = interceptorList;
+        }
     }
 
     public ConsentFilter() {
-        this(new LinkedList<ConsentInterceptor>());
+        this(new LinkedList<>());
     }
 
     public void addInterceptor(ConsentInterceptor interceptor){
-        interceptorList.add(interceptor);
+        synchronized (this) {
+            interceptorList.add(interceptor);
+        }
     }
     public void removeInterceptor(ConsentInterceptor interceptor){
-        interceptorList.remove(interceptor);
+        synchronized (this) {
+            interceptorList.remove(interceptor);
+        }
     }
     public void removeAllInterceptors(){
-        interceptorList.clear();
+        synchronized (this) {
+            interceptorList.clear();
+        }
     }
 
     public RudderMessage applyConsent(RudderServerConfigSource config, RudderMessage message){
-        if(interceptorList.isEmpty())
-            return message;
+        synchronized (this) {
+            if (interceptorList.isEmpty())
+                return message;
+        }
         return runInterceptorsOnMessage(message, config, interceptorList);
     }
 
     private RudderMessage runInterceptorsOnMessage(RudderMessage message, RudderServerConfigSource config, Collection<ConsentInterceptor> interceptorList) {
         RudderMessage updatedMessage = message;
-        for (ConsentInterceptor interceptor: interceptorList) {
-            updatedMessage = interceptor.intercept(config, updatedMessage);
+        synchronized (this) {
+            for (ConsentInterceptor interceptor : interceptorList) {
+                updatedMessage = interceptor.intercept(config, updatedMessage);
+            }
         }
         return updatedMessage;
     }
