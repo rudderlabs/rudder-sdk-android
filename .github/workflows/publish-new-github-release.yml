@@ -1,9 +1,9 @@
 name: Publish new github release
 
 on:
+  workflow_dispatch:
   pull_request:
-    branches:
-      - master
+    branches: [ 'master', 'master-mpx' ]
     types:
       - closed
 
@@ -11,7 +11,7 @@ jobs:
   release:
     name: Publish new release
     runs-on: ubuntu-latest
-    if: (startsWith(github.event.pull_request.head.ref, 'release/') ||(startsWith(github.event.pull_request.head.ref, 'release-mpx/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release/')) || startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/')) && github.event.pull_request.merged == true # only merged pull requests must trigger this job
+    if: startsWith(github.ref, 'refs/heads/master') || ((startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'release-mpx/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/')) && github.event.pull_request.merged == true) # only merged pull requests must trigger this job
     steps:
       - name: Extract version from branch name (for release branches)
         id: extract-version
@@ -30,13 +30,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version: 16
 
       - name: Create Github Release
         id: create_release
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
           CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.PAT }}
         run: |
           npx conventional-github-releaser -p angular
@@ -68,7 +67,7 @@ jobs:
         with:
           branches: 'hotfix-release/*'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
 
       - name: Delete release branch
         uses: koj-co/delete-merged-action@master
@@ -76,14 +75,14 @@ jobs:
         with:
           branches: 'release/*'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
       - name: Delete hotfix release branch -mpx
         uses: koj-co/delete-merged-action@master
         if: startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/')
         with:
           branches: 'hotfix-release/*'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
 
       - name: Delete release branch -mpx
         uses: koj-co/delete-merged-action@master
@@ -91,4 +90,4 @@ jobs:
         with:
           branches: 'release/*'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}

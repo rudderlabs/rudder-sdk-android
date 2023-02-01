@@ -1,27 +1,15 @@
 name: Release
 
 on:
-  pull_request:
-    branches: [ 'master', 'master-mpx' ]
-    types:
-      - closed
+  workflow_dispatch:
+  release:
+    types: [created]
 jobs:
   release:
     runs-on: ubuntu-latest
     environment: deployment
     steps:
-      - uses: actions/checkout@v2
-      - name: Get tag
-        id: vars
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
-      - name: Verify tag
-        run: |
-          VERSION=$(grep VERSION_NAME gradle.properties | awk -F= '{ print $2 }' | sed "s/-SNAPSHOT//")
-          if [ "${{ steps.vars.outputs.tag }}" != "$VERSION" ]; then {
-            echo "Tag ${{ steps.vars.outputs.tag }} does not match the package version ($VERSION)"
-            exit 1
-          } fi
-
+      - uses: actions/checkout@v3
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: cache gradle dependencies
@@ -39,9 +27,12 @@ jobs:
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          SONATYPE_STAGING_PROFILE_ID: ${{ secrets.SONATYPE_STAGING_PROFILE_ID }}
+
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.NEXUS_PASSWORD }}
           SIGNING_PRIVATE_KEY_BASE64: ${{ secrets.SIGNING_PRIVATE_KEY_BASE64 }}
-
 #      - name: Create pull request into develop
 #          uses: repo-sync/pull-request@v2
 #          with:
