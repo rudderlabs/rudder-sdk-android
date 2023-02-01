@@ -40,21 +40,21 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private final List<RudderMessage> eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
     private String authHeaderString;
     private String anonymousIdHeaderString;
-    private Context context;
-    private RudderConfig config;
+    private final Context context;
+    private final RudderConfig config;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
     private RudderPreferenceManager preferenceManager;
     private RudderEventFilteringPlugin rudderEventFilteringPlugin;
     private RudderFlushWorkManager rudderFlushWorkManager;
     private RudderUserSession userSession;
-    private Map<String, RudderIntegration<?>> integrationOperationsMap = new HashMap<>();
-    private Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
+    private final Map<String, RudderIntegration<?>> integrationOperationsMap = new HashMap<>();
+    private final Map<String, RudderClient.Callback> integrationCallbacks = new HashMap<>();
 
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
     private boolean areFactoriesInitialized = false;
-    private AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
+    private final AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
 
     private int noOfActivities;
     private String dataPlaneUrl;
