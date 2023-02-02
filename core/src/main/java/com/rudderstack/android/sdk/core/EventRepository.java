@@ -166,22 +166,11 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         if (serverConfig != null) {
                             isSDKEnabled = serverConfig.source.isSourceEnabled;
                             if (isSDKEnabled) {
-                                // Initialise dataPlaneUrl based on Residency server
-                                RudderDataResidencyManager rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
-                                dataPlaneUrl = rudderDataResidencyManager.getDataResidencyUrl();
-                                if (Utils.isEmpty(dataPlaneUrl)) {
-                                    dataPlaneUrl = config.getDataPlaneUrl();
-                                }
+                                dataPlaneUrl = getDataPlaneUrlWrtResidencyConfig(serverConfig, config);
                                 RudderLogger.logDebug("DataPlaneUrl is set to: " + dataPlaneUrl);
 
-                                // save flush config
-                                RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel());
-                                rudderFlushWorkManager.saveRudderFlushConfig(rudderFlushConfig);
-
-                                // initiate processor
-                                RudderLogger.logDebug("EventRepository: initiateSDK: Initiating processor");
-                                Thread processorThread = new Thread(getProcessorRunnable());
-                                processorThread.start();
+                                saveFlushConfig();
+                                initiateProcessor();
 
                                 // initiate factories
                                 if (serverConfig.source.destinations != null) {
@@ -218,6 +207,26 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                 }
             }
         }).start();
+    }
+
+    private String getDataPlaneUrlWrtResidencyConfig(RudderServerConfig serverConfig, RudderConfig config) {
+        RudderDataResidencyManager rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
+        String dataPlaneUrl = rudderDataResidencyManager.getDataResidencyUrl();
+        if (Utils.isEmpty(dataPlaneUrl)) {
+            dataPlaneUrl = config.getDataPlaneUrl();
+        }
+        return dataPlaneUrl;
+    }
+
+    private void saveFlushConfig() {
+        RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel());
+        rudderFlushWorkManager.saveRudderFlushConfig(rudderFlushConfig);
+    }
+
+    private void initiateProcessor() {
+        RudderLogger.logDebug("EventRepository: initiateSDK: Initiating processor");
+        Thread processorThread = new Thread(getProcessorRunnable());
+        processorThread.start();
     }
 
     private void sendApplicationInstalled(int currentBuild, String currentVersion) {
