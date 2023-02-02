@@ -264,4 +264,22 @@ public class Utils {
             return new ArrayList(messageDetails.subList(0, flushQueueSize));
         }
     }
+
+    @NonNull
+    public static String appendSlashToUrl(@NonNull String dataPlaneUrl) {
+        if (!dataPlaneUrl.endsWith("/")) dataPlaneUrl += "/";
+        return dataPlaneUrl;
+    }
+
+    public static boolean isEmpty(@Nullable Map value) {
+        return (value == null || value.isEmpty());
+    }
+
+    public static boolean isEmpty(@Nullable String value) {
+        return (value == null || value.isEmpty());
+    }
+
+    public static boolean isEmpty(@Nullable List value) {
+        return (value == null || value.isEmpty());
+    }
 }
