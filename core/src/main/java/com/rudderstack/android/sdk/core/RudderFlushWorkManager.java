@@ -22,20 +22,16 @@ public class RudderFlushWorkManager {
     RudderPreferenceManager preferenceManager;
     static final String RUDDER_FLUSH_CONFIG_FILE_NAME = "RudderFlushConfig";
 
-    RudderFlushWorkManager(Context context, RudderConfig config, RudderPreferenceManager preferenceManager, RudderFlushConfig rudderFlushConfig) {
+    RudderFlushWorkManager(Context context, RudderConfig config, RudderPreferenceManager preferenceManager) {
         this.context = context;
         this.config = config;
         this.preferenceManager = preferenceManager;
-        RudderFlushWorkManager.saveRudderFlushConfig(context, rudderFlushConfig);
     }
 
-    static void saveRudderFlushConfig(Context context, RudderFlushConfig rudderFlushConfig) {
-        try {
-            FileOutputStream fos = context.openFileOutput(RUDDER_FLUSH_CONFIG_FILE_NAME, Context.MODE_PRIVATE);
-            ObjectOutputStream os = new ObjectOutputStream(fos);
+    void saveRudderFlushConfig(RudderFlushConfig rudderFlushConfig) {
+        try(FileOutputStream fos = context.openFileOutput(RUDDER_FLUSH_CONFIG_FILE_NAME, Context.MODE_PRIVATE);
+            ObjectOutputStream os = new ObjectOutputStream(fos)) {
             os.writeObject(rudderFlushConfig);
-            os.close();
-            fos.close();
         } catch (Exception e) {
             RudderLogger.logError("RudderServerConfigManager: saveRudderFlushConfig: Exception while saving RudderServerConfig Object to File");
             e.printStackTrace();
@@ -44,20 +40,18 @@ public class RudderFlushWorkManager {
 
     static RudderFlushConfig getRudderFlushConfig(Context context) {
         RudderFlushConfig rudderFlushConfig = null;
-        try {
-            if (Utils.fileExists(context, RUDDER_FLUSH_CONFIG_FILE_NAME)) {
-                FileInputStream fis = context.openFileInput(RUDDER_FLUSH_CONFIG_FILE_NAME);
-                ObjectInputStream is = new ObjectInputStream(fis);
+
+        if (Utils.fileExists(context, RUDDER_FLUSH_CONFIG_FILE_NAME)) {
+            try(FileInputStream fis = context.openFileInput(RUDDER_FLUSH_CONFIG_FILE_NAME);
+                ObjectInputStream is = new ObjectInputStream(fis)) {
                 rudderFlushConfig = (RudderFlushConfig) is.readObject();
-                is.close();
-                fis.close();
+
+            } catch (Exception e) {
+                RudderLogger.logError("RudderServerConfigManager: getRudderFlushConfig: Failed to read RudderServerConfig Object from File");
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            RudderLogger.logError("RudderServerConfigManager: getRudderFlushConfig: Failed to read RudderServerConfig Object from File");
-            e.printStackTrace();
-        } finally {
-            return rudderFlushConfig;
         }
+        return rudderFlushConfig;
     }
 
     void registerPeriodicFlushWorker() {

@@ -75,14 +75,14 @@ jobs:
         with:
           branches: 'release/*'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
       - name: Delete hotfix release branch -mpx
         uses: koj-co/delete-merged-action@master
         if: startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/')
         with:
           branches: 'hotfix-release/*'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
 
       - name: Delete release branch -mpx
         uses: koj-co/delete-merged-action@master
@@ -90,4 +90,4 @@ jobs:
         with:
           branches: 'release/*'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}

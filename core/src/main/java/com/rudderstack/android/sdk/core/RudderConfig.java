@@ -48,6 +48,7 @@ public class RudderConfig {
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
+    private RudderDataResidencyServer rudderDataResidencyServer;
 
     RudderConfig() {
         this(
@@ -67,7 +68,8 @@ public class RudderConfig {
                 Constants.DEFAULT_SESSION_TIMEOUT,
                 Constants.CONTROL_PLANE_URL,
                 null,
-                null
+                null,
+                Constants.DATA_RESIDENCY_SERVER
         );
     }
 
@@ -88,7 +90,8 @@ public class RudderConfig {
             long sessionTimeout,
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
-            List<RudderIntegration.Factory> customFactories
+            List<RudderIntegration.Factory> customFactories,
+            RudderDataResidencyServer rudderDataResidencyServer
     ) {
         RudderLogger.init(logLevel);
 
@@ -174,6 +177,8 @@ public class RudderConfig {
             this.sessionTimeout = Constants.DEFAULT_SESSION_TIMEOUT;
         }
         this.trackAutoSession = trackAutoSession;
+
+        this.rudderDataResidencyServer = rudderDataResidencyServer;
     }
 
     /**
@@ -314,6 +319,13 @@ public class RudderConfig {
         return sessionTimeout;
     }
 
+    /**
+     * @return dataResidencyServer (your data residency server url)
+     */
+    public RudderDataResidencyServer getDataResidencyServer() {
+        return rudderDataResidencyServer;
+    }
+
     void setDataPlaneUrl(String dataPlaneUrl) {
         this.dataPlaneUrl = dataPlaneUrl;
     }
@@ -360,6 +372,10 @@ public class RudderConfig {
 
     void setTrackAutoSession(boolean trackAutoSession) {
         this.trackAutoSession = trackAutoSession;
+    }
+
+    void setDataResidencyServer(RudderDataResidencyServer rudderDataResidencyServer) {
+        this.rudderDataResidencyServer = rudderDataResidencyServer;
     }
 
     /**
@@ -467,6 +483,17 @@ public class RudderConfig {
                 return this;
             }
             this.dataPlaneUrl = dataPlaneUrl;
+            return this;
+        }
+
+        private RudderDataResidencyServer rudderDataResidencyServer = Constants.DATA_RESIDENCY_SERVER;
+
+        /**
+         * @param rudderDataResidencyServer Your dataResidencyServer url
+         * @return RudderConfig.Builder
+         */
+        public Builder withDataResidencyServer(@NonNull RudderDataResidencyServer rudderDataResidencyServer) {
+            this.rudderDataResidencyServer = rudderDataResidencyServer;
             return this;
         }
 
@@ -671,7 +698,8 @@ public class RudderConfig {
                     this.sessionTimeout,
                     this.controlPlaneUrl,
                     this.factories,
-                    this.customFactories
+                    this.customFactories,
+                    this.rudderDataResidencyServer
             );
         }
     }
