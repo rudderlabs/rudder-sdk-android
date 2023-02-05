@@ -7,7 +7,8 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.rudderstack.android.sdk.core.consent.ConsentFilter;
+import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
+import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Map;
@@ -34,8 +35,6 @@ public class RudderClient {
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
 
-    private @Nullable
-    ConsentFilter consentFilter = null;
 
     /*
      * private constructor
@@ -111,6 +110,15 @@ public class RudderClient {
      */
     @NonNull
     public static RudderClient getInstance(@NonNull Context context, @Nullable String writeKey, @Nullable RudderConfig config) {
+        return getInstance(context, writeKey, config, null, null);
+    }
+    @NonNull
+    public static RudderClient getInstance(@NonNull Context context, @Nullable String writeKey,
+                                           @Nullable RudderConfig config,
+                                           @Nullable RudderOption option,
+                                           @Nullable RudderConsentFilter consentFilter) {
+        if(option != null)
+            defaultOptions = option;
         // check if instance is already initiated
         if (instance == null) {
             RudderLogger.logVerbose("getInstance: instance null. creating instance");
@@ -124,37 +132,43 @@ public class RudderClient {
                 config = new RudderConfig();
             } else {
                 RudderLogger.logVerbose("getInstance: config present. using config.");
-                if (TextUtils.isEmpty(config.getDataPlaneUrl())) {
-                    RudderLogger.logVerbose("getInstance: EndPointUri is blank or null. using default.");
-                    config.setDataPlaneUrl(Constants.DATA_PLANE_URL);
-                }
-                if (config.getFlushQueueSize() < 0 || config.getFlushQueueSize() > 100) {
-                    RudderLogger.logVerbose("getInstance: FlushQueueSize is wrong. using default.");
-                    config.setFlushQueueSize(Constants.FLUSH_QUEUE_SIZE);
-                }
-                if (config.getDbCountThreshold() < 0) {
-                    RudderLogger.logVerbose("getInstance: DbCountThreshold is wrong. using default.");
-                    config.setDbCountThreshold(Constants.DB_COUNT_THRESHOLD);
-                }
-                // assure sleepTimeOut never goes below 10s
-                if (config.getSleepTimeOut() < Utils.MIN_SLEEP_TIMEOUT) {
-                    RudderLogger.logVerbose("getInstance: SleepTimeOut is wrong. using default.");
-                    config.setSleepTimeOut(Constants.SLEEP_TIMEOUT);
-                }
+                updateConfigWithValidValuesIfNecessary(config);
             }
             // get application from provided context
             application = (Application) context.getApplicationContext();
 
             // initiate RudderClient instance
             instance = new RudderClient();
-
             // initiate EventRepository class
             if (application != null) {
                 RudderLogger.logVerbose("getInstance: creating EventRepository.");
-                repository = new EventRepository(application, writeKey, config, _anonymousId, _advertisingId, _deviceToken);
+                EventRepository.Identifiers identifiers = new EventRepository
+                        .Identifiers(writeKey,_deviceToken, _anonymousId, _advertisingId);
+                repository = new EventRepository(application,  config, identifiers,
+                        consentFilter);
             }
         }
         return instance;
+    }
+
+    private static void updateConfigWithValidValuesIfNecessary(@NonNull RudderConfig config) {
+        if (TextUtils.isEmpty(config.getDataPlaneUrl())) {
+            RudderLogger.logVerbose("getInstance: EndPointUri is blank or null. using default.");
+            config.setDataPlaneUrl(Constants.DATA_PLANE_URL);
+        }
+        if (config.getFlushQueueSize() < 0 || config.getFlushQueueSize() > 100) {
+            RudderLogger.logVerbose("getInstance: FlushQueueSize is wrong. using default.");
+            config.setFlushQueueSize(Constants.FLUSH_QUEUE_SIZE);
+        }
+        if (config.getDbCountThreshold() < 0) {
+            RudderLogger.logVerbose("getInstance: DbCountThreshold is wrong. using default.");
+            config.setDbCountThreshold(Constants.DB_COUNT_THRESHOLD);
+        }
+        // assure sleepTimeOut never goes below 10s
+        if (config.getSleepTimeOut() < Utils.MIN_SLEEP_TIMEOUT) {
+            RudderLogger.logVerbose("getInstance: SleepTimeOut is wrong. using default.");
+            config.setSleepTimeOut(Constants.SLEEP_TIMEOUT);
+        }
     }
 
     /*
@@ -824,16 +838,6 @@ public class RudderClient {
     static RudderOption getDefaultOptions() {
         return defaultOptions;
     }
-
-    @Nullable
-    public ConsentFilter getConsentFilter() {
-        return consentFilter;
-    }
-
-    public void setConsentFilter(@Nullable ConsentFilter consentFilter) {
-        this.consentFilter = consentFilter;
-    }
-
 
     /**
      * RudderClient.Callback for getting callback when native SDK integration is ready

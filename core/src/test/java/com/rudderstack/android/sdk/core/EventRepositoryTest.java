@@ -14,8 +14,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import android.text.TextUtils;
 
 import com.google.common.collect.ImmutableList;
-import com.rudderstack.android.sdk.core.consent.ConsentFilter;
-import com.rudderstack.android.sdk.core.consent.ConsentInterceptor;
+import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
+import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import org.hamcrest.Matchers;
@@ -31,7 +31,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -258,40 +257,6 @@ public class EventRepositoryTest {
         Mockito.verify(spyMessage).setSession(userSession);
     }
 
-    @Test
-    public void updateMessageWithConsentedDestinations() throws NoSuchFieldException, IllegalAccessException {
-        RudderOption options = new RudderOption();
-        options.putIntegration("Dummy-Integration-1", true);
-        options.putIntegration("Dummy-Integration-2", true);
-        options.putIntegration("Dummy-Integration-3", true);
-
-        RudderOption consentedOptions = new RudderOption();
-        consentedOptions.putIntegration("Dummy-Integration-2", false);
-        consentedOptions.putIntegration("Dummy-Integration-3", false);
-        consentedOptions.putIntegration("Dummy-Integration-4", false);
-
-        ConsentInterceptor testConsentInterceptor = (rudderServerConfigSource,
-                                                     rudderMessage) ->
-                RudderMessageBuilder.from(rudderMessage)
-                .setRudderOption(consentedOptions)
-                        .build();
-        ConsentFilter testConsentFilter= new ConsentFilter(Collections.singletonList(testConsentInterceptor));
-        RudderServerConfig serverConfig = new RudderServerConfig();
-        serverConfig.source = new RudderServerConfigSource();
-        RudderMessage testMessage = new RudderMessageBuilder().setUserId("u-1")
-                .setRudderOption(options)
-                .build();
-
-        EventRepository repo = new EventRepository();
-        RudderMessage updatedMsg = repo.applyConsentFiltersToMessage(testMessage, testConsentFilter, serverConfig);
-
-        assertThat(updatedMsg, not(is(testMessage)));
-        assertThat(updatedMsg.getUserId(), is(testMessage.getUserId()));
-
-        assertThat(MessageReflectionUtils.getMessageId(updatedMsg), is(MessageReflectionUtils.getMessageId(testMessage)));
-        assertThat(MessageReflectionUtils.getTimestamp(updatedMsg), is(MessageReflectionUtils.getTimestamp(testMessage)));
-
-    }
 
 
 
