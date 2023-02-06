@@ -42,8 +42,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     private final List<RudderMessage> eventReplayMessageQueue = Collections.synchronizedList(new ArrayList<RudderMessage>());
     private String authHeaderString;
     private String anonymousIdHeaderString;
-    private final Context context;
-    private final RudderConfig config;
+    private Context context;
+    private RudderConfig config;
     private DBPersistentManager dbManager;
     private RudderServerConfigManager configManager;
     private RudderPreferenceManager preferenceManager;
