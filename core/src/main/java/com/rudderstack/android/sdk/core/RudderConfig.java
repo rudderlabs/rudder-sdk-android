@@ -6,6 +6,7 @@ import android.webkit.URLUtil;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ public class RudderConfig {
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
     private RudderDataResidencyServer rudderDataResidencyServer;
+    @Nullable private RudderConsentFilter consentFilter;
 
     RudderConfig() {
         this(
@@ -69,7 +71,8 @@ public class RudderConfig {
                 Constants.CONTROL_PLANE_URL,
                 null,
                 null,
-                Constants.DATA_RESIDENCY_SERVER
+                Constants.DATA_RESIDENCY_SERVER,
+                null
         );
     }
 
@@ -91,7 +94,8 @@ public class RudderConfig {
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
             List<RudderIntegration.Factory> customFactories,
-            RudderDataResidencyServer rudderDataResidencyServer
+            RudderDataResidencyServer rudderDataResidencyServer,
+            @Nullable RudderConsentFilter consentFilter
     ) {
         RudderLogger.init(logLevel);
 
@@ -179,6 +183,7 @@ public class RudderConfig {
         this.trackAutoSession = trackAutoSession;
 
         this.rudderDataResidencyServer = rudderDataResidencyServer;
+        this.consentFilter = consentFilter;
     }
 
     /**
@@ -319,6 +324,11 @@ public class RudderConfig {
         return sessionTimeout;
     }
 
+    @Nullable
+    public RudderConsentFilter getConsentFilter() {
+        return consentFilter;
+    }
+
     /**
      * @return dataResidencyServer (your data residency server url)
      */
@@ -378,6 +388,7 @@ public class RudderConfig {
         this.rudderDataResidencyServer = rudderDataResidencyServer;
     }
 
+
     /**
      * @return custom toString implementation for RudderConfig
      */
@@ -394,6 +405,7 @@ public class RudderConfig {
     public static class Builder {
         private List<RudderIntegration.Factory> factories = new ArrayList<>();
         private List<RudderIntegration.Factory> customFactories = new ArrayList<>();
+        private @Nullable RudderConsentFilter consentFilter = null;
 
         /**
          * @param factory : Instance of RudderIntegration.Factory (for more information visit https://docs.rudderstack.com)
@@ -593,6 +605,11 @@ public class RudderConfig {
             return this;
         }
 
+        public Builder withConsentFilter(@NonNull RudderConsentFilter consentFilter){
+            this.consentFilter = consentFilter;
+            return this;
+        }
+
         private boolean recordScreenViews = Constants.RECORD_SCREEN_VIEWS;
 
         /**
@@ -699,7 +716,8 @@ public class RudderConfig {
                     this.controlPlaneUrl,
                     this.factories,
                     this.customFactories,
-                    this.rudderDataResidencyServer
+                    this.rudderDataResidencyServer,
+                    consentFilter
             );
         }
     }

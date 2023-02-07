@@ -110,15 +110,7 @@ public class RudderClient {
      */
     @NonNull
     public static RudderClient getInstance(@NonNull Context context, @Nullable String writeKey, @Nullable RudderConfig config) {
-        return getInstance(context, writeKey, config, null, null);
-    }
-    @NonNull
-    public static RudderClient getInstance(@NonNull Context context, @Nullable String writeKey,
-                                           @Nullable RudderConfig config,
-                                           @Nullable RudderOption option,
-                                           @Nullable RudderConsentFilter consentFilter) {
-        if(option != null)
-            defaultOptions = option;
+
         // check if instance is already initiated
         if (instance == null) {
             RudderLogger.logVerbose("getInstance: instance null. creating instance");
@@ -144,8 +136,7 @@ public class RudderClient {
                 RudderLogger.logVerbose("getInstance: creating EventRepository.");
                 EventRepository.Identifiers identifiers = new EventRepository
                         .Identifiers(writeKey,_deviceToken, _anonymousId, _advertisingId);
-                repository = new EventRepository(application,  config, identifiers,
-                        consentFilter);
+                repository = new EventRepository(application,  config, identifiers);
             }
         }
         return instance;

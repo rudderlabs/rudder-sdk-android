@@ -88,7 +88,7 @@ public class RudderClientTest {
     }
 
     @Test
-    public void consentFilterTest() throws Exception {
+    public void messagePassedToRepositoryTest() throws Exception {
 
         final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
         RudderMessage rudderMessage = new RudderMessageBuilder().setEventName("e-1").setUserId("c-1").build();

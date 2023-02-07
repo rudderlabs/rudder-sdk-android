@@ -80,7 +80,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
      * 6. start processor thread
      * 7. initiate factories
      * */
-    EventRepository(Application _application, RudderConfig _config, Identifiers identifiers, @Nullable final RudderConsentFilter consentFilter) {
+    EventRepository(Application _application, RudderConfig _config, Identifiers identifiers) {
         // 1. set the values of writeKey, config
         updateAuthHeaderString(identifiers.writeKey);
         this.context = _application.getApplicationContext();
@@ -105,7 +105,8 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
             // 6. start processor thread
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
-            this.initiateSDK(consentFilter);
+
+            this.initiateSDK(_config.getConsentFilter());
 
             // 7. initiate RudderUserSession for tracking sessions
             startSessionTracking();
@@ -194,7 +195,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
                             // initiate processor
                             initiateProcessor();
-                            if(consentFilter != null)
+                            if (consentFilter != null)
                                 this.consentFilterHandler = new ConsentFilterHandler(serverConfig.source, consentFilter);
                             // initiate factories
                             setupNativeFactoriesWithFiltering(serverConfig.source.getDestinations());
