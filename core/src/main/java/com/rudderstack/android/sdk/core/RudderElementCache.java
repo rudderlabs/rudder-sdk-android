@@ -29,7 +29,7 @@ class RudderElementCache {
     }
 
     static RudderContext getCachedContext() {
-        return cachedContext.copy();
+        return cachedContext == null ? null :cachedContext.copy();
     }
 
     static void reset() {
