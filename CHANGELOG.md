@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.8.0...v1.9.0) (2023-02-02)
+
+
+### Features
+
+* data residency support ([#149](https://github.com/rudderlabs/rudder-sdk-android/issues/149)) ([acb06bb](https://github.com/rudderlabs/rudder-sdk-android/commit/acb06bb2b5a27f544805c3df65ff12d240598aa3)), closes [#150](https://github.com/rudderlabs/rudder-sdk-android/issues/150) [#154](https://github.com/rudderlabs/rudder-sdk-android/issues/154) [#153](https://github.com/rudderlabs/rudder-sdk-android/issues/153) [#184](https://github.com/rudderlabs/rudder-sdk-android/issues/184) [#185](https://github.com/rudderlabs/rudder-sdk-android/issues/185)
+
+
+### Bug Fixes
+
+* fixed the null pointer exception thrown while iterating through the message queue  ([#191](https://github.com/rudderlabs/rudder-sdk-android/issues/191)) ([1bca2ba](https://github.com/rudderlabs/rudder-sdk-android/commit/1bca2baea224883f7d6234907fb41102bf9e0e20))
+* fixed the null pointer exception thrown while iterating through the message queue  ([#191](https://github.com/rudderlabs/rudder-sdk-android/issues/191)) ([0871e4a](https://github.com/rudderlabs/rudder-sdk-android/commit/0871e4a9830e2f9181d0ff3e03fbd4b833f896fb))
+* removed tag check from release ([569806c](https://github.com/rudderlabs/rudder-sdk-android/commit/569806ce36f72ad9f0cc4119ea5491679353b444))
+
 ### [1.8.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.8.0...v1.8.1) (2023-01-04)
 
 

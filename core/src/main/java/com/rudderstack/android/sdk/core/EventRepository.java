@@ -93,8 +93,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
             updateAnonymousIdHeaderString();
 
             // 3. initiate DBPersistentManager for SQLite operations
-            RudderLogger.logDebug("EventRepository: constructor: Initiating DBPersistentManager");
+            RudderLogger.logDebug("EventRepository: constructor: Initiating DBPersistentManager and starting Handler thread");
             this.dbManager = DBPersistentManager.getInstance(_application);
+            this.dbManager.startHandlerThread();
 
             // 4. initiate RudderServerConfigManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
