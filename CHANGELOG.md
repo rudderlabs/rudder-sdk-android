@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.10.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.8.1...v1.10.0) (2023-02-09)
+
+
+### Features
+
+* consent ([#197](https://github.com/rudderlabs/rudder-sdk-android/issues/197)) ([2f33197](https://github.com/rudderlabs/rudder-sdk-android/commit/2f33197e67d4b062392c44975708865e1141ea27))
+* data residency support ([#149](https://github.com/rudderlabs/rudder-sdk-android/issues/149)) ([acb06bb](https://github.com/rudderlabs/rudder-sdk-android/commit/acb06bb2b5a27f544805c3df65ff12d240598aa3)), closes [#150](https://github.com/rudderlabs/rudder-sdk-android/issues/150) [#154](https://github.com/rudderlabs/rudder-sdk-android/issues/154) [#153](https://github.com/rudderlabs/rudder-sdk-android/issues/153) [#184](https://github.com/rudderlabs/rudder-sdk-android/issues/184) [#185](https://github.com/rudderlabs/rudder-sdk-android/issues/185)
+
 ## [1.9.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.8.0...v1.9.0) (2023-02-02)
 
 
