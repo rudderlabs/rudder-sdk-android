@@ -192,7 +192,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                             dataPlaneUrl = getDataPlaneUrlWrtResidencyConfig(serverConfig, config);
                             if (dataPlaneUrl == null) {
                                 RudderLogger.logError("Invalid dataPlaneUrl: The dataPlaneUrl is not provided or given dataPlaneUrl is not valid\n**Note: dataPlaneUrl is mandatory for Free Plan users from version 1.11.0**");
-                                break;
+                                return;
                             }
                             RudderLogger.logDebug("DataPlaneUrl is set to: " + dataPlaneUrl);
 
