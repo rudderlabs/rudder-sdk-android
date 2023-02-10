@@ -7,6 +7,8 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -257,8 +259,25 @@ public class EventRepositoryTest {
         Mockito.verify(spyMessage).setSession(userSession);
     }
 
+    @Test
+    public void getDataPlaneUrlWrtResidencyConfig() {
+        EventRepository repo = new EventRepository();
+        RudderConfig rudderConfig = new RudderConfig.Builder()
+                .build();
+        RudderServerConfig serverConfig = PowerMockito.mock(RudderServerConfig.class);
+        String dataPlaneUrl = repo.getDataPlaneUrlWrtResidencyConfig(serverConfig, rudderConfig);
+        assertThat(dataPlaneUrl, Matchers.nullValue());
+    }
 
-
-
+    @Test
+    public void getDataPlaneUrlWrtResidencyConfigWithDataPlaneUrl() {
+        EventRepository repo = new EventRepository();
+        RudderConfig rudderConfig = new RudderConfig.Builder()
+                                        .withDataPlaneUrl("https://random.dataplane.rudderstack.com")
+                                        .build();
+        RudderServerConfig serverConfig = new RudderServerConfig();
+        String dataPlaneUrl = repo.getDataPlaneUrlWrtResidencyConfig(serverConfig, rudderConfig);
+        assertEquals(dataPlaneUrl, "https://random.dataplane.rudderstack.com/");
+    }
 
 }

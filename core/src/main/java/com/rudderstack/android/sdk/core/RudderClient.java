@@ -116,7 +116,7 @@ public class RudderClient {
             RudderLogger.logVerbose("getInstance: instance null. creating instance");
             // assert writeKey is not null or empty
             if (TextUtils.isEmpty(writeKey)) {
-                throw new IllegalArgumentException("RudderClient: getInstance: writeKey can not be null or empty");
+                RudderLogger.logError("Invalid writeKey: Provided writeKey is empty");
             }
             // assert config is not null
             if (config == null) {
@@ -143,10 +143,6 @@ public class RudderClient {
     }
 
     private static void updateConfigWithValidValuesIfNecessary(@NonNull RudderConfig config) {
-        if (TextUtils.isEmpty(config.getDataPlaneUrl())) {
-            RudderLogger.logVerbose("getInstance: EndPointUri is blank or null. using default.");
-            config.setDataPlaneUrl(Constants.DATA_PLANE_URL);
-        }
         if (config.getFlushQueueSize() < 0 || config.getFlushQueueSize() > 100) {
             RudderLogger.logVerbose("getInstance: FlushQueueSize is wrong. using default.");
             config.setFlushQueueSize(Constants.FLUSH_QUEUE_SIZE);

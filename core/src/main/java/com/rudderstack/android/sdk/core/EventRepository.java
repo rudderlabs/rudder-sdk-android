@@ -190,6 +190,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         isSDKEnabled = serverConfig.source.isSourceEnabled;
                         if (isSDKEnabled) {
                             dataPlaneUrl = getDataPlaneUrlWrtResidencyConfig(serverConfig, config);
+                            if (dataPlaneUrl == null) {
+                                RudderLogger.logError("Invalid dataPlaneUrl: The dataPlaneUrl is not provided or given dataPlaneUrl is not valid\n**Note: dataPlaneUrl is mandatory for Free Plan users from version 1.11.0**");
+                                break;
+                            }
                             RudderLogger.logDebug("DataPlaneUrl is set to: " + dataPlaneUrl);
 
                             saveFlushConfig();
@@ -241,8 +245,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         rudderEventFilteringPlugin = new RudderEventFilteringPlugin(consentedDestinations);
     }
 
-
-    private String getDataPlaneUrlWrtResidencyConfig(RudderServerConfig serverConfig, RudderConfig config) {
+    @Nullable
+    @VisibleForTesting
+    String getDataPlaneUrlWrtResidencyConfig(RudderServerConfig serverConfig, RudderConfig config) {
         RudderDataResidencyManager rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         String dataPlaneUrl = rudderDataResidencyManager.getDataResidencyUrl();
         if (Utils.isEmpty(dataPlaneUrl)) {
