@@ -277,7 +277,7 @@ public class EventRepositoryTest {
                                         .build();
         RudderServerConfig serverConfig = new RudderServerConfig();
         String dataPlaneUrl = repo.getDataPlaneUrlWrtResidencyConfig(serverConfig, rudderConfig);
-        assertEquals(dataPlaneUrl, "https://random.dataplane.rudderstack.com/");
+        assertEquals("https://random.dataplane.rudderstack.com/", dataPlaneUrl);
     }
 
 }
