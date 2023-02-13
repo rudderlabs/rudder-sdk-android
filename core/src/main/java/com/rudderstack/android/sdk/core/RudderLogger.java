@@ -21,7 +21,7 @@ public class RudderLogger {
         }
     }
 
-    public  static void logError(Exception ex) {
+    public static void logError(Exception ex) {
         logError(ex.getMessage());
     }
 

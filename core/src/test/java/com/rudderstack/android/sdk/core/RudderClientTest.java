@@ -1,6 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
 import android.app.Application;
@@ -46,12 +47,7 @@ public class RudderClientTest {
             }
         });
         PowerMockito.spy(RudderClient.class);
-        PowerMockito.when(RudderClient.class, "getOptOutStatus").thenAnswer(new Answer<Boolean>() {
-            @Override
-            public Boolean answer(InvocationOnMock invocation) throws Throwable {
-                return false;
-            }
-        });
+        PowerMockito.when(RudderClient.class, "getOptOutStatus").thenAnswer((Answer<Boolean>) invocation -> false);
         config = PowerMockito.mock(RudderConfig.class);
         PowerMockito.whenNew(RudderConfig.class).withNoArguments().thenReturn(config);
         repository = PowerMockito.mock(EventRepository.class);
@@ -86,6 +82,18 @@ public class RudderClientTest {
 
     @After
     public void clearMocks() {
+        RudderClient.getInstance().shutdown();
+        RudderClient.setSingletonInstance(null);
         Mockito.framework().clearInlineMocks();
+    }
+
+    @Test
+    public void messagePassedToRepositoryTest() throws Exception {
+
+        final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
+        RudderMessage rudderMessage = new RudderMessageBuilder().setEventName("e-1").setUserId("c-1").build();
+        client.track(rudderMessage);
+        //we only check if messages reach event repository.processMessage
+        Mockito.verify(repository).processMessage(rudderMessage);
     }
 }

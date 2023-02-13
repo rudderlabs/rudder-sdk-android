@@ -2,23 +2,28 @@ package com.rudderstack.android.sdk.core;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.text.TextUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
+import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -27,7 +32,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -55,12 +60,11 @@ public class EventRepositoryTest {
         PowerMockito.spy(Utils.class);
         PowerMockito.when(Utils.class, "getTimeStamp"
                 )
-                .thenAnswer(new Answer<String>() {
-                    @Override
-                    public String answer(InvocationOnMock invocation) throws Throwable {
-                        return "2022-03-14T06:46:41.365Z";
-                    }
-                });
+                .thenAnswer((Answer<String>) invocation -> "2022-03-14T06:46:41.365Z");
+    }
+    @After
+    public void clearMocks() {
+        Mockito.framework().clearInlineMocks();
     }
 
     /**
@@ -215,36 +219,46 @@ public class EventRepositoryTest {
         });
     }
 
-    /*public void partialMockTest() throws Exception {
-        assertThat(MockSample.returnNotMockIfNotMocked() , Matchers.is("noMock"));
-        PowerMockito.spy(MockSample.class);
-        PowerMockito.when(MockSample.class, "returnNotMockIfNotMocked").thenAnswer(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                return "mocked";
-            }
-        });
-        assertThat(MockSample.returnNotMockIfNotMocked() , Matchers.is("mocked"));
-        assertThat(MockSample.return2IfNotMocked(), Matchers.is(2));
+    @Test
+    public void applyRudderOptionsToMessageIntegrations() {
+        EventRepository repo = new EventRepository();
 
-        *//*try (MockedStatic<MockSample> utilities = Mockito.mockStatic(MockSample.class)) {
-            utilities.when(new MockedStatic.Verification() {
-                @Override
-                public void apply() throws Throwable {
-                    MockSample.return2IfNotMocked();
-                }
-            }).thenReturn(*//**//*f.call(MockSample.class,new Object() , new Object[]{})*//**//*2);
-            utilities.when(new MockedStatic.Verification() {
-                @Override
-                public void apply() throws Throwable {
-                    MockSample.returnNotMockIfNotMocked();
-                }
-            }).thenReturn("mocked");
-            assertThat(MockSample.returnNotMockIfNotMocked() , Matchers.is("mocked"));
-            assertThat(MockSample.return2IfNotMocked(), Matchers.is(2));
+        RudderOption options = new RudderOption();
+        options.putIntegration("Dummy-Integration-1", false);
+        options.putIntegration("Dummy-Integration-2", false);
 
-        }*//*
+        RudderMessage message = new RudderMessageBuilder()
+                .setUserId("u-id")
+                .setRudderOption(options)
+                .build();
+        repo.applyRudderOptionsToMessageIntegrations(message);
 
-//        assertThat(StaticUtils.name()).isEqualTo("Baeldung");
-    }*/
+        assertThat("All: true should be added", message.getIntegrations(),
+                allOf(hasEntry("Dummy-Integration-1", false),
+                        hasEntry("Dummy-Integration-2", false),
+                        hasEntry("All", true)
+                ));
+    }
+
+    @Test
+    public void applySessionTracking() {
+        RudderUserSession userSession = PowerMockito.mock(RudderUserSession.class);
+        PowerMockito.doReturn(123L).when(userSession).getSessionId();
+
+        RudderConfig mockConfig = PowerMockito.mock(RudderConfig.class);
+        PowerMockito.doReturn(false).when(mockConfig).isTrackLifecycleEvents();
+//        Mockito.doReturn()
+        EventRepository repo = new EventRepository();
+        RudderMessage message = new RudderMessageBuilder().setUserId("u-1").build();
+        RudderMessage spyMessage = PowerMockito.spy(message);
+        PowerMockito.doNothing().when(spyMessage).setSession(userSession);
+
+        repo.applySessionTracking(spyMessage, mockConfig, userSession);
+        Mockito.verify(spyMessage).setSession(userSession);
+    }
+
+
+
+
+
 }
