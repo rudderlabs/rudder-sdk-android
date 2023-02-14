@@ -7,8 +7,6 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
-import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Map;
@@ -116,7 +114,7 @@ public class RudderClient {
             RudderLogger.logVerbose("getInstance: instance null. creating instance");
             // assert writeKey is not null or empty
             if (TextUtils.isEmpty(writeKey)) {
-                RudderLogger.logError(Constants.Logs.WRITE_KEY);
+                RudderLogger.logError(Constants.Logs.WRITE_KEY_ERROR);
             }
             // assert config is not null
             if (config == null) {

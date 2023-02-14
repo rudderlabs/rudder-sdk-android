@@ -191,7 +191,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         if (isSDKEnabled) {
                             dataPlaneUrl = getDataPlaneUrlWrtResidencyConfig(serverConfig, config);
                             if (dataPlaneUrl == null) {
-                                RudderLogger.logError(Constants.Logs.DATA_PLANE_URL);
+                                RudderLogger.logError(Constants.Logs.DATA_PLANE_URL_ERROR);
                                 return;
                             }
                             RudderLogger.logDebug("DataPlaneUrl is set to: " + dataPlaneUrl);
@@ -604,7 +604,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     void flushSync() {
         if (dataPlaneUrl == null) {
-            RudderLogger.logError(Constants.Logs.DATA_PLANE_URL_FLUSH);
+            RudderLogger.logError(Constants.Logs.DATA_PLANE_URL_FLUSH_ERROR);
             return;
         }
         FlushUtils.flush(areFactoriesInitialized, integrationOperationsMap,

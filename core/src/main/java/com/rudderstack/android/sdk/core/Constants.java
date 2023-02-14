@@ -43,8 +43,8 @@ class Constants {
 
 
     class Logs {
-        static final String WRITE_KEY = "Invalid writeKey: Provided writeKey is empty";
-        static final String DATA_PLANE_URL = "Invalid dataPlaneUrl: The dataPlaneUrl is not provided or given dataPlaneUrl is not valid\n**Note: dataPlaneUrl or dataResidencyServer(for Enterprise Users only) is mandatory from version 1.11.0**";
-        static final String DATA_PLANE_URL_FLUSH = "Invalid dataPlaneUrl: The dataPlaneUrl is not provided or given dataPlaneUrl is not valid. Ignoring flush call. \n**Note: dataPlaneUrl or dataResidencyServer(for Enterprise Users only) is mandatory from version 1.11.0**";
+        static final String WRITE_KEY_ERROR = "Invalid writeKey: Provided writeKey is empty";
+        static final String DATA_PLANE_URL_ERROR = "Invalid dataPlaneUrl: The dataPlaneUrl is not provided or given dataPlaneUrl is not valid\n**Note: dataPlaneUrl or dataResidencyServer(for Enterprise Users only) is mandatory from version 1.11.0**";
+        static final String DATA_PLANE_URL_FLUSH_ERROR = "Invalid dataPlaneUrl: The dataPlaneUrl is not provided or given dataPlaneUrl is not valid. Ignoring flush call. \n**Note: dataPlaneUrl or dataResidencyServer(for Enterprise Users only) is mandatory from version 1.11.0**";
     }
 }
