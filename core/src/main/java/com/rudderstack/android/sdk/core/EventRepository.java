@@ -190,6 +190,10 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         isSDKEnabled = serverConfig.source.isSourceEnabled;
                         if (isSDKEnabled) {
                             dataPlaneUrl = getDataPlaneUrlWrtResidencyConfig(serverConfig, config);
+                            if (dataPlaneUrl == null) {
+                                RudderLogger.logError(Constants.Logs.DATA_PLANE_URL_ERROR);
+                                return;
+                            }
                             RudderLogger.logDebug("DataPlaneUrl is set to: " + dataPlaneUrl);
 
                             saveFlushConfig();
@@ -241,8 +245,9 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
         rudderEventFilteringPlugin = new RudderEventFilteringPlugin(consentedDestinations);
     }
 
-
-    private String getDataPlaneUrlWrtResidencyConfig(RudderServerConfig serverConfig, RudderConfig config) {
+    @Nullable
+    @VisibleForTesting
+    String getDataPlaneUrlWrtResidencyConfig(RudderServerConfig serverConfig, RudderConfig config) {
         RudderDataResidencyManager rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
         String dataPlaneUrl = rudderDataResidencyManager.getDataResidencyUrl();
         if (Utils.isEmpty(dataPlaneUrl)) {
@@ -598,11 +603,13 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
     }
 
     void flushSync() {
-//        synchronized (this){
+        if (dataPlaneUrl == null) {
+            RudderLogger.logError(Constants.Logs.DATA_PLANE_URL_FLUSH_ERROR);
+            return;
+        }
         FlushUtils.flush(areFactoriesInitialized, integrationOperationsMap,
                 config.getFlushQueueSize(), dataPlaneUrl,
                 dbManager, authHeaderString, anonymousIdHeaderString);
-//        }
     }
 
     private Map<String, Object> prepareIntegrations() {
