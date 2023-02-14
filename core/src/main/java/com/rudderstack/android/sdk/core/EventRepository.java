@@ -191,7 +191,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
                         if (isSDKEnabled) {
                             dataPlaneUrl = getDataPlaneUrlWrtResidencyConfig(serverConfig, config);
                             if (dataPlaneUrl == null) {
-                                RudderLogger.logError("Invalid dataPlaneUrl: The dataPlaneUrl is not provided or given dataPlaneUrl is not valid\n**Note: dataPlaneUrl or dataResidencyServer(for Enterprise Users only) is mandatory from version 1.11.0**");
+                                RudderLogger.logError(Constants.Logs.DATA_PLANE_URL);
                                 return;
                             }
                             RudderLogger.logDebug("DataPlaneUrl is set to: " + dataPlaneUrl);
@@ -604,7 +604,7 @@ class EventRepository implements Application.ActivityLifecycleCallbacks {
 
     void flushSync() {
         if (dataPlaneUrl == null) {
-            RudderLogger.logError("Invalid dataPlaneUrl: The dataPlaneUrl is not provided or given dataPlaneUrl is not valid. Ignoring flush call. \n**Note: dataPlaneUrl or dataResidencyServer(for Enterprise Users only) is mandatory from version 1.11.0**");
+            RudderLogger.logError(Constants.Logs.DATA_PLANE_URL_FLUSH);
             return;
         }
         FlushUtils.flush(areFactoriesInitialized, integrationOperationsMap,

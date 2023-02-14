@@ -116,7 +116,7 @@ public class RudderClient {
             RudderLogger.logVerbose("getInstance: instance null. creating instance");
             // assert writeKey is not null or empty
             if (TextUtils.isEmpty(writeKey)) {
-                RudderLogger.logError("Invalid writeKey: Provided writeKey is empty");
+                RudderLogger.logError(Constants.Logs.WRITE_KEY);
             }
             // assert config is not null
             if (config == null) {
