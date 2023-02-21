@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.11.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.9.0...v1.11.0) (2023-02-21)
+
+
+### Features
+
+* consent ([#197](https://github.com/rudderlabs/rudder-sdk-android/issues/197)) ([2f33197](https://github.com/rudderlabs/rudder-sdk-android/commit/2f33197e67d4b062392c44975708865e1141ea27))
+* log error message for empty writeKey & dataPlaneUrl ([465e14a](https://github.com/rudderlabs/rudder-sdk-android/commit/465e14ad2dbbf90130691dd64a36da454b506975))
+
 ## [1.10.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.8.1...v1.10.0) (2023-02-09)
 
 

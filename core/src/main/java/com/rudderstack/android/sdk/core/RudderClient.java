@@ -7,8 +7,6 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
-import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Map;
@@ -116,7 +114,7 @@ public class RudderClient {
             RudderLogger.logVerbose("getInstance: instance null. creating instance");
             // assert writeKey is not null or empty
             if (TextUtils.isEmpty(writeKey)) {
-                throw new IllegalArgumentException("RudderClient: getInstance: writeKey can not be null or empty");
+                RudderLogger.logError(Constants.Logs.WRITE_KEY_ERROR);
             }
             // assert config is not null
             if (config == null) {
@@ -143,10 +141,6 @@ public class RudderClient {
     }
 
     private static void updateConfigWithValidValuesIfNecessary(@NonNull RudderConfig config) {
-        if (TextUtils.isEmpty(config.getDataPlaneUrl())) {
-            RudderLogger.logVerbose("getInstance: EndPointUri is blank or null. using default.");
-            config.setDataPlaneUrl(Constants.DATA_PLANE_URL);
-        }
         if (config.getFlushQueueSize() < 0 || config.getFlushQueueSize() > 100) {
             RudderLogger.logVerbose("getInstance: FlushQueueSize is wrong. using default.");
             config.setFlushQueueSize(Constants.FLUSH_QUEUE_SIZE);

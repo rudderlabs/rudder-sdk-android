@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  *
  * */
 public class RudderConfig {
-    private String dataPlaneUrl;
+    @Nullable private String dataPlaneUrl;
     private int flushQueueSize;
     private int dbCountThreshold;
     private int sleepTimeOut;
@@ -54,7 +54,7 @@ public class RudderConfig {
 
     RudderConfig() {
         this(
-                Constants.DATA_PLANE_URL,
+                null,
                 Constants.FLUSH_QUEUE_SIZE,
                 Constants.DB_COUNT_THRESHOLD,
                 Constants.SLEEP_TIMEOUT,
@@ -99,13 +99,7 @@ public class RudderConfig {
     ) {
         RudderLogger.init(logLevel);
 
-        if (TextUtils.isEmpty(dataPlaneUrl)) {
-            RudderLogger.logError("endPointUri can not be null or empty. Set to default.");
-            this.dataPlaneUrl = Constants.DATA_PLANE_URL;
-        } else if (!URLUtil.isValidUrl(dataPlaneUrl)) {
-            RudderLogger.logError("Malformed endPointUri. Set to default");
-            this.dataPlaneUrl = Constants.DATA_PLANE_URL;
-        } else {
+        if (!TextUtils.isEmpty(dataPlaneUrl) && URLUtil.isValidUrl(dataPlaneUrl)) {
             if (!dataPlaneUrl.endsWith("/")) dataPlaneUrl += "/";
             this.dataPlaneUrl = dataPlaneUrl;
         }
@@ -198,6 +192,7 @@ public class RudderConfig {
     /**
      * @return dataPlaneUrl (your data-plane url)
      */
+    @Nullable
     public String getDataPlaneUrl() {
         return dataPlaneUrl;
     }
@@ -406,6 +401,7 @@ public class RudderConfig {
         private List<RudderIntegration.Factory> factories = new ArrayList<>();
         private List<RudderIntegration.Factory> customFactories = new ArrayList<>();
         private @Nullable RudderConsentFilter consentFilter = null;
+        private @Nullable String dataPlaneUrl = null;
 
         /**
          * @param factory : Instance of RudderIntegration.Factory (for more information visit https://docs.rudderstack.com)
@@ -461,8 +457,6 @@ public class RudderConfig {
             return this;
         }
 
-        private String dataPlaneUrl = Constants.DATA_PLANE_URL;
-
         /**
          * @param endPointUri Your data-plane Url
          * @return RudderConfig.Builder
@@ -487,11 +481,11 @@ public class RudderConfig {
          */
         public Builder withDataPlaneUrl(@NonNull String dataPlaneUrl) {
             if (TextUtils.isEmpty(dataPlaneUrl)) {
-                RudderLogger.logError("endPointUri can not be null or empty. Set to default");
+                RudderLogger.logError("endPointUri can not be null or empty.");
                 return this;
             }
             if (!URLUtil.isValidUrl(dataPlaneUrl)) {
-                RudderLogger.logError("Malformed endPointUri. Set to default");
+                RudderLogger.logError("Malformed endPointUri.");
                 return this;
             }
             this.dataPlaneUrl = dataPlaneUrl;
