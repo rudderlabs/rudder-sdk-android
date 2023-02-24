@@ -33,6 +33,7 @@ public class RudderClient {
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
 
+
     /*
      * private constructor
      * */
@@ -107,12 +108,13 @@ public class RudderClient {
      */
     @NonNull
     public static RudderClient getInstance(@NonNull Context context, @Nullable String writeKey, @Nullable RudderConfig config) {
+
         // check if instance is already initiated
         if (instance == null) {
             RudderLogger.logVerbose("getInstance: instance null. creating instance");
             // assert writeKey is not null or empty
             if (TextUtils.isEmpty(writeKey)) {
-                throw new IllegalArgumentException("RudderClient: getInstance: writeKey can not be null or empty");
+                RudderLogger.logError(Constants.Logs.WRITE_KEY_ERROR);
             }
             // assert config is not null
             if (config == null) {
@@ -120,37 +122,38 @@ public class RudderClient {
                 config = new RudderConfig();
             } else {
                 RudderLogger.logVerbose("getInstance: config present. using config.");
-                if (TextUtils.isEmpty(config.getDataPlaneUrl())) {
-                    RudderLogger.logVerbose("getInstance: EndPointUri is blank or null. using default.");
-                    config.setDataPlaneUrl(Constants.DATA_PLANE_URL);
-                }
-                if (config.getFlushQueueSize() < 0 || config.getFlushQueueSize() > 100) {
-                    RudderLogger.logVerbose("getInstance: FlushQueueSize is wrong. using default.");
-                    config.setFlushQueueSize(Constants.FLUSH_QUEUE_SIZE);
-                }
-                if (config.getDbCountThreshold() < 0) {
-                    RudderLogger.logVerbose("getInstance: DbCountThreshold is wrong. using default.");
-                    config.setDbCountThreshold(Constants.DB_COUNT_THRESHOLD);
-                }
-                // assure sleepTimeOut never goes below 10s
-                if (config.getSleepTimeOut() < Utils.MIN_SLEEP_TIMEOUT) {
-                    RudderLogger.logVerbose("getInstance: SleepTimeOut is wrong. using default.");
-                    config.setSleepTimeOut(Constants.SLEEP_TIMEOUT);
-                }
+                updateConfigWithValidValuesIfNecessary(config);
             }
             // get application from provided context
             application = (Application) context.getApplicationContext();
 
             // initiate RudderClient instance
             instance = new RudderClient();
-
             // initiate EventRepository class
             if (application != null) {
                 RudderLogger.logVerbose("getInstance: creating EventRepository.");
-                repository = new EventRepository(application, writeKey, config, _anonymousId, _advertisingId, _deviceToken);
+                EventRepository.Identifiers identifiers = new EventRepository
+                        .Identifiers(writeKey,_deviceToken, _anonymousId, _advertisingId);
+                repository = new EventRepository(application,  config, identifiers);
             }
         }
         return instance;
+    }
+
+    private static void updateConfigWithValidValuesIfNecessary(@NonNull RudderConfig config) {
+        if (config.getFlushQueueSize() < 0 || config.getFlushQueueSize() > 100) {
+            RudderLogger.logVerbose("getInstance: FlushQueueSize is wrong. using default.");
+            config.setFlushQueueSize(Constants.FLUSH_QUEUE_SIZE);
+        }
+        if (config.getDbCountThreshold() < 0) {
+            RudderLogger.logVerbose("getInstance: DbCountThreshold is wrong. using default.");
+            config.setDbCountThreshold(Constants.DB_COUNT_THRESHOLD);
+        }
+        // assure sleepTimeOut never goes below 10s
+        if (config.getSleepTimeOut() < Utils.MIN_SLEEP_TIMEOUT) {
+            RudderLogger.logVerbose("getInstance: SleepTimeOut is wrong. using default.");
+            config.setSleepTimeOut(Constants.SLEEP_TIMEOUT);
+        }
     }
 
     /*
@@ -211,9 +214,8 @@ public class RudderClient {
             return;
         }
         message.setType(MessageType.TRACK);
-        if (repository != null) {
-            repository.dump(message);
-        }
+        dumpMessage(message);
+
     }
 
     /**
@@ -289,9 +291,8 @@ public class RudderClient {
             return;
         }
         message.setType(MessageType.SCREEN);
-        if (repository != null) {
-            repository.dump(message);
-        }
+        dumpMessage(message);
+
     }
 
     /**
@@ -376,10 +377,8 @@ public class RudderClient {
             return;
         }
         message.setType(MessageType.IDENTIFY);
-        // dump to repository
-        if (repository != null) {
-            repository.dump(message);
-        }
+        dumpMessage(message);
+
     }
 
     /**
@@ -490,9 +489,8 @@ public class RudderClient {
             return;
         }
         message.setType(MessageType.ALIAS);
-        if (repository != null) {
-            repository.dump(message);
-        }
+        dumpMessage(message);
+
     }
 
     /**
@@ -553,6 +551,7 @@ public class RudderClient {
      * @param builder RudderMessageBuilder
      * @deprecated Will be removed soon
      */
+    @Deprecated
     public void group(@NonNull RudderMessageBuilder builder) {
         if (getOptOutStatus()) {
             return;
@@ -566,13 +565,20 @@ public class RudderClient {
      * @param message RudderMessage
      * @deprecated Will be removed soon
      */
+    @Deprecated
     public void group(@NonNull RudderMessage message) {
         if (getOptOutStatus()) {
             return;
         }
         message.setType(MessageType.GROUP);
+        dumpMessage(message);
+    }
+
+    
+
+    private void dumpMessage(@NonNull RudderMessage message) {
         if (repository != null) {
-            repository.dump(message);
+            repository.processMessage(message);
         }
     }
 
@@ -746,12 +752,7 @@ public class RudderClient {
             return;
         }
         if (repository != null) {
-            flushExecutorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    repository.flushSync();
-                }
-            });
+            flushExecutorService.submit(() -> repository.flushSync());
 
         }
     }
@@ -903,7 +904,6 @@ public class RudderClient {
             this.writeKey = writeKey;
         }
 
-        private boolean trackLifecycleEvents = false;
 
         /**
          * @return get your builder back
@@ -916,7 +916,6 @@ public class RudderClient {
             return this;
         }
 
-        private boolean recordScreenViews = false;
 
         /**
          * @return get your builder back

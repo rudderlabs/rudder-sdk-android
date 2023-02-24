@@ -1,39 +1,48 @@
 package com.rudderstack.android.sample.kotlin
 
 import android.app.Application
-import com.rudderstack.android.integration.braze.BrazeIntegrationFactory
-import com.rudderstack.android.integrations.amplitude.AmplitudeIntegrationFactory
+
+import android.content.Context
+import androidx.multidex.MultiDex
+import androidx.work.Configuration
+
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
 
-class MainApplication : Application() {
+class MainApplication : Application(), Configuration.Provider {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://shadowfax-dataplane.dev-rudder.rudderlabs.com/"
-        const val CONTROL_PLANE_URL = "https://api.dev.rudderlabs.com"
-        const val WRITE_KEY = "2CZ4Yh3XHKfn6LCWDFk3leBvFdM"
+        const val DATA_PLANE_URL = "https://rudderstachvf.dataplane.rudderstack.com"
+        const val WRITE_KEY = "1pTxG1Tqxr7FCrqIy7j0p28AENV"
     }
 
     override fun onCreate() {
         super.onCreate()
+
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,
             RudderConfig.Builder()
                 .withDataPlaneUrl(DATA_PLANE_URL)
-                .withControlPlaneUrl(CONTROL_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withTrackLifecycleEvents(true)
-                .withAutoSessionTracking(true)
                 .withRecordScreenViews(false)
-                .withAutoCollectAdvertId(false)
-                .withFactory(AmplitudeIntegrationFactory.FACTORY)
-                .withFactory(BrazeIntegrationFactory.FACTORY)
-                .withSessionTimeoutMillis(60000)
                 .build()
         )
 
+    }
+
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(base)
+        MultiDex.install(this)
+    }
+
+    // To initialize WorkManager on demand instead of on startup
+    override fun getWorkManagerConfiguration(): Configuration {
+        return Configuration.Builder()
+            .setMinimumLoggingLevel(android.util.Log.INFO)
+            .build()
     }
 }

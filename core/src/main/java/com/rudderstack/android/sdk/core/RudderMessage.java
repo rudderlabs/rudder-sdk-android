@@ -8,13 +8,12 @@ import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
 public class RudderMessage {
     @SerializedName("messageId")
-    private String messageId = String.format(Locale.US, "%d-%s", System.currentTimeMillis(), UUID.randomUUID().toString());
+    private String messageId = UUID.randomUUID().toString();
     @SerializedName("channel")
     private String channel = "mobile";
     @SerializedName("context")
@@ -53,10 +52,34 @@ public class RudderMessage {
         this.context = RudderElementCache.getCachedContext();
         this.anonymousId = RudderContext.getAnonymousId();
 
-        Map<String, Object> traits = context!= null? context.getTraits() : null;
-        if (traits != null && traits.containsKey("id")) {
-            this.userId = String.valueOf(traits.get("id"));
+        if (context != null) {
+            Map<String, Object> traits = context.getTraits();
+            if (traits != null && traits.containsKey("id")) {
+                this.userId = String.valueOf(traits.get("id"));
+            }
         }
+    }
+
+    RudderMessage(@NonNull RudderMessage message) {
+
+        this.messageId = message.messageId;
+        this.channel = message.channel;
+        this.context = message.context;
+        this.type = message.type;
+        this.action = message.action;
+        this.timestamp = message.timestamp;
+        this.anonymousId = message.anonymousId;
+        this.userId = message.userId;
+        this.event = message.event;
+        this.properties = message.properties;
+        this.userProperties = message.userProperties;
+        this.integrations = message.integrations;
+        this.destinationProps = message.destinationProps;
+        this.previousId = message.previousId;
+        this.traits = message.traits;
+        this.groupId = message.groupId;
+        this.rudderOption = message.rudderOption;
+        this.customContexts = message.customContexts;
     }
 
     void setPreviousId(String previousId) {
@@ -178,7 +201,9 @@ public class RudderMessage {
     void setCustomContexts(Map<String, Object> customContexts) {
         if (customContexts == null) return;
         this.customContexts = customContexts;
-        this.context.setCustomContexts(customContexts);
+        if(this.context != null) {
+            this.context.setCustomContexts(customContexts);
+        }
     }
 
     public Map<String, Object> getTraits() {
@@ -214,7 +239,7 @@ public class RudderMessage {
 
     void updateContext() {
         this.context = RudderElementCache.getCachedContext();
-        if (this.customContexts != null)
+        if (this.customContexts != null && this.context != null)
             this.context.setCustomContexts(this.customContexts);
     }
 
@@ -232,6 +257,7 @@ public class RudderMessage {
     public Map<String, Object> getIntegrations() {
         return this.integrations;
     }
+
 
     void setSession(RudderUserSession userSession) {
         this.context.setSession(userSession);

@@ -38,6 +38,13 @@ class Constants {
     static final long DEFAULT_SESSION_TIMEOUT = 300000;
     // default for automatic session tracking
     static final boolean AUTO_SESSION_TRACKING = true;
-    // current version of the library
-    static final String RUDDER_LIBRARY_VERSION = "1.7.0";
+    // default residency server
+    static final RudderDataResidencyServer DATA_RESIDENCY_SERVER = RudderDataResidencyServer.US;
+
+
+    class Logs {
+        static final String WRITE_KEY_ERROR = "Invalid writeKey: Provided writeKey is empty";
+        static final String DATA_PLANE_URL_ERROR = "Invalid dataPlaneUrl: The dataPlaneUrl is not provided or given dataPlaneUrl is not valid\n**Note: dataPlaneUrl or dataResidencyServer(for Enterprise Users only) is mandatory from version 1.11.0**";
+        static final String DATA_PLANE_URL_FLUSH_ERROR = "Invalid dataPlaneUrl: The dataPlaneUrl is not provided or given dataPlaneUrl is not valid. Ignoring flush call. \n**Note: dataPlaneUrl or dataResidencyServer(for Enterprise Users only) is mandatory from version 1.11.0**";
+    }
 }

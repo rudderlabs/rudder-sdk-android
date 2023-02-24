@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [ 'master','master-mpx' ]
+  pull_request:
+    branches: [ 'master', 'develop', 'develop-mpx', 'master-mpx']
+    types: [ 'opened', 'reopened', 'edited', 'synchronize' ]
+  workflow_dispatch:
+
+jobs:
+  cancel_previous:
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          workflow_id: ${{ github.event.workflow.id }}
+
+  unit-test:
+    needs: cancel_previous
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: cache gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-core-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-core-
+      - name: Set env MODULE_NAME
+        run: |
+            BRANCH="${{ github.event.pull_request.head.ref }}"
+            if [[ $BRANCH == 'master-mpx' || $BRANCH == 'develop-mpx' ]]; then
+                echo "MODULE_NAME=core-mpx" >> "$GITHUB_ENV"
+            else
+                echo "MODULE_NAME=core" >> "$GITHUB_ENV"
+            fi
+      - name: Run Tests
+        run: ./gradlew $MODULE_NAME:test
+#      - name: Generate coverage report
+#        run: ./gradlew $MODULE_NAME:codeCoverageReport
+#      - name: Upload coverage to Codecov
+#        uses: codecov/codecov-action@v2
+
+#  android-test:
+#    needs: cancel_previous
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Grant execute permission for gradlew
+#        run: chmod +x gradlew
+#      - name: cache gradle dependencies
+#        uses: actions/cache@v2
+#        with:
+#          path: |
+#            ~/.gradle/caches
+#            ~/.gradle/wrapper
+#          key: ${{ runner.os }}-gradle-android-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+#          restore-keys: |
+#            ${{ runner.os }}-gradle-android-
+#      - name: Run Tests
+#        run: ./gradlew android:test
+#      - name: Generate coverage report
+#        run: ./gradlew android:codeCoverageReport
+#      - name: Upload coverage to Codecov
+#        uses: codecov/codecov-action@v2
+
+#  security:
+#    needs: cancel_previous
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Grant execute permission for gradlew
+#        run: chmod +x gradlew
+#      - name: Snyk
+#        run: ./gradlew snyk-test
+#        env:
+#          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

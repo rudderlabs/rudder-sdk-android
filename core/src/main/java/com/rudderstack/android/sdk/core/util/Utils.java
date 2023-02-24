@@ -5,21 +5,22 @@ import android.app.Application;
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.ParseException;
 import android.net.Uri;
 import android.os.BadParcelableException;
 import android.os.Build;
+import android.os.Message;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.RudderLogger;
 import com.rudderstack.android.sdk.core.RudderProperty;
-
-
 import java.io.File;
-import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,6 +38,7 @@ import static android.provider.Settings.Secure.ANDROID_ID;
 import static android.provider.Settings.System.getString;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class Utils {
 
@@ -116,9 +118,14 @@ public class Utils {
     }
 
     public static int getUTF8Length(String message) {
-        if (message == null)
-            return 0;
-        return message.getBytes(StandardCharsets.UTF_8).length;
+        int utf8Length;
+        try {
+            utf8Length = message.getBytes("UTF-8").length;
+        } catch (UnsupportedEncodingException ex) {
+            RudderLogger.logError(ex);
+            utf8Length = -1;
+        }
+        return utf8Length;
     }
 
     public static int getUTF8Length(StringBuilder message) {
@@ -137,6 +144,12 @@ public class Utils {
     public static boolean fileExists(Context context, String filename) {
         File file = context.getFileStreamPath(filename);
         return file != null && file.exists();
+    }
+
+    public static Message deserializeMessage(String strMessage) {
+        Message msg = Message.obtain();
+        msg.obj = strMessage;
+        return msg;
     }
 
     /**
@@ -224,6 +237,12 @@ public class Utils {
                 && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
 
+    public enum NetworkResponses {
+        SUCCESS,
+        ERROR,
+        WRITE_KEY_ERROR
+    }
+
     /**
      * Returns the number of batches the given number of events can be split into considering the batch size configured.
      */
@@ -289,5 +308,22 @@ public class Utils {
             return (Boolean) value;
         }
         return false;
+    }
+    @NonNull
+    public static String appendSlashToUrl(@NonNull String dataPlaneUrl) {
+        if (!dataPlaneUrl.endsWith("/")) dataPlaneUrl += "/";
+        return dataPlaneUrl;
+    }
+
+    public static boolean isEmpty(@Nullable Map value) {
+        return (value == null || value.isEmpty());
+    }
+
+    public static boolean isEmpty(@Nullable String value) {
+        return (value == null || value.isEmpty());
+    }
+
+    public static boolean isEmpty(@Nullable List value) {
+        return (value == null || value.isEmpty());
     }
 }

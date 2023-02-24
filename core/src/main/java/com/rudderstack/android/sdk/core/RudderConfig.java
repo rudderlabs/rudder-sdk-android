@@ -6,6 +6,7 @@ import android.webkit.URLUtil;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  *
  * */
 public class RudderConfig {
-    private String dataPlaneUrl;
+    @Nullable private String dataPlaneUrl;
     private int flushQueueSize;
     private int dbCountThreshold;
     private int sleepTimeOut;
@@ -48,10 +49,12 @@ public class RudderConfig {
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
+    private RudderDataResidencyServer rudderDataResidencyServer;
+    @Nullable private RudderConsentFilter consentFilter;
 
     RudderConfig() {
         this(
-                Constants.DATA_PLANE_URL,
+                null,
                 Constants.FLUSH_QUEUE_SIZE,
                 Constants.DB_COUNT_THRESHOLD,
                 Constants.SLEEP_TIMEOUT,
@@ -67,6 +70,8 @@ public class RudderConfig {
                 Constants.DEFAULT_SESSION_TIMEOUT,
                 Constants.CONTROL_PLANE_URL,
                 null,
+                null,
+                Constants.DATA_RESIDENCY_SERVER,
                 null
         );
     }
@@ -88,17 +93,13 @@ public class RudderConfig {
             long sessionTimeout,
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
-            List<RudderIntegration.Factory> customFactories
+            List<RudderIntegration.Factory> customFactories,
+            RudderDataResidencyServer rudderDataResidencyServer,
+            @Nullable RudderConsentFilter consentFilter
     ) {
         RudderLogger.init(logLevel);
 
-        if (TextUtils.isEmpty(dataPlaneUrl)) {
-            RudderLogger.logError("endPointUri can not be null or empty. Set to default.");
-            this.dataPlaneUrl = Constants.DATA_PLANE_URL;
-        } else if (!URLUtil.isValidUrl(dataPlaneUrl)) {
-            RudderLogger.logError("Malformed endPointUri. Set to default");
-            this.dataPlaneUrl = Constants.DATA_PLANE_URL;
-        } else {
+        if (!TextUtils.isEmpty(dataPlaneUrl) && URLUtil.isValidUrl(dataPlaneUrl)) {
             if (!dataPlaneUrl.endsWith("/")) dataPlaneUrl += "/";
             this.dataPlaneUrl = dataPlaneUrl;
         }
@@ -174,6 +175,9 @@ public class RudderConfig {
             this.sessionTimeout = Constants.DEFAULT_SESSION_TIMEOUT;
         }
         this.trackAutoSession = trackAutoSession;
+
+        this.rudderDataResidencyServer = rudderDataResidencyServer;
+        this.consentFilter = consentFilter;
     }
 
     /**
@@ -188,6 +192,7 @@ public class RudderConfig {
     /**
      * @return dataPlaneUrl (your data-plane url)
      */
+    @Nullable
     public String getDataPlaneUrl() {
         return dataPlaneUrl;
     }
@@ -314,6 +319,18 @@ public class RudderConfig {
         return sessionTimeout;
     }
 
+    @Nullable
+    public RudderConsentFilter getConsentFilter() {
+        return consentFilter;
+    }
+
+    /**
+     * @return dataResidencyServer (your data residency server url)
+     */
+    public RudderDataResidencyServer getDataResidencyServer() {
+        return rudderDataResidencyServer;
+    }
+
     void setDataPlaneUrl(String dataPlaneUrl) {
         this.dataPlaneUrl = dataPlaneUrl;
     }
@@ -362,6 +379,11 @@ public class RudderConfig {
         this.trackAutoSession = trackAutoSession;
     }
 
+    void setDataResidencyServer(RudderDataResidencyServer rudderDataResidencyServer) {
+        this.rudderDataResidencyServer = rudderDataResidencyServer;
+    }
+
+
     /**
      * @return custom toString implementation for RudderConfig
      */
@@ -378,6 +400,8 @@ public class RudderConfig {
     public static class Builder {
         private List<RudderIntegration.Factory> factories = new ArrayList<>();
         private List<RudderIntegration.Factory> customFactories = new ArrayList<>();
+        private @Nullable RudderConsentFilter consentFilter = null;
+        private @Nullable String dataPlaneUrl = null;
 
         /**
          * @param factory : Instance of RudderIntegration.Factory (for more information visit https://docs.rudderstack.com)
@@ -433,8 +457,6 @@ public class RudderConfig {
             return this;
         }
 
-        private String dataPlaneUrl = Constants.DATA_PLANE_URL;
-
         /**
          * @param endPointUri Your data-plane Url
          * @return RudderConfig.Builder
@@ -459,14 +481,25 @@ public class RudderConfig {
          */
         public Builder withDataPlaneUrl(@NonNull String dataPlaneUrl) {
             if (TextUtils.isEmpty(dataPlaneUrl)) {
-                RudderLogger.logError("endPointUri can not be null or empty. Set to default");
+                RudderLogger.logError("endPointUri can not be null or empty.");
                 return this;
             }
             if (!URLUtil.isValidUrl(dataPlaneUrl)) {
-                RudderLogger.logError("Malformed endPointUri. Set to default");
+                RudderLogger.logError("Malformed endPointUri.");
                 return this;
             }
             this.dataPlaneUrl = dataPlaneUrl;
+            return this;
+        }
+
+        private RudderDataResidencyServer rudderDataResidencyServer = Constants.DATA_RESIDENCY_SERVER;
+
+        /**
+         * @param rudderDataResidencyServer Your dataResidencyServer url
+         * @return RudderConfig.Builder
+         */
+        public Builder withDataResidencyServer(@NonNull RudderDataResidencyServer rudderDataResidencyServer) {
+            this.rudderDataResidencyServer = rudderDataResidencyServer;
             return this;
         }
 
@@ -563,6 +596,11 @@ public class RudderConfig {
             }
             this.repeatInterval = repeatInterval;
             this.repeatIntervalTimeUnit = repeatIntervalTimeUnit;
+            return this;
+        }
+
+        public Builder withConsentFilter(@NonNull RudderConsentFilter consentFilter){
+            this.consentFilter = consentFilter;
             return this;
         }
 
@@ -671,7 +709,9 @@ public class RudderConfig {
                     this.sessionTimeout,
                     this.controlPlaneUrl,
                     this.factories,
-                    this.customFactories
+                    this.customFactories,
+                    this.rudderDataResidencyServer,
+                    consentFilter
             );
         }
     }

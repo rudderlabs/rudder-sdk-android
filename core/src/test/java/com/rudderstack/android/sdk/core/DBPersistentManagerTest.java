@@ -1,5 +1,26 @@
 package com.rudderstack.android.sdk.core;
 
+import org.hamcrest.Matchers;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.reflect.Whitebox;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
+import static org.awaitility.Awaitility.await;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import android.os.Build;
+import android.os.Message;
 import static com.rudderstack.android.sdk.core.DBPersistentManager.UPDATED_COL;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -21,6 +42,7 @@ import com.google.gson.GsonBuilder;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 
+import com.google.common.collect.ImmutableList;
 import org.awaitility.Awaitility;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
@@ -30,6 +52,11 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLooper;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +69,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Config(sdk = Build.VERSION_CODES.P)
 public class DBPersistentManagerTest {
 
+    DBPersistentManager dbPersistentManager;
+    private final List<String> messages = new ArrayList<String>(ImmutableList.of("{\"message\":\"m-1\"}",
+            "{\"message\":\"m-2\"}", "{\"message\":\"m-3\"}", "{\"message\":\"m-4\"}", "{\"message\":\"m-5\"}", "{\"message\":\"m-6\"}", "{\"message\":\"m-7\"}", "{\"message\":\"m-8\"}", "{\"message\":\"m-9\"}"));
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
             .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
@@ -70,180 +100,75 @@ public class DBPersistentManagerTest {
             "      \"message\": \"m-4\",\n" +
             "      \"sentAt\": \"2022-07-14T06:46:42.365Z\"\n" +
             "    }\n";
+    @Before
+    public void setUp() throws Exception {
+        dbPersistentManager = PowerMockito.mock(DBPersistentManager.class);
+        PowerMockito.when(dbPersistentManager, "saveEvent", anyString()).thenCallRealMethod();
+        PowerMockito.when(dbPersistentManager, "startHandlerThread").thenCallRealMethod();
+        Whitebox.setInternalState(dbPersistentManager, "queue", new LinkedList<Message>());
+    }
+
+    @After
+    public void tearDown() {
+        dbPersistentManager.deleteAllEvents();
+        dbPersistentManager.close();
+        dbPersistentManager = null;
+    }
+
+    private int addMessageCalled = 0;
 
     @Test
-    public void testMigration() {
+    public void testSynchronicity() throws Exception {
+        final AtomicInteger messagesSaved = new AtomicInteger(0);
+        // Mocking the addMessageToQueue, which is used by both the save-event-thread and Handler thread, to verify synchronization
+        PowerMockito.when(dbPersistentManager, "addMessageToHandlerThread", any())
+                .thenAnswer(new Answer<Void>() {
+                                @Override
+                                public Void answer(InvocationOnMock invocation) throws Throwable {
+                                    ++addMessageCalled;
+                                    System.out.println("addMessageToQueue called by: " + Thread.currentThread().getName());
+                                    //assert if called by multiple thread
+                                    assertThat(addMessageCalled, Matchers.lessThan(2));
+                                    Thread.sleep(500);
+                                    --addMessageCalled;
+                                    assertThat(addMessageCalled, Matchers.lessThan(1));
+                                    System.out.println("return from addMessageToQueue by: " + Thread.currentThread().getName());
+                                    messagesSaved.incrementAndGet();
+                                    return null;
+                                }
+                            }
+                );
 
-        final AtomicBoolean isFinished = new AtomicBoolean(false);
-        final DBPersistentManager finalDbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider.<Application>getApplicationContext(),
-                1);
+        // Triggering the saveEvent method of DBPersistentManager from save-event-thread, as this method adds messages to the queue.
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    sleep(1000);
-                    finalDbPersistentManager.saveEventSync(MESSAGE_1);
-                    finalDbPersistentManager.saveEventSync(MESSAGE_2);
-                    ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
-                    sleep(500);
-
-                    Map<Integer, Integer> idStatusMap = new HashMap<>();
-                    ArrayList<String> messages = new ArrayList<String>();
-                    String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC LIMIT %d",
-                            DBPersistentManager.EVENTS_TABLE_NAME,
-                            UPDATED_COL, 3);
-                    finalDbPersistentManager.getEventsFromDB(idStatusMap, messages, selectSQL);
-                    assertThat(idStatusMap, allOf(
-                            hasKey(1),
-                            hasKey(2)
-                    ));
-
-                    DBPersistentManager dbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider.<Application>getApplicationContext(), 2);
-                    sleep(2000);
-                    idStatusMap = new HashMap<>();
-                    messages = new ArrayList<>();
-                    dbPersistentManager.getEventsFromDB(idStatusMap, messages, selectSQL);
-                    assertThat(idStatusMap.size(), CoreMatchers.is(2));
-                    assertThat(idStatusMap, allOf(
-                            hasEntry(1, 1),
-                            hasEntry(2, 1)
-                    ));
-
-                    Map<String, Object> msg1FromDb = gson.fromJson(messages.get(0), new TypeToken<Map<String, Object>>() {
-                    }.getType());
-                    assertThat((String) msg1FromDb.get("event"), CoreMatchers.is("mess-1"));
-
-                    finalDbPersistentManager.saveEventSync(MESSAGE_3);
-                    ShadowLooper.runUiThreadTasksIncludingDelayedTasks();
-                    sleep(500);
-                    idStatusMap = new HashMap<>();
-                    messages = new ArrayList<>();
-                    dbPersistentManager.getEventsFromDB(idStatusMap, messages, selectSQL);
-                    assertThat(idStatusMap.size(), CoreMatchers.is(3));
-                    assertThat(idStatusMap, allOf(
-                            hasEntry(1, 1),
-                            hasEntry(2, 1),
-                            hasEntry(3, 0)
-                    ));
-
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } finally {
-                    isFinished.set(true);
-                    finalDbPersistentManager.close();
+                for (int i = 0; i < messages.size(); i++) {
+                    dbPersistentManager.saveEvent(messages.get(i));
+                    // Starting the Handler thread, only when some events are added to the queue, so that the replay happens, and handler
+                    // thread starts reading from the queue.
+                    if (i == messages.size() / 2) {
+                        dbPersistentManager.startHandlerThread();
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
+        }, "save-event-thread") {
+        }.start();
 
 
-        }).start();
-        Awaitility.await().atMost(1, TimeUnit.MINUTES).untilTrue(isFinished);
-
+        //await until finished
+        await().atMost(10, SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return messagesSaved.get() == messages.size();
+            }
+        });
     }
-
-    @Test
-    public void cloudModeEventsTest() {
-        final AtomicBoolean isFinished = new AtomicBoolean(false);
-        final DBPersistentManager dbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider.<Application>getApplicationContext());
-        dbPersistentManager.deleteAllEvents();
-
-        //insert data into db
-        dbPersistentManager.saveEventSync(MESSAGE_1);
-        dbPersistentManager.saveEventSync(MESSAGE_2);
-        dbPersistentManager.saveEventSync(MESSAGE_3);
-        dbPersistentManager.saveEventSync(MESSAGE_4);
-
-
-        ArrayList<Integer> messageIds = new ArrayList<>();
-        ArrayList<String> messageJsons = new ArrayList<>();
-        dbPersistentManager.fetchAllCloudModeEventsFromDB(messageIds, messageJsons);
-        List<RudderMessage> messages = parse(messageJsons);
-
-        //test if events are available
-        assertThat(messages, allOf(
-                Matchers.<RudderMessage>iterableWithSize(greaterThanOrEqualTo(4)),
-                Matchers.<RudderMessage>hasItems(hasProperty("eventName", equalTo("mess-1")),
-                        hasProperty("eventName", equalTo("mess-2")),
-                        hasProperty("eventName", equalTo("mess-3")),
-                        hasProperty("eventName", equalTo("mess-4"))
-                )
-        ));
-
-        //mark events as cloud done
-        dbPersistentManager.markCloudModeDone(messageIds);
-
-        //fetch again
-        messageIds.clear();
-        messages.clear();
-        dbPersistentManager.fetchAllCloudModeEventsFromDB(messageIds, messageJsons);
-
-        //list should be empty
-        assertThat(messageIds, Matchers.<Integer>iterableWithSize(0));
-
-        //device modes shouldn't be empty
-        messageIds.clear();
-        messages.clear();
-        dbPersistentManager.fetchDeviceModeEventsFromDb(messageIds, messageJsons, 5);
-
-        //list shouldn't be empty
-        assertThat(messageIds, Matchers.<Integer>iterableWithSize(4));
-
-
-        dbPersistentManager.deleteAllEvents();
-        dbPersistentManager.close();
-
-    }
-
-    @Test
-    public void deviceModeEventsTest() {
-        final AtomicBoolean isFinished = new AtomicBoolean(false);
-        final DBPersistentManager dbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider.<Application>getApplicationContext());
-//        dbPersistentManager.deleteAllEvents();
-
-        //insert data into db
-        dbPersistentManager.saveEventSync(MESSAGE_1);
-        dbPersistentManager.saveEventSync(MESSAGE_2);
-        dbPersistentManager.saveEventSync(MESSAGE_3);
-        dbPersistentManager.saveEventSync(MESSAGE_4);
-
-
-        ArrayList<Integer> messageIds = new ArrayList<>();
-        ArrayList<String> messageJsons = new ArrayList<>();
-        dbPersistentManager.fetchDeviceModeEventsFromDb(messageIds, messageJsons, 5);
-        List<RudderMessage> messages = parse(messageJsons);
-
-        //test if events are available
-        assertThat(messages, allOf(
-                Matchers.<RudderMessage>iterableWithSize(greaterThanOrEqualTo(4)),
-                Matchers.<RudderMessage>hasItems(hasProperty("eventName", equalTo("mess-1")),
-                        hasProperty("eventName", equalTo("mess-2")),
-                        hasProperty("eventName", equalTo("mess-3")),
-                        hasProperty("eventName", equalTo("mess-4"))
-                )
-        ));
-
-        //mark events as cloud done
-        dbPersistentManager.markDeviceModeDone(messageIds);
-
-        //fetch again
-        messageIds.clear();
-        messages.clear();
-        dbPersistentManager.fetchDeviceModeEventsFromDb(messageIds, messageJsons, 5);
-
-        //list should be empty
-        assertThat(messageIds, Matchers.<Integer>iterableWithSize(0));
-
-        //test cloud
-        messageIds.clear();
-        messages.clear();
-        dbPersistentManager.fetchAllCloudModeEventsFromDB(messageIds, messageJsons);
-
-        //list shouldn't be empty
-        assertThat(messageIds, Matchers.<Integer>iterableWithSize(4));
-
-        dbPersistentManager.deleteAllEvents();
-        dbPersistentManager.close();
-    }
-
     @Test
     public void doneEventsTest() {
         final DBPersistentManager dbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider.<Application>getApplicationContext());
@@ -302,33 +227,6 @@ public class DBPersistentManagerTest {
         dbPersistentManager.close();
 
     }
-
-
-    @Test
-    public void deleteFirstEventsTest() throws InterruptedException {
-        final DBPersistentManager dbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider.<Application>getApplicationContext());
-        sleep(500);
-        //insert data into db
-        dbPersistentManager.saveEventSync(MESSAGE_1);
-        dbPersistentManager.saveEventSync(MESSAGE_2);
-        dbPersistentManager.saveEventSync(MESSAGE_3);
-        dbPersistentManager.saveEventSync(MESSAGE_4);
-
-        //delete
-        dbPersistentManager.deleteFirstEvents(2);
-
-        List<Integer> messageIds = new ArrayList<>();
-        List<String> messageJsons = new ArrayList<>();
-        dbPersistentManager.getEventsFromDB(messageIds, messageJsons, "SELECT * FROM " + DBPersistentManager.EVENTS_TABLE_NAME);
-
-        //check
-        assertThat(messageIds, Matchers.<Integer>iterableWithSize(2));
-
-        dbPersistentManager.deleteAllEvents();
-        dbPersistentManager.close();
-
-    }
-
     private List<RudderMessage> parse(List<String> messageJsons) {
         List<RudderMessage> messages = new ArrayList<>();
         for (String mJson :
