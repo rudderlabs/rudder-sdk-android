@@ -18,5 +18,10 @@ public class ReflectionUtils {
         field.setAccessible(true);
         return (String) field.get(object);
     }
+    public static <T, R> R getObject(T object, String fieldName) throws NoSuchFieldException, IllegalAccessException {
+        Field field = object.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return (R) field.get(object);
+    }
 
 }

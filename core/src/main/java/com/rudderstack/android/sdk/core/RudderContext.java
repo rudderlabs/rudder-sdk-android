@@ -8,6 +8,7 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -50,13 +51,16 @@ public class RudderContext {
     @Nullable
     @SerializedName("sessionStart")
     private Boolean sessionStart = null;
+    @Nullable
+    @SerializedName("consentManagement")
+    private ConsentManagement consentManagement = null;
     @SerializedName("externalId")
     private List<Map<String, Object>> externalIds = null;
     public Map<String, Object> customContextMap = null;
 
     private static transient String _anonymousId;
 
-    private RudderContext() {
+    RudderContext() {
         // stop instantiating without application instance.
         // cachedContext is used every time, once initialized
     }
@@ -104,6 +108,7 @@ public class RudderContext {
         this.locale = Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
         this.timezone = Utils.getTimeZone();
     }
+
 
     void resetTraits() {
         RudderTraits traits = new RudderTraits();
@@ -185,20 +190,17 @@ public class RudderContext {
     void updateDeviceWithAdId() {
         if (isOnClassPath("com.google.android.gms.ads.identifier.AdvertisingIdClient")) {
             // This needs to be done each time since the settings may have been updated.
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        boolean available = getGooglePlayServicesAdvertisingID();
-                        if (!available) {
-                            available = getAmazonFireAdvertisingID();
-                        }
-                        if (!available) {
-                            RudderLogger.logDebug("Unable to collect advertising ID from Amazon Fire OS and Google Play Services.");
-                        }
-                    } catch (Exception e) {
-                        RudderLogger.logError("Unable to collect advertising ID from Google Play Services or Amazon Fire OS.");
+            new Thread(() -> {
+                try {
+                    boolean available = getGooglePlayServicesAdvertisingID();
+                    if (!available) {
+                        available = getAmazonFireAdvertisingID();
                     }
+                    if (!available) {
+                        RudderLogger.logDebug("Unable to collect advertising ID from Amazon Fire OS and Google Play Services.");
+                    }
+                } catch (Exception e) {
+                    RudderLogger.logError("Unable to collect advertising ID from Google Play Services or Amazon Fire OS.");
                 }
             }).start();
         } else {
@@ -392,5 +394,18 @@ public class RudderContext {
         }
 
         return copy;
+    }
+
+    public void setConsentManagement(@Nullable ConsentManagement consentManagement) {
+        this.consentManagement = consentManagement;
+    }
+
+    public static class ConsentManagement{
+        @SerializedName("deniedConsentIds")
+        private List<String> deniedConsentIds;
+
+        public ConsentManagement(List<String> deniedConsentIds) {
+            this.deniedConsentIds = deniedConsentIds;
+        }
     }
 }

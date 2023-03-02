@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.12.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.10.0...v1.12.0) (2023-03-02)
+
+
+### Features
+
+* adding consented values for cloud mode. ([ba4a698](https://github.com/rudderlabs/rudder-sdk-android/commit/ba4a698eeb9089d67fabf97dd74231cca8696b76))
+* log error message for empty writeKey & dataPlaneUrl ([465e14a](https://github.com/rudderlabs/rudder-sdk-android/commit/465e14ad2dbbf90130691dd64a36da454b506975))
+
 ## [1.11.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.9.0...v1.11.0) (2023-02-21)
 
 
