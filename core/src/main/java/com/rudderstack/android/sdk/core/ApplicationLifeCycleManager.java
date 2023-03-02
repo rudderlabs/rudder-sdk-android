@@ -22,16 +22,46 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
     private final EventRepository repository;
     private final RudderFlushWorkManager rudderFlushWorkManager;
     private final RudderConfig config;
+    private RudderUserSession userSession;
 
 
-    ApplicationLifeCycleManager(Application application, RudderPreferenceManager preferenceManager, EventRepository repository, RudderFlushWorkManager rudderFlushWorkManager, RudderConfig config) {
+    ApplicationLifeCycleManager(Application application, RudderPreferenceManager preferenceManager,
+                                EventRepository repository, RudderFlushWorkManager rudderFlushWorkManager, RudderConfig config) {
         this.preferenceManager = preferenceManager;
         this.repository = repository;
         this.rudderFlushWorkManager = rudderFlushWorkManager;
         this.config = config;
-        this.checkApplicationUpdateStatus(application);
+        this.sendApplicationUpdateStatus(application);
         if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
             application.registerActivityLifecycleCallbacks(this);
+        }
+        startSessionTracking();
+    }
+
+    private void startSessionTracking() {
+        RudderLogger.logDebug("EventRepository: constructor: Initiating RudderUserSession");
+        userSession = new RudderUserSession(preferenceManager, config);
+
+        // 8. clear session if automatic session tracking was enabled previously
+        // but disabled presently or vice versa.
+        boolean previousAutoSessionTrackingStatus = preferenceManager.getAutoSessionTrackingStatus();
+        if (previousAutoSessionTrackingStatus != config.isTrackAutoSession()) {
+            userSession.clearSession();
+        }
+        preferenceManager.saveAutoSessionTrackingStatus(config.isTrackAutoSession());
+        // starting automatic session tracking if enabled.
+        if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
+            userSession.startSessionIfNeeded();
+        }
+    }
+
+    void applySessionTracking(RudderMessage message) {
+        // Session Tracking
+        if (userSession.getSessionId() != null) {
+            message.setSession(userSession);
+        }
+        if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
+            userSession.updateLastEventTimeStamp();
         }
     }
 
@@ -40,7 +70,7 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
      * If it is the first time then make LifeCycle event: Application Installed.
      * If it is updated then make LifeCycle event: Application Updated.
      */
-    private void checkApplicationUpdateStatus(Application application) {
+    private void sendApplicationUpdateStatus(Application application) {
         AppVersion appVersion = new AppVersion(application);
         if (appVersion.previousBuild == -1) {
             // application was not installed previously, now triggering Application Installed event
@@ -67,7 +97,7 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
                                 .putValue("build", currentBuild)
                 ).build();
         message.setType(MessageType.TRACK);
-        repository.dump(message);
+        repository.processMessage(message);
     }
 
     private void sendApplicationUpdated(int previousBuild, int currentBuild, String previousVersion, String currentVersion) {
@@ -86,7 +116,7 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
                                 .putValue("build", currentBuild)
                 ).build();
         message.setType(MessageType.TRACK);
-        repository.dump(message);
+        repository.processMessage(message);
     }
 
     @Override
@@ -100,7 +130,7 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
             ScreenPropertyBuilder screenPropertyBuilder = new ScreenPropertyBuilder().setScreenName(activity.getLocalClassName()).isAtomatic(true);
             RudderMessage screenMessage = new RudderMessageBuilder().setEventName(activity.getLocalClassName()).setProperty(screenPropertyBuilder.build()).build();
             screenMessage.setType(MessageType.SCREEN);
-            repository.dump(screenMessage);
+            repository.processMessage(screenMessage);
         }
         if (this.config.isTrackLifecycleEvents()) {
             noOfActivities += 1;
@@ -110,14 +140,23 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
                 if (repository.getOptStatus()) {
                     return;
                 }
+                startSessionTrackingIfApplicable();
                 RudderMessage trackMessage;
                 trackMessage = new RudderMessageBuilder()
                         .setEventName("Application Opened")
                         .setProperty(Utils.trackDeepLink(activity, isFirstLaunch, preferenceManager.getVersionName()))
                         .build();
                 trackMessage.setType(MessageType.TRACK);
-                repository.dump(trackMessage);
+                repository.processMessage(trackMessage);
             }
+        }
+    }
+
+    private void startSessionTrackingIfApplicable() {
+        // Session Tracking
+        // Automatic tracking session started
+        if (!isFirstLaunch.get() && config.isTrackAutoSession() && userSession != null) {
+            userSession.startSessionIfNeeded();
         }
     }
 
@@ -133,9 +172,24 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
                 }
                 RudderMessage message = new RudderMessageBuilder().setEventName("Application Backgrounded").build();
                 message.setType(MessageType.TRACK);
-                repository.dump(message);
+                repository.processMessage(message);
             }
         }
+    }
+
+    void startSession(Long sessionId) {
+        if (config.isTrackAutoSession()) {
+            endSession();
+            config.setTrackAutoSession(false);
+        }
+        userSession.startSession(sessionId);
+    }
+
+    void endSession() {
+        if (config.isTrackAutoSession()) {
+            config.setTrackAutoSession(false);
+        }
+        userSession.clearSession();
     }
 
     @Override
@@ -163,6 +217,12 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
         // Empty
     }
 
+    public void reset() {
+        if (userSession.getSessionId() != null) {
+            userSession.refreshSession();
+        }
+    }
+
     private class AppVersion {
         int previousBuild;
         int currentBuild;
@@ -177,6 +237,8 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
                 RudderLogger.logDebug("Previous Installed Build: " + previousBuild);
                 String packageName = application.getPackageName();
                 PackageManager packageManager = application.getPackageManager();
+                if (packageManager == null)
+                    return;
                 PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
                 currentVersion = packageInfo.versionName;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -192,8 +254,8 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
         }
 
         /*
-        * Call this method to store the Current Build and Current Version of the app.
-        * In case of the LifeCycle events Application Installed or Application Updated only.
+         * Call this method to store the Current Build and Current Version of the app.
+         * In case of the LifeCycle events Application Installed or Application Updated only.
          */
         void storeCurrentBuildAndVersion() {
             preferenceManager.saveBuildNumber(currentBuild);

@@ -56,7 +56,6 @@ public class RudderNetworkManager {
      * @param requestMethod  the http method which the request should be sent
      * @return sends back a Result Object including the response payload, error payload, statusCode.
      */
-    @VisibleForTesting
     Result sendNetworkRequest(@Nullable String requestPayload, @NonNull String requestURL, @NonNull RequestMethod requestMethod) {
         if (requestMethod == RequestMethod.POST && requestPayload == null)
             return new Result(NetworkResponses.ERROR, -1, null, "Payload is Null");

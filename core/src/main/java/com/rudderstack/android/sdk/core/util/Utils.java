@@ -237,12 +237,6 @@ public class Utils {
                 && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
 
-    public enum NetworkResponses {
-        SUCCESS,
-        ERROR,
-        WRITE_KEY_ERROR
-    }
-
     /**
      * Returns the number of batches the given number of events can be split into considering the batch size configured.
      */

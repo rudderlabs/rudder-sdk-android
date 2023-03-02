@@ -5,8 +5,8 @@ interface Callback {
 }
 
 class EventInsertionCallback implements Callback {
-    RudderMessage message;
-    RudderDeviceModeManager deviceModeManager;
+    private final RudderMessage message;
+    private final RudderDeviceModeManager deviceModeManager;
 
     public EventInsertionCallback(RudderMessage message, RudderDeviceModeManager deviceModeManager) {
         this.message = message;

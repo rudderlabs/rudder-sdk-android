@@ -2,8 +2,6 @@ package com.rudderstack.android.sample.kotlin
 
 import android.app.Application
 
-import android.content.Context
-import androidx.multidex.MultiDex
 import androidx.work.Configuration
 
 import com.rudderstack.android.sdk.core.RudderClient
@@ -34,10 +32,6 @@ class MainApplication : Application(), Configuration.Provider {
 
     }
 
-    override fun attachBaseContext(base: Context) {
-        super.attachBaseContext(base)
-        MultiDex.install(this)
-    }
 
     // To initialize WorkManager on demand instead of on startup
     override fun getWorkManagerConfiguration(): Configuration {

@@ -44,17 +44,14 @@ class RudderServerConfigManager {
 
     private void fetchConfig() {
 
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                downloadConfig();
-                lock.lock();
-                serverConfig = getRudderServerConfig();
-                if (serverConfig == null) {
-                    RudderLogger.logError("Failed to fetch server config");
-                }
-                lock.unlock();
+        Thread thread = new Thread(() -> {
+            downloadConfig();
+            lock.lock();
+            serverConfig = getRudderServerConfig();
+            if (serverConfig == null) {
+                RudderLogger.logError("Failed to fetch server config");
             }
+            lock.unlock();
         });
         RudderLogger.logVerbose("Download Thread Id:" + thread.getId());
         thread.start();
@@ -63,7 +60,7 @@ class RudderServerConfigManager {
     private void downloadConfig() {
         boolean isDone = false;
         int retryCount = 0;
-        String endpoint = "sourceConfig?p=android&v=" + Constants.RUDDER_LIBRARY_VERSION + "&bv=" + android.os.Build.VERSION.SDK_INT;
+        String endpoint = "sourceConfig?p=android&v=" + BuildConfig.VERSION_NAME + "&bv=" + android.os.Build.VERSION.SDK_INT;
         String requestUrl = addEndPoint(rudderConfig.getControlPlaneUrl(), endpoint);
         while (!isDone && retryCount <= 3) {
             RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configUrl: %s", requestUrl));
@@ -103,12 +100,10 @@ class RudderServerConfigManager {
     }
 
     void saveRudderServerConfig(RudderServerConfig rudderServerConfig) {
-        try {
-            FileOutputStream fos = context.openFileOutput(RUDDER_SERVER_CONFIG_FILE_NAME, Context.MODE_PRIVATE);
-            ObjectOutputStream os = new ObjectOutputStream(fos);
+        try(FileOutputStream fos = context.openFileOutput(RUDDER_SERVER_CONFIG_FILE_NAME, Context.MODE_PRIVATE);
+            ObjectOutputStream os = new ObjectOutputStream(fos)) {
+
             os.writeObject(rudderServerConfig);
-            os.close();
-            fos.close();
         } catch (Exception e) {
             RudderLogger.logError("RudderServerConfigManager: saveRudderServerConfig: Exception while saving RudderServerConfig Object to File");
             e.printStackTrace();
@@ -117,20 +112,19 @@ class RudderServerConfigManager {
 
     private RudderServerConfig getRudderServerConfig() {
         RudderServerConfig rudderServerConfig = null;
-        try {
-            if (Utils.fileExists(context, RUDDER_SERVER_CONFIG_FILE_NAME)) {
-                FileInputStream fis = context.openFileInput(RUDDER_SERVER_CONFIG_FILE_NAME);
-                ObjectInputStream is = new ObjectInputStream(fis);
-                rudderServerConfig = (RudderServerConfig) is.readObject();
-                is.close();
-                fis.close();
-            }
-        } catch (Exception e) {
-            RudderLogger.logError("RudderServerConfigManager: getRudderServerConfig: Failed to read RudderServerConfig Object from File");
-            e.printStackTrace();
-        } finally {
-            return rudderServerConfig;
+        if (!Utils.fileExists(context, RUDDER_SERVER_CONFIG_FILE_NAME)) {
+            return null;
         }
+            try(FileInputStream fis = context.openFileInput(RUDDER_SERVER_CONFIG_FILE_NAME);
+                ObjectInputStream is = new ObjectInputStream(fis)) {
+
+                rudderServerConfig = (RudderServerConfig) is.readObject();
+            } catch (Exception e) {
+                RudderLogger.logError("RudderServerConfigManager: getRudderServerConfig: Failed to read RudderServerConfig Object from File");
+                e.printStackTrace();
+            }
+        return rudderServerConfig;
+
     }
 
     RudderServerConfig getConfig() {
@@ -147,7 +141,7 @@ class RudderServerConfigManager {
 
     private void sleep(int retryCount) {
         try {
-            Thread.sleep(retryCount * 1000);
+            Thread.sleep(retryCount * 1000L);
         } catch (InterruptedException ex) {
             RudderLogger.logError(String.format(Locale.US, "RudderServerConfigManager: Sleep: Exception while the thread is in sleep %s", ex.getLocalizedMessage()));
         }

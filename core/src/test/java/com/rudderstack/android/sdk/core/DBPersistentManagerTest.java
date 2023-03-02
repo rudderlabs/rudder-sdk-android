@@ -144,7 +144,7 @@ public class DBPersistentManagerTest {
             @Override
             public void run() {
                 for (int i = 0; i < messages.size(); i++) {
-                    dbPersistentManager.saveEvent(messages.get(i));
+                    dbPersistentManager.saveEventSync(messages.get(i));
                     // Starting the Handler thread, only when some events are added to the queue, so that the replay happens, and handler
                     // thread starts reading from the queue.
                     if (i == messages.size() / 2) {

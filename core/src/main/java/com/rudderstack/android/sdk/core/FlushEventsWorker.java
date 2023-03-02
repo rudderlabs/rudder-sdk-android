@@ -39,6 +39,8 @@ public class FlushEventsWorker extends Worker {
         RudderLogger.logInfo("FlushEventsWorker: doWork: Started Periodic Flushing of Events ");
 
         return FlushUtils.flush(
+                false,// worker is for cloud mode only
+                null,// for cloud mode only
                 flushConfig.flushQueueSize,
                 flushConfig.dataPlaneUrl,
                 dbManager,
