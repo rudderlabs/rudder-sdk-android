@@ -5,10 +5,12 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 
@@ -147,7 +149,7 @@ public class RudderNetworkManager {
             httpConnection.setRequestMethod("POST");
             httpConnection.setRequestProperty("Content-Type", "application/json");
             httpConnection.setRequestProperty("AnonymousId", anonymousIdHeaderString);
-            requestPayload = withAddMetadataToRequestPayload(requestPayload, isDMTRequest);
+            requestPayload = withAddedMetadataToRequestPayload(requestPayload, isDMTRequest);
             OutputStream os = httpConnection.getOutputStream();
             OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
             osw.write(requestPayload);
@@ -157,18 +159,16 @@ public class RudderNetworkManager {
         }
         return httpConnection;
     }
-
-    private String withAddMetadataToRequestPayload(String requestPayload, boolean isDMTRequest) {
+    @VisibleForTesting
+    String withAddedMetadataToRequestPayload(String requestPayload, boolean isDMTRequest) {
         if (requestPayload == null || !isDMTRequest || dmtAuthorisationString == null)
             return requestPayload;
-        Type typeOfPayload = new TypeToken<Map<String, ?>>() {
-        }.getType();
-        JsonObject jsonObject = gson.fromJson(requestPayload, typeOfPayload);
+        JsonObject jsonObject =  JsonParser.parseString(requestPayload).getAsJsonObject();
         jsonObject.addProperty(DMT_AUTHORISATION_KEY, dmtAuthorisationString);
-        return jsonObject.getAsString();
+        return jsonObject.toString();
     }
 
-    String getResponse(InputStream stream) throws IOException {
+    private String getResponse(InputStream stream) throws IOException {
         BufferedInputStream bis = new BufferedInputStream(stream);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         int res;
@@ -187,7 +187,7 @@ public class RudderNetworkManager {
     static class Result {
 
         final NetworkResponses status;
-        int statusCode;
+        final int statusCode;
         @Nullable
         final String response;
         @Nullable
