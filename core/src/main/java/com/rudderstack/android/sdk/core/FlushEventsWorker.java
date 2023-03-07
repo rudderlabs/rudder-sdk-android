@@ -7,12 +7,6 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.rudderstack.android.sdk.core.util.Utils;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
 public class FlushEventsWorker extends Worker {
 
     public FlushEventsWorker(
@@ -38,9 +32,7 @@ public class FlushEventsWorker extends Worker {
         }
         RudderLogger.logInfo("FlushEventsWorker: doWork: Started Periodic Flushing of Events ");
 
-        return FlushUtils.flush(
-                false,// worker is for cloud mode only
-                null,// for cloud mode only
+        return FlushUtils.flushToServer(
                 flushConfig.flushQueueSize,
                 flushConfig.dataPlaneUrl,
                 dbManager,

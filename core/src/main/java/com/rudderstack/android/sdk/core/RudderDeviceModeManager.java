@@ -7,6 +7,8 @@ import static com.rudderstack.android.sdk.core.TransformationRequest.Transformat
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
+import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
@@ -38,7 +40,6 @@ public class RudderDeviceModeManager {
 
     private final DBPersistentManager dbPersistentManager;
     private final RudderNetworkManager networkManager;
-    private final RudderDeviceModeManager rudderDeviceModeManager;
     private final RudderConfig rudderConfig;
     private boolean areFactoriesInitialized;
     private RudderEventFilteringPlugin rudderEventFilteringPlugin;
@@ -61,35 +62,50 @@ public class RudderDeviceModeManager {
         this.integrationOperationsMap = new HashMap<>();
         this.integrationCallbacks = new HashMap<>();
         this.eventReplayMessageQueue = Collections.synchronizedMap(new HashMap<Integer, RudderMessage>());
-        rudderDeviceModeManager = this;
     }
 
-    void initiate(RudderServerConfig serverConfig) {
+    void initiate(RudderServerConfig serverConfig, ConsentFilterHandler consentFilterHandler) {
         RudderLogger.logDebug("RudderDeviceModeManager: DeviceModeProcessor: Starting the Device Mode Processor");
-        this.rudderEventFilteringPlugin = new RudderEventFilteringPlugin(serverConfig.source.destinations);
-        setDestinationsWithTransformationsEnabled(serverConfig);
-        initiateFactories(serverConfig.source.destinations);
+        List<RudderServerDestination> consentedDestinations = getConsentedDestinations(serverConfig.source,
+                consentFilterHandler);
+        setupNativeFactoriesWithFiltering(consentedDestinations);
+        setDestinationsWithTransformationsEnabled(consentedDestinations);
         initiateCustomFactories();
         replayMessageQueue();
         this.areFactoriesInitialized = true;
         if (doPassedFactoriesHaveTransformationsEnabled()) {
             RudderLogger.logDebug("RudderDeviceModeManager: DeviceModeProcessor: Starting the Device Mode Transformation Processor");
-            RudderDeviceModeTransformationManager deviceModeTransformationManager = new RudderDeviceModeTransformationManager(dbPersistentManager, networkManager, rudderDeviceModeManager, rudderConfig);
+            RudderDeviceModeTransformationManager deviceModeTransformationManager = new RudderDeviceModeTransformationManager(dbPersistentManager, networkManager, this, rudderConfig);
             deviceModeTransformationManager.startDeviceModeTransformationProcessor();
         } else {
             RudderLogger.logDebug("RudderDeviceModeManager: DeviceModeProcessor: No Device Mode Destinations with transformations attached hence device mode transformation processor need not to be started");
         }
     }
+    private List<RudderServerDestination> getConsentedDestinations(RudderServerConfigSource serverConfigSource,
+                                                                   ConsentFilterHandler consentFilterHandler){
+        if(serverConfigSource == null)
+            return Collections.emptyList();
+        List<RudderServerDestination> destinations = serverConfigSource.destinations;
+        if (destinations == null) {
+            RudderLogger.logDebug("EventRepository: initiateSDK: No native SDKs are found");
+            return Collections.emptyList();
+        }
+        List<RudderServerDestination> consentedDestinations = consentFilterHandler !=
+                null ? consentFilterHandler.filterDestinationList(destinations) : destinations;
+        if(consentedDestinations == null)
+            return Collections.emptyList();
+        return consentedDestinations;
 
-    private void setDestinationsWithTransformationsEnabled(RudderServerConfig serverConfig) {
-        if (serverConfig != null && serverConfig.source != null && serverConfig.source.destinations != null)
-            for (RudderServerDestination destination : serverConfig.source.destinations) {
+    }
+
+    private void setDestinationsWithTransformationsEnabled(List<RudderServerDestination> destinations)  {
+            for (RudderServerDestination destination :destinations) {
                 if (destination.isDestinationEnabled && destination.areTransformationsConnected)
                     destinationsWithTransformationsEnabled.put(destination.destinationDefinition.displayName, destination.destinationId);
             }
     }
 
-    private void initiateFactories(List<RudderServerDestination> destinations) {
+    private void setupNativeFactoriesWithFiltering(List<RudderServerDestination> destinations) {
         if (!areFactoriesPassedInConfig()) {
             RudderLogger.logInfo("RudderDeviceModeManager: initiateFactories: No native SDK factory found");
             return;
@@ -99,36 +115,9 @@ public class RudderDeviceModeManager {
             RudderLogger.logInfo("RudderDeviceModeManager: initiateFactories: No destination found in the config");
             return;
         }
-        // check for multiple destinations
-        Map<String, RudderServerDestination> destinationConfigMap = new HashMap<>();
-        for (RudderServerDestination destination : destinations) {
-            destinationConfigMap.put(destination.destinationDefinition.displayName, destination);
-        }
-
-        for (RudderIntegration.Factory factory : rudderConfig.getFactories()) {
-            // if factory is present in the config
-            String key = factory.key();
-            if (destinationConfigMap.containsKey(key)) {
-                RudderServerDestination destination = destinationConfigMap.get(key);
-                // initiate factory if destination is enabled from the dashboard
-                if (destination != null && destination.isDestinationEnabled) {
-                    Object destinationConfig = destination.destinationConfig;
-                    RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: initiateFactories: Initiating %s native SDK factory", key));
-                    try {
-                        RudderIntegration<?> nativeOp = factory.create(destinationConfig, RudderClient.getInstance(), rudderConfig);
-                        RudderLogger.logInfo(String.format(Locale.US, "RudderDeviceModeManager: initiateFactories: Initiated %s native SDK factory", key));
-                        integrationOperationsMap.put(key, nativeOp);
-                        handleCallBacks(key, nativeOp);
-                    } catch (Exception e) {
-                        RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: initiateFactories: Failed to initiate %s native SDK Factory due to %s", key, e.getLocalizedMessage()));
-                    }
-                } else {
-                    RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: initiateFactories: destination was null or not enabled for %s", key));
-                }
-            } else {
-                RudderLogger.logInfo(String.format(Locale.US, "RudderDeviceModeManager: initiateFactories: %s is not present in configMap", key));
-            }
-        }
+        initiateFactories(destinations);
+        RudderLogger.logDebug("EventRepository: initiating event filtering plugin for device mode destinations");
+        rudderEventFilteringPlugin = new RudderEventFilteringPlugin(destinations);
     }
 
     private void handleCallBacks(String key, RudderIntegration nativeOp) {
@@ -161,7 +150,45 @@ public class RudderDeviceModeManager {
             }
         }
     }
+    private void initiateFactories(List<RudderServerDestination> destinations) {
+        // initiate factory initialization after 10s
+        // let the factories capture everything they want to capture
+        if (!areFactoriesPassedInConfig()) {
+            RudderLogger.logInfo("EventRepository: initiateFactories: No native SDK factory found");
+            return;
+        }
+        // initiate factories if client is initialized properly
+        if (destinations.isEmpty()) {
+            RudderLogger.logInfo("EventRepository: initiateFactories: No destination found in the config");
+            return;
+        }
+        // check for multiple destinations
+        Map<String, RudderServerDestination> destinationConfigMap = new HashMap<>();
+        for (RudderServerDestination destination : destinations) {
+            destinationConfigMap.put(destination.destinationDefinition.displayName, destination);
+        }
 
+        for (RudderIntegration.Factory factory : rudderConfig.getFactories()) {
+            // if factory is present in the config
+            String key = factory.key();
+            if (destinationConfigMap.containsKey(key)) {
+                RudderServerDestination destination = destinationConfigMap.get(key);
+                // initiate factory if destination is enabled from the dashboard
+                if (destination != null && destination.isDestinationEnabled) {
+                    Object destinationConfig = destination.destinationConfig;
+                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: Initiating %s native SDK factory", key));
+                    RudderIntegration<?> nativeOp = factory.create(destinationConfig, RudderClient.getInstance(), rudderConfig);
+                    RudderLogger.logInfo(String.format(Locale.US, "EventRepository: initiateFactories: Initiated %s native SDK factory", key));
+                    integrationOperationsMap.put(key, nativeOp);
+                    handleCallBacks(key, nativeOp);
+                } else {
+                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: destination was null or not enabled for %s", key));
+                }
+            } else {
+                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: initiateFactories: %s is not present in configMap", key));
+            }
+        }
+    }
     private void replayMessageQueue() {
         synchronized (eventReplayMessageQueue) {
             RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: replaying old messages with factories. Count: %d", eventReplayMessageQueue.size()));

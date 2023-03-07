@@ -3,7 +3,6 @@ package com.rudderstack.android.sdk.core;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 import com.rudderstack.android.sdk.core.util.Utils;
 
-import static com.rudderstack.android.sdk.core.RudderCloudModeManager.getPayloadFromMessages;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
@@ -44,15 +43,11 @@ class FlushUtils {
      * @param dbManager      Instance of the dbPersistentManager which is used to do all the operations with DB.
      * @return boolean indicating if the flush operation is successful or not.
      */
-    static boolean flush(boolean areFactoriesInitialized, @Nullable Map<String, RudderIntegration<?>> integrationOperationsMap,
-                         int flushQueueSize, String dataPlaneUrl, DBPersistentManager dbManager, RudderNetworkManager networkManager) {
+    static boolean flushToServer(int flushQueueSize, String dataPlaneUrl, DBPersistentManager dbManager, RudderNetworkManager networkManager) {
         Result networkResponse;
         synchronized (MessageUploadLock.UPLOAD_LOCK) {
             final ArrayList<Integer> messageIds = new ArrayList<>();
             final ArrayList<String> messages = new ArrayList<>();
-            if (areFactoriesInitialized && integrationOperationsMap != null) {
-                flushNativeSdks(integrationOperationsMap);
-            }
             RudderLogger.logDebug("FlushUtils: flush: Fetching events to flush to server");
             dbManager.fetchAllCloudModeEventsFromDB(messageIds, messages);
             int numberOfBatches = getNumberOfBatches(messages.size(), flushQueueSize);
@@ -91,16 +86,6 @@ class FlushUtils {
                 }
             }
             return true;
-        }
-    }
-    static void flushNativeSdks(Map<String, RudderIntegration<?>> integrationOperationsMap) {
-        RudderLogger.logDebug("EventRepository: flush native SDKs");
-        for (Map.Entry<String, RudderIntegration<?>> entry : integrationOperationsMap.entrySet()) {
-            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush for %s", entry.getKey()));
-            RudderIntegration<?> integration = entry.getValue();
-            if (integration != null) {
-                integration.flush();
-            }
         }
     }
 
