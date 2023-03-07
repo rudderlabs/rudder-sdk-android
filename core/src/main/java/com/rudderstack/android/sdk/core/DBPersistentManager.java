@@ -128,8 +128,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
      * once Handler thread is initialized.
      * */
     void saveEvent(String messageJson, EventInsertionCallback callback) {
-        Message msg = Utils.deserializeMessage(messageJson);
-        msg.obj = callback;
+        Message msg = createOsMessageFromJson(messageJson, callback);
         synchronized (DBPersistentManager.QUEUE_LOCK) {
             if (dbInsertionHandlerThread == null) {
                 queue.add(msg);
@@ -137,23 +136,16 @@ class DBPersistentManager extends SQLiteOpenHelper {
             }
             addMessageToHandlerThread(msg);
         }
-        //TODO
-        /*try {
-            Message msg = Message.obtain();
-            msg.obj = callback;
-            Bundle eventBundle = new Bundle();
-            eventBundle.putString(EVENT, messageJson);
-            msg.setData(eventBundle);
-            if (dbInsertionHandlerThread == null) {
-                queue.add(msg);
-                return;
-            }
-            synchronized (this) {
-                dbInsertionHandlerThread.addMessage(msg);
-            }
-        } catch (Exception e) {
-            RudderLogger.logError(e.getCause());
-        }*/
+
+    }
+
+    private Message createOsMessageFromJson(String messageJson, EventInsertionCallback callback){
+        Message msg = Message.obtain();
+        msg.obj = callback;
+        Bundle eventBundle = new Bundle();
+        eventBundle.putString(EVENT, messageJson);
+        msg.setData(eventBundle);
+        return msg;
     }
 
     /*

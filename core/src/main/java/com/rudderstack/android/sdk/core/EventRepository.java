@@ -27,7 +27,6 @@ import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -307,39 +306,6 @@ class EventRepository {
         processMessage(message);
     }
 
-    private void updatePreferenceManagerWithApplicationUpdateStatus(Application application) {
-        try {
-            int previousBuild = preferenceManager.getBuildNumber();
-            String previousVersion = preferenceManager.getVersionName();
-            RudderLogger.logDebug("Previous Installed Version: " + previousVersion);
-            RudderLogger.logDebug("Previous Installed Build: " + previousBuild);
-            String packageName = application.getPackageName();
-            PackageManager packageManager = application.getPackageManager();
-            PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
-            int currentBuild = 0;
-            String currentVersion = packageInfo.versionName;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                currentBuild = (int) packageInfo.getLongVersionCode();
-            } else {
-                currentBuild = packageInfo.versionCode;
-            }
-            RudderLogger.logDebug("Current Installed Version: " + currentVersion);
-            RudderLogger.logDebug("Current Installed Build: " + currentBuild);
-            if (previousBuild == -1) {
-                // application was not installed previously, Application Installed event
-                preferenceManager.saveBuildNumber(currentBuild);
-                preferenceManager.saveVersionName(currentVersion);
-                sendApplicationInstalled(currentBuild, currentVersion);
-                rudderFlushWorkManager.registerPeriodicFlushWorker();
-            } else if (previousBuild != currentBuild) {
-                preferenceManager.saveBuildNumber(currentBuild);
-                preferenceManager.saveVersionName(currentVersion);
-                sendApplicationUpdated(previousBuild, currentBuild, previousVersion, currentVersion);
-            }
-        } catch (PackageManager.NameNotFoundException ex) {
-            RudderLogger.logError(ex);
-        }
-    }
 
 
     private void initiateFactories(List<RudderServerDestination> destinations) {

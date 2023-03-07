@@ -32,6 +32,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -42,6 +43,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(PowerMockRunner.class)
+@PowerMockIgnore("jdk.internal.reflect.*")
 @PrepareForTest({FlushUtils.class,
         RudderLogger.class,
         TextUtils.class, Utils.class,
@@ -102,7 +104,7 @@ public class EventRepositoryTest {
         }).when(dbPersistentManager).fetchAllCloudModeEventsFromDB(ArgumentMatchers.<List<Integer>>any(), ArgumentMatchers.<List<String>>any());
 
         PowerMockito.when(networkManager, "sendNetworkRequest",
-                        anyString(), anyString(), any(RudderNetworkManager.RequestMethod.class)
+                        anyString(), anyString(), ArgumentMatchers.any(RudderNetworkManager.RequestMethod.class)
                 )
                 .thenAnswer(new Answer<RudderNetworkManager.Result>() {
                     @Override
@@ -111,10 +113,6 @@ public class EventRepositoryTest {
                         return mockResult;
                     }
                 });
-        PowerMockito.when(FlushUtils.class, "flushEventsToServer",
-                        anyString(), anyString(), anyString(), anyString()
-                )
-                .thenAnswer((Answer<RudderNetworkManager.NetworkResponses>) invocation -> RudderNetworkManager.NetworkResponses.SUCCESS);
 
         //expectation
         String expectedPayload = "{\n" +
@@ -150,32 +148,29 @@ public class EventRepositoryTest {
 
         //verify flushEventsToServer is called once with proper arguments
         //we use argument captor, cause we would need to remove spaces from argument
-        PowerMockito.verifyStatic(FlushUtils.class, Mockito.times(1));
         ArgumentCaptor<String> arg1 = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> arg2 = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> arg3 = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> arg4 = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<RudderNetworkManager.RequestMethod> arg3 = ArgumentCaptor.forClass(RudderNetworkManager.RequestMethod.class);
 
-        FlushUtils.flushEventsToServer(
+        Mockito.verify(networkManager, Mockito.times(1)).sendNetworkRequest(
                 arg1.capture(),
                 arg2.capture(),
-                arg3.capture(),
-                arg4.capture()
-//                Mockito.eq(expectedPayload.replace("\n", "").replace(" ", "")),
-//                Mockito.eq("api.rudderstack.com/"),
-//                Mockito.eq("auth_key"),
-//                Mockito.eq("anon_id")
+                arg3.capture()
         );
+
+//        networkManager.sendNetworkRequest(
+//                arg1.capture(),
+//                arg2.capture(),
+//                arg3.capture()
+//        );
         assertThat(result, Matchers.is(true));
         System.out.println(arg1.getValue());
         assertThat(arg1.getValue().replace(" ", ""),
                 Matchers.is(expectedPayload.replace("\n", "").replace(" ", "")));
         System.out.println(arg2.getValue());
-        assertThat(arg2.getValue().replace(" ", ""), Matchers.is("api.rudderstack.com/"));
+        assertThat(arg2.getValue().replace(" ", ""), Matchers.is("api.rudderstack.com/v1/batch"));
         System.out.println(arg3.getValue());
-        assertThat(arg3.getValue(), Matchers.is("auth_key"));
-        System.out.println(arg4.getValue());
-        assertThat(arg4.getValue(), Matchers.is("anon_id"));
+        assertThat(arg3.getValue(), Matchers.is(RudderNetworkManager.RequestMethod.POST));
     }
 
     private int dbFetchCalled = 0;
@@ -211,7 +206,7 @@ public class EventRepositoryTest {
                 )
                 .thenAnswer((Answer<RudderNetworkManager.NetworkResponses>) invocation -> RudderNetworkManager.NetworkResponses.SUCCESS);
         PowerMockito.when(networkManager, "sendNetworkRequest",
-                        anyString(), anyString(), any(RudderNetworkManager.RequestMethod.class)
+                        anyString(), anyString(), ArgumentMatchers.any()
                 )
                 .thenAnswer(new Answer<RudderNetworkManager.Result>() {
                     @Override

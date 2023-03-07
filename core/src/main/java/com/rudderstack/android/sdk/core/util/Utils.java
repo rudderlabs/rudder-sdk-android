@@ -146,11 +146,6 @@ public class Utils {
         return file != null && file.exists();
     }
 
-    public static Message deserializeMessage(String strMessage) {
-        Message msg = Message.obtain();
-        msg.obj = strMessage;
-        return msg;
-    }
 
     /**
      * Returns referring_application, url and its query parameter.

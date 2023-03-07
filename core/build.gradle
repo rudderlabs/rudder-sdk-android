@@ -23,6 +23,9 @@ android {
     }
     testOptions {
         unitTests.returnDefaultValues = true
+        unitTests.all {
+            systemProperty 'robolectric.invokedynamic.enable', 'false'
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -39,7 +42,7 @@ dependencies {
     testImplementation ('com.android.support.test:rules:1.0.2')
     testImplementation 'com.android.support.test:runner:1.0.2'
     testImplementation 'org.robolectric:robolectric:4.3'
-    testImplementation 'androidx.test:core-ktx:1.4.0'
+    testImplementation 'androidx.test:core-ktx:1.5.0'
     testImplementation "org.hamcrest:hamcrest:2.2"
     testImplementation "org.mockito:mockito-core:3.11.2"
 
@@ -51,11 +54,13 @@ dependencies {
 
     testImplementation "org.powermock:powermock-api-mockito2:2.0.9"
     testImplementation 'org.awaitility:awaitility:4.2.0'
-    androidTestImplementation ('androidx.test.ext:junit:1.1.3')
+    androidTestImplementation ('androidx.test.ext:junit:1.1.5')
     compileOnly "androidx.work:work-runtime:2.7.1"
 
 }
-
+tasks.withType(JavaExec) {
+    jvmArgs += ['--add-opens', 'java.base/jdk.internal.loader=ALL-UNNAMED']
+}
 //apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"
 
 apply from: rootProject.file('gradle/mvn-publish.gradle')
