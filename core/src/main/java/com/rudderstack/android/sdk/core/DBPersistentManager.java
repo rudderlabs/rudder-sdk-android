@@ -139,7 +139,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     }
 
-    private Message createOsMessageFromJson(String messageJson, EventInsertionCallback callback){
+    private Message createOsMessageFromJson(String messageJson, EventInsertionCallback callback) {
         Message msg = Message.obtain();
         msg.obj = callback;
         Bundle eventBundle = new Bundle();
@@ -154,6 +154,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
     void addMessageToHandlerThread(Message msg) {
         dbInsertionHandlerThread.addMessage(msg);
     }
+
     @VisibleForTesting
     void saveEventSync(String messageJson) {
         ContentValues insertValues = new ContentValues();
@@ -413,7 +414,10 @@ class DBPersistentManager extends SQLiteOpenHelper {
         try {
             // todo: shall we add some timeout here ?
             future.get();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            RudderLogger.logError("DBPersistentManager: constructor: Exception while initializing the DBInsertionHandlerThread due to " + e.getLocalizedMessage());
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
             RudderLogger.logError("DBPersistentManager: constructor: Exception while initializing the DBInsertionHandlerThread due to " + e.getLocalizedMessage());
         }
     }
@@ -485,6 +489,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         }
         return false;
     }
+
     void checkForMigrations() {
         SQLiteDatabase database = getWritableDatabase();
         if (!checkIfStatusColumnExists(database)) {
