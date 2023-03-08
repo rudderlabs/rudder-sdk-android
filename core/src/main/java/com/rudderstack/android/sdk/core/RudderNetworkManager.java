@@ -11,7 +11,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 
 import java.io.BufferedInputStream;
@@ -20,15 +19,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
-import java.util.Map;
 
 public class RudderNetworkManager {
 
+    private static final String METADATA_KEY = "metadata";
     private final String authHeaderString;
     private String anonymousIdHeaderString;
     @Nullable
@@ -68,13 +66,13 @@ public class RudderNetworkManager {
         }
     }
 
-    void updateDMTHeaderString(@Nullable String dmtHeaderString) {
-        if (dmtHeaderString == null) {
+    void updateDMTCustomToken(@Nullable String dmtCustomToken) {
+        if (dmtCustomToken == null) {
             this.dmtAuthorisationString = null;
             return;
         }
         try {
-            this.dmtAuthorisationString = Base64.encodeToString(dmtHeaderString.getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
+            this.dmtAuthorisationString = dmtCustomToken;
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
@@ -164,7 +162,9 @@ public class RudderNetworkManager {
         if (requestPayload == null || !isDMTRequest || dmtAuthorisationString == null)
             return requestPayload;
         JsonObject jsonObject =  JsonParser.parseString(requestPayload).getAsJsonObject();
-        jsonObject.addProperty(DMT_AUTHORISATION_KEY, dmtAuthorisationString);
+        JsonObject metadataJsonObject = new JsonObject();
+        metadataJsonObject.addProperty(DMT_AUTHORISATION_KEY, dmtAuthorisationString);
+        jsonObject.add(METADATA_KEY, metadataJsonObject);
         return jsonObject.toString();
     }
 

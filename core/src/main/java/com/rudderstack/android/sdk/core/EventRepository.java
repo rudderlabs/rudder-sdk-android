@@ -79,15 +79,15 @@ class EventRepository {
 
             // 3. initiate DBPersistentManager for SQLite operations
             RudderLogger.logDebug("EventRepository: constructor: Initiating DBPersistentManager and starting Handler thread");
-           initializeDbManager(_application);
+            initializeDbManager(_application);
+            RudderLogger.logDebug("EventRepository: constructor: Initiating RudderNetworkManager");
+            this.networkManager = new RudderNetworkManager(authHeaderString, anonymousIdHeaderString, getSavedAuthToken());
 
             // 4. initiate RudderServerConfigManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
             this.configManager = new RudderServerConfigManager(_application, _config, networkManager);
 
             // 5. Initiate RudderNetWorkManager for making Network Requests
-            RudderLogger.logDebug("EventRepository: constructor: Initiating RudderNetworkManager");
-            this.networkManager = new RudderNetworkManager(authHeaderString, anonymousIdHeaderString, getSavedAuthToken());
 
             // 6. initiate FlushWorkManager
             rudderFlushWorkManager = new RudderFlushWorkManager(context, config, preferenceManager);
@@ -105,15 +105,13 @@ class EventRepository {
             this.initiateSDK(_config.getConsentFilter());
 
 
-
-
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
     }
 
     private void initializeDbManager(Application application) {
-        this.dbManager = DBPersistentManager.getInstance( application);
+        this.dbManager = DBPersistentManager.getInstance(application);
         this.dbManager.checkForMigrations();
         this.dbManager.startHandlerThread();
     }
@@ -124,7 +122,6 @@ class EventRepository {
         this.anonymousIdHeaderString = Base64.encodeToString(anonymousId.getBytes(CHARSET_UTF_8), Base64.DEFAULT);
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousIdHeaderString: %s", this.anonymousIdHeaderString));
     }
-
 
 
     private void initiatePreferenceManager(Application application, RudderConfig config, Identifiers identifiers) {
@@ -208,7 +205,6 @@ class EventRepository {
     }
 
 
-
     @Nullable
     @VisibleForTesting
     String getDataPlaneUrlWrtResidencyConfig(RudderServerConfig serverConfig, RudderConfig config) {
@@ -224,7 +220,6 @@ class EventRepository {
         RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel());
         rudderFlushWorkManager.saveRudderFlushConfig(rudderFlushConfig);
     }
-
 
 
     /*
@@ -271,6 +266,7 @@ class EventRepository {
             message.setIntegrations(prepareIntegrations());
         }
     }
+
     void flushSync() {
         if (dataPlaneUrl == null) {
             RudderLogger.logError(Constants.Logs.DATA_PLANE_URL_FLUSH_ERROR);
@@ -279,7 +275,7 @@ class EventRepository {
         deviceModeManager.flush();
         FlushUtils.flushToServer(
                 config.getFlushQueueSize(), dataPlaneUrl,
-                dbManager,networkManager);
+                dbManager, networkManager);
     }
 
     private Map<String, Object> prepareIntegrations() {
@@ -294,10 +290,12 @@ class EventRepository {
         applicationLifeCycleManager.reset();
         refreshAuthToken();
     }
+
     void refreshAuthToken() {
         preferenceManager.saveAuthToken(null);
-        networkManager.updateDMTHeaderString(null);
+        networkManager.updateDMTCustomToken(null);
     }
+
     void cancelPeriodicFlushWorker() {
         rudderFlushWorkManager.cancelPeriodicFlushWorker();
     }
@@ -310,10 +308,11 @@ class EventRepository {
     void updateAuthToken(@NonNull String authToken) {
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: updateAuthToken: Updating AuthToken: %s", authToken));
         preferenceManager.saveAuthToken(authToken);
-        networkManager.updateDMTHeaderString(authToken);
+        networkManager.updateDMTCustomToken(authToken);
     }
 
-    private @Nullable String getSavedAuthToken(){
+    private @Nullable
+    String getSavedAuthToken() {
         return preferenceManager.getAuthToken();
     }
 
@@ -365,7 +364,7 @@ class EventRepository {
     }
 
     public void startSession(Long sessionId) {
-       applicationLifeCycleManager.startSession(sessionId);
+        applicationLifeCycleManager.startSession(sessionId);
     }
 
     public void endSession() {
