@@ -39,7 +39,7 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
     }
 
     private void startSessionTracking() {
-        RudderLogger.logDebug("EventRepository: constructor: Initiating RudderUserSession");
+        RudderLogger.logDebug("ApplicationLifecycleManager: startSessionTracking: Initiating RudderUserSession");
         userSession = new RudderUserSession(preferenceManager, config);
 
         // 8. clear session if automatic session tracking was enabled previously
