@@ -109,7 +109,10 @@ public class RudderNetworkManagerTest {
             "}\n" +
             "\t]\n" +
             "}";
-    private static final String BATCH_WITH_DMT_HEADER = "{\n\"Custom-Authorization\":\""+ DMT_AUTH_HEADER + "\","
+    private static final String BATCH_WITH_DMT_HEADER = "{" +
+            "\n\"metadata\":{" +
+                "\n\t\"Custom-Authorization\":\""+ DMT_AUTH_HEADER + "\"" +
+                "\n\t},\n"
             + TEST_BATCH.substring(1);
     @Before
     public void setup(){
