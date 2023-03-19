@@ -25,17 +25,19 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
     private RudderUserSession userSession;
 
 
-    ApplicationLifeCycleManager(Application application, RudderPreferenceManager preferenceManager,
-                                EventRepository repository, RudderFlushWorkManager rudderFlushWorkManager, RudderConfig config) {
+    ApplicationLifeCycleManager(RudderPreferenceManager preferenceManager, EventRepository repository, RudderFlushWorkManager rudderFlushWorkManager, RudderConfig config) {
         this.preferenceManager = preferenceManager;
         this.repository = repository;
         this.rudderFlushWorkManager = rudderFlushWorkManager;
         this.config = config;
+    }
+
+    public void start(Application application) {
+        startSessionTracking();
         this.sendApplicationUpdateStatus(application);
         if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
             application.registerActivityLifecycleCallbacks(this);
         }
-        startSessionTracking();
     }
 
     private void startSessionTracking() {

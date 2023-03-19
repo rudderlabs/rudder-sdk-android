@@ -81,9 +81,10 @@ public class RudderDeviceModeManager {
             RudderLogger.logDebug("RudderDeviceModeManager: DeviceModeProcessor: No Device Mode Destinations with transformations attached hence device mode transformation processor need not to be started");
         }
     }
+
     private List<RudderServerDestination> getConsentedDestinations(RudderServerConfigSource serverConfigSource,
-                                                                   ConsentFilterHandler consentFilterHandler){
-        if(serverConfigSource == null)
+                                                                   ConsentFilterHandler consentFilterHandler) {
+        if (serverConfigSource == null)
             return Collections.emptyList();
         List<RudderServerDestination> destinations = serverConfigSource.destinations;
         if (destinations == null) {
@@ -92,17 +93,17 @@ public class RudderDeviceModeManager {
         }
         List<RudderServerDestination> consentedDestinations = consentFilterHandler !=
                 null ? consentFilterHandler.filterDestinationList(destinations) : destinations;
-        if(consentedDestinations == null)
+        if (consentedDestinations == null)
             return Collections.emptyList();
         return consentedDestinations;
 
     }
 
-    private void setDestinationsWithTransformationsEnabled(List<RudderServerDestination> destinations)  {
-            for (RudderServerDestination destination :destinations) {
-                if (destination.isDestinationEnabled && destination.areTransformationsConnected)
-                    destinationsWithTransformationsEnabled.put(destination.destinationDefinition.displayName, destination.destinationId);
-            }
+    private void setDestinationsWithTransformationsEnabled(List<RudderServerDestination> destinations) {
+        for (RudderServerDestination destination : destinations) {
+            if (destination.isDestinationEnabled && destination.areTransformationsConnected)
+                destinationsWithTransformationsEnabled.put(destination.destinationDefinition.displayName, destination.destinationId);
+        }
     }
 
     private void setupNativeFactoriesWithFiltering(List<RudderServerDestination> destinations) {
@@ -150,6 +151,7 @@ public class RudderDeviceModeManager {
             }
         }
     }
+
     private void initiateFactories(List<RudderServerDestination> destinations) {
         // initiate factory initialization after 10s
         // let the factories capture everything they want to capture
@@ -189,6 +191,7 @@ public class RudderDeviceModeManager {
             }
         }
     }
+
     private void replayMessageQueue() {
         synchronized (eventReplayMessageQueue) {
             RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: replaying old messages with factories. Count: %d", eventReplayMessageQueue.size()));
@@ -240,7 +243,7 @@ public class RudderDeviceModeManager {
             RudderIntegration<?> integration = integrationOperationsMap.get(destinationName);
             if (integration != null) {
                 try {
-                    RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: %s: dumping for %s", logTag, destinationName));
+                    RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: %s: dumping event %s for %s", logTag, message.getEventName(), destinationName));
                     RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: Dumping: %s", gson.toJson(message)));
                     integration.dump(message);
                 } catch (Exception e) {

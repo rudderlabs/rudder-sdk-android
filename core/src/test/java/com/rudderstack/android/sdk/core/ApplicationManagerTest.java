@@ -24,6 +24,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 public class ApplicationManagerTest {
     ApplicationLifeCycleManager applicationLifeCycleManager;
     RudderUserSession userSession;
+
     @Before
     public void setup() throws Exception {
         userSession = PowerMockito.mock(RudderUserSession.class);
@@ -44,13 +45,14 @@ public class ApplicationManagerTest {
         PowerMockito.doReturn(false).when(repo).getOptStatus();
 
         applicationLifeCycleManager = new ApplicationLifeCycleManager(
-                application,
                 preferenceManager,
                 repo, new RudderFlushWorkManager(application, mockConfig, preferenceManager),
                 mockConfig
         );
+        applicationLifeCycleManager.start(application);
 
     }
+
     @Test
     public void applySessionTracking() throws Exception {
         long testSessionId = 123L;
@@ -69,8 +71,9 @@ public class ApplicationManagerTest {
         applicationLifeCycleManager.applySessionTracking(spyMessage);
         Mockito.verify(spyMessage).setSession(userSession);
     }
+
     @After
-    public void destroy(){
+    public void destroy() {
         Mockito.clearInvocations();
     }
 }

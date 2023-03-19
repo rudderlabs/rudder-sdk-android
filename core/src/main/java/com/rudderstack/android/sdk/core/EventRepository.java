@@ -92,17 +92,18 @@ class EventRepository {
             // 6. initiate FlushWorkManager
             rudderFlushWorkManager = new RudderFlushWorkManager(context, config, preferenceManager);
 
-            // 7. initiate RudderUserSession for tracking sessions
-            // 8. Initiate ApplicationLifeCycleManager
-            RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
-            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(_application, preferenceManager, this, rudderFlushWorkManager, config);
-
-            // 9. Initiate Cloud Mode Manager and Device mode Manager
+            // 7. Initiate Cloud Mode Manager and Device mode Manager
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
             this.cloudModeManager = new RudderCloudModeManager(dbManager, networkManager, config);
             this.deviceModeManager = new RudderDeviceModeManager(dbManager, networkManager, config);
 
             this.initiateSDK(_config.getConsentFilter());
+
+            // 8. initiate RudderUserSession for tracking sessions
+            // 9. Initiate ApplicationLifeCycleManager
+            RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
+            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(preferenceManager, this, rudderFlushWorkManager, config);
+            this.applicationLifeCycleManager.start(_application);
 
 
         } catch (Exception ex) {
