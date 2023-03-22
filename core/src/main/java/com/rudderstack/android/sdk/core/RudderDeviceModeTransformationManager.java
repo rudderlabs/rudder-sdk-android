@@ -79,6 +79,7 @@ public class RudderDeviceModeTransformationManager {
                                         Thread.sleep(Math.abs(deviceModeSleepCount - config.getSleepTimeOut()) * 1000L);
                                     } catch (Exception e) {
                                         RudderLogger.logError(e);
+                                        Thread.currentThread().interrupt();
                                     }
                                 } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
                                     deviceModeSleepCount = 0;

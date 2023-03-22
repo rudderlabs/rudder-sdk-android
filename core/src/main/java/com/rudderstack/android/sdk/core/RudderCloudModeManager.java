@@ -82,6 +82,7 @@ public class RudderCloudModeManager {
                         }
                     } catch (Exception ex) {
                         RudderLogger.logError(String.format("CloudModeManager: cloudModeProcessor: Exception while trying to send events to Data plane URL %s due to %s", config.getDataPlaneUrl(), ex.getLocalizedMessage()));
+                        Thread.currentThread().interrupt();
                     }
                 }
             }
