@@ -123,17 +123,6 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
 
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
-        if (config.isRecordScreenViews()) {
-            // If user has disabled tracking activities (i.e., set optOut() to true)
-            // then discard the event
-            if (repository.getOptStatus()) {
-                return;
-            }
-            ScreenPropertyBuilder screenPropertyBuilder = new ScreenPropertyBuilder().setScreenName(activity.getLocalClassName()).isAtomatic(true);
-            RudderMessage screenMessage = new RudderMessageBuilder().setEventName(activity.getLocalClassName()).setProperty(screenPropertyBuilder.build()).build();
-            screenMessage.setType(MessageType.SCREEN);
-            repository.processMessage(screenMessage);
-        }
         if (this.config.isTrackLifecycleEvents()) {
             noOfActivities += 1;
             if (noOfActivities == 1) {
@@ -151,6 +140,17 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
                 trackMessage.setType(MessageType.TRACK);
                 repository.processMessage(trackMessage);
             }
+        }
+        if (config.isRecordScreenViews()) {
+            // If user has disabled tracking activities (i.e., set optOut() to true)
+            // then discard the event
+            if (repository.getOptStatus()) {
+                return;
+            }
+            ScreenPropertyBuilder screenPropertyBuilder = new ScreenPropertyBuilder().setScreenName(activity.getLocalClassName()).isAtomatic(true);
+            RudderMessage screenMessage = new RudderMessageBuilder().setEventName(activity.getLocalClassName()).setProperty(screenPropertyBuilder.build()).build();
+            screenMessage.setType(MessageType.SCREEN);
+            repository.processMessage(screenMessage);
         }
     }
 
