@@ -128,7 +128,7 @@ public class RudderDeviceModeTransformationManager {
                 jsonPayload.append(message);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            RudderLogger.logError(e);
         }
         if (jsonPayload.charAt(jsonPayload.length() - 1) == ',') {
             jsonPayload.deleteCharAt(jsonPayload.length() - 1);
