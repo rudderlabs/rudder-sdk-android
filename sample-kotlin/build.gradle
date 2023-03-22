@@ -57,7 +57,7 @@ dependencies {
     // Amplitude Device Mode
     implementation 'com.rudderstack.android.integration:amplitude:1.+'
     implementation 'com.amplitude:android-sdk:2.25.2'
-    implementation 'com.squareup.okhttp3:okhttp:4.2.2'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.2'
     implementation 'com.google.android.gms:play-services-ads:18.3.0'
 
     // Braze Device Mode
