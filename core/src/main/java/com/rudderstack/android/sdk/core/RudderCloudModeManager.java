@@ -16,12 +16,14 @@ public class RudderCloudModeManager {
 
     private final DBPersistentManager dbManager;
     private final RudderNetworkManager networkManager;
+    private final RudderDataResidencyManager dataResidencyManager;
     private final RudderConfig config;
     static final String BATCH_ENDPOINT = "v1/batch";
 
-    RudderCloudModeManager(DBPersistentManager dbManager, RudderNetworkManager networkManager, RudderConfig config) {
+    RudderCloudModeManager(DBPersistentManager dbManager, RudderNetworkManager networkManager, RudderConfig config, RudderDataResidencyManager dataResidencyManager) {
         this.dbManager = dbManager;
         this.networkManager = networkManager;
+        this.dataResidencyManager = dataResidencyManager;
         this.config = config;
     }
 
@@ -49,7 +51,7 @@ public class RudderCloudModeManager {
                             RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: payload: %s", payload));
                             RudderLogger.logInfo(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: %d", messageIds.size()));
                             if (payload != null) {
-                                result = networkManager.sendNetworkRequest(payload, addEndPoint(config.getDataPlaneUrl(), BATCH_ENDPOINT), RequestMethod.POST);
+                                result = networkManager.sendNetworkRequest(payload, addEndPoint(dataResidencyManager.getDataPlaneUrl(), BATCH_ENDPOINT), RequestMethod.POST);
                                 RudderLogger.logInfo(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: ServerResponse: %d", result.statusCode));
                                 if (result.status == NetworkResponses.SUCCESS) {
                                     dbManager.markCloudModeDone(messageIds);

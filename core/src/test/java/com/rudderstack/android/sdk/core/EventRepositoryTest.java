@@ -258,28 +258,5 @@ public class EventRepositoryTest {
                         hasEntry("All", true)
                 ));
     }
-
-
-    @Test
-    public void getDataPlaneUrlWrtResidencyConfig() {
-        EventRepository repo = new EventRepository();
-        RudderConfig rudderConfig = new RudderConfig.Builder()
-                .build();
-        RudderServerConfig serverConfig = PowerMockito.mock(RudderServerConfig.class);
-        String dataPlaneUrl = repo.getDataPlaneUrlWrtResidencyConfig(serverConfig, rudderConfig);
-        assertThat(dataPlaneUrl, Matchers.nullValue());
-    }
-
-    @Test
-    public void getDataPlaneUrlWrtResidencyConfigWithDataPlaneUrl() {
-        EventRepository repo = new EventRepository();
-        RudderConfig rudderConfig = new RudderConfig.Builder()
-                                        .withDataPlaneUrl("https://random.dataplane.rudderstack.com")
-                                        .build();
-        RudderServerConfig serverConfig = new RudderServerConfig();
-        String dataPlaneUrl = repo.getDataPlaneUrlWrtResidencyConfig(serverConfig, rudderConfig);
-        assertEquals("https://random.dataplane.rudderstack.com/", dataPlaneUrl);
-    }
-
 }
 

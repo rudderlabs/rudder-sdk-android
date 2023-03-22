@@ -8,7 +8,6 @@ import static com.rudderstack.android.sdk.core.TransformationRequest.Transformat
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
-import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
@@ -46,6 +45,7 @@ public class RudderDeviceModeManager {
     private final Map<String, RudderIntegration<?>> integrationOperationsMap;
     private final Map<String, RudderClient.Callback> integrationCallbacks;
     private final Map<Integer, RudderMessage> eventReplayMessageQueue;
+    private final RudderDataResidencyManager dataResidencyManager;
     // required for device mode transform
     private final Map<String, String> destinationsWithTransformationsEnabled = new HashMap<>(); //destination display name to destinationId
 
@@ -54,10 +54,11 @@ public class RudderDeviceModeManager {
             .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
             .create();
 
-    RudderDeviceModeManager(DBPersistentManager dbPersistentManager, RudderNetworkManager networkManager, RudderConfig rudderConfig) {
+    RudderDeviceModeManager(DBPersistentManager dbPersistentManager, RudderNetworkManager networkManager, RudderConfig rudderConfig, RudderDataResidencyManager dataResidencyManager) {
         this.dbPersistentManager = dbPersistentManager;
         this.networkManager = networkManager;
         this.rudderConfig = rudderConfig;
+        this.dataResidencyManager = dataResidencyManager;
         this.areFactoriesInitialized = false;
         this.integrationOperationsMap = new HashMap<>();
         this.integrationCallbacks = new HashMap<>();
@@ -75,7 +76,7 @@ public class RudderDeviceModeManager {
         this.areFactoriesInitialized = true;
         if (doPassedFactoriesHaveTransformationsEnabled()) {
             RudderLogger.logDebug("RudderDeviceModeManager: DeviceModeProcessor: Starting the Device Mode Transformation Processor");
-            RudderDeviceModeTransformationManager deviceModeTransformationManager = new RudderDeviceModeTransformationManager(dbPersistentManager, networkManager, this, rudderConfig);
+            RudderDeviceModeTransformationManager deviceModeTransformationManager = new RudderDeviceModeTransformationManager(dbPersistentManager, networkManager, this, rudderConfig, dataResidencyManager);
             deviceModeTransformationManager.startDeviceModeTransformationProcessor();
         } else {
             RudderLogger.logDebug("RudderDeviceModeManager: DeviceModeProcessor: No Device Mode Destinations with transformations attached hence device mode transformation processor need not to be started");

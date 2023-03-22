@@ -8,8 +8,6 @@ import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executors;
@@ -26,6 +24,7 @@ public class RudderDeviceModeTransformationManager {
     private final DBPersistentManager dbManager;
     private final RudderNetworkManager rudderNetworkManager;
     private final RudderDeviceModeManager rudderDeviceModeManager;
+    private final RudderDataResidencyManager dataResidencyManager;
     private final RudderConfig config;
     // batch size for device mode transformation
     private static final int DMT_BATCH_SIZE = 12;
@@ -42,10 +41,11 @@ public class RudderDeviceModeTransformationManager {
             .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
             .create();
 
-    RudderDeviceModeTransformationManager(DBPersistentManager dbManager, RudderNetworkManager rudderNetworkManager, RudderDeviceModeManager rudderDeviceModeManager, RudderConfig config) {
+    RudderDeviceModeTransformationManager(DBPersistentManager dbManager, RudderNetworkManager rudderNetworkManager, RudderDeviceModeManager rudderDeviceModeManager, RudderConfig config, RudderDataResidencyManager dataResidencyManager) {
         this.dbManager = dbManager;
         this.rudderNetworkManager = rudderNetworkManager;
         this.rudderDeviceModeManager = rudderDeviceModeManager;
+        this.dataResidencyManager = dataResidencyManager;
         this.config = config;
     }
 
@@ -69,7 +69,7 @@ public class RudderDeviceModeTransformationManager {
                                 String requestJson = createDeviceTransformPayload(messageIds, messages);
                                 RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: Payload: %s", requestJson));
                                 RudderLogger.logInfo(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: EventCount: %d", messageIds.size()));
-                                Result result = rudderNetworkManager.sendNetworkRequest(requestJson, addEndPoint(config.getDataPlaneUrl(), TRANSFORMATION_ENDPOINT), RequestMethod.POST, true);
+                                Result result = rudderNetworkManager.sendNetworkRequest(requestJson, addEndPoint(dataResidencyManager.getDataPlaneUrl(), TRANSFORMATION_ENDPOINT), RequestMethod.POST, true);
                                 if (result.status == NetworkResponses.WRITE_KEY_ERROR) {
                                     RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Wrong WriteKey. Aborting");
                                     break;

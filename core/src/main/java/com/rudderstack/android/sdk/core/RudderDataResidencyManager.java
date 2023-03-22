@@ -15,12 +15,17 @@ class RudderDataResidencyManager {
     Map<RudderDataResidencyServer, List<RudderDataResidencyUrls>> dataResidencyUrls = null;
     @VisibleForTesting
     RudderDataResidencyServer rudderDataResidencyServer;
+    RudderConfig config;
 
-    RudderDataResidencyManager(@Nullable RudderServerConfig serverConfig, @NonNull RudderConfig config) {
-        if (serverConfig != null && serverConfig.source != null) {
-            this.dataResidencyUrls = serverConfig.source.dataResidencyUrls;
-        }
+    RudderDataResidencyManager(@NonNull RudderConfig config) {
+        this.config = config;
         this.rudderDataResidencyServer = config.getDataResidencyServer();
+    }
+
+    void setDataResidencyUrls(RudderServerConfig sourceConfig) {
+        if (sourceConfig != null && sourceConfig.source != null) {
+            this.dataResidencyUrls = sourceConfig.source.dataResidencyUrls;
+        }
     }
 
     /**
@@ -58,6 +63,11 @@ class RudderDataResidencyManager {
         } else {
             return handleOtherRegion(rudderDataResidencyServer);
         }
+    }
+
+    String getDataPlaneUrl() {
+        String dataResidencyUrl = getDataResidencyUrl();
+        return isEmpty(dataResidencyUrl) ? this.config.getDataPlaneUrl() : dataResidencyUrl;
     }
 
     /**

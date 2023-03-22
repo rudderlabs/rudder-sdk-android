@@ -34,6 +34,7 @@ class EventRepository {
     private RudderPreferenceManager preferenceManager;
     private RudderFlushWorkManager rudderFlushWorkManager;
     private RudderNetworkManager networkManager;
+    private RudderDataResidencyManager dataResidencyManager;
 
     private ApplicationLifeCycleManager applicationLifeCycleManager;
 
@@ -92,15 +93,18 @@ class EventRepository {
             // 6. initiate FlushWorkManager
             rudderFlushWorkManager = new RudderFlushWorkManager(context, config, preferenceManager);
 
-            // 7. Initiate Cloud Mode Manager and Device mode Manager
+            // 7. Initiating RudderDataResidencyManager
+            this.dataResidencyManager = new RudderDataResidencyManager(config);
+
+            // 8. Initiate Cloud Mode Manager and Device mode Manager
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
-            this.cloudModeManager = new RudderCloudModeManager(dbManager, networkManager, config);
-            this.deviceModeManager = new RudderDeviceModeManager(dbManager, networkManager, config);
+            this.cloudModeManager = new RudderCloudModeManager(dbManager, networkManager, config, dataResidencyManager);
+            this.deviceModeManager = new RudderDeviceModeManager(dbManager, networkManager, config, dataResidencyManager);
 
             this.initiateSDK(_config.getConsentFilter());
 
-            // 8. initiate RudderUserSession for tracking sessions
-            // 9. Initiate ApplicationLifeCycleManager
+            // 9. initiate RudderUserSession for tracking sessions
+            // 10. Initiate ApplicationLifeCycleManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
             this.applicationLifeCycleManager = new ApplicationLifeCycleManager(preferenceManager, this, rudderFlushWorkManager, config);
             this.applicationLifeCycleManager.start(_application);
@@ -168,7 +172,8 @@ class EventRepository {
                     if (serverConfig != null) {
                         isSDKEnabled = serverConfig.source.isSourceEnabled;
                         if (isSDKEnabled) {
-                            dataPlaneUrl = getDataPlaneUrlWrtResidencyConfig(serverConfig, config);
+                            dataResidencyManager.setDataResidencyUrls(serverConfig);
+                            dataPlaneUrl = dataResidencyManager.getDataPlaneUrl();
                             if (dataPlaneUrl == null) {
                                 RudderLogger.logError(Constants.Logs.DATA_PLANE_URL_ERROR);
                                 return;
@@ -203,18 +208,6 @@ class EventRepository {
                 RudderLogger.logError(ex);
             }
         }).start();
-    }
-
-
-    @Nullable
-    @VisibleForTesting
-    String getDataPlaneUrlWrtResidencyConfig(RudderServerConfig serverConfig, RudderConfig config) {
-        RudderDataResidencyManager rudderDataResidencyManager = new RudderDataResidencyManager(serverConfig, config);
-        String dataPlaneUrl = rudderDataResidencyManager.getDataResidencyUrl();
-        if (Utils.isEmpty(dataPlaneUrl)) {
-            dataPlaneUrl = config.getDataPlaneUrl();
-        }
-        return dataPlaneUrl;
     }
 
     private void saveFlushConfig() {
