@@ -84,6 +84,10 @@ class EventRepository {
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderNetworkManager");
             this.networkManager = new RudderNetworkManager(authHeaderString, anonymousIdHeaderString, getSavedAuthToken());
 
+            if (identifiers.authToken != null) {
+                updateAuthToken(identifiers.authToken);
+            }
+
             // 4. initiate RudderServerConfigManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
             this.configManager = new RudderServerConfigManager(_application, _config, networkManager);
@@ -392,17 +396,19 @@ class EventRepository {
 
     //model
     static class Identifiers {
-        public Identifiers(String writeKey, String deviceToken, String anonymousId, String advertisingId) {
+        public Identifiers(String writeKey, String deviceToken, String anonymousId, String advertisingId, String authToken) {
             this.writeKey = writeKey;
             this.deviceToken = deviceToken;
             this.anonymousId = anonymousId;
             this.advertisingId = advertisingId;
+            this.authToken = authToken;
         }
 
         private final String writeKey;
         private final String deviceToken;
         private final String anonymousId;
         private final String advertisingId;
+        private final String authToken;
 
 
     }

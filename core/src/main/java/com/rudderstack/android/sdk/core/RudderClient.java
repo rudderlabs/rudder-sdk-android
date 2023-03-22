@@ -30,6 +30,7 @@ public class RudderClient {
     private static String anonymousId;
     private static RudderOption defaultOptions;
     private static String deviceToken;
+    private static String authToken;
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
 
@@ -135,8 +136,8 @@ public class RudderClient {
             if (application != null) {
                 RudderLogger.logVerbose("getInstance: creating EventRepository.");
                 EventRepository.Identifiers identifiers = new EventRepository
-                        .Identifiers(writeKey, deviceToken, anonymousId, advertisingId);
-                repository = new EventRepository(application,  config, identifiers);
+                        .Identifiers(writeKey, deviceToken, anonymousId, advertisingId, authToken);
+                repository = new EventRepository(application, config, identifiers);
             }
         }
         return instance;
@@ -577,7 +578,6 @@ public class RudderClient {
     }
 
 
-
     private void dumpMessage(@NonNull RudderMessage message) {
         if (repository != null) {
             repository.processMessage(message);
@@ -735,7 +735,11 @@ public class RudderClient {
         }
     }
 
-    public void putAuthToken(@NonNull String authToken) {
+    public static void putAuthToken(@NonNull String authToken) {
+        if (instance == null) {
+            RudderClient.authToken = authToken;
+            return;
+        }
         if (getOptOutStatus()) {
             return;
         }
