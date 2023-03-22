@@ -61,8 +61,8 @@ dependencies {
     implementation 'com.google.android.gms:play-services-ads:18.3.0'
 
     // Braze Device Mode
-    implementation 'com.rudderstack.android.integration:braze:1.0.2'
-    implementation "com.appboy:android-sdk-ui:13.1.0"
+    implementation 'com.rudderstack.android.integration:braze:1.0.6'
+    implementation "com.appboy:android-sdk-ui:21.0.0"
 
 
     testImplementation 'junit:junit:4.12'
