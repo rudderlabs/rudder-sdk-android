@@ -26,6 +26,7 @@ class RudderPreferenceManager {
     private static final String RUDDER_LAST_EVENT_TIMESTAMP_KEY = "rl_last_event_timestamp_key";
     private static final String RUDDER_SESSION_ID_KEY = "rl_session_id_key";
     private static final String RUDDER_AUTO_SESSION_TRACKING_STATUS_KEY = "rl_auto_session_tracking_status_key";
+    private static final String RUDDER_DMT_HEADER_KEY = "rl_dmt_header_key";
 
     private static SharedPreferences preferences;
     private static RudderPreferenceManager instance;
@@ -182,5 +183,12 @@ class RudderPreferenceManager {
         }
     }
 
+    void saveAuthToken(@Nullable String dmtHeader) {
+        preferences.edit().putString(RUDDER_DMT_HEADER_KEY, dmtHeader).apply();
+    }
 
+    @Nullable
+    String getAuthToken() {
+        return preferences.getString(RUDDER_DMT_HEADER_KEY, null);
+    }
 }

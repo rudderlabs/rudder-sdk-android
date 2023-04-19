@@ -26,8 +26,6 @@ public class SerializationTest {
             "            \"eventName\": \"\"\n" +
             "        }\n" +
             "    ],\n" +
-            "    \"blackListedEvents\": {\n" +
-            "    },\n" +
             "    \"dataCenter\": \"EU-01\",\n" +
             "    \"eventDelivery\": false,\n" +
             "    \"eventDeliveryTS\": 16425.0,\n" +
@@ -52,9 +50,7 @@ public class SerializationTest {
             "        {\n" +
             "            \"eventName\": \"\"\n" +
             "        }\n" +
-            "    ],\n" +
-            "    \"whiteListedEvents\": {\n" +
-            "    }\n" +
+            "    ]\n" +
             "}";
     private static final String INCOMING_JSON =
             "{\n" +
@@ -69,8 +65,8 @@ public class SerializationTest {
             "                   \"name\" : \"der\",\n" +
             "                   \"enabled\" : true,\n" +
             "                   \"updatedAt\" : \"23-10-22\",\n" +
-            "                   \"config\" : " + INCOMING_JSON_SERVER_CONFIG + "\n" +
-            "" +
+            "                   \"config\" : " + INCOMING_JSON_SERVER_CONFIG + ",\n" +
+            "\"areTransformationsConnected\":false" +
             "           }" +
             "       ]\n" +
             "   }\n" +

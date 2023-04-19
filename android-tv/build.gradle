@@ -1,8 +1,18 @@
+buildscript {
+    ext.kotlin_version = '1.5.31'
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.31"
+    }
+}
+
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
 }
-
 android {
     compileSdkVersion 31
 
@@ -30,7 +40,7 @@ android {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'androidx.core:core-ktx:1.5.31'
     implementation 'androidx.leanback:leanback:1.0.0'
     implementation 'androidx.appcompat:appcompat:1.4.0'
     implementation 'com.github.bumptech.glide:glide:4.11.0'

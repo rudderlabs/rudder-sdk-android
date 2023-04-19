@@ -1,11 +1,15 @@
 package com.rudderstack.android.sdk.core;
 
+import static com.rudderstack.android.sdk.core.DBPersistentManager.BACKSLASH;
+import static com.rudderstack.android.sdk.core.DBPersistentManager.EVENT;
+
 import android.app.Application;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -13,13 +17,26 @@ import android.os.Message;
 
 import com.rudderstack.android.sdk.core.util.Utils;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+
+import com.rudderstack.android.sdk.core.util.Utils;
+
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /*
  * Helper class for SQLite operations
@@ -30,14 +47,29 @@ class DBPersistentManager extends SQLiteOpenHelper {
     // SQLite database file name
     private static final String DB_NAME = "rl_persistence.db";
     // SQLite database version number
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 2;
+    static final String EVENT = "EVENT";
 
-    // events table and its details
     static final String EVENTS_TABLE_NAME = "events";
     private static final String MESSAGE_ID_COL = "id";
     static final String MESSAGE_COL = "message";
     static final String UPDATED_COL = "updated";
     private static final String STATUS_COL = "status";
+
+    //status values for database version 2 =. Check createSchema documentation for details.
+    private static final int STATUS_CLOUD_MODE_DONE = 0b10;
+    private static final int STATUS_DEVICE_MODE_DONE = 0b01;
+    private static final int STATUS_ALL_DONE = 0b11;
+    private static final int STATUS_NEW = 0b00;
+
+    //command to add status column. For details see onUpgrade or the documentation for createSchema
+    //for version 1 to 2
+    private static final String DATABASE_ALTER_ADD_STATUS = "ALTER TABLE "
+            + EVENTS_TABLE_NAME + " ADD COLUMN " + STATUS_COL + " INTEGER NOT NULL DEFAULT " + STATUS_NEW;
+
+    private static final String SET_STATUS_FOR_EXISTING = "UPDATE " + EVENTS_TABLE_NAME + " SET " + STATUS_COL + " = " + STATUS_DEVICE_MODE_DONE;
+
+    static final String BACKSLASH = "\\\\'";
 
     // command to create events table based for the database version 1.
     private static final String DATABASE_EVENTS_TABLE_SCHEMA_V1 = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS '%s' " +
@@ -56,16 +88,38 @@ class DBPersistentManager extends SQLiteOpenHelper {
     private static final String DATABASE_DROP_OLD_EVENTS_TABLE = "DROP TABLE " + OLD_EVENTS_TABLE;
 
     DBInsertionHandlerThread dbInsertionHandlerThread;
-    final Queue<Message> queue = new LinkedList<Message>();
+    final Queue<Message> queue = new LinkedList<>();
+
+    //synchronizing database access
+    private static final Object DB_LOCK = new Object();
 
     public static final Object QUEUE_LOCK = new Object();
 
     /*
      * create table initially if not exists
+     * version -2 : adding status for device mode
+     * status will either be 2, 1 or 0.
+     * The events in Db will be used by both cloud and device mode.
+     * status -0x00 -> event is not used by any of cloud or device mode.
+     * 0x10 → cloud done/ device mode is pending (1st bit)
+     * 0x01 → device mode done/ cloud mode is pending (0th bit)
+     * 0x11 → both done, needs to be deleted.
+     * For checking if something is done we & and check for value < 1, meaning it's not done
+     * For updating the status perform | with the associated binary
+
      * */
     private void createSchema(SQLiteDatabase db) {
-        RudderLogger.logVerbose(String.format(Locale.US, "DBPersistentManager: createSchema: createSchemaSQL: %s", DATABASE_EVENTS_TABLE_SCHEMA_V1));
-        db.execSQL(DATABASE_EVENTS_TABLE_SCHEMA_V1);
+        String createEventSchemaSQL;
+        if (DB_VERSION == 1) {
+            createEventSchemaSQL = DATABASE_EVENTS_TABLE_SCHEMA_V1;
+        } else {
+            createEventSchemaSQL = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS '%s' " +
+                            "('%s' INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            "'%s' TEXT NOT NULL, '%s' INTEGER NOT NULL, '%s' INTEGER NOT NULL DEFAULT %d)",
+                    EVENTS_TABLE_NAME, MESSAGE_ID_COL, MESSAGE_COL, UPDATED_COL, STATUS_COL, STATUS_NEW);
+        }
+        RudderLogger.logVerbose(String.format(Locale.US, "DBPersistentManager: createSchema: createEventSchemaSQL: %s", createEventSchemaSQL));
+        db.execSQL(createEventSchemaSQL);
         RudderLogger.logInfo("DBPersistentManager: createSchema: DB Schema created");
     }
 
@@ -73,8 +127,8 @@ class DBPersistentManager extends SQLiteOpenHelper {
      * Receives message from Repository, and passes it to the Handler thread if it exists, else adds it to a queue for replay
      * once Handler thread is initialized.
      * */
-    void saveEvent(String messageJson) {
-        Message msg = Utils.deserializeMessage(messageJson);
+    void saveEvent(String messageJson, EventInsertionCallback callback) {
+        Message msg = createOsMessageFromJson(messageJson, callback);
         synchronized (DBPersistentManager.QUEUE_LOCK) {
             if (dbInsertionHandlerThread == null) {
                 queue.add(msg);
@@ -82,6 +136,16 @@ class DBPersistentManager extends SQLiteOpenHelper {
             }
             addMessageToHandlerThread(msg);
         }
+
+    }
+
+    private Message createOsMessageFromJson(String messageJson, EventInsertionCallback callback) {
+        Message msg = Message.obtain();
+        msg.obj = callback;
+        Bundle eventBundle = new Bundle();
+        eventBundle.putString(EVENT, messageJson);
+        msg.setData(eventBundle);
+        return msg;
     }
 
     /*
@@ -89,6 +153,14 @@ class DBPersistentManager extends SQLiteOpenHelper {
      */
     void addMessageToHandlerThread(Message msg) {
         dbInsertionHandlerThread.addMessage(msg);
+    }
+
+    @VisibleForTesting
+    void saveEventSync(String messageJson) {
+        ContentValues insertValues = new ContentValues();
+        insertValues.put(DBPersistentManager.MESSAGE_COL, messageJson.replace("'", BACKSLASH));
+        insertValues.put(DBPersistentManager.UPDATED_COL, System.currentTimeMillis());
+        getWritableDatabase().insert(DBPersistentManager.EVENTS_TABLE_NAME, null, insertValues);
     }
 
     /*
@@ -110,7 +182,9 @@ class DBPersistentManager extends SQLiteOpenHelper {
             if (database.isOpen()) {
                 String deleteSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
                 RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: flushEvents: deleteSQL: %s", deleteSQL));
-                database.execSQL(deleteSQL);
+                synchronized (DB_LOCK) {
+                    database.execSQL(deleteSQL);
+                }
                 RudderLogger.logInfo("DBPersistentManager: flushEvents: Messages deleted from DB");
             } else {
                 RudderLogger.logError("DBPersistentManager: flushEvents: database is not writable");
@@ -155,22 +229,37 @@ class DBPersistentManager extends SQLiteOpenHelper {
      * returns messageIds and messages returned on executing the supplied SQL statement
      * */
     void getEventsFromDB(List<Integer> messageIds, List<String> messages, String selectSQL) {
+        Map<Integer, Integer> messageIdStatusMap = new HashMap<>();
+        getEventsFromDB(messageIdStatusMap, messages, selectSQL);
+        messageIds.addAll(messageIdStatusMap.keySet());
+        Collections.sort(messageIds);
+    }
+
+    void getEventsFromDB(Map<Integer, Integer> messageIdStatusMap,//(id (row_id), status)
+                         List<String> messages,
+                         String selectSQL) {
         // clear lists if not empty
-        if (!messageIds.isEmpty()) messageIds.clear();
+        if (!messageIdStatusMap.isEmpty()) messageIdStatusMap.clear();
         if (!messages.isEmpty()) messages.clear();
 
         try {
             // get readable database instance
             SQLiteDatabase database = getReadableDatabase();
             if (database.isOpen()) {
-                Cursor cursor = database.rawQuery(selectSQL, null);
+                Cursor cursor;
+                synchronized (DB_LOCK) {
+                    cursor = database.rawQuery(selectSQL, null);
+                }
                 if (cursor.moveToFirst()) {
                     RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: fetched messages from DB");
                     while (!cursor.isAfterLast()) {
                         final int messageIdColIndex = cursor.getColumnIndex(MESSAGE_ID_COL);
                         final int messageColIndex = cursor.getColumnIndex(MESSAGE_COL);
+                        final int statusColIndex = cursor.getColumnIndex(STATUS_COL);
+
                         if (messageIdColIndex > -1)
-                            messageIds.add(cursor.getInt(messageIdColIndex));
+                            messageIdStatusMap.put(cursor.getInt(messageIdColIndex),
+                                    statusColIndex > -1 ? cursor.getInt(statusColIndex) : STATUS_DEVICE_MODE_DONE);
                         if (messageColIndex > -1)
                             messages.add(cursor.getString(messageColIndex));
                         cursor.moveToNext();
@@ -190,23 +279,59 @@ class DBPersistentManager extends SQLiteOpenHelper {
     /*
      * retrieve `count` number of messages from DB and store messageIds and messages separately
      * */
-    void fetchEventsFromDB(ArrayList<Integer> messageIds, ArrayList<String> messages, int count) {
-        String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC LIMIT %d", EVENTS_TABLE_NAME, UPDATED_COL, count);
-        RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchEventsFromDB: selectSQL: %s", selectSQL));
+    //unit test this
+    void fetchCloudModeEventsFromDB(ArrayList<Integer> messageIds, ArrayList<String> messages, int count) {
+        String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) ORDER BY %s ASC LIMIT %d",
+                EVENTS_TABLE_NAME, DBPersistentManager.STATUS_COL, DBPersistentManager.STATUS_NEW,
+                DBPersistentManager.STATUS_DEVICE_MODE_DONE, UPDATED_COL, count);
+        RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchCloudModeEventsFromDB: selectSQL: %s", selectSQL));
         getEventsFromDB(messageIds, messages, selectSQL);
     }
 
-    /*
-     * retrieve all messages from DB and store messageIds and messages separately
-     * */
+    //unit test this
+    void fetchDeviceModeEventsFromDb(ArrayList<Integer> messageIds, ArrayList<String> messages, int count) {
+        String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) ORDER BY %s ASC LIMIT %d",
+                EVENTS_TABLE_NAME, DBPersistentManager.STATUS_COL, DBPersistentManager.STATUS_NEW,
+                DBPersistentManager.STATUS_CLOUD_MODE_DONE, UPDATED_COL, count);
+        RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchDeviceModeEventsFromDb: selectSQL: %s", selectSQL));
+        getEventsFromDB(messageIds, messages, selectSQL);
+    }
+
+
+    void fetchAllCloudModeEventsFromDB(List<Integer> messageIds, List<String> messages) {
+        String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) ORDER BY %s ASC", EVENTS_TABLE_NAME,
+                DBPersistentManager.STATUS_COL, DBPersistentManager.STATUS_NEW, DBPersistentManager.STATUS_DEVICE_MODE_DONE, UPDATED_COL);
+        RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchAllCloudModeEventsFromDB: selectSQL: %s", selectSQL));
+        getEventsFromDB(messageIds, messages, selectSQL);
+    }
+
+    @VisibleForTesting
+    void fetchAllDeviceModeEventsFromDB(List<Integer> messageIds, List<String> messages) {
+        String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) ORDER BY %s ASC", EVENTS_TABLE_NAME,
+                DBPersistentManager.STATUS_COL, DBPersistentManager.STATUS_NEW, DBPersistentManager.STATUS_CLOUD_MODE_DONE, UPDATED_COL);
+        RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchAllDeviceModeEventsFromDB: selectSQL: %s", selectSQL));
+        getEventsFromDB(messageIds, messages, selectSQL);
+    }
+
+    @VisibleForTesting
     void fetchAllEventsFromDB(List<Integer> messageIds, List<String> messages) {
         String selectSQL = String.format(Locale.US, "SELECT * FROM %s ORDER BY %s ASC", EVENTS_TABLE_NAME, UPDATED_COL);
         RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchAllEventsFromDB: selectSQL: %s", selectSQL));
         getEventsFromDB(messageIds, messages, selectSQL);
     }
 
-
     int getDBRecordCount() {
+        String countSQL = String.format(Locale.US, "SELECT count(*) FROM %s ;", EVENTS_TABLE_NAME);
+        return getCountForCommand(countSQL);
+    }
+
+    int getDeviceModeRecordCount() {
+        String countSQL = String.format(Locale.US, "SELECT count(*) FROM %s WHERE %s IN (%d, %d);", EVENTS_TABLE_NAME, DBPersistentManager.STATUS_COL,
+                DBPersistentManager.STATUS_CLOUD_MODE_DONE, DBPersistentManager.STATUS_NEW);
+        return getCountForCommand(countSQL);
+    }
+
+    private int getCountForCommand(String sql) {
         // initiate count
         int count = -1;
 
@@ -214,9 +339,12 @@ class DBPersistentManager extends SQLiteOpenHelper {
             // get readable database instance
             SQLiteDatabase database = getReadableDatabase();
             if (database.isOpen()) {
-                String countSQL = String.format(Locale.US, "SELECT count(*) FROM %s;", EVENTS_TABLE_NAME);
-                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: getDBRecordCount: countSQL: %s", countSQL));
-                Cursor cursor = database.rawQuery(countSQL, null);
+
+                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: getDBRecordCount: countSQL: %s", sql));
+                Cursor cursor;
+                synchronized (DB_LOCK) {
+                    cursor = database.rawQuery(sql, null);
+                }
                 if (cursor.moveToFirst()) {
                     RudderLogger.logInfo("DBPersistentManager: getDBRecordCount: fetched count from DB");
                     while (!cursor.isAfterLast()) {
@@ -259,12 +387,15 @@ class DBPersistentManager extends SQLiteOpenHelper {
      */
     void startHandlerThread() {
         // Need to perform db operations on a separate thread to support strict mode.
-        new Thread(new Runnable() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 try {
                     synchronized (DBPersistentManager.QUEUE_LOCK) {
-                        dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", DBPersistentManager.this.getWritableDatabase());
+                        SQLiteDatabase database = DBPersistentManager.this.getWritableDatabase();
+                        dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", database);
                         dbInsertionHandlerThread.start();
                         for (Message msg : queue) {
                             addMessageToHandlerThread(msg);
@@ -278,7 +409,17 @@ class DBPersistentManager extends SQLiteOpenHelper {
                     RudderLogger.logError(ex);
                 }
             }
-        }).start();
+        };
+        Future future = executor.submit(runnable);
+        try {
+            // todo: shall we add some timeout here ?
+            future.get();
+        } catch (InterruptedException e) {
+            RudderLogger.logError("DBPersistentManager: constructor: Exception while initializing the DBInsertionHandlerThread due to " + e.getLocalizedMessage());
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            RudderLogger.logError("DBPersistentManager: constructor: Exception while initializing the DBInsertionHandlerThread due to " + e.getLocalizedMessage());
+        }
     }
 
     @Override
@@ -349,6 +490,31 @@ class DBPersistentManager extends SQLiteOpenHelper {
         return false;
     }
 
+    void checkForMigrations() {
+        SQLiteDatabase database = getWritableDatabase();
+        if (!checkIfStatusColumnExists(database)) {
+            RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column doesn't exist in the events table, hence performing the migration now");
+            performMigration(database);
+            return;
+        }
+        RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column exists in the table already, hence no migration required");
+    }
+
+    private void performMigration(SQLiteDatabase database) {
+        try {
+            if (database.isOpen()) {
+                RudderLogger.logDebug("DBPersistentManager: performMigration: Adding the status column to the events table");
+                database.execSQL(DATABASE_ALTER_ADD_STATUS);
+                RudderLogger.logDebug("DBPersistentManager: performMigration: Setting the status to DEVICE_MODE_PROCESSING_DONE for the events existing already in the DB");
+                database.execSQL(SET_STATUS_FOR_EXISTING);
+            } else {
+                RudderLogger.logError("DBPersistentManager: performMigration: database is not readable, hence migration cannot be performed");
+            }
+        } catch (Exception e) {
+            RudderLogger.logError("DBPersistentManager: performMigration: Exception while performing the migration due to " + e.getLocalizedMessage());
+        }
+    }
+
     @Override
     public synchronized void close() {
         super.close();
@@ -362,13 +528,61 @@ class DBPersistentManager extends SQLiteOpenHelper {
                 // remove events
                 String clearDBSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
                 RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: deleteAllEvents: clearDBSQL: %s", clearDBSQL));
-                database.execSQL(clearDBSQL);
+                synchronized (DB_LOCK) {
+                    database.execSQL(clearDBSQL);
+                }
                 RudderLogger.logInfo("DBPersistentManager: deleteAllEvents: deleted all events");
             } else {
                 RudderLogger.logError("DBPersistentManager: deleteAllEvents: database is not writable");
             }
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
+        }
+    }
+
+
+    void markDeviceModeDone(List<Integer> rowIds) {
+        String rowIdsCSVString = Utils.getCSVString(rowIds);
+        if (rowIdsCSVString == null) return;
+        updateEventStatus(rowIdsCSVString, DBPersistentManager.STATUS_DEVICE_MODE_DONE);
+
+    }
+
+    void markCloudModeDone(List<Integer> rowIds) {
+        String rowIdsCSVString = Utils.getCSVString(rowIds);
+        if (rowIdsCSVString == null) return;
+        updateEventStatus(rowIdsCSVString, DBPersistentManager.STATUS_CLOUD_MODE_DONE);
+    }
+
+    //unit test
+    private void updateEventStatus(String rowIdsCSVString, int status) {
+        String sql = "UPDATE " + DBPersistentManager.EVENTS_TABLE_NAME + " SET " +
+                DBPersistentManager.STATUS_COL + " = (" + DBPersistentManager.STATUS_COL + " | " + status +
+                ") WHERE " + MESSAGE_ID_COL + " IN "
+                + rowIdsCSVString + ";";
+        synchronized (DB_LOCK) {
+            getWritableDatabase().execSQL(sql);
+        }
+    }
+
+    // Delete all events from the DB which have status as STATUS_ALL_DONE
+    void runGcForEvents() {
+        deleteDoneEvents();
+    }
+
+    private void deleteDoneEvents() {
+        synchronized (DB_LOCK) {
+            getWritableDatabase().delete(EVENTS_TABLE_NAME,
+                    DBPersistentManager.STATUS_COL + " = " + DBPersistentManager.STATUS_ALL_DONE,
+                    null);
+        }
+    }
+
+    void deleteFirstEvents(int count) {
+        synchronized (DB_LOCK) {
+            getWritableDatabase().delete(EVENTS_TABLE_NAME, MESSAGE_ID_COL + " IN ( " +
+                    "SELECT " + MESSAGE_ID_COL + " FROM " + EVENTS_TABLE_NAME +
+                    " ORDER BY " + UPDATED_COL + " LIMIT " + count + ");", null);
         }
     }
 }
@@ -399,20 +613,24 @@ class DBInsertionHandlerThread extends HandlerThread {
         }
 
         @Override
-        public void handleMessage(Message msg) {
+        public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
             if (this.database.isOpen()) {
-                String messageJson = (String) msg.obj;
+                EventInsertionCallback callback = (EventInsertionCallback) msg.obj;
+                Bundle msgBundle = msg.getData();
+                String messageJson = msgBundle.getString(EVENT);
                 long updatedTime = System.currentTimeMillis();
-                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: saveEvent: Inserting Message %s into table %s as Updated at %d", messageJson.replaceAll("'", "\\\\\'"), DBPersistentManager.EVENTS_TABLE_NAME, updatedTime));
+                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: saveEvent: Inserting Message %s into table %s as Updated at %d", messageJson.replace("'", BACKSLASH), DBPersistentManager.EVENTS_TABLE_NAME, updatedTime));
                 ContentValues insertValues = new ContentValues();
-                insertValues.put(DBPersistentManager.MESSAGE_COL, messageJson.replaceAll("'", "\\\\\'"));
+                insertValues.put(DBPersistentManager.MESSAGE_COL, messageJson.replaceAll("'", BACKSLASH));
                 insertValues.put(DBPersistentManager.UPDATED_COL, updatedTime);
-                database.insert(DBPersistentManager.EVENTS_TABLE_NAME, null, insertValues);
+                long rowId = database.insert(DBPersistentManager.EVENTS_TABLE_NAME, null, insertValues); //rowId will used
+                callback.onInsertion((int) rowId);
                 RudderLogger.logInfo("DBPersistentManager: saveEvent: Event saved to DB");
             } else {
                 RudderLogger.logError("DBPersistentManager: saveEvent: database is not writable");
             }
         }
     }
+
 }

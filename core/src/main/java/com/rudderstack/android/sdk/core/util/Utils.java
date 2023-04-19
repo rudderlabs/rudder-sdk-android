@@ -19,7 +19,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.RudderLogger;
 import com.rudderstack.android.sdk.core.RudderProperty;
-
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
@@ -83,17 +82,14 @@ public class Utils {
     }
 
     public static String getDeviceId(Application application) {
-        if (Build.VERSION.SDK_INT >= 17) {
-            String androidId = getString(application.getContentResolver(), ANDROID_ID);
-            if (!TextUtils.isEmpty(androidId)
-                    && !"9774d56d682e549c".equals(androidId)
-                    && !"unknown".equals(androidId)
-                    && !"000000000000000".equals(androidId)
-            ) {
-                return androidId;
-            }
+        String androidId = getString(application.getContentResolver(), ANDROID_ID);
+        if (!TextUtils.isEmpty(androidId)
+                && !"9774d56d682e549c".equals(androidId)
+                && !"unknown".equals(androidId)
+                && !"000000000000000".equals(androidId)
+        ) {
+            return androidId;
         }
-
         // If this still fails, generate random identifier that does not persist across installations
         return UUID.randomUUID().toString();
     }
@@ -147,17 +143,9 @@ public class Utils {
 
     public static boolean fileExists(Context context, String filename) {
         File file = context.getFileStreamPath(filename);
-        if (file == null || !file.exists()) {
-            return false;
-        }
-        return true;
+        return file != null && file.exists();
     }
 
-    public static Message deserializeMessage(String strMessage) {
-        Message msg = Message.obtain();
-        msg.obj = strMessage;
-        return msg;
-    }
 
     /**
      * Returns referring_application, url and its query parameter.
@@ -244,12 +232,6 @@ public class Utils {
                 && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
     }
 
-    public enum NetworkResponses {
-        SUCCESS,
-        ERROR,
-        WRITE_KEY_ERROR
-    }
-
     /**
      * Returns the number of batches the given number of events can be split into considering the batch size configured.
      */
@@ -268,10 +250,54 @@ public class Utils {
         if (messageDetails.size() <= flushQueueSize) {
             return messageDetails;
         } else {
-            return new ArrayList(messageDetails.subList(0, flushQueueSize));
+            return new ArrayList<>(messageDetails.subList(0, flushQueueSize));
         }
     }
 
+    /**
+     * @param integers the input list of integers which are to be converted into a csv string
+     * @return a string which is the csv format of the List<Integer> provided.
+     */
+    public static String getCSVString(List<Integer> integers) {
+        int size = integers.size();
+        if (size <= 0) return null;
+        StringBuilder sb = new StringBuilder("(" + integers.get(0));
+        if (size > 1)
+            for (int i = 1; i < size; i++) {
+                sb.append(",").append(integers.get(i));
+            }
+        sb.append(")");
+        return sb.toString();
+    }
+
+    /**
+     * @param map   the map on which we need to check for the key associated with the value provided.
+     * @param value the value for which we need to find the key associated with it.
+     * @param <K>   the type of the key
+     * @param <V>   the type of the value
+     * @return the key associated for the value in the map provided.
+     */
+    public static <K, V> K getKeyForValueFromMap(Map<K, V> map, Object value) {
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            if (value.equals(entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the value associated with key in the map after casting it into boolean, if the key exists and casting it boolean is possible, else returns false.
+     */
+    public static <K, V> boolean getBooleanFromMap(Map<K, V> map, K key) {
+        if (!map.containsKey(key))
+            return false;
+        V value = map.get(key);
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        return false;
+    }
     @NonNull
     public static String appendSlashToUrl(@NonNull String dataPlaneUrl) {
         if (!dataPlaneUrl.endsWith("/")) dataPlaneUrl += "/";

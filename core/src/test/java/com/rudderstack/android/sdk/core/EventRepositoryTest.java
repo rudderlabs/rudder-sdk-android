@@ -16,8 +16,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import android.text.TextUtils;
 
 import com.google.common.collect.ImmutableList;
-import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
-import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import org.hamcrest.Matchers;
@@ -26,23 +24,26 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(PowerMockRunner.class)
+@PowerMockIgnore("jdk.internal.reflect.*")
 @PrepareForTest({FlushUtils.class,
         RudderLogger.class,
-        TextUtils.class, Utils.class})
+        TextUtils.class, Utils.class,
+        RudderNetworkManager.class})
 public class EventRepositoryTest {
 
     // data to be used
@@ -52,6 +53,7 @@ public class EventRepositoryTest {
 
     //database manager mock
     DBPersistentManager dbPersistentManager = PowerMockito.mock(DBPersistentManager.class);
+    RudderNetworkManager networkManager = PowerMockito.mock(RudderNetworkManager.class);
 
     @Before
     public void setup() throws Exception {
@@ -75,6 +77,8 @@ public class EventRepositoryTest {
     @Test
     public void flush() throws Exception {
 
+        final RudderNetworkManager.Result mockResult= new RudderNetworkManager.Result(RudderNetworkManager.NetworkResponses.SUCCESS,
+                200, "", null);
         PowerMockito.when(dbPersistentManager, "fetchAllEventsFromDB", anyList(), anyList())
                 .thenAnswer(new Answer<Void>() {
                     @Override
@@ -84,13 +88,25 @@ public class EventRepositoryTest {
                         return null;
                     }
                 });
-        PowerMockito.when(FlushUtils.class, "flushEventsToServer",
-                        anyString(), anyString(), anyString(), anyString()
+        PowerMockito.doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                List<Integer> msgIdParams = (List<Integer>) invocation.getArguments()[0];
+                List<String> msgParams = (List<String>) invocation.getArguments()[1];
+                msgIdParams.addAll(messageIds);
+                msgParams.addAll(messages);
+                return null;
+            }
+        }).when(dbPersistentManager).fetchAllCloudModeEventsFromDB(ArgumentMatchers.<List<Integer>>any(), ArgumentMatchers.<List<String>>any());
+
+        PowerMockito.when(networkManager, "sendNetworkRequest",
+                        anyString(), anyString(), ArgumentMatchers.any(RudderNetworkManager.RequestMethod.class)
                 )
-                .thenAnswer(new Answer<Utils.NetworkResponses>() {
+                .thenAnswer(new Answer<RudderNetworkManager.Result>() {
                     @Override
-                    public Utils.NetworkResponses answer(InvocationOnMock invocation) throws Throwable {
-                        return Utils.NetworkResponses.SUCCESS;
+                    public RudderNetworkManager.Result answer(InvocationOnMock invocation) {
+                        System.out.println(invocation.getArguments().length);
+                        return mockResult;
                     }
                 });
 
@@ -121,39 +137,36 @@ public class EventRepositoryTest {
                 "  ]\n" +
                 "}";
         //when
-        boolean result = FlushUtils.flush(false, null,
+        boolean result = FlushUtils.flushToServer(
                 30, "api.rudderstack.com/", dbPersistentManager
-                , "auth_key", "anon_id");
+                , networkManager);
 
 
         //verify flushEventsToServer is called once with proper arguments
         //we use argument captor, cause we would need to remove spaces from argument
-        PowerMockito.verifyStatic(FlushUtils.class, Mockito.times(1));
         ArgumentCaptor<String> arg1 = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> arg2 = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> arg3 = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> arg4 = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<RudderNetworkManager.RequestMethod> arg3 = ArgumentCaptor.forClass(RudderNetworkManager.RequestMethod.class);
 
-        FlushUtils.flushEventsToServer(
+        Mockito.verify(networkManager, Mockito.times(1)).sendNetworkRequest(
                 arg1.capture(),
                 arg2.capture(),
-                arg3.capture(),
-                arg4.capture()
-//                Mockito.eq(expectedPayload.replace("\n", "").replace(" ", "")),
-//                Mockito.eq("api.rudderstack.com/"),
-//                Mockito.eq("auth_key"),
-//                Mockito.eq("anon_id")
+                arg3.capture()
         );
+
+//        networkManager.sendNetworkRequest(
+//                arg1.capture(),
+//                arg2.capture(),
+//                arg3.capture()
+//        );
         assertThat(result, Matchers.is(true));
         System.out.println(arg1.getValue());
         assertThat(arg1.getValue().replace(" ", ""),
                 Matchers.is(expectedPayload.replace("\n", "").replace(" ", "")));
         System.out.println(arg2.getValue());
-        assertThat(arg2.getValue().replace(" ", ""), Matchers.is("api.rudderstack.com/"));
+        assertThat(arg2.getValue().replace(" ", ""), Matchers.is("api.rudderstack.com/v1/batch"));
         System.out.println(arg3.getValue());
-        assertThat(arg3.getValue(), Matchers.is("auth_key"));
-        System.out.println(arg4.getValue());
-        assertThat(arg4.getValue(), Matchers.is("anon_id"));
+        assertThat(arg3.getValue(), Matchers.is(RudderNetworkManager.RequestMethod.POST));
     }
 
     private int dbFetchCalled = 0;
@@ -161,9 +174,11 @@ public class EventRepositoryTest {
     @Test
     public void testSynchronicity() throws Exception {
         final AtomicInteger threadsCalledDb = new AtomicInteger(0);
+        final RudderNetworkManager.Result mockResult= new RudderNetworkManager.Result(RudderNetworkManager.NetworkResponses.SUCCESS,
+                200, "", null);
         //we add a sleep to db fetch to check for synchronicity
         // take a class level variable to check for thread access
-        PowerMockito.when(dbPersistentManager, "fetchAllEventsFromDB", anyList(), anyList())
+        PowerMockito.when(dbPersistentManager, "fetchAllCloudModeEventsFromDB", anyList(), anyList())
                 .thenAnswer(new Answer<Void>() {
                     @Override
                     public Void answer(InvocationOnMock invocation) throws Throwable {
@@ -181,28 +196,30 @@ public class EventRepositoryTest {
                         return null;
                     }
                 });
+
         PowerMockito.when(FlushUtils.class, "flushEventsToServer",
                         anyString(), anyString(), anyString(), anyString()
                 )
-                .thenAnswer(new Answer<Utils.NetworkResponses>() {
+                .thenAnswer((Answer<RudderNetworkManager.NetworkResponses>) invocation -> RudderNetworkManager.NetworkResponses.SUCCESS);
+        PowerMockito.when(networkManager, "sendNetworkRequest",
+                        anyString(), anyString(), ArgumentMatchers.any()
+                )
+                .thenAnswer(new Answer<RudderNetworkManager.Result>() {
                     @Override
-                    public Utils.NetworkResponses answer(InvocationOnMock invocation) throws Throwable {
-                        return Utils.NetworkResponses.SUCCESS;
+                    public RudderNetworkManager.Result answer(InvocationOnMock invocation) {
+                        System.out.println(invocation.getArguments().length);
+                        return mockResult;
                     }
                 });
-
+        PowerMockito.when(networkManager.sendNetworkRequest(anyString(), anyString(), ArgumentMatchers.any(RudderNetworkManager.RequestMethod.class)))
+                .thenReturn(mockResult);
         //starting multiple threads to access the same.
         final int numberOfThreads = 8;
         for (int n = 0; n < numberOfThreads; n++) {
-            Thread t = new Thread(new Runnable() {
-
-                @Override
-                public void run() {
-                    FlushUtils.flush(false, null,
+            Thread t = new Thread(() ->
+                    FlushUtils.flushToServer(
                             30, "api.rudderstack.com/", dbPersistentManager
-                            , "auth_key", "anon_id");
-                }
-            }, "flush-thread-" + n) {
+                            , networkManager), "flush-thread-" + n) {
                 @Override
                 public synchronized void start() {
                     super.start();
@@ -241,43 +258,5 @@ public class EventRepositoryTest {
                         hasEntry("All", true)
                 ));
     }
-
-    @Test
-    public void applySessionTracking() {
-        RudderUserSession userSession = PowerMockito.mock(RudderUserSession.class);
-        PowerMockito.doReturn(123L).when(userSession).getSessionId();
-
-        RudderConfig mockConfig = PowerMockito.mock(RudderConfig.class);
-        PowerMockito.doReturn(false).when(mockConfig).isTrackLifecycleEvents();
-//        Mockito.doReturn()
-        EventRepository repo = new EventRepository();
-        RudderMessage message = new RudderMessageBuilder().setUserId("u-1").build();
-        RudderMessage spyMessage = PowerMockito.spy(message);
-        PowerMockito.doNothing().when(spyMessage).setSession(userSession);
-
-        repo.applySessionTracking(spyMessage, mockConfig, userSession);
-        Mockito.verify(spyMessage).setSession(userSession);
-    }
-
-    @Test
-    public void getDataPlaneUrlWrtResidencyConfig() {
-        EventRepository repo = new EventRepository();
-        RudderConfig rudderConfig = new RudderConfig.Builder()
-                .build();
-        RudderServerConfig serverConfig = PowerMockito.mock(RudderServerConfig.class);
-        String dataPlaneUrl = repo.getDataPlaneUrlWrtResidencyConfig(serverConfig, rudderConfig);
-        assertThat(dataPlaneUrl, Matchers.nullValue());
-    }
-
-    @Test
-    public void getDataPlaneUrlWrtResidencyConfigWithDataPlaneUrl() {
-        EventRepository repo = new EventRepository();
-        RudderConfig rudderConfig = new RudderConfig.Builder()
-                                        .withDataPlaneUrl("https://random.dataplane.rudderstack.com")
-                                        .build();
-        RudderServerConfig serverConfig = new RudderServerConfig();
-        String dataPlaneUrl = repo.getDataPlaneUrlWrtResidencyConfig(serverConfig, rudderConfig);
-        assertEquals("https://random.dataplane.rudderstack.com/", dataPlaneUrl);
-    }
-
 }
+

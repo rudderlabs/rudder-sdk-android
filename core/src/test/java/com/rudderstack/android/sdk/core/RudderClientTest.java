@@ -40,12 +40,12 @@ public class RudderClientTest {
             }
         });
         PowerMockito.spy(URLUtil.class);
-        PowerMockito.when(URLUtil.class, "isValidUrl", anyString()).thenAnswer(new Answer<Boolean>() {
+        PowerMockito.doReturn(true).when(URLUtil.class, "isValidUrl", anyString());/*.thenReturn(new Answer<Boolean>() {
             @Override
             public Boolean answer(InvocationOnMock invocation) throws Throwable {
                 return true;
             }
-        });
+        });*/
         PowerMockito.spy(RudderClient.class);
         PowerMockito.when(RudderClient.class, "getOptOutStatus").thenAnswer((Answer<Boolean>) invocation -> false);
         config = PowerMockito.mock(RudderConfig.class);

@@ -5,7 +5,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
     <application
         android:name=".MainApplication"
@@ -15,7 +16,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.rudderstack.android.sample.kotlin.MainActivity"
+        <activity
+            android:name="com.rudderstack.android.sample.kotlin.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,25 +25,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.rudderstack.android.sample.kotlin.FirstActivity" />
-        <activity android:name="com.rudderstack.android.sample.kotlin.SecondActivity" />
-        <activity android:name="com.rudderstack.android.sample.kotlin.UserSessionActivity" />
+        <activity
+            android:name="com.rudderstack.android.sample.kotlin.FirstActivity" />
+        <activity
+            android:name="com.rudderstack.android.sample.kotlin.SecondActivity" />
+        <activity 
+            android:name="com.rudderstack.android.sample.kotlin.UserSessionActivity"/>
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-4271859468376006~9737595580" />
-        <!-- To disable workManager Initialization on startup and initialize it only on-demand -->
-        <provider
-            android:name="androidx.startup.InitializationProvider"
-            android:authorities="${applicationId}.androidx-startup"
-            android:exported="false"
-            tools:node="merge">
-            <!-- If you are using androidx.startup to initialize other components -->
-            <meta-data
-                android:name="androidx.work.WorkManagerInitializer"
-                android:value="androidx.startup"
-                tools:node="remove" />
-        </provider>
 
     </application>
 

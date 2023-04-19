@@ -1,11 +1,18 @@
 package com.rudderstack.android.sdk.core;
 
+import com.rudderstack.android.sdk.core.util.MessageUploadLock;
+import com.rudderstack.android.sdk.core.util.Utils;
+
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
+import static com.rudderstack.android.sdk.core.util.Utils.getBatch;
+import static com.rudderstack.android.sdk.core.util.Utils.getNumberOfBatches;
+
 import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
-
-import com.rudderstack.android.sdk.core.util.MessageUploadLock;
-import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,93 +34,65 @@ class FlushUtils {
     }
 
     private static final Object FLUSH_LOCK = new Object();
-    private static final Object DB_LOCK = new Object();
 
     /**
      * Should not be called from main thread.
      *
-     * @param areFactoriesInitialized
-     * @param integrationOperationsMap
-     * @param flushQueueSize
-     * @param dataPlaneUrl
-     * @param dbManager
-     * @param authHeaderString
-     * @param anonymousIdHeaderString
-     * @return
+     * @param flushQueueSize queue size defined by the user on which the batch is flushed to the data plane.
+     * @param dataPlaneUrl   dataPlaneUrl to which the events are flushed.
+     * @param dbManager      Instance of the dbPersistentManager which is used to do all the operations with DB.
+     * @return boolean indicating if the flush operation is successful or not.
      */
-    static boolean flush(boolean areFactoriesInitialized, @Nullable Map<String, RudderIntegration<?>> integrationOperationsMap,
-                         int flushQueueSize, String dataPlaneUrl,
-                         DBPersistentManager dbManager,
-                         String authHeaderString, String anonymousIdHeaderString) {
-
-        if (areFactoriesInitialized && integrationOperationsMap != null) {
-            flushNativeSdks(integrationOperationsMap);
-        }
-        Utils.NetworkResponses networkResponse;
+    static boolean flushToServer(int flushQueueSize, String dataPlaneUrl, DBPersistentManager dbManager, RudderNetworkManager networkManager) {
+        Result networkResponse;
         synchronized (MessageUploadLock.UPLOAD_LOCK) {
             final ArrayList<Integer> messageIds = new ArrayList<>();
             final ArrayList<String> messages = new ArrayList<>();
-            RudderLogger.logDebug("EventRepository: flush: Fetching events to flush to server");
-            //locks to prevent concurrent database access.
-            synchronized (DB_LOCK) {
-                dbManager.fetchAllEventsFromDB(messageIds, messages);
-            }
-            int numberOfBatches = Utils.getNumberOfBatches(messages.size(), flushQueueSize);
-            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: %d batches of events to be flushed", numberOfBatches));
+            RudderLogger.logDebug("FlushUtils: flush: Fetching events to flush to server");
+            dbManager.fetchAllCloudModeEventsFromDB(messageIds, messages);
+            int numberOfBatches = getNumberOfBatches(messages.size(), flushQueueSize);
+            RudderLogger.logDebug(String.format(Locale.US, "FlushUtils: flush: %d batches of events to be flushed", numberOfBatches));
             boolean lastBatchFailed;
             for (int i = 1; i <= numberOfBatches; i++) {
                 lastBatchFailed = true;
                 int retries = 3;
                 while (retries-- > 0) {
-                    List<Integer> batchMessageIds = Utils.getBatch(messageIds, flushQueueSize);
-                    List<String> batchMessages = Utils.getBatch(messages, flushQueueSize);
+                    List<Integer> batchMessageIds = getBatch(messageIds, flushQueueSize);
+                    List<String> batchMessages = getBatch(messages, flushQueueSize);
                     String payload = getPayloadFromMessages(batchMessageIds, batchMessages);
-                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: payload: %s", payload));
-                    RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: EventCount: %d", batchMessages.size()));
+                    RudderLogger.logDebug(String.format(Locale.US, "FlushUtils: flush: payload: %s", payload));
+                    RudderLogger.logInfo(String.format(Locale.US, "FlushUtils: flush: EventCount: %d", batchMessages.size()));
                     if (payload != null) {
                         // send payload to server if it is not null
-                        networkResponse = flushEventsToServer(payload, dataPlaneUrl, authHeaderString, anonymousIdHeaderString);
-                        RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: ServerResponse: %s", networkResponse));
+                        networkResponse = networkManager.sendNetworkRequest(payload, addEndPoint(dataPlaneUrl, RudderCloudModeManager.BATCH_ENDPOINT), RequestMethod.POST);
+                        RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: ServerResponse: %d", networkResponse.statusCode));
                         // if success received from server
-                        if (networkResponse == Utils.NetworkResponses.SUCCESS) {
+                        if (networkResponse.status == NetworkResponses.SUCCESS) {
                             // remove events from DB
-                            RudderLogger.logDebug(String.format("EventRepository: flush: Successfully sent batch %d/%d ", i, numberOfBatches));
+                            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: Successfully sent batch %d/%d ", i, numberOfBatches));
                             RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: clearingEvents of batch %d from DB: %s", i, networkResponse));
-                            dbManager.clearEventsFromDB(batchMessageIds);
+                            dbManager.markCloudModeDone(batchMessageIds);
                             messageIds.removeAll(batchMessageIds);
                             messages.removeAll(batchMessages);
                             lastBatchFailed = false;
                             break;
                         }
                     }
-                    RudderLogger.logWarn(String.format("EventRepository: flush: Failed to send batch %d/%d retrying again, %d retries left", i, numberOfBatches, retries));
+                    RudderLogger.logWarn(String.format(Locale.US, "EventRepository: flush: Failed to send batch %d/%d retrying again, %d retries left", i, numberOfBatches, retries));
                 }
                 if (lastBatchFailed) {
-                    RudderLogger.logWarn(String.format("EventRepository: flush: Failed to send batch %d/%d after 3 retries , dropping the remaining batches as well", i, numberOfBatches));
+                    RudderLogger.logWarn(String.format(Locale.US, "EventRepository: flush: Failed to send batch %d/%d after 3 retries , dropping the remaining batches as well", i, numberOfBatches));
                     return false;
                 }
             }
             return true;
-        }
-
-
-    }
-
-    static void flushNativeSdks(Map<String, RudderIntegration<?>> integrationOperationsMap) {
-        RudderLogger.logDebug("EventRepository: flush native SDKs");
-        for (Map.Entry<String, RudderIntegration<?>> entry : integrationOperationsMap.entrySet()) {
-            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush for %s", entry.getKey()));
-            RudderIntegration<?> integration = entry.getValue();
-            if (integration != null) {
-                integration.flush();
-            }
         }
     }
 
     /*
      * flush events payload to server and return response as String
      * */
-    static Utils.NetworkResponses flushEventsToServer(String payload, String dataPlaneUrl, String authHeaderString, String anonymousIdHeaderString) {
+    static NetworkResponses flushEventsToServer(String payload, String dataPlaneUrl, String authHeaderString, String anonymousIdHeaderString) {
         try {
             if (TextUtils.isEmpty(authHeaderString)) {
                 RudderLogger.logError("EventRepository: flushEventsToServer: WriteKey was not correct. Aborting flush to server");
@@ -152,7 +131,7 @@ class FlushUtils {
             }
             // get input stream from connection to get output from the server
             if (httpConnection.getResponseCode() == 200) {
-                return Utils.NetworkResponses.SUCCESS;
+                return NetworkResponses.SUCCESS;
             } else {
                 BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -167,13 +146,13 @@ class FlushUtils {
                 RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + errorResp);
                 // return null as request made is not successful
                 if (errorResp.toLowerCase().contains("invalid write key")) {
-                    return Utils.NetworkResponses.WRITE_KEY_ERROR;
+                    return NetworkResponses.WRITE_KEY_ERROR;
                 }
             }
         } catch (Exception ex) {
             RudderLogger.logError(ex);
         }
-        return Utils.NetworkResponses.ERROR;
+        return NetworkResponses.ERROR;
     }
 
     /*
