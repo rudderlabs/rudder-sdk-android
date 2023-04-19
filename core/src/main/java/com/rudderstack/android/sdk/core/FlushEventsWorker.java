@@ -7,12 +7,6 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.rudderstack.android.sdk.core.util.Utils;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
 public class FlushEventsWorker extends Worker {
 
     public FlushEventsWorker(
@@ -31,19 +25,18 @@ public class FlushEventsWorker extends Worker {
         RudderLogger.init(flushConfig.getLogLevel());
 
         DBPersistentManager dbManager = DBPersistentManager.getInstance((Application) getApplicationContext());
+        RudderNetworkManager networkManager = new RudderNetworkManager(flushConfig.getAuthHeaderString(), flushConfig.getAnonymousHeaderString());
         if (dbManager == null) {
             RudderLogger.logWarn("FlushEventsWorker: doWork: Failed to initialize DBPersistentManager, couldn't flush the events, aborting the work");
             return Result.failure();
         }
         RudderLogger.logInfo("FlushEventsWorker: doWork: Started Periodic Flushing of Events ");
 
-        return FlushUtils.flush(false,// worker is for cloud mode only
-                null,// for cloud mode only
+        return FlushUtils.flushToServer(
                 flushConfig.flushQueueSize,
                 flushConfig.dataPlaneUrl,
                 dbManager,
-                flushConfig.getAuthHeaderString(),
-                flushConfig.getAnonymousHeaderString()
-                )? Result.success() : Result.failure();
+                networkManager
+        ) ? Result.success() : Result.failure();
     }
 }

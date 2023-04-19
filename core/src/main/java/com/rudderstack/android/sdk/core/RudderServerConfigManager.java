@@ -2,230 +2,148 @@ package com.rudderstack.android.sdk.core;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.text.TextUtils;
-import android.util.Base64;
 
 import com.google.gson.Gson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
+
 class RudderServerConfigManager {
-    private static RudderPreferenceManager preferenceManger;
-    private static RudderServerConfigManager instance;
-    private static RudderServerConfig serverConfig;
-    private static RudderConfig rudderConfig;
-    private static ReentrantLock lock = new ReentrantLock();
-    private Map<String, Object> integrationsMap = null;
-    private Utils.NetworkResponses receivedError = Utils.NetworkResponses.SUCCESS;
+
+    private RudderPreferenceManager preferenceManger;
+    private RudderConfig rudderConfig;
+    private Context context;
+    private RudderNetworkManager networkManager;
+    private RudderServerConfig serverConfig;
+
+    private NetworkResponses receivedError = NetworkResponses.SUCCESS;
+
     private static final String RUDDER_SERVER_CONFIG_FILE_NAME = "RudderServerConfig";
-    private static Context context;
+    private static final ReentrantLock lock = new ReentrantLock();
 
 
-    RudderServerConfigManager(Application _application, String _writeKey, RudderConfig _config) {
-        preferenceManger = RudderPreferenceManager.getInstance(_application);
-        rudderConfig = _config;
-        context = _application.getApplicationContext();
+    RudderServerConfigManager(Application _application, RudderConfig _config, RudderNetworkManager networkManager) {
+        this.preferenceManger = RudderPreferenceManager.getInstance(_application);
+        this.rudderConfig = _config;
+        this.context = _application.getApplicationContext();
+        this.networkManager = networkManager;
         // fetch server config
-        fetchConfig(_writeKey);
+        fetchConfig();
     }
 
-    // update config if it is older than an day
-    private boolean isServerConfigOutDated() {
-        long lastUpdatedTime = preferenceManger.getLastUpdatedTime();
-        RudderLogger.logDebug(String.format(Locale.US, "Last updated config time: %d", lastUpdatedTime));
-        RudderLogger.logDebug(String.format(Locale.US, "ServerConfigInterval: %d", rudderConfig.getConfigRefreshInterval()));
-        if (lastUpdatedTime == -1) return true;
+    private void fetchConfig() {
 
-        long currentTime = System.currentTimeMillis();
-        return (currentTime - lastUpdatedTime) > (rudderConfig.getConfigRefreshInterval() * 60 * 60 * 1000);
-    }
-
-
-    private void fetchConfig(final String _writeKey) {
-        // don't try to download anything if writeKey is not valid
-        if (TextUtils.isEmpty(_writeKey)) {
-            receivedError = Utils.NetworkResponses.WRITE_KEY_ERROR;
-            return;
-        }
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // download and store config to storage
-                downloadConfig(_writeKey);
-                // retrieve config from storage
-
-                lock.lock();
-                serverConfig = getRudderServerConfig();
-                if (serverConfig == null) {
-                    RudderLogger.logDebug("Server config retrieval failed.No config found in storage");
-                    RudderLogger.logError(String.format("Failed to fetch server config for writeKey: %s", _writeKey));
-                }
-                lock.unlock();
+        Thread thread = new Thread(() -> {
+            downloadConfig();
+            lock.lock();
+            serverConfig = getRudderServerConfig();
+            if (serverConfig == null) {
+                RudderLogger.logError("Failed to fetch server config");
             }
+            lock.unlock();
         });
         RudderLogger.logVerbose("Download Thread Id:" + thread.getId());
         thread.start();
     }
 
-    private void downloadConfig(final String _writeKey) {
-        RudderLogger.logDebug(String.format("Downloading server config for writeKey: %s", _writeKey));
+    private void downloadConfig() {
         boolean isDone = false;
         int retryCount = 0;
+        String endpoint = "sourceConfig?p=android&v=" + BuildConfig.VERSION_NAME + "&bv=" + android.os.Build.VERSION.SDK_INT;
+        String requestUrl = addEndPoint(rudderConfig.getControlPlaneUrl(), endpoint);
         while (!isDone && retryCount <= 3) {
-            try {
-
-                String configUrl = rudderConfig.getControlPlaneUrl() + "sourceConfig?p=android&v=" + BuildConfig.VERSION_NAME + "&bv=" + android.os.Build.VERSION.SDK_INT;
-                RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configUrl: %s", configUrl));
-                // create url object
-                URL url = new URL(configUrl);
-                // get connection object
-                HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
-                // set request method
-                httpConnection.setRequestMethod("GET");
-                // add basic auth_header
-                httpConnection.setRequestProperty("Authorization", "Basic " + Base64.encodeToString((_writeKey + ":").getBytes("UTF-8"), Base64.DEFAULT));
-                // create connection
-                httpConnection.connect();
-                RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: response status code: %d", httpConnection.getResponseCode()));
-                if (httpConnection.getResponseCode() == 200) {
-                    // get input stream from connection to get output from the server
-                    BufferedInputStream bis = new BufferedInputStream(httpConnection.getInputStream());
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    int res = bis.read();
-                    // read response from the server
-                    while (res != -1) {
-                        baos.write((byte) res);
-                        res = bis.read();
-                    }
-                    String configJson = baos.toString();
-                    try {
-                        RudderServerConfig rudderServerConfig = new Gson().fromJson(configJson, RudderServerConfig.class);
-                        RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configJson: %s", configJson));
-                        // save config for future use
-                        preferenceManger.updateLastUpdatedTime();
-                        saveRudderServerConfig(rudderServerConfig);
-                        // reset retry count
-                        isDone = true;
-                        RudderLogger.logInfo("RudderServerConfigManager: downloadConfig: server config download successful");
-                    } catch (Exception e) {
-                        isDone = false;
-                        retryCount += 1;
-                        RudderLogger.logError("RudderServerConfigManager: downloadConfig: Failed to parse RudderServerConfig Object, retrying in " + retryCount + "s");
-                        e.printStackTrace();
-                        try {
-                            Thread.sleep(retryCount * 1000);
-                        } catch (InterruptedException ex) {
-                            RudderLogger.logError(ex);
-                        }
-                    }
-                } else {
-                    BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    int res = bis.read();
-                    // read response from the server
-                    while (res != -1) {
-                        baos.write((byte) res);
-                        res = bis.read();
-                    }
-                    RudderLogger.logError("ServerError for FetchingConfig: " + baos.toString());
-//                            if (httpConnection.getResponseCode() == 400) {
-//                                receivedError = Utils.NetworkResponses.WRITE_KEY_ERROR;
-//                                return;
-//                            }
-
-                    // TODO : change the logic based on a defined API response or responseCode
-                    if (baos.toString().equals("{\"message\":\"Invalid write key\"}")) {
-                        receivedError = Utils.NetworkResponses.WRITE_KEY_ERROR;
-                        return;
-                    }
-
-                    retryCount += 1;
-                    RudderLogger.logInfo("downloadConfig: Retrying to download in " + retryCount + "s");
-                    receivedError = Utils.NetworkResponses.ERROR;
-                    Thread.sleep(retryCount * 1000);
-                }
-            } catch (Exception ex) {
-                RudderLogger.logError(ex);
-                retryCount += 1;
-                RudderLogger.logInfo("downloadConfig: Retrying to download in " + retryCount + "s");
+            RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configUrl: %s", requestUrl));
+            Result result = networkManager.sendNetworkRequest(null, requestUrl, RequestMethod.GET);
+            if (result.status == NetworkResponses.SUCCESS) {
                 try {
-                    Thread.sleep(retryCount * 1000);
-                } catch (InterruptedException e) {
-                    RudderLogger.logError(e);
+                    RudderServerConfig rudderServerConfig = new Gson().fromJson(result.response, RudderServerConfig.class);
+                    RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configJson: %s", result.response));
+                    // save config for future use
+                    preferenceManger.updateLastUpdatedTime();
+                    saveRudderServerConfig(rudderServerConfig);
+                    // reset retry count
+                    isDone = true;
+                    RudderLogger.logInfo("RudderServerConfigManager: downloadConfig: server config download successful");
+                } catch (Exception e) {
+                    isDone = false;
+                    retryCount += 1;
+                    RudderLogger.logError("RudderServerConfigManager: downloadConfig: Failed to parse RudderServerConfig Object, retrying in " + retryCount + "s");
+                    e.printStackTrace();
+                    sleep(retryCount);
                 }
+            } else if (result.status == NetworkResponses.WRITE_KEY_ERROR) {
+                receivedError = NetworkResponses.WRITE_KEY_ERROR;
+                RudderLogger.logError("RudderServerConfigManager: downloadConfig: ServerError for FetchingConfig due to invalid write key " + result.error);
+                return;
+            } else {
+                receivedError = NetworkResponses.ERROR;
+                retryCount += 1;
+                RudderLogger.logError("RudderServerConfigManager: downloadConfig: ServerError for FetchingConfig: " + result.error);
+                RudderLogger.logInfo("RudderServerConfigManager: downloadConfig: Retrying to download in " + retryCount + "s");
+                sleep(retryCount);
             }
         }
         if (!isDone) {
-            RudderLogger.logDebug("Server config download failed.Using the last saved config from storage");
+            RudderLogger.logDebug("RudderServerConfigManager: downloadConfig: Server config download failed. Using the last saved config from storage");
         }
     }
 
     void saveRudderServerConfig(RudderServerConfig rudderServerConfig) {
-        try {
-            FileOutputStream fos = context.openFileOutput(RUDDER_SERVER_CONFIG_FILE_NAME, Context.MODE_PRIVATE);
-            ObjectOutputStream os = new ObjectOutputStream(fos);
+        try(FileOutputStream fos = context.openFileOutput(RUDDER_SERVER_CONFIG_FILE_NAME, Context.MODE_PRIVATE);
+            ObjectOutputStream os = new ObjectOutputStream(fos)) {
+
             os.writeObject(rudderServerConfig);
-            os.close();
-            fos.close();
         } catch (Exception e) {
             RudderLogger.logError("RudderServerConfigManager: saveRudderServerConfig: Exception while saving RudderServerConfig Object to File");
             e.printStackTrace();
         }
     }
 
-    RudderServerConfig getRudderServerConfig() {
+    private RudderServerConfig getRudderServerConfig() {
         RudderServerConfig rudderServerConfig = null;
-        try {
-            if (Utils.fileExists(context, RUDDER_SERVER_CONFIG_FILE_NAME)) {
-                FileInputStream fis = context.openFileInput(RUDDER_SERVER_CONFIG_FILE_NAME);
-                ObjectInputStream is = new ObjectInputStream(fis);
-                rudderServerConfig = (RudderServerConfig) is.readObject();
-                is.close();
-                fis.close();
-            }
-        } catch (Exception e) {
-            RudderLogger.logError("RudderServerConfigManager: getRudderServerConfig: Failed to read RudderServerConfig Object from File");
-            e.printStackTrace();
-        } finally {
-            return rudderServerConfig;
+        if (!Utils.fileExists(context, RUDDER_SERVER_CONFIG_FILE_NAME)) {
+            return null;
         }
+            try(FileInputStream fis = context.openFileInput(RUDDER_SERVER_CONFIG_FILE_NAME);
+                ObjectInputStream is = new ObjectInputStream(fis)) {
+
+                rudderServerConfig = (RudderServerConfig) is.readObject();
+            } catch (Exception e) {
+                RudderLogger.logError("RudderServerConfigManager: getRudderServerConfig: Failed to read RudderServerConfig Object from File");
+                e.printStackTrace();
+            }
+        return rudderServerConfig;
+
     }
 
     RudderServerConfig getConfig() {
-        RudderServerConfig config = null;
+        RudderServerConfig config;
         lock.lock();
         config = serverConfig;
         lock.unlock();
         return config;
     }
 
-    Utils.NetworkResponses getError() {
+    NetworkResponses getError() {
         return receivedError;
     }
 
-    Map<String, Object> getIntegrations() {
-        if (integrationsMap == null) {
-            this.integrationsMap = new HashMap<>();
-            for (RudderServerDestination destination : serverConfig.source.destinations) {
-                if (!this.integrationsMap.containsKey(destination.destinationDefinition.definitionName))
-                    this.integrationsMap.put(destination.destinationDefinition.definitionName, destination.isDestinationEnabled);
-            }
+    private void sleep(int retryCount) {
+        try {
+            Thread.sleep(retryCount * 1000L);
+        } catch (InterruptedException ex) {
+            RudderLogger.logError(String.format(Locale.US, "RudderServerConfigManager: Sleep: Exception while the thread is in sleep %s", ex.getLocalizedMessage()));
         }
-        return this.integrationsMap;
     }
-
 }

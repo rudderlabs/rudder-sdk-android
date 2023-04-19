@@ -10,7 +10,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
 import android.text.TextUtils;
@@ -54,8 +53,8 @@ public class RudderEventFilteringPluginTest {
 
     @Before
     public void setup() {
-        mockTheLog();
-        PowerMockito.mockStatic(TextUtils.class);
+//        mockTheLog();
+//        PowerMockito.mockStatic(TextUtils.class);
          message = PowerMockito.mock(RudderMessage.class);
 
 
@@ -348,7 +347,7 @@ public class RudderEventFilteringPluginTest {
 
 
         // For any string values
-        PowerMockito.when(TextUtils.isEmpty(any(CharSequence.class))).thenAnswer(new Answer<Boolean>() {
+       /* PowerMockito.when(TextUtils.isEmpty(any(CharSequence.class))).thenAnswer(new Answer<Boolean>() {
             @Override
             public Boolean answer(InvocationOnMock invocation) {
                 CharSequence a = (CharSequence) invocation.getArguments()[0];
@@ -361,7 +360,7 @@ public class RudderEventFilteringPluginTest {
             public Boolean answer(InvocationOnMock invocation) {
                 return true;
             }
-        });
+        });*/
 
         plugin_Blacklist = new RudderEventFilteringPlugin(testDestinations_Amplitude_BlacklistedEvents);
         plugin_Whitelist = new RudderEventFilteringPlugin(testDestinations_Amplitude_WhitelistedEvents);

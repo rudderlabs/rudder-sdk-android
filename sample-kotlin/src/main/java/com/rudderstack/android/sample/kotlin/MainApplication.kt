@@ -2,13 +2,13 @@ package com.rudderstack.android.sample.kotlin
 
 import android.app.Application
 
-import android.content.Context
-import androidx.multidex.MultiDex
 import androidx.work.Configuration
 
+import com.rudderstack.android.integration.braze.BrazeIntegrationFactory
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
+import com.rudderstack.android.integrations.amplitude.AmplitudeIntegrationFactory
 
 class MainApplication : Application(), Configuration.Provider {
     companion object {
@@ -21,12 +21,15 @@ class MainApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
+        RudderClient.putAuthToken("testAuthToken");
         rudderClient = RudderClient.getInstance(
             this,
             WRITE_KEY,
             RudderConfig.Builder()
-                .withDataPlaneUrl(DATA_PLANE_URL)
+               .withDataPlaneUrl(DATA_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
+                .withFactory(BrazeIntegrationFactory.FACTORY)
+                .withFactory(AmplitudeIntegrationFactory.FACTORY)
                 .withTrackLifecycleEvents(true)
                 .withRecordScreenViews(false)
                 .build()
@@ -34,10 +37,6 @@ class MainApplication : Application(), Configuration.Provider {
 
     }
 
-    override fun attachBaseContext(base: Context) {
-        super.attachBaseContext(base)
-        MultiDex.install(this)
-    }
 
     // To initialize WorkManager on demand instead of on startup
     override fun getWorkManagerConfiguration(): Configuration {

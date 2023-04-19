@@ -6,30 +6,87 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.rudderstack.android.sdk.core.RudderClient
-import com.rudderstack.android.sdk.core.RudderTraits
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
+import com.rudderstack.android.sdk.core.*
+import kotlinx.android.synthetic.main.activity_main.*
 import javax.net.ssl.SSLContext
 
 
 class MainActivity : AppCompatActivity() {
-    private var count = 0
+    private var userCount = 1
+    private var eventCount = 1
+    private var screenCount = 1
+    private var groupCount = 1
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT)
             tlsBackport()
+
+        identify.setOnClickListener {
+            MainApplication.rudderClient!!.identify(
+                "user$userCount",
+                RudderTraits().putEmail("user$userCount@gmail.com").putName("Mr. User$userCount"),
+                null
+            )
+            userCount++;
+        }
+
+        track.setOnClickListener {
+            val props = RudderProperty()
+            props.put("Test Track Key $eventCount", "Test Track Value $eventCount")
+            MainApplication.rudderClient!!.track(
+                "Test Event $eventCount",
+                props,
+                null
+            )
+            eventCount++;
+        }
+
+        screen.setOnClickListener {
+            val props = RudderProperty()
+            props.put("Test Screen Key $screenCount", "Test Screen Value $screenCount")
+            MainApplication.rudderClient!!.track(
+                "Test Screen $screenCount",
+                props,
+                null
+            )
+            screenCount++;
+        }
+
+        group.setOnClickListener {
+            MainApplication.rudderClient!!.group(
+                "Group $groupCount",
+                RudderTraits().put("group id $groupCount", "group value $groupCount")
+            )
+            groupCount++;
+        }
+
+        alias.setOnClickListener {
+            MainApplication.rudderClient!!.alias("new user $userCount");
+        }
+
+        resetBtn.setOnClickListener {
+            MainApplication.rudderClient!!.reset()
+        }
+
+        nextPage.setOnClickListener {
+            startActivity(Intent(this, FirstActivity::class.java))
+        }
+
+        userSessionPage.setOnClickListener {
+            startActivity(Intent(this, UserSessionActivity::class.java))
+        }
+
     }
 
     override fun onStart() {
         super.onStart()
-        MainApplication.rudderClient!!.identify("testUserId1", RudderTraits().putName("Test User"), null)
-        MainApplication.rudderClient!!.track("Test Event")
-        MainApplication.rudderClient!!.screen("Main Screen")
     }
 
     private fun tlsBackport() {
