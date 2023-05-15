@@ -1,4 +1,24 @@
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
+
+task androidSourcesJar(type: Jar) {
+    classifier 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.rudderstack.android.sdk.core'
+                artifactId = 'core'
+                version = '1.13.0'
+            }
+        }
+    }
+}
 
 android {
     compileSdkVersion 31
@@ -7,7 +27,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 31
         consumerProguardFiles 'proguard-consumer-rules.pro'
-        buildConfigField("String", "VERSION_NAME", "\"${VERSION_NAME}\"")
+        buildConfigField("String", "VERSION_NAME", "\"1.13.0\"")
     }
 
     buildTypes {
@@ -63,5 +83,5 @@ tasks.withType(JavaExec) {
 }
 //apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"
 
-apply from: rootProject.file('gradle/mvn-publish.gradle')
-apply from: rootProject.file('gradle/codecov.gradle')
+//apply from: rootProject.file('gradle/mvn-publish.gradle')
+//apply from: rootProject.file('gradle/codecov.gradle')
