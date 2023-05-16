@@ -31,6 +31,7 @@ public class RudderClient {
     private static RudderOption defaultOptions;
     private static String deviceToken;
     private static String authToken;
+    private static Long currentSessionId= Long.valueOf(-1);
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
 
@@ -866,6 +867,7 @@ public class RudderClient {
             RudderLogger.logError("RudderClient: startSession: Length of the session Id supplied should be atleast 10, hence ignoring it");
             return;
         }
+        currentSessionId=sessionId;
         repository.startSession(sessionId);
     }
 
@@ -876,7 +878,18 @@ public class RudderClient {
         if (repository == null) {
             return;
         }
+        currentSessionId= Long.valueOf(-1);
         repository.endSession();
+    }
+    
+    /**
+     * Public method for getting an active session id.
+     */
+    public String getSessionId() {
+        if (currentSessionId == -1) {
+            return "";
+        }
+        return String.valueOf(currentSessionId);
     }
 
     /*
