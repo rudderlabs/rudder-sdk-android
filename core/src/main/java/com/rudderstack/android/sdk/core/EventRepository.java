@@ -128,10 +128,9 @@ class EventRepository {
     private void updateAnonymousIdHeaderString() throws UnsupportedEncodingException {
         String anonymousId = RudderContext.getAnonymousId();
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousId: %s", anonymousId));
-        this.anonymousIdHeaderString = Base64.encodeToString(anonymousId.getBytes(CHARSET_UTF_8), Base64.DEFAULT);
+        this.anonymousIdHeaderString = Base64.encodeToString(anonymousId.getBytes(CHARSET_UTF_8), Base64.NO_WRAP);
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousIdHeaderString: %s", this.anonymousIdHeaderString));
     }
-
 
     private void initiatePreferenceManager(Application application, RudderConfig config, Identifiers identifiers) {
         preferenceManager = RudderPreferenceManager.getInstance(application);
@@ -149,10 +148,9 @@ class EventRepository {
     }
 
     private void updateAuthHeaderString(String writeKey) {
-
         try {
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: writeKey: %s", writeKey));
-            this.authHeaderString = Base64.encodeToString((String.format(Locale.US, "%s:", writeKey)).getBytes(CHARSET_UTF_8), Base64.DEFAULT);
+            this.authHeaderString = Base64.encodeToString((String.format(Locale.US, "%s:", writeKey)).getBytes(CHARSET_UTF_8), Base64.NO_WRAP);
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: authHeaderString: %s", this.authHeaderString));
         } catch (UnsupportedEncodingException ex) {
             RudderLogger.logError(ex);
@@ -350,7 +348,7 @@ class EventRepository {
         RudderElementCache.updateAnonymousId(anonymousId);
         preferenceManager.saveAnonymousId(RudderContext.getAnonymousId());
         try {
-            this.anonymousIdHeaderString = Base64.encodeToString(RudderContext.getAnonymousId().getBytes(CHARSET_UTF_8), Base64.DEFAULT);
+            this.anonymousIdHeaderString = Base64.encodeToString(RudderContext.getAnonymousId().getBytes(CHARSET_UTF_8), Base64.NO_WRAP);
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }

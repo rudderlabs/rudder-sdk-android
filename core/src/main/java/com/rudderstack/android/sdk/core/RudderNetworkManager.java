@@ -60,7 +60,7 @@ public class RudderNetworkManager {
 
     void updateAnonymousIdHeaderString() {
         try {
-            this.anonymousIdHeaderString = Base64.encodeToString(RudderContext.getAnonymousId().getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
+            this.anonymousIdHeaderString = Base64.encodeToString(RudderContext.getAnonymousId().getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
