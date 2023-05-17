@@ -2,13 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-## [1.14.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.12.0...v1.14.0) (2023-05-17)
-
-
-### Features
-
-* device mode transformation ([#123](https://github.com/rudderlabs/rudder-sdk-android/issues/123)) ([6a28177](https://github.com/rudderlabs/rudder-sdk-android/commit/6a28177d360f3f7d9726a4825b899b033b93ccb4)), closes [#138](https://github.com/rudderlabs/rudder-sdk-android/issues/138)
-
+## [1.13.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.13.0...v1.13.1) (2023-05-17)
 
 ### Bug Fixes
 
