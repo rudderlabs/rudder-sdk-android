@@ -35,6 +35,7 @@ class EventRepository {
     private RudderFlushWorkManager rudderFlushWorkManager;
     private RudderNetworkManager networkManager;
     private RudderDataResidencyManager dataResidencyManager;
+    private Application application;
 
     private ApplicationLifeCycleManager applicationLifeCycleManager;
 
@@ -71,6 +72,7 @@ class EventRepository {
         updateAuthHeaderString(identifiers.writeKey);
         Context context = _application.getApplicationContext();
         this.config = _config;
+        this.application = _application;
         RudderLogger.logDebug(String.format("EventRepository: constructor: %s", this.config.toString()));
 
         try {
@@ -111,8 +113,10 @@ class EventRepository {
             // 10. Initiate ApplicationLifeCycleManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
             this.applicationLifeCycleManager = new ApplicationLifeCycleManager(preferenceManager, this, rudderFlushWorkManager, config);
-            this.applicationLifeCycleManager.start(_application);
-
+            if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
+                this.application.registerActivityLifecycleCallbacks(this.applicationLifeCycleManager);
+            }
+            this.applicationLifeCycleManager.startSessionTracking();
 
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
@@ -356,7 +360,7 @@ class EventRepository {
     }
 
     public void shutDown() {
-        deviceModeManager.flush();
+        this.deviceModeManager.flush();
     }
 
     public void startSession(Long sessionId) {
@@ -407,7 +411,5 @@ class EventRepository {
         private final String anonymousId;
         private final String advertisingId;
         private final String authToken;
-
-
     }
 }

@@ -13,11 +13,13 @@ import androidx.annotation.Nullable;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ApplicationLifeCycleManager implements Application.ActivityLifecycleCallbacks {
 
-    private int noOfActivities;
-    private final AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
+    private AtomicInteger noOfActivities;
+    private AtomicBoolean isFirstLaunch;
+    private AtomicBoolean trackedApplicationLifeCycleEvents;
     private final RudderPreferenceManager preferenceManager;
     private final EventRepository repository;
     private final RudderFlushWorkManager rudderFlushWorkManager;
@@ -26,21 +28,16 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
 
 
     ApplicationLifeCycleManager(RudderPreferenceManager preferenceManager, EventRepository repository, RudderFlushWorkManager rudderFlushWorkManager, RudderConfig config) {
+        this.noOfActivities = new AtomicInteger(1);
+        this.isFirstLaunch = new AtomicBoolean(false);
+        this.trackedApplicationLifeCycleEvents = new AtomicBoolean(false);
         this.preferenceManager = preferenceManager;
         this.repository = repository;
         this.rudderFlushWorkManager = rudderFlushWorkManager;
         this.config = config;
     }
 
-    public void start(Application application) {
-        startSessionTracking();
-        this.sendApplicationUpdateStatus(application);
-        if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
-            application.registerActivityLifecycleCallbacks(this);
-        }
-    }
-
-    private void startSessionTracking() {
+    public void startSessionTracking() {
         RudderLogger.logDebug("ApplicationLifecycleManager: startSessionTracking: Initiating RudderUserSession");
         userSession = new RudderUserSession(preferenceManager, config);
 
@@ -64,6 +61,35 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
         }
         if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
             userSession.updateLastEventTimeStamp();
+        }
+    }
+
+    private void startSessionTrackingIfApplicable() {
+        // Session Tracking
+        // Automatic tracking session started
+        if (!isFirstLaunch.get() && config.isTrackAutoSession() && userSession != null) {
+            userSession.startSessionIfNeeded();
+        }
+    }
+
+    void startSession(Long sessionId) {
+        if (config.isTrackAutoSession()) {
+            endSession();
+            config.setTrackAutoSession(false);
+        }
+        userSession.startSession(sessionId);
+    }
+
+    void endSession() {
+        if (config.isTrackAutoSession()) {
+            config.setTrackAutoSession(false);
+        }
+        userSession.clearSession();
+    }
+
+    public void reset() {
+        if (userSession.getSessionId() != null) {
+            userSession.refreshSession();
         }
     }
 
@@ -124,14 +150,13 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
         if (this.config.isTrackLifecycleEvents()) {
-            noOfActivities += 1;
-            if (noOfActivities == 1) {
+            if (noOfActivities.incrementAndGet() == 1) {
                 // If user has disabled tracking activities (i.e., set optOut() to true)
                 // then discard the event
+                startSessionTrackingIfApplicable();
                 if (repository.getOptStatus()) {
                     return;
                 }
-                startSessionTrackingIfApplicable();
                 RudderMessage trackMessage;
                 trackMessage = new RudderMessageBuilder()
                         .setEventName("Application Opened")
@@ -154,19 +179,10 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
         }
     }
 
-    private void startSessionTrackingIfApplicable() {
-        // Session Tracking
-        // Automatic tracking session started
-        if (!isFirstLaunch.get() && config.isTrackAutoSession() && userSession != null) {
-            userSession.startSessionIfNeeded();
-        }
-    }
-
     @Override
     public void onActivityStopped(@NonNull Activity activity) {
         if (this.config.isTrackLifecycleEvents()) {
-            noOfActivities -= 1;
-            if (noOfActivities == 0) {
+            if (noOfActivities.decrementAndGet() == 0) {
                 // If user has disabled tracking activities (i.e., set optOut() to true)
                 // then discard the event
                 if (repository.getOptStatus()) {
@@ -179,24 +195,13 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
         }
     }
 
-    void startSession(Long sessionId) {
-        if (config.isTrackAutoSession()) {
-            endSession();
-            config.setTrackAutoSession(false);
-        }
-        userSession.startSession(sessionId);
-    }
-
-    void endSession() {
-        if (config.isTrackAutoSession()) {
-            config.setTrackAutoSession(false);
-        }
-        userSession.clearSession();
-    }
-
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
-        // Empty
+        if (!trackedApplicationLifeCycleEvents.getAndSet(true)) {
+            noOfActivities.set(0);
+            isFirstLaunch.set(true);
+            sendApplicationUpdateStatus(activity.getApplication());
+        }
     }
 
     @Override
@@ -217,12 +222,6 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
     @Override
     public void onActivityDestroyed(@NonNull Activity activity) {
         // Empty
-    }
-
-    public void reset() {
-        if (userSession.getSessionId() != null) {
-            userSession.refreshSession();
-        }
     }
 
     private class AppVersion {
