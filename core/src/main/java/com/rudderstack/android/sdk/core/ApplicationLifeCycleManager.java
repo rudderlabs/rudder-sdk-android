@@ -265,3 +265,13 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
         }
     }
 }
+    /*create or replace view app_opened_installed as select result.event_name, result.userId,
+    result.timestamp as sent_at, result.platform as platform, result.writeKey as write_key, result.anon_id as anonymous_id, result.sdk_version as sdk_version from (
+        select gw_jobs_1.event ->> 'event' as event_name, gw_jobs_1.event->>'userId' as userId, gw_jobs_1.event->>'anonymousId' as anon_id, gw_jobs_1.event ->> 'originalTimestamp' as timestamp, gw_jobs_1.event->'context'->'library'->>'name' as platform, gw_jobs_1.event->'context'->'library'->>'version' as sdk_version, writeKey as writeKey from (select jsonb_array_elements(jsonb_extract_path(event_payload, 'batch')) as event, event_payload ->> 'writeKey' as writeKey
+        from gw_jobs_4584) as gw_jobs_1 where gw_jobs_1.event->'context'->'library'->>'name' = 'com.rudderstack.android.sdk.core' )
+        as result order by timestamp
+
+
+        with app_installed as (select * from app_opened_installed order by sent_at),
+        app_opened as( select event_name, lead(event_name,1) over (order by sent_at) next_event, userid, anonymous_id, sent_at, write_key, platform, sdk_version from app_installed)
+        select * from app_opened where event_name = 'Application Installed'*/
