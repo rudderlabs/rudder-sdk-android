@@ -101,7 +101,7 @@ public class EventRepositoryTest {
         }).when(dbPersistentManager).fetchAllCloudModeEventsFromDB(ArgumentMatchers.<List<Integer>>any(), ArgumentMatchers.<List<String>>any());
 
         PowerMockito.when(networkManager, "sendNetworkRequest",
-                        anyString(), anyString(), ArgumentMatchers.any(RudderNetworkManager.RequestMethod.class)
+                        anyString(), anyString(), ArgumentMatchers.any(RudderNetworkManager.RequestMethod.class), anyBoolean()
                 )
                 .thenAnswer(new Answer<RudderNetworkManager.Result>() {
                     @Override
@@ -204,7 +204,7 @@ public class EventRepositoryTest {
                 )
                 .thenAnswer((Answer<RudderNetworkManager.NetworkResponses>) invocation -> RudderNetworkManager.NetworkResponses.SUCCESS);
         PowerMockito.when(networkManager, "sendNetworkRequest",
-                        anyString(), anyString(), ArgumentMatchers.any()
+                        anyString(), anyString(), ArgumentMatchers.any(), anyBoolean()
                 )
                 .thenAnswer(new Answer<RudderNetworkManager.Result>() {
                     @Override
@@ -213,7 +213,7 @@ public class EventRepositoryTest {
                         return mockResult;
                     }
                 });
-        PowerMockito.when(networkManager.sendNetworkRequest(anyString(), anyString(), ArgumentMatchers.any(RudderNetworkManager.RequestMethod.class), anyBoolean()))
+        PowerMockito.when(networkManager.sendNetworkRequest(anyString(), anyString(), ArgumentMatchers.any(RudderNetworkManager.RequestMethod.class), anyBoolean(), anyBoolean()))
                 .thenReturn(mockResult);
         //starting multiple threads to access the same.
         final int numberOfThreads = 8;

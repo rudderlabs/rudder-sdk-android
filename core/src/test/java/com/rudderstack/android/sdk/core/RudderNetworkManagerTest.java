@@ -3,35 +3,29 @@ package com.rudderstack.android.sdk.core;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertNotNull;
 
-import com.rudderstack.android.sdk.core.util.FunctionUtils;
-import com.rudderstack.android.sdk.core.util.GzipUtils;
-
 import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FilterOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore({ "javax.net.ssl.*" })
 public class RudderNetworkManagerTest {
 
     private final static String DUMMY_AUTH = "dp_auth";
@@ -160,7 +154,7 @@ public class RudderNetworkManagerTest {
     public void getHttpConnection() throws IOException, JSONException {
         String testingPayload = "{\"test\":\"test\", \"test2\":\"test2\", \"test3\":{   \"test4\":\"test4\"}}";
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        HttpURLConnection connection = networkManager.getHttpConnection("https://www.google.com/",
+        HttpURLConnection connection = networkManager.updateHttpConnection(getDummyHttpURLConnection(),
                 RudderNetworkManager.RequestMethod.POST, testingPayload, false,
                 Map.of("Content-Encoding", "gzip"), outputStream -> {
                     customWrappedOS = new GZIPOutputStream(outputStream) {
@@ -188,5 +182,29 @@ public class RudderNetworkManagerTest {
         MatcherAssert.assertThat(result, notNullValue());
         JSONAssert.assertEquals(testingPayload, result, true);
 
+    }
+
+    private HttpURLConnection getDummyHttpURLConnection() throws MalformedURLException {
+        return new HttpURLConnection(new URL("http://www.google.com")) {
+            @Override
+            public void disconnect() {
+
+            }
+
+            @Override
+            public boolean usingProxy() {
+                return false;
+            }
+
+            @Override
+            public void connect() throws IOException {
+
+            }
+
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                return new ByteArrayOutputStream();
+            }
+        };
     }
 }

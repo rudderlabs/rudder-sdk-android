@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.zip.GZIPOutputStream;
 
 public class RudderNetworkManager {
 
@@ -109,7 +108,7 @@ public class RudderNetworkManager {
         }
 
         try {
-            HttpURLConnection httpConnection = getHttpConnection(requestURL, requestMethod, requestPayload, isDMTRequest, isGzipAvailableForApi);
+            HttpURLConnection httpConnection = updateHttpConnection(requestURL, requestMethod, requestPayload, isDMTRequest, isGzipAvailableForApi);
             synchronized (MessageUploadLock.REQUEST_LOCK) {
                 httpConnection.connect();
             }
@@ -145,28 +144,28 @@ public class RudderNetworkManager {
         return new Result(networkResponse == null ? NetworkResponses.ERROR : networkResponse, responseCode, responsePayload, errorPayload);
     }
 
-    private HttpURLConnection getHttpConnection(String requestURL, RequestMethod requestMethod,
-                                                String requestPayload, boolean isDMTRequest, boolean isGzipSupported)
-            throws IOException{
-        if(isGzipSupported && isGzipConfigured) {
+    private HttpURLConnection updateHttpConnection(String requestURL, RequestMethod requestMethod,
+                                                   String requestPayload, boolean isDMTRequest, boolean isGzipSupported)
+            throws IOException {
+        URL url = new URL(requestURL);
+        RudderLogger.logDebug(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Request URL: %s", requestURL));
+        HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+        if (isGzipSupported && isGzipConfigured) {
             RudderLogger.logDebug("RudderNetworkManager: sendNetworkRequest: Gzip is enabled");
-            Map<String,String> customRequestHeaders = new HashMap<>();
+            Map<String, String> customRequestHeaders = new HashMap<>();
             customRequestHeaders.put("Content-Encoding", "gzip");
-            return getHttpConnection(requestURL, requestMethod, requestPayload, isDMTRequest,customRequestHeaders,
+            return updateHttpConnection(httpConnection, requestMethod, requestPayload, isDMTRequest, customRequestHeaders,
                     GzipUtils::getGzipOutputStream);
         }
-       return getHttpConnection(requestURL, requestMethod, requestPayload, isDMTRequest,
-               null, null);
+        return updateHttpConnection(httpConnection, requestMethod, requestPayload, isDMTRequest,
+                null, null);
     }
 
     @VisibleForTesting
-    HttpURLConnection getHttpConnection(String requestURL, RequestMethod requestMethod,
-                                        String requestPayload, boolean isDMTRequest,
-                                        @Nullable Map<String, String> customRequestHeaders,
-                                        @Nullable FunctionUtils.Function<OutputStream, OutputStream> connectionWrapperOSGenerator) throws IOException {
-        RudderLogger.logDebug(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Request URL: %s", requestURL));
-        URL url = new URL(requestURL);
-        HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+    HttpURLConnection updateHttpConnection(HttpURLConnection httpConnection, RequestMethod requestMethod,
+                                           String requestPayload, boolean isDMTRequest,
+                                           @Nullable Map<String, String> customRequestHeaders,
+                                           @Nullable FunctionUtils.Function<OutputStream, OutputStream> connectionWrapperOSGenerator) throws IOException {
         httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", authHeaderString));
         if (requestMethod == RequestMethod.GET) {
             httpConnection.setRequestMethod("GET");
