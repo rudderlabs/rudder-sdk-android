@@ -71,6 +71,8 @@ fun CreateButtonsTemplate(viewModel: MainViewModel){
         Spacer(modifier = Modifier.height(8.dp))
         CreateRowOfApis(names = arrayOf( Event.OPT_IN,Event.FORCE_FLUSH), weight = .5f, viewModel = viewModel)
         Spacer(modifier = Modifier.height(8.dp))
+        CreateRowOfApis(names = arrayOf( Event.SEND_ERROR), weight = .5f, viewModel = viewModel)
+        Spacer(modifier = Modifier.height(8.dp))
 
         CreateLogcat(viewModel.logState.value)
     }

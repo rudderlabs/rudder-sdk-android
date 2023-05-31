@@ -18,6 +18,8 @@ import android.app.Application
 import android.content.res.AssetManager
 import android.util.Log
 import com.rudderstack.android.RudderAnalytics
+import com.rudderstack.android.ruddermetricsreporterandroid.Client
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.Configuration
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Settings
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
@@ -30,6 +32,9 @@ class MyApplication : Application() {
         private lateinit var _rudderAnalytics: Analytics
         val rudderAnalytics
             get() = _rudderAnalytics
+        private lateinit var _metricsClient: Client
+        val metricsClient
+            get() = _metricsClient
     }
 
     var initializationCallback: ((InitializationResponse) -> Unit)? = null
@@ -50,6 +55,7 @@ class MyApplication : Application() {
             { success, message ->
                 initializationCallback?.invoke(InitializationResponse(success, message))
             }
+        _metricsClient = Client(application, Configuration())
     }
 
     private val properties by lazy {

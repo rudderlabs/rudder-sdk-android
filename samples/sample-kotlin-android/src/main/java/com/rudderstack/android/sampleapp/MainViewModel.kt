@@ -26,8 +26,10 @@ import com.rudderstack.android.sampleapp.MainViewModel.Event.IDENTIFY
 import com.rudderstack.android.sampleapp.MainViewModel.Event.INITIALIZE
 import com.rudderstack.android.sampleapp.MainViewModel.Event.OPT_IN
 import com.rudderstack.android.sampleapp.MainViewModel.Event.SCREEN
+import com.rudderstack.android.sampleapp.MainViewModel.Event.SEND_ERROR
 import com.rudderstack.android.sampleapp.MainViewModel.Event.SHUTDOWN
 import com.rudderstack.android.sampleapp.MainViewModel.Event.TRACK
+import com.rudderstack.android.sampleapp.MyApplication.Companion.metricsClient
 import com.rudderstack.android.sampleapp.MyApplication.Companion.rudderAnalytics
 import com.rudderstack.android.sampleapp.models.LogData
 import com.rudderstack.core.Plugin
@@ -50,6 +52,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         internal const val SCREEN = "screen"
         internal const val OPT_IN = "opt in/out"
         internal const val FORCE_FLUSH = "force flush"
+        internal const val SEND_ERROR = "send error"
     }
 
     private var _logState = mutableStateOf<List<LogData>>(listOf())
@@ -123,6 +126,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             FORCE_FLUSH ->{
                 rudderAnalytics.forceFlush()
                 "Forcing a flush"
+            }
+            SEND_ERROR ->{
+                metricsClient.leaveBreadcrumb("Error BC")
+                metricsClient.addMetadata("Error MD", "md_key", "md_value")
+                metricsClient.notify(Exception("Non Fatal Exception"))
+                "Sending an error"
             }
             else -> "What's this?"
         }
