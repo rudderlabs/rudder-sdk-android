@@ -32,7 +32,8 @@ import java.util.concurrent.TimeUnit;
  *
  * */
 public class RudderConfig {
-    @Nullable private String dataPlaneUrl;
+    @Nullable
+    private String dataPlaneUrl;
     private int flushQueueSize;
     private int dbCountThreshold;
     private int sleepTimeOut;
@@ -45,12 +46,15 @@ public class RudderConfig {
     private boolean autoCollectAdvertId;
     private boolean recordScreenViews;
     private boolean trackAutoSession;
+    private boolean useNewLifeCycleEvents;
+    private boolean trackDeepLinks;
     private long sessionTimeout;
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
     private RudderDataResidencyServer rudderDataResidencyServer;
-    @Nullable private RudderConsentFilter consentFilter;
+    @Nullable
+    private RudderConsentFilter consentFilter;
 
     RudderConfig() {
         this(
@@ -64,6 +68,8 @@ public class RudderConfig {
                 Constants.REPEAT_INTERVAL,
                 Constants.REPEAT_INTERVAL_TIME_UNIT,
                 Constants.TRACK_LIFECYCLE_EVENTS,
+                Constants.USE_NEW_LIFECYCLE_EVENTS,
+                Constants.TRACK_DEEP_LINKS,
                 Constants.AUTO_COLLECT_ADVERT_ID,
                 Constants.RECORD_SCREEN_VIEWS,
                 Constants.AUTO_SESSION_TRACKING,
@@ -87,6 +93,8 @@ public class RudderConfig {
             long repeatInterval,
             TimeUnit repeatIntervalTimeUnit,
             boolean trackLifecycleEvents,
+            boolean useNewLifeCycleEvents,
+            boolean trackDeepLinks,
             boolean autoCollectAdvertId,
             boolean recordScreenViews,
             boolean trackAutoSession,
@@ -147,6 +155,8 @@ public class RudderConfig {
         }
 
         this.trackLifecycleEvents = trackLifecycleEvents;
+        this.useNewLifeCycleEvents = useNewLifeCycleEvents;
+        this.trackDeepLinks = trackDeepLinks;
         this.autoCollectAdvertId = autoCollectAdvertId;
         this.recordScreenViews = recordScreenViews;
 
@@ -261,11 +271,29 @@ public class RudderConfig {
         return trackLifecycleEvents;
     }
 
+
+    /**
+     * @return useNewLifeCycleEvents (whether we are using the new lifecycle events)
+     */
+    public boolean isUseNewLifeCycleEvents() {
+        return useNewLifeCycleEvents;
+    }
+
+
+    /**
+     * @return trackDeepLinks (whether we are tracking the deep link events or not
+     */
+    public boolean isTrackDeepLinks() {
+        return trackDeepLinks;
+    }
+
     /**
      * @return autoCollectAdvertId (whether we are automatically collecting the advertisingId if the
      * com.google.android.gms.ads.identifier.AdvertisingIdClient is found on the classpath.
      */
-    public boolean isAutoCollectAdvertId() { return autoCollectAdvertId; }
+    public boolean isAutoCollectAdvertId() {
+        return autoCollectAdvertId;
+    }
 
     /**
      * @return recordScreenViews (whether we are recording the screen views automatically)
@@ -365,6 +393,14 @@ public class RudderConfig {
 
     void setTrackLifecycleEvents(boolean trackLifecycleEvents) {
         this.trackLifecycleEvents = trackLifecycleEvents;
+    }
+
+    void setUseNewLifeCycleEvents(boolean useNewLifeCycleEvents) {
+        this.useNewLifeCycleEvents = useNewLifeCycleEvents;
+    }
+
+    void setTrackDeepLinks(boolean trackDeepLinks) {
+        this.trackDeepLinks = trackDeepLinks;
     }
 
     void setRecordScreenViews(boolean recordScreenViews) {
@@ -599,7 +635,7 @@ public class RudderConfig {
             return this;
         }
 
-        public Builder withConsentFilter(@NonNull RudderConsentFilter consentFilter){
+        public Builder withConsentFilter(@NonNull RudderConsentFilter consentFilter) {
             this.consentFilter = consentFilter;
             return this;
         }
@@ -627,11 +663,34 @@ public class RudderConfig {
             return this;
         }
 
+        private boolean useNewLifecycleEvents = Constants.USE_NEW_LIFECYCLE_EVENTS;
+
+        /**
+         * @param shouldUseNewLifecycleEvents Whether we should use new lifecycle events
+         * @return RudderConfig.Builder
+         */
+
+        public Builder withUseNewLifecycleEvents(boolean shouldUseNewLifecycleEvents) {
+            this.useNewLifecycleEvents = shouldUseNewLifecycleEvents;
+            return this;
+        }
+
+        private boolean trackDeepLinks = Constants.TRACK_DEEP_LINKS;
+
+        /**
+         * @param shouldTrackDeepLinks whether the sdk should track any deep links or not
+         * @return
+         */
+        public Builder withTrackDeepLinks(boolean shouldTrackDeepLinks) {
+            this.trackDeepLinks = shouldTrackDeepLinks;
+            return this;
+        }
+
         private boolean autoCollectAdvertId = Constants.AUTO_COLLECT_ADVERT_ID;
 
         /**
          * @param shouldAutoCollectAdvertId (whether we should automatically collecting the advertisingId if the
-         * com.google.android.gms.ads.identifier.AdvertisingIdClient is found on the classpath.
+         *                                  com.google.android.gms.ads.identifier.AdvertisingIdClient is found on the classpath.
          * @return RudderConfig.Builder
          */
         public Builder withAutoCollectAdvertId(boolean shouldAutoCollectAdvertId) {
@@ -703,6 +762,8 @@ public class RudderConfig {
                     this.repeatInterval,
                     this.repeatIntervalTimeUnit,
                     this.trackLifecycleEvents,
+                    this.useNewLifecycleEvents,
+                    this.trackDeepLinks,
                     this.autoCollectAdvertId,
                     this.recordScreenViews,
                     this.autoSessionTracking,

@@ -47,10 +47,10 @@ public class ApplicationManagerTest {
         applicationLifeCycleManager = new ApplicationLifeCycleManager(
                 preferenceManager,
                 repo, new RudderFlushWorkManager(application, mockConfig, preferenceManager),
-                mockConfig
+                mockConfig,
+                application
         );
-        applicationLifeCycleManager.start(application);
-
+        applicationLifeCycleManager.startSessionTracking();
     }
 
     @Test

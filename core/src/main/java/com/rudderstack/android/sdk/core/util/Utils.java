@@ -146,55 +146,10 @@ public class Utils {
         return file != null && file.exists();
     }
 
-
-    /**
-     * Returns referring_application, url and its query parameter.
-     */
-    @NonNull
-    public static RudderProperty trackDeepLink(Activity activity, AtomicBoolean isFirstLaunch, String versionName) {
-        RudderProperty rudderProperty = new RudderProperty()
-                .putValue("from_background", !isFirstLaunch.get());
-        // If it is not firstLaunch then return RudderProperty instance
-        if (!isFirstLaunch.getAndSet(false)) {
-            return rudderProperty;
-        }
-        rudderProperty.putValue("version", versionName);
-        try {
-            Intent intent = activity.getIntent();
-            if (intent == null || intent.getData() == null) {
-                return rudderProperty;
-            }
-
-            // Get information about who launched this activity
-            String referrer = getReferrer(activity);
-            if (referrer != null) {
-                rudderProperty.putValue("referring_application", referrer);
-            }
-
-            Uri uri = intent.getData();
-            if (uri != null) {
-                try {
-                    for (String parameter : uri.getQueryParameterNames()) {
-                        String value = uri.getQueryParameter(parameter);
-                        if (value != null && !value.trim().isEmpty()) {
-                            rudderProperty.putValue(parameter, value);
-                        }
-                    }
-                } catch (Exception e) {
-                    RudderLogger.logError("Failed to get uri query parameters: " + e);
-                }
-                rudderProperty.putValue("url", uri.toString());
-            }
-        } catch (Exception e) {
-            RudderLogger.logError("Error occurred while tracking deep link" + e);
-        }
-        return rudderProperty;
-    }
-
     /**
      * Returns information about who launched this activity.
      */
-    private static String getReferrer(Activity activity) {
+    public static String getReferrer(Activity activity) {
         // If devices running on SDK versions greater than equal to 22
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
             return activity.getReferrer().toString();

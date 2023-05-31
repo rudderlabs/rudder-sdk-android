@@ -3,11 +3,15 @@ package com.rudderstack.android.sdk.core;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -55,6 +59,15 @@ class EventRepository {
     private String dataPlaneUrl;
 
     private static final String CHARSET_UTF_8 = "UTF-8";
+
+    // Handler instance associated with the main thread
+    static final Handler HANDLER =
+            new Handler(Looper.getMainLooper()) {
+                @Override
+                public void handleMessage(Message msg) {
+                    throw new AssertionError("Unknown handler message received: " + msg.what);
+                }
+            };
 
     /*
      * constructor to be called from RudderClient internally.
@@ -112,9 +125,11 @@ class EventRepository {
             // 9. initiate RudderUserSession for tracking sessions
             // 10. Initiate ApplicationLifeCycleManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
-            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(preferenceManager, this, rudderFlushWorkManager, config);
-            if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
-                this.application.registerActivityLifecycleCallbacks(this.applicationLifeCycleManager);
+            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(preferenceManager, this, rudderFlushWorkManager, config, application);
+            this.application.registerActivityLifecycleCallbacks(this.applicationLifeCycleManager);
+
+            if (config.isUseNewLifeCycleEvents()) {
+                run(() -> ProcessLifecycleOwner.get().getLifecycle().addObserver(applicationLifeCycleManager));
             }
             this.applicationLifeCycleManager.startSessionTracking();
 
@@ -341,6 +356,17 @@ class EventRepository {
     }
 
     /**
+     * Executes the runnable on the main thread of the App
+     */
+    private void run(Runnable runnable) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            runnable.run();
+        } else {
+            HANDLER.post(runnable);
+        }
+    }
+
+    /**
      * @return optOut status
      */
     boolean getOptStatus() {
@@ -361,6 +387,8 @@ class EventRepository {
 
     public void shutDown() {
         this.deviceModeManager.flush();
+        this.application.unregisterActivityLifecycleCallbacks(applicationLifeCycleManager);
+        run(() -> ProcessLifecycleOwner.get().getLifecycle().removeObserver(applicationLifeCycleManager));
     }
 
     public void startSession(Long sessionId) {
