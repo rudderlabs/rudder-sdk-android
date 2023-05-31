@@ -42,6 +42,7 @@ android {
     buildFeatures {
         viewBinding true
     }
+    namespace 'com.rudderstack.android.sample_java'
 }
 
 dependencies {

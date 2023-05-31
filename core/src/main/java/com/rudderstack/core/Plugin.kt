@@ -114,7 +114,7 @@ fun interface Plugin {
 
     /**
      * Called when shutDOwn is triggered in [Analytics]
-     *
+     * refactor to shutdown
      */
     fun onShutDown(){}
 

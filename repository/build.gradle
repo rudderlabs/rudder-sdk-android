@@ -49,6 +49,7 @@ android {
             includeAndroidResources = true
         }
     }
+    namespace 'com.rudderstack.android.repository'
     //for testing content providers
     //deprecated
 

@@ -34,5 +34,5 @@ include ':android'
 //samples
 include ':samples:sample-android-java'
 include ':samples:sample-kotlin-android'
-include ':sample-java'
+include ':samples:sample-java'
 

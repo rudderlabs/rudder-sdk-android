@@ -16,8 +16,6 @@ package com.rudderstack.core.compat;
 
 import com.rudderstack.core.Analytics;
 import com.rudderstack.core.BaseDestinationPlugin;
-import com.rudderstack.core.DestinationPlugin;
-import com.rudderstack.core.DestinationPlugin.PluginInterceptor;
 import com.rudderstack.core.Settings;
 import com.rudderstack.models.Message;
 import com.rudderstack.models.RudderServerConfig;
@@ -69,7 +67,7 @@ public abstract class BaseDestinationPluginCompat<T> extends BaseDestinationPlug
     }
 
 
-    public static class PluginInterceptorCompat implements PluginInterceptor{
+    public static class DestinationInterceptorCompat implements DestinationInterceptor {
 
         @NotNull
         @Override
@@ -79,33 +77,28 @@ public abstract class BaseDestinationPluginCompat<T> extends BaseDestinationPlug
 
         @Override
         public void setup(@NotNull Analytics analytics) {
-            PluginInterceptor.super.setup(analytics);
         }
 
         @Override
         public void updateSettings(@NotNull Settings settings) {
-            PluginInterceptor.super.updateSettings(settings);
         }
 
         @Override
         public void updateRudderServerConfig(@NotNull RudderServerConfig config) {
-            PluginInterceptor.super.updateRudderServerConfig(config);
         }
 
         @Override
         public void onShutDown() {
-            PluginInterceptor.super.onShutDown();
         }
 
         @Override
         public void reset() {
-            PluginInterceptor.super.reset();
         }
 
         @NotNull
         @Override
-        public JsonAdapter getJsonAdapter(@NotNull Analytics $this$jsonAdapter) {
-            return PluginInterceptor.super.getJsonAdapter($this$jsonAdapter);
+        public JsonAdapter getJsonAdapter(@NotNull Analytics analytics) {
+            return analytics.getJsonAdapter();
         }
     }
 }

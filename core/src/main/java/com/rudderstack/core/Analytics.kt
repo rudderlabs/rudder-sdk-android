@@ -25,6 +25,7 @@ import java.util.concurrent.*
 
 class Analytics private constructor(
     private val _writeKey: String,
+    @get:JvmName("getJsonAdapter")
     internal val jsonAdapter: JsonAdapter,
     private val _dataPlaneUrl: String,
     private val _delegate: AnalyticsDelegate,

@@ -13,7 +13,6 @@
   ~ permissions and limitations under the License.
   -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.rudderstack.jacksonrudderadapter">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
 </manifest>

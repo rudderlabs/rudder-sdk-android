@@ -53,6 +53,7 @@ android {
             includeAndroidResources = true
         }
     }
+    namespace 'com.rudderstack.android'
 }
 
 dependencies {

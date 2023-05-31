@@ -62,7 +62,7 @@ public class SampleApplication extends Application {
                 return super.intercept(chain);
             }
         };
-        bdp.addSubPlugin(new BaseDestinationPluginCompat.PluginInterceptorCompat(){
+        bdp.addSubPlugin(new BaseDestinationPluginCompat.DestinationInterceptorCompat(){
             @NonNull
             @Override
             public Message intercept(@NonNull Chain chain) {

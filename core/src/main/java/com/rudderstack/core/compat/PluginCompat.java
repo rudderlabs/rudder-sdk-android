@@ -32,32 +32,27 @@ public abstract class PluginCompat implements Plugin {
 
     @Override
     public void setup(@NotNull Analytics analytics) {
-        Plugin.super.setup(analytics);
     }
 
     @Override
     public void updateSettings(@NotNull Settings settings) {
-        Plugin.super.updateSettings(settings);
     }
 
     @Override
     public void updateRudderServerConfig(@NotNull RudderServerConfig config) {
-        Plugin.super.updateRudderServerConfig(config);
     }
 
     @Override
     public void onShutDown() {
-        Plugin.super.onShutDown();
     }
 
     @Override
     public void reset() {
-        Plugin.super.reset();
     }
 
     @NotNull
     @Override
     public JsonAdapter getJsonAdapter(@NotNull Analytics analytics) {
-        return Plugin.super.getJsonAdapter(analytics);
+        return analytics.getJsonAdapter();
     }
 }

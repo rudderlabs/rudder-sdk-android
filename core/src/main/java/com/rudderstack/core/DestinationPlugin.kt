@@ -22,7 +22,7 @@ import com.rudderstack.models.Message
  * destinations.
  * They are typical [Plugin], with the following differences.
  * [Plugin.intercept] is called with a copy of the original message.
- * [PluginInterceptor] works on this copied message.
+ * [DestinationInterceptor] works on this copied message.
  * But when [Plugin.Chain.proceed] is called, internally the copied message is replaced by the
  * original message thus discarding all the changes DestinationPlugin and it's sub-plugins did on the
  * message.
@@ -41,7 +41,7 @@ interface DestinationPlugin<T> : Plugin {
      * Closely linked to [onReadyCallbacks]
      */
     val isReady : Boolean
-    val subPlugins: List<PluginInterceptor>
+    val subPlugins: List<DestinationInterceptor>
     val onReadyCallbacks: List<(T?, Boolean) -> Unit>
 //    get() = ArrayList(field)
 
@@ -52,9 +52,9 @@ interface DestinationPlugin<T> : Plugin {
      * device mode-plugin-1 --> sub-plugins of device-mode-2 --> device-mode-plugin-2 ....
      *
      * @param plugin A plugin object.
-     * @see PluginInterceptor
+     * @see DestinationInterceptor
      */
-    fun addSubPlugin(plugin: PluginInterceptor)
+    fun addSubPlugin(plugin: DestinationInterceptor)
 
     /**
      * Called when the device destination is ready to accept requests
@@ -72,7 +72,7 @@ interface DestinationPlugin<T> : Plugin {
      * These plugins only act on the main-plugin that it is added to.
      *
      */
-    fun interface PluginInterceptor : Plugin
+    fun interface DestinationInterceptor : Plugin
 
     /**
      * Called when flush is triggered.
@@ -92,10 +92,10 @@ interface DestinationPlugin<T> : Plugin {
  */
 abstract class BaseDestinationPlugin<T>(override val name: String) : DestinationPlugin<T>{
     private var _isReady = false
-    private var _subPlugins = listOf<DestinationPlugin.PluginInterceptor>()
+    private var _subPlugins = listOf<DestinationPlugin.DestinationInterceptor>()
     private var _onReadyCallbacks = listOf<(T?, Boolean) -> Unit>()
 
-    override val subPlugins: List<DestinationPlugin.PluginInterceptor>
+    override val subPlugins: List<DestinationPlugin.DestinationInterceptor>
         get() = _subPlugins
 
     override val onReadyCallbacks: List<(T?, Boolean) -> Unit>
@@ -105,7 +105,7 @@ abstract class BaseDestinationPlugin<T>(override val name: String) : Destination
         get() = _isReady
 
 
-    override fun addSubPlugin(plugin: DestinationPlugin.PluginInterceptor) {
+    override fun addSubPlugin(plugin: DestinationPlugin.DestinationInterceptor) {
         _subPlugins = _subPlugins + plugin
     }
 
