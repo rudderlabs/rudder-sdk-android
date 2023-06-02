@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.13.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.13.0...v1.13.1) (2023-05-17)
+
+### Bug Fixes
+
+* sourceConfig issue by changing encoding to Base64.NO_WRAP ([#221](https://github.com/rudderlabs/rudder-sdk-android/issues/221)) ([4d9cba1](https://github.com/rudderlabs/rudder-sdk-android/commit/4d9cba17c0a8a4a119ca8c2ab70269c6c9a3c4d9))
+
 ## [1.13.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.11.0...v1.13.0) (2023-04-19)
 
 
