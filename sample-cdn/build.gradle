@@ -5,7 +5,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.31"
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.21'
     }
 }
 
@@ -35,6 +35,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    namespace 'com.rudderstack.android.sample.kotlin'
 }
 
 repositories {
@@ -50,7 +51,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.2'
     implementation 'com.google.android.material:material:1.2.1'
 
-    implementation 'com.rudderstack.android.sdk:core:1.0.9'
+    implementation 'com.rudderstack.android.sdk:core:[1.0.0, 2.0.0)'
     implementation 'com.google.code.gson:gson:2.8.6'
 
     implementation 'com.google.android.gms:play-services-ads:19.4.0'
