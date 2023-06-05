@@ -5,7 +5,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.31"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10"
     }
 }
 
@@ -14,12 +14,12 @@ plugins {
     id 'kotlin-android'
 }
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId "com.rudderstack.android_tv"
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
 
@@ -40,7 +40,7 @@ android {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.5.31'
+    implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.leanback:leanback:1.0.0'
     implementation 'androidx.appcompat:appcompat:1.4.0'
     implementation 'com.github.bumptech.glide:glide:4.11.0'
