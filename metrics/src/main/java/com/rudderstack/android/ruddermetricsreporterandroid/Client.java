@@ -111,18 +111,15 @@ public class Client implements MetadataAware {
         ContextModule contextModule = new ContextModule(androidContext);
         appContext = contextModule.getCtx();
 
-        connectivity = new ConnectivityCompat(appContext, new Function2<Boolean, String, Unit>() {
-            @Override
-            public Unit invoke(Boolean hasConnection, String networkState) {
-                Map<String, Object> data = new HashMap<>();
-                data.put("hasConnection", hasConnection);
-                data.put("networkState", networkState);
-                leaveAutoBreadcrumb("Connectivity changed", BreadcrumbType.STATE, data);
-                if (hasConnection) {
+        connectivity = new ConnectivityCompat(appContext, (hasConnection, networkState) -> {
+            Map<String, Object> data = new HashMap<>();
+            data.put("hasConnection", hasConnection);
+            data.put("networkState", networkState);
+            leaveAutoBreadcrumb("Connectivity changed", BreadcrumbType.STATE, data);
+            if (hasConnection) {
 //                    eventStore.flushAsync();
-                }
-                return null;
             }
+            return null;
         });
 
         // set sensible defaults for delivery/project packages etc if not set
@@ -332,8 +329,6 @@ public class Client implements MetadataAware {
      * Notify Bugsnag of a handled exception
      *
      * @param exc     the exception to send to Bugsnag
-     * @param onError callback invoked on the generated error report for
-     *                additional modification
      */
     public void notify(@NonNull Throwable exc) {
         if (exc != null) {
@@ -402,7 +397,7 @@ public class Client implements MetadataAware {
      * The returned collection is readonly and mutating the list will cause no effect on the
      * Client's state. If you wish to alter the breadcrumbs collected by the Client then you should
      * use {@link Configuration#setEnabledBreadcrumbTypes(Set)} and
-     * {@link Configuration#addOnBreadcrumb(OnBreadcrumbCallback)} instead.
+     *
      *
      * @return a list of collected breadcrumbs
      */

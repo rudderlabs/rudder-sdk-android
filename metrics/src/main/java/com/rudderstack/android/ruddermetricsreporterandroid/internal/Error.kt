@@ -25,4 +25,8 @@ class Error @JvmOverloads internal constructor(
         }
     }
 
+    override fun toString(): String {
+        return "Error(errorClass='$errorClass', errorMessage=$errorMessage, stacktrace=$stacktrace, type=$type)"
+    }
+
 }

@@ -194,7 +194,6 @@ class ErrorEvent : MetadataAware{
         return "ErrorEvent{" +
                 "originalError=" + originalError +
                 ", severityReason=" + severityReason +
-                ", logger=" + logger +
                 ", metadata=" + metadata +
                 ", discardClasses=" + discardClasses +
                 ", projectPackages=" + projectPackages +

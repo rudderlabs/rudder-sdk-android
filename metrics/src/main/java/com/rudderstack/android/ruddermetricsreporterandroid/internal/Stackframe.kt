@@ -102,4 +102,8 @@ class Stackframe{
         this.type = nativeFrame.type
     }
 
+    override fun toString(): String {
+        return "Stackframe{method='$method', file='$file', lineNumber=$lineNumber, " +
+            "inProject=$inProject, code=$code, columnNumber=$columnNumber}"
+    }
 }

@@ -81,4 +81,8 @@ internal class Stacktrace {
         }
     }
 
+    override fun toString(): String {
+        return "Stacktrace{trace=$trace}"
+    }
+
 }
