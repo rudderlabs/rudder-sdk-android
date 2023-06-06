@@ -72,6 +72,11 @@ class DBPersistentManager extends SQLiteOpenHelper {
     static final String BACKSLASH = "\\\\'";
 
     // command to create events table based for the database version 1.
+    private static final String DATABASE_EVENTS_TABLE_SCHEMA_V2 = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS '%s' " +
+                    "('%s' INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "'%s' TEXT NOT NULL, '%s' INTEGER NOT NULL, '%s' INTEGER NOT NULL DEFAULT %d)",
+            EVENTS_TABLE_NAME, MESSAGE_ID_COL, MESSAGE_COL, UPDATED_COL, STATUS_COL, STATUS_NEW);
+
     private static final String DATABASE_EVENTS_TABLE_SCHEMA_V1 = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS '%s' " +
                     "('%s' INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "'%s' TEXT NOT NULL, '%s' INTEGER NOT NULL)",
@@ -113,10 +118,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         if (DB_VERSION == 1) {
             createEventSchemaSQL = DATABASE_EVENTS_TABLE_SCHEMA_V1;
         } else {
-            createEventSchemaSQL = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS '%s' " +
-                            "('%s' INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                            "'%s' TEXT NOT NULL, '%s' INTEGER NOT NULL, '%s' INTEGER NOT NULL DEFAULT %d)",
-                    EVENTS_TABLE_NAME, MESSAGE_ID_COL, MESSAGE_COL, UPDATED_COL, STATUS_COL, STATUS_NEW);
+            createEventSchemaSQL = DATABASE_EVENTS_TABLE_SCHEMA_V2;
         }
         RudderLogger.logVerbose(String.format(Locale.US, "DBPersistentManager: createSchema: createEventSchemaSQL: %s", createEventSchemaSQL));
         db.execSQL(createEventSchemaSQL);
@@ -289,7 +291,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
     }
 
     //unit test this
-    void fetchDeviceModeEventsFromDb(ArrayList<Integer> messageIds, ArrayList<String> messages, int count) {
+    void fetchDeviceModeEventsFromDb(List<Integer> messageIds, List<String> messages, int count) {
         String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) ORDER BY %s ASC LIMIT %d",
                 EVENTS_TABLE_NAME, DBPersistentManager.STATUS_COL, DBPersistentManager.STATUS_NEW,
                 DBPersistentManager.STATUS_CLOUD_MODE_DONE, UPDATED_COL, count);
