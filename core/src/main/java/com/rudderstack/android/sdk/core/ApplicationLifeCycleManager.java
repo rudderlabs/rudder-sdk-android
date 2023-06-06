@@ -35,7 +35,7 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
 
     // This is just a stub LifecycleOwner which is used when we need to call some lifecycle
     // methods without going through the actual lifecycle callbacks
-    private static LifecycleOwner stubOwner =
+    private final static LifecycleOwner stubOwner =
             new LifecycleOwner() {
                 Lifecycle stubLifecycle =
                         new Lifecycle() {
@@ -167,11 +167,12 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
     }
 
     private void sendApplicationUpdated(int previousBuild, int currentBuild, String previousVersion, String currentVersion) {
-        // If either optOut() is set to true or LifeCycleEvents set to false then discard the event
-        if (repository.getOptStatus() || !config.isTrackLifecycleEvents()) {
+        // If automatic tracking of life cycle events is disabled (OR) if the user has opted out
+        // from tracking his activity then do not send the Application Updated event
+        if (!config.isTrackLifecycleEvents() || repository.getOptStatus()) {
             return;
         }
-        // Application Updated event
+
         RudderLogger.logDebug("ApplicationLifeCycleManager: sendApplicationInstalled: Tracking Application Updated");
         RudderMessage message = new RudderMessageBuilder().setEventName("Application Updated")
                 .setProperty(
@@ -187,44 +188,36 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
 
     @Override
     public void onStart(@NonNull LifecycleOwner owner) {
-        if (this.config.isTrackLifecycleEvents()) {
-            if (noOfActivities.incrementAndGet() == 1) {
-                // If user has disabled tracking activities (i.e., set optOut() to true)
-                // then discard the event
-                startSessionTrackingIfApplicable();
-                if (repository.getOptStatus()) {
-                    return;
-                }
-                RudderProperty rudderProperty = new RudderProperty()
-                        .putValue("from_background", !isFirstLaunch.get());
-                // If it is not firstLaunch then set the version as well
-                if (isFirstLaunch.getAndSet(false)) {
-                    rudderProperty.putValue("version", preferenceManager.getVersionName());
-                }
-
-                RudderMessage trackMessage = new RudderMessageBuilder()
-                        .setEventName("Application Opened")
-                        .setProperty(rudderProperty)
-                        .build();
-                trackMessage.setType(MessageType.TRACK);
-                repository.processMessage(trackMessage);
+        if (this.config.isTrackLifecycleEvents() && noOfActivities.incrementAndGet() == 1) {
+            startSessionTrackingIfApplicable();
+            // If the user has opted out from tracking his activity then do not send the Application Opened event
+            if (repository.getOptStatus()) {
+                return;
             }
+            RudderProperty rudderProperty = new RudderProperty()
+                    .putValue("from_background", !isFirstLaunch.get());
+            // If it is not firstLaunch then set the version as well
+            if (isFirstLaunch.getAndSet(false)) {
+                rudderProperty.putValue("version", preferenceManager.getVersionName());
+            }
+
+            RudderMessage trackMessage = new RudderMessageBuilder()
+                    .setEventName("Application Opened")
+                    .setProperty(rudderProperty)
+                    .build();
+            trackMessage.setType(MessageType.TRACK);
+            repository.processMessage(trackMessage);
         }
     }
 
     @Override
     public void onStop(@NonNull LifecycleOwner owner) {
-        if (this.config.isTrackLifecycleEvents()) {
-            if (noOfActivities.decrementAndGet() == 0) {
-                // If user has disabled tracking activities (i.e., set optOut() to true)
-                // then discard the event
-                if (repository.getOptStatus()) {
-                    return;
-                }
-                RudderMessage message = new RudderMessageBuilder().setEventName("Application Backgrounded").build();
-                message.setType(MessageType.TRACK);
-                repository.processMessage(message);
-            }
+        // if user has enabled automatic tracking of life cycle events and it is the last activity in the stack
+        // and if the user has not opted out from tracking his activity then send the Application Backgrounded event
+        if (this.config.isTrackLifecycleEvents() && noOfActivities.decrementAndGet() == 0 && !repository.getOptStatus()) {
+            RudderMessage message = new RudderMessageBuilder().setEventName("Application Backgrounded").build();
+            message.setType(MessageType.TRACK);
+            repository.processMessage(message);
         }
     }
 
@@ -251,29 +244,28 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
 
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
-        if (config.isRecordScreenViews()) {
-            // If user has disabled tracking activities (i.e., set optOut() to true)
-            // then discard the event
-            if (repository.getOptStatus()) {
-                return;
-            }
-            ScreenPropertyBuilder screenPropertyBuilder = new ScreenPropertyBuilder().setScreenName(activity.getLocalClassName()).isAtomatic(true);
-            RudderMessage screenMessage = new RudderMessageBuilder().setEventName(activity.getLocalClassName()).setProperty(screenPropertyBuilder.build()).build();
-            screenMessage.setType(MessageType.SCREEN);
-            repository.processMessage(screenMessage);
+        // If automatic screen recording is disabled (OR) user opted himself out of tracking then we will not record screen views
+        if (!config.isRecordScreenViews() || repository.getOptStatus()) {
+            return;
         }
+
+        ScreenPropertyBuilder screenPropertyBuilder = new ScreenPropertyBuilder().setScreenName(activity.getLocalClassName()).isAutomatic(true);
+        RudderMessage screenMessage = new RudderMessageBuilder().setEventName(activity.getLocalClassName()).setProperty(screenPropertyBuilder.build()).build();
+        screenMessage.setType(MessageType.SCREEN);
+        repository.processMessage(screenMessage);
+
     }
 
     @Override
     public void onActivityStopped(@NonNull Activity activity) {
-        if (!config.isUseNewLifeCycleEvents()) {
+        if (!config.isNewLifeCycleEvents()) {
             onStop(stubOwner);
         }
     }
 
     @Override
     public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle bundle) {
-        if (!config.isUseNewLifeCycleEvents()) {
+        if (!config.isNewLifeCycleEvents()) {
             onCreate(stubOwner);
         }
         trackDeepLinks(activity);
@@ -281,14 +273,14 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
 
     @Override
     public void onActivityResumed(@NonNull Activity activity) {
-        if (!config.isUseNewLifeCycleEvents()) {
+        if (!config.isNewLifeCycleEvents()) {
             onStart(stubOwner);
         }
     }
 
     @Override
     public void onActivityPaused(@NonNull Activity activity) {
-        if (!config.isUseNewLifeCycleEvents()) {
+        if (!config.isNewLifeCycleEvents()) {
             onPause(stubOwner);
         }
     }
@@ -299,7 +291,7 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
 
     @Override
     public void onActivityDestroyed(@NonNull Activity activity) {
-        if (!config.isUseNewLifeCycleEvents()) {
+        if (!config.isNewLifeCycleEvents()) {
             onDestroy(stubOwner);
         }
     }

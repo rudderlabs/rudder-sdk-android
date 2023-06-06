@@ -31,7 +31,7 @@ class Constants {
     // whether we should trackLifecycle events
     static final boolean TRACK_LIFECYCLE_EVENTS = true;
     // whether we should use the new way of tracking life cycle events
-    static final boolean USE_NEW_LIFECYCLE_EVENTS = false;
+    static final boolean NEW_LIFECYCLE_EVENTS = false;
     // whether we should track the deep link events or not
     static final boolean TRACK_DEEP_LINKS = true;
     // whether we should record screen views automatically

@@ -68,7 +68,7 @@ public class RudderConfig {
                 Constants.REPEAT_INTERVAL,
                 Constants.REPEAT_INTERVAL_TIME_UNIT,
                 Constants.TRACK_LIFECYCLE_EVENTS,
-                Constants.USE_NEW_LIFECYCLE_EVENTS,
+                Constants.NEW_LIFECYCLE_EVENTS,
                 Constants.TRACK_DEEP_LINKS,
                 Constants.AUTO_COLLECT_ADVERT_ID,
                 Constants.RECORD_SCREEN_VIEWS,
@@ -275,7 +275,7 @@ public class RudderConfig {
     /**
      * @return useNewLifeCycleEvents (whether we are using the new lifecycle events)
      */
-    public boolean isUseNewLifeCycleEvents() {
+    public boolean isNewLifeCycleEvents() {
         return useNewLifeCycleEvents;
     }
 
@@ -395,7 +395,7 @@ public class RudderConfig {
         this.trackLifecycleEvents = trackLifecycleEvents;
     }
 
-    void setUseNewLifeCycleEvents(boolean useNewLifeCycleEvents) {
+    void setNewLifeCycleEvents(boolean useNewLifeCycleEvents) {
         this.useNewLifeCycleEvents = useNewLifeCycleEvents;
     }
 
@@ -663,14 +663,14 @@ public class RudderConfig {
             return this;
         }
 
-        private boolean useNewLifecycleEvents = Constants.USE_NEW_LIFECYCLE_EVENTS;
+        private boolean useNewLifecycleEvents = Constants.NEW_LIFECYCLE_EVENTS;
 
         /**
          * @param shouldUseNewLifecycleEvents Whether we should use new lifecycle events
          * @return RudderConfig.Builder
          */
 
-        public Builder withUseNewLifecycleEvents(boolean shouldUseNewLifecycleEvents) {
+        public Builder withNewLifecycleEvents(boolean shouldUseNewLifecycleEvents) {
             this.useNewLifecycleEvents = shouldUseNewLifecycleEvents;
             return this;
         }

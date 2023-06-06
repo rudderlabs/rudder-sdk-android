@@ -65,7 +65,7 @@ class EventRepository {
             new Handler(Looper.getMainLooper()) {
                 @Override
                 public void handleMessage(Message msg) {
-                    throw new AssertionError("Unknown handler message received: " + msg.what);
+                    RudderLogger.logError("EventRepository: HANDLER: handleMessage: Unknown handler message received: " + msg.what);
                 }
             };
 
