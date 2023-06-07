@@ -31,6 +31,7 @@ class MainApplication : Application(), Configuration.Provider {
                 .withFactory(BrazeIntegrationFactory.FACTORY)
                 .withFactory(AmplitudeIntegrationFactory.FACTORY)
                 .withTrackLifecycleEvents(true)
+                .withNewLifecycleEvents(true)
                 .withRecordScreenViews(false)
                 .build()
         )

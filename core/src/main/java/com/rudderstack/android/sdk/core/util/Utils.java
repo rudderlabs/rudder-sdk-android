@@ -19,6 +19,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.RudderLogger;
 import com.rudderstack.android.sdk.core.RudderProperty;
+
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
@@ -141,6 +142,11 @@ public class Utils {
         }
     }
 
+    public static boolean lifeCycleDependenciesExists() {
+        return isOnClassPath("androidx.lifecycle.DefaultLifecycleObserver")
+                && isOnClassPath("androidx.lifecycle.LifecycleOwner") && isOnClassPath("androidx.lifecycle.ProcessLifecycleOwner");
+    }
+
     public static boolean fileExists(Context context, String filename) {
         File file = context.getFileStreamPath(filename);
         return file != null && file.exists();
@@ -253,6 +259,7 @@ public class Utils {
         }
         return false;
     }
+
     @NonNull
     public static String appendSlashToUrl(@NonNull String dataPlaneUrl) {
         if (!dataPlaneUrl.endsWith("/")) dataPlaneUrl += "/";

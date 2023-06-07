@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "528373226077",
+    "project_id": "debanjan-dmt",
+    "storage_bucket": "debanjan-dmt.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:528373226077:android:41b10b8db42c7ac2374bb4",
+        "android_client_info": {
+          "package_name": "com.example.testapp1mg"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "528373226077-u5p6vuas9th932me4vqma1b0m5l62u7f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDY7qRhqxLQxlad5ZDEyYDQfq0dQ2W8Yq4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "528373226077-u5p6vuas9th932me4vqma1b0m5l62u7f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

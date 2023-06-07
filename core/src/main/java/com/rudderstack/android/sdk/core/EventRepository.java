@@ -21,6 +21,8 @@ import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
+import static com.rudderstack.android.sdk.core.util.Utils.lifeCycleDependenciesExists;
+
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Locale;
@@ -41,7 +43,10 @@ class EventRepository {
     private RudderDataResidencyManager dataResidencyManager;
     private Application application;
 
+    private RudderUserSessionManager userSessionManager;
     private ApplicationLifeCycleManager applicationLifeCycleManager;
+    private LifeCycleManagerV1 lifeCycleManagerV1;
+    private LifeCycleManagerV2 lifeCycleManagerV2;
 
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
@@ -125,13 +130,25 @@ class EventRepository {
             // 9. initiate RudderUserSession for tracking sessions
             // 10. Initiate ApplicationLifeCycleManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
-            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(preferenceManager, this, rudderFlushWorkManager, config, application);
-            this.application.registerActivityLifecycleCallbacks(this.applicationLifeCycleManager);
 
-            if (config.isUseNewLifeCycleEvents()) {
-                run(() -> ProcessLifecycleOwner.get().getLifecycle().addObserver(applicationLifeCycleManager));
+            this.userSessionManager = new RudderUserSessionManager(this.preferenceManager, this.config);
+            this.userSessionManager.startSessionTracking();
+
+            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(config, application, rudderFlushWorkManager, this, preferenceManager);
+            this.applicationLifeCycleManager.trackApplicationUpdateStatus();
+
+            this.lifeCycleManagerV1 = new LifeCycleManagerV1(this, config, applicationLifeCycleManager, userSessionManager);
+            this.application.registerActivityLifecycleCallbacks(this.lifeCycleManagerV1);
+
+            if (config.isNewLifeCycleEvents()) {
+                if (lifeCycleDependenciesExists()) {
+                    this.lifeCycleManagerV2 = new LifeCycleManagerV2(applicationLifeCycleManager, userSessionManager);
+                    run(() -> ProcessLifecycleOwner.get().getLifecycle().addObserver(lifeCycleManagerV2));
+                } else {
+                    RudderLogger.logWarn("EventRepository: constructor: Required Dependencies are not present in the classpath. Please add them to enable new lifecycle events.");
+                }
             }
-            this.applicationLifeCycleManager.startSessionTracking();
+
 
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
@@ -248,7 +265,7 @@ class EventRepository {
 
         applyRudderOptionsToMessageIntegrations(message);
         RudderMessage updatedMessage = updateMessageWithConsentedDestinations(message);
-        applicationLifeCycleManager.applySessionTracking(updatedMessage);
+        userSessionManager.applySessionTracking(updatedMessage);
 
         String eventJson = gson.toJson(updatedMessage);
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
@@ -302,7 +319,7 @@ class EventRepository {
     void reset() {
         deviceModeManager.reset();
         RudderLogger.logDebug("EventRepository: reset: resetting the SDK");
-        applicationLifeCycleManager.reset();
+        userSessionManager.reset();
         refreshAuthToken();
     }
 
@@ -387,16 +404,16 @@ class EventRepository {
 
     public void shutDown() {
         this.deviceModeManager.flush();
-        this.application.unregisterActivityLifecycleCallbacks(applicationLifeCycleManager);
-        run(() -> ProcessLifecycleOwner.get().getLifecycle().removeObserver(applicationLifeCycleManager));
+        this.application.unregisterActivityLifecycleCallbacks(lifeCycleManagerV1);
+        run(() -> ProcessLifecycleOwner.get().getLifecycle().removeObserver(lifeCycleManagerV2));
     }
 
     public void startSession(Long sessionId) {
-        applicationLifeCycleManager.startSession(sessionId);
+        userSessionManager.startSession(sessionId);
     }
 
     public void endSession() {
-        applicationLifeCycleManager.endSession();
+        userSessionManager.endSession();
     }
 
     private RudderMessage updateMessageWithConsentedDestinations(RudderMessage message) {
