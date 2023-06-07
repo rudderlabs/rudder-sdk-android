@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.7.10'
+    ext.kotlin_version = '1.8.10'
     repositories {
         google()
         mavenCentral()
@@ -11,7 +11,6 @@ buildscript {
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 //apply plugin: 'com.google.gms.google-services'
 
 Properties properties = new Properties()
@@ -20,8 +19,7 @@ if (project.rootProject.file('sample-kotlin/local.properties').canRead()) {
 }
 
 android {
-    compileSdkVersion 33
-    buildToolsVersion "29.0.3"
+    compileSdkVersion 32
     defaultConfig {
         applicationId "com.example.testapp1mg"
         minSdkVersion 19
@@ -44,6 +42,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    namespace 'com.rudderstack.android.sample.kotlin'
 }
 
 dependencies {
@@ -71,7 +70,7 @@ dependencies {
     implementation 'com.rudderstack.android.integration:amplitude:1.+'
     implementation 'com.amplitude:android-sdk:2.25.2'
     implementation 'com.squareup.okhttp3:okhttp:4.9.2'
-    implementation 'com.google.android.gms:play-services-ads:18.3.0'
+    implementation 'com.google.android.gms:play-services-ads:22.1.0'
 
     // Braze Device Mode
     implementation 'com.rudderstack.android.integration:braze:1.0.6'

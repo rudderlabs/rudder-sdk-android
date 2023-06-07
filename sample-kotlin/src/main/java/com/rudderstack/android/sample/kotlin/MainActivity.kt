@@ -5,13 +5,13 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
 import com.rudderstack.android.sdk.core.*
-import kotlinx.android.synthetic.main.activity_main.*
 import javax.net.ssl.SSLContext
 
 
@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT)
             tlsBackport()
 
-        identify.setOnClickListener {
+        findViewById<Button>(R.id.identify).setOnClickListener {
             MainApplication.rudderClient!!.identify(
                 "user$userCount",
                 RudderTraits().putEmail("user$userCount@gmail.com").putName("Mr. User$userCount"),
@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
             userCount++;
         }
 
-        track.setOnClickListener {
+        findViewById<Button>(R.id.track).setOnClickListener {
             val props = RudderProperty()
             props.put("Test Track Key $eventCount", "Test Track Value $eventCount")
             MainApplication.rudderClient!!.track(
@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
             eventCount++;
         }
 
-        screen.setOnClickListener {
+        findViewById<Button>(R.id.screen).setOnClickListener {
             val props = RudderProperty()
             props.put("Test Screen Key $screenCount", "Test Screen Value $screenCount")
             MainApplication.rudderClient!!.track(
@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
             screenCount++;
         }
 
-        group.setOnClickListener {
+        findViewById<Button>(R.id.group).setOnClickListener {
             MainApplication.rudderClient!!.group(
                 "Group $groupCount",
                 RudderTraits().put("group id $groupCount", "group value $groupCount")
@@ -67,19 +67,19 @@ class MainActivity : AppCompatActivity() {
             groupCount++;
         }
 
-        alias.setOnClickListener {
+        findViewById<Button>(R.id.alias).setOnClickListener {
             MainApplication.rudderClient!!.alias("new user $userCount");
         }
 
-        resetBtn.setOnClickListener {
+        findViewById<Button>(R.id.resetBtn).setOnClickListener {
             MainApplication.rudderClient!!.reset()
         }
 
-        nextPage.setOnClickListener {
+        findViewById<Button>(R.id.nextPage).setOnClickListener {
             startActivity(Intent(this, FirstActivity::class.java))
         }
 
-        userSessionPage.setOnClickListener {
+        findViewById<Button>(R.id.userSessionPage).setOnClickListener {
             startActivity(Intent(this, UserSessionActivity::class.java))
         }
 
