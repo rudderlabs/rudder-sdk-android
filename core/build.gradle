@@ -64,5 +64,9 @@ tasks.withType(JavaExec) {
 }
 //apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"
 
-apply from: rootProject.file('gradle/mvn-publish.gradle')
-apply from: rootProject.file('gradle/codecov.gradle')
+if (project.file('gradle/mvn-publish.gradle').exists()) {
+    apply from: rootProject.file('gradle/mvn-publish.gradle')
+}
+if (project.file('gradle/codecov.gradle').exists()) {
+    apply from: rootProject.file('gradle/codecov.gradle')
+}
