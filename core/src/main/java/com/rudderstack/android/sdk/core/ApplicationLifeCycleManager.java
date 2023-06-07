@@ -16,7 +16,7 @@ public class ApplicationLifeCycleManager {
     private RudderFlushWorkManager rudderFlushWorkManager;
     private EventRepository repository;
     public static final String VERSION = "version";
-    private static AtomicBoolean isFirstLaunch = new AtomicBoolean(true);;
+    private static AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
     private RudderPreferenceManager preferenceManager;
 
     public ApplicationLifeCycleManager(RudderConfig config, Application application, RudderFlushWorkManager rudderFlushWorkManager, EventRepository repository, RudderPreferenceManager preferenceManager) {
