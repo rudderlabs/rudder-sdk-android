@@ -14,8 +14,8 @@ class MainApplication : Application(), Configuration.Provider {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://rudderstachvf.dataplane.rudderstack.com"
-        const val WRITE_KEY = "1pTxG1Tqxr7FCrqIy7j0p28AENV"
+        const val DATA_PLANE_URL = BuildConfig.DATA_PLANE_URL
+        const val WRITE_KEY = BuildConfig.WRITE_KEY
     }
 
     override fun onCreate() {

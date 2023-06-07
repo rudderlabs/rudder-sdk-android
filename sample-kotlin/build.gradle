@@ -14,6 +14,10 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 //apply plugin: 'com.google.gms.google-services'
 
+Properties properties = new Properties()
+if (project.rootProject.file('sample-kotlin/local.properties').canRead()) {
+    properties.load(project.rootProject.file("sample-kotlin/local.properties").newDataInputStream())
+}
 
 android {
     compileSdkVersion 32
@@ -26,6 +30,9 @@ android {
         versionCode 4
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "DATA_PLANE_URL", properties.getProperty('dataplaneUrl', 'https://api.rudderstack.com'))
+        buildConfigField("String", "CONTROL_PLANE_URL", properties.getProperty('controlplaneUrl', "\"https://api.rudderstack.com\""))
+        buildConfigField("String", "WRITE_KEY", properties.getProperty('writeKey', ''))
     }
     buildTypes {
         release {
