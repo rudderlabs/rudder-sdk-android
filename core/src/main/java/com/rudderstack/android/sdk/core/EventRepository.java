@@ -1,6 +1,8 @@
 package com.rudderstack.android.sdk.core;
 
 
+import static com.rudderstack.android.sdk.core.util.Utils.lifeCycleDependenciesExists;
+
 import android.app.Application;
 import android.content.Context;
 import android.os.Handler;
@@ -20,8 +22,6 @@ import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
-
-import static com.rudderstack.android.sdk.core.util.Utils.lifeCycleDependenciesExists;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
@@ -44,9 +44,9 @@ class EventRepository {
     private Application application;
 
     private RudderUserSessionManager userSessionManager;
-    private ApplicationLifeCycleManager applicationLifeCycleManager;
-    private LifeCycleManagerV1 lifeCycleManagerV1;
-    private LifeCycleManagerV2 lifeCycleManagerV2;
+    private LifeCycleManagerCompat lifeCycleManagerCompat;
+    private @Nullable
+    AndroidXLifeCycleManager androidXlifeCycleManager = null;
 
     private boolean isSDKInitialized = false;
     private boolean isSDKEnabled = true;
@@ -101,6 +101,7 @@ class EventRepository {
             // 3. initiate DBPersistentManager for SQLite operations
             RudderLogger.logDebug("EventRepository: constructor: Initiating DBPersistentManager and starting Handler thread");
             initializeDbManager(_application);
+
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderNetworkManager");
             this.networkManager = new RudderNetworkManager(authHeaderString, anonymousIdHeaderString, getSavedAuthToken());
 
@@ -112,47 +113,60 @@ class EventRepository {
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
             this.configManager = new RudderServerConfigManager(_application, _config, networkManager);
 
-            // 5. Initiate RudderNetWorkManager for making Network Requests
-
-            // 6. initiate FlushWorkManager
+            // 5. initiate FlushWorkManager
             rudderFlushWorkManager = new RudderFlushWorkManager(context, config, preferenceManager);
 
-            // 7. Initiating RudderDataResidencyManager
+            // 6. Initiating RudderDataResidencyManager
             this.dataResidencyManager = new RudderDataResidencyManager(config);
 
-            // 8. Initiate Cloud Mode Manager and Device mode Manager
+            // 7. Initiate Cloud Mode Manager and Device mode Manager
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
             this.cloudModeManager = new RudderCloudModeManager(dbManager, networkManager, config, dataResidencyManager);
             this.deviceModeManager = new RudderDeviceModeManager(dbManager, networkManager, config, dataResidencyManager);
 
             this.initiateSDK(_config.getConsentFilter());
 
-            // 9. initiate RudderUserSession for tracking sessions
-            // 10. Initiate ApplicationLifeCycleManager
+            // 8. Initiate ApplicationLifeCycleManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
 
             this.userSessionManager = new RudderUserSessionManager(this.preferenceManager, this.config);
             this.userSessionManager.startSessionTracking();
 
-            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(config, application, rudderFlushWorkManager, this, preferenceManager);
-            this.applicationLifeCycleManager.trackApplicationUpdateStatus();
+            ApplicationLifeCycleManager applicationLifeCycleManager = new ApplicationLifeCycleManager(config, application, rudderFlushWorkManager, this, preferenceManager);
+            applicationLifeCycleManager.trackApplicationUpdateStatus();
 
-            this.lifeCycleManagerV1 = new LifeCycleManagerV1(this, config, applicationLifeCycleManager, userSessionManager);
-            this.application.registerActivityLifecycleCallbacks(this.lifeCycleManagerV1);
-
-            if (config.isNewLifeCycleEvents()) {
-                if (lifeCycleDependenciesExists()) {
-                    this.lifeCycleManagerV2 = new LifeCycleManagerV2(applicationLifeCycleManager, userSessionManager);
-                    run(() -> ProcessLifecycleOwner.get().getLifecycle().addObserver(lifeCycleManagerV2));
-                } else {
-                    RudderLogger.logWarn("EventRepository: constructor: Required Dependencies are not present in the classpath. Please add them to enable new lifecycle events.");
-                }
-            }
+            initializeLifecycleTracking(applicationLifeCycleManager);
 
 
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
+    }
+
+    private void initializeLifecycleTracking(ApplicationLifeCycleManager applicationLifeCycleManager) {
+        if (config.isNewLifeCycleEvents()) {
+            boolean isAndroidXConfigSuccess = configureAndroidXLifeCycleTracking(applicationLifeCycleManager);
+            if(!isAndroidXConfigSuccess) {
+                config.setNewLifeCycleEvents(false);
+            }
+        }
+        this.lifeCycleManagerCompat = new LifeCycleManagerCompat(this, config, applicationLifeCycleManager, userSessionManager);
+        this.application.registerActivityLifecycleCallbacks(this.lifeCycleManagerCompat);
+
+
+    }
+
+    private boolean configureAndroidXLifeCycleTracking(ApplicationLifeCycleManager applicationLifeCycleManager) {
+        if (lifeCycleDependenciesExists()) {
+            this.androidXlifeCycleManager = new AndroidXLifeCycleManager(applicationLifeCycleManager, userSessionManager);
+            run(() -> ProcessLifecycleOwner.get().getLifecycle().addObserver(androidXlifeCycleManager));
+            return true;
+        } else {
+            RudderLogger.logWarn("EventRepository: constructor: Required Dependencies are not present in the classpath. " +
+                    "Please add them to enable new lifecycle events. Using lifecycle callbacks");
+        }
+
+        return false;
     }
 
     private void initializeDbManager(Application application) {
@@ -404,8 +418,9 @@ class EventRepository {
 
     public void shutDown() {
         this.deviceModeManager.flush();
-        this.application.unregisterActivityLifecycleCallbacks(lifeCycleManagerV1);
-        run(() -> ProcessLifecycleOwner.get().getLifecycle().removeObserver(lifeCycleManagerV2));
+        this.application.unregisterActivityLifecycleCallbacks(lifeCycleManagerCompat);
+        if (androidXlifeCycleManager != null)
+            run(() -> ProcessLifecycleOwner.get().getLifecycle().removeObserver(androidXlifeCycleManager));
     }
 
     public void startSession(Long sessionId) {

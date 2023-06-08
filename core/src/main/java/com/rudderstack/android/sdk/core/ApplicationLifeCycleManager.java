@@ -11,15 +11,18 @@ import androidx.annotation.NonNull;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ApplicationLifeCycleManager {
-    private RudderConfig config;
-    private Application application;
-    private RudderFlushWorkManager rudderFlushWorkManager;
-    private EventRepository repository;
+    private final RudderConfig config;
+    private final Application application;
+    private final RudderFlushWorkManager rudderFlushWorkManager;
+    private final EventRepository repository;
     public static final String VERSION = "version";
-    private static AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
-    private RudderPreferenceManager preferenceManager;
+    private static final AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
+    private final RudderPreferenceManager preferenceManager;
 
-    public ApplicationLifeCycleManager(RudderConfig config, Application application, RudderFlushWorkManager rudderFlushWorkManager, EventRepository repository, RudderPreferenceManager preferenceManager) {
+    public ApplicationLifeCycleManager(RudderConfig config, Application application,
+                                       RudderFlushWorkManager rudderFlushWorkManager,
+                                       EventRepository repository,
+                                       RudderPreferenceManager preferenceManager) {
         this.config = config;
         this.application = application;
         this.rudderFlushWorkManager = rudderFlushWorkManager;
@@ -33,18 +36,20 @@ public class ApplicationLifeCycleManager {
      * If it is updated then make LifeCycle event: Application Updated.
      */
     void trackApplicationUpdateStatus() {
-        if (this.config.isTrackLifecycleEvents() || this.config.isNewLifeCycleEvents()) {
-            AppVersion appVersion = new AppVersion(application);
-            if (appVersion.previousBuild == -1) {
-                // application was not installed previously, now triggering Application Installed event
-                appVersion.storeCurrentBuildAndVersion();
-                sendApplicationInstalled(appVersion.currentBuild, appVersion.currentVersion);
-                rudderFlushWorkManager.registerPeriodicFlushWorker();
-            } else if (appVersion.previousBuild != appVersion.currentBuild) {
-                appVersion.storeCurrentBuildAndVersion();
-                sendApplicationUpdated(appVersion.previousBuild, appVersion.currentBuild, appVersion.previousVersion, appVersion.currentVersion);
-            }
+        if (!this.config.isTrackLifecycleEvents() && !this.config.isNewLifeCycleEvents()) {
+            return;
         }
+        AppVersion appVersion = new AppVersion(application);
+        if (appVersion.previousBuild == -1) {
+            // application was not installed previously, now triggering Application Installed event
+            appVersion.storeCurrentBuildAndVersion();
+            sendApplicationInstalled(appVersion.currentBuild, appVersion.currentVersion);
+            rudderFlushWorkManager.registerPeriodicFlushWorker();
+        } else if (appVersion.previousBuild != appVersion.currentBuild) {
+            appVersion.storeCurrentBuildAndVersion();
+            sendApplicationUpdated(appVersion.previousBuild, appVersion.currentBuild, appVersion.previousVersion, appVersion.currentVersion);
+        }
+
     }
 
     void sendApplicationInstalled(int currentBuild, String currentVersion) {
