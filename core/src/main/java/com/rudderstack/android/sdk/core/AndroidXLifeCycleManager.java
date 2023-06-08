@@ -4,11 +4,11 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 
-public class LifeCycleManagerV2 implements DefaultLifecycleObserver {
+public class AndroidXLifeCycleManager implements DefaultLifecycleObserver {
     private ApplicationLifeCycleManager applicationLifeCycleManager;
     private RudderUserSessionManager userSessionManager;
 
-    public LifeCycleManagerV2(ApplicationLifeCycleManager applicationLifeCycleManager, RudderUserSessionManager userSessionManager) {
+    public AndroidXLifeCycleManager(ApplicationLifeCycleManager applicationLifeCycleManager, RudderUserSessionManager userSessionManager) {
         this.applicationLifeCycleManager = applicationLifeCycleManager;
         this.userSessionManager = userSessionManager;
     }

@@ -16,7 +16,7 @@ import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LifeCycleManagerV1 implements ActivityLifecycleCallbacks {
+public class LifeCycleManagerCompat implements ActivityLifecycleCallbacks {
 
     private final ApplicationLifeCycleManager applicationLifeCycleManager;
     private AtomicInteger noOfActivities;
@@ -25,7 +25,9 @@ public class LifeCycleManagerV1 implements ActivityLifecycleCallbacks {
     private RudderUserSessionManager userSessionManager;
 
 
-    LifeCycleManagerV1(EventRepository repository, RudderConfig config, ApplicationLifeCycleManager applicationLifeCycleManager, RudderUserSessionManager userSessionManager) {
+    LifeCycleManagerCompat(EventRepository repository, RudderConfig config,
+                           ApplicationLifeCycleManager applicationLifeCycleManager,
+                           RudderUserSessionManager userSessionManager) {
         this.noOfActivities = new AtomicInteger(0);
         this.repository = repository;
         this.config = config;
@@ -43,6 +45,10 @@ public class LifeCycleManagerV1 implements ActivityLifecycleCallbacks {
 
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
+        if (!config.isNewLifeCycleEvents() && this.config.isTrackLifecycleEvents() && noOfActivities.incrementAndGet() == 1) {
+            userSessionManager.startSessionTrackingIfApplicable();
+            applicationLifeCycleManager.sendApplicationOpened();
+        }
         if (this.config.isRecordScreenViews()) {
             applicationLifeCycleManager.recordScreenView(activity);
         }
@@ -50,10 +56,7 @@ public class LifeCycleManagerV1 implements ActivityLifecycleCallbacks {
 
     @Override
     public void onActivityResumed(@NonNull Activity activity) {
-        if (!config.isNewLifeCycleEvents() && this.config.isTrackLifecycleEvents() && noOfActivities.incrementAndGet() == 1) {
-            userSessionManager.startSessionTrackingIfApplicable();
-            applicationLifeCycleManager.sendApplicationOpened();
-        }
+       // NO-OP
     }
 
     @Override
