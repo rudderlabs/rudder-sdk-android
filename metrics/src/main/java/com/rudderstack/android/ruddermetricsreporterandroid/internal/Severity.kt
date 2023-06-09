@@ -13,7 +13,7 @@ enum class Severity(private val str: String) {
     WARNING("warning"),
     INFO("info");
 
-    internal companion object {
-        internal fun fromDescriptor(desc: String) = values().find { it.str == desc }
-    }
+//    internal companion object {
+//        internal fun fromDescriptor(desc: String) = values().find { it.str == desc }
+//    }
 }

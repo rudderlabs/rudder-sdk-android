@@ -40,9 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import kotlin.Unit;
-import kotlin.jvm.functions.Function2;
-
 /**
  * A Bugsnag Client instance allows you to use Bugsnag in your Android app.
  * Typically you'd instead use the static access provided in the Bugsnag class.
@@ -51,8 +48,6 @@ import kotlin.jvm.functions.Function2;
  * <p/>
  * Client client = new Client(this, "your-api-key");
  * client.notify(new RuntimeException("something broke!"));
- *
- *
  */
 @SuppressWarnings({"checkstyle:JavadocTagContinuationIndentation", "ConstantConditions"})
 public class Client implements MetadataAware {
@@ -111,7 +106,7 @@ public class Client implements MetadataAware {
         ContextModule contextModule = new ContextModule(androidContext);
         appContext = contextModule.getCtx();
 
-        connectivity = new ConnectivityCompat(appContext, (hasConnection, networkState) -> {
+         connectivity = new ConnectivityCompat(appContext, (hasConnection, networkState) -> {
             Map<String, Object> data = new HashMap<>();
             data.put("hasConnection", hasConnection);
             data.put("networkState", networkState);
@@ -190,58 +185,32 @@ public class Client implements MetadataAware {
     Client(
             ImmutableConfig immutableConfig,
             MetadataState metadataState,
-//            ContextState contextState,
-//            CallbackState callbackState,
-//            UserState userState,
-//            FeatureFlagState featureFlagState,
-//            ClientObservable clientObservable,
             Context appContext,
             @NonNull DeviceDataCollector deviceDataCollector,
             @NonNull AppDataCollector appDataCollector,
             @NonNull BreadcrumbState breadcrumbState,
-//            @NonNull EventStore eventStore,
-//            SystemBroadcastReceiver systemBroadcastReceiver,
-//            SessionTracker sessionTracker,
             Connectivity connectivity,
             Logger logger,
 //            DeliveryDelegate deliveryDelegate,
-//            LastRunInfoStore lastRunInfoStore,
-//            LaunchCrashTracker launchCrashTracker,
             ExceptionHandler exceptionHandler
 //            Notifier notifier
     ) {
         this.immutableConfig = immutableConfig;
         this.metadataState = metadataState;
-//        this.contextState = contextState;
-//        this.callbackState = callbackState;
-//        this.userState = userState;
-//        this.featureFlagState = featureFlagState;
-//        this.clientObservable = clientObservable;
         this.appContext = appContext;
         this.deviceDataCollector = deviceDataCollector;
         this.appDataCollector = appDataCollector;
         this.breadcrumbState = breadcrumbState;
 //        this.eventStore = eventStore;
-//        this.systemBroadcastReceiver = systemBroadcastReceiver;
-//        this.sessionTracker = sessionTracker;
         this.connectivity = connectivity;
         this.logger = logger;
 //        this.deliveryDelegate = deliveryDelegate;
-//        this.lastRunInfoStore = lastRunInfoStore;
-//        this.launchCrashTracker = launchCrashTracker;
-//        this.lastRunInfo = null;
         this.exceptionHandler = exceptionHandler;
-//        this.notifier = notifier;
-//        internalMetrics = new InternalMetricsNoop();
-//        configDifferences = new HashMap<>();
+
     }
 
     private void start() {
-//        if (immutableConfig.getEnabledErrorTypes().getUnhandledExceptions()) {
         exceptionHandler.install();
-//        }
-
-
         // Flush any on-disk errors and sessions
 //        eventStore.flushOnLaunch();
 //        eventStore.flushAsync();
@@ -252,9 +221,6 @@ public class Client implements MetadataAware {
 
         // Register listeners for system events in the background
         registerComponentCallbacks();
-
-        // Leave auto breadcrumb
-        Map<String, Object> data = new HashMap<>();
 
         logger.d("Rudder Error Colloector loaded");
     }
@@ -274,44 +240,37 @@ public class Client implements MetadataAware {
                     leaveAutoBreadcrumb("Orientation changed", BreadcrumbType.STATE, data);
                     return null;
                 }, (isLowMemory, memoryTrimLevel) -> {
-                    memoryTrimState.setLowMemory(Boolean.TRUE.equals(isLowMemory));
-                    if (memoryTrimState.updateMemoryTrimLevel(memoryTrimLevel)) {
-                        leaveAutoBreadcrumb(
-                                "Trim Memory",
-                                BreadcrumbType.STATE,
-                                Collections.<String, Object>singletonMap(
-                                        "trimLevel", memoryTrimState.getTrimLevelDescription()
-                                )
-                        );
-                    }
+            memoryTrimState.setLowMemory(Boolean.TRUE.equals(isLowMemory));
+            if (memoryTrimState.updateMemoryTrimLevel(memoryTrimLevel)) {
+                leaveAutoBreadcrumb(
+                        "Trim Memory",
+                        BreadcrumbType.STATE,
+                        Collections.<String, Object>singletonMap(
+                                "trimLevel", memoryTrimState.getTrimLevelDescription()
+                        )
+                );
+            }
 
-                    memoryTrimState.emitObservableEvent();
-                    return null;
-                }
+            memoryTrimState.emitObservableEvent();
+            return null;
+        }
         ));
     }
 
-
+    @VisibleForTesting
     void addObserver(StateObserver observer) {
         metadataState.addObserver(observer);
         breadcrumbState.addObserver(observer);
-//        clientObservable.addObserver(observer);
-//        contextState.addObserver(observer);
 //        deliveryDelegate.addObserver(observer);
-//        launchCrashTracker.addObserver(observer);
         memoryTrimState.addObserver(observer);
     }
 
+    @VisibleForTesting
     void removeObserver(StateObserver observer) {
         metadataState.removeObserver(observer);
         breadcrumbState.removeObserver(observer);
-//        sessionTracker.removeObserver(observer);
-//        clientObservable.removeObserver(observer);
-//        contextState.removeObserver(observer);
 //        deliveryDelegate.removeObserver(observer);
-//        launchCrashTracker.removeObserver(observer);
         memoryTrimState.removeObserver(observer);
-//        featureFlagState.removeObserver(observer);
     }
 
     /**
@@ -319,30 +278,27 @@ public class Client implements MetadataAware {
      */
     void syncInitialState() {
         metadataState.emitObservableEvent();
-//        contextState.emitObservableEvent();
-//        userState.emitObservableEvent();
         memoryTrimState.emitObservableEvent();
-//        featureFlagState.emitObservableEvent();
     }
 
     /**
      * Notify Bugsnag of a handled exception
      *
-     * @param exc     the exception to send to Bugsnag
+     * @param exc the exception to send to Bugsnag
      */
     public void notify(@NonNull Throwable exc) {
-        if (exc != null) {
-            if (immutableConfig.shouldDiscardError(exc)) {
-                return;
-            }
-            SeverityReason severityReason = SeverityReason.newInstance(REASON_HANDLED_EXCEPTION);
-            Metadata metadata = metadataState.getMetadata();
-//            FeatureFlags featureFlags = featureFlagState.getFeatureFlags();
-            ErrorEvent event = new ErrorEvent(exc, immutableConfig, severityReason, metadata);
-            populateAndNotifyAndroidEvent(event);
-        } else {
+        if (null == exc) {
             logNull("notify");
+            return;
         }
+        if (immutableConfig.shouldDiscardError(exc)) {
+            return;
+        }
+        SeverityReason severityReason = SeverityReason.newInstance(REASON_HANDLED_EXCEPTION);
+        Metadata metadata = metadataState.getMetadata();
+        ErrorEvent event = new ErrorEvent(exc, immutableConfig, severityReason, metadata);
+        populateAndNotifyAndroidEvent(event);
+
     }
 
     /**
@@ -397,7 +353,6 @@ public class Client implements MetadataAware {
      * The returned collection is readonly and mutating the list will cause no effect on the
      * Client's state. If you wish to alter the breadcrumbs collected by the Client then you should
      * use {@link Configuration#setEnabledBreadcrumbTypes(Set)} and
-     *
      *
      * @return a list of collected breadcrumbs
      */
@@ -615,15 +570,8 @@ public class Client implements MetadataAware {
     }
 
 
-//    Notifier getNotifier() {
-//        return notifier;
-//    }
-
     MetadataState getMetadataState() {
         return metadataState;
     }
 
-//    void setAutoDetectAnrs(boolean autoDetectAnrs) {
-//        pluginClient.setAutoDetectAnrs(this, autoDetectAnrs);
-//    }
 }

@@ -1,8 +1,6 @@
 package com.bugsnag.android
 
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.ErrorType
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.NativeStackframe
-import java.io.IOException
 
 /**
  * Represents a single stackframe from a [Throwable]
@@ -87,20 +85,6 @@ class Stackframe{
         this.columnNumber = columnNumber
     }
 
-    constructor(nativeFrame: NativeStackframe) : this(
-        nativeFrame.method,
-        nativeFrame.file,
-        nativeFrame.lineNumber,
-        null,
-        null
-    ) {
-        this.frameAddress = nativeFrame.frameAddress
-        this.symbolAddress = nativeFrame.symbolAddress
-        this.loadAddress = nativeFrame.loadAddress
-        this.codeIdentifier = nativeFrame.codeIdentifier
-        this.isPC = nativeFrame.isPC
-        this.type = nativeFrame.type
-    }
 
     override fun toString(): String {
         return "Stackframe{method='$method', file='$file', lineNumber=$lineNumber, " +

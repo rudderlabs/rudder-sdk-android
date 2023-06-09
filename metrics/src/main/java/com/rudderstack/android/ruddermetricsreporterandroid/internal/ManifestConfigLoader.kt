@@ -4,54 +4,43 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.annotation.VisibleForTesting
-import java.lang.IllegalArgumentException
 
 internal class ManifestConfigLoader {
 
     companion object {
         // mandatory
-        private const val BUGSNAG_NS = "com.bugsnag.android"
-        private const val API_KEY = "$BUGSNAG_NS.API_KEY"
-        internal const val BUILD_UUID = "$BUGSNAG_NS.BUILD_UUID"
+        private const val RUDDER_IDENTIFIER = "com.rudderstack.android"
 
         // detection
-        private const val AUTO_TRACK_SESSIONS = "$BUGSNAG_NS.AUTO_TRACK_SESSIONS"
-        private const val AUTO_DETECT_ERRORS = "$BUGSNAG_NS.AUTO_DETECT_ERRORS"
-        private const val PERSIST_USER = "$BUGSNAG_NS.PERSIST_USER"
-        private const val SEND_THREADS = "$BUGSNAG_NS.SEND_THREADS"
-
-        // endpoints
-        private const val ENDPOINT_NOTIFY = "$BUGSNAG_NS.ENDPOINT_NOTIFY"
-        private const val ENDPOINT_SESSIONS = "$BUGSNAG_NS.ENDPOINT_SESSIONS"
+        private const val AUTO_TRACK_SESSIONS = "$RUDDER_IDENTIFIER.AUTO_TRACK_SESSIONS"
+        private const val SEND_THREADS = "$RUDDER_IDENTIFIER.SEND_THREADS"
 
         // app/project packages
-        private const val APP_VERSION = "$BUGSNAG_NS.APP_VERSION"
-        private const val VERSION_CODE = "$BUGSNAG_NS.VERSION_CODE"
-        private const val RELEASE_STAGE = "$BUGSNAG_NS.RELEASE_STAGE"
-        private const val ENABLED_RELEASE_STAGES = "$BUGSNAG_NS.ENABLED_RELEASE_STAGES"
-        private const val DISCARD_CLASSES = "$BUGSNAG_NS.DISCARD_CLASSES"
-        private const val PROJECT_PACKAGES = "$BUGSNAG_NS.PROJECT_PACKAGES"
-        private const val REDACTED_KEYS = "$BUGSNAG_NS.REDACTED_KEYS"
+        private const val APP_VERSION = "$RUDDER_IDENTIFIER.APP_VERSION"
+        private const val VERSION_CODE = "$RUDDER_IDENTIFIER.VERSION_CODE"
+        private const val RELEASE_STAGE = "$RUDDER_IDENTIFIER.RELEASE_STAGE"
+        private const val ENABLED_RELEASE_STAGES = "$RUDDER_IDENTIFIER.ENABLED_RELEASE_STAGES"
+        private const val DISCARD_CLASSES = "$RUDDER_IDENTIFIER.DISCARD_CLASSES"
+        private const val PROJECT_PACKAGES = "$RUDDER_IDENTIFIER.PROJECT_PACKAGES"
 
         // misc
-        private const val MAX_BREADCRUMBS = "$BUGSNAG_NS.MAX_BREADCRUMBS"
-        private const val MAX_PERSISTED_EVENTS = "$BUGSNAG_NS.MAX_PERSISTED_EVENTS"
-        private const val MAX_PERSISTED_SESSIONS = "$BUGSNAG_NS.MAX_PERSISTED_SESSIONS"
-        private const val MAX_REPORTED_THREADS = "$BUGSNAG_NS.MAX_REPORTED_THREADS"
-        private const val LAUNCH_CRASH_THRESHOLD_MS = "$BUGSNAG_NS.LAUNCH_CRASH_THRESHOLD_MS"
-        private const val LAUNCH_DURATION_MILLIS = "$BUGSNAG_NS.LAUNCH_DURATION_MILLIS"
-        private const val SEND_LAUNCH_CRASHES_SYNCHRONOUSLY = "$BUGSNAG_NS.SEND_LAUNCH_CRASHES_SYNCHRONOUSLY"
-        private const val APP_TYPE = "$BUGSNAG_NS.APP_TYPE"
-        private const val ATTEMPT_DELIVERY_ON_CRASH = "$BUGSNAG_NS.ATTEMPT_DELIVERY_ON_CRASH"
+        private const val MAX_BREADCRUMBS = "$RUDDER_IDENTIFIER.MAX_BREADCRUMBS"
+        private const val MAX_PERSISTED_EVENTS = "$RUDDER_IDENTIFIER.MAX_PERSISTED_EVENTS"
+        private const val MAX_PERSISTED_SESSIONS = "$RUDDER_IDENTIFIER.MAX_PERSISTED_SESSIONS"
+        private const val MAX_REPORTED_THREADS = "$RUDDER_IDENTIFIER.MAX_REPORTED_THREADS"
+        private const val LAUNCH_CRASH_THRESHOLD_MS = "$RUDDER_IDENTIFIER.LAUNCH_CRASH_THRESHOLD_MS"
+        private const val LAUNCH_DURATION_MILLIS = "$RUDDER_IDENTIFIER.LAUNCH_DURATION_MILLIS"
+        private const val SEND_LAUNCH_CRASHES_SYNCHRONOUSLY = "$RUDDER_IDENTIFIER.SEND_LAUNCH_CRASHES_SYNCHRONOUSLY"
+        private const val APP_TYPE = "$RUDDER_IDENTIFIER.APP_TYPE"
     }
 
-    fun load(ctx: Context, userSuppliedApiKey: String?): Configuration {
+    fun load(ctx: Context): Configuration {
         try {
             val packageManager = ctx.packageManager
             val packageName = ctx.packageName
             val ai = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
             val data = ai.metaData
-            return load(data, userSuppliedApiKey)
+            return load(data)
         } catch (exc: Exception) {
             throw IllegalStateException("Bugsnag is unable to read config from manifest.", exc)
         }
@@ -63,12 +52,11 @@ internal class ManifestConfigLoader {
      * @param data   the manifest bundle
      */
     @VisibleForTesting
-    internal fun load(data: Bundle?, userSuppliedApiKey: String?): Configuration {
+    internal fun load(data: Bundle?): Configuration {
 
         val config = Configuration()
 
         if (data != null) {
-            loadDetectionConfig(config, data)
             loadAppConfig(config, data)
 
             // misc config
@@ -97,17 +85,6 @@ internal class ManifestConfigLoader {
         }
         return config
     }
-
-    private fun loadDetectionConfig(config: Configuration, data: Bundle) {
-        with(config) {
-            autoTrackSessions = data.getBoolean(AUTO_TRACK_SESSIONS, autoTrackSessions)
-//            autoDetectErrors = data.getBoolean(AUTO_DETECT_ERRORS, autoDetectErrors)
-
-            val str = data.getString(SEND_THREADS)
-
-        }
-    }
-
 
     private fun loadAppConfig(config: Configuration, data: Bundle) {
         with(config) {

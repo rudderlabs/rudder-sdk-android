@@ -73,9 +73,6 @@ class ErrorEvent : MetadataAware{
     var groupingHash: String? = null
     var context: String? = null
 
-    fun getUnhandledOverridden(): Boolean = severityReason.unhandledOverridden
-
-    fun getOriginalUnhandled(): Boolean = severityReason.originalUnhandled
 
     protected fun shouldDiscardClass(): Boolean {
         return when {
@@ -84,32 +81,32 @@ class ErrorEvent : MetadataAware{
         }
     }
 
-    protected fun isAnr(event: ErrorEvent): Boolean {
-        val errors = event.errors
-        var errorClass: String? = null
-        if (errors.isNotEmpty()) {
-            val error = errors[0]
-            errorClass = error.errorClass
-        }
-        return "ANR" == errorClass
-    }
+//    protected fun isAnr(event: ErrorEvent): Boolean {
+//        val errors = event.errors
+//        var errorClass: String? = null
+//        if (errors.isNotEmpty()) {
+//            val error = errors[0]
+//            errorClass = error.errorClass
+//        }
+//        return "ANR" == errorClass
+//    }
+//
+//
+//    internal fun getErrorTypesFromStackframes(): Set<ErrorType> {
+//        val errorTypes = errors.mapNotNull(Error::type).toSet()
+//        val frameOverrideTypes = errors
+//            .map { it.stacktrace }
+//            .flatMap { it.mapNotNull(Stackframe::type) }
+//        return errorTypes.plus(frameOverrideTypes)
+//    }
 
-
-    internal fun getErrorTypesFromStackframes(): Set<ErrorType> {
-        val errorTypes = errors.mapNotNull(Error::type).toSet()
-        val frameOverrideTypes = errors
-            .map { it.stacktrace }
-            .flatMap { it.mapNotNull(Stackframe::type) }
-        return errorTypes.plus(frameOverrideTypes)
-    }
-
-    internal fun normalizeStackframeErrorTypes() {
-        if (getErrorTypesFromStackframes().size == 1) {
-            errors.flatMap { it.stacktrace }.forEach {
-                it.type = null
-            }
-        }
-    }
+//    internal fun normalizeStackframeErrorTypes() {
+//        if (getErrorTypesFromStackframes().size == 1) {
+//            errors.flatMap { it.stacktrace }.forEach {
+//                it.type = null
+//            }
+//        }
+//    }
 
     internal fun updateSeverityReasonInternal(severityReason: SeverityReason) {
         this.severityReason = severityReason

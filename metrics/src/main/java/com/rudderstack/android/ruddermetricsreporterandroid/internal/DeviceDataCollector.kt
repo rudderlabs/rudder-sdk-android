@@ -108,12 +108,25 @@ internal class DeviceDataCollector(
         populateBatteryInfo(into = map)
         map["locationStatus"] = getLocationStatus()
         map["networkAccess"] = getNetworkAccess()
-        map["brand"] = buildInfo.brand
+        populateBuildInfo(into = map)
         map["screenDensity"] = screenDensity
         map["dpi"] = dpi
         map["emulator"] = emulator
         map["screenResolution"] = screenResolution
+
         return map
+    }
+
+    private fun populateBuildInfo(into: MutableMap<String, Any?>) {
+        into["brand"] = buildInfo.brand
+        into["model"] = buildInfo.model
+        into["osVersion"] = buildInfo.osVersion
+        into["manufacturer"] = buildInfo.manufacturer
+        into["apiLevel"] = buildInfo.apiLevel
+        into["osBuild"] = buildInfo.osBuild
+        into["fingerprint"] = buildInfo.fingerprint
+        into["tags"] = buildInfo.tags
+        into["cpuAbis"] = buildInfo.cpuAbis
     }
 
     private fun checkIsRooted(): Boolean {

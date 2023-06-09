@@ -49,10 +49,6 @@ class Configuration {
     fun getMetadata(section: String) = metadataState.getMetadata(section)
     fun getMetadata(section: String, key: String) = metadataState.getMetadata(section, key)
 
-    private fun toCommaSeparated(coll: Collection<Any>?): String {
-        return coll?.map { it.toString() }?.sorted()?.joinToString(",") ?: ""
-    }
-
     companion object {
         private const val DEFAULT_MAX_BREADCRUMBS = 100
         private const val DEFAULT_MAX_PERSISTED_SESSIONS = 128
@@ -62,11 +58,7 @@ class Configuration {
         private const val DEFAULT_MAX_STRING_VALUE_LENGTH = 10000
 
         @JvmStatic
-        fun load(context: Context): Configuration = load(context, null)
+        fun load(context: Context): Configuration = load(context)
 
-        @JvmStatic
-        protected fun load(context: Context, apiKey: String?): Configuration {
-            return ManifestConfigLoader().load(context, apiKey)
-        }
     }
 }

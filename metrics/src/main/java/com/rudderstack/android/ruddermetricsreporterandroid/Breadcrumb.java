@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.BreadcrumbInternal;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DateUtils;
 
 import java.io.IOException;

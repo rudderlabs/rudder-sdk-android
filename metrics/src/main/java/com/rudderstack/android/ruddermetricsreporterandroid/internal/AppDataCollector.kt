@@ -20,6 +20,7 @@ internal class AppDataCollector(
     private val memoryTrimState: MemoryTrimState
 ) {
 
+
     var codeBundleId: String? = null
 
     private val packageName: String = appContext.packageName
@@ -29,6 +30,9 @@ internal class AppDataCollector(
     private val releaseStage = config.releaseStage
     private val versionName = config.appVersion ?: config.packageInfo?.versionName
     private val installerPackage = getInstallerPackageName()
+
+    private val bgWorkRestricted
+        get() = isBackgroundWorkRestricted()
 
     fun generateApp(): App =
         App(config, binaryArch, packageName, releaseStage, versionName, codeBundleId)
@@ -44,7 +48,12 @@ internal class AppDataCollector(
         map["name"] = appName
         map["lowMemory"] = memoryTrimState.isLowMemory
         map["memoryTrimLevel"] = memoryTrimState.trimLevelDescription
-
+        bgWorkRestricted?.let {
+            map["backgroundWorkRestricted"] = bgWorkRestricted
+        }
+        processName?.let {
+            map["processName"] = it
+        }
         populateRuntimeMemoryMetadata(map)
 
         processName?.let {
@@ -136,12 +145,13 @@ internal class AppDataCollector(
     }
 
     companion object {
-        internal val startTimeMs = SystemClock.elapsedRealtime()
+//        internal val startTimeMs = SystemClock.elapsedRealtime()
 
         /**
          * Get the time in milliseconds since Bugsnag was initialized, which is a
          * good approximation for how long the app has been running.
+         * Not required now.
          */
-        fun getDurationMs(): Long = SystemClock.elapsedRealtime() - startTimeMs
+//        fun getDurationMs(): Long = SystemClock.elapsedRealtime() - startTimeMs
     }
 }

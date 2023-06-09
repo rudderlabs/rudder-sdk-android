@@ -7,7 +7,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.internal.getStorageM
 /**
  * A dependency module which provides a reference to Android system services.
  */
-internal class SystemServiceModule(
+internal class  SystemServiceModule(
     contextModule: ContextModule
 ) : DependencyModule() {
 
