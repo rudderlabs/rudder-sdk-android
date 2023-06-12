@@ -103,7 +103,7 @@ class EventRepository {
             initializeDbManager(_application);
 
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderNetworkManager");
-            this.networkManager = new RudderNetworkManager(authHeaderString, anonymousIdHeaderString, getSavedAuthToken());
+            this.networkManager = new RudderNetworkManager(authHeaderString, anonymousIdHeaderString, getSavedAuthToken(), config.isGzipEnabled());
 
             if (identifiers.authToken != null) {
                 updateAuthToken(identifiers.authToken);
@@ -263,7 +263,8 @@ class EventRepository {
     }
 
     private void saveFlushConfig() {
-        RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString, anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel());
+        RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString,
+                anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel(), config.isGzipEnabled());
         rudderFlushWorkManager.saveRudderFlushConfig(rudderFlushConfig);
     }
 

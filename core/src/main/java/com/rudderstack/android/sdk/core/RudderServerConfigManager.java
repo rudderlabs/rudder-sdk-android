@@ -64,7 +64,7 @@ class RudderServerConfigManager {
         String requestUrl = addEndPoint(rudderConfig.getControlPlaneUrl(), endpoint);
         while (!isDone && retryCount <= 3) {
             RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configUrl: %s", requestUrl));
-            Result result = networkManager.sendNetworkRequest(null, requestUrl, RequestMethod.GET);
+            Result result = networkManager.sendNetworkRequest(null, requestUrl, RequestMethod.GET, false);
             if (result.status == NetworkResponses.SUCCESS) {
                 try {
                     RudderServerConfig rudderServerConfig = new Gson().fromJson(result.response, RudderServerConfig.class);

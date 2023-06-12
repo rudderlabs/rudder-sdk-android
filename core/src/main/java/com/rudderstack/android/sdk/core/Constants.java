@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
  * Default value holder class
  * */
 class Constants {
+    public static final boolean DEFAULT_GZIP_ENABLED = true;
     // how often config should be fetched from the server (in hours) (2 hrs by default)
     static final int CONFIG_REFRESH_INTERVAL = 2; // probably change it to 1 hr, or every time
     // default base url or rudder-backend-server

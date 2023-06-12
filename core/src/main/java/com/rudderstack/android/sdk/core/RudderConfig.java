@@ -53,8 +53,8 @@ public class RudderConfig {
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
     private RudderDataResidencyServer rudderDataResidencyServer;
-    @Nullable
-    private RudderConsentFilter consentFilter;
+    @Nullable private RudderConsentFilter consentFilter;
+    private boolean isGzipEnabled = true;
 
     RudderConfig() {
         this(
@@ -78,7 +78,8 @@ public class RudderConfig {
                 null,
                 null,
                 Constants.DATA_RESIDENCY_SERVER,
-                null
+                null,
+                Constants.DEFAULT_GZIP_ENABLED
         );
     }
 
@@ -103,7 +104,8 @@ public class RudderConfig {
             List<RudderIntegration.Factory> factories,
             List<RudderIntegration.Factory> customFactories,
             RudderDataResidencyServer rudderDataResidencyServer,
-            @Nullable RudderConsentFilter consentFilter
+            @Nullable RudderConsentFilter consentFilter,
+            boolean isGzipEnabled
     ) {
         RudderLogger.init(logLevel);
 
@@ -188,6 +190,7 @@ public class RudderConfig {
 
         this.rudderDataResidencyServer = rudderDataResidencyServer;
         this.consentFilter = consentFilter;
+        this.isGzipEnabled = isGzipEnabled;
     }
 
     /**
@@ -318,6 +321,9 @@ public class RudderConfig {
         return customFactories;
     }
 
+    public boolean isGzipEnabled() {
+        return isGzipEnabled;
+    }
     /**
      * @return configPlaneUrl (Link to your hosted version of source-config)
      * @deprecated use getControlPlaneUrl()
@@ -438,6 +444,7 @@ public class RudderConfig {
         private List<RudderIntegration.Factory> customFactories = new ArrayList<>();
         private @Nullable RudderConsentFilter consentFilter = null;
         private @Nullable String dataPlaneUrl = null;
+        private boolean isGzipEnabled = Constants.DEFAULT_GZIP_ENABLED;
 
         /**
          * @param factory : Instance of RudderIntegration.Factory (for more information visit https://docs.rudderstack.com)
@@ -598,6 +605,17 @@ public class RudderConfig {
          */
         public Builder withSleepCount(int sleepCount) {
             this.sleepTimeout = sleepCount;
+            return this;
+        }
+
+        /**
+         * Enable/Disable Gzip.
+         * Gzip is enabled by default
+         * @param isGzip true to enable and vice-versa
+         * @return RudderConfig.Builder
+         */
+        public Builder withGzip(boolean isGzip) {
+            this.isGzipEnabled = isGzip;
             return this;
         }
 
@@ -772,7 +790,8 @@ public class RudderConfig {
                     this.factories,
                     this.customFactories,
                     this.rudderDataResidencyServer,
-                    consentFilter
+                    consentFilter,
+                    this.isGzipEnabled
             );
         }
     }

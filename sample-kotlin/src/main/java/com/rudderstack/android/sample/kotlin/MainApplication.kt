@@ -1,14 +1,12 @@
 package com.rudderstack.android.sample.kotlin
 
 import android.app.Application
-
 import androidx.work.Configuration
-
 import com.rudderstack.android.integration.braze.BrazeIntegrationFactory
+import com.rudderstack.android.integrations.amplitude.AmplitudeIntegrationFactory
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
-import com.rudderstack.android.integrations.amplitude.AmplitudeIntegrationFactory
 
 class MainApplication : Application(), Configuration.Provider {
     companion object {
@@ -26,7 +24,8 @@ class MainApplication : Application(), Configuration.Provider {
             this,
             WRITE_KEY,
             RudderConfig.Builder()
-               .withDataPlaneUrl(DATA_PLANE_URL)
+                .withDataPlaneUrl(DATA_PLANE_URL)
+                .withControlPlaneUrl(BuildConfig.CONTROL_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withFactory(BrazeIntegrationFactory.FACTORY)
                 .withFactory(AmplitudeIntegrationFactory.FACTORY)

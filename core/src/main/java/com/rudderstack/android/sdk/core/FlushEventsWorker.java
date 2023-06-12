@@ -25,7 +25,8 @@ public class FlushEventsWorker extends Worker {
         RudderLogger.init(flushConfig.getLogLevel());
 
         DBPersistentManager dbManager = DBPersistentManager.getInstance((Application) getApplicationContext());
-        RudderNetworkManager networkManager = new RudderNetworkManager(flushConfig.getAuthHeaderString(), flushConfig.getAnonymousHeaderString());
+        RudderNetworkManager networkManager = new RudderNetworkManager(flushConfig.getAuthHeaderString(), flushConfig.getAnonymousHeaderString(),
+                flushConfig.isGzipConfigured());
         if (dbManager == null) {
             RudderLogger.logWarn("FlushEventsWorker: doWork: Failed to initialize DBPersistentManager, couldn't flush the events, aborting the work");
             return Result.failure();

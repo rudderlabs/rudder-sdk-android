@@ -11,7 +11,12 @@ buildscript {
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
 //apply plugin: 'com.google.gms.google-services'
+Properties properties = new Properties()
+if (project.rootProject.file('sample-kotlin/local.properties').canRead()) {
+    properties.load(project.rootProject.file("sample-kotlin/local.properties").newDataInputStream())
+}
 
 Properties properties = new Properties()
 if (project.rootProject.file('sample-kotlin/local.properties').canRead()) {

@@ -15,6 +15,8 @@ public class RudderFlushConfig implements Serializable {
     int logLevel;
     @SerializedName("flushQueueSize")
     int flushQueueSize;
+    @SerializedName("isGzipConfigured")
+    private final boolean isGzipConfigured;
 
     public String getDataPlaneUrl() {
         return dataPlaneUrl;
@@ -36,11 +38,16 @@ public class RudderFlushConfig implements Serializable {
         return logLevel;
     }
 
-    public RudderFlushConfig(String dataPlaneUrl, String authHeaderString, String anonymousHeaderString, int flushQueueSize, int logLevel) {
+    public boolean isGzipConfigured() {
+        return isGzipConfigured;
+    }
+    public RudderFlushConfig(String dataPlaneUrl, String authHeaderString, String anonymousHeaderString, int flushQueueSize, int logLevel,
+                             boolean isGzipConfigured) {
         this.dataPlaneUrl = dataPlaneUrl;
         this.authHeaderString = authHeaderString;
         this.anonymousHeaderString = anonymousHeaderString;
         this.flushQueueSize = flushQueueSize;
         this.logLevel = logLevel;
+        this.isGzipConfigured = isGzipConfigured;
     }
 }
