@@ -1,21 +1,19 @@
 package com.rudderstack.android.sample.kotlin
 
 import android.app.Application
-
 import androidx.work.Configuration
-
 import com.rudderstack.android.integration.braze.BrazeIntegrationFactory
+import com.rudderstack.android.integrations.amplitude.AmplitudeIntegrationFactory
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
-import com.rudderstack.android.integrations.amplitude.AmplitudeIntegrationFactory
 
 class MainApplication : Application(), Configuration.Provider {
     companion object {
         var rudderClient: RudderClient? = null
         const val TAG = "MainApplication"
-        const val DATA_PLANE_URL = "https://rudderstachvf.dataplane.rudderstack.com"
-        const val WRITE_KEY = "1pTxG1Tqxr7FCrqIy7j0p28AENV"
+        const val DATA_PLANE_URL = BuildConfig.DATA_PLANE_URL
+        const val WRITE_KEY = BuildConfig.WRITE_KEY
     }
 
     override fun onCreate() {
@@ -26,7 +24,8 @@ class MainApplication : Application(), Configuration.Provider {
             this,
             WRITE_KEY,
             RudderConfig.Builder()
-               .withDataPlaneUrl(DATA_PLANE_URL)
+                .withDataPlaneUrl(DATA_PLANE_URL)
+                .withControlPlaneUrl(BuildConfig.CONTROL_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.VERBOSE)
                 .withFactory(BrazeIntegrationFactory.FACTORY)
                 .withFactory(AmplitudeIntegrationFactory.FACTORY)
