@@ -88,7 +88,7 @@ public class ApplicationLifeCycleManager {
             return;
         }
         RudderProperty rudderProperty = new RudderProperty().putValue("from_background", !isFirstLaunch.get());
-        if (isFirstLaunchValue) {
+        if (Boolean.TRUE.equals(isFirstLaunchValue)) {
             rudderProperty.putValue(VERSION, preferenceManager.getVersionName());
         }
         RudderMessage trackMessage = new RudderMessageBuilder()
