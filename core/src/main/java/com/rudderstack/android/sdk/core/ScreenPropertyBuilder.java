@@ -11,7 +11,7 @@ public class ScreenPropertyBuilder extends RudderPropertyBuilder {
     }
 
     private boolean isAutomatic = false;
-    ScreenPropertyBuilder isAtomatic(boolean isAutomatic) {
+    ScreenPropertyBuilder isAutomatic(boolean isAutomatic) {
         this.isAutomatic = isAutomatic;
         return this;
     }
