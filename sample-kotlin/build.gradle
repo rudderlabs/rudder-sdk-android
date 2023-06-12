@@ -18,11 +18,6 @@ if (project.rootProject.file('sample-kotlin/local.properties').canRead()) {
     properties.load(project.rootProject.file("sample-kotlin/local.properties").newDataInputStream())
 }
 
-Properties properties = new Properties()
-if (project.rootProject.file('sample-kotlin/local.properties').canRead()) {
-    properties.load(project.rootProject.file("sample-kotlin/local.properties").newDataInputStream())
-}
-
 android {
     compileSdkVersion 33
     defaultConfig {
