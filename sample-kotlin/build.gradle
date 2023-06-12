@@ -19,7 +19,7 @@ if (project.rootProject.file('sample-kotlin/local.properties').canRead()) {
 }
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
     defaultConfig {
         applicationId "com.example.testapp1mg"
         minSdkVersion 19
