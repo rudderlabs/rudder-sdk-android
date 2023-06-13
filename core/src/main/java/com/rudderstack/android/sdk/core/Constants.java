@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
  * Default value holder class
  * */
 class Constants {
+    public static final boolean DEFAULT_GZIP_ENABLED = true;
     // how often config should be fetched from the server (in hours) (2 hrs by default)
     static final int CONFIG_REFRESH_INTERVAL = 2; // probably change it to 1 hr, or every time
     // default base url or rudder-backend-server
@@ -30,6 +31,10 @@ class Constants {
     static final boolean AUTO_COLLECT_ADVERT_ID = false;
     // whether we should trackLifecycle events
     static final boolean TRACK_LIFECYCLE_EVENTS = true;
+    // whether we should use the new way of tracking life cycle events
+    static final boolean NEW_LIFECYCLE_EVENTS = false;
+    // whether we should track the deep link events or not
+    static final boolean TRACK_DEEP_LINKS = true;
     // whether we should record screen views automatically
     static final boolean RECORD_SCREEN_VIEWS = false;
     // minimum duration for inactivity is 0 milliseconds

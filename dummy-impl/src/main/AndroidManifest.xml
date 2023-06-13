@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.rudderstack.android.integration.dummy">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" android:required="false"/>
     <uses-permission android:name="android.permission.BLUETOOTH" android:required="false"/>

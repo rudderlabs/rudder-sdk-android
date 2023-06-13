@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.5.31'
+    ext.kotlin_version = '1.8.10'
     repositories {
         google()
         mavenCentral()
@@ -11,13 +11,15 @@ buildscript {
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-parcelize'
 //apply plugin: 'com.google.gms.google-services'
-
+Properties properties = new Properties()
+if (project.rootProject.file('sample-kotlin/local.properties').canRead()) {
+    properties.load(project.rootProject.file("sample-kotlin/local.properties").newDataInputStream())
+}
 
 android {
-    compileSdkVersion 32
-    buildToolsVersion "29.0.3"
+    compileSdkVersion 33
     defaultConfig {
         applicationId "com.example.testapp1mg"
         minSdkVersion 19
@@ -26,6 +28,9 @@ android {
         versionCode 4
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "DATA_PLANE_URL", properties.getProperty('dataplaneUrl', 'https://api.rudderstack.com'))
+        buildConfigField("String", "CONTROL_PLANE_URL", properties.getProperty('controlplaneUrl', "\"https://api.rudderstack.com\""))
+        buildConfigField("String", "WRITE_KEY", properties.getProperty('writeKey', ''))
     }
     buildTypes {
         release {
@@ -37,13 +42,15 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    namespace 'com.rudderstack.android.sample.kotlin'
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.8.0"))
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.core:core-ktx:1.3.0'
+    implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'com.google.android.material:material:1.1.0'
 
@@ -52,6 +59,10 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation "androidx.work:work-runtime:2.7.1"
 
+    // required for new life cycle methods
+    implementation 'androidx.lifecycle:lifecycle-process:2.6.1'
+    implementation 'androidx.lifecycle:lifecycle-common:2.6.1'
+
     // SSL Back-porting
     implementation 'com.google.android.gms:play-services-base:17.6.0'
 
@@ -59,7 +70,7 @@ dependencies {
     implementation 'com.rudderstack.android.integration:amplitude:1.+'
     implementation 'com.amplitude:android-sdk:2.25.2'
     implementation 'com.squareup.okhttp3:okhttp:4.9.2'
-    implementation 'com.google.android.gms:play-services-ads:18.3.0'
+    implementation 'com.google.android.gms:play-services-ads:22.1.0'
 
     // Braze Device Mode
     implementation 'com.rudderstack.android.integration:braze:1.0.6'
