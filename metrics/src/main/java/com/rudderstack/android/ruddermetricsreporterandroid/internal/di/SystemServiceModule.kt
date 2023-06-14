@@ -11,6 +11,5 @@ internal class  SystemServiceModule(
     contextModule: ContextModule
 ) : DependencyModule() {
 
-    val storageManager = contextModule.ctx.getStorageManager()
     val activityManager = contextModule.ctx.getActivityManager()
 }

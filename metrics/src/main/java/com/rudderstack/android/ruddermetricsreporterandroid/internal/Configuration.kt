@@ -1,26 +1,19 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
 import android.content.Context
-import com.rudderstack.android.ruddermetricsreporterandroid.BreadcrumbType
+import com.rudderstack.android.ruddermetricsreporterandroid.error.BreadcrumbType
 import com.rudderstack.android.ruddermetricsreporterandroid.Logger
-import java.io.File
-import java.util.*
-import kotlin.collections.HashSet
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.MetadataState
 
 class Configuration {
     @JvmField
     internal val metadataState: MetadataState = MetadataState()
 
-//    @JvmField
-//    internal val featureFlagState: FeatureFlagState = FeatureFlagState()
-
     var appVersion: String? = null
     var versionCode: Int? = 0
     var releaseStage: String? = null
-//    var sendThreads: ThreadSendPolicy = ThreadSendPolicy.ALWAYS
     var launchDurationMillis: Long = DEFAULT_LAUNCH_CRASH_THRESHOLD_MS
 
-    var autoTrackSessions: Boolean = true
     var sendLaunchCrashesSynchronously: Boolean = true
     var appType: String? = "android"
     var logger: Logger? = DebugLogger
@@ -28,7 +21,6 @@ class Configuration {
             field = value ?: DebugLogger
         }
 //    var delivery: Delivery? = null
-//    var endpoints: EndpointConfiguration = EndpointConfiguration()
     var maxBreadcrumbs: Int = DEFAULT_MAX_BREADCRUMBS
     var maxPersistedEvents: Int = DEFAULT_MAX_PERSISTED_EVENTS
     var maxPersistedSessions: Int = DEFAULT_MAX_PERSISTED_SESSIONS

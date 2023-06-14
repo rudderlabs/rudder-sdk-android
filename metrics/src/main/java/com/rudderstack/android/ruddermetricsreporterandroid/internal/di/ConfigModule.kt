@@ -1,8 +1,7 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal.di
 
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.Configuration
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.Connectivity
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.sanitiseConfiguration
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.sanitiseConfiguration
 
 /**
  * A dependency module which constructs the configuration object that is used to alter

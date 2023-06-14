@@ -1,6 +1,6 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
-import com.rudderstack.android.ruddermetricsreporterandroid.BreadcrumbType
+import com.rudderstack.android.ruddermetricsreporterandroid.error.BreadcrumbType
 
 sealed class StateEvent { // JvmField allows direct field access optimizations
 

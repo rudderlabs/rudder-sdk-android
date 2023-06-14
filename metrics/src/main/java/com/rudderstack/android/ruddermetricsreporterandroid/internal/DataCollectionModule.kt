@@ -5,6 +5,8 @@ import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigMo
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.DependencyModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.SystemServiceModule
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.MemoryTrimState
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.RootDetector
 
 /**
  * A dependency module which constructs the objects that collect data in Bugsnag. For example, this

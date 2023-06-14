@@ -7,7 +7,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
-import android.os.SystemClock
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.ImmutableConfig
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.MemoryTrimState
 
 /**
  * Collects various data on the application state

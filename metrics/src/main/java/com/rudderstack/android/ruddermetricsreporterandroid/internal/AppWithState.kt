@@ -1,5 +1,7 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.ImmutableConfig
+
 
 /**
  * Stateful information set by the notifier about your app can be found on this class. These values
