@@ -17,8 +17,10 @@ public class RudderServerDestination implements Serializable {
     RudderServerDestinationDefinition destinationDefinition;
     @SerializedName("config")
     Object destinationConfig;
-    @SerializedName("areTransformationsConnected")
-    boolean areTransformationsConnected;
+    @SerializedName("enableTransformationForDeviceMode")
+    boolean enableTransformationForDeviceMode;
+    @SerializedName("propagateEventsUntransformedOnError")
+    boolean propagateEventsUntransformedOnError;
 
     public String getDestinationId() {
         return destinationId;

@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Locale;
@@ -45,7 +46,8 @@ public class RudderNetworkManager {
         SUCCESS,
         ERROR,
         WRITE_KEY_ERROR,
-        RESOURCE_NOT_FOUND
+        RESOURCE_NOT_FOUND,
+        NETWORK_ISSUE
     }
 
     public enum RequestMethod {
@@ -114,6 +116,9 @@ public class RudderNetworkManager {
             }
 
             return getResult(httpConnection);
+        } catch (UnknownHostException ex) {
+            RudderLogger.logError(ex);
+            return new Result(NetworkResponses.NETWORK_ISSUE, -1, null, ex.getLocalizedMessage());
         } catch (Exception ex) {
             RudderLogger.logError(ex);
             return new Result(NetworkResponses.ERROR, -1, null, ex.getLocalizedMessage());

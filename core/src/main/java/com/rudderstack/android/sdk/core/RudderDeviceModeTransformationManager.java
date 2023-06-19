@@ -36,6 +36,8 @@ public class RudderDeviceModeTransformationManager {
     final ArrayList<String> messages = new ArrayList<>();
 
     private static final String TRANSFORMATION_ENDPOINT = "transform";
+    private static final int MAX_RETRIES = 2; // Maximum number of retries
+    private static final int MAX_DELAY = 1000; // Maximum delay in milliseconds
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
             .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
@@ -60,6 +62,8 @@ public class RudderDeviceModeTransformationManager {
                         long deviceModeEventsCount = dbManager.getDeviceModeRecordCount();
                         RudderLogger.logDebug("DeviceModeTransformationManager: DeviceModeTransformationProcessor: fetching device mode events to flush to transformation service");
                         if ((deviceModeSleepCount >= config.getSleepTimeOut() && deviceModeEventsCount > 0) || deviceModeEventsCount >= DMT_BATCH_SIZE) {
+                            int retryCount = 0;
+                            int delay;
                             do {
                                 messages.clear();
                                 messageIds.clear();
@@ -73,20 +77,24 @@ public class RudderDeviceModeTransformationManager {
                                 if (result.status == NetworkResponses.WRITE_KEY_ERROR) {
                                     RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Wrong WriteKey. Aborting");
                                     break;
+                                } else if (result.status == NetworkResponses.NETWORK_ISSUE) {
+                                    RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Network issue. Aborting");
+                                    break;
                                 } else if (result.status == NetworkResponses.ERROR) {
-                                    RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Retrying in " + Math.abs(deviceModeSleepCount - config.getSleepTimeOut()) + "s");
+                                    delay = Math.min((1 << retryCount) * 500 , MAX_DELAY); // Exponential backoff
+                                    if (retryCount++ == MAX_RETRIES) {
+                                        dumpOriginalEventsOnTransformationError(requestJson, true);
+                                        break;
+                                    }
+                                    RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Retrying in " + delay + "s");
                                     try {
-                                        Thread.sleep(Math.abs(deviceModeSleepCount - config.getSleepTimeOut()) * 1000L);
+                                        Thread.sleep(delay);
                                     } catch (Exception e) {
                                         RudderLogger.logError(e);
                                         Thread.currentThread().interrupt();
                                     }
                                 } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
-                                    deviceModeSleepCount = 0;
-                                    rudderDeviceModeManager.dumpOriginalEvents(gson.fromJson(requestJson, TransformationRequest.class));
-                                    RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: Updating status as DEVICE_MODE_PROCESSING DONE for events %s", messageIds));
-                                    dbManager.markDeviceModeDone(messageIds);
-                                    dbManager.runGcForEvents();
+                                    dumpOriginalEventsOnTransformationError(requestJson, false);
                                 } else {
                                     deviceModeSleepCount = 0;
                                     rudderDeviceModeManager.dumpTransformedEvents(gson.fromJson(result.response, TransformationResponse.class));
@@ -102,6 +110,14 @@ public class RudderDeviceModeTransformationManager {
                     }
                 }
                 , 1, 1, TimeUnit.SECONDS);
+    }
+
+    private void dumpOriginalEventsOnTransformationError(String requestJson, boolean isTransformationError) {
+        deviceModeSleepCount = 0;
+        rudderDeviceModeManager.dumpOriginalEvents(gson.fromJson(requestJson, TransformationRequest.class), isTransformationError);
+        RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: Updating status as DEVICE_MODE_PROCESSING DONE for events %s", messageIds));
+        dbManager.markDeviceModeDone(messageIds);
+        dbManager.runGcForEvents();
     }
 
     private static String createDeviceTransformPayload(List<Integer> rowIds, List<String> messages) {

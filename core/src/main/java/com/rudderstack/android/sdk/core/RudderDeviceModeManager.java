@@ -17,9 +17,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -48,6 +50,7 @@ public class RudderDeviceModeManager {
     private final RudderDataResidencyManager dataResidencyManager;
     // required for device mode transform
     private final Map<String, String> destinationsWithTransformationsEnabled = new HashMap<>(); //destination display name to destinationId
+    private final Set<String> excludeDestinationsOnTransformationError = new HashSet<>();
 
     static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
@@ -102,8 +105,12 @@ public class RudderDeviceModeManager {
 
     private void setDestinationsWithTransformationsEnabled(List<RudderServerDestination> destinations) {
         for (RudderServerDestination destination : destinations) {
-            if (destination.isDestinationEnabled && destination.areTransformationsConnected)
+            if (destination.isDestinationEnabled && destination.enableTransformationForDeviceMode) {
                 destinationsWithTransformationsEnabled.put(destination.destinationDefinition.displayName, destination.destinationId);
+                if (!destination.propagateEventsUntransformedOnError) {
+                    excludeDestinationsOnTransformationError.add(destination.destinationDefinition.displayName);
+                }
+            }
         }
     }
 
@@ -215,7 +222,7 @@ public class RudderDeviceModeManager {
             if (areFactoriesInitialized || fromHistory) {
                 List<String> eligibleDestinations = getEligibleDestinations(message);
 
-                List<String> destinationsWithTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.ENABLED, eligibleDestinations);
+                List<String> destinationsWithTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.ENABLED, eligibleDestinations, false);
                 if (destinationsWithTransformations.isEmpty()) {
                     RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Marking event with rowId %s as DEVICE_MODE_PROCESSING DONE as it has no device mode destinations with transformations", rowId));
                     dbPersistentManager.markDeviceModeDone(Arrays.asList(rowId));
@@ -225,7 +232,7 @@ public class RudderDeviceModeManager {
                     }
                 }
 
-                List<String> destinationsWithoutTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.DISABLED, eligibleDestinations);
+                List<String> destinationsWithoutTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.DISABLED, eligibleDestinations, false);
                 dumpEventToDestinations(message, destinationsWithoutTransformations, "makeFactoryDump");
             } else {
                 RudderLogger.logDebug("RudderDeviceModeManager: makeFactoryDump: factories are not initialized. dumping to replay queue");
@@ -254,12 +261,12 @@ public class RudderDeviceModeManager {
         }
     }
 
-    void dumpOriginalEvents(TransformationRequest transformationRequest) {
+    void dumpOriginalEvents(TransformationRequest transformationRequest, boolean isTransformationError) {
         if (transformationRequest.batch != null) {
             RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: dumpOriginalEvents: dumping back the original events to the transformations enabled destinations as the feature is disabled"));
             for (TransformationRequestEvent transformationRequestEvent : transformationRequest.batch) {
                 if (transformationRequestEvent != null && transformationRequestEvent.message != null) {
-                    List<String> destinationsWithTransformationsEnabled = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.ENABLED, transformationRequestEvent.message);
+                    List<String> destinationsWithTransformationsEnabled = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.ENABLED, transformationRequestEvent.message, isTransformationError);
                     dumpEventToDestinations(transformationRequestEvent.message, destinationsWithTransformationsEnabled, "dumpOriginalEvents");
                 }
             }
@@ -278,7 +285,8 @@ public class RudderDeviceModeManager {
             List<TransformedEvent> transformedEvents = transformedDestination.payload;
             sortTransformedEventBasedOnOrderNo(transformedEvents);
             for (TransformedEvent transformedEvent : transformedEvents) {
-                if (transformedEvent.status.equals("200")) {
+                boolean isTransformationError = !transformedEvent.status.equals("200");
+                if (isEventAllowedOnTransformationError(isTransformationError, destinationName)) {
                     dumpEventToDestinations(transformedEvent.event, Collections.singletonList(destinationName), "dumpTransformedEvents");
                 }
             }
@@ -344,19 +352,29 @@ public class RudderDeviceModeManager {
         return eligibleDestinations;
     }
 
-    private List<String> getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS status, RudderMessage message) {
-        return getDestinationsWithTransformationStatus(status, getEligibleDestinations(message));
+    private List<String> getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS status, RudderMessage message, boolean isTransformationError) {
+        return getDestinationsWithTransformationStatus(status, getEligibleDestinations(message), isTransformationError);
     }
 
-    private List<String> getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS transformationStatus, List<String> inputDestinations) {
+    private List<String> getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS transformationStatus, List<String> inputDestinations, boolean isTransformationError) {
         List<String> outputDestinations = new ArrayList<>();
         for (String inputDestination : inputDestinations) {
+            boolean isEventAllowedOnTransformationError = isEventAllowedOnTransformationError(isTransformationError, inputDestination);
             boolean isDestinationWithTransformation = destinationsWithTransformationsEnabled.containsKey(inputDestination);
-            if (isDestinationWithTransformation == transformationStatus.status) {
+            if (isEventAllowedOnTransformationError && isDestinationWithTransformation == transformationStatus.status) {
                 outputDestinations.add(inputDestination);
             }
         }
         return outputDestinations;
+    }
+
+    private boolean isEventAllowedOnTransformationError(boolean isTransformationError, String destinationName) {
+        boolean isEventAllowedOnTransformationError = !isTransformationError || !excludeDestinationsOnTransformationError.contains(destinationName);
+        if (isTransformationError && !isEventAllowedOnTransformationError) {
+            RudderLogger.logDebug("RudderDeviceModeManager: isEventAllowedOnTransformationError: " +
+                    "event is not allowed on transformation error. Ignoring the event for " + destinationName + " destination");
+        }
+        return isEventAllowedOnTransformationError;
     }
 
     /**
