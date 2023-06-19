@@ -19,6 +19,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.repository.models.SampleAutoGenEntity
 import com.rudderstack.android.repository.models.SampleEntity
 import com.rudderstack.android.repository.models.TestEntityFactory
+import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert
 import org.hamcrest.MatcherAssert.assertThat
@@ -42,7 +43,7 @@ class RudderDatabaseTest {
         RudderDatabase.init(
             ApplicationProvider.getApplicationContext(),
 //            RuntimeEnvironment.application,
-            "testDb", TestEntityFactory
+            "testDb", TestEntityFactory, executorService = TestExecutor()
         )
 
     }

@@ -31,23 +31,25 @@ sealed interface Counter<T> {
      * @param value The increment amount. MUST be non-negative.
      * @param attributes A set of attributes to associate with the value.
      */
-    fun add(value: T, attributes: Attributes?)
+    fun add(value: T, attributes: Labels)
 
 }
 
 class LongCounter internal constructor(
     override val name: String,
     _aggregatorHandle: AggregatorHandler,
-    _reservoir: Reservoir
 ) : Counter<Long> {
     private val aggregatorHandler = _aggregatorHandle
-    private val reservoir = _reservoir
     override fun add(value: Long) {
-        TODO("Not yet implemented")
+        with(aggregatorHandler) {
+            recordMetric(value)
+        }
     }
 
-    override fun add(value: Long, attributes: Attributes?) {
-        TODO("Not yet implemented")
+    override fun add(value: Long, attributes: Labels) {
+        with(aggregatorHandler) {
+            recordMetric(value, attributes)
+        }
     }
 
 }

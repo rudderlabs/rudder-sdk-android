@@ -25,20 +25,36 @@ import com.rudderstack.android.ruddermetricsreporterandroid.models.MetricEntity.
  * Both Gauge and Counter metrics have number as values
  *
  */
-@RudderEntity(tableName = TABLE_NAME, [
-    RudderField(RudderField.Type.INTEGER, MetricEntity.ColumnNames.ID,
-        primaryKey = true, isNullable = false, isAutoInc = true, isIndex = true),
-    RudderField(RudderField.Type.TEXT, MetricEntity.ColumnNames.NAME,
-        primaryKey = false, isNullable = false),
-    RudderField(RudderField.Type.INTEGER, MetricEntity.ColumnNames.VALUE,
-        primaryKey = false, isNullable = false),
-    RudderField(RudderField.Type.TEXT, MetricEntity.ColumnNames.TYPE,
-        primaryKey = false, isNullable = false),
-    RudderField(RudderField.Type.TEXT, MetricEntity.ColumnNames.LABEL,
-        primaryKey = false, isNullable = false, isIndex = true)
-])
-internal class MetricEntity(val name: String, val value: Long, val type: String, val label: String)
-    :Entity{
+@RudderEntity(
+    tableName = TABLE_NAME, [
+        RudderField(
+            RudderField.Type.INTEGER, MetricEntity.ColumnNames.ID,
+            primaryKey = false, isNullable = false, isAutoInc = true, isIndex = true
+        ),
+        RudderField(
+            RudderField.Type.TEXT, MetricEntity.ColumnNames.NAME,
+            primaryKey = true, isNullable = false
+        ),
+        RudderField(
+            RudderField.Type.INTEGER, MetricEntity.ColumnNames.VALUE,
+            primaryKey = false, isNullable = false
+        ),
+        RudderField(
+            RudderField.Type.TEXT, MetricEntity.ColumnNames.TYPE,
+            primaryKey = true, isNullable = false
+        ),
+        RudderField(
+            RudderField.Type.TEXT, MetricEntity.ColumnNames.LABEL,
+            primaryKey = true, isNullable = false, isIndex = true
+        )
+    ]
+)
+internal class MetricEntity(
+    val name: String,
+    val value: Long,
+    val type: String,
+    val label: String
+) : Entity {
     object ColumnNames {
         const val ID = "id"
         const val NAME = "name"
@@ -46,9 +62,11 @@ internal class MetricEntity(val name: String, val value: Long, val type: String,
         const val TYPE = "type"
         const val LABEL = "label"
     }
+
     private var _id: Long = UNINITIALIZED_ID
     val id: Long
         get() = _id
+
     override fun generateContentValues(): ContentValues {
         val contentValues = ContentValues()
         contentValues.put(ColumnNames.NAME, name)
@@ -59,11 +77,12 @@ internal class MetricEntity(val name: String, val value: Long, val type: String,
     }
 
     override fun getPrimaryKeyValues(): Array<String> {
-        return arrayOf(id.toString())
+        return arrayOf(name, type, label)
     }
 
-    companion object{
+    companion object {
         const val TABLE_NAME = "metrics"
+
         // This object is not generated from database.
         const val UNINITIALIZED_ID = -1L
 

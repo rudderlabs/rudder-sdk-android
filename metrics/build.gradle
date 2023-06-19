@@ -1,6 +1,6 @@
 plugins {
     id 'com.android.library'
-    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-android'
 }
 apply from : "$projectDir/../dependencies.gradle"
 android {
@@ -36,10 +36,17 @@ android {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation deps.kotlinCore
     compileOnly project(path: projects.json_rudder_adapter)
     compileOnly project(path: projects.repository)
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    testImplementation deps.androidXTestExtJunitKtx
+    testImplementation deps.androidXTestRules
+    testImplementation deps.androidXTest
+    testImplementation deps.hamcrest
+    testImplementation deps.mockito
+    testImplementation deps.awaitility
+    testImplementation deps.robolectric
+    androidTestImplementation deps.androidXTestExtJunitKtx
+    testImplementation project(path: projects.repository)
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }

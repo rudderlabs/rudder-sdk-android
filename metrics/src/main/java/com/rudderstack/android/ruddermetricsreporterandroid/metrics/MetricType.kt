@@ -16,5 +16,15 @@ package com.rudderstack.android.ruddermetricsreporterandroid.metrics
 
 enum class MetricType(val value: String) {
     COUNTER("counter"),
-    GAUGE("gauge"),
+    GAUGE("gauge"),;
+
+    companion object {
+        fun getType(type: String): MetricType {
+            return when (type) {
+                "counter" -> COUNTER
+                "gauge" -> GAUGE
+                else -> throw IllegalArgumentException("Invalid metric type $type")
+            }
+        }
+    }
 }

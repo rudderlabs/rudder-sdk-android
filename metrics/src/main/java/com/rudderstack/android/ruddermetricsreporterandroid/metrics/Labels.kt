@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 13/06/23, 7:42 pm Last modified: 13/06/23, 7:42 pm
+ * Creator: Debanjan Chatterjee on 13/06/23, 7:32 pm Last modified: 13/06/23, 7:32 pm
  * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,14 +14,23 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.metrics
 
-interface Reservoir {
-    fun set(cursor: Cursor)
-    fun getAllMetric(): List<Cursor>
-    fun getMetricsFirst(limit : Int): List<Cursor>
-    fun getCount(): Int
-    fun clear()
-    fun removeFirst(limit: Int)
+class Labels private constructor(attributesMap: Map<String, String>) {
+    private val _attributeMap = HashMap<String, String>()
+    val data: Map<String, String>
+        get() = _attributeMap
 
-    data class Cursor(val metric: String, val type: MetricType,
-                      val value: Any, val attributes: Attributes)
+    companion object {
+        fun of(vararg attributes: Pair<String, String>): Labels {
+            return of(mapOf(*attributes))
+        }
+
+        fun of(attributesMap: Map<String, String>): Labels {
+            return Labels(attributesMap)
+        }
+    }
+
+    init {
+        _attributeMap.putAll(attributesMap)
+    }
+
 }

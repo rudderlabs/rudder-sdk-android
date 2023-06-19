@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 13/06/23, 7:32 pm Last modified: 13/06/23, 7:32 pm
+ * Creator: Debanjan Chatterjee on 17/06/23, 5:17 pm Last modified: 17/06/23, 5:17 pm
  * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,23 +14,5 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.metrics
 
-class Attributes private constructor(attributesMap: Map<String, String>) {
-    private val _attributeMap = HashMap<String, String>()
-    val attributeMap: Map<String, String>
-        get() = _attributeMap
-
-    companion object {
-        fun of(vararg attributes: Pair<String, String>): Attributes {
-            return of(mapOf(*attributes))
-        }
-
-        fun of(attributesMap: Map<String, String>): Attributes {
-            return Attributes(attributesMap)
-        }
-    }
-
-    init {
-        _attributeMap.putAll(attributesMap)
-    }
-
-}
+data class MetricModel<T : Any>(val name: String, val type: MetricType,
+                                val value: T, val labels: Labels)

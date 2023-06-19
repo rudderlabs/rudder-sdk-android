@@ -225,7 +225,7 @@ internal class AndroidStorage(
             MessageEntity(it, jsonAdapter)
         }.apply {
             with(messageDao) {
-                insert {
+                insertWithDataCallback {
                     println("inserted $it")
                 }
             }

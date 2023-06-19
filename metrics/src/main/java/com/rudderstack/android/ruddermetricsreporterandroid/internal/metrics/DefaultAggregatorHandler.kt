@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 14/06/23, 3:30 pm Last modified: 14/06/23, 3:30 pm
+ * Creator: Debanjan Chatterjee on 17/06/23, 5:14 pm Last modified: 17/06/23, 5:14 pm
  * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,16 +14,30 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal.metrics
 
+import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.AggregatorHandler
+import com.rudderstack.android.ruddermetricsreporterandroid.metrics.Labels
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongGauge
+import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
+import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricType
 
-class DefaultAggregatorHandle : AggregatorHandler{
+class DefaultAggregatorHandler(private val reservoir: Reservoir) : AggregatorHandler {
     override fun LongCounter.recordMetric(value: Long) {
-        TODO("Not yet implemented")
+        recordMetric(value, Labels.of())
+    }
+
+    override fun LongCounter.recordMetric(value: Long, attributes: Labels) {
+        reservoir.insertOrIncrement(MetricModel(name, MetricType.COUNTER,
+            value, attributes))
     }
 
     override fun LongGauge.recordMetric(value: Long) {
-        TODO("Not yet implemented")
+        recordMetric(value, Labels.of())
+    }
+
+    override fun LongGauge.recordMetric(value: Long, attributes: Labels) {
+        reservoir.insertOrIncrement(MetricModel(name, MetricType.GAUGE,
+            value, attributes))
     }
 }

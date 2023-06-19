@@ -19,29 +19,66 @@ import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
 
-@RudderEntity(LabelEntity.TABLE_NAME, [
-    RudderField(RudderField.Type.INTEGER, LabelEntity.Columns.ID, primaryKey = true, isNullable = false,
-    isAutoInc = true, isIndex = true),
-    RudderField(RudderField.Type.TEXT, LabelEntity.Columns.NAME, ),
-    RudderField(RudderField.Type.INTEGER, LabelEntity.Columns.VALUE)
-])
-class LabelEntity : Entity {
-    object Columns{
-        const val ID = "id"
+@RudderEntity(
+    LabelEntity.TABLE_NAME, [
+        RudderField(
+            RudderField.Type.INTEGER,
+            LabelEntity.Columns.ID,
+            primaryKey = false,
+            isNullable = false,
+            isAutoInc = true,
+            isIndex = true
+        ),
+        RudderField(
+            RudderField.Type.TEXT,
+            LabelEntity.Columns.NAME,
+            primaryKey = true,
+            isNullable = false,
+            isUnique = true
+        ),
+        RudderField(
+            RudderField.Type.TEXT,
+            LabelEntity.Columns.VALUE,
+            primaryKey = true,
+            isNullable = false,
+            isUnique = true
+        )
+    ]
+)
+internal class LabelEntity(val name: String, val value: String) : Entity {
+    private var _id: Long = UNINITIALIZED_ID
+    val id: Long
+        get() = _id
+
+    object Columns {
+        const val ID = "label_id"
         const val NAME = "name"
         const val VALUE = "value"
     }
 
     override fun generateContentValues(): ContentValues {
-        TODO("Not yet implemented")
+        val contentValues = ContentValues()
+        contentValues.put(Columns.NAME, name)
+        contentValues.put(Columns.VALUE, value)
+        return contentValues
     }
 
     override fun getPrimaryKeyValues(): Array<String> {
-        TODO("Not yet implemented")
+        return arrayOf(name, value)
     }
 
-    companion object{
+    companion object {
         const val TABLE_NAME = "label"
+        const val UNINITIALIZED_ID = -1L
+
+        fun create(values: Map<String, Any?>): LabelEntity {
+            val id = values[Columns.ID] as Long
+            val name = values[Columns.NAME] as String
+            val value = values[Columns.VALUE] as String
+            return LabelEntity(name, value).also {
+                it._id = id
+            }
+        }
     }
 
 }

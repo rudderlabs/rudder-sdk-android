@@ -14,6 +14,24 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
-interface Storage {
+import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 
+interface Reservoir {
+    fun insertOrIncrement(metric: MetricModel<Number>)
+    fun getAllMetricsSync(): List<MetricModel<Long>>
+    fun getAllMetrics(callback : (List<MetricModel<Number>>) -> Unit)
+
+    fun getMetricsFirst(limit : Int): List<MetricModel<*>>
+    fun getCount(): Int
+    fun clear()
+    fun removeFirst(limit: Int)
+    interface DataListener {
+        /**
+         * Called whenever there's a change in data count
+         *
+         */
+        fun onDataChange()
+
+    }
+    //this is a combined response class
 }
