@@ -47,7 +47,7 @@ public class RudderNetworkManager {
         ERROR,
         WRITE_KEY_ERROR,
         RESOURCE_NOT_FOUND,
-        NETWORK_ISSUE
+        NETWORK_UNAVAILABLE
     }
 
     public enum RequestMethod {
@@ -118,7 +118,7 @@ public class RudderNetworkManager {
             return getResult(httpConnection);
         } catch (UnknownHostException ex) {
             RudderLogger.logError(ex);
-            return new Result(NetworkResponses.NETWORK_ISSUE, -1, null, ex.getLocalizedMessage());
+            return new Result(NetworkResponses.NETWORK_UNAVAILABLE, -1, null, ex.getLocalizedMessage());
         } catch (Exception ex) {
             RudderLogger.logError(ex);
             return new Result(NetworkResponses.ERROR, -1, null, ex.getLocalizedMessage());

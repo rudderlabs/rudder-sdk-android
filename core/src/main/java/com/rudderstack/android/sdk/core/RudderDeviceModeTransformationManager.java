@@ -77,13 +77,15 @@ public class RudderDeviceModeTransformationManager {
                                 if (result.status == NetworkResponses.WRITE_KEY_ERROR) {
                                     RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Wrong WriteKey. Aborting");
                                     break;
-                                } else if (result.status == NetworkResponses.NETWORK_ISSUE) {
-                                    RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Network issue. Aborting");
+                                } else if (result.status == NetworkResponses.NETWORK_UNAVAILABLE) {
+                                    RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Network unavailable. Aborting");
                                     break;
                                 } else if (result.status == NetworkResponses.ERROR) {
                                     delay = Math.min((1 << retryCount) * 500 , MAX_DELAY); // Exponential backoff
                                     if (retryCount++ == MAX_RETRIES) {
-                                        dumpOriginalEventsOnTransformationError(requestJson, true);
+                                        deviceModeSleepCount = 0;
+                                        rudderDeviceModeManager.dumpOriginalEvents(gson.fromJson(requestJson, TransformationRequest.class), true);
+                                        completeDeviceModeEventProcessing();
                                         break;
                                     }
                                     RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Retrying in " + delay + "s");
@@ -94,13 +96,13 @@ public class RudderDeviceModeTransformationManager {
                                         Thread.currentThread().interrupt();
                                     }
                                 } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
-                                    dumpOriginalEventsOnTransformationError(requestJson, false);
+                                    deviceModeSleepCount = 0;
+                                    rudderDeviceModeManager.dumpOriginalEvents(gson.fromJson(requestJson, TransformationRequest.class), false);
+                                    completeDeviceModeEventProcessing();
                                 } else {
                                     deviceModeSleepCount = 0;
                                     rudderDeviceModeManager.dumpTransformedEvents(gson.fromJson(result.response, TransformationResponse.class));
-                                    RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: Updating status as DEVICE_MODE_PROCESSING DONE for events %s", messageIds));
-                                    dbManager.markDeviceModeDone(messageIds);
-                                    dbManager.runGcForEvents();
+                                    completeDeviceModeEventProcessing();
                                 }
                                 RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: SleepCount: %d", deviceModeSleepCount));
                             } while (dbManager.getDeviceModeRecordCount() > 0);
@@ -112,9 +114,7 @@ public class RudderDeviceModeTransformationManager {
                 , 1, 1, TimeUnit.SECONDS);
     }
 
-    private void dumpOriginalEventsOnTransformationError(String requestJson, boolean isTransformationError) {
-        deviceModeSleepCount = 0;
-        rudderDeviceModeManager.dumpOriginalEvents(gson.fromJson(requestJson, TransformationRequest.class), isTransformationError);
+    private void completeDeviceModeEventProcessing() {
         RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: Updating status as DEVICE_MODE_PROCESSING DONE for events %s", messageIds));
         dbManager.markDeviceModeDone(messageIds);
         dbManager.runGcForEvents();
