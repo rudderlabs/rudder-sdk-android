@@ -269,8 +269,12 @@ public class RudderDeviceModeManager {
             for (TransformationRequestEvent transformationRequestEvent : transformationRequest.batch) {
                 if (transformationRequestEvent != null && transformationRequestEvent.message != null) {
                     List<String> destinationsWithTransformationsEnabled = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.ENABLED, transformationRequestEvent.message);
-                    List<String> destinationsAcceptingEventsOnTransformationError = getDestinationsAcceptingEventsOnTransformationError(onTransformationError, destinationsWithTransformationsEnabled);
-                    dumpEventToDestinations(transformationRequestEvent.message, destinationsAcceptingEventsOnTransformationError, "dumpOriginalEvents");
+                    if (onTransformationError) {
+                        List<String> destinationsAcceptingEventsOnTransformationError = getDestinationsAcceptingEventsOnTransformationError(destinationsWithTransformationsEnabled);
+                        dumpEventToDestinations(transformationRequestEvent.message, destinationsAcceptingEventsOnTransformationError, "dumpOriginalEvents");
+                    } else {
+                        dumpEventToDestinations(transformationRequestEvent.message, destinationsWithTransformationsEnabled, "dumpOriginalEvents");
+                    }
                 }
             }
         }
@@ -288,18 +292,20 @@ public class RudderDeviceModeManager {
             List<TransformedEvent> transformedEvents = transformedDestination.payload;
             sortTransformedEventBasedOnOrderNo(transformedEvents);
             for (TransformedEvent transformedEvent : transformedEvents) {
-                boolean isTransformationError = !transformedEvent.status.equals("200");
-                List<String> destinationsAcceptingEventsOnTransformationError = getDestinationsAcceptingEventsOnTransformationError(
-                        isTransformationError, Collections.singletonList(destinationName));
-                dumpEventToDestinations(transformedEvent.event, destinationsAcceptingEventsOnTransformationError, "dumpTransformedEvents");
+                boolean onTransformationError = !transformedEvent.status.equals("200");
+                if (onTransformationError && destinationsExcludedOnTransformationError.contains(destinationName)) {
+                    RudderLogger.logDebug("RudderDeviceModeManager: dumpTransformedEvents: event is not allowed on transformation error. Ignoring the event for " + destinationName + " destination");
+                    continue;
+                }
+                dumpEventToDestinations(transformedEvent.event, Collections.singletonList(destinationName), "dumpTransformedEvents");
             }
         }
     }
 
-    private List<String> getDestinationsAcceptingEventsOnTransformationError(boolean onTransformationError, List<String> destinationsWithTransformationsEnabled) {
+    private List<String> getDestinationsAcceptingEventsOnTransformationError(List<String> destinationsWithTransformationsEnabled) {
         List<String> destinationsAcceptingEventsOnTransformationError = new ArrayList<>();
         for (String destinationName : destinationsWithTransformationsEnabled) {
-            if (onTransformationError && destinationsExcludedOnTransformationError.contains(destinationName)) {
+            if (destinationsExcludedOnTransformationError.contains(destinationName)) {
                 RudderLogger.logDebug("RudderDeviceModeManager: getDestinationsAcceptingEventsOnTransformationError: " +
                         "event is not allowed on transformation error. Ignoring the event for " + destinationName + " destination");
                 continue;
