@@ -136,7 +136,6 @@ class DBPersistentManager extends SQLiteOpenHelper {
             }
             addMessageToHandlerThread(msg);
         }
-
     }
 
     private Message createOsMessageFromJson(String messageJson, EventInsertionCallback callback) {
@@ -386,31 +385,26 @@ class DBPersistentManager extends SQLiteOpenHelper {
        save them to the sqlite db sequentially.
      */
     void startHandlerThread() {
-        // Need to perform db operations on a separate thread to support strict mode.
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    synchronized (DBPersistentManager.QUEUE_LOCK) {
-                        SQLiteDatabase database = DBPersistentManager.this.getWritableDatabase();
-                        dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", database);
-                        dbInsertionHandlerThread.start();
-                        for (Message msg : queue) {
-                            addMessageToHandlerThread(msg);
-                        }
+        Runnable runnable = () -> {
+            try {
+                synchronized (DBPersistentManager.QUEUE_LOCK) {
+                    SQLiteDatabase database = DBPersistentManager.this.getWritableDatabase();
+                    dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", database);
+                    dbInsertionHandlerThread.start();
+                    for (Message msg : queue) {
+                        addMessageToHandlerThread(msg);
                     }
-                } catch (SQLiteDatabaseCorruptException ex) {
-                    RudderLogger.logError(ex);
-                } catch (ConcurrentModificationException ex) {
-                    RudderLogger.logError(ex);
-                } catch (NullPointerException ex) {
-                    RudderLogger.logError(ex);
                 }
+            } catch (SQLiteDatabaseCorruptException ex) {
+                RudderLogger.logError(ex);
+            } catch (ConcurrentModificationException ex) {
+                RudderLogger.logError(ex);
+            } catch (NullPointerException ex) {
+                RudderLogger.logError(ex);
             }
         };
-        Future future = executor.submit(runnable);
+        // Need to perform db operations on a separate thread to support strict mode.
+        Future future = Executors.newSingleThreadExecutor().submit(runnable);
         try {
             // todo: shall we add some timeout here ?
             future.get();
@@ -466,11 +460,12 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     private boolean checkIfStatusColumnExists(SQLiteDatabase database) {
         String checkIfStatusExistsSqlString = "PRAGMA table_info(events)";
+        Cursor allRows = null;
         try {
             // get readable database instance
             if (database.isOpen()) {
-                Cursor allRows = database.rawQuery(checkIfStatusExistsSqlString, null);
-                if (allRows.moveToFirst()) {
+                allRows = database.rawQuery(checkIfStatusExistsSqlString, null);
+                if (allRows != null && allRows.moveToFirst()) {
                     do {
                         int index = allRows.getColumnIndex("name");
                         if (index > -1) {
@@ -480,24 +475,48 @@ class DBPersistentManager extends SQLiteOpenHelper {
                         }
                     } while (allRows.moveToNext());
                 }
-                allRows.close();
             } else {
                 RudderLogger.logError("DBPersistentManager: checkIfStatusColumnExists: database is not readable, hence we cannot check the existence of status column");
             }
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError("DBPersistentManager: checkIfStatusColumnExists: Exception while checking the presence of status column due to " + ex.getLocalizedMessage());
+        } finally {
+            if (allRows != null) {
+                allRows.close();
+            }
         }
         return false;
     }
 
     void checkForMigrations() {
-        SQLiteDatabase database = getWritableDatabase();
-        if (!checkIfStatusColumnExists(database)) {
-            RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column doesn't exist in the events table, hence performing the migration now");
-            performMigration(database);
-            return;
+        Runnable runnable = () -> {
+            try {
+                SQLiteDatabase database = getWritableDatabase();
+                if (!checkIfStatusColumnExists(database)) {
+                    RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column doesn't exist in the events table, hence performing the migration now");
+                    performMigration(database);
+                    return;
+                }
+                RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column exists in the table already, hence no migration required");
+            } catch (SQLiteDatabaseCorruptException ex) {
+                RudderLogger.logError("DBPersistentManager: checkForMigrations: " + ex.getLocalizedMessage());
+            } catch (ConcurrentModificationException ex) {
+                RudderLogger.logError("DBPersistentManager: checkForMigrations: " + ex.getLocalizedMessage());
+            } catch (NullPointerException ex) {
+                RudderLogger.logError("DBPersistentManager: checkForMigrations: " + ex.getLocalizedMessage());
+            }
+        };
+        // Need to perform db operations on a separate thread to support strict mode.
+        Future future = Executors.newSingleThreadExecutor().submit(runnable);
+        try {
+            // todo: shall we add some timeout here ?
+            future.get();
+        } catch (InterruptedException e) {
+            RudderLogger.logError("DBPersistentManager: checkForMigrations: Exception while checking for migrations due to " + e.getLocalizedMessage());
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            RudderLogger.logError("DBPersistentManager: checkForMigrations: Exception while checking for migrations due to " + e.getLocalizedMessage());
         }
-        RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column exists in the table already, hence no migration required");
     }
 
     private void performMigration(SQLiteDatabase database) {
