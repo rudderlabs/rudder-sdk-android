@@ -212,6 +212,8 @@ public class RudderNetworkManager {
         while ((res = bis.read()) != -1) {
             baos.write((byte) res);
         }
+        bis.close();
+        baos.close();
         return baos.toString();
     }
 
