@@ -136,7 +136,7 @@ class CustomEntityRudderDatabaseTest {
         with(entityModelDao) {
             val rowIds = sampleModelEntitiesToSave.insertSync()
             MatcherAssert.assertThat(rowIds, Matchers.iterableWithSize(4))
-            println("inserted: ${rowIds?.size}")
+//            println("inserted: ${rowIds?.size}")
             val savedItems = getAllSync()?.map {
                 it.model.name
             }

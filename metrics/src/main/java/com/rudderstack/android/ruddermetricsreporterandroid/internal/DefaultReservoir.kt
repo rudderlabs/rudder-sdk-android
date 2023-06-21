@@ -15,6 +15,7 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import com.rudderstack.android.repository.Dao
 import com.rudderstack.android.repository.RudderDatabase
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
@@ -51,109 +52,178 @@ class DefaultReservoir(
         metric: MetricModel<Number>
     ) {
         val labels = metric.labels.data.map { LabelEntity(it.key, it.value) }
-        with(labelDao) {
-            println(labels.joinToString(",") {
-                "${it.name} to ${it.value}"
-            })
-            labels.insertWithDataCallback(conflictResolutionStrategy = Dao.ConflictResolutionStrategy.CONFLICT_IGNORE) { insertedData: Map<Long, LabelEntity?> ->
-                if (insertedData.isEmpty()) return@insertWithDataCallback
-                println("inserted ids: ${insertedData.keys.joinToString(",")}")
-                //callback is done inside executor
-                var insertedIds = listOf<Long>()
-                insertedData.onEachIndexed  { index, insertedEntry ->
-                    val rowId = insertedEntry.key
-                    val entry = insertedEntry.value
-                    if (rowId == -1L || entry == null) {
-                        println("fetching id for ${labels[index].name}")
-                        val name = labels[index].name
-                        val valueOfLabel = labels[index].value
-                        val idOfAlreadyCreatedLabel = runGetQuerySync(
-                            selection = "${LabelEntity.Columns.NAME} = ? AND ${LabelEntity.Columns.VALUE} = ?",
-                            selectionArgs = arrayOf(name, valueOfLabel)
-                        )?.firstOrNull()?.id
-                        if (idOfAlreadyCreatedLabel != null) {
-                            println("found: $idOfAlreadyCreatedLabel")
-                            insertedIds = insertedIds + idOfAlreadyCreatedLabel
-                        }
-                    } else insertedIds = insertedIds + entry.id
-                }
+        if (labels.isEmpty()) {
+            insertCounterWithLabelMask(metric, "")
+            return
+        }
 
-                println("inserted =  $insertedIds")
+        with(labelDao) {
+            labels.insertWithDataCallback(conflictResolutionStrategy =
+            Dao.ConflictResolutionStrategy.CONFLICT_IGNORE) { rowIds: List<Long>,
+                                                              insertedData: List<LabelEntity?> ->
+                if (insertedData.isEmpty()) {
+                    insertCounterWithLabelMask(metric, "")
+                    return@insertWithDataCallback
+                }
+                //callback is done inside executor
+                val insertedIds = getInsertedLabelIds(rowIds, insertedData, labels)
+
                 val labelMaskForMetric = if (insertedIds.isEmpty()) "" else run {
                     val maxIdInserted = insertedIds.max()
                     val useBigDec = (maxIdInserted >= 63)
                     if (useBigDec) {
-                        var labelIdsMask = BigDecimal.ZERO
-                        insertedIds.forEach { id ->
-                            labelIdsMask += BigDecimal(2).pow(id.toInt())
-                        }
-                        labelIdsMask.toString()
+                        getLabelMaskForMetricWithBigDec(insertedIds)
                     } else {
-                        var labelIdsMask = 0L
-                        insertedIds.forEach { id ->
-                            labelIdsMask += 2.0.pow(id.toDouble()).toLong()
+                        getLabelMaskForMetricWithLong(insertedIds).also {
+                            println("label mask for metric ${metric.name} and labels $insertedIds is $it")
                         }
-                        labelIdsMask.toString()
                     }
                 }
-                val metricEntity = MetricEntity(
-                    metric.name,
-                    metric.value.toLong(),
-                    MetricType.COUNTER.value,
-                    labelMaskForMetric
-                )
-                with(metricDao) {
-                    val insertedRowId = listOf(metricEntity).insertSync(
-                        conflictResolutionStrategy =
-                        Dao.ConflictResolutionStrategy.CONFLICT_IGNORE
-                    )?.firstOrNull()
-                    if (insertedRowId == -1L) {
-                        this.execSqlSync(
-                            "UPDATE " + MetricEntity.TABLE_NAME + " SET " +
-                                    MetricEntity.ColumnNames.VALUE + " = (" + MetricEntity.ColumnNames.VALUE + " + " + metric.value +
-                                    ") WHERE " + MetricEntity.ColumnNames.NAME + "=" + metric.name
-                                    + " AND " + MetricEntity.ColumnNames.LABEL + "=" + labelMaskForMetric
-                                    + "AND " + MetricEntity.ColumnNames.TYPE + "=" + MetricType.COUNTER.value
-                                    + ";"
-                        )
-                    }
-                }
+                insertCounterWithLabelMask(metric, labelMaskForMetric)
                 _storageListeners.forEach { it.onDataChange() }
             }
         }
 
     }
 
-    override fun getMetricsFirst(limit: Int): List<MetricModel<*>> {
-        TODO("Not yet implemented")
+    private fun getLabelMaskForMetricWithLong(insertedIds: List<Long>): String {
+        var labelIdsMask = 0L
+        insertedIds.forEach { id ->
+            labelIdsMask += 2.0.pow(id.toDouble()).toLong()
+        }
+        return labelIdsMask.toString()
     }
 
-    override fun getCount(): Int {
-        TODO("Not yet implemented")
+    private fun getLabelMaskForMetricWithBigDec(insertedIds: List<Long>): String {
+        var labelIdsMask = BigDecimal.ZERO
+        insertedIds.forEach { id ->
+            labelIdsMask += BigDecimal(2).pow(id.toInt())
+        }
+        return labelIdsMask.toString()
+    }
+
+    private fun Dao<LabelEntity>.getInsertedLabelIds(
+        rowIds: List<Long>,
+        insertedData: List<LabelEntity?>,
+        queryData: List<LabelEntity>
+    ): List<Long> {
+        var insertedIds = listOf<Long>()
+        rowIds.onEachIndexed { index, rowId ->
+            val entry = insertedData[index]
+            if (rowId == -1L || entry == null) {
+                val name = queryData[index].name
+                val valueOfLabel = queryData[index].value
+                val idOfAlreadyCreatedLabel = runGetQuerySync(
+                    selection = "${LabelEntity.Columns.NAME} = ? AND ${LabelEntity.Columns.VALUE} = ?",
+                    selectionArgs = arrayOf(name, valueOfLabel)
+                )?.firstOrNull()?.id
+                if (idOfAlreadyCreatedLabel != null) {
+                    insertedIds = insertedIds + idOfAlreadyCreatedLabel
+                }
+            } else insertedIds = insertedIds + entry.id
+        }
+        return insertedIds
+    }
+
+    private fun insertCounterWithLabelMask(
+        metric: MetricModel<Number>,
+        labelMaskForMetric: String
+    ) {
+        val metricEntity = MetricEntity(
+            metric.name,
+            metric.value.toLong(),
+            MetricType.COUNTER.value,
+            labelMaskForMetric
+        )
+        with(metricDao) {
+            val insertedRowId = listOf(metricEntity).insertSync(
+                conflictResolutionStrategy =
+                Dao.ConflictResolutionStrategy.CONFLICT_IGNORE
+            )?.firstOrNull()
+            if (insertedRowId == -1L) {
+                println("updating metric ${metric.name} label mask $labelMaskForMetric")
+                this.execSqlSync(
+                    "UPDATE " + MetricEntity.TABLE_NAME + " SET " +
+                            MetricEntity.ColumnNames.VALUE + " = (" + MetricEntity.ColumnNames.VALUE + " + " + metric.value +
+                            ") WHERE " + MetricEntity.ColumnNames.NAME + "='" + metric.name + "'"
+                            + " AND " + MetricEntity.ColumnNames.LABEL + "='" + labelMaskForMetric + "'"
+                            + " AND " + MetricEntity.ColumnNames.TYPE + "='" + MetricType.COUNTER.value + "'"
+                            + ";"
+                )
+            }else{
+                println("inserting metric ${metric.name} label mask $labelMaskForMetric")
+            }
+        }
+    }
+
+    override fun getMetricsFirstSync(limit: Long): List<MetricModel<*>> {
+        with(metricDao) {
+            val metricEntities = runGetQuerySync(limit = limit.toString())
+            return metricEntities?.map {
+                val labels = getLabelsForMetric(it)
+                MetricModel(it.name, MetricType.getType(it.type), it.value, labels)
+            } ?: listOf()
+        }
+    }
+
+    override fun getMetricsFirst(limit: Long, callback: (List<MetricModel<Number>>) -> Unit) {
+        with(metricDao) {
+            runGetQuery(limit = limit.toString()) { metricEntities ->
+                callback(metricEntities.map {
+                    val labels = getLabelsForMetric(it)
+                    MetricModel(it.name, MetricType.getType(it.type), it.value, labels)
+                })
+            }
+        }
+    }
+
+    override fun getMetricsCount(callback: (Long) -> Unit) {
+        metricDao.getCount(callback = callback)
     }
 
     override fun clear() {
-        TODO("Not yet implemented")
+        metricDao.delete(null, null)
+        labelDao.delete(null, null)
     }
 
-    override fun removeFirst(limit: Int) {
-        TODO("Not yet implemented")
+    override fun resetFirst(limit: Long) {
+        with(metricDao) {
+            execSql(
+                "UPDATE ${MetricEntity.TABLE_NAME} SET ${MetricEntity.ColumnNames.VALUE}=0" +
+                        " WHERE ${MetricEntity.ColumnNames.ID} IN (SELECT ${MetricEntity.ColumnNames.ID} " +
+                        "FROM ${MetricEntity.TABLE_NAME} ORDER BY ${MetricEntity.ColumnNames.ID} ASC LIMIT $limit)"
+            )
+        }
     }
 
-    override fun getAllMetrics(callback: (List<MetricModel<Number>>) -> Unit) {
-        TODO("Not yet implemented")
+    override fun reset() {
+        with(metricDao) {
+            execSql("UPDATE ${MetricEntity.TABLE_NAME} SET ${MetricEntity.ColumnNames.VALUE}=0")
+        }
     }
 
-    override fun getAllMetricsSync(): List<MetricModel<Long>> {
+    override fun getAllMetrics(callback: (List<MetricModel<out Number>>) -> Unit) {
         with(metricDao) {
             getAll { metricEntities ->
                 metricEntities.map {
                     val labels = getLabelsForMetric(it)
                     MetricModel(it.name, MetricType.getType(it.type), it.value, labels)
+                }.let {
+                    callback(it)
                 }
             }
         }
-        return listOf()
+    }
+
+    override fun getAllMetricsSync(): List<MetricModel<Long>> {
+
+        return with(metricDao) {
+            val metricEntities = getAllSync()
+            metricEntities?.map {
+                val labels = getLabelsForMetric(it)
+                MetricModel(it.name, MetricType.getType(it.type), it.value, labels)
+            }
+        } ?: listOf()
     }
 
     private fun getLabelsForMetric(metricEntity: MetricEntity): Labels {
@@ -175,7 +245,7 @@ class DefaultReservoir(
             while (labels > 0) {
                 val isPositionToBeTaken = labels and 1
                 if (isPositionToBeTaken > 0) {
-                    labelIds.add(2.0.pow(pos).toLong())
+                    labelIds.add(pos.toLong())
                 }
                 ++pos
                 labels = labels shr 1
@@ -198,8 +268,7 @@ class DefaultReservoir(
         }
         with(labelDao) {
             runGetQuerySync(
-                selection = "${LabelEntity.Columns.ID} IN (?)",
-                selectionArgs = arrayOf(labelIds.joinToString(","))
+                selection = "${LabelEntity.Columns.ID} IN (${labelIds.joinToString(",") { "'${it}'" }})"
             )?.map {
                 it.name to it.value
             }?.toTypedArray()?.let {
@@ -207,6 +276,11 @@ class DefaultReservoir(
             }
         }
         return Labels.of()
+    }
+
+    @VisibleForTesting
+    fun shutDownDatabase() {
+        RudderDatabase.shutDown()
     }
 
     companion object {

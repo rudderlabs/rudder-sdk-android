@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 14/06/23, 5:02 pm Last modified: 14/06/23, 5:02 pm
+ * Creator: Debanjan Chatterjee on 19/06/23, 7:57 pm Last modified: 19/06/23, 7:57 pm
  * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,26 +14,9 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
+import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 
-interface Reservoir {
-    fun insertOrIncrement(metric: MetricModel<Number>)
-    fun getAllMetricsSync(): List<MetricModel<Long>>
-    fun getAllMetrics(callback : (List<MetricModel<out Number>>) -> Unit)
-
-    fun getMetricsFirstSync(limit : Long): List<MetricModel<*>>
-    fun getMetricsFirst(limit : Long, callback : (List<MetricModel<Number>>) -> Unit)
-    fun getMetricsCount(callback : (Long) -> Unit)
-    fun clear()
-    fun resetFirst(limit: Long)
-    fun reset()
-    interface DataListener {
-        /**
-         * Called whenever there's a change in data count
-         *
-         */
-        fun onDataChange()
-
-    }
-    //this is a combined response class
+interface Uploader {
+    fun upload(metrics: List<MetricModel<Number>>, error: ErrorModel)
 }

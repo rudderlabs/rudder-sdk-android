@@ -30,7 +30,6 @@ class ErrorEvent : MetadataAware {
         severityReason: SeverityReason,
         data: Metadata = Metadata()
     ) : this(
-        config.logger,
         mutableListOf(),
         config.discardClasses.toSet(),
         when (originalError) {
@@ -44,7 +43,6 @@ class ErrorEvent : MetadataAware {
     )
 
     internal constructor(
-        logger: Logger,
         breadcrumbs: MutableList<Breadcrumb> = mutableListOf(),
         discardClasses: Set<String> = setOf(),
         errors: MutableList<Error> = mutableListOf(),
@@ -55,7 +53,6 @@ class ErrorEvent : MetadataAware {
             SeverityReason.REASON_HANDLED_EXCEPTION
         ),
     ) {
-        this.logger = logger
         this.breadcrumbs = breadcrumbs
         this.discardClasses = discardClasses
         this.errors = errors
@@ -68,7 +65,6 @@ class ErrorEvent : MetadataAware {
     val originalError: Throwable?
     internal var severityReason: SeverityReason
 
-    val logger: Logger
     val metadata: Metadata
     private val discardClasses: Set<String>
     internal var projectPackages: Collection<String>

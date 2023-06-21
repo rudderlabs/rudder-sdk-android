@@ -33,4 +33,15 @@ class Labels private constructor(attributesMap: Map<String, String>) {
         _attributeMap.putAll(attributesMap)
     }
 
+    override fun equals(other: Any?): Boolean {
+        return other is Labels && other._attributeMap == _attributeMap
+    }
+
+    override fun hashCode(): Int {
+        return _attributeMap.hashCode()
+    }
+
+    override fun toString(): String {
+        return "Labels{_attributeMap=$_attributeMap}"
+    }
 }
