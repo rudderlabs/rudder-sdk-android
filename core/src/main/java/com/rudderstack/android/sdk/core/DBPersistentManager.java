@@ -20,8 +20,6 @@ import com.rudderstack.android.sdk.core.util.Utils;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
-import com.rudderstack.android.sdk.core.util.Utils;
-
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.Collections;
@@ -31,10 +29,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
@@ -86,6 +80,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
     private static final String DATABASE_COPY_EVENTS_FROM_OLD_TO_NEW = "INSERT INTO " + EVENTS_TABLE_NAME + "(" + DOWNGRADED_EVENTS_TABLE_COLUMNS + ") SELECT " + DOWNGRADED_EVENTS_TABLE_COLUMNS + " FROM " + OLD_EVENTS_TABLE;
     // command to drop the old events table
     private static final String DATABASE_DROP_OLD_EVENTS_TABLE = "DROP TABLE " + OLD_EVENTS_TABLE;
+    public static final String DBPERSISTENT_MANAGER_CHECK_FOR_MIGRATIONS_TAG = "DBPersistentManager: checkForMigrations: ";
 
     DBInsertionHandlerThread dbInsertionHandlerThread;
     final Queue<Message> queue = new LinkedList<>();
@@ -404,7 +399,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
             }
         };
         // Need to perform db operations on a separate thread to support strict mode.
-        Future future = Executors.newSingleThreadExecutor().submit(runnable);
+        Future<?> future = Executors.newSingleThreadExecutor().submit(runnable);
         try {
             // todo: shall we add some timeout here ?
             future.get();
@@ -499,15 +494,15 @@ class DBPersistentManager extends SQLiteOpenHelper {
                 }
                 RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column exists in the table already, hence no migration required");
             } catch (SQLiteDatabaseCorruptException ex) {
-                RudderLogger.logError("DBPersistentManager: checkForMigrations: " + ex.getLocalizedMessage());
+                RudderLogger.logError(DBPERSISTENT_MANAGER_CHECK_FOR_MIGRATIONS_TAG + ex.getLocalizedMessage());
             } catch (ConcurrentModificationException ex) {
-                RudderLogger.logError("DBPersistentManager: checkForMigrations: " + ex.getLocalizedMessage());
+                RudderLogger.logError(DBPERSISTENT_MANAGER_CHECK_FOR_MIGRATIONS_TAG + ex.getLocalizedMessage());
             } catch (NullPointerException ex) {
-                RudderLogger.logError("DBPersistentManager: checkForMigrations: " + ex.getLocalizedMessage());
+                RudderLogger.logError(DBPERSISTENT_MANAGER_CHECK_FOR_MIGRATIONS_TAG + ex.getLocalizedMessage());
             }
         };
         // Need to perform db operations on a separate thread to support strict mode.
-        Future future = Executors.newSingleThreadExecutor().submit(runnable);
+        Future<?> future = Executors.newSingleThreadExecutor().submit(runnable);
         try {
             // todo: shall we add some timeout here ?
             future.get();
