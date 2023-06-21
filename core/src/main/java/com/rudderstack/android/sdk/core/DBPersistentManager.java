@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
@@ -89,6 +90,8 @@ class DBPersistentManager extends SQLiteOpenHelper {
     private static final Object DB_LOCK = new Object();
 
     public static final Object QUEUE_LOCK = new Object();
+
+    public static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     /*
      * create table initially if not exists
@@ -399,7 +402,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
             }
         };
         // Need to perform db operations on a separate thread to support strict mode.
-        Future<?> future = Executors.newSingleThreadExecutor().submit(runnable);
+        Future<?> future = executor.submit(runnable);
         try {
             // todo: shall we add some timeout here ?
             future.get();
@@ -455,30 +458,23 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     private boolean checkIfStatusColumnExists(SQLiteDatabase database) {
         String checkIfStatusExistsSqlString = "PRAGMA table_info(events)";
-        Cursor allRows = null;
-        try {
-            // get readable database instance
-            if (database.isOpen()) {
-                allRows = database.rawQuery(checkIfStatusExistsSqlString, null);
-                if (allRows != null && allRows.moveToFirst()) {
-                    do {
-                        int index = allRows.getColumnIndex("name");
-                        if (index > -1) {
-                            String columnName = allRows.getString(index);
-                            if (columnName.equals(STATUS_COL))
-                                return true;
-                        }
-                    } while (allRows.moveToNext());
-                }
-            } else {
-                RudderLogger.logError("DBPersistentManager: checkIfStatusColumnExists: database is not readable, hence we cannot check the existence of status column");
+        if (!database.isOpen()) {
+            RudderLogger.logError("DBPersistentManager: checkIfStatusColumnExists: database is not readable, hence we cannot check the existence of status column");
+            return false;
+        }
+        try (Cursor allRows = database.rawQuery(checkIfStatusExistsSqlString, null)) {
+            if (allRows != null && allRows.moveToFirst()) {
+                do {
+                    int index = allRows.getColumnIndex("name");
+                    if (index > -1) {
+                        String columnName = allRows.getString(index);
+                        if (columnName.equals(STATUS_COL))
+                            return true;
+                    }
+                } while (allRows.moveToNext());
             }
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError("DBPersistentManager: checkIfStatusColumnExists: Exception while checking the presence of status column due to " + ex.getLocalizedMessage());
-        } finally {
-            if (allRows != null) {
-                allRows.close();
-            }
         }
         return false;
     }
@@ -502,7 +498,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
             }
         };
         // Need to perform db operations on a separate thread to support strict mode.
-        Future<?> future = Executors.newSingleThreadExecutor().submit(runnable);
+        Future<?> future = executor.submit(runnable);
         try {
             // todo: shall we add some timeout here ?
             future.get();
