@@ -1,5 +1,8 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
+import com.rudderstack.android.ruddermetricsreporterandroid.JSerialize
+import com.rudderstack.rudderjsonadapter.JsonAdapter
+
 /**
  * Stateless information set by the notifier about the device on which the event occurred can be
  * found on this class. These values can be accessed and amended if necessary.
@@ -37,7 +40,7 @@ open class Device internal constructor(
      * runtimes that the application is running on
      */
     runtimeVersions: MutableMap<String, Any>?
-) {
+) : JSerialize<Device>{
 
     /**
      * The manufacturer of the device used
@@ -66,4 +69,8 @@ open class Device internal constructor(
 
     private fun sanitizeRuntimeVersions(value: MutableMap<String, Any>?): MutableMap<String, Any>? =
         value?.mapValuesTo(mutableMapOf()) { (_, value) -> value.toString() }
+
+    override fun serialize(jsonAdapter: JsonAdapter): String? {
+        return jsonAdapter.writeToJson(this)
+    }
 }

@@ -14,31 +14,55 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
+import com.rudderstack.android.ruddermetricsreporterandroid.Source
 import com.rudderstack.android.ruddermetricsreporterandroid.Uploader
 import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+import com.rudderstack.web.WebServiceFactory
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 internal class DefaultUploader(
     dataCollectionModule: DataCollectionModule,
-    private val jsonAdapter: JsonAdapter
+    baseUrl: String,
+    source : Source,
+    networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
+    private val jsonAdapter: JsonAdapter,
+    private val apiVersion : Int = 1
 ) : Uploader {
     private val deviceDataCollector: DeviceDataCollector
-
+    private val webService = WebServiceFactory.getWebService(baseUrl, jsonAdapter, executor = networkExecutor)
+    private val source = source.serialize(jsonAdapter)
     init {
         deviceDataCollector = dataCollectionModule.deviceDataCollector
     }
 
-    override fun upload(metrics: List<MetricModel<Number>>, error: ErrorModel) {
-        val device = deviceDataCollector.generateDevice()
+    override fun upload(metrics: List<MetricModel<Number>>, error: ErrorModel,
+                        callback: (success : Boolean) -> Unit) {
         val requestMap = createRequestMap(metrics, error)
+        webService.post(null,null, jsonAdapter.writeToJson(requestMap), METRICS_ENDPOINT,
+            object : RudderTypeAdapter<Map<*,*>>(){}){
+            (it.status in 200..299).apply(callback)
+        }
     }
 
-    fun createRequestMap(metrics: List<MetricModel<Number>>, error: ErrorModel): Map<String, Any> {
-        val requestMap = HashMap<String, Any>()
-        requestMap["device"] = deviceDataCollector.generateDevice()
-        requestMap["metrics"] = metrics
-        requestMap["error"] = error
+    private fun createRequestMap(metrics: List<MetricModel<Number>>, error: ErrorModel): Map<String, Any?> {
+        val requestMap = HashMap<String, Any?>()
+        requestMap[DEVICE_KEY] = deviceDataCollector.generateDeviceWithState(System.currentTimeMillis()).serialize(jsonAdapter)
+        requestMap[METRICS_KEY] = metrics.map { it.serialize(jsonAdapter) }
+        requestMap[ERROR_KEY] = error.serialize(jsonAdapter)
+        requestMap[SOURCE_KEY] = source
+        requestMap[VERSION_KEY] = apiVersion
         return requestMap
+    }
+    companion object{
+        private const val DEVICE_KEY = "device"
+        private const val SOURCE_KEY = "source"
+        private const val METRICS_KEY = "metrics"
+        private const val ERROR_KEY = "error"
+        private const val VERSION_KEY = "version"
+        private const val METRICS_ENDPOINT = "sdkmetrics"
     }
 }

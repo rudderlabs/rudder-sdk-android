@@ -71,6 +71,7 @@ ext {
             gson_rudder_adapter   : ':gsonrudderadapter',
             moshi_rudder_adapter  : ':moshirudderadapter',
             repository            : ':repository',
+            web                   : ':web',
             metrics               : ':metrics',
     ]
     library = [

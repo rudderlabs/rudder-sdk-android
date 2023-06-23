@@ -77,7 +77,6 @@ internal class StorageDecorator(
                         if (data.isNotEmpty())*/
 //                    println("periodic_task_call, $this, timer: $thresholdCountDownTimer, " +
 //                            "decorator: ${this@StorageDecorator}")
-                    thresholdCountDownTimer
                     dataChangeListener?.onDataChange()
 //                    }
                 }

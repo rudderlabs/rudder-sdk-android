@@ -37,13 +37,23 @@ android {
 dependencies {
 
     implementation deps.kotlinCore
-    compileOnly project(path: projects.json_rudder_adapter)
-    compileOnly project(path: projects.repository)
+    implementation(project(projects.json_rudder_adapter))
+    implementation project(projects.repository)
+    implementation project(projects.web)
+
+    testImplementation(project(projects.moshi_rudder_adapter))
+    testImplementation(project(projects.gson_rudder_adapter))
+    testImplementation(project(projects.jackson_rudder_adapter))
+    testImplementation deps.moshi.kotlin
+    testImplementation deps.moshi.core
+    testImplementation deps.gson
+    testImplementation deps.jackson
     testImplementation deps.androidXTestExtJunitKtx
     testImplementation deps.androidXTestRules
     testImplementation deps.androidXTest
     testImplementation deps.hamcrest
     testImplementation deps.mockito
+    testImplementation deps.mockito_kotlin
     testImplementation deps.awaitility
     testImplementation deps.robolectric
     androidTestImplementation deps.androidXTestExtJunitKtx

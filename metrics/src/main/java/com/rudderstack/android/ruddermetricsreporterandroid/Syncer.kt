@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 19/06/23, 7:57 pm Last modified: 19/06/23, 7:57 pm
+ * Creator: Debanjan Chatterjee on 22/06/23, 7:59 pm Last modified: 22/06/23, 7:54 pm
  * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,13 +14,16 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 
-interface Uploader {
-    fun upload(
-        metrics: List<MetricModel<Number>>,
-        error: ErrorModel,
-        callback: (success: Boolean) -> Unit
+interface Syncer {
+    fun startScheduledSyncs(
+        interval: Long, flushOnStart: Boolean, flushCount: Long
     )
+    //setting null will nullify the callback
+    fun setCallback(callback: ((uploaded: List<MetricModel<out Number>>, success: Boolean) -> Unit)?)
+
+    fun stopScheduling()
+
+    fun flushAllMetrics()
 }

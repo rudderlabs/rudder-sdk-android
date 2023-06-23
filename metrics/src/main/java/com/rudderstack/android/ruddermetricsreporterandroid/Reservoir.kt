@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
+import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 
 interface Reservoir {
@@ -23,6 +24,7 @@ interface Reservoir {
 
     fun getMetricsFirstSync(limit : Long): List<MetricModel<*>>
     fun getMetricsFirst(limit : Long, callback : (List<MetricModel<Number>>) -> Unit)
+//    fun getMetricsAndErrorFirst(limit : Long, callback : (List<MetricModel<Number>>, List<ErrorModel>) -> Unit)
     fun getMetricsCount(callback : (Long) -> Unit)
     fun clear()
     fun resetFirst(limit: Long)

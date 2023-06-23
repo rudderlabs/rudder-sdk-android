@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 17/06/23, 5:17 pm Last modified: 17/06/23, 5:17 pm
+ * Creator: Debanjan Chatterjee on 22/06/23, 12:56 pm Last modified: 22/06/23, 12:56 pm
  * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,17 +12,10 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.ruddermetricsreporterandroid.metrics
+package com.rudderstack.android.ruddermetricsreporterandroid
 
-import com.rudderstack.android.ruddermetricsreporterandroid.JSerialize
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 
-data class MetricModel<T : Any>(val name: String, val type: MetricType,
-                                val value: T, val labels: Labels) : JSerialize<MetricModel<T>> {
-    override fun serialize(jsonAdapter: JsonAdapter): String? {
-        mapOf<String, Any>("name" to name, "type" to type, "value" to value, "labels" to labels.data).let {
-            return jsonAdapter.writeToJson(it)
-        }
-    }
-
+interface JSerialize<T> {
+    fun serialize(jsonAdapter: JsonAdapter): String?
 }
