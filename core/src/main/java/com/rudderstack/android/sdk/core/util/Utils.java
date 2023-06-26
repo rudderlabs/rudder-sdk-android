@@ -92,7 +92,6 @@ public class Utils {
         ) {
             return androidId;
         }
-        // If this still fails, generate random identifier that does not persist across installations
         return null;
     }
 
