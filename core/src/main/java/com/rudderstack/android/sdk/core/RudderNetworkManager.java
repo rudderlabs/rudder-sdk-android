@@ -112,86 +112,101 @@ public class RudderNetworkManager {
             synchronized (MessageUploadLock.REQUEST_LOCK) {
                 httpConnection.connect();
             }
-
             return getResult(httpConnection);
         } catch (Exception ex) {
-            RudderLogger.logError(ex);
+            RudderLogger.logError("RudderNetworkManager: sendNetworkRequest: Exception occurred while sending the request to " + requestURL + ex.getLocalizedMessage());
             return new Result(NetworkResponses.ERROR, -1, null, ex.getLocalizedMessage());
         }
     }
 
-    private Result getResult(HttpURLConnection httpConnection) throws IOException {
+    private Result getResult(HttpURLConnection httpConnection) {
         String responsePayload = null;
         String errorPayload = null;
         NetworkResponses networkResponse = null;
 
-        int responseCode = httpConnection.getResponseCode();
-        if (responseCode == 200) {
-            responsePayload = getResponse(httpConnection.getInputStream());
-            RudderLogger.logInfo(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Request to endpoint %s was successful with status code %d and response is %s",
-                    httpConnection.getURL(), responseCode, responsePayload));
-            networkResponse = NetworkResponses.SUCCESS;
+        int responseCode = 0;
+        try {
+            responseCode = httpConnection.getResponseCode();
+            if (responseCode == 200) {
+                responsePayload = getResponse(httpConnection.getInputStream());
+                RudderLogger.logInfo(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Request to endpoint %s was successful with status code %d and response is %s",
+                        httpConnection.getURL(), responseCode, responsePayload));
+                networkResponse = NetworkResponses.SUCCESS;
 
-        } else {
-            errorPayload = getResponse(httpConnection.getErrorStream());
-            RudderLogger.logError(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Request to endpoint %s failed with status code %d and error %s",
-                    httpConnection.getURL(), responseCode, errorPayload));
-            if (errorPayload.toLowerCase().contains("invalid write key"))
-                networkResponse = NetworkResponses.WRITE_KEY_ERROR;
-            if (responseCode == 404)
-                networkResponse = NetworkResponses.RESOURCE_NOT_FOUND;
+            } else {
+                errorPayload = getResponse(httpConnection.getErrorStream());
+                RudderLogger.logError(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Request to endpoint %s failed with status code %d and error %s",
+                        httpConnection.getURL(), responseCode, errorPayload));
+                if (errorPayload != null && errorPayload.toLowerCase().contains("invalid write key"))
+                    networkResponse = NetworkResponses.WRITE_KEY_ERROR;
+                if (responseCode == 404)
+                    networkResponse = NetworkResponses.RESOURCE_NOT_FOUND;
+            }
+            // if networkresponse is null (or) if both response and error payload is null, then it is an error
+            if (networkResponse == null || (responsePayload == null && errorPayload == null))
+                networkResponse = NetworkResponses.ERROR;
+            return new Result(networkResponse, responseCode, responsePayload, errorPayload);
+        } catch (Exception ex) {
+            RudderLogger.logError("RudderNetworkManager: sendNetworkRequest: Exception occurred while getting the response from the request to " + httpConnection.getURL() + ex.getLocalizedMessage());
+            return new Result(NetworkResponses.ERROR, responseCode, responsePayload, ex.getLocalizedMessage());
+        } finally {
+            httpConnection.disconnect();
         }
-        return new Result(networkResponse == null ? NetworkResponses.ERROR : networkResponse, responseCode, responsePayload, errorPayload);
     }
 
     private HttpURLConnection updateHttpConnection(String requestURL, RequestMethod requestMethod,
-                                                   String requestPayload, boolean isDMTRequest, boolean isGzipSupported)
-            throws IOException {
-        URL url = new URL(requestURL);
-        RudderLogger.logDebug(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Request URL: %s", requestURL));
-        HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
-        if (isGzipSupported && isGzipConfigured) {
-            RudderLogger.logDebug("RudderNetworkManager: sendNetworkRequest: Gzip is enabled");
-            Map<String, String> customRequestHeaders = new HashMap<>();
-            customRequestHeaders.put("Content-Encoding", "gzip");
-            return updateHttpConnection(httpConnection, requestMethod, requestPayload, isDMTRequest, customRequestHeaders,
-                    GzipUtils::getGzipOutputStream);
+                                                   String requestPayload, boolean isDMTRequest, boolean isGzipSupported) {
+        try {
+            URL url = new URL(requestURL);
+            RudderLogger.logDebug(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Request URL: %s", requestURL));
+            HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+            if (isGzipSupported && isGzipConfigured) {
+                RudderLogger.logDebug("RudderNetworkManager: sendNetworkRequest: Gzip is enabled");
+                Map<String, String> customRequestHeaders = new HashMap<>();
+                customRequestHeaders.put("Content-Encoding", "gzip");
+                return updateHttpConnection(httpConnection, requestMethod, requestPayload, isDMTRequest, customRequestHeaders,
+                        GzipUtils::getGzipOutputStream);
+            }
+            return updateHttpConnection(httpConnection, requestMethod, requestPayload, isDMTRequest,
+                    null, null);
+        } catch (Exception ex) {
+            RudderLogger.logError("RudderNetworkManager: sendNetworkRequest: Exception occurred while creating HttpURLConnection" + ex.getLocalizedMessage());
+            return null;
         }
-        return updateHttpConnection(httpConnection, requestMethod, requestPayload, isDMTRequest,
-                null, null);
     }
 
     @VisibleForTesting
     HttpURLConnection updateHttpConnection(HttpURLConnection httpConnection, RequestMethod requestMethod,
                                            String requestPayload, boolean isDMTRequest,
                                            @Nullable Map<String, String> customRequestHeaders,
-                                           @Nullable FunctionUtils.Function<OutputStream, OutputStream> connectionWrapperOSGenerator) throws IOException {
-        httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", authHeaderString));
-        if (requestMethod == RequestMethod.GET) {
-            httpConnection.setRequestMethod("GET");
-        } else {
-            httpConnection.setDoOutput(true);
-            httpConnection.setRequestMethod("POST");
-            httpConnection.setRequestProperty("Content-Type", "application/json");
-            httpConnection.setRequestProperty("AnonymousId", anonymousIdHeaderString);
-            if (customRequestHeaders != null && !customRequestHeaders.isEmpty()) {
-                for (Map.Entry<String, String> entry : customRequestHeaders.entrySet()) {
-                    httpConnection.setRequestProperty(entry.getKey(), entry.getValue());
+                                           @Nullable FunctionUtils.Function<OutputStream, OutputStream> connectionWrapperOSGenerator) {
+        try (OutputStream os = httpConnection.getOutputStream();
+             OutputStream oss = connectionWrapperOSGenerator != null ? connectionWrapperOSGenerator.apply(os) : null;
+             OutputStreamWriter osw = new OutputStreamWriter(oss != null ? oss : os, StandardCharsets.UTF_8);
+        ) {
+            httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", authHeaderString));
+            if (requestMethod == RequestMethod.GET) {
+                httpConnection.setRequestMethod("GET");
+            } else {
+                httpConnection.setDoOutput(true);
+                httpConnection.setRequestMethod("POST");
+                httpConnection.setRequestProperty("Content-Type", "application/json");
+                httpConnection.setRequestProperty("AnonymousId", anonymousIdHeaderString);
+                if (customRequestHeaders != null && !customRequestHeaders.isEmpty()) {
+                    for (Map.Entry<String, String> entry : customRequestHeaders.entrySet()) {
+                        httpConnection.setRequestProperty(entry.getKey(), entry.getValue());
+                    }
                 }
+                String requestPayloadWithMetadata = withAddedMetadataToRequestPayload(requestPayload, isDMTRequest);
+                osw.write(requestPayloadWithMetadata);
+                osw.flush();
             }
-            String requestPayloadWithMetadata = withAddedMetadataToRequestPayload(requestPayload, isDMTRequest);
-            OutputStream os = httpConnection.getOutputStream();
-            if (connectionWrapperOSGenerator != null) {
-                os = connectionWrapperOSGenerator.apply(os);
-                System.out.println("RudderNetworkManager: sendNetworkRequest: Gzip is enabled");
-            }
-            OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
-            osw.write(requestPayloadWithMetadata);
-            osw.flush();
-            osw.close();
-            os.close();
+            return httpConnection;
+        } catch (Exception ex) {
+            RudderLogger.logError("RudderNetworkManager: updateHttpConnection: Error while updating the http connection" + ex.getLocalizedMessage());
+            return null;
         }
-        return httpConnection;
+
     }
 
     @VisibleForTesting
@@ -205,16 +220,18 @@ public class RudderNetworkManager {
         return jsonObject.toString();
     }
 
-    private String getResponse(InputStream stream) throws IOException {
-        BufferedInputStream bis = new BufferedInputStream(stream);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        int res;
-        while ((res = bis.read()) != -1) {
-            baos.write((byte) res);
+    private String getResponse(InputStream stream) {
+        try (BufferedInputStream bis = new BufferedInputStream(stream);
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            int res;
+            while ((res = bis.read()) != -1) {
+                baos.write((byte) res);
+            }
+            return baos.toString();
+        } catch (Exception ex) {
+            RudderLogger.logError("RudderNetworkManager: getResponse: Exception occurred while reading response" + ex.getLocalizedMessage());
+            return null;
         }
-        bis.close();
-        baos.close();
-        return baos.toString();
     }
 
     static String addEndPoint(String url, String endPoint) {

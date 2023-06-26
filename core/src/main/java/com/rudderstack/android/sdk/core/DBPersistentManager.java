@@ -385,8 +385,8 @@ class DBPersistentManager extends SQLiteOpenHelper {
     void startHandlerThread() {
         Runnable runnable = () -> {
             try {
+                SQLiteDatabase database = DBPersistentManager.this.getWritableDatabase();
                 synchronized (DBPersistentManager.QUEUE_LOCK) {
-                    SQLiteDatabase database = DBPersistentManager.this.getWritableDatabase();
                     dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", database);
                     dbInsertionHandlerThread.start();
                     for (Message msg : queue) {
@@ -402,16 +402,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
             }
         };
         // Need to perform db operations on a separate thread to support strict mode.
-        Future<?> future = executor.submit(runnable);
-        try {
-            // todo: shall we add some timeout here ?
-            future.get();
-        } catch (InterruptedException e) {
-            RudderLogger.logError("DBPersistentManager: constructor: Exception while initializing the DBInsertionHandlerThread due to " + e.getLocalizedMessage());
-            Thread.currentThread().interrupt();
-        } catch (Exception e) {
-            RudderLogger.logError("DBPersistentManager: constructor: Exception while initializing the DBInsertionHandlerThread due to " + e.getLocalizedMessage());
-        }
+        executor.execute(runnable);
     }
 
     @Override
@@ -498,16 +489,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
             }
         };
         // Need to perform db operations on a separate thread to support strict mode.
-        Future<?> future = executor.submit(runnable);
-        try {
-            // todo: shall we add some timeout here ?
-            future.get();
-        } catch (InterruptedException e) {
-            RudderLogger.logError("DBPersistentManager: checkForMigrations: Exception while checking for migrations due to " + e.getLocalizedMessage());
-            Thread.currentThread().interrupt();
-        } catch (Exception e) {
-            RudderLogger.logError("DBPersistentManager: checkForMigrations: Exception while checking for migrations due to " + e.getLocalizedMessage());
-        }
+        executor.execute(runnable);
     }
 
     private void performMigration(SQLiteDatabase database) {
