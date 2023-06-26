@@ -19,7 +19,7 @@ import android.content.res.AssetManager
 import android.util.Log
 import com.rudderstack.android.RudderAnalytics
 import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClientDelegate
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.Configuration
+import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Settings
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter

@@ -93,7 +93,7 @@ dependencies {
     implementation project(path: ':models')
     implementation project(path: ':web')
     implementation project(path: ':rudderjsonadapter')
-    implementation project(path: ':metrics')
+    implementation project(path: ':rudderreporter')
 
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
