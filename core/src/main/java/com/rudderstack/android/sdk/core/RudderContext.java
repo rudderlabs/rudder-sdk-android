@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.rudderstack.android.sdk.core.util.Utils.isOnClassPath;
 
@@ -65,14 +66,19 @@ public class RudderContext {
         // cachedContext is used every time, once initialized
     }
 
-    RudderContext(Application application, String anonymousId, String advertisingId, String deviceToken) {
+    RudderContext(Application application, String anonymousId, String advertisingId, String deviceToken, boolean collectDeviceId) {
         RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
 
         if (TextUtils.isEmpty(anonymousId)) {
-            anonymousId = preferenceManger.getAnonymousId() != null ? preferenceManger.getAnonymousId() : Utils.getDeviceId(application);
-        } else {
-            preferenceManger.saveAnonymousId(anonymousId);
+            anonymousId = preferenceManger.getAnonymousId();
+            if (anonymousId == null && collectDeviceId) {
+                anonymousId = Utils.getDeviceId(application);
+            }
+            if (anonymousId == null) {
+                anonymousId = UUID.randomUUID().toString();
+            }
         }
+        preferenceManger.saveAnonymousId(anonymousId);
 
         _anonymousId = anonymousId;
 
@@ -101,7 +107,7 @@ public class RudderContext {
 
         this.screenInfo = new RudderScreenInfo(application);
         this.userAgent = System.getProperty("http.agent");
-        this.deviceInfo = new RudderDeviceInfo(advertisingId, deviceToken);
+        this.deviceInfo = new RudderDeviceInfo(advertisingId, deviceToken, collectDeviceId);
         this.networkInfo = new RudderNetwork(application);
         this.osInfo = new RudderOSInfo();
         this.libraryInfo = new RudderLibraryInfo();

@@ -48,6 +48,7 @@ public class RudderConfig {
     private boolean trackAutoSession;
     private boolean useNewLifeCycleEvents;
     private boolean trackDeepLinks;
+    private boolean collectDeviceId;
     private long sessionTimeout;
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
@@ -73,6 +74,7 @@ public class RudderConfig {
                 Constants.AUTO_COLLECT_ADVERT_ID,
                 Constants.RECORD_SCREEN_VIEWS,
                 Constants.AUTO_SESSION_TRACKING,
+                Constants.COLLECT_DEVICE_ID,
                 Constants.DEFAULT_SESSION_TIMEOUT,
                 Constants.CONTROL_PLANE_URL,
                 null,
@@ -99,6 +101,7 @@ public class RudderConfig {
             boolean autoCollectAdvertId,
             boolean recordScreenViews,
             boolean trackAutoSession,
+            boolean collectDeviceId,
             long sessionTimeout,
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
@@ -187,6 +190,7 @@ public class RudderConfig {
             this.sessionTimeout = Constants.DEFAULT_SESSION_TIMEOUT;
         }
         this.trackAutoSession = trackAutoSession;
+        this.collectDeviceId = collectDeviceId;
 
         this.rudderDataResidencyServer = rudderDataResidencyServer;
         this.consentFilter = consentFilter;
@@ -344,6 +348,13 @@ public class RudderConfig {
      */
     public boolean isTrackAutoSession() {
         return trackAutoSession;
+    }
+
+    /**
+     * @return isCollectDeviceId (whether we want to collect the device ID)
+     */
+    public boolean isCollectDeviceId() {
+        return collectDeviceId;
     }
 
     /**
@@ -763,6 +774,17 @@ public class RudderConfig {
             return this;
         }
 
+        private boolean collectDeviceId = Constants.COLLECT_DEVICE_ID;
+
+        /**
+         * @param collectDeviceId (whether we are collecting the device ID)
+         * @return RudderConfig.Builder
+         */
+        public Builder withCollectDeviceId(boolean collectDeviceId) {
+            this.collectDeviceId = collectDeviceId;
+            return this;
+        }
+
         /**
          * Finalize your config building
          *
@@ -785,6 +807,7 @@ public class RudderConfig {
                     this.autoCollectAdvertId,
                     this.recordScreenViews,
                     this.autoSessionTracking,
+                    this.collectDeviceId,
                     this.sessionTimeout,
                     this.controlPlaneUrl,
                     this.factories,

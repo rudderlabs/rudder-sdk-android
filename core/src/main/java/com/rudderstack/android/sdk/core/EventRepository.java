@@ -189,11 +189,11 @@ class EventRepository {
         // 2. initiate RudderElementCache
         if (preferenceManager.getOptStatus()) {
             RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the identifiers");
-            RudderElementCache.initiate(application, null, null, null, config.isAutoCollectAdvertId());
+            RudderElementCache.initiate(application, null, null, null, config.isAutoCollectAdvertId(), config.isCollectDeviceId());
         } else {
             // We first send the anonymousId to RudderElementCache which will just set the anonymousId static variable in RudderContext class.
             RudderElementCache.initiate(application, identifiers.anonymousId,
-                    identifiers.advertisingId, identifiers.deviceToken, config.isAutoCollectAdvertId());
+                    identifiers.advertisingId, identifiers.deviceToken, config.isAutoCollectAdvertId(), config.isCollectDeviceId());
         }
     }
 
