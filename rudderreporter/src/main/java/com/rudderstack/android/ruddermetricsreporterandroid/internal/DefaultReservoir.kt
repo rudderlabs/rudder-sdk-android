@@ -19,8 +19,8 @@ import androidx.annotation.VisibleForTesting
 import com.rudderstack.android.repository.Dao
 import com.rudderstack.android.repository.RudderDatabase
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.Labels
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
+import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModelWithId
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricType
 import com.rudderstack.android.ruddermetricsreporterandroid.models.LabelEntity
 import com.rudderstack.android.ruddermetricsreporterandroid.models.MetricEntity
@@ -31,7 +31,7 @@ import kotlin.math.pow
 
 class DefaultReservoir(
     androidContext: Context, useContentProvider: Boolean,
-    dbExecutor: ExecutorService? = null
+    private val dbExecutor: ExecutorService? = null
 ) :
     Reservoir {
     private val dbName = "metrics_db_${androidContext.packageName}.db"
@@ -51,16 +51,18 @@ class DefaultReservoir(
     override fun insertOrIncrement(
         metric: MetricModel<Number>
     ) {
-        val labels = metric.labels.data.map { LabelEntity(it.key, it.value) }
+        val labels = metric.labels.map { LabelEntity(it.key, it.value) }
         if (labels.isEmpty()) {
             insertCounterWithLabelMask(metric, "")
             return
         }
 
         with(labelDao) {
-            labels.insertWithDataCallback(conflictResolutionStrategy =
-            Dao.ConflictResolutionStrategy.CONFLICT_IGNORE) { rowIds: List<Long>,
-                                                              insertedData: List<LabelEntity?> ->
+            labels.insertWithDataCallback(
+                conflictResolutionStrategy =
+                Dao.ConflictResolutionStrategy.CONFLICT_IGNORE
+            ) { rowIds: List<Long>,
+                insertedData: List<LabelEntity?> ->
                 if (insertedData.isEmpty()) {
                     insertCounterWithLabelMask(metric, "")
                     return@insertWithDataCallback
@@ -150,28 +152,40 @@ class DefaultReservoir(
                             + " AND " + MetricEntity.ColumnNames.TYPE + "='" + MetricType.COUNTER.value + "'"
                             + ";"
                 )
-            }else{
+            } else {
                 println("inserting metric ${metric.name} label mask $labelMaskForMetric")
             }
         }
     }
 
-    override fun getMetricsFirstSync(limit: Long): List<MetricModel<*>> {
+    override fun getMetricsFirstSync(limit: Long): List<MetricModelWithId<out Number>> {
         with(metricDao) {
             val metricEntities = runGetQuerySync(limit = limit.toString())
             return metricEntities?.map {
                 val labels = getLabelsForMetric(it)
-                MetricModel(it.name, MetricType.getType(it.type), it.value, labels)
+                MetricModelWithId(
+                    it.id.toString(),
+                    it.name,
+                    MetricType.getType(it.type),
+                    it.value,
+                    labels
+                )
             } ?: listOf()
         }
     }
 
-    override fun getMetricsFirst(limit: Long, callback: (List<MetricModel<Number>>) -> Unit) {
+    override fun getMetricsFirst(
+        limit: Long,
+        callback: (List<MetricModelWithId<out Number>>) -> Unit
+    ) {
         with(metricDao) {
             runGetQuery(limit = limit.toString()) { metricEntities ->
                 callback(metricEntities.map {
                     val labels = getLabelsForMetric(it)
-                    MetricModel(it.name, MetricType.getType(it.type), it.value, labels)
+                    MetricModelWithId(
+                        it.id.toString(), it.name, MetricType.getType(it.type),
+                        it.value, labels
+                    )
                 })
             }
         }
@@ -196,18 +210,42 @@ class DefaultReservoir(
         }
     }
 
+    override fun resetTillSync(dumpedMetrics: List<MetricModelWithId<out Number>>) {
+        with(metricDao) {
+//            dbExecutor?.execute {
+            beginTransaction()
+            dumpedMetrics.forEach { metric ->
+                println("Reducing metric ${metric.name} by ${metric.value}")
+                execSqlSync(
+                    "UPDATE ${MetricEntity.TABLE_NAME} " +
+                            "SET ${MetricEntity.ColumnNames.VALUE}=${MetricEntity.ColumnNames.VALUE}-${metric.value}" +
+                            " WHERE ${MetricEntity.ColumnNames.ID}='${metric.id}'"
+                )
+            }
+            setTransactionSuccessful()
+            endTransaction()
+//            }
+        }
+    }
+
     override fun reset() {
         with(metricDao) {
             execSql("UPDATE ${MetricEntity.TABLE_NAME} SET ${MetricEntity.ColumnNames.VALUE}=0")
         }
     }
 
-    override fun getAllMetrics(callback: (List<MetricModel<out Number>>) -> Unit) {
+    override fun getAllMetrics(callback: (List<MetricModelWithId<out Number>>) -> Unit) {
         with(metricDao) {
             getAll { metricEntities ->
                 metricEntities.map {
                     val labels = getLabelsForMetric(it)
-                    MetricModel(it.name, MetricType.getType(it.type), it.value, labels)
+                    MetricModelWithId(
+                        it.id.toString(),
+                        it.name,
+                        MetricType.getType(it.type),
+                        it.value,
+                        labels
+                    )
                 }.let {
                     callback(it)
                 }
@@ -215,32 +253,28 @@ class DefaultReservoir(
         }
     }
 
-    override fun getAllMetricsSync(): List<MetricModel<Long>> {
+    override fun getAllMetricsSync(): List<MetricModelWithId<out Number>> {
 
         return with(metricDao) {
             val metricEntities = getAllSync()
             metricEntities?.map {
                 val labels = getLabelsForMetric(it)
-                MetricModel(it.name, MetricType.getType(it.type), it.value, labels)
+                MetricModelWithId(
+                    it.id.toString(),
+                    it.name, MetricType.getType(it.type), it.value, labels
+                )
             }
         } ?: listOf()
     }
 
-    private fun getLabelsForMetric(metricEntity: MetricEntity): Labels {
+    private fun getLabelsForMetric(metricEntity: MetricEntity): Map<String, String> {
         val labelMask = metricEntity.label
         val labelIds = mutableListOf<Long>()
         try {
             if (labelMask.isEmpty()) {
-                return Labels.of()
+                return mapOf()
             }
             var labels = labelMask.toLong()
-//            val maxPowerOf2 = (ln(labels.toDouble()) / ln(2.0)).toLong()
-//            for (i in 0..maxPowerOf2) {
-//                val valueAtI = 2.0.pow(i.toDouble()).toLong()
-//                if (labels and valueAtI > 0 ) {
-//                    labelIds.add(i)
-//                }
-//            }
             var pos = 0
             while (labels > 0) {
                 val isPositionToBeTaken = labels and 1
@@ -264,18 +298,15 @@ class DefaultReservoir(
             }
         }
         if (labelIds.isEmpty()) {
-            return Labels.of()
+            return mapOf()
         }
         with(labelDao) {
-            runGetQuerySync(
+            return runGetQuerySync(
                 selection = "${LabelEntity.Columns.ID} IN (${labelIds.joinToString(",") { "'${it}'" }})"
-            )?.map {
+            )?.associate {
                 it.name to it.value
-            }?.toTypedArray()?.let {
-                return Labels.of(*it)
-            }
+            } ?: mapOf()
         }
-        return Labels.of()
     }
 
     @VisibleForTesting

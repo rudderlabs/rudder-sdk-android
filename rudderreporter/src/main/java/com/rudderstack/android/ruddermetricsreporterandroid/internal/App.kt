@@ -37,7 +37,7 @@ open class App internal constructor(
     /**
      * The version code of the application set in [Configuration.versionCode]
      */
-    var versionCode: Number?
+    var versionCode: String?
 ) {
 
     internal constructor(
@@ -53,6 +53,6 @@ open class App internal constructor(
         releaseStage,
         version,
         codeBundleId,
-        config.versionCode
+        config.libraryMetadata.versionCode
     )
 }

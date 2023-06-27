@@ -145,7 +145,10 @@ class WebServiceImpl internal constructor(
     ) {
         executor.execute {
             callback.invoke(
-                httpCall(headers, query, body, endpoint, HttpMethod.POST, responseTypeAdapter)
+                httpCall(headers, query, body, endpoint, HttpMethod.POST, responseTypeAdapter).also {
+                    println("response is $it")
+
+                }
             )
         }
     }
@@ -184,8 +187,14 @@ class WebServiceImpl internal constructor(
         typeAdapter: RudderTypeAdapter<T>
     ): HttpResponse<T> {
         return rawHttpCall(headers, query, body, endpoint, type, deserializer = { json ->
-            jsonAdapter.readJson(json, typeAdapter)
-                ?: throw IllegalArgumentException("Json adapter not able to parse response body")
+            if(json.isEmpty()) {
+                //TODO add logger
+//                logger.debug("Empty response body")
+                 null
+            }
+            else
+                jsonAdapter.readJson(json, typeAdapter)
+                    ?: throw IllegalArgumentException("Json adapter not able to parse response body")
         })
     }
 

@@ -16,7 +16,6 @@ package com.rudderstack.android.ruddermetricsreporterandroid.internal.metrics
 
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.AggregatorHandler
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.Labels
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongGauge
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
@@ -24,19 +23,19 @@ import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricType
 
 class DefaultAggregatorHandler(private val reservoir: Reservoir) : AggregatorHandler {
     override fun LongCounter.recordMetric(value: Long) {
-        recordMetric(value, Labels.of())
+        recordMetric(value, mapOf())
     }
 
-    override fun LongCounter.recordMetric(value: Long, attributes: Labels) {
+    override fun LongCounter.recordMetric(value: Long, attributes: Map<String,String>) {
         reservoir.insertOrIncrement(MetricModel(name, MetricType.COUNTER,
             value, attributes))
     }
 
     override fun LongGauge.recordMetric(value: Long) {
-        recordMetric(value, Labels.of())
+        recordMetric(value, mapOf())
     }
 
-    override fun LongGauge.recordMetric(value: Long, attributes: Labels) {
+    override fun LongGauge.recordMetric(value: Long, attributes: Map<String,String>) {
         reservoir.insertOrIncrement(MetricModel(name, MetricType.GAUGE,
             value, attributes))
     }

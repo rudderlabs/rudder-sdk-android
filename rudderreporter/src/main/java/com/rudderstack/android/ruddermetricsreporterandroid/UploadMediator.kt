@@ -19,7 +19,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 
 fun interface UploadMediator {
     fun upload(
-        metrics: List<MetricModel<Number>>,
+        metrics: List<MetricModel<out Number>>,
         error: ErrorModel,
         callback: (success: Boolean) -> Unit
     )

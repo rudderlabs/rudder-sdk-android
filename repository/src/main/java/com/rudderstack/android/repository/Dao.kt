@@ -549,6 +549,21 @@ class Dao<T : Entity> internal constructor(
             _db?.openDatabase?.execSQL(command)
         }
     }
+    fun beginTransaction() {
+        synchronized(DB_LOCK) {
+            _db?.openDatabase?.beginTransaction()
+        }
+    }
+    fun setTransactionSuccessful() {
+        synchronized(DB_LOCK) {
+            _db?.openDatabase?.setTransactionSuccessful()
+        }
+    }
+    fun endTransaction() {
+        synchronized(DB_LOCK) {
+            _db?.openDatabase?.endTransaction()
+        }
+    }
     fun execSql(command: String, callback : (() -> Unit)? = null) {
         runTransactionOrDeferToCreation { db: SQLiteDatabase ->
             db.openDatabase?.execSQL(command)
@@ -611,7 +626,7 @@ class Dao<T : Entity> internal constructor(
         }.reduce { acc, s -> "$acc$s" }.let {
             "${it}_idx"
         }
-        return "CREATE INDEX $indexName ON $tableName $indexFieldsStmt"
+        return "CREATE INDEX IF NOT EXISTS $indexName ON $tableName $indexFieldsStmt"
     }
 
     private fun RudderField.findValue(cursor: Cursor) = when (type) {

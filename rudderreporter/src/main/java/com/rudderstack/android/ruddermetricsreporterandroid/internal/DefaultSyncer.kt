@@ -14,11 +14,13 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
+import android.util.Log
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
 import com.rudderstack.android.ruddermetricsreporterandroid.Syncer
 import com.rudderstack.android.ruddermetricsreporterandroid.UploadMediator
 import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
+import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModelWithId
 import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.atomic.AtomicBoolean
@@ -52,25 +54,36 @@ class DefaultSyncer internal constructor(
     }
 
     private fun flushMetrics(flushCount: Long) {
+        Log.e("syncer", "flush called $this")
         //TODO: add error handling getMetricsAndErrorFirst
         reservoir.getMetricsFirst(flushCount) {
-            if (it.isEmpty()) {
+            val validMetrics = it.filterWithValidValues()
+            Log.e("syncer", "valid metrics ${validMetrics.size}")
+            if (validMetrics.isEmpty()) {
                 _atomicRunning.set(false)
                 if (_isShutDown.get())
                     stopScheduling()
                 return@getMetricsFirst
             }
-            uploader.upload(it, ErrorModel()) { success ->
+            Log.e("syncer", "uploading ${validMetrics.size}")
+
+            uploader.upload(validMetrics, ErrorModel()) { success ->
+                Log.e("syncer", "upload cb success $success")
                 if (success) {
-                    reservoir.resetFirst(it.size.toLong())
+                    reservoir.resetTillSync(validMetrics)
                 }
-                callback?.invoke(it, success)
+
+                callback?.invoke(validMetrics, success)
                 if (_isShutDown.get()) {
                     _atomicRunning.set(false)
                     stopScheduling()
                     return@upload
                 }
-                flushMetrics(flushCount)
+                if(success)
+                    flushMetrics(flushCount)
+                else
+                    _atomicRunning.set(false)
+                Log.e("syncer", "atomic_running ${_atomicRunning.get()}")
             }
         }
     }
@@ -105,6 +118,7 @@ class DefaultSyncer internal constructor(
             periodicTaskScheduler = object : TimerTask() {
                 override fun run() {
                     callback.invoke()
+                    Log.e("syncer", "invoke timer $this")
                 }
             }
             println("rescheduling : $this")
@@ -118,6 +132,11 @@ class DefaultSyncer internal constructor(
         fun stop(){
             periodicTaskScheduler?.cancel()
             thresholdCountDownTimer.cancel()
+        }
+    }
+    private fun List<MetricModelWithId<out Number>>.filterWithValidValues(): List<MetricModelWithId<out Number>> {
+        return this.filter {
+            it.value.toLong() > 0
         }
     }
 }

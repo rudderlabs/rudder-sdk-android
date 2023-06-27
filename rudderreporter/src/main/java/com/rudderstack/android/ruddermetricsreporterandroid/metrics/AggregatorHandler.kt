@@ -16,8 +16,8 @@ package com.rudderstack.android.ruddermetricsreporterandroid.metrics
 
 interface AggregatorHandler {
     fun LongCounter.recordMetric(value: Long)
-    fun LongCounter.recordMetric(value: Long, attributes: Labels)
+    fun LongCounter.recordMetric(value: Long, attributes: Map<String,String>)
     fun LongGauge.recordMetric(value: Long)
-    fun LongGauge.recordMetric(value: Long, attributes: Labels)
+    fun LongGauge.recordMetric(value: Long, attributes: Map<String,String>)
 
 }

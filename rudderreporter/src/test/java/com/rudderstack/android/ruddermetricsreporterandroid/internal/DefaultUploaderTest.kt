@@ -14,8 +14,12 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
+import android.content.Context
+import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextModule
 import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
@@ -25,6 +29,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
 import org.mockito.Mockito
+import java.util.Date
 
 open class DefaultUploaderTest {
 
@@ -32,27 +37,35 @@ open class DefaultUploaderTest {
     private val mockedDataCollectionModule = Mockito.mock(DataCollectionModule::class.java).also {
         Mockito.`when`(
             it.deviceDataCollector
-        ).thenReturn (
+        ).thenReturn(
             Mockito.mock(DeviceDataCollector::class.java).also {
                 Mockito.`when`(it.generateDeviceWithState(Mockito.anyLong())).thenReturn(
-                    DeviceWithState(DeviceBuildInfo(MANUFACTURER, MODEL, OS_VERSION, API_LEVEL,
-                    OS_BUILD, null, null, null, null), false, ID, "Locale.ENGLISH",
-                    null, mutableMapOf<String, Any>(),
-                        null, null, null, null)
+                    DeviceWithState(
+                        DeviceBuildInfo(
+                            MANUFACTURER, MODEL, OS_VERSION, API_LEVEL,
+                            OS_BUILD, null, null, null, null
+                        ), false, ID, 100, mutableMapOf<String, Any>(), 11111,
+                        12232, "landscape", Date()
+                    )
                 )
 
-        })
+            })
     }
-    private val defaultUploader = DefaultUploadMediator(mockedDataCollectionModule, "",
-        LibraryMetadata("Android", "1.14.0", "write_key"), networkExecutor =
-        TestExecutor(), jsonAdapter = jsonAdapter)
+    private val defaultUploader = DefaultUploadMediator(
+         ConfigModule(ContextModule(Mockito.mock(Context::class.java)), Configuration(
+            LibraryMetadata("","","","")
+        )),"",
+        jsonAdapter, TestExecutor()
+    )
+
     @Test
     fun upload() {
-        defaultUploader.upload(listOf(), ErrorModel()){
+        defaultUploader.upload(listOf(), ErrorModel()) {
 
         }
     }
-    companion object{
+
+    companion object {
         private const val MANUFACTURER = "Google"
         private const val MODEL = "pixel 7"
         private const val OS_VERSION = "10"
@@ -63,22 +76,29 @@ open class DefaultUploaderTest {
     }
 }
 
-class DefaultUploaderTestGson: DefaultUploaderTest() {
+class DefaultUploaderTestGson : DefaultUploaderTest() {
     init {
         jsonAdapter = GsonAdapter()
     }
 }
-class DefaultUploaderTestJackson: DefaultUploaderTest() {
+
+class DefaultUploaderTestJackson : DefaultUploaderTest() {
     init {
         jsonAdapter = JacksonAdapter()
     }
 }
-class DefaultUploaderTestMoshi: DefaultUploaderTest() {
+
+class DefaultUploaderTestMoshi : DefaultUploaderTest() {
     init {
         jsonAdapter = MoshiAdapter()
     }
 }
+
 @RunWith(Suite::class)
-@Suite.SuiteClasses(DefaultUploaderTestGson::class, DefaultUploaderTestJackson::class, DefaultUploaderTestMoshi::class)
+@Suite.SuiteClasses(
+    DefaultUploaderTestGson::class,
+    DefaultUploaderTestJackson::class,
+    DefaultUploaderTestMoshi::class
+)
 class DefaultUploaderTestSuite {
 }

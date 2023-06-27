@@ -32,7 +32,7 @@ sealed interface Gauge<T> {
      * @param value The amount for gauge
      * @param attributes A set of attributes to associate with the value.
      */
-    fun set(value: T, attributes: Labels?)
+    fun set(value: T, attributes: Map<String,String>?)
 }
 class LongGauge internal constructor(
     override val name: String,
@@ -44,7 +44,7 @@ class LongGauge internal constructor(
         TODO("Not yet implemented")
     }
 
-    override fun set(value: Long, attributes: Labels?) {
+    override fun set(value: Long, attributes: Map<String,String>?) {
         TODO("Not yet implemented")
     }
 
@@ -61,7 +61,7 @@ class ShortGauge internal constructor(
         TODO("Not yet implemented")
     }
 
-    override fun set(value: Short, attributes: Labels?) {
+    override fun set(value: Short, attributes: Map<String,String>?) {
         TODO("Not yet implemented")
     }
 }

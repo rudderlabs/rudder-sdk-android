@@ -13,7 +13,7 @@ class AppWithState(
     releaseStage: String?,
     version: String?,
     codeBundleId: String?,
-    versionCode: Number?,
+    versionCode: String?,
 
 ) : App(binaryArch, id, releaseStage, version, codeBundleId, versionCode) {
 
@@ -30,7 +30,7 @@ class AppWithState(
         releaseStage,
         version,
         codeBundleId,
-        config.versionCode
+        config.libraryMetadata.versionCode
     )
 
 }

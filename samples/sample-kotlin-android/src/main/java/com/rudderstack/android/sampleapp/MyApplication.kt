@@ -20,6 +20,7 @@ import android.util.Log
 import com.rudderstack.android.RudderAnalytics
 import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClientDelegate
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
+import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Settings
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
@@ -58,7 +59,7 @@ class MyApplication : Application() {
         _metricsErrorClientDelegate =
             ErrorClientDelegate(
                 application,
-                Configuration()
+                Configuration(LibraryMetadata("android", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toString(), "write-key"))
             )
     }
 

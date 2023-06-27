@@ -14,7 +14,6 @@
 package com.rudderstack.android.ruddermetricsreporterandroid
 
 import android.content.Context
-import com.rudderstack.android.ruddermetricsreporterandroid.error.BreadcrumbType
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.BackgroundTaskService
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.Connectivity
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.ConnectivityCompat
@@ -31,7 +30,6 @@ import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.Memor
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.metrics.DefaultAggregatorHandler
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.AggregatorHandler
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import java.util.concurrent.ExecutorService
 
 class RudderReporter(
     private val aggregatorHandler: AggregatorHandler,
@@ -99,13 +97,13 @@ class RudderReporter(
             backgroundTaskService.databaseExecutor
         ),
         DefaultUploadMediator(
-            DataCollectionModule(
+            /*DataCollectionModule(
                 contextModule,
                 configModule,
                 SystemServiceModule(contextModule),
                 backgroundTaskService, connectivity,
                 memoryTrimState
-            ), configModule, baseUrl, jsonAdapter, backgroundTaskService.ioExecutor
+            ),*/ configModule, baseUrl, jsonAdapter, backgroundTaskService.ioExecutor
         )
     ) {
         this.backgroundTaskService = backgroundTaskService

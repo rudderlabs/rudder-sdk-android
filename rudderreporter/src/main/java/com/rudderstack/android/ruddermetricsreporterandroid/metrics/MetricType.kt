@@ -14,14 +14,24 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.metrics
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
+
 enum class MetricType(val value: String) {
-    COUNTER("counter"),
-    GAUGE("gauge"),;
+    @SerializedName("count")
+    @JsonProperty("count")
+    @Json(name = "count")
+    COUNTER("count"),
+    @SerializedName("gauge")
+    @JsonProperty("gauge")
+    @Json(name = "gauge")
+    GAUGE("gauge");
 
     companion object {
         fun getType(type: String): MetricType {
             return when (type) {
-                "counter" -> COUNTER
+                "count" -> COUNTER
                 "gauge" -> GAUGE
                 else -> throw IllegalArgumentException("Invalid metric type $type")
             }

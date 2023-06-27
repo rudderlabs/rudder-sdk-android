@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
+import android.util.Log
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.UploadMediator
 import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
@@ -26,54 +27,60 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 internal class DefaultUploadMediator(
-    dataCollectionModule: DataCollectionModule,
-    configModule: ConfigModule,
+//    dataCollectionModule: DataCollectionModule,
+    private val configModule: ConfigModule,
     baseUrl: String,
     private val jsonAdapter: JsonAdapter,
     networkExecutor: ExecutorService,
     private val apiVersion : Int = 1
 ) : UploadMediator {
-    private val deviceDataCollector: DeviceDataCollector
+//    private val deviceDataCollector: DeviceDataCollector
     private val webService = WebServiceFactory.getWebService(baseUrl, jsonAdapter,
         executor = networkExecutor)
-    private val libraryMetadataJson = configModule.config.libraryMetadata.serialize(jsonAdapter)
-    init {
-        deviceDataCollector = dataCollectionModule.deviceDataCollector
-    }
+//    private val libraryMetadataJson = configModule.config.libraryMetadata.serialize(jsonAdapter)
+//    init {
+//        deviceDataCollector = dataCollectionModule.deviceDataCollector
+//    }
 
-    override fun upload(metrics: List<MetricModel<Number>>, error: ErrorModel,
+    override fun upload(metrics: List<MetricModel<out Number>>, error: ErrorModel,
                         callback: (success : Boolean) -> Unit) {
         val requestMap = createRequestMap(metrics, error)
-        webService.post(null,null, jsonAdapter.writeToJson(requestMap), METRICS_ENDPOINT,
+        webService.post(null,null, jsonAdapter.writeToJson(requestMap,
+            object: RudderTypeAdapter<Map<String, Any?>>() {}).also {
+            println("posting")
+            println(it)
+        }, METRICS_ENDPOINT,
             object : RudderTypeAdapter<Map<*,*>>(){}){
+            Log.e("DefaultUploadMediator", "upload: $it")
             (it.status in 200..299).apply(callback)
         }
     }
 
-    private fun createRequestMap(metrics: List<MetricModel<Number>>, error: ErrorModel): Map<String, Any?> {
+    private fun createRequestMap(metrics: List<MetricModel<out Number>>, error: ErrorModel): Map<String, Any?> {
         val requestMap = HashMap<String, Any?>()
 //        requestMap[DEVICE_KEY] =
-        requestMap[METRICS_KEY] = metrics.map { it.serialize(jsonAdapter) }
-        requestMap[ERROR_KEY] = error.serialize(jsonAdapter)
-        requestMap[SOURCE_KEY] = getSourceJsonFromDeviceAndLibrary(
-            deviceDataCollector.generateDeviceWithState(System.currentTimeMillis()).serialize(jsonAdapter),
-            libraryMetadataJson
-        )
-        requestMap[VERSION_KEY] = apiVersion
+        requestMap[METRICS_KEY] = metrics
+        requestMap[ERROR_KEY] = error
+        requestMap[SOURCE_KEY] = configModule.config.libraryMetadata
+                /*mapOf(
+            DEVICE_KEY to deviceDataCollector.generateDeviceWithState(System.currentTimeMillis()),
+            LIBRARY_METADATA_KEY to configModule.config.libraryMetadata
+        )*/
+        requestMap[VERSION_KEY] = apiVersion.toString()
         return requestMap
     }
-    private fun getSourceJsonFromDeviceAndLibrary(deviceJson: String?,
-                                                  libraryMetadataJson: String?): String? {
-        return jsonAdapter.writeToJson(
-            mapOf(
-                DEVICE_KEY to deviceJson,
-                LIBRARY_METADATA_KEY to libraryMetadataJson
-            ), object : RudderTypeAdapter<Map<*,*>>(){}
-        )
-    }
+//    private fun getSourceJsonFromDeviceAndLibrary(deviceJson: String?,
+//                                                  libraryMetadataJson: String?): String? {
+//        return jsonAdapter.writeToJson(
+//            mapOf(
+//                DEVICE_KEY to deviceJson,
+//                LIBRARY_METADATA_KEY to libraryMetadataJson
+//            ), object : RudderTypeAdapter<Map<*,*>>(){}
+//        )
+//    }
     companion object{
-        private const val DEVICE_KEY = "device"
-        private const val LIBRARY_METADATA_KEY = "libraryMetadata"
+//        private const val DEVICE_KEY = "device"
+//        private const val LIBRARY_METADATA_KEY = "libraryMetadata"
         private const val SOURCE_KEY = "source"
         private const val METRICS_KEY = "metrics"
         private const val ERROR_KEY = "error"

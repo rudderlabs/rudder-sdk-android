@@ -19,7 +19,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.repository.Dao
 import com.rudderstack.android.repository.RudderDatabase
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.metrics.DefaultAggregatorHandler
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.Labels
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricType
@@ -46,8 +45,6 @@ class DefaultReservoirTest {
     }
     private lateinit var defaultStorage : DefaultReservoir
 
-
-
     //create 200 metric
     private lateinit var testNameCounterMap : Map<String, LongCounter>
     //consider 1000 labels
@@ -73,17 +70,17 @@ class DefaultReservoirTest {
             )
         }
         testLabels = (0..MAX_LABELS).map {
-            val randomNumberOfPairs = kotlin.random.Random.Default.nextInt(
+            val randomNumberOfPairs = Random.Default.nextInt(
                 0,
                 MAX_LABEL_MAP_COUNT
             )
             (0..randomNumberOfPairs).associate {
-                val randomLabelIndex = kotlin.random.Random.nextInt(
+                val randomLabelIndex = Random.nextInt(
                     0,
                     MAX_LABEL_MAP_COUNT
                 )
                 "testLabel_key_$randomLabelIndex" to "testLabel_value_$randomLabelIndex"
-            }.let { Labels.of(it) }
+            }.let { it }
         }
         testCounterToLabelMap =  testNameCounterMap.map { it.key }.associateWith {
             val randomLabelIndex = Random.nextInt(0, MAX_LABELS)
@@ -165,3 +162,5 @@ class DefaultReservoirTest {
     }
 
 }
+
+typealias Labels = Map<String, String>

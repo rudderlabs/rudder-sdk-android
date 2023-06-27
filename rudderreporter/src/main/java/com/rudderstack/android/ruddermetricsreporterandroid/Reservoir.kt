@@ -16,18 +16,26 @@ package com.rudderstack.android.ruddermetricsreporterandroid
 
 import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
+import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModelWithId
 
 interface Reservoir {
     fun insertOrIncrement(metric: MetricModel<Number>)
-    fun getAllMetricsSync(): List<MetricModel<Long>>
-    fun getAllMetrics(callback : (List<MetricModel<out Number>>) -> Unit)
+    fun getAllMetricsSync(): List<MetricModelWithId<out Number>>
+    fun getAllMetrics(callback : (List<MetricModelWithId<out Number>>) -> Unit)
 
-    fun getMetricsFirstSync(limit : Long): List<MetricModel<*>>
-    fun getMetricsFirst(limit : Long, callback : (List<MetricModel<Number>>) -> Unit)
+    fun getMetricsFirstSync(limit : Long): List<MetricModelWithId<out Number>>
+    fun getMetricsFirst(limit : Long, callback : (List<MetricModelWithId<out Number>>) -> Unit)
 //    fun getMetricsAndErrorFirst(limit : Long, callback : (List<MetricModel<Number>>, List<ErrorModel>) -> Unit)
     fun getMetricsCount(callback : (Long) -> Unit)
     fun clear()
     fun resetFirst(limit: Long)
+
+    /**
+     * Will reset upto the value present in the list
+     *
+     * @param dumpedMetrics
+     */
+    fun resetTillSync(dumpedMetrics: List<MetricModelWithId<out Number>>)
     fun reset()
     interface DataListener {
         /**

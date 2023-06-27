@@ -16,7 +16,6 @@ package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
 import com.rudderstack.android.ruddermetricsreporterandroid.UploadMediator
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.Labels
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricType
 import org.awaitility.Awaitility
@@ -133,7 +132,7 @@ class DefaultSyncerTest {
                 "testMetric$it",
                 MetricType.COUNTER,
                 it.toLong(),
-                Labels.of("testLabel_$it" to "testValue_$it")
+                mapOf("testLabel_$it" to "testValue_$it")
             )
         }
     }

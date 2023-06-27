@@ -41,6 +41,12 @@ dependencies {
     implementation project(projects.repository)
     implementation project(projects.web)
 
+    compileOnly deps.gson
+    compileOnly deps.jackson
+    compileOnly deps.moshi.core
+    compileOnly deps.moshi.kotlin
+    compileOnly deps.moshi.adapter
+
     testImplementation(project(projects.moshi_rudder_adapter))
     testImplementation(project(projects.gson_rudder_adapter))
     testImplementation(project(projects.jackson_rudder_adapter))

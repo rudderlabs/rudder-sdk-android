@@ -19,6 +19,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.annotation.VisibleForTesting
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
+import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 
 internal class ManifestConfigLoader {
 
@@ -69,7 +70,7 @@ internal class ManifestConfigLoader {
     @VisibleForTesting
     internal fun load(data: Bundle?): Configuration {
 
-        val config = Configuration()
+        val config = Configuration(LibraryMetadata("","","", ""))
 
         if (data != null) {
             loadAppConfig(config, data)
@@ -104,12 +105,12 @@ internal class ManifestConfigLoader {
     private fun loadAppConfig(config: Configuration, data: Bundle) {
         with(config) {
             releaseStage = data.getString(RELEASE_STAGE, config.releaseStage)
-            appVersion = data.getString(APP_VERSION, config.appVersion)
+//            appVersion = data.getString(APP_VERSION, config.appVersion)
             appType = data.getString(APP_TYPE, config.appType)
 
-            if (data.containsKey(VERSION_CODE)) {
-                versionCode = data.getInt(VERSION_CODE)
-            }
+//            if (data.containsKey(VERSION_CODE)) {
+//                versionCode = data.getInt(VERSION_CODE)
+//            }
             if (data.containsKey(ENABLED_RELEASE_STAGES)) {
                 enabledReleaseStages = getStrArray(data, ENABLED_RELEASE_STAGES, enabledReleaseStages)
             }

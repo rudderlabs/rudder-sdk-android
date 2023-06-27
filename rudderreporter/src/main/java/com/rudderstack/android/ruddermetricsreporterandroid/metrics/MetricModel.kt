@@ -17,12 +17,20 @@ package com.rudderstack.android.ruddermetricsreporterandroid.metrics
 import com.rudderstack.android.ruddermetricsreporterandroid.JSerialize
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 
-data class MetricModel<T : Any>(val name: String, val type: MetricType,
-                                val value: T, val labels: Labels) : JSerialize<MetricModel<T>> {
+open class MetricModel<T : Any>(val name: String, val type: MetricType,
+                                val value: T, val labels: Map<String,String>) : JSerialize<MetricModel<T>> {
     override fun serialize(jsonAdapter: JsonAdapter): String? {
-        mapOf<String, Any>("name" to name, "type" to type, "value" to value, "labels" to labels.data).let {
+        mapOf<String, Any>("name" to name, "type" to type, "value" to value, "labels" to labels).let {
             return jsonAdapter.writeToJson(it)
         }
     }
+}
 
+class MetricModelWithId<T : Any>(val id: String, name: String, type: MetricType,
+                                      value: T, labels: Map<String,String>) : MetricModel<T>(name, type, value, labels) {
+    override fun serialize(jsonAdapter: JsonAdapter): String? {
+        mapOf<String, Any>("id" to id, "name" to name, "type" to type, "value" to value, "labels" to labels).let {
+            return jsonAdapter.writeToJson(it)
+        }
+    }
 }

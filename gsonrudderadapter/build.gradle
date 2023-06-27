@@ -29,7 +29,6 @@ apply from : "$projectDir/../dependencies.gradle"
 dependencies {
 
     implementation project(':rudderjsonadapter')
-    implementation project(':models')
     api deps.gson
 
     testImplementation deps.hamcrest

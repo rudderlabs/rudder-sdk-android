@@ -29,7 +29,7 @@ internal class AppDataCollector(
     private val appName = getAppName()
     private val processName = findProcessName()
     private val releaseStage = config.releaseStage
-    private val versionName = config.appVersion ?: config.packageInfo?.versionName
+    private val versionName = config.libraryMetadata.sdkVersion ?: config.packageInfo?.versionName
     private val installerPackage = getInstallerPackageName()
 
     private val bgWorkRestricted
