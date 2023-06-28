@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /*
  * Helper class for SQLite operations
@@ -210,7 +209,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
                 builder.deleteCharAt(builder.length() - 1);
                 // remove events
                 String deleteSQL = String.format(Locale.US, "DELETE FROM %s WHERE %s IN (%s)",
-                        EVENTS_TABLE_NAME, MESSAGE_ID_COL, builder.toString());
+                        EVENTS_TABLE_NAME, MESSAGE_ID_COL, builder);
                 RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: clearEventsFromDB: deleteSQL: %s", deleteSQL));
                 database.execSQL(deleteSQL);
                 RudderLogger.logInfo("DBPersistentManager: clearEventsFromDB: Messages deleted from DB");
@@ -242,32 +241,34 @@ class DBPersistentManager extends SQLiteOpenHelper {
         try {
             // get readable database instance
             SQLiteDatabase database = getReadableDatabase();
-            if (database.isOpen()) {
-                Cursor cursor;
-                synchronized (DB_LOCK) {
-                    cursor = database.rawQuery(selectSQL, null);
-                }
-                if (cursor.moveToFirst()) {
-                    RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: fetched messages from DB");
-                    while (!cursor.isAfterLast()) {
-                        final int messageIdColIndex = cursor.getColumnIndex(MESSAGE_ID_COL);
-                        final int messageColIndex = cursor.getColumnIndex(MESSAGE_COL);
-                        final int statusColIndex = cursor.getColumnIndex(STATUS_COL);
-
-                        if (messageIdColIndex > -1)
-                            messageIdStatusMap.put(cursor.getInt(messageIdColIndex),
-                                    statusColIndex > -1 ? cursor.getInt(statusColIndex) : STATUS_DEVICE_MODE_DONE);
-                        if (messageColIndex > -1)
-                            messages.add(cursor.getString(messageColIndex));
-                        cursor.moveToNext();
-                    }
-                } else {
-                    RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: DB is empty");
-                }
-                cursor.close();
-            } else {
+            if (!database.isOpen()) {
                 RudderLogger.logError("DBPersistentManager: fetchEventsFromDB: database is not readable");
+                return;
             }
+            Cursor cursor;
+            synchronized (DB_LOCK) {
+                cursor = database.rawQuery(selectSQL, null);
+            }
+            if (!cursor.moveToFirst()) {
+                RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: DB is empty");
+                cursor.close();
+                return;
+            }
+            RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: fetched messages from DB");
+            while (!cursor.isAfterLast()) {
+                final int messageIdColIndex = cursor.getColumnIndex(MESSAGE_ID_COL);
+                final int messageColIndex = cursor.getColumnIndex(MESSAGE_COL);
+                final int statusColIndex = cursor.getColumnIndex(STATUS_COL);
+
+                if (messageIdColIndex > -1)
+                    messageIdStatusMap.put(cursor.getInt(messageIdColIndex),
+                            statusColIndex > -1 ? cursor.getInt(statusColIndex) : STATUS_DEVICE_MODE_DONE);
+                if (messageColIndex > -1)
+                    messages.add(cursor.getString(messageColIndex));
+                cursor.moveToNext();
+            }
+            cursor.close();
+
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
         }
@@ -335,28 +336,29 @@ class DBPersistentManager extends SQLiteOpenHelper {
         try {
             // get readable database instance
             SQLiteDatabase database = getReadableDatabase();
-            if (database.isOpen()) {
-
-                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: getDBRecordCount: countSQL: %s", sql));
-                Cursor cursor;
-                synchronized (DB_LOCK) {
-                    cursor = database.rawQuery(sql, null);
-                }
-                if (cursor.moveToFirst()) {
-                    RudderLogger.logInfo("DBPersistentManager: getDBRecordCount: fetched count from DB");
-                    while (!cursor.isAfterLast()) {
-                        // result will be in the first position
-                        count = cursor.getInt(0);
-                        cursor.moveToNext();
-                    }
-                } else {
-                    RudderLogger.logInfo("DBPersistentManager: getDBRecordCount: DB is empty");
-                }
-                // release cursor
-                cursor.close();
-            } else {
+            if (!database.isOpen()) {
                 RudderLogger.logError("DBPersistentManager: getDBRecordCount: database is not readable");
+                return count;
             }
+
+            RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: getDBRecordCount: countSQL: %s", sql));
+            Cursor cursor;
+            synchronized (DB_LOCK) {
+                cursor = database.rawQuery(sql, null);
+            }
+            if (cursor.moveToFirst()) {
+                RudderLogger.logInfo("DBPersistentManager: getDBRecordCount: fetched count from DB");
+                while (!cursor.isAfterLast()) {
+                    // result will be in the first position
+                    count = cursor.getInt(0);
+                    cursor.moveToNext();
+                }
+            } else {
+                RudderLogger.logInfo("DBPersistentManager: getDBRecordCount: DB is empty");
+            }
+            // release cursor
+            cursor.close();
+
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
         }
@@ -393,11 +395,8 @@ class DBPersistentManager extends SQLiteOpenHelper {
                         addMessageToHandlerThread(msg);
                     }
                 }
-            } catch (SQLiteDatabaseCorruptException ex) {
-                RudderLogger.logError(ex);
-            } catch (ConcurrentModificationException ex) {
-                RudderLogger.logError(ex);
-            } catch (NullPointerException ex) {
+            } catch (SQLiteDatabaseCorruptException | ConcurrentModificationException |
+                     NullPointerException ex) {
                 RudderLogger.logError(ex);
             }
         };
@@ -454,16 +453,20 @@ class DBPersistentManager extends SQLiteOpenHelper {
             return false;
         }
         try (Cursor allRows = database.rawQuery(checkIfStatusExistsSqlString, null)) {
-            if (allRows != null && allRows.moveToFirst()) {
-                do {
-                    int index = allRows.getColumnIndex("name");
-                    if (index > -1) {
-                        String columnName = allRows.getString(index);
-                        if (columnName.equals(STATUS_COL))
-                            return true;
-                    }
-                } while (allRows.moveToNext());
+            if (allRows == null || !allRows.moveToFirst()) {
+                return false;
             }
+            do {
+                int index = allRows.getColumnIndex("name");
+                if (index == -1) {
+                    return false;
+                }
+                String columnName = allRows.getString(index);
+                if (columnName.equals(STATUS_COL))
+                    return true;
+
+            } while (allRows.moveToNext());
+
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError("DBPersistentManager: checkIfStatusColumnExists: Exception while checking the presence of status column due to " + ex.getLocalizedMessage());
         }
@@ -480,11 +483,8 @@ class DBPersistentManager extends SQLiteOpenHelper {
                     return;
                 }
                 RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column exists in the table already, hence no migration required");
-            } catch (SQLiteDatabaseCorruptException ex) {
-                RudderLogger.logError(DBPERSISTENT_MANAGER_CHECK_FOR_MIGRATIONS_TAG + ex.getLocalizedMessage());
-            } catch (ConcurrentModificationException ex) {
-                RudderLogger.logError(DBPERSISTENT_MANAGER_CHECK_FOR_MIGRATIONS_TAG + ex.getLocalizedMessage());
-            } catch (NullPointerException ex) {
+            } catch (SQLiteDatabaseCorruptException | ConcurrentModificationException |
+                     NullPointerException ex) {
                 RudderLogger.logError(DBPERSISTENT_MANAGER_CHECK_FOR_MIGRATIONS_TAG + ex.getLocalizedMessage());
             }
         };
@@ -516,17 +516,18 @@ class DBPersistentManager extends SQLiteOpenHelper {
     public void deleteAllEvents() {
         try {
             SQLiteDatabase database = getWritableDatabase();
-            if (database.isOpen()) {
-                // remove events
-                String clearDBSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
-                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: deleteAllEvents: clearDBSQL: %s", clearDBSQL));
-                synchronized (DB_LOCK) {
-                    database.execSQL(clearDBSQL);
-                }
-                RudderLogger.logInfo("DBPersistentManager: deleteAllEvents: deleted all events");
-            } else {
+            if (!database.isOpen()) {
                 RudderLogger.logError("DBPersistentManager: deleteAllEvents: database is not writable");
+                return;
             }
+            // remove events
+            String clearDBSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
+            RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: deleteAllEvents: clearDBSQL: %s", clearDBSQL));
+            synchronized (DB_LOCK) {
+                database.execSQL(clearDBSQL);
+            }
+            RudderLogger.logInfo("DBPersistentManager: deleteAllEvents: deleted all events");
+
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
         }
@@ -596,7 +597,7 @@ class DBInsertionHandlerThread extends HandlerThread {
         dbInsertionHandler.sendMessage(message);
     }
 
-    private class DBInsertionHandler extends Handler {
+    private static class DBInsertionHandler extends Handler {
         SQLiteDatabase database;
 
         public DBInsertionHandler(Looper looper, SQLiteDatabase database) {
@@ -612,9 +613,11 @@ class DBInsertionHandlerThread extends HandlerThread {
                 Bundle msgBundle = msg.getData();
                 String messageJson = msgBundle.getString(EVENT);
                 long updatedTime = System.currentTimeMillis();
-                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: saveEvent: Inserting Message %s into table %s as Updated at %d", messageJson.replace("'", BACKSLASH), DBPersistentManager.EVENTS_TABLE_NAME, updatedTime));
+                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: " +
+                        "saveEvent: Inserting Message %s into table %s as Updated at %d",
+                        messageJson.replace("'", BACKSLASH), DBPersistentManager.EVENTS_TABLE_NAME, updatedTime));
                 ContentValues insertValues = new ContentValues();
-                insertValues.put(DBPersistentManager.MESSAGE_COL, messageJson.replaceAll("'", BACKSLASH));
+                insertValues.put(DBPersistentManager.MESSAGE_COL, messageJson.replace("'", BACKSLASH));
                 insertValues.put(DBPersistentManager.UPDATED_COL, updatedTime);
                 long rowId = database.insert(DBPersistentManager.EVENTS_TABLE_NAME, null, insertValues); //rowId will used
                 callback.onInsertion((int) rowId);
