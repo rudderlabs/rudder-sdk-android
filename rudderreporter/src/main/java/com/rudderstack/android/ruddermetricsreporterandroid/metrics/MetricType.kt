@@ -19,10 +19,12 @@ import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.Json
 
 enum class MetricType(val value: String) {
+
     @SerializedName("count")
     @JsonProperty("count")
     @Json(name = "count")
     COUNTER("count"),
+
     @SerializedName("gauge")
     @JsonProperty("gauge")
     @Json(name = "gauge")
