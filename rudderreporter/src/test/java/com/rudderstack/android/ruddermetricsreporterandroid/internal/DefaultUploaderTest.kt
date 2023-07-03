@@ -15,6 +15,8 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
 import android.content.Context
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
@@ -29,32 +31,17 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
 import org.mockito.Mockito
+import org.robolectric.annotation.Config
 import java.util.Date
-
+@RunWith(AndroidJUnit4::class)
+@Config(sdk = [29])
 open class DefaultUploaderTest {
 
     protected var jsonAdapter: JsonAdapter = MoshiAdapter()
-    private val mockedDataCollectionModule = Mockito.mock(DataCollectionModule::class.java).also {
-        Mockito.`when`(
-            it.deviceDataCollector
-        ).thenReturn(
-            Mockito.mock(DeviceDataCollector::class.java).also {
-                Mockito.`when`(it.generateDeviceWithState(Mockito.anyLong())).thenReturn(
-                    DeviceWithState(
-                        DeviceBuildInfo(
-                            MANUFACTURER, MODEL, OS_VERSION, API_LEVEL,
-                            OS_BUILD, null, null, null, null
-                        ), false, ID, 100, mutableMapOf<String, Any>(), 11111,
-                        12232, "landscape", Date()
-                    )
-                )
-
-            })
-    }
     private val defaultUploader = DefaultUploadMediator(
-         ConfigModule(ContextModule(Mockito.mock(Context::class.java)), Configuration(
+         ConfigModule(ContextModule(ApplicationProvider.getApplicationContext()), Configuration(
             LibraryMetadata("","","","")
-        )),"",
+        )),"https://some-api.com",
         jsonAdapter, TestExecutor()
     )
 

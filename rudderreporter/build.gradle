@@ -36,7 +36,9 @@ android {
 
 dependencies {
 
-    implementation deps.kotlinCore
+//    implementation deps.kotlinCore
+    implementation deps.androidXAnnotations
+
     implementation(project(projects.json_rudder_adapter))
     implementation project(projects.repository)
     implementation project(projects.web)

@@ -1,9 +1,12 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -20,6 +23,24 @@ internal interface Connectivity {
     fun unregisterForNetworkChanges()
     fun hasNetworkConnection(): Boolean
     fun retrieveNetworkAccessState(): String
+    fun hasAccessNetworkStatePermissionInManifest(context: Context): Boolean {
+
+        val packageInfo = context.packageManager.getPackageInfo(
+            context.packageName,
+            PackageManager.GET_PERMISSIONS
+        )
+        val permissions = packageInfo.requestedPermissions
+
+        if (permissions.isNullOrEmpty())
+            return false
+
+        for (perm in permissions) {
+            if (perm == Manifest.permission.ACCESS_NETWORK_STATE)
+                return true
+        }
+
+        return false
+    }
 }
 
 internal class ConnectivityCompat(
@@ -32,7 +53,12 @@ internal class ConnectivityCompat(
     private val connectivity: Connectivity =
         when {
             cm == null -> UnknownConnectivity
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> ConnectivityApi24(cm, callback)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> ConnectivityApi24(
+                cm,
+                context,
+                callback
+            )
+
             else -> ConnectivityLegacy(context, cm, callback)
         }
 
@@ -65,12 +91,13 @@ internal class ConnectivityLegacy(
     private val changeReceiver = ConnectivityChangeReceiver(callback)
 
     private val activeNetworkInfo: android.net.NetworkInfo?
-        get() = try {
+        @SuppressLint("MissingPermission")
+        get() = if (hasAccessNetworkStatePermissionInManifest(context)) try {
             cm.activeNetworkInfo
         } catch (e: NullPointerException) {
             // in some rare cases we get a remote NullPointerException via Parcel.readException
             null
-        }
+        } else null
 
     override fun registerForNetworkChanges() {
         val intentFilter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
@@ -109,17 +136,27 @@ internal class ConnectivityLegacy(
 @RequiresApi(Build.VERSION_CODES.N)
 internal class ConnectivityApi24(
     private val cm: ConnectivityManager,
+    private val context: Context,
     callback: NetworkChangeCallback?
 ) : Connectivity {
 
     private val networkCallback = ConnectivityTrackerCallback(callback)
 
-    override fun registerForNetworkChanges() = cm.registerDefaultNetworkCallback(networkCallback)
-    override fun unregisterForNetworkChanges() = cm.unregisterNetworkCallback(networkCallback)
-    override fun hasNetworkConnection() = cm.activeNetwork != null
+    @SuppressLint("MissingPermission")
+    override fun registerForNetworkChanges() {
+        if (hasAccessNetworkStatePermissionInManifest(context))
+            cm.registerDefaultNetworkCallback(networkCallback)
+    }
 
+    override fun unregisterForNetworkChanges() = cm.unregisterNetworkCallback(networkCallback)
+    @SuppressLint("MissingPermission")
+    override fun hasNetworkConnection() =
+        !hasAccessNetworkStatePermissionInManifest(context) || cm.activeNetwork != null
+
+    @SuppressLint("MissingPermission")
     override fun retrieveNetworkAccessState(): String {
-        val network = cm.activeNetwork
+        val network = if (hasAccessNetworkStatePermissionInManifest(context))
+            cm.activeNetwork else null
         val capabilities = if (network != null) cm.getNetworkCapabilities(network) else null
 
         return when {

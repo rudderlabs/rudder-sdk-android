@@ -19,8 +19,6 @@ import android.content.Context
 import android.database.Cursor
 import android.database.DatabaseUtils
 import android.database.sqlite.SQLiteDatabase
-import androidx.core.database.getLongOrNull
-import androidx.core.database.getStringOrNull
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
 import com.rudderstack.android.repository.utils.getInsertedRowIdForConflictIgnore
@@ -310,21 +308,27 @@ class Dao<T : Entity> internal constructor(
         }
     }
 
-    private fun getCountSync(db : SQLiteDatabase, selection: String? = null, selectionArgs: Array<String>? = null): Long {
+    private fun getCountSync(
+        db: SQLiteDatabase,
+        selection: String? = null,
+        selectionArgs: Array<String>? = null
+    ): Long {
         return synchronized(DB_LOCK) {
-            if (useContentProvider) (context.contentResolver.query(entityContentProviderUri.build(),
-                arrayOf("count(*)"), selection, selectionArgs, null)
+            if (useContentProvider) (context.contentResolver.query(
+                entityContentProviderUri.build(),
+                arrayOf("count(*)"), selection, selectionArgs, null
+            )
                 ?.use { cursor ->
                     cursor.moveToFirst()
                     cursor.getLong(0)
                 } ?: -1L)
             else
-            DatabaseUtils.queryNumEntries(
-                db,
-                tableName,
-                selection,
-                selectionArgs
-            )
+                DatabaseUtils.queryNumEntries(
+                    db,
+                    tableName,
+                    selection,
+                    selectionArgs
+                )
         }
     }
 
@@ -342,7 +346,7 @@ class Dao<T : Entity> internal constructor(
         //consider only one auto increment key
         var (autoIncrementFieldName: String?, nextValue: Long) = fields.firstOrNull {
             it.type == RudderField.Type.INTEGER &&
-                    it.isAutoInc && !it.primaryKey
+                    it.isAutoInc /*&& !it.primaryKey*/
         }?.let { autoIncField ->
             autoIncField.fieldName to getMaxIntValueForColumn(
                 db,
@@ -350,7 +354,10 @@ class Dao<T : Entity> internal constructor(
                 autoIncField.fieldName
             ) + 1L
         } ?: (null to 0L)
-        var dbCount = if(conflictResolutionStrategy == ConflictResolutionStrategy.CONFLICT_IGNORE) getCountSync(db) else -1L
+        var dbCount =
+            if (conflictResolutionStrategy == ConflictResolutionStrategy.CONFLICT_IGNORE) getCountSync(
+                db
+            ) else 0L
         var rowIds = listOf<Long>()
         var returnedItems = listOf<T?>()
         items.forEach {
@@ -366,10 +373,9 @@ class Dao<T : Entity> internal constructor(
                 null,
                 conflictResolutionStrategy.type
             ).let {
-                if(conflictResolutionStrategy == ConflictResolutionStrategy.CONFLICT_IGNORE) {
+                if (conflictResolutionStrategy == ConflictResolutionStrategy.CONFLICT_IGNORE) {
                     getInsertedRowIdForConflictIgnore(dbCount, it)
-                }
-                else it
+                } else it
             }.also {
                 if (it >= 0) {
                     nextValue++
@@ -377,7 +383,8 @@ class Dao<T : Entity> internal constructor(
                 }
             }
             rowIds = rowIds + insertedRowId
-            returnedItems = returnedItems + (if(insertedRowId < 0) it else contentValues.toEntity(entityClass))
+            returnedItems =
+                returnedItems + (if (insertedRowId < 0) it else contentValues.toEntity(entityClass))
         }
         if (!useContentProvider) {
             db.openDatabase?.setTransactionSuccessful()
@@ -392,9 +399,10 @@ class Dao<T : Entity> internal constructor(
         return rowIds to returnedItems
     }
 
-    private fun <T: Entity> ContentValues.toEntity(classOfT: Class<T>) : T? {
+    private fun <T : Entity> ContentValues.toEntity(classOfT: Class<T>): T? {
         return entityFactory.getEntity(classOfT, this.toMap())
     }
+
     private fun ContentValues.toMap(): Map<String, Any?> {
         return keySet().associateWith { get(it) }
     }
@@ -408,7 +416,7 @@ class Dao<T : Entity> internal constructor(
     ): Long {
         return db.query(
             tableName,
-            arrayOf("IFNULL(MAX($column), -1)"),
+            arrayOf("IFNULL(MAX($column), 0)"),
             null,
             null,
             null,
@@ -533,7 +541,8 @@ class Dao<T : Entity> internal constructor(
         //run all pending tasks
         executorService.execute {
             synchronized(DB_LOCK) {
-                sqLiteDatabase.openDatabase?.execSQL(createTableStmt(tableName, fields))
+                val tableStmt = createTableStmt(tableName, fields)
+                sqLiteDatabase.openDatabase?.execSQL(tableStmt)
                 createIndexStmt(tableName, fields)?.apply {
                     sqLiteDatabase.openDatabase?.execSQL(this)
                 }
@@ -549,22 +558,26 @@ class Dao<T : Entity> internal constructor(
             _db?.openDatabase?.execSQL(command)
         }
     }
+
     fun beginTransaction() {
         synchronized(DB_LOCK) {
             _db?.openDatabase?.beginTransaction()
         }
     }
+
     fun setTransactionSuccessful() {
         synchronized(DB_LOCK) {
             _db?.openDatabase?.setTransactionSuccessful()
         }
     }
+
     fun endTransaction() {
         synchronized(DB_LOCK) {
             _db?.openDatabase?.endTransaction()
         }
     }
-    fun execSql(command: String, callback : (() -> Unit)? = null) {
+
+    fun execSql(command: String, callback: (() -> Unit)? = null) {
         runTransactionOrDeferToCreation { db: SQLiteDatabase ->
             db.openDatabase?.execSQL(command)
             callback?.invoke()
@@ -575,31 +588,31 @@ class Dao<T : Entity> internal constructor(
     private fun createTableStmt(tableName: String, fields: Array<RudderField>): String? {
 
 //        var isAutoIncKeyPresent = false
-        var isAutoIncrementedKeyPrimaryKeySame = false
+//        var isAutoIncrementedKeyPrimaryKeySame = false
         val fieldsStmt = fields.map {
-            if (it.isAutoInc) {
-//                isAutoIncKeyPresent = true
-                isAutoIncrementedKeyPrimaryKeySame = it.primaryKey
-            }
+//            if (it.isAutoInc) {
+////                isAutoIncKeyPresent = true
+//                isAutoIncrementedKeyPrimaryKeySame = it.primaryKey
+//            }
             "'${it.fieldName}' ${it.type.notation}" + //field name and type
                     // if primary and auto increment
-                    if (it.primaryKey && it.isAutoInc && it.type == RudderField.Type.INTEGER) " PRIMARY KEY AUTOINCREMENT" else "" +
-                            if (!it.isNullable && !it.primaryKey) " NOT NULL" else "" //specifying nullability, primary key cannot be null
+                    /*if (it.primaryKey && it.isAutoInc && it.type == RudderField.Type.INTEGER) " PRIMARY KEY AUTOINCREMENT" else "" +*/
+                            if (!it.isNullable || it.primaryKey) " NOT NULL" else "" //specifying nullability, primary key cannot be null
         }.reduce { acc, s -> "$acc, $s" }
         val primaryKeyStmt =
-            if (isAutoIncrementedKeyPrimaryKeySame) "" else { //auto increment is only available for one primary key
+            /*if (isAutoIncrementedKeyPrimaryKeySame) "" else {*/ //auto increment is only available for one primary key
                 fields.filter { it.primaryKey }.takeIf { !it.isNullOrEmpty() }?.map {
                     it.fieldName
                 }?.reduce { acc, s -> "$acc,$s" }?.let {
                     "PRIMARY KEY ($it)"
                 } ?: ""
-            }
+//            }
         val uniqueKeyStmt =
             fields.filter { it.isUnique }.takeIf { it.isNotEmpty() }?.joinToString(",") {
                 it.fieldName
             }?.let {
-                    "UNIQUE($it)"
-                }
+                "UNIQUE($it)"
+            }
 
 
 
@@ -719,4 +732,21 @@ class Dao<T : Entity> internal constructor(
         }
 
     }
+}
+
+private fun Cursor.getStringOrNull(columnIndex: Int): String? {
+    return try {
+        getString(columnIndex)
+    } catch (_: Exception) {
+        null
+    }
+}
+
+private fun Cursor.getLongOrNull(colIndex: Int): Long? {
+    return try {
+        getLong(colIndex)
+    } catch (_: Exception) {
+        null
+    }
+
 }

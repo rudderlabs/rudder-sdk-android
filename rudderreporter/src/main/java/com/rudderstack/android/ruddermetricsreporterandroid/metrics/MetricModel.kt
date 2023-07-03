@@ -24,6 +24,32 @@ open class MetricModel<T : Any>(val name: String, val type: MetricType,
             return jsonAdapter.writeToJson(it)
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is MetricModel<*>) return false
+
+        if (name != other.name) return false
+        if (type != other.type) return false
+        if (value != other.value) return false
+        if (labels != other.labels) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + type.hashCode()
+        result = 31 * result + value.hashCode()
+        result = 31 * result + labels.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return "MetricModel(name='$name', type=$type, value=$value, labels=$labels)"
+    }
+
+
 }
 
 class MetricModelWithId<T : Any>(val id: String, name: String, type: MetricType,
@@ -33,4 +59,17 @@ class MetricModelWithId<T : Any>(val id: String, name: String, type: MetricType,
             return jsonAdapter.writeToJson(it)
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        return other is MetricModelWithId<*> && other.id == id && super.equals(other)
+    }
+
+    override fun hashCode(): Int {
+        return 31 * id.hashCode() + super.hashCode()
+    }
+
+    override fun toString(): String {
+        return "MetricModelWithId(id='$id'), parent = ${super.toString()})"
+    }
+
 }

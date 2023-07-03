@@ -21,6 +21,7 @@ import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
 import com.rudderstack.android.repository.models.SampleEntity
 import com.rudderstack.android.repository.models.TestEntityFactory
+import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
@@ -28,9 +29,11 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 @RunWith(AndroidJUnit4::class)
+@Config(sdk = [29])
 class CustomEntityRudderDatabaseTest {
 
     //lets have a model class
@@ -111,7 +114,8 @@ class CustomEntityRudderDatabaseTest {
         RudderDatabase.init(
             ApplicationProvider.getApplicationContext(),
 //            RuntimeEnvironment.application,
-            "testDb", ModelEntityFactory()
+            "testDb", ModelEntityFactory(), false,
+            executorService = TestExecutor()
         )
 
     }

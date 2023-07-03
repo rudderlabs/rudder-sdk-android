@@ -17,6 +17,7 @@ package com.rudderstack.android.ruddermetricsreporterandroid.internal
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
 import com.rudderstack.android.ruddermetricsreporterandroid.UploadMediator
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
+import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModelWithId
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricType
 import org.awaitility.Awaitility
 import org.hamcrest.Matchers
@@ -40,8 +41,8 @@ class DefaultSyncerTest {
         val isDone = AtomicBoolean(false)
         val interval = 1000L
         Mockito.`when`(mockReservoir.getMetricsFirst(Mockito.anyLong(), org.mockito.kotlin.any())).then {
-            val callback = it.arguments[1] as ((List<MetricModel<Number>>) -> Unit)
-            val metrics = if (lastMetricsIndex + 1 < maxMetrics) getTestMetricList(
+            val callback = it.arguments[1] as ((List<MetricModelWithId<Number>>) -> Unit)
+            val metrics = if (lastMetricsIndex < maxMetrics) getTestMetricList(
                 lastMetricsIndex,
                 limit
             ) else emptyList()
@@ -61,16 +62,23 @@ class DefaultSyncerTest {
                 assert(false) //should not reach here
                 isDone.set(true)
             }else {
+                val expected = getTestMetricList(cumulativeIndex, limit)
+                println("*********uploaded**********" )
+                println(uploaded)
+                println("***************")
+                println("*****Expected*******")
+                println(expected)
+                println("***************")
                 assertThat(
                     uploaded,
                     allOf(
                         notNullValue(),
                         not(empty()),
                         hasSize(limit),
-                        Matchers.contains<MetricModel<out Number>>(*(getTestMetricList(cumulativeIndex, limit).toTypedArray()))
+                        Matchers.contains<MetricModel<out Number>>(*(expected.toTypedArray()))
                     )
                 )
-                if (cumulativeIndex + uploaded.size + 1 >= maxMetrics) {
+                if (cumulativeIndex + uploaded.size  >= maxMetrics) {
                     Thread.sleep(1000)
                     isDone.set(true)
                 }
@@ -126,12 +134,14 @@ class DefaultSyncerTest {
         Thread.sleep(1000)
         assertThat(schedulerCalled, `is`(3))
     }
-    private fun getTestMetricList(startIndex: Int, limit: Int): List<MetricModel<Number>> {
-        return (startIndex until startIndex + limit).map {
-            MetricModel(
+    private fun getTestMetricList(startPos: Int, limit: Int): List<MetricModelWithId<Number>> {
+
+        return (startPos until startPos + limit).map {
+            val index = it + 1
+            MetricModelWithId((index).toString(),
                 "testMetric$it",
                 MetricType.COUNTER,
-                it.toLong(),
+                index.toLong(),
                 mapOf("testLabel_$it" to "testValue_$it")
             )
         }

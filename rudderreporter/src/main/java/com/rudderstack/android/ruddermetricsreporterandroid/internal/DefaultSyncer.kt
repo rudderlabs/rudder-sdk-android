@@ -14,7 +14,6 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
-import android.util.Log
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
 import com.rudderstack.android.ruddermetricsreporterandroid.Syncer
 import com.rudderstack.android.ruddermetricsreporterandroid.UploadMediator
@@ -54,21 +53,17 @@ class DefaultSyncer internal constructor(
     }
 
     private fun flushMetrics(flushCount: Long) {
-        Log.e("syncer", "flush called $this")
         //TODO: add error handling getMetricsAndErrorFirst
         reservoir.getMetricsFirst(flushCount) {
             val validMetrics = it.filterWithValidValues()
-            Log.e("syncer", "valid metrics ${validMetrics.size}")
             if (validMetrics.isEmpty()) {
                 _atomicRunning.set(false)
                 if (_isShutDown.get())
                     stopScheduling()
                 return@getMetricsFirst
             }
-            Log.e("syncer", "uploading ${validMetrics.size}")
 
             uploader.upload(validMetrics, ErrorModel()) { success ->
-                Log.e("syncer", "upload cb success $success")
                 if (success) {
                     reservoir.resetTillSync(validMetrics)
                 }
@@ -83,7 +78,6 @@ class DefaultSyncer internal constructor(
                     flushMetrics(flushCount)
                 else
                     _atomicRunning.set(false)
-                Log.e("syncer", "atomic_running ${_atomicRunning.get()}")
             }
         }
     }
@@ -118,7 +112,6 @@ class DefaultSyncer internal constructor(
             periodicTaskScheduler = object : TimerTask() {
                 override fun run() {
                     callback.invoke()
-                    Log.e("syncer", "invoke timer $this")
                 }
             }
             println("rescheduling : $this")

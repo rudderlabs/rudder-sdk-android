@@ -19,7 +19,8 @@ ext {
             jackson                : "2.12.4",
             jacksonKotlin          : "2.13.3",
             moshi                  : "1.13.0",
-            "kotlinCore"           : "1.8.0",
+            kotlinCore             : "1.10.1",
+            androidXAnnotations    : "1.6.0",
             hamcrest               : "2.2",
             androidXTestRules      : "1.4.0",
             androidXTest           : "1.4.0",
@@ -46,6 +47,7 @@ ext {
                     adapter: "com.squareup.moshi:moshi-adapters:${versions.moshi}"
             ],
             kotlinCore             : "androidx.core:core-ktx:${versions.kotlinCore}",
+            androidXAnnotations    : "androidx.annotation:annotation:${versions.androidXAnnotations}",
             androidXTest           : "androidx.test:core:${versions.androidXTest}",
             androidXTestRules      : "androidx.test:rules:${versions.androidXTestRules}",
             androidXTestExtJunitKtx: "androidx.test.ext:junit-ktx:${versions.androidXTestExtJunitKtx}",
