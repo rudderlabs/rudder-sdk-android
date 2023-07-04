@@ -63,7 +63,6 @@ public class RudderDeviceModeTransformationManager {
                         RudderLogger.logDebug("DeviceModeTransformationManager: DeviceModeTransformationProcessor: fetching device mode events to flush to transformation service");
                         if ((deviceModeSleepCount >= config.getSleepTimeOut() && deviceModeEventsCount > 0) || deviceModeEventsCount >= DMT_BATCH_SIZE) {
                             int retryCount = 0;
-                            int delay;
                             do {
                                 messages.clear();
                                 messageIds.clear();
@@ -82,19 +81,20 @@ public class RudderDeviceModeTransformationManager {
                                     RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Network unavailable. Aborting");
                                     break;
                                 } else if (result.status == NetworkResponses.ERROR) {
-                                    delay = Math.min((1 << retryCount) * 500, MAX_DELAY); // Exponential backoff
+                                    int delay = Math.min((1 << retryCount) * 500, MAX_DELAY); // Exponential backoff
                                     if (retryCount++ == MAX_RETRIES) {
+                                        retryCount = 0;
                                         deviceModeSleepCount = 0;
                                         rudderDeviceModeManager.dumpOriginalEvents(gson.fromJson(requestJson, TransformationRequest.class), true);
                                         completeDeviceModeEventProcessing();
-                                        break;
-                                    }
-                                    RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Retrying in " + delay + "s");
-                                    try {
-                                        Thread.sleep(delay);
-                                    } catch (Exception e) {
-                                        RudderLogger.logError(e);
-                                        Thread.currentThread().interrupt();
+                                    } else {
+                                        RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Retrying in " + delay + "s");
+                                        try {
+                                            Thread.sleep(delay);
+                                        } catch (Exception e) {
+                                            RudderLogger.logError(e);
+                                            Thread.currentThread().interrupt();
+                                        }
                                     }
                                 } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
                                     deviceModeSleepCount = 0;
