@@ -184,14 +184,14 @@ public class RudderNetworkManager {
                     httpConnection.setRequestProperty(entry.getKey(), entry.getValue());
                 }
             }
-            requestPayload = withAddedMetadataToRequestPayload(requestPayload, isDMTRequest);
+            String requestPayloadWithMetadata = withAddedMetadataToRequestPayload(requestPayload, isDMTRequest);
             OutputStream os = httpConnection.getOutputStream();
             if (connectionWrapperOSGenerator != null) {
                 os = connectionWrapperOSGenerator.apply(os);
                 System.out.println("RudderNetworkManager: sendNetworkRequest: Gzip is enabled");
             }
             OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
-            osw.write(requestPayload);
+            osw.write(requestPayloadWithMetadata);
             osw.flush();
             osw.close();
             os.close();
