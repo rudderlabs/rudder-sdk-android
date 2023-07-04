@@ -17,10 +17,13 @@ public class TransformationRequest {
         final Integer rowId;
         @SerializedName(value="message", alternate = {"event"})
         final RudderMessage message;
+        @SerializedName(value="destinationIds")
+        final List<String> destinationIds;
 
-        private TransformationRequestEvent(Integer rowId, RudderMessage message) {
+        private TransformationRequestEvent(Integer rowId, RudderMessage message, List<String> destinationIds) {
             this.rowId = rowId;
             this.message = message;
+            this.destinationIds = destinationIds;
         }
     }
 }

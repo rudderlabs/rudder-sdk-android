@@ -70,10 +70,11 @@ public class RudderDeviceModeTransformationManager {
                                 synchronized (MessageUploadLock.DEVICE_TRANSFORMATION_LOCK) {
                                     dbManager.fetchDeviceModeEventsFromDb(messageIds, messages, DMT_BATCH_SIZE);
                                 }
-                                String requestJson = createDeviceTransformPayload(messageIds, messages);
+                                ArrayList<String> transformationEnabledDestinationIds = getTransformationEnabledDestinationIds(messages);
+                                String requestJson = createDeviceTransformPayload(messageIds, messages, transformationEnabledDestinationIds);
                                 RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: Payload: %s", requestJson));
                                 RudderLogger.logInfo(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: EventCount: %d", messageIds.size()));
-                                Result result = rudderNetworkManager.sendNetworkRequest(requestJson, addEndPoint(dataResidencyManager.getDataPlaneUrl(), TRANSFORMATION_ENDPOINT), RequestMethod.POST, true, true);
+                                Result result = rudderNetworkManager.sendNetworkRequest(requestJson, addEndPoint(dataResidencyManager.getDataPlaneUrl(), TRANSFORMATION_ENDPOINT), RequestMethod.POST, false, true);
                                 if (result.status == NetworkResponses.WRITE_KEY_ERROR) {
                                     RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Wrong WriteKey. Aborting");
                                     break;
@@ -81,7 +82,7 @@ public class RudderDeviceModeTransformationManager {
                                     RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Network unavailable. Aborting");
                                     break;
                                 } else if (result.status == NetworkResponses.ERROR) {
-                                    delay = Math.min((1 << retryCount) * 500 , MAX_DELAY); // Exponential backoff
+                                    delay = Math.min((1 << retryCount) * 500, MAX_DELAY); // Exponential backoff
                                     if (retryCount++ == MAX_RETRIES) {
                                         deviceModeSleepCount = 0;
                                         rudderDeviceModeManager.dumpOriginalEvents(gson.fromJson(requestJson, TransformationRequest.class), true);
@@ -101,7 +102,12 @@ public class RudderDeviceModeTransformationManager {
                                     completeDeviceModeEventProcessing();
                                 } else {
                                     deviceModeSleepCount = 0;
-                                    rudderDeviceModeManager.dumpTransformedEvents(gson.fromJson(result.response, TransformationResponse.class));
+                                    try {
+                                        TransformationResponse transformationResponse = gson.fromJson(result.response, TransformationResponse.class);
+                                        rudderDeviceModeManager.dumpTransformedEvents(transformationResponse);
+                                    } catch (Exception e) {
+                                        RudderLogger.logError("DeviceModeTransformationManager: TransformationProcessor: Error encountered during transformed response conversion to TransformationResponse format: " + e);
+                                    }
                                     completeDeviceModeEventProcessing();
                                 }
                                 RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: SleepCount: %d", deviceModeSleepCount));
@@ -120,7 +126,39 @@ public class RudderDeviceModeTransformationManager {
         dbManager.runGcForEvents();
     }
 
-    private static String createDeviceTransformPayload(List<Integer> rowIds, List<String> messages) {
+    RudderMessage getEventFromMessageId(int messageId) {
+        String message = messages.get(messageIds.indexOf(messageId));
+        return gson.fromJson(message, RudderMessage.class);
+    }
+
+    // For each message get the list of destinationIds for which transformation is enabled
+    private ArrayList<String> getTransformationEnabledDestinationIds(List<String> messages) {
+        ArrayList<List<String>> destinationIds = new ArrayList<>();
+        for (int i = 0; i < messages.size(); i++) {
+            RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
+            destinationIds.add(this.rudderDeviceModeManager.getTransformationEnabledDestinationIds(message));
+        }
+        return convertIntoString(destinationIds);
+    }
+
+    private ArrayList<String> convertIntoString(List<List<String>> destinationIds) {
+        ArrayList<String> destinationIdsString = new ArrayList<>();
+        for (int i = 0; i < destinationIds.size(); i++) {
+            StringBuilder destinationId = new StringBuilder();
+            destinationId.append("[");
+            for (int j = 0; j < destinationIds.get(i).size(); j++) {
+                destinationId.append("\"").append(destinationIds.get(i).get(j)).append("\"");
+                if (j != destinationIds.get(i).size() - 1) {
+                    destinationId.append(",");
+                }
+            }
+            destinationId.append("]");
+            destinationIdsString.add(destinationId.toString());
+        }
+        return destinationIdsString;
+    }
+
+    private static String createDeviceTransformPayload(List<Integer> rowIds, List<String> messages, ArrayList<String> transformationEnabledDestinationIds) {
         if (rowIds.isEmpty() || messages.isEmpty() || rowIds.size() != messages.size())
             return null;
         StringBuilder jsonPayload = new StringBuilder();
@@ -133,6 +171,7 @@ public class RudderDeviceModeTransformationManager {
                 StringBuilder message = new StringBuilder();
                 message.append("{");
                 message.append("\"orderNo\":").append(rowIds.get(i)).append(",");
+                message.append("\"destinationIds\":").append(transformationEnabledDestinationIds.get(i)).append(",");
                 message.append("\"event\":").append(messages.get(i));
                 message.append("}");
                 message.append(",");
