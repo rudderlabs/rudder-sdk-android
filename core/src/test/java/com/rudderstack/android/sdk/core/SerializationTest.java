@@ -66,7 +66,7 @@ public class SerializationTest {
             "                   \"enabled\" : true,\n" +
             "                   \"updatedAt\" : \"23-10-22\",\n" +
             "                   \"config\" : " + INCOMING_JSON_SERVER_CONFIG + ",\n" +
-            "\"enableTransformationForDeviceMode\":false" + ",\n" +
+            "\"shouldApplyDeviceModeTransformation\":false" + ",\n" +
                     "\"propagateEventsUntransformedOnError\":false" +
             "           }" +
             "       ]\n" +
