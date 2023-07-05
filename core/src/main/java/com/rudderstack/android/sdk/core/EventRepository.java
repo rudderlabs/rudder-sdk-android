@@ -138,6 +138,8 @@ class EventRepository {
 
             initializeLifecycleTracking(applicationLifeCycleManager);
 
+            // Previously in certain cases (e.g., network unavailability) events are not processed by device mode factories and statuses remains at either 0 or 2.
+            // Now we are marking those events as device_mode_processing_done.
             if (isPreviousEventsDeletionAllowed()) {
                 dbManager.updateDeviceModeEventsStatus();
                 dbManager.runGcForEvents();
