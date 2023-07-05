@@ -23,6 +23,8 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
     private final RudderFlushWorkManager rudderFlushWorkManager;
     private final RudderConfig config;
     private RudderUserSession userSession;
+    private boolean isApplicationUpdated;
+    private AppVersion appVersion;
 
 
     ApplicationLifeCycleManager(RudderPreferenceManager preferenceManager, EventRepository repository, RudderFlushWorkManager rudderFlushWorkManager, RudderConfig config) {
@@ -33,11 +35,19 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
     }
 
     public void start(Application application) {
+        appVersion = new AppVersion(application);
+        if (appVersion.previousBuild != -1 && appVersion.previousBuild != appVersion.currentBuild) {
+            isApplicationUpdated = true;
+        }
         startSessionTracking();
-        this.sendApplicationUpdateStatus(application);
+        this.sendApplicationUpdateStatus();
         if (config.isTrackLifecycleEvents() || config.isRecordScreenViews()) {
             application.registerActivityLifecycleCallbacks(this);
         }
+    }
+
+    boolean isApplicationUpdated() {
+        return isApplicationUpdated;
     }
 
     private void startSessionTracking() {
@@ -72,14 +82,13 @@ public class ApplicationLifeCycleManager implements Application.ActivityLifecycl
      * If it is the first time then make LifeCycle event: Application Installed.
      * If it is updated then make LifeCycle event: Application Updated.
      */
-    private void sendApplicationUpdateStatus(Application application) {
-        AppVersion appVersion = new AppVersion(application);
+    private void sendApplicationUpdateStatus() {
         if (appVersion.previousBuild == -1) {
             // application was not installed previously, now triggering Application Installed event
             appVersion.storeCurrentBuildAndVersion();
             sendApplicationInstalled(appVersion.currentBuild, appVersion.currentVersion);
             rudderFlushWorkManager.registerPeriodicFlushWorker();
-        } else if (appVersion.previousBuild != appVersion.currentBuild) {
+        } else if (isApplicationUpdated()) {
             appVersion.storeCurrentBuildAndVersion();
             sendApplicationUpdated(appVersion.previousBuild, appVersion.currentBuild, appVersion.previousVersion, appVersion.currentVersion);
         }

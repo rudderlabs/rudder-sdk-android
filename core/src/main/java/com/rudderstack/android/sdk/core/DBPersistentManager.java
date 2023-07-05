@@ -20,8 +20,6 @@ import com.rudderstack.android.sdk.core.util.Utils;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
-import com.rudderstack.android.sdk.core.util.Utils;
-
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.Collections;
@@ -31,9 +29,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -539,6 +534,16 @@ class DBPersistentManager extends SQLiteOpenHelper {
             }
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
+        }
+    }
+
+    public void updateDeviceModeEventsStatus() {
+        String sql = "UPDATE " + DBPersistentManager.EVENTS_TABLE_NAME + " SET " +
+                DBPersistentManager.STATUS_COL + " = (" + DBPersistentManager.STATUS_COL + " | " + DBPersistentManager.STATUS_DEVICE_MODE_DONE +
+                ") WHERE " + DBPersistentManager.STATUS_COL + " IN " + "(" + DBPersistentManager.STATUS_NEW + ", " +
+                DBPersistentManager.STATUS_CLOUD_MODE_DONE + ")";
+        synchronized (DB_LOCK) {
+            getWritableDatabase().execSQL(sql);
         }
     }
 

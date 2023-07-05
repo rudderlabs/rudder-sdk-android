@@ -113,10 +113,23 @@ class EventRepository {
             this.applicationLifeCycleManager = new ApplicationLifeCycleManager(preferenceManager, this, rudderFlushWorkManager, config);
             this.applicationLifeCycleManager.start(_application);
 
-
+            // Previously in certain cases (e.g., network unavailability) events are not processed by device mode factories and statuses remains at either 0 or 2.
+            // Now we are marking those events as device_mode_processing_done.
+            if (isPreviousEventsDeletionAllowed()) {
+                dbManager.updateDeviceModeEventsStatus();
+                dbManager.runGcForEvents();
+            }
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
+    }
+
+    boolean isPreviousEventsDeletionAllowed() {
+        if (!preferenceManager.getEventDeletionStatus()) {
+            preferenceManager.saveEventDeletionStatus();
+            return this.applicationLifeCycleManager.isApplicationUpdated();
+        }
+        return false;
     }
 
     private void initializeDbManager(Application application) {
@@ -168,7 +181,7 @@ class EventRepository {
         new Thread(() -> {
             try {
                 int retryCount = 0;
-                while (!isSDKInitialized && retryCount <= 5) {
+                while (!isSDKInitialized && retryCount <= 10) {
                     RudderNetworkManager.NetworkResponses receivedError = configManager.getError();
                     RudderServerConfig serverConfig = configManager.getConfig();
                     if (serverConfig != null) {
