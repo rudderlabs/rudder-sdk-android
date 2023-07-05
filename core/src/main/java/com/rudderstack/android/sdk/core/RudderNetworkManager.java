@@ -11,6 +11,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.rudderstack.android.sdk.core.util.FunctionUtils;
+import com.rudderstack.android.sdk.core.util.GzipUtils;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 
 import java.io.BufferedInputStream;
@@ -22,12 +24,15 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class RudderNetworkManager {
 
     private static final String METADATA_KEY = "metadata";
     private final String authHeaderString;
+    private final boolean isGzipConfigured;
     private String anonymousIdHeaderString;
     @Nullable
     private String dmtAuthorisationString;
@@ -48,14 +53,16 @@ public class RudderNetworkManager {
         GET
     }
 
-    public RudderNetworkManager(String authHeaderString, String anonymousIdHeaderString) {
-        this(authHeaderString, anonymousIdHeaderString, null);
+    public RudderNetworkManager(String authHeaderString, String anonymousIdHeaderString, boolean isGzipConfigured) {
+        this(authHeaderString, anonymousIdHeaderString, null, isGzipConfigured);
     }
 
-    public RudderNetworkManager(String authHeaderString, String anonymousIdHeaderString, @Nullable String dmtHeaderString) {
+    public RudderNetworkManager(String authHeaderString, String anonymousIdHeaderString,
+                                @Nullable String dmtHeaderString, boolean isGzipConfigured) {
         this.authHeaderString = authHeaderString;
         this.anonymousIdHeaderString = anonymousIdHeaderString;
         this.dmtAuthorisationString = dmtHeaderString;
+        this.isGzipConfigured = isGzipConfigured;
     }
 
     void updateAnonymousIdHeaderString() {
@@ -78,8 +85,9 @@ public class RudderNetworkManager {
         }
     }
 
-    Result sendNetworkRequest(@Nullable String requestPayload, @NonNull String requestURL, @NonNull RequestMethod requestMethod) {
-        return sendNetworkRequest(requestPayload, requestURL, requestMethod, false);
+    Result sendNetworkRequest(@Nullable String requestPayload, @NonNull String requestURL,
+                              @NonNull RequestMethod requestMethod, boolean isGzipAvailableForApi) {
+        return sendNetworkRequest(requestPayload, requestURL, requestMethod, isGzipAvailableForApi, false);
     }
 
     /**
@@ -88,7 +96,9 @@ public class RudderNetworkManager {
      * @param requestMethod  the http method which the request should be sent
      * @return sends back a Result Object including the response payload, error payload, statusCode.
      */
-    Result sendNetworkRequest(@Nullable String requestPayload, @NonNull String requestURL, @NonNull RequestMethod requestMethod, boolean isDMTRequest) {
+    Result sendNetworkRequest(@Nullable String requestPayload, @NonNull String requestURL,
+                              @NonNull RequestMethod requestMethod, boolean isGzipAvailableForApi,
+                              boolean isDMTRequest) {
         if (requestMethod == RequestMethod.POST && requestPayload == null)
             return new Result(NetworkResponses.ERROR, -1, null, "Payload is Null");
 
@@ -98,13 +108,13 @@ public class RudderNetworkManager {
         }
 
         try {
-            HttpURLConnection httpConnection = getHttpConnection(requestURL, requestMethod, requestPayload, isDMTRequest);
+            HttpURLConnection httpConnection = updateHttpConnection(requestURL, requestMethod, requestPayload, isDMTRequest, isGzipAvailableForApi);
             synchronized (MessageUploadLock.REQUEST_LOCK) {
                 httpConnection.connect();
             }
 
             return getResult(httpConnection);
-        }  catch (Exception ex) {
+        } catch (Exception ex) {
             RudderLogger.logError(ex);
             return new Result(NetworkResponses.ERROR, -1, null, ex.getLocalizedMessage());
         }
@@ -134,11 +144,28 @@ public class RudderNetworkManager {
         return new Result(networkResponse == null ? NetworkResponses.ERROR : networkResponse, responseCode, responsePayload, errorPayload);
     }
 
-    private HttpURLConnection getHttpConnection(String requestURL, RequestMethod requestMethod,
-                                                String requestPayload, boolean isDMTRequest) throws IOException {
-        RudderLogger.logDebug(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Request URL: %s", requestURL));
+    private HttpURLConnection updateHttpConnection(String requestURL, RequestMethod requestMethod,
+                                                   String requestPayload, boolean isDMTRequest, boolean isGzipSupported)
+            throws IOException {
         URL url = new URL(requestURL);
+        RudderLogger.logDebug(String.format(Locale.US, "RudderNetworkManager: sendNetworkRequest: Request URL: %s", requestURL));
         HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
+        if (isGzipSupported && isGzipConfigured) {
+            RudderLogger.logDebug("RudderNetworkManager: sendNetworkRequest: Gzip is enabled");
+            Map<String, String> customRequestHeaders = new HashMap<>();
+            customRequestHeaders.put("Content-Encoding", "gzip");
+            return updateHttpConnection(httpConnection, requestMethod, requestPayload, isDMTRequest, customRequestHeaders,
+                    GzipUtils::getGzipOutputStream);
+        }
+        return updateHttpConnection(httpConnection, requestMethod, requestPayload, isDMTRequest,
+                null, null);
+    }
+
+    @VisibleForTesting
+    HttpURLConnection updateHttpConnection(HttpURLConnection httpConnection, RequestMethod requestMethod,
+                                           String requestPayload, boolean isDMTRequest,
+                                           @Nullable Map<String, String> customRequestHeaders,
+                                           @Nullable FunctionUtils.Function<OutputStream, OutputStream> connectionWrapperOSGenerator) throws IOException {
         httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", authHeaderString));
         if (requestMethod == RequestMethod.GET) {
             httpConnection.setRequestMethod("GET");
@@ -147,8 +174,17 @@ public class RudderNetworkManager {
             httpConnection.setRequestMethod("POST");
             httpConnection.setRequestProperty("Content-Type", "application/json");
             httpConnection.setRequestProperty("AnonymousId", anonymousIdHeaderString);
+            if (customRequestHeaders != null && !customRequestHeaders.isEmpty()) {
+                for (Map.Entry<String, String> entry : customRequestHeaders.entrySet()) {
+                    httpConnection.setRequestProperty(entry.getKey(), entry.getValue());
+                }
+            }
             requestPayload = withAddedMetadataToRequestPayload(requestPayload, isDMTRequest);
             OutputStream os = httpConnection.getOutputStream();
+            if (connectionWrapperOSGenerator != null) {
+                os = connectionWrapperOSGenerator.apply(os);
+                System.out.println("RudderNetworkManager: sendNetworkRequest: Gzip is enabled");
+            }
             OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
             osw.write(requestPayload);
             osw.flush();
@@ -157,11 +193,12 @@ public class RudderNetworkManager {
         }
         return httpConnection;
     }
+
     @VisibleForTesting
     String withAddedMetadataToRequestPayload(String requestPayload, boolean isDMTRequest) {
         if (requestPayload == null || !isDMTRequest || dmtAuthorisationString == null)
             return requestPayload;
-        JsonObject jsonObject =  JsonParser.parseString(requestPayload).getAsJsonObject();
+        JsonObject jsonObject = JsonParser.parseString(requestPayload).getAsJsonObject();
         JsonObject metadataJsonObject = new JsonObject();
         metadataJsonObject.addProperty(DMT_AUTHORISATION_KEY, dmtAuthorisationString);
         jsonObject.add(METADATA_KEY, metadataJsonObject);

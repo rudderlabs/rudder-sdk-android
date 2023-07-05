@@ -32,7 +32,8 @@ import java.util.concurrent.TimeUnit;
  *
  * */
 public class RudderConfig {
-    @Nullable private String dataPlaneUrl;
+    @Nullable
+    private String dataPlaneUrl;
     private int flushQueueSize;
     private int dbCountThreshold;
     private int sleepTimeOut;
@@ -45,12 +46,16 @@ public class RudderConfig {
     private boolean autoCollectAdvertId;
     private boolean recordScreenViews;
     private boolean trackAutoSession;
+    private boolean useNewLifeCycleEvents;
+    private boolean trackDeepLinks;
+    private boolean collectDeviceId;
     private long sessionTimeout;
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
     private RudderDataResidencyServer rudderDataResidencyServer;
     @Nullable private RudderConsentFilter consentFilter;
+    private boolean isGzipEnabled = true;
 
     RudderConfig() {
         this(
@@ -64,15 +69,19 @@ public class RudderConfig {
                 Constants.REPEAT_INTERVAL,
                 Constants.REPEAT_INTERVAL_TIME_UNIT,
                 Constants.TRACK_LIFECYCLE_EVENTS,
+                Constants.NEW_LIFECYCLE_EVENTS,
+                Constants.TRACK_DEEP_LINKS,
                 Constants.AUTO_COLLECT_ADVERT_ID,
                 Constants.RECORD_SCREEN_VIEWS,
                 Constants.AUTO_SESSION_TRACKING,
+                Constants.COLLECT_DEVICE_ID,
                 Constants.DEFAULT_SESSION_TIMEOUT,
                 Constants.CONTROL_PLANE_URL,
                 null,
                 null,
                 Constants.DATA_RESIDENCY_SERVER,
-                null
+                null,
+                Constants.DEFAULT_GZIP_ENABLED
         );
     }
 
@@ -87,15 +96,19 @@ public class RudderConfig {
             long repeatInterval,
             TimeUnit repeatIntervalTimeUnit,
             boolean trackLifecycleEvents,
+            boolean useNewLifeCycleEvents,
+            boolean trackDeepLinks,
             boolean autoCollectAdvertId,
             boolean recordScreenViews,
             boolean trackAutoSession,
+            boolean collectDeviceId,
             long sessionTimeout,
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
             List<RudderIntegration.Factory> customFactories,
             RudderDataResidencyServer rudderDataResidencyServer,
-            @Nullable RudderConsentFilter consentFilter
+            @Nullable RudderConsentFilter consentFilter,
+            boolean isGzipEnabled
     ) {
         RudderLogger.init(logLevel);
 
@@ -147,6 +160,8 @@ public class RudderConfig {
         }
 
         this.trackLifecycleEvents = trackLifecycleEvents;
+        this.useNewLifeCycleEvents = useNewLifeCycleEvents;
+        this.trackDeepLinks = trackDeepLinks;
         this.autoCollectAdvertId = autoCollectAdvertId;
         this.recordScreenViews = recordScreenViews;
 
@@ -175,9 +190,11 @@ public class RudderConfig {
             this.sessionTimeout = Constants.DEFAULT_SESSION_TIMEOUT;
         }
         this.trackAutoSession = trackAutoSession;
+        this.collectDeviceId = collectDeviceId;
 
         this.rudderDataResidencyServer = rudderDataResidencyServer;
         this.consentFilter = consentFilter;
+        this.isGzipEnabled = isGzipEnabled;
     }
 
     /**
@@ -261,11 +278,29 @@ public class RudderConfig {
         return trackLifecycleEvents;
     }
 
+
+    /**
+     * @return useNewLifeCycleEvents (whether we are using the new lifecycle events)
+     */
+    public boolean isNewLifeCycleEvents() {
+        return useNewLifeCycleEvents;
+    }
+
+
+    /**
+     * @return trackDeepLinks (whether we are tracking the deep link events or not
+     */
+    public boolean isTrackDeepLinks() {
+        return trackDeepLinks;
+    }
+
     /**
      * @return autoCollectAdvertId (whether we are automatically collecting the advertisingId if the
      * com.google.android.gms.ads.identifier.AdvertisingIdClient is found on the classpath.
      */
-    public boolean isAutoCollectAdvertId() { return autoCollectAdvertId; }
+    public boolean isAutoCollectAdvertId() {
+        return autoCollectAdvertId;
+    }
 
     /**
      * @return recordScreenViews (whether we are recording the screen views automatically)
@@ -290,6 +325,9 @@ public class RudderConfig {
         return customFactories;
     }
 
+    public boolean isGzipEnabled() {
+        return isGzipEnabled;
+    }
     /**
      * @return configPlaneUrl (Link to your hosted version of source-config)
      * @deprecated use getControlPlaneUrl()
@@ -310,6 +348,13 @@ public class RudderConfig {
      */
     public boolean isTrackAutoSession() {
         return trackAutoSession;
+    }
+
+    /**
+     * @return isCollectDeviceId (whether we want to collect the device ID)
+     */
+    public boolean isCollectDeviceId() {
+        return collectDeviceId;
     }
 
     /**
@@ -367,6 +412,14 @@ public class RudderConfig {
         this.trackLifecycleEvents = trackLifecycleEvents;
     }
 
+    void setNewLifeCycleEvents(boolean useNewLifeCycleEvents) {
+        this.useNewLifeCycleEvents = useNewLifeCycleEvents;
+    }
+
+    void setTrackDeepLinks(boolean trackDeepLinks) {
+        this.trackDeepLinks = trackDeepLinks;
+    }
+
     void setRecordScreenViews(boolean recordScreenViews) {
         this.recordScreenViews = recordScreenViews;
     }
@@ -402,6 +455,7 @@ public class RudderConfig {
         private List<RudderIntegration.Factory> customFactories = new ArrayList<>();
         private @Nullable RudderConsentFilter consentFilter = null;
         private @Nullable String dataPlaneUrl = null;
+        private boolean isGzipEnabled = Constants.DEFAULT_GZIP_ENABLED;
 
         /**
          * @param factory : Instance of RudderIntegration.Factory (for more information visit https://docs.rudderstack.com)
@@ -565,6 +619,17 @@ public class RudderConfig {
             return this;
         }
 
+        /**
+         * Enable/Disable Gzip.
+         * Gzip is enabled by default
+         * @param isGzip true to enable and vice-versa
+         * @return RudderConfig.Builder
+         */
+        public Builder withGzip(boolean isGzip) {
+            this.isGzipEnabled = isGzip;
+            return this;
+        }
+
         private int configRefreshInterval = Constants.CONFIG_REFRESH_INTERVAL;
 
         /**
@@ -599,7 +664,7 @@ public class RudderConfig {
             return this;
         }
 
-        public Builder withConsentFilter(@NonNull RudderConsentFilter consentFilter){
+        public Builder withConsentFilter(@NonNull RudderConsentFilter consentFilter) {
             this.consentFilter = consentFilter;
             return this;
         }
@@ -627,11 +692,34 @@ public class RudderConfig {
             return this;
         }
 
+        private boolean useNewLifecycleEvents = Constants.NEW_LIFECYCLE_EVENTS;
+
+        /**
+         * @param shouldUseNewLifecycleEvents Whether we should use new lifecycle events
+         * @return RudderConfig.Builder
+         */
+
+        public Builder withNewLifecycleEvents(boolean shouldUseNewLifecycleEvents) {
+            this.useNewLifecycleEvents = shouldUseNewLifecycleEvents;
+            return this;
+        }
+
+        private boolean trackDeepLinks = Constants.TRACK_DEEP_LINKS;
+
+        /**
+         * @param shouldTrackDeepLinks whether the sdk should track any deep links or not
+         * @return
+         */
+        public Builder withTrackDeepLinks(boolean shouldTrackDeepLinks) {
+            this.trackDeepLinks = shouldTrackDeepLinks;
+            return this;
+        }
+
         private boolean autoCollectAdvertId = Constants.AUTO_COLLECT_ADVERT_ID;
 
         /**
          * @param shouldAutoCollectAdvertId (whether we should automatically collecting the advertisingId if the
-         * com.google.android.gms.ads.identifier.AdvertisingIdClient is found on the classpath.
+         *                                  com.google.android.gms.ads.identifier.AdvertisingIdClient is found on the classpath.
          * @return RudderConfig.Builder
          */
         public Builder withAutoCollectAdvertId(boolean shouldAutoCollectAdvertId) {
@@ -686,6 +774,17 @@ public class RudderConfig {
             return this;
         }
 
+        private boolean collectDeviceId = Constants.COLLECT_DEVICE_ID;
+
+        /**
+         * @param collectDeviceId (whether we are collecting the device ID)
+         * @return RudderConfig.Builder
+         */
+        public Builder withCollectDeviceId(boolean collectDeviceId) {
+            this.collectDeviceId = collectDeviceId;
+            return this;
+        }
+
         /**
          * Finalize your config building
          *
@@ -703,15 +802,19 @@ public class RudderConfig {
                     this.repeatInterval,
                     this.repeatIntervalTimeUnit,
                     this.trackLifecycleEvents,
+                    this.useNewLifecycleEvents,
+                    this.trackDeepLinks,
                     this.autoCollectAdvertId,
                     this.recordScreenViews,
                     this.autoSessionTracking,
+                    this.collectDeviceId,
                     this.sessionTimeout,
                     this.controlPlaneUrl,
                     this.factories,
                     this.customFactories,
                     this.rudderDataResidencyServer,
-                    consentFilter
+                    consentFilter,
+                    this.isGzipEnabled
             );
         }
     }

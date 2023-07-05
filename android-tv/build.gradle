@@ -1,11 +1,11 @@
 buildscript {
-    ext.kotlin_version = '1.5.31'
+    ext.kotlin_version = '1.8.10'
     repositories {
         google()
         jcenter()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
@@ -46,4 +46,8 @@ dependencies {
     implementation 'com.github.bumptech.glide:glide:4.11.0'
 
     implementation project(':core')
+}
+
+repositories {
+    google()
 }

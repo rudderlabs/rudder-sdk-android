@@ -1,12 +1,31 @@
 package com.rudderstack.android.sdk.core;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertNotNull;
 
+import org.hamcrest.MatcherAssert;
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.modules.junit4.PowerMockRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.zip.GZIPOutputStream;
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore({ "javax.net.ssl.*" })
 public class RudderNetworkManagerTest {
 
     private final static String DUMMY_AUTH = "dp_auth";
@@ -111,17 +130,81 @@ public class RudderNetworkManagerTest {
             "}";
     private static final String BATCH_WITH_DMT_HEADER = "{" +
             "\n\"metadata\":{" +
-                "\n\t\"Custom-Authorization\":\""+ DMT_AUTH_HEADER + "\"" +
-                "\n\t},\n"
+            "\n\t\"Custom-Authorization\":\"" + DMT_AUTH_HEADER + "\"" +
+            "\n\t},\n"
             + TEST_BATCH.substring(1);
+
     @Before
-    public void setup(){
-        networkManager = new RudderNetworkManager(DUMMY_AUTH, DUMMY_ANONYMOUS_ID, DMT_AUTH_HEADER);
+    public void setup() {
+        networkManager = new RudderNetworkManager(DUMMY_AUTH, DUMMY_ANONYMOUS_ID, DMT_AUTH_HEADER, true);
 
     }
+
     @Test
     public void withAddedMetadataToRequestPayload() throws JSONException {
         String withAddedCustomAuth = networkManager.withAddedMetadataToRequestPayload(TEST_BATCH, true);
         JSONAssert.assertEquals(BATCH_WITH_DMT_HEADER, withAddedCustomAuth, true);
+    }
+    OutputStream customWrappedOS;
+
+    @Test
+    /**
+     * Keeping gzip compression out of scope. Just testing if the streams are working.
+     */
+    public void getHttpConnection() throws IOException, JSONException {
+        String testingPayload = "{\"test\":\"test\", \"test2\":\"test2\", \"test3\":{   \"test4\":\"test4\"}}";
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        HttpURLConnection connection = networkManager.updateHttpConnection(getDummyHttpURLConnection(),
+                RudderNetworkManager.RequestMethod.POST, testingPayload, false,
+                Map.of("Content-Encoding", "gzip"), outputStream -> {
+                    customWrappedOS = new GZIPOutputStream(outputStream) {
+
+                        @Override
+                        public void write(byte[] b) throws IOException {
+                            super.write(b);
+                        }
+
+                        @Override
+                        public synchronized void write(byte[] buf, int off, int len) throws IOException {
+                            super.write(buf, off, len);
+                            baos.write(buf, off, len);
+                        }
+                    };
+                    return customWrappedOS;
+                }
+
+        );
+        assertNotNull(connection);
+        ByteArrayInputStream bios = new ByteArrayInputStream(baos.toByteArray());
+
+        String result = new BufferedReader(new InputStreamReader(bios))
+                .lines().collect(Collectors.joining("\n"));
+        MatcherAssert.assertThat(result, notNullValue());
+        JSONAssert.assertEquals(testingPayload, result, true);
+
+    }
+
+    private HttpURLConnection getDummyHttpURLConnection() throws MalformedURLException {
+        return new HttpURLConnection(new URL("http://www.google.com")) {
+            @Override
+            public void disconnect() {
+
+            }
+
+            @Override
+            public boolean usingProxy() {
+                return false;
+            }
+
+            @Override
+            public void connect() throws IOException {
+
+            }
+
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                return new ByteArrayOutputStream();
+            }
+        };
     }
 }
