@@ -18,6 +18,7 @@ public class ApplicationLifeCycleManager {
     public static final String VERSION = "version";
     private static final AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
     private final RudderPreferenceManager preferenceManager;
+    private boolean isApplicationUpdated = false;
 
     public ApplicationLifeCycleManager(RudderConfig config, Application application,
                                        RudderFlushWorkManager rudderFlushWorkManager,
@@ -46,10 +47,14 @@ public class ApplicationLifeCycleManager {
             sendApplicationInstalled(appVersion.currentBuild, appVersion.currentVersion);
             rudderFlushWorkManager.registerPeriodicFlushWorker();
         } else if (appVersion.previousBuild != appVersion.currentBuild) {
+            this.isApplicationUpdated = true;
             appVersion.storeCurrentBuildAndVersion();
             sendApplicationUpdated(appVersion.previousBuild, appVersion.currentBuild, appVersion.previousVersion, appVersion.currentVersion);
         }
+    }
 
+    boolean isApplicationUpdated() {
+        return this.isApplicationUpdated;
     }
 
     void sendApplicationInstalled(int currentBuild, String currentVersion) {

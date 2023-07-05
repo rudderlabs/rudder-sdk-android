@@ -53,6 +53,7 @@ class EventRepository {
 
     private RudderCloudModeManager cloudModeManager;
     private RudderDeviceModeManager deviceModeManager;
+    private ApplicationLifeCycleManager applicationLifeCycleManager;
 
     private @Nullable
     ConsentFilterHandler consentFilterHandler = null;
@@ -132,15 +133,26 @@ class EventRepository {
             this.userSessionManager = new RudderUserSessionManager(this.preferenceManager, this.config);
             this.userSessionManager.startSessionTracking();
 
-            ApplicationLifeCycleManager applicationLifeCycleManager = new ApplicationLifeCycleManager(config, application, rudderFlushWorkManager, this, preferenceManager);
-            applicationLifeCycleManager.trackApplicationUpdateStatus();
+            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(config, application, rudderFlushWorkManager, this, preferenceManager);
+            this.applicationLifeCycleManager.trackApplicationUpdateStatus();
 
             initializeLifecycleTracking(applicationLifeCycleManager);
 
-
+            if (isPreviousEventsDeletionAllowed()) {
+                dbManager.updateDeviceModeEventsStatus();
+                dbManager.runGcForEvents();
+            }
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
+    }
+
+    private boolean isPreviousEventsDeletionAllowed() {
+        if (!preferenceManager.getEventDeletionStatus()) {
+            preferenceManager.saveEventDeletionStatus();
+            return this.applicationLifeCycleManager.isApplicationUpdated();
+        }
+        return false;
     }
 
     private void initializeLifecycleTracking(ApplicationLifeCycleManager applicationLifeCycleManager) {
@@ -218,7 +230,7 @@ class EventRepository {
         new Thread(() -> {
             try {
                 int retryCount = 0;
-                while (!isSDKInitialized && retryCount <= 5) {
+                while (!isSDKInitialized && retryCount <= 10) {
                     RudderNetworkManager.NetworkResponses receivedError = configManager.getError();
                     RudderServerConfig serverConfig = configManager.getConfig();
                     if (serverConfig != null) {
