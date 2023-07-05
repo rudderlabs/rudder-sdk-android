@@ -74,7 +74,6 @@ public class RudderDeviceModeManager {
         replayMessageQueue();
         this.areFactoriesInitialized = true;
         if (doPassedFactoriesHaveTransformationsEnabled()) {
-            //in case transformations are attached, events will anyway be replayed
             RudderLogger.logDebug("RudderDeviceModeManager: DeviceModeProcessor: Starting the Device Mode Transformation Processor");
             RudderDeviceModeTransformationManager deviceModeTransformationManager = new RudderDeviceModeTransformationManager(dbPersistentManager, networkManager, this, rudderConfig, dataResidencyManager);
             deviceModeTransformationManager.startDeviceModeTransformationProcessor();
