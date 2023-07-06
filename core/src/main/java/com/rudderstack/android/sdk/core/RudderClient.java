@@ -50,7 +50,7 @@ public class RudderClient {
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
 
-    private static final String RUDDER_REPORTER_BASE_URL = "https://2d0b-202-78-234-136.ngrok-free.app/";
+    private static final String RUDDER_REPORTER_BASE_URL = "https://sdk-metrics.dev-rudder.rudderlabs.com/sdkmetrics/";
 
 
     /*
@@ -157,8 +157,8 @@ public class RudderClient {
                         .Identifiers(writeKey, deviceToken, anonymousId, advertisingId, authToken);
                 repository = new EventRepository(application, config, identifiers);
             }
+            initiateRudderReporter(context, writeKey);
         }
-        initiateRudderReporter(context, writeKey);
         return instance;
     }
 
