@@ -21,6 +21,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -85,6 +86,9 @@ class FlushUtils {
                     return false;
                 }
             }
+            ReportManager.cloudModeEventCounter().add(numberOfBatches, Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_FLUSH_NUMBER_OF_QUEUES));
+            ReportManager.cloudModeEventCounter().add(messages.size(), Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_FLUSH_NUMBER_OF_MESSAGES));
+
             return true;
         }
     }

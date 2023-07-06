@@ -1,5 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
+import static com.rudderstack.android.sdk.core.ReportManager.deviceModeEventCounter;
 import static com.rudderstack.android.sdk.core.util.Utils.getBooleanFromMap;
 import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedEvent;
 import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedDestination;
@@ -96,6 +97,9 @@ public class RudderDeviceModeManager {
                 null ? consentFilterHandler.filterDestinationList(destinations) : destinations;
         if (consentedDestinations == null)
             return Collections.emptyList();
+        ReportManager.deviceModeDiscardedCounter().add(destinations.size() - consentedDestinations.size(), Collections.singletonMap(
+                ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_DESTINATION_DISSENTED
+        ));
         return consentedDestinations;
 
     }
@@ -178,6 +182,7 @@ public class RudderDeviceModeManager {
                 RudderServerDestination destination = destinationConfigMap.get(key);
                 // initiate factory if destination is enabled from the dashboard
                 if (destination != null && destination.isDestinationEnabled) {
+
                     Object destinationConfig = destination.destinationConfig;
                     RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: Initiating %s native SDK factory", key));
                     RudderIntegration<?> nativeOp = factory.create(destinationConfig, RudderClient.getInstance(), rudderConfig);
@@ -185,6 +190,9 @@ public class RudderDeviceModeManager {
                     integrationOperationsMap.put(key, nativeOp);
                     handleCallBacks(key, nativeOp);
                 } else {
+                    ReportManager.deviceModeDiscardedCounter().add(1, Collections.singletonMap(
+                            ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_DESTINATION_DISABLED
+                    ));
                     RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: destination was null or not enabled for %s", key));
                 }
             } else {
@@ -246,12 +254,20 @@ public class RudderDeviceModeManager {
                 try {
                     RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: %s: dumping event %s for %s", logTag, message.getEventName(), destinationName));
                     RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: Dumping: %s", gson.toJson(message)));
+                    addDeviceModeCounter(message.getType(), destinationName);
                     integration.dump(message);
                 } catch (Exception e) {
                     RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: %s: Exception in dumping message %s to %s factory %s", logTag, message.getEventName(), destinationName, e.getMessage()));
                 }
             }
         }
+    }
+
+    private void addDeviceModeCounter(String type, String destinationName) {
+        Map<String, String> labelMap = new HashMap<>();
+        labelMap.put(ReportManager.LABEL_TYPE, type);
+        labelMap.put(ReportManager.LABEL_INTEGRATION, destinationName);
+        deviceModeEventCounter().add(1, labelMap);
     }
 
     void dumpOriginalEvents(TransformationRequest transformationRequest) {

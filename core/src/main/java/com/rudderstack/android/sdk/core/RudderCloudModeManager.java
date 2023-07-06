@@ -4,6 +4,7 @@ import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -100,7 +101,11 @@ public class RudderCloudModeManager {
         if (recordCount > config.getDbCountThreshold()) {
             // fetch extra old events
             RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: getPayloadFromMessages: OldRecordCount: %d", (recordCount - config.getDbCountThreshold())));
-            dbManager.deleteFirstEvents(recordCount - config.getDbCountThreshold());
+            int toDelete = recordCount - config.getDbCountThreshold();
+            dbManager.deleteFirstEvents(toDelete);
+            ReportManager.discardedCounter().add(toDelete, Collections.singletonMap(
+                    ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_OUT_OF_MEMORY
+            ));
         }
     }
 

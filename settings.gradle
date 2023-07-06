@@ -1,1 +1,19 @@
 include ':sample-cdn', ':sample-kotlin', ':core', ':sample-segment-java', ':sample-kotlin-integration', ':dummy-impl', ':android-tv'
+include(':web')
+project(':web').projectDir = new File(rootDir, "../RudderAndroidLibs/web")
+
+include(':rudderjsonadapter')
+project(':rudderjsonadapter').projectDir = new File(rootDir, "../RudderAndroidLibs/rudderjsonadapter")
+include(':gsonrudderadapter')
+project(':gsonrudderadapter').projectDir = new File(rootDir, "../RudderAndroidLibs/gsonrudderadapter")
+include(':moshirudderadapter')
+project(':moshirudderadapter').projectDir = new File(rootDir, "../RudderAndroidLibs/moshirudderadapter")
+include(':jacksonrudderadapter')
+project(':jacksonrudderadapter').projectDir = new File(rootDir, "../RudderAndroidLibs/jacksonrudderadapter")
+
+include(':repository')
+project(':repository').projectDir = new File(rootDir, "../RudderAndroidLibs/repository")
+
+include(':rudderreporter')
+project(':rudderreporter').projectDir = new File(rootDir, "../RudderAndroidLibs/rudderreporter")
+
