@@ -79,7 +79,7 @@ public class RudderDeviceModeTransformationManager {
 
                                 Result result = rudderNetworkManager.sendNetworkRequest(requestJson, addEndPoint(dataResidencyManager.getDataPlaneUrl(), TRANSFORMATION_ENDPOINT), RequestMethod.POST, false, true);
                                 boolean isTransformationIssuePresent = handleTransformationResponse(result, requestJson);
-                                if (!isTransformationIssuePresent) {
+                                if (isTransformationIssuePresent) {
                                     break;
                                 }
 
