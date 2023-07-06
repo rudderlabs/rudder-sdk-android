@@ -96,10 +96,10 @@ public class RudderDeviceModeTransformationManager {
     private boolean handleTransformationResponse(Result result, String requestJson) {
         if (result.status == NetworkResponses.WRITE_KEY_ERROR) {
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Wrong WriteKey. Aborting");
-            return false;
+            return true;
         } else if (result.status == NetworkResponses.NETWORK_UNAVAILABLE) {
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Network unavailable. Aborting");
-            return false;
+            return true;
         } else if (result.status == NetworkResponses.ERROR) {
             handleError(requestJson);
         } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
@@ -107,7 +107,7 @@ public class RudderDeviceModeTransformationManager {
         } else {
             handleSuccess(result);
         }
-        return true;
+        return false;
     }
 
     private void handleError(String requestJson) {
