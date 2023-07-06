@@ -74,7 +74,7 @@ public class RudderDeviceModeManager {
         List<RudderServerDestination> consentedDestinations = getConsentedDestinations(serverConfig.source,
                 consentFilterHandler);
         setupNativeFactoriesWithFiltering(consentedDestinations);
-        setDestinations(consentedDestinations);
+        segregateDestinations(consentedDestinations);
         initiateCustomFactories();
         replayMessageQueue();
         this.areFactoriesInitialized = true;
@@ -106,7 +106,7 @@ public class RudderDeviceModeManager {
 
     // The sourceConfig will be used to generate two lists: one containing destinations with enabled transformations,
     // and another containing destinations to be excluded in case of a transformation error.
-    private void setDestinations(List<RudderServerDestination> destinations) {
+    private void segregateDestinations(List<RudderServerDestination> destinations) {
         for (RudderServerDestination destination : destinations) {
             if (destination.isDestinationEnabled && destination.shouldApplyDeviceModeTransformation) {
                 destinationsWithTransformationsEnabled.put(destination.destinationDefinition.displayName, destination.destinationId);
@@ -303,6 +303,8 @@ public class RudderDeviceModeManager {
     }
 
     private void sendEventsToTransformedDestinations(TransformedDestination transformedDestination, String destinationName) {
+        if (transformedDestination.payload == null)
+            return;
         for (TransformedEvent transformedEvent : transformedDestination.payload) {
             RudderMessage message = transformedEvent.event;
             boolean onTransformationError = !transformedEvent.status.equals("200");
