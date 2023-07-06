@@ -53,8 +53,11 @@ class DefaultSyncer internal constructor(
     }
 
     private fun flushMetrics(flushCount: Long) {
+        flushMetrics(0L, flushCount)
+    }
+    private fun flushMetrics(startIndex: Long, flushCount: Long) {
         //TODO: add error handling getMetricsAndErrorFirst
-        reservoir.getMetricsFirst(flushCount) {
+        reservoir.getMetricsFirst(startIndex, flushCount) {
             val validMetrics = it.filterWithValidValues()
             if (validMetrics.isEmpty()) {
                 _atomicRunning.set(false)
@@ -75,7 +78,7 @@ class DefaultSyncer internal constructor(
                     return@upload
                 }
                 if(success)
-                    flushMetrics(flushCount)
+                    flushMetrics(startIndex + validMetrics.size.toLong(), flushCount)
                 else
                     _atomicRunning.set(false)
             }

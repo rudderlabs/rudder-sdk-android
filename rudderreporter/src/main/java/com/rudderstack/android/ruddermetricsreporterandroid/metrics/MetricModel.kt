@@ -14,8 +14,10 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.metrics
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.rudderstack.android.ruddermetricsreporterandroid.JSerialize
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.squareup.moshi.Json
 
 open class MetricModel<T : Any>(val name: String, val type: MetricType,
                                 val value: T, val labels: Map<String,String>) : JSerialize<MetricModel<T>> {
@@ -52,7 +54,10 @@ open class MetricModel<T : Any>(val name: String, val type: MetricType,
 
 }
 
-class MetricModelWithId<T : Any>(val id: String, name: String, type: MetricType,
+class MetricModelWithId<T : Any>(@Transient
+                                 @JsonIgnore
+                                 @field:Json(ignore = true)
+                                 val id: String, name: String, type: MetricType,
                                       value: T, labels: Map<String,String>) : MetricModel<T>(name, type, value, labels) {
     override fun serialize(jsonAdapter: JsonAdapter): String? {
         mapOf<String, Any>("id" to id, "name" to name, "type" to type, "value" to value, "labels" to labels).let {

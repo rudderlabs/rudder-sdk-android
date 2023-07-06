@@ -175,6 +175,27 @@ class DefaultReservoir(
     }
 
     override fun getMetricsFirst(
+        skip: Long,
+        limit: Long,
+        callback: (List<MetricModelWithId<out Number>>) -> Unit
+    ) {
+        with(metricDao) {
+            runGetQuery(
+                limit = limit.toString(),
+                offset = if (skip > 0) skip.toString() else null
+            ) { metricEntities ->
+                callback(metricEntities.map {
+                    val labels = getLabelsForMetric(it)
+                    MetricModelWithId(
+                        it.id.toString(), it.name, MetricType.getType(it.type),
+                        it.value, labels
+                    )
+                })
+            }
+        }
+    }
+
+    override fun getMetricsFirst(
         limit: Long,
         callback: (List<MetricModelWithId<out Number>>) -> Unit
     ) {

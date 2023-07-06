@@ -26,6 +26,7 @@ import org.junit.Assert.*
 
 import org.junit.Test
 import org.mockito.Mockito
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 class DefaultSyncerTest {
@@ -35,22 +36,37 @@ class DefaultSyncerTest {
 
     @Test
     fun checkSyncWithSuccess() {
-        var lastMetricsIndex = 0
+//        var lastMetricsIndex = 0
         val limit = 20
         val maxMetrics = 100
         val isDone = AtomicBoolean(false)
-        val interval = 1000L
-        Mockito.`when`(mockReservoir.getMetricsFirst(Mockito.anyLong(), org.mockito.kotlin.any())).then {
-            val callback = it.arguments[1] as ((List<MetricModelWithId<Number>>) -> Unit)
-            val metrics = if (lastMetricsIndex < maxMetrics) getTestMetricList(
-                lastMetricsIndex,
-                limit
+        val interval = 2000L
+        (1..5)
+        Mockito.`when`(
+            mockReservoir.getMetricsFirst(
+                Mockito.anyLong(),
+                Mockito.anyLong(),
+                org.mockito.kotlin.any()
+            )
+        ).then {
+            val callback = it.arguments[2] as ((List<MetricModelWithId<Number>>) -> Unit)
+            val skip = (it.arguments[0] as Long).toInt().coerceAtLeast(0)
+            val limitArgument = (it.arguments[1] as Long).toInt()
+            val metrics = if (skip < maxMetrics) getTestMetricList(
+                skip,
+                (maxMetrics - skip).coerceAtMost(limitArgument),
             ) else emptyList()
-            lastMetricsIndex += metrics.size
+//            lastMetricsIndex += metrics.size
             callback.invoke(metrics)
         }
 
-        Mockito.`when`(mockUploader.upload(org.mockito.kotlin.any(),org.mockito.kotlin.any(), org.mockito.kotlin.any())).then {
+        Mockito.`when`(
+            mockUploader.upload(
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any()
+            )
+        ).then {
             val callback = it.arguments[2] as ((Boolean) -> Unit)
             callback.invoke(true)
         }
@@ -58,12 +74,15 @@ class DefaultSyncerTest {
         var cumulativeIndex = 0
         syncer.setCallback { uploaded, success ->
             println("uploaded  ${uploaded.size} checkedIndex $cumulativeIndex")
-            if (cumulativeIndex + 1 >= maxMetrics){
+            if (cumulativeIndex > maxMetrics) {
                 assert(false) //should not reach here
                 isDone.set(true)
-            }else {
-                val expected = getTestMetricList(cumulativeIndex, limit)
-                println("*********uploaded**********" )
+            } else {
+                val expected = getTestMetricList(
+                    cumulativeIndex,
+                    (maxMetrics - cumulativeIndex).coerceAtMost(limit)
+                )
+                println("*********uploaded**********")
                 println(uploaded)
                 println("***************")
                 println("*****Expected*******")
@@ -78,8 +97,12 @@ class DefaultSyncerTest {
                         Matchers.contains<MetricModel<out Number>>(*(expected.toTypedArray()))
                     )
                 )
-                if (cumulativeIndex + uploaded.size  >= maxMetrics) {
+                if (cumulativeIndex + uploaded.size == maxMetrics) {
                     Thread.sleep(1000)
+                    isDone.set(true)
+                }
+                if (cumulativeIndex + uploaded.size > maxMetrics) {
+                    assert(false) //should not reach here
                     isDone.set(true)
                 }
             }
@@ -89,44 +112,47 @@ class DefaultSyncerTest {
         }
         syncer.startScheduledSyncs(interval, true, limit.toLong())
 
-        Awaitility.await().untilTrue(isDone)
+        Awaitility.await().atMost(2,TimeUnit.MINUTES).untilTrue(isDone)
 
     }
+
     @Test
-    fun testTimerWithCallbackOnStart(){
+    fun testTimerWithCallbackOnStart() {
         val scheduler = DefaultSyncer.Scheduler()
         var schedulerCalled = 0
-        scheduler.scheduleTimer(true, 500L){
+        scheduler.scheduleTimer(true, 500L) {
             println("timer called")
-            schedulerCalled ++
+            schedulerCalled++
         }
         Thread.sleep(2100)
         scheduler.stop()
         Thread.sleep(1000)
         assertThat(schedulerCalled, `is`(5))
     }
+
     @Test
-    fun testTimerWithNoCallbackOnStart(){
+    fun testTimerWithNoCallbackOnStart() {
         val scheduler = DefaultSyncer.Scheduler()
         var schedulerCalled = 0
-        scheduler.scheduleTimer(false, 500L){
+        scheduler.scheduleTimer(false, 500L) {
             println("timer called")
-            schedulerCalled ++
+            schedulerCalled++
         }
         Thread.sleep(2100)
         scheduler.stop()
         Thread.sleep(1000)
         assertThat(schedulerCalled, `is`(4))
     }
+
     @Test
-    fun testTimerStoppedDuringExec(){
+    fun testTimerStoppedDuringExec() {
         val scheduler = DefaultSyncer.Scheduler()
         var schedulerCalled = 0
 
-        scheduler.scheduleTimer(true, 500L){
+        scheduler.scheduleTimer(true, 500L) {
             Thread.sleep(200)
 
-            schedulerCalled ++
+            schedulerCalled++
         }
         //should run at 0. 500, 1000, 1500
         Thread.sleep(1100) // stopped during execution.
@@ -134,11 +160,13 @@ class DefaultSyncerTest {
         Thread.sleep(1000)
         assertThat(schedulerCalled, `is`(3))
     }
+
     private fun getTestMetricList(startPos: Int, limit: Int): List<MetricModelWithId<Number>> {
 
         return (startPos until startPos + limit).map {
             val index = it + 1
-            MetricModelWithId((index).toString(),
+            MetricModelWithId(
+                (index).toString(),
                 "testMetric$it",
                 MetricType.COUNTER,
                 index.toLong(),

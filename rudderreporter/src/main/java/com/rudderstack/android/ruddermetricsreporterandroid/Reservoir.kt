@@ -24,6 +24,7 @@ interface Reservoir {
     fun getAllMetrics(callback : (List<MetricModelWithId<out Number>>) -> Unit)
 
     fun getMetricsFirstSync(limit : Long): List<MetricModelWithId<out Number>>
+    fun getMetricsFirst(skip: Long, limit : Long, callback : (List<MetricModelWithId<out Number>>) -> Unit)
     fun getMetricsFirst(limit : Long, callback : (List<MetricModelWithId<out Number>>) -> Unit)
 //    fun getMetricsAndErrorFirst(limit : Long, callback : (List<MetricModel<Number>>, List<ErrorModel>) -> Unit)
     fun getMetricsCount(callback : (Long) -> Unit)

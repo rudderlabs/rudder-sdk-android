@@ -274,11 +274,12 @@ class Dao<T : Entity> internal constructor(
         selectionArgs: Array<String>? = null,
         orderBy: String? = null,
         limit: String? = null,
+        offset: String? = null,
         callback: (List<T>) -> Unit
     ) {
         runTransactionOrDeferToCreation { _: SQLiteDatabase ->
             callback.invoke(
-                runGetQuerySync(columns, selection, selectionArgs, orderBy, limit) ?: listOf()
+                runGetQuerySync(columns, selection, selectionArgs, orderBy, limit, offset) ?: listOf()
             )
         }
     }
@@ -294,8 +295,9 @@ class Dao<T : Entity> internal constructor(
         selectionArgs: Array<String>? = null,
         orderBy: String? = null,
         limit: String? = null,
+        offset: String? = null
     ): List<T>? {
-        return getItems(_db ?: return null, columns, selection, selectionArgs, orderBy, limit)
+        return getItems(_db ?: return null, columns, selection, selectionArgs, orderBy, limit, offset)
     }
 
     fun getCount(
@@ -466,7 +468,8 @@ class Dao<T : Entity> internal constructor(
         selection: String? = null,
         selectionArgs: Array<String>? = null,
         orderBy: String? = null,
-        limit: String? = null
+        limit: String? = null,
+        offset: String? = null
     ): List<T> {
         //have to use factory
         val fields = entityClass.getAnnotation(RudderEntity::class.java)?.fields
@@ -487,7 +490,7 @@ class Dao<T : Entity> internal constructor(
                     null,
                     null,
                     orderBy,
-                    limit
+                    if (offset != null) "$limit,$offset" else limit
                 )
             }
                 ?: return listOf()
