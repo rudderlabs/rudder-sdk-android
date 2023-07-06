@@ -1,7 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
 
-import static com.rudderstack.android.sdk.core.ReportManager.discardedCounter;
+import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
 import static com.rudderstack.android.sdk.core.util.Utils.lifeCycleDependenciesExists;
 
 import android.app.Application;
@@ -18,7 +18,7 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter;
+import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
 import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
 import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
@@ -149,7 +149,7 @@ class EventRepository {
     private void initializeLifecycleTracking(ApplicationLifeCycleManager applicationLifeCycleManager) {
         if (config.isNewLifeCycleEvents()) {
             boolean isAndroidXConfigSuccess = configureAndroidXLifeCycleTracking(applicationLifeCycleManager);
-            if(!isAndroidXConfigSuccess) {
+            if (!isAndroidXConfigSuccess) {
                 config.setNewLifeCycleEvents(false);
             }
         }
@@ -277,7 +277,7 @@ class EventRepository {
      * */
     void processMessage(@NonNull RudderMessage message) {
         if (!isSDKEnabled) {
-            discardedCounter().add(1, Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_SDK_DISABLED));
+            incrementDiscardedCounter(1, Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_SDK_DISABLED));
             return;
         }
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: eventName: %s", message.getEventName()));
@@ -289,7 +289,7 @@ class EventRepository {
         String eventJson = gson.toJson(updatedMessage);
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
         if (isMessageJsonExceedingMaxSize(eventJson)) {
-            discardedCounter().add(1, Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_SIZE_INVALID));
+            incrementDiscardedCounter(1, Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_SIZE_INVALID));
             RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
             return;
         }

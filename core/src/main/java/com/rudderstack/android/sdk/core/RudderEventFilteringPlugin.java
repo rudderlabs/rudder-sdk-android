@@ -5,8 +5,6 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -95,7 +93,7 @@ class RudderEventFilteringPlugin {
             }
             handleLogMessage(isEventAllowed, destinationName, message.getEventName().trim());
             if (!isEventAllowed)
-                ReportManager.discardedCounter().add(1, Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_FILTERED));
+                ReportManager.incrementDiscardedCounter(1, Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_FILTERED));
             return isEventAllowed;
         }
         return true;

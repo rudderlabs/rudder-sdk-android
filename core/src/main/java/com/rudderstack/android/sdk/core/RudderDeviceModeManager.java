@@ -1,6 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.ReportManager.deviceModeEventCounter;
+import static com.rudderstack.android.sdk.core.ReportManager.incrementDeviceModeEventCounter;
 import static com.rudderstack.android.sdk.core.util.Utils.getBooleanFromMap;
 import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedEvent;
 import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedDestination;
@@ -97,7 +97,7 @@ public class RudderDeviceModeManager {
                 null ? consentFilterHandler.filterDestinationList(destinations) : destinations;
         if (consentedDestinations == null)
             return Collections.emptyList();
-        ReportManager.deviceModeDiscardedCounter().add(destinations.size() - consentedDestinations.size(), Collections.singletonMap(
+        ReportManager.incrementDeviceModeDiscardedCounter(destinations.size() - consentedDestinations.size(), Collections.singletonMap(
                 ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_DESTINATION_DISSENTED
         ));
         return consentedDestinations;
@@ -190,7 +190,7 @@ public class RudderDeviceModeManager {
                     integrationOperationsMap.put(key, nativeOp);
                     handleCallBacks(key, nativeOp);
                 } else {
-                    ReportManager.deviceModeDiscardedCounter().add(1, Collections.singletonMap(
+                    ReportManager.incrementDeviceModeDiscardedCounter(1, Collections.singletonMap(
                             ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_DESTINATION_DISABLED
                     ));
                     RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: destination was null or not enabled for %s", key));
@@ -267,7 +267,7 @@ public class RudderDeviceModeManager {
         Map<String, String> labelMap = new HashMap<>();
         labelMap.put(ReportManager.LABEL_TYPE, type);
         labelMap.put(ReportManager.LABEL_INTEGRATION, destinationName);
-        deviceModeEventCounter().add(1, labelMap);
+        incrementDeviceModeEventCounter(1, labelMap);
     }
 
     void dumpOriginalEvents(TransformationRequest transformationRequest) {

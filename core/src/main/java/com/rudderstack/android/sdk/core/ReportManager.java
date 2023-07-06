@@ -3,6 +3,8 @@ package com.rudderstack.android.sdk.core;
 import com.rudderstack.android.ruddermetricsreporterandroid.Metrics;
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
 
+import java.util.Map;
+
 public class ReportManager {
 
     public static final String LABEL_TYPE_OUT_OF_MEMORY = "out_of_memory";
@@ -19,12 +21,12 @@ public class ReportManager {
     public static final String LABEL_TYPE_DESTINATION_DISSENTED = "dissented";
     public static final String LABEL_TYPE_DESTINATION_DISABLED = "disabled";
 
-    private static LongCounter messageCounter;
-    private static LongCounter discardedCounter;
+    private static LongCounter messageCounter = null;
+    private static LongCounter discardedCounter = null;
 
-    private static LongCounter deviceModeEventCounter;
-    private static LongCounter cloudModeEventCounter;
-    private static LongCounter deviceModeDiscardedCounter;
+    private static LongCounter deviceModeEventCounter = null;
+    private static LongCounter cloudModeEventCounter = null;
+    private static LongCounter deviceModeDiscardedCounter = null;
     private static final String EVENTS_SUBMITTED_COUNTER_TAG = "submitted_events";
     private static final String EVENTS_DISCARDED_COUNTER_TAG = "discarded_events";
     private static final String DEVICE_MODE_EVENT_COUNTER_TAG = "dm_event";
@@ -39,19 +41,54 @@ public class ReportManager {
         ReportManager.deviceModeDiscardedCounter = metrics.getLongCounter(DEVICE_MODE_DISCARD_COUNTER_TAG);
 
     }
-    static LongCounter messageCounter() {
-        return messageCounter;
+    static void incrementMessageCounter(int value, Map<String, String> attributes) {
+        if (messageCounter != null) {
+            messageCounter.add(value, attributes);
+        }
     }
-    static LongCounter discardedCounter() {
-        return discardedCounter;
+    static void incrementMessageCounter(int value) {
+        if (messageCounter != null) {
+            messageCounter.add(value);
+        }
     }
-    static LongCounter deviceModeEventCounter() {
-        return deviceModeEventCounter;
+    static void incrementDiscardedCounter(int value, Map<String, String> attributes) {
+        if(discardedCounter != null){
+            discardedCounter.add(value, attributes);
+        }
     }
-    static LongCounter cloudModeEventCounter() {
-        return cloudModeEventCounter;
+    static void incrementDiscardedCounter(int value) {
+        if(discardedCounter != null){
+            discardedCounter.add(value);
+        }
     }
-    static LongCounter deviceModeDiscardedCounter() {
-        return deviceModeDiscardedCounter;
+    static void incrementDeviceModeEventCounter(int value, Map<String, String> attributes) {
+        if(deviceModeEventCounter != null){
+            deviceModeEventCounter.add(value, attributes);
+        }
+    }
+    static void incrementDeviceModeEventCounter(int value) {
+        if(deviceModeEventCounter != null){
+            deviceModeEventCounter.add(value);
+        }
+    }
+    static void incrementCloudModeEventCounter(int value, Map<String, String> attributes) {
+        if(cloudModeEventCounter != null){
+            cloudModeEventCounter.add(value, attributes);
+        }
+    }
+    static void incrementCloudModeEventCounter(int value) {
+        if(cloudModeEventCounter != null){
+            cloudModeEventCounter.add(value);
+        }
+    }
+    static void incrementDeviceModeDiscardedCounter(int value, Map<String, String> attributes) {
+        if(deviceModeDiscardedCounter != null){
+            deviceModeDiscardedCounter.add(value, attributes);
+        }
+    }
+    static void incrementDeviceModeDiscardedCounter(int value) {
+        if(deviceModeDiscardedCounter != null){
+            deviceModeDiscardedCounter.add(value);
+        }
     }
 }

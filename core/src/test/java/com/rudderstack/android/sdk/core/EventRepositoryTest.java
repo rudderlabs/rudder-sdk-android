@@ -60,7 +60,6 @@ public class EventRepositoryTest {
     public void setup() throws Exception {
         // creating static mocks
         PowerMockito.spy(FlushUtils.class);
-
         //mocking timestamp
         PowerMockito.spy(Utils.class);
         PowerMockito.when(Utils.class, "getTimeStamp"

@@ -1,8 +1,10 @@
 package com.rudderstack.android.sdk.core;
 
+import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 import com.rudderstack.android.sdk.core.util.Utils;
 
+import static com.rudderstack.android.sdk.core.ReportManager.incrementCloudModeEventCounter;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
@@ -11,8 +13,6 @@ import static com.rudderstack.android.sdk.core.util.Utils.getBatch;
 import static com.rudderstack.android.sdk.core.util.Utils.getNumberOfBatches;
 
 import android.text.TextUtils;
-
-import androidx.annotation.Nullable;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * Standard flush related calls
@@ -86,12 +85,16 @@ class FlushUtils {
                     return false;
                 }
             }
-            ReportManager.cloudModeEventCounter().add(numberOfBatches, Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_FLUSH_NUMBER_OF_QUEUES));
-            ReportManager.cloudModeEventCounter().add(messages.size(), Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_FLUSH_NUMBER_OF_MESSAGES));
-
+            reportBatchesAndMessages(numberOfBatches, messages.size());
             return true;
         }
     }
+
+    private static void reportBatchesAndMessages(int numberOfBatches, int messagesSize) {
+        incrementCloudModeEventCounter(numberOfBatches, Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_FLUSH_NUMBER_OF_QUEUES));
+        incrementCloudModeEventCounter(messagesSize, Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_FLUSH_NUMBER_OF_MESSAGES));
+    }
+
 
     /*
      * flush events payload to server and return response as String

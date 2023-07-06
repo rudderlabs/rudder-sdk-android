@@ -103,7 +103,7 @@ public class RudderCloudModeManager {
             RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: getPayloadFromMessages: OldRecordCount: %d", (recordCount - config.getDbCountThreshold())));
             int toDelete = recordCount - config.getDbCountThreshold();
             dbManager.deleteFirstEvents(toDelete);
-            ReportManager.discardedCounter().add(toDelete, Collections.singletonMap(
+            ReportManager.incrementDiscardedCounter(toDelete, Collections.singletonMap(
                     ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_OUT_OF_MEMORY
             ));
         }

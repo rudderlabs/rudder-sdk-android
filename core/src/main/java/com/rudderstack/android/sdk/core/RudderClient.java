@@ -1,7 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.ReportManager.discardedCounter;
-import static com.rudderstack.android.sdk.core.ReportManager.messageCounter;
+import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
+import static com.rudderstack.android.sdk.core.ReportManager.incrementMessageCounter;
 
 import android.app.Application;
 import android.content.Context;
@@ -12,23 +12,18 @@ import androidx.annotation.Nullable;
 
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration;
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata;
-import com.rudderstack.android.ruddermetricsreporterandroid.Metrics;
 import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter;
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
 import com.rudderstack.android.sdk.core.util.Utils;
 import com.rudderstack.gsonrudderadapter.GsonAdapter;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import kotlin.Pair;
-import kotlin.collections.MapsKt;
 
 /*
  * Primary class to be used in client
@@ -162,10 +157,11 @@ public class RudderClient {
         return instance;
     }
 
-    private static void initiateRudderReporter(Context context, @Nullable String writeKey){
-        if (rudderReporter == null && !TextUtils.isEmpty(writeKey)) {
+    private static void initiateRudderReporter(Context context, @Nullable String writeKey) {
+        String writeKeyOrBlank = writeKey == null ? "" : writeKey;
+        if (rudderReporter == null) {
             rudderReporter = new RudderReporter(context, RUDDER_REPORTER_BASE_URL, new Configuration(new LibraryMetadata(
-                    BuildConfig.LIBRARY_PACKAGE_NAME, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, writeKey
+                    BuildConfig.LIBRARY_PACKAGE_NAME, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, writeKeyOrBlank
             )), new GsonAdapter(), null, false);
             rudderReporter.getMetrics().getSyncer().startScheduledSyncs(10000, true, 10);
             ReportManager.initiate(rudderReporter.getMetrics());
@@ -542,11 +538,11 @@ public class RudderClient {
 
     private void dumpMessage(@NonNull RudderMessage message) {
         if (getOptOutStatus()) {
-            discardedCounter().add(1, Collections.singletonMap(ReportManager.LABEL_TYPE,
+            incrementDiscardedCounter(1, Collections.singletonMap(ReportManager.LABEL_TYPE,
                     ReportManager.LABEL_TYPE_OPT_OUT));
             return;
         }
-        messageCounter().add(1, Collections.singletonMap(ReportManager.LABEL_TYPE,
+        incrementMessageCounter(1, Collections.singletonMap(ReportManager.LABEL_TYPE,
                 message.getType()));
         if (repository != null) {
             repository.processMessage(message);

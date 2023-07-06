@@ -28,17 +28,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RudderClientTest {
     EventRepository repository;
     Application application = PowerMockito.mock(Application.class);
-    Context context = PowerMockito.mock(Context.class);
     RudderConfig config;
 
     @Before
     public void setUp() throws Exception {
-        PowerMockito.when(context, "getApplicationContext").thenAnswer(new Answer<Application>() {
+        PowerMockito.when(application, "getApplicationContext").thenAnswer(new Answer<Application>() {
             @Override
             public Application answer(InvocationOnMock invocation) throws Throwable {
                 return application;
             }
         });
+        PowerMockito.when(application, "getPackageName").thenAnswer((Answer<String>) invocation -> "com.rudderstack.android.sdk.core");
         PowerMockito.spy(URLUtil.class);
         PowerMockito.doReturn(true).when(URLUtil.class, "isValidUrl", anyString());/*.thenReturn(new Answer<Boolean>() {
             @Override
@@ -57,7 +57,7 @@ public class RudderClientTest {
 
     @Test
     public void testFlushThrottling() throws Exception {
-        final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
+        final RudderClient client = RudderClient.getInstance(application, "dummy_write_key");
 
         final AtomicInteger flushSyncCalls = new AtomicInteger();
         PowerMockito.when(repository, "flushSync").thenAnswer(new Answer<Void>() {
@@ -90,7 +90,7 @@ public class RudderClientTest {
     @Test
     public void messagePassedToRepositoryTest() throws Exception {
 
-        final RudderClient client = RudderClient.getInstance(context, "dummy_write_key");
+        final RudderClient client = RudderClient.getInstance(application, "dummy_write_key");
         RudderMessage rudderMessage = new RudderMessageBuilder().setEventName("e-1").setUserId("c-1").build();
         client.track(rudderMessage);
         //we only check if messages reach event repository.processMessage
