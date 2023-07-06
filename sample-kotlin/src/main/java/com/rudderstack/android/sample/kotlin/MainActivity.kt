@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.screen).setOnClickListener {
             val props = RudderProperty()
             props.put("Test Screen Key $screenCount", "Test Screen Value $screenCount")
-            MainApplication.rudderClient!!.track(
+            MainApplication.rudderClient!!.screen(
                 "Test Screen $screenCount",
                 props,
                 null
