@@ -195,8 +195,10 @@ public class RudderDeviceModeTransformationManager {
     }
 
     private static String createDeviceTransformPayload(List<Integer> rowIds, List<String> messages, ArrayList<String> transformationEnabledDestinationIds) {
-        if (rowIds.isEmpty() || messages.isEmpty() || rowIds.size() != messages.size())
+        if (rowIds.isEmpty() || messages.isEmpty() || rowIds.size() != messages.size() || transformationEnabledDestinationIds.isEmpty() || rowIds.size() != transformationEnabledDestinationIds.size()) {
+            RudderLogger.logError("DeviceModeTransformationManager: createDeviceTransformPayload: Error while creating transformation payload. Aborting.");
             return null;
+        }
         StringBuilder jsonPayload = new StringBuilder();
         jsonPayload.append("{");
         jsonPayload.append("\"batch\" :");
