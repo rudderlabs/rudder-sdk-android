@@ -174,7 +174,7 @@ public class RudderDeviceModeTransformationManager {
     }
 
     // For each message get the list of destinationIds for which transformation is enabled
-    private void getTransformationEnabledDestinationIds(List<String> messages) {
+    private void setTransformationEnabledDestinationIds(List<String> messages) {
         for (int i = 0; i < messages.size(); i++) {
             RudderTransformationRequest transformationRequest = messageMap.get(messageIds.get(i));
             if (transformationRequest == null) {
@@ -188,7 +188,7 @@ public class RudderDeviceModeTransformationManager {
 
     private String createDeviceTransformPayload() {
         try {
-            getTransformationEnabledDestinationIds(messages);
+            setTransformationEnabledDestinationIds(messages);
         } catch (NullPointerException e) {
             RudderLogger.logError("DeviceModeTransformationManager: createDeviceTransformPayload: Error while getting transformation enabled destination Ids. Aborting. " + e);
             return null;
