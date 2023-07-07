@@ -8,8 +8,10 @@ import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +56,7 @@ public class RudderDeviceModeTransformationManager {
     // checking how many seconds passed since last successful transformation
     private int deviceModeSleepCount = 0;
     private int retryCount = 0;
+    private final Map<Integer, RudderMessage> messageMap = new HashMap<>();
 
     void startDeviceModeTransformationProcessor() {
         deviceModeExecutor.scheduleWithFixedDelay(
@@ -67,9 +70,11 @@ public class RudderDeviceModeTransformationManager {
                             do {
                                 messages.clear();
                                 messageIds.clear();
+                                messageMap.clear();
                                 synchronized (MessageUploadLock.DEVICE_TRANSFORMATION_LOCK) {
                                     dbManager.fetchDeviceModeEventsFromDb(messageIds, messages, DMT_BATCH_SIZE);
                                 }
+                                createMessageMap();
 
                                 ArrayList<String> transformationEnabledDestinationIds = getTransformationEnabledDestinationIds(messages);
                                 String requestJson = createDeviceTransformPayload(messageIds, messages, transformationEnabledDestinationIds);
@@ -91,6 +96,13 @@ public class RudderDeviceModeTransformationManager {
                     }
                 }
                 , 1, 1, TimeUnit.SECONDS);
+    }
+
+    private void createMessageMap() {
+        for (int i = 0; i < messageIds.size(); i++) {
+            RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
+            messageMap.put(messageIds.get(i), message);
+        }
     }
 
     private boolean handleTransformationResponse(Result result, String requestJson) {
@@ -152,15 +164,14 @@ public class RudderDeviceModeTransformationManager {
     }
 
     RudderMessage getEventFromMessageId(int messageId) {
-        String message = messages.get(messageIds.indexOf(messageId));
-        return gson.fromJson(message, RudderMessage.class);
+        return messageMap.get(messageId);
     }
 
     // For each message get the list of destinationIds for which transformation is enabled
     private ArrayList<String> getTransformationEnabledDestinationIds(List<String> messages) {
         ArrayList<List<String>> destinationIds = new ArrayList<>();
         for (int i = 0; i < messages.size(); i++) {
-            RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
+            RudderMessage message = messageMap.get(messageIds.get(i));
             destinationIds.add(this.rudderDeviceModeManager.getTransformationEnabledDestinationIds(message));
         }
         return convertIntoString(destinationIds);
