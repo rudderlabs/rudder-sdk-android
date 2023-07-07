@@ -2,9 +2,6 @@ package com.rudderstack.android.sdk.core;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
@@ -58,7 +55,7 @@ public class RudderDeviceModeTransformationManager {
     // checking how many seconds passed since last successful transformation
     private int deviceModeSleepCount = 0;
     private int retryCount = 0;
-    private final Map<Integer, RudderTransformationRequest> messageMap = new HashMap<>();
+    private final Map<Integer, RudderMessage> messageIdTransformationRequestMap = new HashMap<>();
 
     void startDeviceModeTransformationProcessor() {
         deviceModeExecutor.scheduleWithFixedDelay(
@@ -72,18 +69,19 @@ public class RudderDeviceModeTransformationManager {
                             do {
                                 messages.clear();
                                 messageIds.clear();
-                                messageMap.clear();
+                                messageIdTransformationRequestMap.clear();
                                 synchronized (MessageUploadLock.DEVICE_TRANSFORMATION_LOCK) {
                                     dbManager.fetchDeviceModeEventsFromDb(messageIds, messages, DMT_BATCH_SIZE);
                                 }
-                                createMessageMap();
-                                String requestJson = createDeviceTransformPayload();
+                                createMessageIdTransformationRequestMap();
+                                TransformationRequest transformationRequest = createTransformationRequestPayload();
+                                String requestJson = gson.toJson(transformationRequest);
 
                                 RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: Payload: %s", requestJson));
                                 RudderLogger.logInfo(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: EventCount: %d", messageIds.size()));
 
                                 Result result = rudderNetworkManager.sendNetworkRequest(requestJson, addEndPoint(dataResidencyManager.getDataPlaneUrl(), TRANSFORMATION_ENDPOINT), RequestMethod.POST, false, true);
-                                boolean isTransformationIssuePresent = handleTransformationResponse(result, requestJson);
+                                boolean isTransformationIssuePresent = handleTransformationResponse(result, transformationRequest);
                                 if (isTransformationIssuePresent) {
                                     break;
                                 }
@@ -98,16 +96,14 @@ public class RudderDeviceModeTransformationManager {
                 , 1, 1, TimeUnit.SECONDS);
     }
 
-    private void createMessageMap() {
+    private void createMessageIdTransformationRequestMap() {
         for (int i = 0; i < messageIds.size(); i++) {
             RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
-            RudderTransformationRequest transformationRequest = new RudderTransformationRequest();
-            transformationRequest.setMessage(message);
-            messageMap.put(messageIds.get(i), transformationRequest);
+            messageIdTransformationRequestMap.put(messageIds.get(i), message);
         }
     }
 
-    private boolean handleTransformationResponse(Result result, String requestJson) {
+    private boolean handleTransformationResponse(Result result, TransformationRequest transformationRequest) {
         if (result.status == NetworkResponses.WRITE_KEY_ERROR) {
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Wrong WriteKey. Aborting");
             return true;
@@ -115,21 +111,21 @@ public class RudderDeviceModeTransformationManager {
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Network unavailable. Aborting");
             return true;
         } else if (result.status == NetworkResponses.ERROR) {
-            handleError(requestJson);
+            handleError(transformationRequest);
         } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
-            handleResourceNotFound(requestJson);
+            handleResourceNotFound(transformationRequest);
         } else {
             handleSuccess(result);
         }
         return false;
     }
 
-    private void handleError(String requestJson) {
+    private void handleError(TransformationRequest transformationRequest) {
         int delay = Math.min((1 << retryCount) * 500, MAX_DELAY); // Exponential backoff
         if (retryCount++ == MAX_RETRIES) {
             retryCount = 0;
             deviceModeSleepCount = 0;
-            rudderDeviceModeManager.dumpOriginalEvents(gson.fromJson(requestJson, TransformationRequest.class), true);
+            rudderDeviceModeManager.dumpOriginalEvents(transformationRequest, true);
             completeDeviceModeEventProcessing();
         } else {
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Retrying in " + delay + "s");
@@ -142,9 +138,9 @@ public class RudderDeviceModeTransformationManager {
         }
     }
 
-    private void handleResourceNotFound(String requestJson) {
+    private void handleResourceNotFound(TransformationRequest transformationRequest) {
         deviceModeSleepCount = 0;
-        rudderDeviceModeManager.dumpOriginalEvents(gson.fromJson(requestJson, TransformationRequest.class), false);
+        rudderDeviceModeManager.dumpOriginalEvents(transformationRequest, false);
         completeDeviceModeEventProcessing();
     }
 
@@ -166,59 +162,25 @@ public class RudderDeviceModeTransformationManager {
     }
 
     RudderMessage getEventFromMessageId(int messageId) {
-        RudderTransformationRequest transformationRequest = messageMap.get(messageId);
-        if (transformationRequest == null) {
-            throw new NullPointerException();
-        }
-        return transformationRequest.getMessage();
+        return messageIdTransformationRequestMap.get(messageId);
     }
 
-    // For each message get the list of destinationIds for which transformation is enabled
-    private void setTransformationEnabledDestinationIds(List<String> messages) {
-        for (int i = 0; i < messages.size(); i++) {
-            RudderTransformationRequest transformationRequest = messageMap.get(messageIds.get(i));
-            if (transformationRequest == null) {
-                throw new NullPointerException();
-            }
-            RudderMessage message = transformationRequest.getMessage();
-            List<String>  destinationIds = this.rudderDeviceModeManager.getTransformationEnabledDestinationIds(message);
-            transformationRequest.setDestinationIds(destinationIds);
-        }
-    }
-
-    private String createDeviceTransformPayload() {
-        try {
-            setTransformationEnabledDestinationIds(messages);
-        } catch (NullPointerException e) {
-            RudderLogger.logError("DeviceModeTransformationManager: createDeviceTransformPayload: Error while getting transformation enabled destination Ids. Aborting. " + e);
-            return null;
-        }
-
+    private TransformationRequest createTransformationRequestPayload() {
         if (this.messageIds.isEmpty() || this.messages.isEmpty() || this.messageIds.size() != this.messages.size()) {
             RudderLogger.logError("DeviceModeTransformationManager: createDeviceTransformPayload: Error while creating transformation payload. Aborting.");
             return null;
         }
 
-        JsonArray batchArray = new JsonArray();
+        List<TransformationRequest.TransformationRequestEvent> transformationRequestEvents = new ArrayList<>();
+        for (int i = 0; i < messageIds.size(); i++) {
+            // For each message get the list of destinationIds for which transformation is enabled
+            RudderMessage message = messageIdTransformationRequestMap.get(messageIds.get(i));
+            List<String>  destinationIds = this.rudderDeviceModeManager.getTransformationEnabledDestinationIds(message);
 
-        for (Map.Entry<Integer, RudderTransformationRequest> entry : messageMap.entrySet()) {
-            Integer orderNo = entry.getKey();
-            RudderTransformationRequest transformationRequest = entry.getValue();
-            JsonElement event = gson.toJsonTree(transformationRequest.getMessage());
-            JsonElement destinationIds = gson.toJsonTree(transformationRequest.getDestinationIds());
-
-            JsonObject batchItem = new JsonObject();
-            batchItem.addProperty("orderNo", orderNo);
-            batchItem.add("event", event);
-
-            batchItem.add("destinationIds", destinationIds);
-
-            batchArray.add(batchItem);
+            TransformationRequest.TransformationRequestEvent transformationRequestEvent = new TransformationRequest.TransformationRequestEvent(messageIds.get(i), message, destinationIds);
+            transformationRequestEvents.add(transformationRequestEvent);
         }
 
-        JsonObject json = new JsonObject();
-        json.add("batch", batchArray);
-
-        return gson.toJson(json);
+        return new TransformationRequest(transformationRequestEvents);
     }
 }

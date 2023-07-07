@@ -257,10 +257,10 @@ public class RudderDeviceModeManager {
         if (transformationRequest.batch != null) {
             RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: dumpOriginalEvents: dumping back the original events to the transformations enabled destinations as there is transformation error."));
             for (TransformationRequestEvent transformationRequestEvent : transformationRequest.batch) {
-                if (transformationRequestEvent != null && transformationRequestEvent.message != null) {
+                if (transformationRequestEvent != null && transformationRequestEvent.event != null) {
                     List<String> destinationsWithTransformationsEnabled = getDestinationNameForIds(transformationRequestEvent.destinationIds);
                     List<String> destinations = onTransformationError ? getDestinationsAcceptingEventsOnTransformationError(destinationsWithTransformationsEnabled) : destinationsWithTransformationsEnabled;
-                    dumpEventToDestinations(transformationRequestEvent.message, destinations, "dumpOriginalEvents");
+                    dumpEventToDestinations(transformationRequestEvent.event, destinations, "dumpOriginalEvents");
                 }
             }
         }
@@ -317,13 +317,8 @@ public class RudderDeviceModeManager {
                     // For all other status codes
                     errorMsg.append("There is a transformation error. ");
                 }
-                try {
-                    // If their is a transformation error then response payload will not contain the original event. So we need to get the original event based on messageId/orderNo.
-                    message = this.deviceModeTransformationManager.getEventFromMessageId(transformedEvent.orderNo);
-                } catch (NullPointerException e) {
-                    RudderLogger.logError("RudderDeviceModeManager: dumpTransformedEvents: Error while getting original event from messageId. " + e);
-                    continue;
-                }
+                // If their is a transformation error then response payload will not contain the original event. So we need to get the original event based on messageId/orderNo.
+                message = this.deviceModeTransformationManager.getEventFromMessageId(transformedEvent.orderNo);
                 if (destinationsExcludedOnTransformationError.contains(destinationName)) {
                     errorMsg.append(destinationName).append(" is excluded from accepting event ").append(message.getEventName()).append(" on transformation error. Hence dropping this event.");
                     RudderLogger.logWarn(errorMsg.toString());
