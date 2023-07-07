@@ -2,10 +2,12 @@ package com.rudderstack.android.sdk.core;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
-import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -75,9 +77,7 @@ public class RudderDeviceModeTransformationManager {
                                     dbManager.fetchDeviceModeEventsFromDb(messageIds, messages, DMT_BATCH_SIZE);
                                 }
                                 createMessageMap();
-
-                                ArrayList<String> transformationEnabledDestinationIds = getTransformationEnabledDestinationIds(messages);
-                                String requestJson = createDeviceTransformPayload(messageIds, messages, transformationEnabledDestinationIds);
+                                String requestJson = createDeviceTransformPayload();
 
                                 RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: Payload: %s", requestJson));
                                 RudderLogger.logInfo(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: EventCount: %d", messageIds.size()));
@@ -168,66 +168,44 @@ public class RudderDeviceModeTransformationManager {
     }
 
     // For each message get the list of destinationIds for which transformation is enabled
-    private ArrayList<String> getTransformationEnabledDestinationIds(List<String> messages) {
+    private ArrayList<List<String>> getTransformationEnabledDestinationIds(List<String> messages) {
         ArrayList<List<String>> destinationIds = new ArrayList<>();
         for (int i = 0; i < messages.size(); i++) {
             RudderMessage message = messageMap.get(messageIds.get(i));
             destinationIds.add(this.rudderDeviceModeManager.getTransformationEnabledDestinationIds(message));
         }
-        return convertIntoString(destinationIds);
+        return destinationIds;
     }
 
-    private ArrayList<String> convertIntoString(List<List<String>> destinationIds) {
-        ArrayList<String> destinationIdsString = new ArrayList<>();
-        for (int i = 0; i < destinationIds.size(); i++) {
-            StringBuilder destinationId = new StringBuilder();
-            destinationId.append("[");
-            for (int j = 0; j < destinationIds.get(i).size(); j++) {
-                destinationId.append("\"").append(destinationIds.get(i).get(j)).append("\"");
-                if (j != destinationIds.get(i).size() - 1) {
-                    destinationId.append(",");
-                }
-            }
-            destinationId.append("]");
-            destinationIdsString.add(destinationId.toString());
-        }
-        return destinationIdsString;
-    }
-
-    private static String createDeviceTransformPayload(List<Integer> rowIds, List<String> messages, ArrayList<String> transformationEnabledDestinationIds) {
-        if (rowIds.isEmpty() || messages.isEmpty() || rowIds.size() != messages.size() || transformationEnabledDestinationIds.isEmpty() || rowIds.size() != transformationEnabledDestinationIds.size()) {
+    private String createDeviceTransformPayload() {
+        ArrayList<List<String>> transformationEnabledDestinationIds = getTransformationEnabledDestinationIds(messages);
+        if (this.messageIds.isEmpty() || this.messages.isEmpty() || transformationEnabledDestinationIds.isEmpty() ||
+                this.messageIds.size() != this.messages.size() ||
+                this.messageIds.size() != transformationEnabledDestinationIds.size()) {
             RudderLogger.logError("DeviceModeTransformationManager: createDeviceTransformPayload: Error while creating transformation payload. Aborting.");
             return null;
         }
-        StringBuilder jsonPayload = new StringBuilder();
-        jsonPayload.append("{");
-        jsonPayload.append("\"batch\" :");
-        jsonPayload.append("[");
-        int totalBatchSize = Utils.getUTF8Length(jsonPayload) + 2;
-        try {
-            for (int i = 0; i < rowIds.size(); i++) {
-                StringBuilder message = new StringBuilder();
-                message.append("{");
-                message.append("\"orderNo\":").append(rowIds.get(i)).append(",");
-                message.append("\"destinationIds\":").append(transformationEnabledDestinationIds.get(i)).append(",");
-                message.append("\"event\":").append(messages.get(i));
-                message.append("}");
-                message.append(",");
-                totalBatchSize += Utils.getUTF8Length(message);
-                if (totalBatchSize >= Utils.MAX_BATCH_SIZE) {
-                    RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: createDeviceTransformPayload: MAX_BATCH_SIZE reached at index: %d | Total: %d", i, totalBatchSize));
-                    break;
-                }
-                jsonPayload.append(message);
-            }
-        } catch (Exception e) {
-            RudderLogger.logError(e);
+
+        JsonArray batchArray = new JsonArray();
+
+        int i = 0;
+        for (Map.Entry<Integer, RudderMessage> entry : messageMap.entrySet()) {
+            Integer orderNo = entry.getKey();
+            JsonElement event = gson.toJsonTree(entry.getValue());
+            JsonElement destinationIds = gson.toJsonTree(transformationEnabledDestinationIds.get(i++));
+
+            JsonObject batchItem = new JsonObject();
+            batchItem.addProperty("orderNo", orderNo);
+            batchItem.add("event", event);
+
+            batchItem.add("destinationIds", destinationIds);
+
+            batchArray.add(batchItem);
         }
-        if (jsonPayload.charAt(jsonPayload.length() - 1) == ',') {
-            jsonPayload.deleteCharAt(jsonPayload.length() - 1);
-        }
-        jsonPayload.append("]");
-        jsonPayload.append("}");
-        return jsonPayload.toString();
+
+        JsonObject json = new JsonObject();
+        json.add("batch", batchArray);
+
+        return gson.toJson(json);
     }
 }
