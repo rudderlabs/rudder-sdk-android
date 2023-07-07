@@ -58,7 +58,7 @@ public class RudderDeviceModeTransformationManager {
     // checking how many seconds passed since last successful transformation
     private int deviceModeSleepCount = 0;
     private int retryCount = 0;
-    private final Map<Integer, RudderMessage> messageMap = new HashMap<>();
+    private final Map<Integer, RudderTransformationRequest> messageMap = new HashMap<>();
 
     void startDeviceModeTransformationProcessor() {
         deviceModeExecutor.scheduleWithFixedDelay(
@@ -101,7 +101,9 @@ public class RudderDeviceModeTransformationManager {
     private void createMessageMap() {
         for (int i = 0; i < messageIds.size(); i++) {
             RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
-            messageMap.put(messageIds.get(i), message);
+            RudderTransformationRequest transformationRequest = new RudderTransformationRequest();
+            transformationRequest.setMessage(message);
+            messageMap.put(messageIds.get(i), transformationRequest);
         }
     }
 
@@ -164,35 +166,46 @@ public class RudderDeviceModeTransformationManager {
     }
 
     RudderMessage getEventFromMessageId(int messageId) {
-        return messageMap.get(messageId);
+        RudderTransformationRequest transformationRequest = messageMap.get(messageId);
+        if (transformationRequest == null) {
+            throw new NullPointerException();
+        }
+        return transformationRequest.getMessage();
     }
 
     // For each message get the list of destinationIds for which transformation is enabled
-    private ArrayList<List<String>> getTransformationEnabledDestinationIds(List<String> messages) {
-        ArrayList<List<String>> destinationIds = new ArrayList<>();
+    private void getTransformationEnabledDestinationIds(List<String> messages) {
         for (int i = 0; i < messages.size(); i++) {
-            RudderMessage message = messageMap.get(messageIds.get(i));
-            destinationIds.add(this.rudderDeviceModeManager.getTransformationEnabledDestinationIds(message));
+            RudderTransformationRequest transformationRequest = messageMap.get(messageIds.get(i));
+            if (transformationRequest == null) {
+                throw new NullPointerException();
+            }
+            RudderMessage message = transformationRequest.getMessage();
+            List<String>  destinationIds = this.rudderDeviceModeManager.getTransformationEnabledDestinationIds(message);
+            transformationRequest.setDestinationIds(destinationIds);
         }
-        return destinationIds;
     }
 
     private String createDeviceTransformPayload() {
-        ArrayList<List<String>> transformationEnabledDestinationIds = getTransformationEnabledDestinationIds(messages);
-        if (this.messageIds.isEmpty() || this.messages.isEmpty() || transformationEnabledDestinationIds.isEmpty() ||
-                this.messageIds.size() != this.messages.size() ||
-                this.messageIds.size() != transformationEnabledDestinationIds.size()) {
+        try {
+            getTransformationEnabledDestinationIds(messages);
+        } catch (NullPointerException e) {
+            RudderLogger.logError("DeviceModeTransformationManager: createDeviceTransformPayload: Error while getting transformation enabled destination Ids. Aborting. " + e);
+            return null;
+        }
+
+        if (this.messageIds.isEmpty() || this.messages.isEmpty() || this.messageIds.size() != this.messages.size()) {
             RudderLogger.logError("DeviceModeTransformationManager: createDeviceTransformPayload: Error while creating transformation payload. Aborting.");
             return null;
         }
 
         JsonArray batchArray = new JsonArray();
 
-        int i = 0;
-        for (Map.Entry<Integer, RudderMessage> entry : messageMap.entrySet()) {
+        for (Map.Entry<Integer, RudderTransformationRequest> entry : messageMap.entrySet()) {
             Integer orderNo = entry.getKey();
-            JsonElement event = gson.toJsonTree(entry.getValue());
-            JsonElement destinationIds = gson.toJsonTree(transformationEnabledDestinationIds.get(i++));
+            RudderTransformationRequest transformationRequest = entry.getValue();
+            JsonElement event = gson.toJsonTree(transformationRequest.getMessage());
+            JsonElement destinationIds = gson.toJsonTree(transformationRequest.getDestinationIds());
 
             JsonObject batchItem = new JsonObject();
             batchItem.addProperty("orderNo", orderNo);

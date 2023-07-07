@@ -317,8 +317,13 @@ public class RudderDeviceModeManager {
                     // For all other status codes
                     errorMsg.append("There is a transformation error. ");
                 }
-                // If their is a transformation error then response payload will not contain the original event. So we need to get the original event based on messageId/orderNo.
-                message = this.deviceModeTransformationManager.getEventFromMessageId(transformedEvent.orderNo);
+                try {
+                    // If their is a transformation error then response payload will not contain the original event. So we need to get the original event based on messageId/orderNo.
+                    message = this.deviceModeTransformationManager.getEventFromMessageId(transformedEvent.orderNo);
+                } catch (NullPointerException e) {
+                    RudderLogger.logError("RudderDeviceModeManager: dumpTransformedEvents: Error while getting original event from messageId. " + e);
+                    continue;
+                }
                 if (destinationsExcludedOnTransformationError.contains(destinationName)) {
                     errorMsg.append(destinationName).append(" is excluded from accepting event ").append(message.getEventName()).append(" on transformation error. Hence dropping this event.");
                     RudderLogger.logWarn(errorMsg.toString());
