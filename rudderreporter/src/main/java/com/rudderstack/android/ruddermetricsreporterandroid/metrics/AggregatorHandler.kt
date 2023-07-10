@@ -20,4 +20,5 @@ interface AggregatorHandler {
     fun LongGauge.recordMetric(value: Long)
     fun LongGauge.recordMetric(value: Long, attributes: Map<String,String>)
 
+    fun enable(enable : Boolean)
 }

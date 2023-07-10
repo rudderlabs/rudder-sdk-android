@@ -100,7 +100,6 @@ class DefaultSyncer internal constructor(
         }
     }
 
-
     companion object {
         private const val DEFAULT_FLUSH_SIZE = 20L
     }

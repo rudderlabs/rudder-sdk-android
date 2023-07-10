@@ -26,4 +26,5 @@ interface Syncer {
     fun stopScheduling()
 
     fun flushAllMetrics()
+
 }

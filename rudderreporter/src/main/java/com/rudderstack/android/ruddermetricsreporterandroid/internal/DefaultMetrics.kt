@@ -30,7 +30,12 @@ private val syncer: Syncer) : Metrics {
         return syncer
     }
 
+    override fun enable(enable: Boolean) {
+        aggregatorHandler.enable(enable)
+    }
+
     override fun shutdown() {
-        TODO("Not yet implemented")
+//        aggregatorHandler.shutdown()
+        syncer.stopScheduling()
     }
 }

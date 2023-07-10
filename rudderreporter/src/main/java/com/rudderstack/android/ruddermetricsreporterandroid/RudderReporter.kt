@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 23/06/23, 6:06 pm Last modified: 23/06/23, 6:06 pm
+ * Creator: Debanjan Chatterjee on 07/07/23, 11:29 am Last modified: 07/07/23, 11:29 am
  * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -11,123 +11,10 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
 package com.rudderstack.android.ruddermetricsreporterandroid
 
-import android.content.Context
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.BackgroundTaskService
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.Connectivity
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.ConnectivityCompat
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.DataCollectionModule
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultMetrics
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultReservoir
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultSyncer
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultUploadMediator
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.NetworkChangeCallback
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextModule
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.SystemServiceModule
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.MemoryTrimState
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.metrics.DefaultAggregatorHandler
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.AggregatorHandler
-import com.rudderstack.rudderjsonadapter.JsonAdapter
-
-class RudderReporter(
-    private val aggregatorHandler: AggregatorHandler,
-    private val syncer: Syncer
-) {
-
-    private var backgroundTaskService: BackgroundTaskService?= null
-
-    constructor(reservoir: Reservoir, syncer: Syncer) : this(
-        DefaultAggregatorHandler(reservoir),
-        syncer
-    )
-
-    constructor(reservoir: Reservoir, uploadMediator: UploadMediator) : this(
-        reservoir,
-        DefaultSyncer(reservoir, uploadMediator)
-    )
-
-    constructor(
-        context: Context,
-        baseUrl: String,
-        configuration: Configuration,
-        jsonAdapter: JsonAdapter,
-        backgroundTaskService: BackgroundTaskService? = null,
-        useContentProvider: Boolean = false,
-    ) : this(
-        ContextModule(context), ConnectivityCompat(context, RudderReporterNetworkChangeCallback()),
-        MemoryTrimState(), baseUrl, configuration, jsonAdapter,
-        backgroundTaskService ?: BackgroundTaskService(), useContentProvider
-    )
-
-    internal constructor(
-        contextModule: ContextModule,
-        connectivity: Connectivity,
-        memoryTrimState: MemoryTrimState,
-        baseUrl: String,
-        configuration: Configuration,
-        jsonAdapter: JsonAdapter,
-        backgroundTaskService: BackgroundTaskService,
-        useContentProvider: Boolean,
-    ) : this(
-        contextModule,
-        connectivity,
-        memoryTrimState,
-        baseUrl,
-        ConfigModule(contextModule, configuration),
-        jsonAdapter,
-        backgroundTaskService,
-        useContentProvider
-    )
-
-    internal constructor(
-        contextModule: ContextModule,
-        connectivity: Connectivity,
-        memoryTrimState: MemoryTrimState,
-        baseUrl: String,
-        configModule: ConfigModule,
-        jsonAdapter: JsonAdapter,
-        backgroundTaskService: BackgroundTaskService,
-        useContentProvider: Boolean,
-    ) : this(
-        DefaultReservoir(
-            contextModule.ctx,
-            useContentProvider,
-            backgroundTaskService.databaseExecutor
-        ),
-        DefaultUploadMediator(
-            /*DataCollectionModule(
-                contextModule,
-                configModule,
-                SystemServiceModule(contextModule),
-                backgroundTaskService, connectivity,
-                memoryTrimState
-            ),*/ configModule, baseUrl, jsonAdapter, backgroundTaskService.ioExecutor
-        )
-    ) {
-        this.backgroundTaskService = backgroundTaskService
-    }
-
-    val metrics: Metrics = DefaultMetrics(aggregatorHandler, syncer)
-
-    fun shutdown() {
-        metrics.shutdown()
-        backgroundTaskService?.shutdown()
-    }
-
-    internal class RudderReporterNetworkChangeCallback : NetworkChangeCallback {
-        override fun invoke(hasConnection: Boolean, networkState: String) {
-//            val data: MutableMap<String, Any> = HashMap()
-//            data["hasConnection"] = hasConnection
-//            data["networkState"] = networkState
-//            leaveAutoBreadcrumb("Connectivity changed", BreadcrumbType.STATE, data)
-            if (hasConnection) {
-//                    eventStore.flushAsync();
-            }
-//            return null
-        }
-    }
+interface RudderReporter {
+    val metrics: Metrics
+    fun shutdown()
 }
-
-

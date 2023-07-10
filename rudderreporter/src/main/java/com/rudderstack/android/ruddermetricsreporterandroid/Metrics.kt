@@ -21,6 +21,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.metrics.Meter
 interface Metrics {
     fun getMeter(): Meter
     fun getSyncer():Syncer
+    fun enable(enable: Boolean)
     fun shutdown()
     fun getLongCounter(name: String): LongCounter = getMeter().longCounter(name)
 }
