@@ -57,6 +57,7 @@ class FlushUtils {
                 lastBatchFailed = true;
                 int retries = 3;
                 while (retries-- > 0) {
+
                     List<Integer> batchMessageIds = getBatch(messageIds, flushQueueSize);
                     List<String> batchMessages = getBatch(messages, flushQueueSize);
                     String payload = getPayloadFromMessages(batchMessageIds, batchMessages);
@@ -68,6 +69,7 @@ class FlushUtils {
                         RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: ServerResponse: %d", networkResponse.statusCode));
                         // if success received from server
                         if (networkResponse.status == NetworkResponses.SUCCESS) {
+                            ReportManager.incrementCloudModeUploadSuccessCounter(1);
                             // remove events from DB
                             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: Successfully sent batch %d/%d ", i, numberOfBatches));
                             RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: clearingEvents of batch %d from DB: %s", i, networkResponse));
@@ -77,10 +79,12 @@ class FlushUtils {
                             lastBatchFailed = false;
                             break;
                         }
+                        ReportManager.incrementCloudModeUploadRetryCounter(1);
                     }
                     RudderLogger.logWarn(String.format(Locale.US, "EventRepository: flush: Failed to send batch %d/%d retrying again, %d retries left", i, numberOfBatches, retries));
                 }
                 if (lastBatchFailed) {
+                    ReportManager.incrementCloudModeUploadAbortCounter(1);
                     RudderLogger.logWarn(String.format(Locale.US, "EventRepository: flush: Failed to send batch %d/%d after 3 retries , dropping the remaining batches as well", i, numberOfBatches));
                     return false;
                 }

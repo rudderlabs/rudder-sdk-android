@@ -1,6 +1,10 @@
 package com.rudderstack.android.sdk.core;
 
 
+import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE;
+import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_SOURCE_CONFIG_URL_INVALID;
+import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_SOURCE_DISABLED;
+import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_WRITE_KEY_INVALID;
 import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
 import static com.rudderstack.android.sdk.core.util.Utils.lifeCycleDependenciesExists;
 
@@ -18,6 +22,7 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.rudderstack.android.ruddermetricsreporterandroid.Metrics;
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
 import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
 import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
@@ -222,15 +227,21 @@ class EventRepository {
             try {
                 int retryCount = 0;
                 while (!isSDKInitialized && retryCount <= 5) {
+                    if (retryCount > 0) {
+                        ReportManager.incrementSourceConfigDownloadRetryCounter(1);
+                    }
                     RudderNetworkManager.NetworkResponses receivedError = configManager.getError();
                     RudderServerConfig serverConfig = configManager.getConfig();
                     if (serverConfig != null) {
                         isSDKEnabled = serverConfig.source.isSourceEnabled;
                         if (isSDKEnabled) {
+                            enableStatsCollection(serverConfig.source.sourceConfiguration.getStatsCollection());
                             dataResidencyManager.setDataResidencyUrls(serverConfig);
                             dataPlaneUrl = dataResidencyManager.getDataPlaneUrl();
                             if (dataPlaneUrl == null) {
                                 RudderLogger.logError(Constants.Logs.DATA_PLANE_URL_ERROR);
+                                ReportManager.incrementSourceConfigDownloadAbortCounter(1,
+                                        Collections.singletonMap(LABEL_TYPE, LABEL_TYPE_SOURCE_CONFIG_URL_INVALID));
                                 return;
                             }
                             if (consentFilter != null)
@@ -240,9 +251,11 @@ class EventRepository {
                             deviceModeManager.initiate(serverConfig, consentFilterHandler);
 
                             RudderLogger.logDebug("DataPlaneUrl is set to: " + dataPlaneUrl);
-
+                            ReportManager.incrementSourceConfigDownloadSuccessCounter(1);
                             saveFlushConfig();
                         } else {
+                            ReportManager.incrementSourceConfigDownloadAbortCounter(1,
+                                    Collections.singletonMap(LABEL_TYPE, LABEL_TYPE_SOURCE_DISABLED));
                             RudderLogger.logDebug("EventRepository: initiateSDK: source is disabled in the dashboard");
                             RudderLogger.logDebug("Flushing persisted events");
                             dbManager.flushEvents();
@@ -251,6 +264,8 @@ class EventRepository {
                         isSDKInitialized = true;
                     } else if (receivedError == RudderNetworkManager.NetworkResponses.WRITE_KEY_ERROR) {
                         RudderLogger.logError("WRONG WRITE_KEY");
+                        ReportManager.incrementSourceConfigDownloadAbortCounter(1,
+                                Collections.singletonMap(LABEL_TYPE, LABEL_TYPE_WRITE_KEY_INVALID));
                         break;
                     } else {
                         retryCount += 1;
@@ -265,6 +280,14 @@ class EventRepository {
         }).start();
     }
 
+    private void enableStatsCollection(SourceConfiguration.StatsCollection statsCollection) {
+        Metrics rudderMetrics = ReportManager.getMetrics();
+        boolean metricsCollection = statsCollection.getMetrics().isEnabled();
+        if(rudderMetrics!= null && !metricsCollection) {
+            rudderMetrics.enable(false);
+        }
+    }
+
     private void saveFlushConfig() {
         RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString,
                 anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel(), config.isGzipEnabled());
@@ -277,7 +300,7 @@ class EventRepository {
      * */
     void processMessage(@NonNull RudderMessage message) {
         if (!isSDKEnabled) {
-            incrementDiscardedCounter(1, Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_SDK_DISABLED));
+            incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_SDK_DISABLED));
             return;
         }
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: eventName: %s", message.getEventName()));
@@ -289,7 +312,7 @@ class EventRepository {
         String eventJson = gson.toJson(updatedMessage);
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
         if (isMessageJsonExceedingMaxSize(eventJson)) {
-            incrementDiscardedCounter(1, Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_SIZE_INVALID));
+            incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_SIZE_INVALID));
             RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
             return;
         }

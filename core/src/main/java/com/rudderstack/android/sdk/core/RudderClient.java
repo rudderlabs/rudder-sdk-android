@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration;
+import com.rudderstack.android.ruddermetricsreporterandroid.DefaultRudderReporter;
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata;
 import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter;
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
@@ -160,9 +161,9 @@ public class RudderClient {
     private static void initiateRudderReporter(Context context, @Nullable String writeKey) {
         String writeKeyOrBlank = writeKey == null ? "" : writeKey;
         if (rudderReporter == null) {
-            rudderReporter = new RudderReporter(context, RUDDER_REPORTER_BASE_URL, new Configuration(new LibraryMetadata(
+            rudderReporter = new DefaultRudderReporter(context, RUDDER_REPORTER_BASE_URL, new Configuration(new LibraryMetadata(
                     BuildConfig.LIBRARY_PACKAGE_NAME, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, writeKeyOrBlank
-            )), new GsonAdapter(), null, false);
+            )), new GsonAdapter());
             rudderReporter.getMetrics().getSyncer().startScheduledSyncs(50000, true, 10);
             ReportManager.initiate(rudderReporter.getMetrics());
 
