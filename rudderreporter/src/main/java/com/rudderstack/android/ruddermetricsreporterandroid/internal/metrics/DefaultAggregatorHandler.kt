@@ -26,6 +26,7 @@ class DefaultAggregatorHandler(private val reservoir: Reservoir,
 isEnabled: Boolean = true) : AggregatorHandler {
     private val _isEnabled = AtomicBoolean(isEnabled)
     override fun LongCounter.recordMetric(value: Long) {
+        if(!_isEnabled.get()) return
         recordMetric(value, mapOf())
     }
 
@@ -36,6 +37,7 @@ isEnabled: Boolean = true) : AggregatorHandler {
     }
 
     override fun LongGauge.recordMetric(value: Long) {
+        if(!_isEnabled.get()) return
         recordMetric(value, mapOf())
     }
 

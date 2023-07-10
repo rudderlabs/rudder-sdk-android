@@ -46,7 +46,7 @@ class DefaultRudderReporter(
         reservoir,
         DefaultSyncer(reservoir, uploadMediator), isMetricsAggregatorEnabled
     )
-
+    @JvmOverloads
     constructor(
         context: Context,
         baseUrl: String,
