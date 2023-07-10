@@ -46,7 +46,7 @@ public class RudderDeviceModeManager {
     private final RudderDataResidencyManager dataResidencyManager;
     // required for device mode transform
     private final Map<String, String> destinationsWithTransformationsEnabled = new HashMap<>(); //destination display name to destinationId
-    private boolean isDeviceModeFactoriesNotPresent = false;
+    private boolean areDeviceModeFactoriesAbsent = false;
 
     static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
@@ -194,7 +194,7 @@ public class RudderDeviceModeManager {
 
     private void isDeviceModeFactoriesNotPresent() {
         if (this.integrationOperationsMap.isEmpty()) {
-            isDeviceModeFactoriesNotPresent = true;
+            areDeviceModeFactoriesAbsent = true;
         }
     }
 
@@ -238,7 +238,7 @@ public class RudderDeviceModeManager {
     }
 
     void makeFactoryDump(RudderMessage message, Integer rowId, boolean fromHistory) {
-        if (this.isDeviceModeFactoriesNotPresent) {
+        if (this.areDeviceModeFactoriesAbsent) {
             dbPersistentManager.markDeviceModeDone(Arrays.asList(rowId));
         } else if (areFactoriesInitialized || fromHistory) {
             List<String> eligibleDestinations = getEligibleDestinations(message);
