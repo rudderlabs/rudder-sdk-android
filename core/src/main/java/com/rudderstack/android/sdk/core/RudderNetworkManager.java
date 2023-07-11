@@ -47,7 +47,8 @@ public class RudderNetworkManager {
         ERROR,
         WRITE_KEY_ERROR,
         RESOURCE_NOT_FOUND,
-        NETWORK_UNAVAILABLE
+        NETWORK_UNAVAILABLE,
+        BAD_REQUEST
     }
 
     public enum RequestMethod {
@@ -143,8 +144,10 @@ public class RudderNetworkManager {
                     httpConnection.getURL(), responseCode, errorPayload));
             if (errorPayload.toLowerCase().contains("invalid write key"))
                 networkResponse = NetworkResponses.WRITE_KEY_ERROR;
-            if (responseCode == 404)
+            else if (responseCode == 404)
                 networkResponse = NetworkResponses.RESOURCE_NOT_FOUND;
+            else if (responseCode == 400)
+                networkResponse = NetworkResponses.BAD_REQUEST;
         }
         return new Result(networkResponse == null ? NetworkResponses.ERROR : networkResponse, responseCode, responsePayload, errorPayload);
     }

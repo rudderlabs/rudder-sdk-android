@@ -110,6 +110,9 @@ public class RudderDeviceModeTransformationManager {
         } else if (result.status == NetworkResponses.NETWORK_UNAVAILABLE) {
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Network unavailable. Aborting");
             return true;
+        } else if (result.status == NetworkResponses.BAD_REQUEST) {
+            RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Bad request, dumping back the original events to the factories");
+            dumpOriginalEvents(transformationRequest);
         } else if (result.status == NetworkResponses.ERROR) {
             handleError(transformationRequest);
         } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
@@ -124,9 +127,7 @@ public class RudderDeviceModeTransformationManager {
         int delay = Math.min((1 << retryCount) * 500, MAX_DELAY); // Exponential backoff
         if (retryCount++ == MAX_RETRIES) {
             retryCount = 0;
-            deviceModeSleepCount = 0;
-            rudderDeviceModeManager.dumpOriginalEvents(transformationRequest, true);
-            completeDeviceModeEventProcessing();
+            dumpOriginalEvents(transformationRequest);
         } else {
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Retrying in " + delay + "s");
             try {
@@ -136,6 +137,12 @@ public class RudderDeviceModeTransformationManager {
                 Thread.currentThread().interrupt();
             }
         }
+    }
+
+    private void dumpOriginalEvents(TransformationRequest transformationRequest) {
+        deviceModeSleepCount = 0;
+        rudderDeviceModeManager.dumpOriginalEvents(transformationRequest, true);
+        completeDeviceModeEventProcessing();
     }
 
     private void handleResourceNotFound(TransformationRequest transformationRequest) {
