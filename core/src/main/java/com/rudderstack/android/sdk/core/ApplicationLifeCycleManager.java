@@ -12,23 +12,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ApplicationLifeCycleManager {
     private final RudderConfig config;
-    private final Application application;
     private final RudderFlushWorkManager rudderFlushWorkManager;
     private final EventRepository repository;
     public static final String VERSION = "version";
     private static final AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
     private final RudderPreferenceManager preferenceManager;
-    private boolean isApplicationUpdated = false;
+    private final AppVersion appVersion;
 
     public ApplicationLifeCycleManager(RudderConfig config, Application application,
                                        RudderFlushWorkManager rudderFlushWorkManager,
                                        EventRepository repository,
                                        RudderPreferenceManager preferenceManager) {
         this.config = config;
-        this.application = application;
         this.rudderFlushWorkManager = rudderFlushWorkManager;
         this.repository = repository;
         this.preferenceManager = preferenceManager;
+        this.appVersion = new AppVersion(application);
     }
 
     /*
@@ -37,24 +36,21 @@ public class ApplicationLifeCycleManager {
      * If it is updated then make LifeCycle event: Application Updated.
      */
     void trackApplicationUpdateStatus() {
+        this.appVersion.storeCurrentBuildAndVersion();
         if (!this.config.isTrackLifecycleEvents() && !this.config.isNewLifeCycleEvents()) {
             return;
         }
-        AppVersion appVersion = new AppVersion(application);
-        if (appVersion.previousBuild == -1) {
+        if (this.appVersion.previousBuild == -1) {
             // application was not installed previously, now triggering Application Installed event
-            appVersion.storeCurrentBuildAndVersion();
             sendApplicationInstalled(appVersion.currentBuild, appVersion.currentVersion);
             rudderFlushWorkManager.registerPeriodicFlushWorker();
-        } else if (appVersion.previousBuild != appVersion.currentBuild) {
-            this.isApplicationUpdated = true;
-            appVersion.storeCurrentBuildAndVersion();
+        } else if (isApplicationUpdated()) {
             sendApplicationUpdated(appVersion.previousBuild, appVersion.currentBuild, appVersion.previousVersion, appVersion.currentVersion);
         }
     }
 
     boolean isApplicationUpdated() {
-        return this.isApplicationUpdated;
+        return this.appVersion.previousBuild != -1 && (this.appVersion.previousBuild != this.appVersion.currentBuild);
     }
 
     void sendApplicationInstalled(int currentBuild, String currentVersion) {
