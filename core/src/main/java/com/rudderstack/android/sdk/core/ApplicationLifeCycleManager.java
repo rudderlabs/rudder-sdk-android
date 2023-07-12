@@ -84,12 +84,12 @@ public class ApplicationLifeCycleManager {
     }
 
     void sendApplicationOpened() {
-        Boolean isFirstLaunchValue = isFirstLaunch.getAndSet(false);
         if (repository.getOptStatus()) {
             return;
         }
-        RudderProperty rudderProperty = new RudderProperty().putValue("from_background", !isFirstLaunch.get());
-        if (Boolean.TRUE.equals(isFirstLaunchValue)) {
+        boolean hasLaunchedBefore = !isFirstLaunch.getAndSet(false);
+        RudderProperty rudderProperty = new RudderProperty().putValue("from_background", hasLaunchedBefore);
+        if (!hasLaunchedBefore) {
             rudderProperty.putValue(VERSION, preferenceManager.getVersionName());
         }
         RudderMessage trackMessage = new RudderMessageBuilder()
