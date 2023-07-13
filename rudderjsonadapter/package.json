@@ -1,11 +1,14 @@
 {
   "name": "rudderjsonadapter",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "properties-reader": "^2.2.0"
+  }
 }
