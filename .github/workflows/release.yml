@@ -2,6 +2,9 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      module:
+        required: true
   release:
     types: [created]
 jobs:
@@ -22,7 +25,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-core-
       - name: Publish release to sonatype
-        run: ./gradlew publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository
+        run: |
+          module_input = ${{ github.event.inputs.module }}
+          module_name=$({{ github.event.release.tag_name }} | cut -d'-' -f1)
+          module_name=${module_name:=module_input}
+          cd module_name && sh ../gradlew publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository
+          cd ..
         env:
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}

@@ -1,7 +1,10 @@
 name: Draft new release
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
+    inputs:
+      module:
+        required: true
 
 jobs:
   draft-new-release:
@@ -31,20 +34,22 @@ jobs:
       - name: Create release branch
         id: create-release
         run: |
+          module_input = ${{ github.event.inputs.module }}
           source_branch_name=${GITHUB_REF##*/}
           release_type=release
           main_branch=master-v2
           grep -q "hotfix/" <<< "${GITHUB_REF}" && release_type=hotfix-release          
           git fetch origin "$main_branch" --depth=1
           git merge "origin/$main_branch"
+          cd $module_input
           current_version=$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)
           
           npm ci
           npx standard-version --skip.commit --skip.tag --skip.changelog
-          new_version=$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)
+          new_version="$module_input-$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)"
           git reset --hard
-          
-          branch_name="${release_type}-${module_name}/${new_version}"
+          cd ..
+          branch_name="${release_type}/${new_version}"
 
           echo "Source branch for new release is $source_branch_name"
           echo "Current version is $current_version"
@@ -62,13 +67,17 @@ jobs:
       - name: Update changelog & bump version
         id: finish-release
         run: |
+          cd $module_input
           npm ci
           npx standard-version
+          cd ..
           git add . && git commit --amend --no-edit
 
       - name: Push new version in release branch & tag
         run: |
+          cd $module_input
           git push --follow-tags
+          cd ..
 
       - name: Create pull request into main
         uses: repo-sync/pull-request@v2

@@ -2,7 +2,7 @@ name: Snapshot
 
 on:
   pull_request:
-    branches: [ 'master', 'master-mpx' ]
+    branches: [ 'master-v2']
     types: [ 'opened', 'reopened', 'edited', 'synchronize' ]
 
 jobs:
@@ -23,7 +23,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-core-
       - name: Publish snapshot to sonatype
-        run: ./gradlew publishToSonatype
+        run: |
+          module_name=$({{ github.event.release.tag_name }} | cut -d'-' -f1)
+          cd module_name && sh ../gradlew publishToSonatype 
+          cd ..
         env:
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
