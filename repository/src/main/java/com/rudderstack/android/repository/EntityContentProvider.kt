@@ -34,7 +34,7 @@ internal class EntityContentProvider : ContentProvider() {
 
         internal const val ECP_ENTITY_CODE = "db_entity"
         internal const val ECP_LIMIT_CODE = "query_limit"
-        internal const val ECP_CONFLICT_RESOLUTION_CODE = "query_limit"
+        internal const val ECP_CONFLICT_RESOLUTION_CODE = "ecp_conflict_resolution"
         private const val ECP_TABLE_URI_MATCHER_CODE = 1
         private const val ECP_TABLE_SUB_QUERY_URI_MATCHER_CODE = 2
 

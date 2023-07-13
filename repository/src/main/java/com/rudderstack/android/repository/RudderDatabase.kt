@@ -59,10 +59,11 @@ object RudderDatabase {
         entityFactory: EntityFactory,
         useContentProvider: Boolean = this.useContentProvider,
         version: Int = 1,
+        executorService: ExecutorService? = null,
         databaseCreatedCallback: ((SQLiteDatabase?) -> Unit)? = null,
         databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)? = null
     ) {
-        commonExecutor = Executors.newCachedThreadPool()
+        commonExecutor = executorService ?: Executors.newCachedThreadPool()
         this.entityFactory = entityFactory
         if (sqliteOpenHelper != null)
             return

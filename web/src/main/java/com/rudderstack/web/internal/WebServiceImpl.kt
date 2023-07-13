@@ -28,7 +28,7 @@ import java.net.URL
 import java.util.concurrent.*
 
 class WebServiceImpl internal constructor(
-    baseUrl : String,
+    baseUrl: String,
     private val jsonAdapter: JsonAdapter,
     private val defaultTimeout: Int = 10000,
     private val executor: ExecutorService = Executors.newCachedThreadPool()
@@ -41,6 +41,7 @@ class WebServiceImpl internal constructor(
         POST,
         GET
     }
+
     init {
         this.baseUrl = baseUrl.validatedBaseUrl
     }
@@ -145,7 +146,17 @@ class WebServiceImpl internal constructor(
     ) {
         executor.execute {
             callback.invoke(
-                httpCall(headers, query, body, endpoint, HttpMethod.POST, responseTypeAdapter)
+                httpCall(
+                    headers,
+                    query,
+                    body,
+                    endpoint,
+                    HttpMethod.POST,
+                    responseTypeAdapter
+                ).also {
+                    println("response is $it")
+
+                }
             )
         }
     }
@@ -155,7 +166,7 @@ class WebServiceImpl internal constructor(
         _interceptor = httpInterceptor
     }
 
-//    @Throws(Throwable::class)
+    //    @Throws(Throwable::class)
     private fun <T : Any> httpCall(
         headers: Map<String, String>?,
         query: Map<String, String>?,
@@ -184,8 +195,13 @@ class WebServiceImpl internal constructor(
         typeAdapter: RudderTypeAdapter<T>
     ): HttpResponse<T> {
         return rawHttpCall(headers, query, body, endpoint, type, deserializer = { json ->
-            jsonAdapter.readJson(json, typeAdapter)
-                ?: throw IllegalArgumentException("Json adapter not able to parse response body")
+            if (json.isEmpty()) {
+                //TODO add logger
+//                logger.debug("Empty response body")
+                null
+            } else
+                jsonAdapter.readJson(json, typeAdapter)
+                    ?: throw IllegalArgumentException("Json adapter not able to parse response body")
         })
     }
 
@@ -200,63 +216,62 @@ class WebServiceImpl internal constructor(
     ): HttpResponse<T> {
         try {
 
-        val httpConnection =
-            createHttpConnection(endpoint, headers, type, query, body, defaultTimeout) {
-                //call interceptor if any changes to HttpConnection required
-                _interceptor?.intercept(it) ?: it
-            }
-        // create connection
-        httpConnection.connect()
+            val httpConnection =
+                createHttpConnection(endpoint, headers, type, query, body, defaultTimeout) {
+                    //call interceptor if any changes to HttpConnection required
+                    _interceptor?.intercept(it) ?: it
+                }
+            // create connection
+            httpConnection.connect()
 
-        // get input stream from connection to get output from the server
-        if (httpConnection.responseCode in (200 until 300)) { //success block
-            val bis = BufferedInputStream(httpConnection.inputStream)
-            val baos = ByteArrayOutputStream()
-            var res = bis.read()
-            // read response from the server
-            while (res != -1) {
-                baos.write(res)
-                res = bis.read()
-            }
-            // finally return response when reading from server is completed
-            /*if (baos.toString().equals("OK", ignoreCase = true)) {
-                return Utils.NetworkResponses.SUCCESS
-            }*/
-            return HttpResponse(
-                httpConnection.responseCode,
-                deserializer.invoke(baos.toString()),
-                null
-            )
+            // get input stream from connection to get output from the server
+            return if (httpConnection.responseCode in (200 until 300)) { //success block
+                val bis = BufferedInputStream(httpConnection.inputStream)
+                val baos = ByteArrayOutputStream()
+                var res = bis.read()
+                // read response from the server
+                while (res != -1) {
+                    baos.write(res)
+                    res = bis.read()
+                }
+                // finally return response when reading from server is completed
+                /*if (baos.toString().equals("OK", ignoreCase = true)) {
+                    return Utils.NetworkResponses.SUCCESS
+                }*/
+                HttpResponse(
+                    httpConnection.responseCode,
+                    deserializer.invoke(baos.toString()),
+                    null
+                )
 
-        } else {
-            val bis = BufferedInputStream(httpConnection.errorStream)
-            val baos = ByteArrayOutputStream()
-            var res = bis.read()
-            // read response from the server
-            while (res != -1) {
-                baos.write(res)
-                res = bis.read()
-            }
-            // finally return response when reading from server is completed
-            val errorResp = baos.toString()
+            } else {
+                val bis = BufferedInputStream(httpConnection.errorStream)
+                val baos = ByteArrayOutputStream()
+                var res = bis.read()
+                // read response from the server
+                while (res != -1) {
+                    baos.write(res)
+                    res = bis.read()
+                }
+                // finally return response when reading from server is completed
+                val errorResp = baos.toString()
 //                RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: $errorResp")
-            // return null as request made is not successful
-//                if (errorResp.lowercase().contains("invalid write key")) {
-//                    return Utils.NetworkResponses.WRITE_KEY_ERROR
-//                }
-            return HttpResponse(httpConnection.responseCode, null, errorResp)
-        }
-        } catch (ex : Exception) {
+                HttpResponse(httpConnection.responseCode, null, errorResp)
+            }
+        } catch (ex: Exception) {
 //            RudderLogger.logError(ex)
             ex.printStackTrace()
-            return HttpResponse(status = HttpResponse.HTTP_STATUS_NONE,
-            body = null,
-            errorBody = null,
-            error = ex)
+            return HttpResponse(
+                status = HttpResponse.HTTP_STATUS_NONE,
+                body = null,
+                errorBody = null,
+                error = ex
+            )
         }
 
     }
-//    @kotlin.jvm.Throws(IOException::class)
+
+    //    @kotlin.jvm.Throws(IOException::class)
     @Throws(IOException::class)
     private fun createHttpConnection(
         endpoint: String,
@@ -298,7 +313,7 @@ class WebServiceImpl internal constructor(
         httpConn = onHttpConnectionCreated.invoke(httpConn)
 
         // get output stream and write payload content
-        if(type == HttpMethod.POST) {
+        if (type == HttpMethod.POST) {
             // set connection object to return output
             httpConn.doOutput = true
             val os = httpConn.outputStream
@@ -320,5 +335,5 @@ class WebServiceImpl internal constructor(
         }?.reduce { acc, s -> "$acc&$s" } ?: ""
 
     private val String.validatedBaseUrl
-    get() = if(this.endsWith('/')) this else "$this/"
+        get() = if (this.endsWith('/')) this else "$this/"
 }

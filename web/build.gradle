@@ -27,7 +27,7 @@ apply from : "$projectDir/../dependencies.gradle"
 
 dependencies {
 
-    implementation(project(":rudderjsonadapter"))
+    implementation(project(projects.json_rudder_adapter))
 
     //test
     testImplementation 'junit:junit:4.13.2'

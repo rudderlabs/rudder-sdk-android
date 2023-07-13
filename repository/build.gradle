@@ -24,8 +24,6 @@ android {
     defaultConfig {
         minSdk library.min_sdk
         targetSdk library.target_sdk
-        versionCode 1
-        versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -60,9 +58,8 @@ android {
 
 dependencies {
 
-    implementation deps.kotlinCore
-    implementation deps.androidXTestExtJunitKtx
-    implementation deps.androidXTestRules
+    testImplementation deps.androidXTestExtJunitKtx
+    testImplementation deps.androidXTestRules
 //    implementation 'androidx.appcompat:appcompat:1.3.1'
 //    implementation 'com.google.android.material:material:1.4.0'
 //    implementation(project(":rudderjsonadapter"))

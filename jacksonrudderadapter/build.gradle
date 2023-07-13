@@ -27,7 +27,6 @@ apply from : "$projectDir/../dependencies.gradle"
 dependencies {
 
     implementation project(':rudderjsonadapter')
-    implementation project(':models')
     api deps.jackson
     api deps.jacksonKotlin
 

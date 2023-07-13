@@ -18,8 +18,9 @@ import android.app.Application
 import android.content.res.AssetManager
 import android.util.Log
 import com.rudderstack.android.RudderAnalytics
-import com.rudderstack.android.ruddermetricsreporterandroid.Client
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.Configuration
+import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClientDelegate
+import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
+import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Settings
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
@@ -32,9 +33,9 @@ class MyApplication : Application() {
         private lateinit var _rudderAnalytics: Analytics
         val rudderAnalytics
             get() = _rudderAnalytics
-        private lateinit var _metricsClient: Client
+        private lateinit var _metricsErrorClientDelegate: ErrorClientDelegate
         val metricsClient
-            get() = _metricsClient
+            get() = _metricsErrorClientDelegate
     }
 
     var initializationCallback: ((InitializationResponse) -> Unit)? = null
@@ -55,7 +56,11 @@ class MyApplication : Application() {
             { success, message ->
                 initializationCallback?.invoke(InitializationResponse(success, message))
             }
-        _metricsClient = Client(application, Configuration())
+        _metricsErrorClientDelegate =
+            ErrorClientDelegate(
+                application,
+                Configuration(LibraryMetadata("android", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toString(), "write-key"))
+            )
     }
 
     private val properties by lazy {

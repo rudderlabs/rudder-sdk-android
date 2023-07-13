@@ -13,7 +13,6 @@
  */
 
 package com.rudderstack.android.repository
-
 interface EntityFactory {
     /**
      * Create entity for given class.

@@ -14,6 +14,7 @@
 
 package com.rudderstack.core.internal
 
+import com.rudderstack.core.Base64Generator
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.dataPlaneUrl
 import com.rudderstack.core.writeKey
@@ -31,6 +32,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
+import java.util.Base64
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -55,7 +58,11 @@ abstract class DataServiceUploadImplTest {
     fun setup() {
         dataServiceImpl = DataUploadServiceImpl(
             writeKey,
-            jsonAdapter, dataPlaneUrl = dataPlaneUrl
+            jsonAdapter, dataPlaneUrl = dataPlaneUrl, base64Generator = {
+                Base64.getEncoder().encodeToString(
+                    String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8"))
+                )
+            }
         )
 
     }
