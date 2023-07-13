@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.repository
 
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
@@ -234,6 +235,15 @@ class Dao<T : Entity> internal constructor(
             ?: throw IllegalArgumentException("RudderEntity must have at least one field")
 
         val cursor = db.rawQuery(query, arrayOf())
+        val items = extractItems(cursor, fields)
+        cursor.close()
+        return items
+    }
+
+    private fun extractItems(
+        cursor: Cursor,
+        fields: Array<RudderField>
+    ): ArrayList<T> {
         val items = ArrayList<T>(cursor.count)
 
         if (cursor.moveToFirst()) {
@@ -244,6 +254,7 @@ class Dao<T : Entity> internal constructor(
                             cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
                                 ?: throw IllegalArgumentException("No such column ${it.fieldName}")
                         )
+
                         RudderField.Type.TEXT -> cursor.getString(
                             cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
                                 ?: throw IllegalArgumentException("No such column ${it.fieldName}"))
@@ -256,7 +267,6 @@ class Dao<T : Entity> internal constructor(
                 }
             } while (cursor.moveToNext())
         }
-        cursor.close()
         return items
     }
 
