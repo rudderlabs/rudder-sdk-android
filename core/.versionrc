@@ -1,0 +1,14 @@
+{
+  "bumpFiles": [
+    {
+       "filename": "package.json",
+       "type": "json"
+     },
+    {
+      "filename": "gradle.properties",
+      "updater": "gradle-updater.js"
+    }
+  ],
+  "path": "."
+}
+

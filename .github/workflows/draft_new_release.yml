@@ -10,7 +10,7 @@ jobs:
   draft-new-release:
     name: Draft a new release
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/heads/develop-v2') || startsWith(github.ref, 'refs/heads/hotfix/')
+#    if: startsWith(github.ref, 'refs/heads/develop-v2') || startsWith(github.ref, 'refs/heads/hotfix/')
     steps:
       - name: Checkout source branch
         uses: actions/checkout@v3
@@ -69,7 +69,7 @@ jobs:
         run: |
           cd $module_input
           npm ci
-          npx standard-version
+          npx standard-version -t "${module_input}-"
           cd ..
           git add . && git commit --amend --no-edit
 
