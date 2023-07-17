@@ -1,16 +1,29 @@
-name: Draft new release
+name: Draft new release for v2
 
 on:
   workflow_dispatch:
     inputs:
       module:
         required: true
+        type: choice
+        description: Choose module to draft release from
+        options:
+        - core
+        - android
+        - rudderjsonadapter
+        - gsonrudderadapter
+        - jacksonrudderadapter
+        - moshirudderadapter
+        - models
+        - repository
+        - rudderreporter
+        - web
 
 jobs:
   draft-new-release:
-    name: Draft a new release
+    name: Draft a new release for v2
     runs-on: ubuntu-latest
-#    if: startsWith(github.ref, 'refs/heads/develop-v2') || startsWith(github.ref, 'refs/heads/hotfix/')
+    if: startsWith(github.ref, 'refs/heads/develop-v2') || startsWith(github.ref, 'refs/heads/hotfix-v2/')
     steps:
       - name: Checkout source branch
         uses: actions/checkout@v3
@@ -32,13 +45,13 @@ jobs:
 
       # Calculate the next release version based on conventional semantic release
       - name: Create release branch
-        id: create-release
+        id: create-release-v2
         run: |
           module_input = ${{ github.event.inputs.module }}
           source_branch_name=${GITHUB_REF##*/}
-          release_type=release
+          release_type=release-v2
           main_branch=master-v2
-          grep -q "hotfix/" <<< "${GITHUB_REF}" && release_type=hotfix-release          
+          grep -q "hotfix-v2/" <<< "${GITHUB_REF}" && release_type=hotfix-release-v2          
           git fetch origin "$main_branch" --depth=1
           git merge "origin/$main_branch"
           cd $module_input
@@ -46,7 +59,7 @@ jobs:
           
           npm ci
           npx standard-version --skip.commit --skip.tag --skip.changelog
-          new_version="$module_input-$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)"
+          new_version="$module_input@$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)"
           git reset --hard
           cd ..
           branch_name="${release_type}/${new_version}"
@@ -63,19 +76,20 @@ jobs:
           echo "::set-output name=branch_name::$branch_name"
           echo "::set-output name=new_version::$new_version"
           echo "::set-output name=main_branch::$main_branch"
+          echo "::set-output name=module_name::$module_input"
 
       - name: Update changelog & bump version
         id: finish-release
         run: |
-          cd $module_input
+          cd $module_name
           npm ci
-          npx standard-version -t "${module_input}-"
+          npx standard-version -t "${module_name}@"
           cd ..
           git add . && git commit --amend --no-edit
 
       - name: Push new version in release branch & tag
         run: |
-          cd $module_input
+          cd $module_name
           git push --follow-tags
           cd ..
 

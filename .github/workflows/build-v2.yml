@@ -1,4 +1,4 @@
-name: CI
+name: CI for v2
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
           workflow_id: ${{ github.event.workflow.id }}
 
   unit-test:
-    needs: cancel_previous
+    needs: cancel_previous for v2
     runs-on: ubuntu-latest
 
     steps:

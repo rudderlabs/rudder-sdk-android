@@ -1,0 +1,67 @@
+name: Publish new github release
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ 'master-v2' ]
+    types:
+      - closed
+
+jobs:
+  release:
+    name: Publish new release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/master-v2') || ((startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.ref, 'refs/heads/hotfix-v2/') && github.event.pull_request.merged == true) # only merged pull requests must trigger this job
+    steps:
+      - name: Extract version from branch name (for release branches)
+        id: extract-version
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          VERSION=${BRANCH_NAME#hotfix-v2/}
+          VERSION=${VERSION#release-v2/}
+          
+          echo "release_version=$VERSION" >> $GITHUB_OUTPUT
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Create Github Release
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.PAT }}
+        run: |
+          npx conventional-github-releaser -p angular
+
+      - name: Create pull request into develop
+        uses: repo-sync/pull-request@v2
+        if: (startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/'))
+        with:
+          source_branch: 'master-v2'
+          destination_branch: 'develop-v2'
+          github_token: ${{ secrets.PAT }}
+          pr_title: "chore(release): pulling master-v2 into develop-v2 post release v${{ steps.extract-version.outputs.release_version }}"
+          pr_body: ':crown: *An automated PR*'
+          pr_reviewer: 'itsdebs'
+
+      - name: Delete hotfix release branch
+        uses: koj-co/delete-merged-action@master
+        if: startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/')
+        with:
+          branches: 'hotfix-release-v2/*'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete release branch
+        uses: koj-co/delete-merged-action@master
+        if: startsWith(github.event.pull_request.head.ref, 'release-v2/')
+        with:
+          branches: 'release-v2/*'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

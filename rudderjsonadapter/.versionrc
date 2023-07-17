@@ -6,7 +6,7 @@
      },
     {
       "filename": "gradle.properties",
-      "updater": "gradle-updater.js"
+      "updater": "../gradle-updater.js"
     }
   ],
   "path": "."

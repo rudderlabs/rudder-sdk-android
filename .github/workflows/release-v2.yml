@@ -1,4 +1,4 @@
-name: Release
+name: Release-v2
 
 on:
   workflow_dispatch:
@@ -27,7 +27,7 @@ jobs:
       - name: Publish release to sonatype
         run: |
           module_input = ${{ github.event.inputs.module }}
-          module_name=$(echo ${{ github.event.release.tag_name }} | cut -d'-' -f1)
+          module_name=$(echo ${{ github.event.release.tag_name }} | cut -d'@' -f1)
           module_name=${module_name:=$module_input}
           cd $module_name && sh ../gradlew publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository
           cd ..
