@@ -1,6 +1,8 @@
 package com.rudderstack.android.sdk.core;
 
-public class SourceConfiguration {
+import java.io.Serializable;
+
+public class SourceConfiguration implements Serializable {
     public SourceConfiguration(StatsCollection statsCollection) {
         this.statsCollection = statsCollection;
     }
@@ -11,7 +13,7 @@ public class SourceConfiguration {
         return statsCollection;
     }
 
-    static class StatsCollection{
+    static class StatsCollection implements Serializable {
         public StatsCollection(Errors errors, Metrics metrics) {
             this.errors = errors;
             this.metrics = metrics;
@@ -28,7 +30,8 @@ public class SourceConfiguration {
             return metrics;
         }
     }
-    static class Errors{
+
+    static class Errors implements Serializable {
         public Errors(boolean enabled) {
             this.enabled = enabled;
         }
@@ -39,7 +42,8 @@ public class SourceConfiguration {
             return enabled;
         }
     }
-    static class Metrics{
+
+    static class Metrics implements Serializable {
         public Metrics(boolean enabled) {
             this.enabled = enabled;
         }
