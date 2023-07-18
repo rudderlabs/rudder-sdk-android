@@ -11,11 +11,8 @@ import com.rudderstack.android.sdk.core.util.Utils;
 
 import static com.rudderstack.android.sdk.core.util.Utils.isOnClassPath;
 
-import androidx.annotation.Nullable;
-
 class RudderDeviceInfo {
     @SerializedName("id")
-    @Nullable
     private String deviceId;
     @SerializedName("manufacturer")
     private String manufacturer = Build.MANUFACTURER;
@@ -32,10 +29,8 @@ class RudderDeviceInfo {
     @SerializedName("advertisingId")
     private String advertisingId;
 
-    RudderDeviceInfo(String advertisingId, String token, boolean collectDeviceId) {
-        if (collectDeviceId) {
-            this.deviceId = Utils.getDeviceId(RudderClient.getApplication());
-        }
+    RudderDeviceInfo(String advertisingId, String token) {
+        this.deviceId = Utils.getDeviceId(RudderClient.getApplication());
         if (advertisingId != null && !advertisingId.isEmpty()) {
             this.advertisingId = advertisingId;
             this.adTrackingEnabled = true;
@@ -45,7 +40,6 @@ class RudderDeviceInfo {
         }
     }
 
-    @Nullable
     String getDeviceId() {
         return deviceId;
     }
