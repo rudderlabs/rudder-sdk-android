@@ -342,7 +342,7 @@ class Dao<T : Entity> internal constructor(
     ): Pair<List<Long>, List<T?>> {
         if (!db.isOpen) return emptyList<Long>() to emptyList()
         if (!useContentProvider)
-            db.openDatabase?.beginTransaction()
+            beginTransaction()
         //we consider one key which is auto increment but not primary.
         //These are special cases that needs to be handled here
         //consider only one auto increment key
@@ -389,8 +389,8 @@ class Dao<T : Entity> internal constructor(
                 returnedItems + (if (insertedRowId < 0) it else contentValues.toEntity(entityClass))
         }
         if (!useContentProvider) {
-            db.openDatabase?.setTransactionSuccessful()
-            db.openDatabase?.endTransaction()
+            setTransactionSuccessful()
+            endTransaction()
         }
         if (returnedItems.isNotEmpty()) {
             val allData = getAllSync() ?: listOf()
