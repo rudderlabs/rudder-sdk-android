@@ -6,7 +6,7 @@ on:
       module:
         required: true
 jobs:
-  release:
+  beta-release-v2:
     runs-on: ubuntu-latest
     environment: deployment
     steps:
@@ -22,7 +22,7 @@ jobs:
           key: ${{ runner.os }}-gradle-core-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-core-
-      - name: Publish release to sonatype
+      - name: Publish v2 release to sonatype
         run: |
           module = ${{ github.event.inputs.module }}
           cd $module && sh ../gradlew publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository

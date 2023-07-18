@@ -5,7 +5,7 @@ on:
     types: [ created ]
 
 jobs:
-  deploy-tag:
+  notify-slack-v2:
     name: Notify Slack
     runs-on: ubuntu-latest
     steps:

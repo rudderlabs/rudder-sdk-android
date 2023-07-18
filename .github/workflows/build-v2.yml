@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  cancel_previous:
+  cancel_previous_v2:
 
     runs-on: ubuntu-latest
     steps:
@@ -18,7 +18,7 @@ jobs:
           workflow_id: ${{ github.event.workflow.id }}
 
   unit-test:
-    needs: cancel_previous for v2
+    needs: cancel_previous_v2
     runs-on: ubuntu-latest
 
     steps:

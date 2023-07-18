@@ -8,8 +8,8 @@ on:
       - closed
 
 jobs:
-  release:
-    name: Publish new release
+  github-release-v2:
+    name: Publish new release for v2
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/master-v2') || ((startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.ref, 'refs/heads/hotfix-v2/') && github.event.pull_request.merged == true) # only merged pull requests must trigger this job
     steps:

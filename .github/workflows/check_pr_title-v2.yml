@@ -5,12 +5,12 @@ on:
     types: ['opened', 'reopened', 'edited', 'synchronize']
 
 jobs:
-  check_pr_title:
-    name: Check PR title
+  check_pr_title_v2:
+    name: Check PR title for v2
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source branch
         uses: actions/checkout@v3
 
-      - name: Check PR title
+      - name: Check PR title for v2
         uses: rudderlabs/github-action-check-pr-title@v1.0.7

@@ -20,7 +20,7 @@ on:
         - web
 
 jobs:
-  draft-new-release:
+  draft-new-release-v2:
     name: Draft a new release for v2
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/develop-v2') || startsWith(github.ref, 'refs/heads/hotfix-v2/')

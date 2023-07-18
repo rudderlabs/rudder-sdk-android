@@ -8,7 +8,7 @@ on:
   release:
     types: [created]
 jobs:
-  release:
+  release-v2:
     runs-on: ubuntu-latest
     environment: deployment
     steps:

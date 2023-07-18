@@ -8,7 +8,7 @@ on:
         required: true
 
 jobs:
-  create-branch:
+  create-hotfix-branch-v2:
     name: Create new branch for v2
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master-v2'

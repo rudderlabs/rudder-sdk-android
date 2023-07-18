@@ -6,7 +6,7 @@ on:
     types: [ 'opened', 'reopened', 'edited', 'synchronize' ]
 
 jobs:
-  snapshot:
+  snapshot-v2:
     runs-on: ubuntu-latest
     environment: deployment
     steps:
