@@ -180,27 +180,35 @@ public class RudderNetworkManager {
                                            String requestPayload, boolean isDMTRequest,
                                            @Nullable Map<String, String> customRequestHeaders,
                                            @Nullable FunctionUtils.Function<OutputStream, OutputStream> connectionWrapperOSGenerator) {
-        try (OutputStream os = httpConnection.getOutputStream();
-             OutputStream oss = connectionWrapperOSGenerator != null ? connectionWrapperOSGenerator.apply(os) : null;
-             OutputStreamWriter osw = new OutputStreamWriter(oss != null ? oss : os, StandardCharsets.UTF_8);
-        ) {
-            httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", authHeaderString));
-            if (requestMethod == RequestMethod.GET) {
+
+        httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", authHeaderString));
+        if (requestMethod == RequestMethod.GET) {
+            try {
                 httpConnection.setRequestMethod("GET");
-            } else {
-                httpConnection.setDoOutput(true);
-                httpConnection.setRequestMethod("POST");
-                httpConnection.setRequestProperty("Content-Type", "application/json");
-                httpConnection.setRequestProperty("AnonymousId", anonymousIdHeaderString);
-                if (customRequestHeaders != null && !customRequestHeaders.isEmpty()) {
-                    for (Map.Entry<String, String> entry : customRequestHeaders.entrySet()) {
-                        httpConnection.setRequestProperty(entry.getKey(), entry.getValue());
-                    }
-                }
-                String requestPayloadWithMetadata = withAddedMetadataToRequestPayload(requestPayload, isDMTRequest);
-                osw.write(requestPayloadWithMetadata);
-                osw.flush();
+            } catch (Exception ex) {
+                RudderLogger.logError("RudderNetworkManager: updateHttpConnection: Error while updating the http connection" + ex.getLocalizedMessage());
+                return null;
             }
+            return httpConnection;
+        }
+        // if the request is of type POST
+        httpConnection.setDoOutput(true);
+        httpConnection.setRequestProperty("Content-Type", "application/json");
+        httpConnection.setRequestProperty("AnonymousId", anonymousIdHeaderString);
+        if (customRequestHeaders != null && !customRequestHeaders.isEmpty()) {
+            for (Map.Entry<String, String> entry : customRequestHeaders.entrySet()) {
+                httpConnection.setRequestProperty(entry.getKey(), entry.getValue());
+            }
+        }
+        try (
+                OutputStream os = httpConnection.getOutputStream();
+                OutputStream oss = connectionWrapperOSGenerator != null ? connectionWrapperOSGenerator.apply(os) : null;
+                OutputStreamWriter osw = new OutputStreamWriter(oss != null ? oss : os, StandardCharsets.UTF_8);
+        ) {
+            httpConnection.setRequestMethod("POST");
+            String requestPayloadWithMetadata = withAddedMetadataToRequestPayload(requestPayload, isDMTRequest);
+            osw.write(requestPayloadWithMetadata);
+            osw.flush();
             return httpConnection;
         } catch (Exception ex) {
             RudderLogger.logError("RudderNetworkManager: updateHttpConnection: Error while updating the http connection" + ex.getLocalizedMessage());
