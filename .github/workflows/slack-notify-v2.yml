@@ -28,7 +28,7 @@ jobs:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "New release: ${module_name}"
+                    "text": "New release: ${{ steps.create-release.outputs.module_name }}"
                   }
                 },
                 {

@@ -81,6 +81,7 @@ jobs:
       - name: Update changelog & bump version
         id: finish-release
         run: |
+          module_name=${{ steps.create-release.outputs.module_name }}
           cd $module_name
           npm ci
           npx standard-version -t "${module_name}@"

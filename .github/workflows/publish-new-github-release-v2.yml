@@ -1,17 +1,24 @@
-name: Publish new github release
+name: Publish new github release for v2
 
 on:
   workflow_dispatch:
+    inputs:
+      module@version:
+        required: true
+        description: Choose module to draft release from
   pull_request:
     branches: [ 'master-v2' ]
     types:
       - closed
 
+permissions:
+  contents: write
+  pull-requests: write
 jobs:
   github-release-v2:
     name: Publish new release for v2
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/heads/master-v2') || ((startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.ref, 'refs/heads/hotfix-v2/') && github.event.pull_request.merged == true) # only merged pull requests must trigger this job
+#    if: startsWith(github.ref, 'refs/heads/master-v2') || ((startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.ref, 'refs/heads/hotfix-v2/') && github.event.pull_request.merged == true) # only merged pull requests must trigger this job
     steps:
       - name: Extract version from branch name (for release branches)
         id: extract-version
@@ -19,8 +26,9 @@ jobs:
           BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           VERSION=${BRANCH_NAME#hotfix-v2/}
           VERSION=${VERSION#release-v2/}
-          
+          VERSION=${module@version:=$VERSION}
           echo "release_version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -31,14 +39,33 @@ jobs:
         with:
           node-version: 16
 
-      - name: Create Github Release
-        id: create_release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.PAT }}
+#      - name: Create Github Release
+#        id: create_release
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.PAT }}
+#        run: |
+#          module_name=$(echo ${{ steps.extract-version.outputs.release_version }} | cut -d'@' -f1)
+#          npx conventional-github-releaser -p angular -k $module_name
+      - name: Get module name
+        id: get-module
         run: |
           module_name=$(echo ${{ steps.extract-version.outputs.release_version }} | cut -d'@' -f1)
-          npx conventional-github-releaser -p angular -k $module_name
+          echo "::set-output name=module_name::$module_name"
+
+      - name: Create release with release-please
+        id: release-please
+        uses: google-github-actions/release-please-action@v3
+        with:
+          release-type: java
+          package-name: ${{ steps.get-module.outputs.module_name }}
+          monorepo-tags: ${{ steps.get-module.outputs.module_name }}
+          default-branch: develop-v2
+          command: github-release
+          pull-request-header: ':crown: *An automated PR*'
+          skip-labeling: true
+
+      - run: echo "A release was created. ${{ steps.release-please.outputs.releases_created }}"
 
       - name: Create pull request into develop
         uses: repo-sync/pull-request@v2
