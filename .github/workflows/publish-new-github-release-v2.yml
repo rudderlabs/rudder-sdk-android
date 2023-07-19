@@ -37,7 +37,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.PAT }}
         run: |
-          npx conventional-github-releaser -p angular
+          module_name=$(echo ${{ steps.extract-version.outputs.release_version }} | cut -d'@' -f1)
+          npx conventional-github-releaser -p angular -k $module_name
 
       - name: Create pull request into develop
         uses: repo-sync/pull-request@v2

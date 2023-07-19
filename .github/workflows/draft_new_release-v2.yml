@@ -62,7 +62,7 @@ jobs:
           new_version="$module_input@$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)"
           git reset --hard
           cd ..
-          branch_name="${release_type}/${new_version}"
+          branch_name="${release_type}/$module_input@${new_version}"
 
           echo "Source branch for new release is $source_branch_name"
           echo "Current version is $current_version"

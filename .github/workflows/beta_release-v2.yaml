@@ -5,6 +5,19 @@ on:
     inputs:
       module:
         required: true
+        type: choice
+        description: Choose module to draft release from
+        options:
+          - core
+          - android
+          - rudderjsonadapter
+          - gsonrudderadapter
+          - jacksonrudderadapter
+          - moshirudderadapter
+          - models
+          - repository
+          - rudderreporter
+          - web
 jobs:
   beta-release-v2:
     runs-on: ubuntu-latest
