@@ -6,10 +6,10 @@ on:
       module@version:
         required: true
         description: Choose module to draft release from
-  pull_request:
-    branches: [ 'master-v2' ]
-    types:
-      - closed
+#  pull_request:
+#    branches: [ 'master-v2' ]
+#    types:
+#      - closed
 
 permissions:
   contents: write
