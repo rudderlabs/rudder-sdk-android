@@ -118,7 +118,7 @@ public class RudderDeviceModeTransformationManager {
         } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
             handleResourceNotFound(transformationRequest);
         } else {
-            handleSuccess(result);
+            handleSuccess(result, transformationRequest);
         }
         return false;
     }
@@ -151,15 +151,16 @@ public class RudderDeviceModeTransformationManager {
         completeDeviceModeEventProcessing();
     }
 
-    private void handleSuccess(Result result) {
+    private void handleSuccess(Result result, TransformationRequest transformationRequest) {
         deviceModeSleepCount = 0;
         try {
             TransformationResponse transformationResponse = gson.fromJson(result.response, TransformationResponse.class);
             rudderDeviceModeManager.dumpTransformedEvents(transformationResponse);
+            completeDeviceModeEventProcessing();
         } catch (Exception e) {
-            RudderLogger.logError("DeviceModeTransformationManager: TransformationProcessor: Error encountered during transformed response conversion to TransformationResponse format: " + e);
+            RudderLogger.logError("DeviceModeTransformationManager: handleSuccess: Error encountered during transformed response deserialization to TransformationResponse schema: " + e);
+            dumpOriginalEvents(transformationRequest);
         }
-        completeDeviceModeEventProcessing();
     }
 
     private void completeDeviceModeEventProcessing() {
