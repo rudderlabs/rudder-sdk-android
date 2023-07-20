@@ -109,6 +109,9 @@ public class RudderNetworkManager {
 
         try {
             HttpURLConnection httpConnection = updateHttpConnection(requestURL, requestMethod, requestPayload, isDMTRequest, isGzipAvailableForApi);
+            if (httpConnection == null) {
+                return new Result(NetworkResponses.ERROR, -1, null, "Http Connection is Null");
+            }
             synchronized (MessageUploadLock.REQUEST_LOCK) {
                 httpConnection.connect();
             }
