@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.15.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.13.1...v1.15.0) (2023-07-20)
+
+
+### Features
+
+* added gzip feature ([#224](https://github.com/rudderlabs/rudder-sdk-android/issues/224)) ([a0212f0](https://github.com/rudderlabs/rudder-sdk-android/commit/a0212f0bf6879232da86d4ecc0fd0225b3651557))
+* added new way for tracking life cycle events in android using life cycle observer ([#225](https://github.com/rudderlabs/rudder-sdk-android/issues/225)) ([ae5a938](https://github.com/rudderlabs/rudder-sdk-android/commit/ae5a938abd19448ee173bed17b817fa3c6d22ee3)), closes [#233](https://github.com/rudderlabs/rudder-sdk-android/issues/233)
+* added support for eliminating device_id from event ([#231](https://github.com/rudderlabs/rudder-sdk-android/issues/231)) ([e68d399](https://github.com/rudderlabs/rudder-sdk-android/commit/e68d39960e47d85845990ab3c629061ea64132a2))
+
+
+### Bug Fixes
+
+* event not getting removed from db in certain cases ([#239](https://github.com/rudderlabs/rudder-sdk-android/issues/239)) ([ce8d057](https://github.com/rudderlabs/rudder-sdk-android/commit/ce8d057e60b61af0571242b7bfe0c7367b11377f))
+* moved db operations to background thread/executor and fixed leaking objects ([#237](https://github.com/rudderlabs/rudder-sdk-android/issues/237)) ([9b66f65](https://github.com/rudderlabs/rudder-sdk-android/commit/9b66f651b120bd4e9580eb8fb2bb5f058133c871)), closes [#238](https://github.com/rudderlabs/rudder-sdk-android/issues/238)
+
 ## [1.14.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.13.0...v1.14.0) (2023-06-12)
 
 
