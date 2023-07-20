@@ -157,6 +157,7 @@ public class RudderNetworkManager {
         }
     }
 
+    @Nullable
     private HttpURLConnection updateHttpConnection(String requestURL, RequestMethod requestMethod,
                                                    String requestPayload, boolean isDMTRequest, boolean isGzipSupported) {
         try {
@@ -179,21 +180,31 @@ public class RudderNetworkManager {
     }
 
     @VisibleForTesting
+    @Nullable
     HttpURLConnection updateHttpConnection(HttpURLConnection httpConnection, RequestMethod requestMethod,
                                            String requestPayload, boolean isDMTRequest,
                                            @Nullable Map<String, String> customRequestHeaders,
                                            @Nullable FunctionUtils.Function<OutputStream, OutputStream> connectionWrapperOSGenerator) {
-
         httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", authHeaderString));
         if (requestMethod == RequestMethod.GET) {
-            try {
-                httpConnection.setRequestMethod("GET");
-            } catch (Exception ex) {
-                RudderLogger.logError("RudderNetworkManager: updateHttpConnection: Error while updating the http connection" + ex.getLocalizedMessage());
-                return null;
-            }
-            return httpConnection;
+            return updateHttpConnectionForGetRequests(httpConnection);
         }
+        return updateHttpConnectionForPostRequest(httpConnection, requestPayload, isDMTRequest, customRequestHeaders, connectionWrapperOSGenerator);
+    }
+
+    @Nullable
+    private static HttpURLConnection updateHttpConnectionForGetRequests(HttpURLConnection httpConnection) {
+        try {
+            httpConnection.setRequestMethod("GET");
+        } catch (Exception ex) {
+            RudderLogger.logError("RudderNetworkManager: updateHttpConnection: Error while updating the http connection" + ex.getLocalizedMessage());
+            return null;
+        }
+        return httpConnection;
+    }
+
+    @Nullable
+    private HttpURLConnection updateHttpConnectionForPostRequest(HttpURLConnection httpConnection, String requestPayload, boolean isDMTRequest, @Nullable Map<String, String> customRequestHeaders, @Nullable FunctionUtils.Function<OutputStream, OutputStream> connectionWrapperOSGenerator) {
         // if the request is of type POST
         httpConnection.setDoOutput(true);
         httpConnection.setRequestProperty("Content-Type", "application/json");
@@ -217,7 +228,6 @@ public class RudderNetworkManager {
             RudderLogger.logError("RudderNetworkManager: updateHttpConnection: Error while updating the http connection" + ex.getLocalizedMessage());
             return null;
         }
-
     }
 
     @VisibleForTesting
