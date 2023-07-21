@@ -30,7 +30,12 @@ public class TransformationResponseDeserializer implements JsonDeserializer<Tran
                 if (payloadObject.has("event") && !payloadObject.get("event").isJsonNull()) {
                     JsonObject eventObject = payloadObject.getAsJsonObject("event");
                     if (eventObject.size() > 0) {
-                        message = gson.fromJson(eventObject, RudderMessage.class);
+                        try {
+                            message = gson.fromJson(eventObject, RudderMessage.class);
+                        } catch (Exception e) {
+                            RudderLogger.logError(String.format("TransformationResponseDeserializer: Error while parsing event object for the destinationId: %s, and error: %s", id, e));
+                            continue;
+                        }
                     }
                 }
 
