@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.14.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.13.0...v1.14.0) (2023-06-12)
+
+
+### Features
+
+* added gzip feature ([#224](https://github.com/rudderlabs/rudder-sdk-android/issues/224)) ([a0212f0](https://github.com/rudderlabs/rudder-sdk-android/commit/a0212f0bf6879232da86d4ecc0fd0225b3651557))
+* added new way for tracking life cycle events in android using life cycle observer ([#225](https://github.com/rudderlabs/rudder-sdk-android/issues/225)) ([ae5a938](https://github.com/rudderlabs/rudder-sdk-android/commit/ae5a938abd19448ee173bed17b817fa3c6d22ee3)), closes [#233](https://github.com/rudderlabs/rudder-sdk-android/issues/233)
+
+
+### Bug Fixes
+
+* sourceConfig issue by changing encoding to Base64.NO_WRAP ([#221](https://github.com/rudderlabs/rudder-sdk-android/issues/221)) ([4d9cba1](https://github.com/rudderlabs/rudder-sdk-android/commit/4d9cba17c0a8a4a119ca8c2ab70269c6c9a3c4d9))
+
 ## [1.13.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.13.0...v1.13.1) (2023-05-17)
 
 ### Bug Fixes

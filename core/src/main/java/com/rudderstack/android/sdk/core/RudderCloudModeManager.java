@@ -37,13 +37,13 @@ public class RudderCloudModeManager {
                 final ArrayList<Integer> messageIds = new ArrayList<>();
                 final ArrayList<String> messages = new ArrayList<>();
                 while (true) {
+                    // clear lists for reuse
+                    messageIds.clear();
+                    messages.clear();
+                    result = null;
+                    maintainDBThreshold();
+                    RudderLogger.logDebug("CloudModeManager: cloudModeProcessor: Fetching events to flush to server");
                     synchronized (MessageUploadLock.UPLOAD_LOCK) {
-                        // clear lists for reuse
-                        messageIds.clear();
-                        messages.clear();
-                        result = null;
-                        maintainDBThreshold();
-                        RudderLogger.logDebug("CloudModeManager: cloudModeProcessor: Fetching events to flush to server");
                         dbManager.fetchCloudModeEventsFromDB(messageIds, messages, config.getFlushQueueSize());
                         if (messages.size() >= config.getFlushQueueSize() || (!messages.isEmpty() && sleepCount >= config.getSleepTimeOut())) {
                             // form payload JSON form the list of messages
