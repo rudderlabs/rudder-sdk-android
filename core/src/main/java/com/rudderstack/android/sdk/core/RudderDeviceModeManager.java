@@ -3,6 +3,7 @@ package com.rudderstack.android.sdk.core;
 import static com.rudderstack.android.sdk.core.TransformationRequest.TransformationRequestEvent;
 import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedDestination;
 import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedEvent;
+import static com.rudderstack.android.sdk.core.util.Utils.MAX_FLUSH_QUEUE_SIZE;
 import static com.rudderstack.android.sdk.core.util.Utils.getBooleanFromMap;
 
 import com.google.gson.Gson;
@@ -48,6 +49,7 @@ public class RudderDeviceModeManager {
     private boolean areDeviceModeFactoriesAbsent = false;
     private final Object replayMessageQueueLock = new Object();
     private final RudderPreferenceManager preferenceManager;
+    int offset;
 
     static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
@@ -63,6 +65,7 @@ public class RudderDeviceModeManager {
         this.integrationOperationsMap = new HashMap<>();
         this.integrationCallbacks = new HashMap<>();
         this.preferenceManager = preferenceManager;
+        this.offset = this.preferenceManager.getOffsetValue();
     }
 
     void initiate(RudderServerConfig serverConfig, ConsentFilterHandler consentFilterHandler) {
@@ -226,36 +229,22 @@ public class RudderDeviceModeManager {
         synchronized (replayMessageQueueLock) {
             List<Integer> messageIds = new ArrayList<>();
             List<String> messages = new ArrayList<>();
-            int offset = preferenceManager.getOffsetValue();
             do {
                 messages.clear();
                 messageIds.clear();
-                dbPersistentManager.fetchDeviceModeEventsFromDbWithLimitAndOffset(messageIds, messages, 4, offset);
+                dbPersistentManager.fetchDeviceModeEventsFromDbWithLimitAndOffset(messageIds, messages, MAX_FLUSH_QUEUE_SIZE, offset);
                 RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: replaying old messages with factories. Count: %d", messageIds.size()));
                 for (int i = 0; i < messageIds.size(); i++) {
                     try {
                         RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
                         makeFactoryDump(message, messageIds.get(i), true);
-                        if (isMessageEligibleForTransformation(message)) {
-                            offset++;
-                        }
                     } catch (Exception e) {
                         RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: Exception in dumping message %s due to %s", messages.get(i), e.getMessage()));
                     }
                 }
             } while (dbPersistentManager.getDeviceModeRecordCount() > 0 && !messageIds.isEmpty());
             RudderLogger.logVerbose("RudderDeviceModeManager: replayMessageQueue: saving offset value: " + offset);
-            preferenceManager.saveOffsetValue(offset);
         }
-    }
-
-    private boolean isMessageEligibleForTransformation(RudderMessage message) {
-        if (this.areDeviceModeFactoriesAbsent) {
-            return false;
-        }
-        List<String> eligibleDestinations = getEligibleDestinations(message);
-        List<String> destinationsWithTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.ENABLED, eligibleDestinations);
-        return !destinationsWithTransformations.isEmpty();
     }
 
     void makeFactoryDump(RudderMessage message, Integer rowId, boolean fromHistory) {
@@ -274,12 +263,20 @@ public class RudderDeviceModeManager {
                     for (String destinationName : destinationsWithTransformations) {
                         RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Destination %s needs transformation, hence the event will be batched and sent to transformation service", destinationName));
                     }
+                    preferenceManager.saveOffsetValue(++this.offset);
                 }
 
                 List<String> destinationsWithoutTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.DISABLED, eligibleDestinations);
                 dumpEventToDestinations(message, destinationsWithoutTransformations, "makeFactoryDump");
             }
         }
+    }
+
+    void updateOffsetValueAfterTransformation(int messageIdsSize) {
+        int offset = preferenceManager.getOffsetValue();
+        int updateOffset = Math.max(offset - messageIdsSize, 0);
+        this.offset = updateOffset;
+        preferenceManager.saveOffsetValue(updateOffset);
     }
 
     /**
