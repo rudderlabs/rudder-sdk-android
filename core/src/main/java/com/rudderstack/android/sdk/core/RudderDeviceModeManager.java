@@ -225,8 +225,15 @@ public class RudderDeviceModeManager {
         synchronized (replayMessageQueueLock) {
             List<Integer> messageIds = new ArrayList<>();
             List<String> messages = new ArrayList<>();
+            int offset = 0;
             do {
-                dbPersistentManager.fetchDeviceModeEventsFromDb(messageIds, messages, MAX_FLUSH_QUEUE_SIZE);
+                offset += messageIds.size();
+                messages.clear();
+                messageIds.clear();
+                dbPersistentManager.fetchDeviceModeEventsFromDbWithLimitAndOffset(messageIds, messages, MAX_FLUSH_QUEUE_SIZE, offset);
+                if (messageIds.isEmpty()) {
+                    break;
+                }
                 RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: replaying old messages with factories. Count: %d", messageIds.size()));
                 for (int i = 0; i < messageIds.size(); i++) {
                     try {

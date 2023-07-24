@@ -297,6 +297,14 @@ class DBPersistentManager extends SQLiteOpenHelper {
         getEventsFromDB(messageIds, messages, selectSQL);
     }
 
+    void fetchDeviceModeEventsFromDbWithLimitAndOffset(List<Integer> messageIds, List<String> messages, int limit, int offset) {
+        String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) ORDER BY %s ASC LIMIT %d OFFSET %d",
+                EVENTS_TABLE_NAME, DBPersistentManager.STATUS_COL, DBPersistentManager.STATUS_NEW,
+                DBPersistentManager.STATUS_CLOUD_MODE_DONE, UPDATED_COL, limit, offset);
+        RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchDeviceModeEventsFromDb: selectSQL: %s", selectSQL));
+        getEventsFromDB(messageIds, messages, selectSQL);
+    }
+
 
     void fetchAllCloudModeEventsFromDB(List<Integer> messageIds, List<String> messages) {
         String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) ORDER BY %s ASC", EVENTS_TABLE_NAME,
