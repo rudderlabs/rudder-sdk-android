@@ -15,6 +15,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-consumer-rules.pro'
+            buildConfigField("String", "STATS_BASE_URL", "\"https://sdk-metrics.rudderstack.com/\"")
+        }
+        debug{
+            buildConfigField("String", "STATS_BASE_URL", "\"https://sdk-metrics.dev-rudder.rudderlabs.com/\"")
         }
     }
     testOptions {

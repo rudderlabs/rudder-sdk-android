@@ -46,9 +46,6 @@ public class RudderClient {
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
 
-    private static final String RUDDER_REPORTER_BASE_URL = "https://sdk-metrics.dev-rudder.rudderlabs.com/";
-
-
     /*
      * private constructor
      * */
@@ -161,10 +158,12 @@ public class RudderClient {
     private static void initiateRudderReporter(Context context, @Nullable String writeKey) {
         String writeKeyOrBlank = writeKey == null ? "" : writeKey;
         if (rudderReporter == null) {
-            rudderReporter = new DefaultRudderReporter(context, RUDDER_REPORTER_BASE_URL, new Configuration(new LibraryMetadata(
+            rudderReporter = new DefaultRudderReporter(context, /*BuildConfig.STATS_BASE_URL*/
+                    "https://sdk-metrics.rudderstack.com/", //TODO(change to build config url)
+                    new Configuration(new LibraryMetadata(
                     BuildConfig.LIBRARY_PACKAGE_NAME, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, writeKeyOrBlank
             )), new GsonAdapter());
-            rudderReporter.getMetrics().getSyncer().startScheduledSyncs(50000, true, 10);
+            rudderReporter.getMetrics().getSyncer().startScheduledSyncs(30000, true, 10);
             ReportManager.initiate(rudderReporter.getMetrics());
 
         }
