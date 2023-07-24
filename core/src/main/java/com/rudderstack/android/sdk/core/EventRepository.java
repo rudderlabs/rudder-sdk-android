@@ -123,7 +123,7 @@ class EventRepository {
             // 7. Initiate Cloud Mode Manager and Device mode Manager
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
             this.cloudModeManager = new RudderCloudModeManager(dbManager, networkManager, config, dataResidencyManager);
-            this.deviceModeManager = new RudderDeviceModeManager(dbManager, networkManager, config, dataResidencyManager);
+            this.deviceModeManager = new RudderDeviceModeManager(dbManager, networkManager, config, dataResidencyManager, preferenceManager);
 
             this.initiateSDK(_config.getConsentFilter());
 

@@ -28,6 +28,7 @@ class RudderPreferenceManager {
     private static final String RUDDER_AUTO_SESSION_TRACKING_STATUS_KEY = "rl_auto_session_tracking_status_key";
     private static final String RUDDER_DMT_HEADER_KEY = "rl_dmt_header_key";
     private static final String RUDDER_EVENT_DELETION_STATUS_KEY = "rl_event_deletion_status_key";
+    private static final String RUDDER_OFFSET_KEY = "rl_offset_key";
 
     private static SharedPreferences preferences;
     private static RudderPreferenceManager instance;
@@ -199,5 +200,13 @@ class RudderPreferenceManager {
 
     boolean getEventDeletionStatus() {
         return preferences.getBoolean(RUDDER_EVENT_DELETION_STATUS_KEY, false);
+    }
+
+    int getOffsetValue() {
+        return preferences.getInt(RUDDER_OFFSET_KEY, 0);
+    }
+
+    void saveOffsetValue(int versionCode) {
+        preferences.edit().putInt(RUDDER_OFFSET_KEY, versionCode).apply();
     }
 }

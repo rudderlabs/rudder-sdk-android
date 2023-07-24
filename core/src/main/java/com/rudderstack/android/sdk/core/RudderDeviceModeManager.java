@@ -3,7 +3,6 @@ package com.rudderstack.android.sdk.core;
 import static com.rudderstack.android.sdk.core.TransformationRequest.TransformationRequestEvent;
 import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedDestination;
 import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedEvent;
-import static com.rudderstack.android.sdk.core.util.Utils.MAX_FLUSH_QUEUE_SIZE;
 import static com.rudderstack.android.sdk.core.util.Utils.getBooleanFromMap;
 
 import com.google.gson.Gson;
@@ -48,13 +47,14 @@ public class RudderDeviceModeManager {
     private final Map<String, String> destinationsWithTransformationsEnabled = new HashMap<>(); //destination display name to destinationId
     private boolean areDeviceModeFactoriesAbsent = false;
     private final Object replayMessageQueueLock = new Object();
+    private final RudderPreferenceManager preferenceManager;
 
     static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
             .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
             .create();
 
-    RudderDeviceModeManager(DBPersistentManager dbPersistentManager, RudderNetworkManager networkManager, RudderConfig rudderConfig, RudderDataResidencyManager dataResidencyManager) {
+    RudderDeviceModeManager(DBPersistentManager dbPersistentManager, RudderNetworkManager networkManager, RudderConfig rudderConfig, RudderDataResidencyManager dataResidencyManager, RudderPreferenceManager preferenceManager) {
         this.dbPersistentManager = dbPersistentManager;
         this.networkManager = networkManager;
         this.rudderConfig = rudderConfig;
@@ -62,6 +62,7 @@ public class RudderDeviceModeManager {
         this.areFactoriesInitialized = false;
         this.integrationOperationsMap = new HashMap<>();
         this.integrationCallbacks = new HashMap<>();
+        this.preferenceManager = preferenceManager;
     }
 
     void initiate(RudderServerConfig serverConfig, ConsentFilterHandler consentFilterHandler) {
@@ -225,38 +226,49 @@ public class RudderDeviceModeManager {
         synchronized (replayMessageQueueLock) {
             List<Integer> messageIds = new ArrayList<>();
             List<String> messages = new ArrayList<>();
-            int offset = 0;
+            int offset = preferenceManager.getOffsetValue();
             do {
-                offset += messageIds.size();
                 messages.clear();
                 messageIds.clear();
-                dbPersistentManager.fetchDeviceModeEventsFromDbWithLimitAndOffset(messageIds, messages, MAX_FLUSH_QUEUE_SIZE, offset);
-                if (messageIds.isEmpty()) {
-                    break;
-                }
+                dbPersistentManager.fetchDeviceModeEventsFromDbWithLimitAndOffset(messageIds, messages, 4, offset);
                 RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: replaying old messages with factories. Count: %d", messageIds.size()));
                 for (int i = 0; i < messageIds.size(); i++) {
                     try {
                         RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
                         makeFactoryDump(message, messageIds.get(i), true);
+                        if (isMessageEligibleForTransformation(message)) {
+                            offset++;
+                        }
                     } catch (Exception e) {
                         RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: Exception in dumping message %s due to %s", messages.get(i), e.getMessage()));
                     }
                 }
-            } while (dbPersistentManager.getDeviceModeRecordCount() > 0);
+            } while (dbPersistentManager.getDeviceModeRecordCount() > 0 && !messageIds.isEmpty());
+            RudderLogger.logVerbose("RudderDeviceModeManager: replayMessageQueue: saving offset value: " + offset);
+            preferenceManager.saveOffsetValue(offset);
         }
+    }
+
+    private boolean isMessageEligibleForTransformation(RudderMessage message) {
+        if (this.areDeviceModeFactoriesAbsent) {
+            return false;
+        }
+        List<String> eligibleDestinations = getEligibleDestinations(message);
+        List<String> destinationsWithTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.ENABLED, eligibleDestinations);
+        return !destinationsWithTransformations.isEmpty();
     }
 
     void makeFactoryDump(RudderMessage message, Integer rowId, boolean fromHistory) {
         synchronized (replayMessageQueueLock) {
             if (this.areDeviceModeFactoriesAbsent) {
+                RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Marking event with rowId %s as DEVICE_MODE_PROCESSING_DONE as device mode factories are absent", rowId));
                 dbPersistentManager.markDeviceModeDone(Arrays.asList(rowId));
             } else if (areFactoriesInitialized || fromHistory) {
                 List<String> eligibleDestinations = getEligibleDestinations(message);
 
                 List<String> destinationsWithTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.ENABLED, eligibleDestinations);
                 if (destinationsWithTransformations.isEmpty()) {
-                    RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Marking event with rowId %s as DEVICE_MODE_PROCESSING DONE as it has no device mode destinations with transformations", rowId));
+                    RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Marking event with rowId %s as DEVICE_MODE_PROCESSING_DONE as it has no device mode destinations with transformations", rowId));
                     dbPersistentManager.markDeviceModeDone(Arrays.asList(rowId));
                 } else {
                     for (String destinationName : destinationsWithTransformations) {
