@@ -47,7 +47,6 @@ public class RudderDeviceModeManager {
     // required for device mode transform
     private final Map<String, String> destinationsWithTransformationsEnabled = new HashMap<>(); //destination display name to destinationId
     private boolean areDeviceModeFactoriesAbsent = false;
-    private final Object replayMessageQueueLock = new Object();
     private final RudderPreferenceManager preferenceManager;
     int offset;
 
@@ -226,28 +225,26 @@ public class RudderDeviceModeManager {
      *
      */
     private void replayMessageQueue() {
-        synchronized (replayMessageQueueLock) {
-            List<Integer> messageIds = new ArrayList<>();
-            List<String> messages = new ArrayList<>();
-            do {
-                messages.clear();
-                messageIds.clear();
-                dbPersistentManager.fetchDeviceModeEventsFromDbWithLimitAndOffset(messageIds, messages, MAX_FLUSH_QUEUE_SIZE, offset);
-                RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: replaying old messages with factories. Count: %d", messageIds.size()));
-                for (int i = 0; i < messageIds.size(); i++) {
-                    try {
-                        RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
-                        makeFactoryDump(message, messageIds.get(i), true);
-                    } catch (Exception e) {
-                        RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: Exception in dumping message %s due to %s", messages.get(i), e.getMessage()));
-                    }
+        List<Integer> messageIds = new ArrayList<>();
+        List<String> messages = new ArrayList<>();
+        do {
+            messages.clear();
+            messageIds.clear();
+            dbPersistentManager.fetchDeviceModeEventsFromDbWithLimitAndOffset(messageIds, messages, MAX_FLUSH_QUEUE_SIZE, offset);
+            RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: replaying old messages with factories. Count: %d", messageIds.size()));
+            for (int i = 0; i < messageIds.size(); i++) {
+                try {
+                    RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
+                    makeFactoryDump(message, messageIds.get(i), true);
+                } catch (Exception e) {
+                    RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: Exception in dumping message %s due to %s", messages.get(i), e.getMessage()));
                 }
-            } while (dbPersistentManager.getDeviceModeRecordCount() > 0 && !messageIds.isEmpty());
-        }
+            }
+        } while (dbPersistentManager.getDeviceModeRecordCount() > 0 && !messageIds.isEmpty());
     }
 
     void makeFactoryDump(RudderMessage message, Integer rowId, boolean fromHistory) {
-        synchronized (replayMessageQueueLock) {
+        synchronized (this) {
             if (this.areDeviceModeFactoriesAbsent) {
                 RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Marking event with rowId %s as DEVICE_MODE_PROCESSING_DONE as device mode factories are absent", rowId));
                 dbPersistentManager.markDeviceModeDone(Arrays.asList(rowId));
