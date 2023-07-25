@@ -1,0 +1,58 @@
+{
+  "name": "android",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "./android/src",
+  "targets": {
+    "build": {
+      "executor": "@jnxplus/nx-gradle:build",
+      "outputs": ["./android/build"]
+    },
+    "lint": {
+      "executor": "@jnxplus/nx-gradle:lint",
+      "options": {
+        "linter": "ktlint"
+      }
+    },
+    "test": {
+      "executor": "@jnxplus/nx-gradle:test"
+    },
+    "ktformat": {
+      "executor": "@jnxplus/nx-gradle:ktformat"
+    },
+    "version": {
+      "executor": "@jscutlery/semver:version",
+      "options": {
+        "baseBranch": "master",
+        "preset": "conventional",
+        "tagPrefix": "${projectName}@"
+      }
+    },
+    "sync-bumped-version-properties": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node gradle-updater.js 'android'"
+      }
+    },
+    "github": {
+      "executor": "@jscutlery/semver:github",
+      "options": {
+        "tag": "android@2.0.0",
+        "notesFile": "./android/CHANGELOG_LATEST.md"
+      }
+    },
+    "release-sonatype": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'android-release' && ./gradlew :android:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
+      }
+    },
+    "snapshot-release": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'android-snapshot' && ./gradlew :android:publishToSonatype"
+      }
+    }
+  },
+  "tags": []
+}

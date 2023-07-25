@@ -1,0 +1,58 @@
+{
+  "name": "web",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "./web/src",
+  "targets": {
+    "build": {
+      "executor": "@jnxplus/nx-gradle:build",
+      "outputs": ["./web/build"]
+    },
+    "lint": {
+      "executor": "@jnxplus/nx-gradle:lint",
+      "options": {
+        "linter": "ktlint"
+      }
+    },
+    "test": {
+      "executor": "@jnxplus/nx-gradle:test"
+    },
+    "ktformat": {
+      "executor": "@jnxplus/nx-gradle:ktformat"
+    },
+    "version": {
+      "executor": "@jscutlery/semver:version",
+      "options": {
+        "baseBranch": "master",
+        "preset": "conventional",
+        "tagPrefix": "${projectName}@"
+      }
+    },
+    "sync-bumped-version-properties": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node gradle-updater.js 'web'"
+      }
+    },
+    "github": {
+      "executor": "@jscutlery/semver:github",
+      "options": {
+        "tag": "web@1.0.0",
+        "notesFile": "./web/CHANGELOG_LATEST.md"
+      }
+    },
+    "release-sonatype": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'web-release' && ./gradlew :web:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
+      }
+    },
+    "snapshot-release": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'web-snapshot' && ./gradlew :web:publishToSonatype"
+      }
+    }
+  },
+  "tags": []
+}

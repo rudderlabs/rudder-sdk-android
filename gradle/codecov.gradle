@@ -5,19 +5,18 @@ jacoco {
 }
 
 task codeCoverageReport(type: JacocoReport) {
-    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', "**/**/*serializer*.*", "**/**/*Companion*.*" ]
+    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', "**/**/*serializer*.*", "**/**/*Companion*.*"]
     def mainSrc = []
     def debugTrees = []
     def execData = []
-    if(project.name == rootProject.name) {
+    if (project.name == rootProject.name) {
         subprojects.each {
             mainSrc.add("${it.projectDir}/src/main/java")
             debugTrees.add(fileTree(dir: "${it.buildDir}/classes", excludes: fileFilter))
             debugTrees.add(fileTree(dir: "${it.buildDir}/tmp/kotlin-classes/debugUnitTest", excludes: fileFilter))
             execData.add(fileTree(dir: "${it.buildDir}/jacoco", includes: ["*.exec"]))
         }
-    }
-    else {
+    } else {
         mainSrc.add("${project.projectDir}/src/main/java")
         debugTrees.add(fileTree(dir: "${project.buildDir}/classes", excludes: fileFilter))
         debugTrees.add(fileTree(dir: "${project.buildDir}/tmp/kotlin-classes/debugUnitTest", excludes: fileFilter))
@@ -29,9 +28,9 @@ task codeCoverageReport(type: JacocoReport) {
     executionData.setFrom(execData)
 
     reports {
-        xml.enabled true
-        xml.destination file("${buildDir}/reports/jacoco/report.xml")
-        html.enabled true
-        csv.enabled false
+        xml.required.set true
+        xml.outputLocation.set file("${buildDir}/reports/jacoco/report.xml")
+        html.required.set true
+        csv.required.set false
     }
 }

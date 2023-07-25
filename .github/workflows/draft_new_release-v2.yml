@@ -2,22 +2,8 @@ name: Draft new release for v2
 
 on:
   workflow_dispatch:
-    inputs:
-      module:
-        required: true
-        type: choice
-        description: Choose module to draft release from
-        options:
-        - core
-        - android
-        - rudderjsonadapter
-        - gsonrudderadapter
-        - jacksonrudderadapter
-        - moshirudderadapter
-        - models
-        - repository
-        - rudderreporter
-        - web
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   draft-new-release-v2:
@@ -30,11 +16,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set Node 16
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version-file: '.nvmrc'
+          cache: 'npm'
 
+      - name: Install node_modules
+        run: |
+          npm ci
 
       # In order to make a commit, we need to initialize a user.
       # You may choose to write something less generic here if you want, it doesn't matter functionality wise.
@@ -45,24 +35,20 @@ jobs:
 
       # Calculate the next release version based on conventional semantic release
       - name: Create release branch
-        id: create-release-v2
+        id: create-release
         run: |
-          module_input = ${{ github.event.inputs.module }}
           source_branch_name=${GITHUB_REF##*/}
           release_type=release-v2
-          main_branch=master-v2
-          grep -q "hotfix-v2/" <<< "${GITHUB_REF}" && release_type=hotfix-release-v2          
-          git fetch origin "$main_branch" --depth=1
-          git merge "origin/$main_branch"
-          cd $module_input
-          current_version=$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)
-          
-          npm ci
-          npx standard-version --skip.commit --skip.tag --skip.changelog
-          new_version="$module_input@$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)"
+          grep -q "hotfix-v2/" <<< "${GITHUB_REF}" && release_type=hotfix-release-v2
+          git fetch origin main --depth=1
+          git merge origin/main
+          current_version=$(jq -r .version package.json)
+
+          npm run bump-version:monorepo
+          new_version=$(jq -r .version package.json)
           git reset --hard
-          cd ..
-          branch_name="${release_type}/$module_input@${new_version}"
+
+          branch_name="${release_type}/${new_version}"
 
           echo "Source branch for new release is $source_branch_name"
           echo "Current version is $current_version"
@@ -71,35 +57,37 @@ jobs:
           echo "New release branch name is $branch_name"
           git checkout -b "$branch_name"
           git push --set-upstream origin "$branch_name"
-          
-          echo "::set-output name=source_branch_name::$source_branch_name"
-          echo "::set-output name=branch_name::$branch_name"
-          echo "::set-output name=new_version::$new_version"
-          echo "::set-output name=main_branch::$main_branch"
-          echo "::set-output name=module_name::$module_input"
+
+          echo "source_branch_name=$source_branch_name" >> $GITHUB_OUTPUT
+          echo "branch_name=$branch_name" >> $GITHUB_OUTPUT
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+          echo "CURRENT_VERSION_VALUE=$current_version" >> $GITHUB_ENV
+          echo "NEW_VERSION_VALUE=$new_version" >> $GITHUB_ENV
 
       - name: Update changelog & bump version
         id: finish-release
+        # We need main history that contains all previous tags commit reference
         run: |
-          module_name=${{ steps.create-release.outputs.module_name }}
-          cd $module_name
-          npm ci
-          npx standard-version -t "${module_name}@"
-          cd ..
-          git add . && git commit --amend --no-edit
+          echo "Current version: $CURRENT_VERSION_VALUE"
+          echo "New version: $NEW_VERSION_VALUE"
+          git fetch --no-tags --prune --depth=100 origin master-v2
+          npm run release
+          ./scripts/sync-tags-in-nx-projects.sh
+          ./scripts/generate-last-release-changelog.sh
+          npm run bump-version:monorepo
+          git add .
+          git commit -m "chore: sync versions and generate release logs"
 
-      - name: Push new version in release branch & tag
+      - name: Push new versions in release branch
         run: |
-          cd $module_name
           git push --follow-tags
-          cd ..
 
-      - name: Create pull request into main
+      - name: Create pull request into master-v2
         uses: repo-sync/pull-request@v2
         with:
           source_branch: ${{ steps.create-release.outputs.branch_name }}
-          destination_branch: ${{ steps.create-release.outputs.main_branch }}
+          destination_branch: 'master-v2'
           github_token: ${{ secrets.PAT }}
-          pr_title: "chore(release): pulling ${{ steps.create-release.outputs.branch_name }} into ${{ steps.create-release.outputs.main_branch }}"
-          pr_body:  ":crown: *An automated PR*"
+          pr_title: 'chore(release): pulling ${{ steps.create-release.outputs.branch_name }} into master-v2'
+          pr_body: ':crown: *An automated PR*'
           pr_reviewer: 'itsdebs'

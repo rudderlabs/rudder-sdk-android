@@ -1,32 +1,26 @@
 name: Publish new github release for v2
 
 on:
-  workflow_dispatch:
-    inputs:
-      module@version:
-        required: true
-        description: Choose module to draft release from
-#  pull_request:
-#    branches: [ 'master-v2' ]
-#    types:
-#      - closed
-
-permissions:
-  contents: write
-  pull-requests: write
+  pull_request:
+    branches:
+      - master-v2
+    types:
+      - closed
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
-  github-release-v2:
+  release:
     name: Publish new release for v2
     runs-on: ubuntu-latest
-#    if: startsWith(github.ref, 'refs/heads/master-v2') || ((startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.ref, 'refs/heads/hotfix-v2/') && github.event.pull_request.merged == true) # only merged pull requests must trigger this job
+    if: (startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/')) && github.event.pull_request.merged == true # only merged pull requests must trigger this job
     steps:
       - name: Extract version from branch name (for release branches)
-        id: extract-version
+        id: extract-version-v2
         run: |
           BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
-          VERSION=${BRANCH_NAME#hotfix-v2/}
+          VERSION=${BRANCH_NAME#hotfix-}
           VERSION=${VERSION#release-v2/}
-          VERSION=${module@version:=$VERSION}
+
           echo "release_version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Checkout
@@ -34,51 +28,68 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node
+      - name: Get the latest version tag v2
+        id: extract-previous-version-v2
+        run: |
+          TAGS=$(git tag --sort=-v:refname)
+          TAGS_ARRAY=($TAGS)
+          VERSION=${TAGS_ARRAY[0]}
+
+          echo "previous_version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Setup Node v2
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version-file: '.nvmrc'
+          cache: 'npm'
 
-#      - name: Create Github Release
-#        id: create_release
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.PAT }}
-#        run: |
-#          module_name=$(echo ${{ steps.extract-version.outputs.release_version }} | cut -d'@' -f1)
-#          npx conventional-github-releaser -p angular -k $module_name
-      - name: Get module name
-        id: get-module
+      - name: Install node_modules v2
         run: |
-          module_name=$(echo ${{ steps.extract-version.outputs.release_version }} | cut -d'@' -f1)
-          echo "::set-output name=module_name::$module_name"
+          npm ci
 
-      - name: Create release with release-please
-        id: release-please
-        uses: google-github-actions/release-please-action@v3
-        with:
-          release-type: java
-          package-name: ${{ steps.get-module.outputs.module_name }}
-          monorepo-tags: ${{ steps.get-module.outputs.module_name }}
-          default-branch: develop-v2
-          command: github-release
-          pull-request-header: ':crown: *An automated PR*'
-          skip-labeling: true
+      # In order to make a commit, we need to initialize a user.
+      # You may choose to write something less generic here if you want, it doesn't matter functionality wise.
+      - name: Initialize mandatory git config v2
+        run: |
+          git config user.name "GitHub actions"
+          git config user.email noreply@github.com
 
-      - run: echo "A release was created. ${{ steps.release-please.outputs.releases_created }}"
+      - name: Create Monorepo Release Tag v2
+        id: create_monorepo_release_v2
+        run: |
+          git tag -a v${{ steps.extract-version.outputs.release_version }} -m "chore: release v${{ steps.extract-version.outputs.release_version }}"
+          git push origin refs/tags/v${{ steps.extract-version.outputs.release_version }}
 
-      - name: Create pull request into develop
+      - name: Get the two latest versions
+        run: |
+          CURRENT_VERSION=$(git tag -l "v*" --sort=-version:refname | head -n 1)
+          LAST_VERSION=$(git tag -l "v*" --sort=-version:refname | head -n 2 | awk 'NR == 2 { print $1 }')
+
+          echo "Current version: $CURRENT_VERSION"
+          echo "Previous version: $LAST_VERSION"
+
+          echo "current_version=$(echo $CURRENT_VERSION)" >> $GITHUB_ENV
+          echo "last_version=$(echo $LAST_VERSION)" >> $GITHUB_ENV
+          echo "DATE=$(date)" >> $GITHUB_ENV
+
+      - name: Create GitHub Releases v2
+        id: create_release_v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm run release:github -- --base=$last_version --head=$current_version
+
+      - name: Create pull request into develop v2
         uses: repo-sync/pull-request@v2
-        if: (startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/'))
         with:
           source_branch: 'master-v2'
           destination_branch: 'develop-v2'
           github_token: ${{ secrets.PAT }}
-          pr_title: "chore(release): pulling master-v2 into develop-v2 post release v${{ steps.extract-version.outputs.release_version }}"
+          pr_title: 'chore(release): pulling master-v2 into develop-v2 post release v${{ steps.extract-version.outputs.release_version }}'
           pr_body: ':crown: *An automated PR*'
           pr_reviewer: 'itsdebs'
 
-      - name: Delete hotfix release branch
+      - name: Delete hotfix release branch v2
         uses: koj-co/delete-merged-action@master
         if: startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/')
         with:
@@ -86,10 +97,42 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Delete release branch
+      - name: Delete release branch v2
         uses: koj-co/delete-merged-action@master
         if: startsWith(github.event.pull_request.head.ref, 'release-v2/')
         with:
           branches: 'release-v2/*'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Send message to Slack channel
+        id: slack
+        uses: slackapi/slack-github-action@v1.24.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          PROJECT_NAME: 'Rudderstack Kotlin SDK v2 monorepo'
+          RELEASES_URL: 'https://github.com/rudderlabs/rudder-sdk-android/compare/'
+        with:
+          channel-id: ${{ secrets.SLACK_RELEASE_CHANNEL_ID }}
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "New release: ${{ env.PROJECT_NAME }}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Release: <${{env.RELEASES_URL}}${{ steps.extract-previous-version.outputs.previous_version }}...v${{ steps.extract-version.outputs.release_version }}|v${{ steps.extract-version.outputs.release_version }}>*\n${{ env.DATE }}"
+                  }
+                }
+              ]
+            }

@@ -1,0 +1,63 @@
+{
+  "name": "@rudderstack/rudder-sdk-android-monorepo",
+  "version": "2.0.0",
+  "description": "Rudder Android SDK monorepo",
+  "keywords": [
+    "android",
+    "rudder",
+    "kotlin"
+  ],
+  "author": "RudderStack",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rudderlabs/rudder-sdk-android.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rudderlabs/rudder-sdk-android/issues"
+  },
+  "homepage": "https://github.com/rudderlabs/rudder-sdk-android#readme",
+  "scripts": {
+    "bump-version:monorepo": "npm version minor --git-tag-version false",
+    "release": "nx affected --base=origin/master --target=version --parallel=1 --skipCommitTypes=docs,ci,chore",
+    "release:github": "nx affected --target=github --parallel=1 --exclude=app --skipCommitTypes=docs,ci,chore",
+  },
+  "private": true,
+  "dependencies": {
+
+  },
+  "devDependencies": {
+    "@commitlint/cli": "17.5.1",
+    "@commitlint/config-conventional": "17.4.4",
+    "@digitalroute/cz-conventional-changelog-for-jira": "8.0.0",
+    "@jscutlery/semver": "2.30.1",
+    "@nrwl/cli": "15.8.9",
+    "@nrwl/detox": "15.8.9",
+    "@nrwl/eslint-plugin-nx": "15.8.9",
+    "@nrwl/jest": "15.8.9",
+    "@nrwl/linter": "15.8.9",
+    "@nrwl/react-native": "15.8.9",
+    "@nrwl/web": "15.8.9",
+    "@nrwl/workspace": "15.8.9",
+    "@rnx-kit/metro-resolver-symlinks": "0.1.27",
+    "commitizen": "4.3.0",
+    "commitlint": "17.5.1",
+    "conventional-changelog-cli": "2.2.2",
+    "conventional-github-releaser": "3.1.5",
+    "nx": "15.8.9"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/@digitalroute/cz-conventional-changelog-for-jira",
+      "jiraMode": false,
+      "jiraOptional": true,
+      "skipScope": false,
+      "scopes": [
+        "android"
+      ],
+      "maxHeaderWidth": 120,
+      "defaultScope": "@rudderstack/rudder-sdk-android-monorepo",
+      "defaultType": "feat"
+    }
+  }
+}

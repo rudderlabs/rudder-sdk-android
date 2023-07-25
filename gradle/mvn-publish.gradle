@@ -9,11 +9,9 @@ publishing {
             groupId GROUP
             artifactId POM_ARTIFACT_ID
             version getVersionName()
-
-            if (artifactId == "aar") {
+            if (POM_PACKAGING == "aar") {
                 artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
-            }
-            else {
+            } else {
                 artifact("$buildDir/libs/${project.getName()}-${version}.jar")
             }
 //            artifact sourcesJar
@@ -79,7 +77,7 @@ signing {
     def signingKeyId = System.getenv("SIGNING_KEY_ID")
     def signingKey = System.getenv("SIGNING_PRIVATE_KEY_BASE64")
     def signingPassword = System.getenv("SIGNING_KEY_PASSWORD")
-    useInMemoryPgpKeys(signingKeyId,signingKey, signingPassword)
+    useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
     sign publishing.publications
 }
 

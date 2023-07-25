@@ -1,31 +1,20 @@
 name: Release-v2
 
 on:
-  workflow_dispatch:
-    inputs:
-      module:
-        required: true
-        type: choice
-        description: Choose module to draft release from
-        options:
-          - core
-          - android
-          - rudderjsonadapter
-          - gsonrudderadapter
-          - jacksonrudderadapter
-          - moshirudderadapter
-          - models
-          - repository
-          - rudderreporter
-          - web
-  release:
-    types: [created]
+  pull_request:
+    branches:
+      - master-v2
+    types:
+      - closed
 jobs:
   release-v2:
     runs-on: ubuntu-latest
     environment: deployment
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: cache gradle dependencies
@@ -37,13 +26,29 @@ jobs:
           key: ${{ runner.os }}-gradle-core-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-core-
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+
+      - name: Set Node 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install node_modules
+        run: |
+          npm ci
+
       - name: Publish release to sonatype
         run: |
-          module_input = ${{ github.event.inputs.module }}
-          module_name=$(echo ${{ github.event.release.tag_name }} | cut -d'@' -f1)
-          module_name=${module_name:=$module_input}
-          cd $module_name && sh ../gradlew publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository
-          cd ..
+          git fetch --no-tags --prune --depth=100 origin master-v2
+          npm run release:sonatype
         env:
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
@@ -54,39 +59,3 @@ jobs:
 
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.NEXUS_PASSWORD }}
           SIGNING_PRIVATE_KEY_BASE64: ${{ secrets.SIGNING_PRIVATE_KEY_BASE64 }}
-#      - name: Create pull request into develop
-#          uses: repo-sync/pull-request@v2
-#          with:
-#            source_branch: 'main'
-#            destination_branch: 'develop'
-#            github_token: ${{ secrets.PAT }}
-#            pr_title: "chore(release): pulling main into develop post release v${{ steps.extract-version.outputs.release_version }}"
-#            pr_body: ':crown: *An automated PR*'
-#            pr_reviewer: 'itsdebs'
-#
-#            - name: Delete hotfix release branch
-#              uses: koj-co/delete-merged-action@master
-#              if: startsWith(github.event.pull_request.head.ref, 'hotfix-release/')
-#              with:
-#                branches: 'hotfix-release/*'
-#              env:
-#                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#
-#            - name: Delete release branch
-#              uses: koj-co/delete-merged-action@master
-#              if: startsWith(github.event.pull_request.head.ref, 'release/')
-#              with:
-#                branches: 'release/*'
-#              env:
-#                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-#      - name: create release
-#        run: |
-#          curl \
-#             -X POST \
-#             -H "Authorization: token $RELEASE_TOKEN" \
-#                https://api.github.com/repos/${{github.repository}}/releases \
-#             -d '{"tag_name": "${{ env.RELEASE_VERSION }}", "name": "${{ env.RELEASE_VERSION }}", "body": "Release of version ${{ env.RELEASE_VERSION }}", "draft": false, "prerelease": false, "generate_release_notes": true}'
-#        env:
-#          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-#          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}

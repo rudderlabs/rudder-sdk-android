@@ -7,8 +7,5 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "properties-reader": "^2.2.0"
-  }
+  "license": "ISC"
 }

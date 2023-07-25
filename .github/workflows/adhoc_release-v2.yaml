@@ -1,4 +1,4 @@
-name: Release Beta for v2
+name: Release from Feature branch for v2
 
 on:
   workflow_dispatch:
@@ -37,9 +37,7 @@ jobs:
             ${{ runner.os }}-gradle-core-
       - name: Publish v2 release to sonatype
         run: |
-          module = ${{ github.event.inputs.module }}
-          cd $module && sh ../gradlew publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository
-          cd ..
+          ./gradlew :${{ github.event.inputs.module }}:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository
         env:
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
