@@ -243,7 +243,6 @@ public class RudderDeviceModeManager {
                     }
                 }
             } while (dbPersistentManager.getDeviceModeRecordCount() > 0 && !messageIds.isEmpty());
-            RudderLogger.logVerbose("RudderDeviceModeManager: replayMessageQueue: saving offset value: " + offset);
         }
     }
 
