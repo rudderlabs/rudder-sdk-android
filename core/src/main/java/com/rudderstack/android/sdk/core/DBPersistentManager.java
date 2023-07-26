@@ -535,17 +535,6 @@ class DBPersistentManager extends SQLiteOpenHelper {
         }
     }
 
-    public void updateDeviceModeEventsStatus() {
-        String sql = "UPDATE " + DBPersistentManager.EVENTS_TABLE_NAME + " SET " +
-                DBPersistentManager.STATUS_COL + " = (" + DBPersistentManager.STATUS_COL + " | " + DBPersistentManager.STATUS_DEVICE_MODE_DONE +
-                ") WHERE " + DBPersistentManager.STATUS_COL + " IN " + "(" + DBPersistentManager.STATUS_NEW + ", " +
-                DBPersistentManager.STATUS_CLOUD_MODE_DONE + ")";
-        synchronized (DB_LOCK) {
-            getWritableDatabase().execSQL(sql);
-        }
-    }
-
-
     void markDeviceModeDone(List<Integer> rowIds) {
         String rowIdsCSVString = Utils.getCSVString(rowIds);
         if (rowIdsCSVString == null) return;
