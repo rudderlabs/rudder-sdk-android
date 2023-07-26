@@ -9,6 +9,14 @@ on:
   workflow_dispatch:
 
 jobs:
+  cancel_previous:
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          workflow_id: ${{ github.event.workflow.id }}
+
   build:
     name: Build & Code Quality Checks
     runs-on: macos-latest
@@ -17,11 +25,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-#      - name: Setup Java
-#        uses: actions/setup-java@v3
-#        with:
-#          distribution: 'zulu'
-#          java-version: '17'
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11'
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -35,10 +43,24 @@ jobs:
         run: |
           npm ci
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: cache gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-core-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-core-
+
       - name: Build
         run: |
           git fetch --no-tags --prune --depth=100 origin master-v2
           npm run build
+
       - name: Unit test
         run: |
           git fetch --no-tags --prune --depth=100 origin master-v2
