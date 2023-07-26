@@ -18,16 +18,23 @@ plugins {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
-
+compileKotlin {
+    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.javaParameters = true
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.javaParameters = true
+}
 apply from : "$rootDir/dependencies.gradle"
 
 
 dependencies {
 
-    implementation(project(":rudderjsonadapter"))
+    implementation(project(path: ":rudderjsonadapter", configuration: 'default'))
 
     //test
     testImplementation 'junit:junit:4.13.2'

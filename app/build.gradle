@@ -19,9 +19,10 @@ plugins {
 
 android {
     compileSdk 31
+    namespace 'com.rudderstack.android.demo'
 
     defaultConfig {
-        applicationId "com.rudderstack.android.libs"
+        applicationId "com.rudderstack.android.demo"
         minSdk 21
         targetSdk 31
         versionCode 1
@@ -36,12 +37,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+  kotlinOptions {
+        jvmTarget = '17'
     }
-    kotlinOptions {
-        jvmTarget = '1.8'
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    java {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
