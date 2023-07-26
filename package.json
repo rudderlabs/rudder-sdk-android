@@ -19,11 +19,11 @@
   "homepage": "https://github.com/rudderlabs/rudder-sdk-android#readme",
   "scripts": {
     "bump-version:monorepo": "npm version minor --git-tag-version false",
-    "build": "nx affected --base=origin/master --target=build --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "lint": "nx affected --base=origin/master --target=lint --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "ktformat": "nx affected --base=origin/master --target=ktformat --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "test": "nx affected --base=origin/master --target='test' --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "release": "nx affected --base=origin/master --target=version --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
+    "build": "nx affected --base=origin/master-v2 --target=build --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
+    "lint": "nx affected --base=origin/master-v2 --target=lint --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
+    "ktformat": "nx affected --base=origin/master-v2 --target=ktformat --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
+    "test": "nx affected --base=origin/master-v2 --target='test' --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
+    "release": "nx affected --base=origin/master-v2 --target=version --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
     "release:github": "nx affected --target=github --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
     "release:sonatype": "nx affected --target=release-sonatype --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
     "release-snapshot:sonatype": "nx affected --target=snapshot-release --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore"

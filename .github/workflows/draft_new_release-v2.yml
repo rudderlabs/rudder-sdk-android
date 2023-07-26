@@ -40,8 +40,8 @@ jobs:
           source_branch_name=${GITHUB_REF##*/}
           release_type=release-v2
           grep -q "hotfix-v2/" <<< "${GITHUB_REF}" && release_type=hotfix-release-v2
-          git fetch origin main --depth=1
-          git merge origin/main
+          git fetch origin master-v2 --depth=1
+          git merge origin/master-v2
           current_version=$(jq -r .version package.json)
 
           npm run bump-version:monorepo
