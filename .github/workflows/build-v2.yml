@@ -20,7 +20,7 @@ jobs:
   build:
     needs: cancel_previous
     name: Build & Code Quality Checks
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
