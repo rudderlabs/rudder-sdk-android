@@ -158,8 +158,7 @@ public class RudderClient {
     private static void initiateRudderReporter(Context context, @Nullable String writeKey) {
         String writeKeyOrBlank = writeKey == null ? "" : writeKey;
         if (rudderReporter == null) {
-            rudderReporter = new DefaultRudderReporter(context, /*BuildConfig.STATS_BASE_URL*/
-                    "https://sdk-metrics.rudderstack.com/", //TODO(change to build config url)
+            rudderReporter = new DefaultRudderReporter(context, BuildConfig.STATS_BASE_URL,
                     new Configuration(new LibraryMetadata(
                     BuildConfig.LIBRARY_PACKAGE_NAME, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, writeKeyOrBlank
             )), new GsonAdapter());

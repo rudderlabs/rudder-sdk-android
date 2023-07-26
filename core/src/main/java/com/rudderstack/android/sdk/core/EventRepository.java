@@ -298,10 +298,9 @@ class EventRepository {
     private void enableStatsCollection(SourceConfiguration.StatsCollection statsCollection) {
         Metrics rudderMetrics = ReportManager.getMetrics();
         boolean metricsCollection = statsCollection.getMetrics().isEnabled();
-        //TODO: uncomment this when metrics are implemented
-//        if(rudderMetrics!= null && !metricsCollection) {
-//            rudderMetrics.enable(false);
-//        }
+        if(rudderMetrics!= null && !metricsCollection) {
+            rudderMetrics.enable(false);
+        }
     }
 
     private void saveFlushConfig() {
