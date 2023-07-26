@@ -46,11 +46,11 @@ class FlushUtils {
      * @return boolean indicating if the flush operation is successful or not.
      */
     static boolean flushToServer(int flushQueueSize, String dataPlaneUrl, DBPersistentManager dbManager, RudderNetworkManager networkManager) {
-        Result networkResponse = null;
+        Result networkResponse;
+        final ArrayList<Integer> messageIds = new ArrayList<>();
+        final ArrayList<String> messages = new ArrayList<>();
+        RudderLogger.logDebug("FlushUtils: flush: Fetching events to flush to server");
         synchronized (MessageUploadLock.UPLOAD_LOCK) {
-            final ArrayList<Integer> messageIds = new ArrayList<>();
-            final ArrayList<String> messages = new ArrayList<>();
-            RudderLogger.logDebug("FlushUtils: flush: Fetching events to flush to server");
             dbManager.fetchAllCloudModeEventsFromDB(messageIds, messages);
             int numberOfBatches = getNumberOfBatches(messages.size(), flushQueueSize);
             RudderLogger.logDebug(String.format(Locale.US, "FlushUtils: flush: %d batches of events to be flushed", numberOfBatches));

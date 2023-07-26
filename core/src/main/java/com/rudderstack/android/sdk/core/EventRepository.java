@@ -62,6 +62,7 @@ class EventRepository {
 
     private RudderCloudModeManager cloudModeManager;
     private RudderDeviceModeManager deviceModeManager;
+    private ApplicationLifeCycleManager applicationLifeCycleManager;
 
     private @Nullable
     ConsentFilterHandler consentFilterHandler = null;
@@ -141,15 +142,28 @@ class EventRepository {
             this.userSessionManager = new RudderUserSessionManager(this.preferenceManager, this.config);
             this.userSessionManager.startSessionTracking();
 
-            ApplicationLifeCycleManager applicationLifeCycleManager = new ApplicationLifeCycleManager(config, application, rudderFlushWorkManager, this, preferenceManager);
-            applicationLifeCycleManager.trackApplicationUpdateStatus();
+            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(config, application, rudderFlushWorkManager, this, preferenceManager);
+            this.applicationLifeCycleManager.trackApplicationUpdateStatus();
 
             initializeLifecycleTracking(applicationLifeCycleManager);
 
-
+            // Previously in certain cases (e.g., network unavailability) events are not processed by device mode factories and statuses remains at either 0 or 2.
+            // Now we are marking those events as device_mode_processing_done.
+            if (isPreviousEventsDeletionAllowed()) {
+                dbManager.updateDeviceModeEventsStatus();
+                dbManager.runGcForEvents();
+            }
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
+    }
+
+    private boolean isPreviousEventsDeletionAllowed() {
+        if (!preferenceManager.getEventDeletionStatus()) {
+            preferenceManager.saveEventDeletionStatus();
+            return this.applicationLifeCycleManager.isApplicationUpdated();
+        }
+        return false;
     }
 
     private void initializeLifecycleTracking(ApplicationLifeCycleManager applicationLifeCycleManager) {
@@ -198,11 +212,11 @@ class EventRepository {
         // 2. initiate RudderElementCache
         if (preferenceManager.getOptStatus()) {
             RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the identifiers");
-            RudderElementCache.initiate(application, null, null, null, config.isAutoCollectAdvertId(), config.isCollectDeviceId());
+            RudderElementCache.initiate(application, null, null, null, config.isAutoCollectAdvertId());
         } else {
             // We first send the anonymousId to RudderElementCache which will just set the anonymousId static variable in RudderContext class.
             RudderElementCache.initiate(application, identifiers.anonymousId,
-                    identifiers.advertisingId, identifiers.deviceToken, config.isAutoCollectAdvertId(), config.isCollectDeviceId());
+                    identifiers.advertisingId, identifiers.deviceToken, config.isAutoCollectAdvertId());
         }
     }
 
@@ -227,7 +241,7 @@ class EventRepository {
         new Thread(() -> {
             try {
                 int retryCount = 0;
-                while (!isSDKInitialized && retryCount <= 5) {
+                while (!isSDKInitialized && retryCount <= 10) {
                     if (retryCount > 0) {
                         ReportManager.incrementSourceConfigDownloadRetryCounter(1);
                     }
