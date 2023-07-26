@@ -20,7 +20,7 @@
   "scripts": {
     "bump-version:monorepo": "npm version minor --git-tag-version false",
     "release": "nx affected --base=origin/master --target=version --parallel=1 --skipCommitTypes=docs,ci,chore",
-    "release:github": "nx affected --target=github --parallel=1 --exclude=app --skipCommitTypes=docs,ci,chore",
+    "release:github": "nx affected --target=github --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore"
   },
   "private": true,
   "dependencies": {
