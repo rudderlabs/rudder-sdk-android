@@ -11,4 +11,5 @@ java {
 dependencies {
     implementation (project(':core'))
     implementation project(path: ':moshirudderadapter')
+    testImplementation 'junit:junit:4.+'
 }
