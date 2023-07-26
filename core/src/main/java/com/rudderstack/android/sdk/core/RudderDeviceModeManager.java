@@ -97,11 +97,26 @@ public class RudderDeviceModeManager {
                 null ? consentFilterHandler.filterDestinationList(destinations) : destinations;
         if (consentedDestinations == null)
             return Collections.emptyList();
-        ReportManager.incrementDeviceModeDiscardedCounter(destinations.size() - consentedDestinations.size(), Collections.singletonMap(
-                ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_DESTINATION_DISSENTED
-        ));
+
+        collectDissentedMetrics(destinations, consentedDestinations);
         return consentedDestinations;
 
+    }
+
+    private static void collectDissentedMetrics(List<RudderServerDestination> destinations, List<RudderServerDestination> consentedDestinations) {
+        List<RudderServerDestination> destinationsCopy = new ArrayList<>(destinations);
+        destinationsCopy.removeAll(consentedDestinations);
+        for (RudderServerDestination destination : destinationsCopy) {
+            reportDiscardedDestinationWithType(destination, ReportManager.LABEL_TYPE_DESTINATION_DISSENTED);
+        }
+
+    }
+
+    private static void reportDiscardedDestinationWithType(RudderServerDestination destination, String type) {
+        Map<String,String> labelsMap = new HashMap<>();
+        labelsMap.put(ReportManager.LABEL_TYPE, type);
+        labelsMap.put(ReportManager.LABEL_INTEGRATION, destination.getDestinationDefinition().displayName);
+        ReportManager.incrementDeviceModeDiscardedCounter(1, labelsMap);
     }
 
     private void setDestinationsWithTransformationsEnabled(List<RudderServerDestination> destinations) {
@@ -190,9 +205,7 @@ public class RudderDeviceModeManager {
                     integrationOperationsMap.put(key, nativeOp);
                     handleCallBacks(key, nativeOp);
                 } else {
-                    ReportManager.incrementDeviceModeDiscardedCounter(1, Collections.singletonMap(
-                            ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_DESTINATION_DISABLED
-                    ));
+                    reportDiscardedDestinationWithType(destination, ReportManager.LABEL_TYPE_DESTINATION_DISABLED);
                     RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: destination was null or not enabled for %s", key));
                 }
             } else {

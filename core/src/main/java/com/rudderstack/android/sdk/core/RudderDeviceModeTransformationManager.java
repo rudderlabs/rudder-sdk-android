@@ -8,12 +8,15 @@ import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE;
+import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
@@ -122,6 +125,7 @@ public class RudderDeviceModeTransformationManager {
                 message.append(",");
                 totalBatchSize += Utils.getUTF8Length(message);
                 if (totalBatchSize >= Utils.MAX_BATCH_SIZE) {
+                    incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_BATCH_SIZE_INVALID));
                     RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: createDeviceTransformPayload: MAX_BATCH_SIZE reached at index: %d | Total: %d", i, totalBatchSize));
                     break;
                 }

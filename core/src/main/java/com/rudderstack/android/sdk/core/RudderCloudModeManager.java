@@ -8,6 +8,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE;
+import static com.rudderstack.android.sdk.core.ReportManager.incrementCloudModeUploadRetryCounter;
+import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
@@ -55,9 +58,12 @@ public class RudderCloudModeManager {
                                 result = networkManager.sendNetworkRequest(payload, addEndPoint(dataResidencyManager.getDataPlaneUrl(), BATCH_ENDPOINT), RequestMethod.POST, true);
                                 RudderLogger.logInfo(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: ServerResponse: %d", result.statusCode));
                                 if (result.status == NetworkResponses.SUCCESS) {
+                                    ReportManager.incrementCloudModeUploadSuccessCounter(messageIds.size());
                                     dbManager.markCloudModeDone(messageIds);
                                     dbManager.runGcForEvents();
                                     sleepCount = 0;
+                                }else {
+                                    incrementCloudModeUploadRetryCounter(1);
                                 }
                             }
                         }
@@ -144,6 +150,7 @@ public class RudderCloudModeManager {
                 totalBatchSize += messageSize;
                 // check batch size
                 if (totalBatchSize >= Utils.MAX_BATCH_SIZE) {
+                    incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_BATCH_SIZE_INVALID));
                     RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: getPayloadFromMessages: MAX_BATCH_SIZE reached at index: %d | Total: %d", index, totalBatchSize));
                     break;
                 }

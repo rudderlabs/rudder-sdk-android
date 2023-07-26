@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -114,9 +115,12 @@ public class RudderNetworkManager {
             }
 
             return getResult(httpConnection);
-        } catch (Exception ex) {
+        } catch (SocketTimeoutException ex) {
             RudderLogger.logError(ex);
-            return new Result(NetworkResponses.ERROR, -1, null, ex.getLocalizedMessage());
+            return new Result(NetworkResponses.ERROR, -1, null, "Request Timed Out");
+        }catch (IOException ex) {
+            RudderLogger.logError(ex);
+            return new Result(NetworkResponses.ERROR, -1, null, "Invalid Url");
         }
     }
 

@@ -2,6 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE;
+import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_DATA_PLANE_URL_INVALID;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_SOURCE_CONFIG_URL_INVALID;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_SOURCE_DISABLED;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_WRITE_KEY_INVALID;
@@ -241,7 +242,7 @@ class EventRepository {
                             if (dataPlaneUrl == null) {
                                 RudderLogger.logError(Constants.Logs.DATA_PLANE_URL_ERROR);
                                 ReportManager.incrementSourceConfigDownloadAbortCounter(1,
-                                        Collections.singletonMap(LABEL_TYPE, LABEL_TYPE_SOURCE_CONFIG_URL_INVALID));
+                                        Collections.singletonMap(LABEL_TYPE, LABEL_TYPE_DATA_PLANE_URL_INVALID));
                                 return;
                             }
                             if (consentFilter != null)

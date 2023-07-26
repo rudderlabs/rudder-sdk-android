@@ -10,6 +10,8 @@ import java.util.Map;
 public class ReportManager {
 
     public static final String LABEL_TYPE_OUT_OF_MEMORY = "out_of_memory";
+    public static final String LABEL_TYPE_PAYLOAD_NULL = "payload_null";
+    public static final String LABEL_TYPE_REQUEST_TIMEOUT = "request_timeout";
 
     private ReportManager() {
     }
@@ -21,11 +23,13 @@ public class ReportManager {
     public static final String LABEL_TYPE_OPT_OUT = "opt_out";
     public static final String LABEL_TYPE_SDK_DISABLED = "sdk_disabled";
     public static final String LABEL_TYPE_MSG_SIZE_INVALID = "msg_size_invalid";
+    public static final String LABEL_TYPE_BATCH_SIZE_INVALID = "batch_size_invalid";
     public static final String LABEL_TYPE_MSG_FILTERED = "msg_filtered";
     public static final String LABEL_TYPE_DESTINATION_DISSENTED = "dissented";
     public static final String LABEL_TYPE_DESTINATION_DISABLED = "disabled";
 
-    public static final String LABEL_TYPE_SOURCE_CONFIG_URL_INVALID = "data_plane_url_invalid";
+    public static final String LABEL_TYPE_SOURCE_CONFIG_URL_INVALID = "control_plane_url_invalid";
+    public static final String LABEL_TYPE_DATA_PLANE_URL_INVALID = "data_plane_url_invalid";
     public static final String LABEL_TYPE_SOURCE_DISABLED = "source_disabled";
     public static final String LABEL_TYPE_WRITE_KEY_INVALID = "writekey_invalid";
 
