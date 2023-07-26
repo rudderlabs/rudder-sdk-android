@@ -4,7 +4,7 @@ on:
   push:
     branches: [ 'master-v2' ]
   pull_request:
-    branches: [ 'master-v2', 'develop-v2']
+    branches: [ 'master-v2', 'develop-v2' ]
     types: [ 'opened', 'reopened', 'edited', 'synchronize' ]
   workflow_dispatch:
 
@@ -37,7 +37,9 @@ jobs:
 
       - name: Build
         run: |
+          git fetch --no-tags --prune --depth=100 origin master-v2
           npm run build
       - name: Unit test
         run: |
+          git fetch --no-tags --prune --depth=100 origin master-v2
           npm run test
