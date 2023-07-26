@@ -20,14 +20,15 @@ import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
 
 @RudderEntity(
-    "sautogen", fields = [
+    "sautogen",
+    fields = [
         RudderField(
             RudderField.Type.INTEGER,
             "id",
             true,
             isNullable = false,
             isAutoInc = true,
-            isIndex = true
+            isIndex = true,
         ),
         RudderField(
             RudderField.Type.TEXT,
@@ -35,9 +36,9 @@ import com.rudderstack.android.repository.annotation.RudderField
             false,
             isNullable = false,
             isAutoInc = false,
-            isIndex = false
-        )
-    ]
+            isIndex = false,
+        ),
+    ],
 )
 data class SampleAutoGenEntity(val name: String) : Entity {
     var id = 0

@@ -5,16 +5,29 @@
   "sourceRoot": "./web/src",
   "targets": {
     "build": {
+      "dependsOn": [
+        {
+          "projects":[
+            "moshirudderadapter",
+            "gsonrudderadapter",
+            "jacksonrudderadapter",
+            "models"
+          ],
+          "target":"build"
+        }
+      ],
       "executor": "@jnxplus/nx-gradle:build",
       "outputs": ["./web/build"]
     },
     "lint": {
+      "dependsOn": ["build"],
       "executor": "@jnxplus/nx-gradle:lint",
       "options": {
         "linter": "ktlint"
       }
     },
     "test": {
+      "dependsOn": ["build"],
       "executor": "@jnxplus/nx-gradle:test"
     },
     "ktformat": {
@@ -42,12 +55,14 @@
       }
     },
     "release-sonatype": {
+      "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'web-release' && ./gradlew :web:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
+      "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'web-snapshot' && ./gradlew :web:publishToSonatype"

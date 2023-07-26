@@ -22,15 +22,21 @@ import org.junit.Test
 
 class WebApiTestSuite : TestSuite() {
     @Test
-    fun testWebWithAllAdapters(){
-        addTest(WebApiTest().also {
-            it.jsonAdapter = MoshiAdapter()
-        })
-        addTest(WebApiTest().also {
-            it.jsonAdapter = JacksonAdapter()
-        })
-        addTest(WebApiTest().also {
-            it.jsonAdapter = GsonAdapter()
-        })
+    fun testWebWithAllAdapters() {
+        addTest(
+            WebApiTest().also {
+                it.jsonAdapter = MoshiAdapter()
+            },
+        )
+        addTest(
+            WebApiTest().also {
+                it.jsonAdapter = JacksonAdapter()
+            },
+        )
+        addTest(
+            WebApiTest().also {
+                it.jsonAdapter = GsonAdapter()
+            },
+        )
     }
 }

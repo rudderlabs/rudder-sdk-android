@@ -4,6 +4,15 @@
   "projectType": "library",
   "sourceRoot": "./moshirudderadapter/src",
   "targets": {
+    "dependsOn": [
+      {
+        "projects":[
+          "rudderjsonadapter",
+          "models"
+        ],
+        "target":"build"
+      }
+    ],
     "build": {
       "executor": "@jnxplus/nx-gradle:build",
       "outputs": ["./moshirudderadapter/build"]

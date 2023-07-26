@@ -20,11 +20,11 @@ import com.google.gson.annotations.SerializedName
 data class CustomerEntity(
     @SerializedName("name")
     @get:JsonProperty
-    val name : String,
+    val name: String,
     @SerializedName("address")
     @get:JsonProperty
     val address: String,
     @SerializedName("work_address")
     @get:JsonProperty("work_address")
-    val workAddress : String
+    val workAddress: String,
 )

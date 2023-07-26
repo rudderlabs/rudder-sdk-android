@@ -43,20 +43,22 @@ object RudderDatabase {
      * @param databaseUpgradeCallback If db upgrade is necessary, this is to be handled
      */
     fun init(
-        context: Context, databaseName: String,
+        context: Context,
+        databaseName: String,
         entityFactory: EntityFactory,
         version: Int = 1,
         databaseCreatedCallback: ((SQLiteDatabase?) -> Unit)? = null,
-        databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)? = null
+        databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)? = null,
     ) {
         this.entityFactory = entityFactory
-        if (sqliteOpenHelper != null)
+        if (sqliteOpenHelper != null) {
             return
+        }
 //        context = application
 //        this.databaseName = databaseName
         sqliteOpenHelper = object : SQLiteOpenHelper(context, databaseName, null, version) {
             init {
-                //listeners won't be fired else
+                // listeners won't be fired else
                 writableDatabase
             }
             override fun onCreate(database: SQLiteDatabase?) {
@@ -70,13 +72,12 @@ object RudderDatabase {
             override fun onUpgrade(database: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
                 databaseUpgradeCallback?.invoke(database, oldVersion, newVersion)
             }
-
         }
-
     }
 
     fun <T : Entity> getDao(
-        entityClass: Class<T>, executorService: ExecutorService = commonExecutor
+        entityClass: Class<T>,
+        executorService: ExecutorService = commonExecutor,
 
     ): Dao<T> {
         return registeredDaoList[entityClass]?./*.also {
@@ -84,14 +85,13 @@ object RudderDatabase {
             it.executorService = executorService
         }?*/let {
             it as Dao<T>
-        } ?: Dao<T>(entityClass,  entityFactory, executorService).also{
+        } ?: Dao<T>(entityClass, entityFactory, executorService).also {
             registeredDaoList[entityClass] = it
             database?.apply {
                 initDaoList(this, listOf(it))
             }
         }
     }
-
 
     fun <T : Entity> Dao<T>.unregister() {
         registeredDaoList.remove(entityClass)
@@ -112,5 +112,4 @@ object RudderDatabase {
         sqliteOpenHelper?.close()
         sqliteOpenHelper = null
     }
-
 }

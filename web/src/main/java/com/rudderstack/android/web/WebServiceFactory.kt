@@ -33,10 +33,10 @@ object WebServiceFactory {
      * @param executor The Executor for the web service calls
      * @return A WebService implementation
      */
-     fun getWebService(
+    fun getWebService(
         baseUrl: String,
         jsonAdapter: JsonAdapter,
         defaultTimeout: Int = 10000,
-        executor: ExecutorService = Executors.newCachedThreadPool()
-    ) : WebService = WebServiceImpl(baseUrl, jsonAdapter, defaultTimeout, executor)
+        executor: ExecutorService = Executors.newCachedThreadPool(),
+    ): WebService = WebServiceImpl(baseUrl, jsonAdapter, defaultTimeout, executor)
 }

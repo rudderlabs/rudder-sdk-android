@@ -23,7 +23,8 @@ data class OrderEntity(
     val orderId: Int,
     @SerializedName("quantity")
     @get:JsonProperty("quantity")
-    var quantity : Int,
+    var quantity: Int,
     @SerializedName("total_price")
     @get:JsonProperty("total_price")
-    val totalPrice: Double)
+    val totalPrice: Double,
+)

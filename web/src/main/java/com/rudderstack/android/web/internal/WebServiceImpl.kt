@@ -30,50 +30,14 @@ class WebServiceImpl internal constructor(
     private val baseUrl: String,
     private val jsonAdapter: JsonAdapter,
     private val defaultTimeout: Int = 10000,
-    private val executor: ExecutorService = Executors.newCachedThreadPool()
+    private val executor: ExecutorService = Executors.newCachedThreadPool(),
 ) : WebService {
 
     private var _interceptor: HttpInterceptor? = null
 
     private enum class HttpMethod {
         POST,
-        GET
-    }
-
-    override fun <T : Any> get(
-        headers: Map<String, String>?,
-        query: Map<String, String>?,
-        endpoint: String,
-        responseClass: Class<T>
-    ): Future<HttpResponse<T>> {
-        return executor.submit(Callable {
-            httpCall(headers, query, null, endpoint, HttpMethod.GET, responseClass)
-        })
-    }
-
-    override fun <T : Any> get(
-        headers: Map<String, String>?,
-        query: Map<String, String>?,
-        endpoint: String,
-        responseTypeAdapter: RudderTypeAdapter<T>
-    ): Future<HttpResponse<T>> {
-        return executor.submit(Callable {
-            httpCall(headers, query, null, endpoint, HttpMethod.GET, responseTypeAdapter)
-        })
-    }
-
-    override fun <T : Any> get(
-        headers: Map<String, String>?,
-        query: Map<String, String>?,
-        endpoint: String,
-        responseTypeAdapter: RudderTypeAdapter<T>,
-        callback: (HttpResponse<T>) -> Unit
-    ) {
-        executor.execute {
-            callback.invoke(
-                httpCall(headers, query, null, endpoint, HttpMethod.GET, responseTypeAdapter)
-            )
-        }
+        GET,
     }
 
     override fun <T : Any> get(
@@ -81,12 +45,51 @@ class WebServiceImpl internal constructor(
         query: Map<String, String>?,
         endpoint: String,
         responseClass: Class<T>,
-        callback: (HttpResponse<T>) -> Unit
-    ) {
-
-        executor.execute {
-            callback.invoke(
+    ): Future<HttpResponse<T>> {
+        return executor.submit(
+            Callable {
                 httpCall(headers, query, null, endpoint, HttpMethod.GET, responseClass)
+            },
+        )
+    }
+
+    override fun <T : Any> get(
+        headers: Map<String, String>?,
+        query: Map<String, String>?,
+        endpoint: String,
+        responseTypeAdapter: RudderTypeAdapter<T>,
+    ): Future<HttpResponse<T>> {
+        return executor.submit(
+            Callable {
+                httpCall(headers, query, null, endpoint, HttpMethod.GET, responseTypeAdapter)
+            },
+        )
+    }
+
+    override fun <T : Any> get(
+        headers: Map<String, String>?,
+        query: Map<String, String>?,
+        endpoint: String,
+        responseTypeAdapter: RudderTypeAdapter<T>,
+        callback: (HttpResponse<T>) -> Unit,
+    ) {
+        executor.execute {
+            callback.invoke(
+                httpCall(headers, query, null, endpoint, HttpMethod.GET, responseTypeAdapter),
+            )
+        }
+    }
+
+    override fun <T : Any> get(
+        headers: Map<String, String>?,
+        query: Map<String, String>?,
+        endpoint: String,
+        responseClass: Class<T>,
+        callback: (HttpResponse<T>) -> Unit,
+    ) {
+        executor.execute {
+            callback.invoke(
+                httpCall(headers, query, null, endpoint, HttpMethod.GET, responseClass),
             )
         }
     }
@@ -96,11 +99,13 @@ class WebServiceImpl internal constructor(
         query: Map<String, String>?,
         body: String?,
         endpoint: String,
-        responseClass: Class<T>
+        responseClass: Class<T>,
     ): Future<HttpResponse<T>> {
-        return executor.submit(Callable {
-            httpCall(headers, query, body, endpoint, HttpMethod.POST, responseClass)
-        })
+        return executor.submit(
+            Callable {
+                httpCall(headers, query, body, endpoint, HttpMethod.POST, responseClass)
+            },
+        )
     }
 
     override fun <T : Any> post(
@@ -108,11 +113,13 @@ class WebServiceImpl internal constructor(
         query: Map<String, String>?,
         body: String?,
         endpoint: String,
-        responseTypeAdapter: RudderTypeAdapter<T>
+        responseTypeAdapter: RudderTypeAdapter<T>,
     ): Future<HttpResponse<T>> {
-        return executor.submit(Callable {
-            httpCall(headers, query, body, endpoint, HttpMethod.POST, responseTypeAdapter)
-        })
+        return executor.submit(
+            Callable {
+                httpCall(headers, query, body, endpoint, HttpMethod.POST, responseTypeAdapter)
+            },
+        )
     }
 
     override fun <T : Any> post(
@@ -121,11 +128,11 @@ class WebServiceImpl internal constructor(
         body: String?,
         endpoint: String,
         responseClass: Class<T>,
-        callback: (HttpResponse<T>) -> Unit
+        callback: (HttpResponse<T>) -> Unit,
     ) {
         executor.execute {
             callback.invoke(
-                httpCall(headers, query, body, endpoint, HttpMethod.POST, responseClass)
+                httpCall(headers, query, body, endpoint, HttpMethod.POST, responseClass),
             )
         }
     }
@@ -136,15 +143,14 @@ class WebServiceImpl internal constructor(
         body: String?,
         endpoint: String,
         responseTypeAdapter: RudderTypeAdapter<T>,
-        callback: (HttpResponse<T>) -> Unit
+        callback: (HttpResponse<T>) -> Unit,
     ) {
         executor.execute {
             callback.invoke(
-                httpCall(headers, query, body, endpoint, HttpMethod.POST, responseTypeAdapter)
+                httpCall(headers, query, body, endpoint, HttpMethod.POST, responseTypeAdapter),
             )
         }
     }
-
 
     override fun setInterceptor(httpInterceptor: HttpInterceptor) {
         _interceptor = httpInterceptor
@@ -158,7 +164,7 @@ class WebServiceImpl internal constructor(
         endpoint: String,
         type: HttpMethod,
 
-        responseClass: Class<T>
+        responseClass: Class<T>,
     ): HttpResponse<T> {
         return rawHttpCall(headers, query, body, endpoint, type, deserializer = { json ->
             jsonAdapter.readJson(json, responseClass)
@@ -173,7 +179,7 @@ class WebServiceImpl internal constructor(
         body: String?,
         endpoint: String,
         type: HttpMethod,
-        typeAdapter: RudderTypeAdapter<T>
+        typeAdapter: RudderTypeAdapter<T>,
     ): HttpResponse<T> {
         return rawHttpCall(headers, query, body, endpoint, type, deserializer = { json ->
             jsonAdapter.readJson(json, typeAdapter)
@@ -188,20 +194,20 @@ class WebServiceImpl internal constructor(
         body: String?,
         endpoint: String,
         type: HttpMethod,
-        deserializer: (String) -> T?
+        deserializer: (String) -> T?,
     ): HttpResponse<T> {
 //        try {
 
         val httpConnection =
             createHttpConnection(endpoint, headers, type, query, body, defaultTimeout) {
-                //call interceptor if any changes to HttpConnection required
+                // call interceptor if any changes to HttpConnection required
                 _interceptor?.intercept(it) ?: it
             }
         // create connection
         httpConnection.connect()
 
         // get input stream from connection to get output from the server
-        if (httpConnection.responseCode in (200 until 300)) { //success block
+        if (httpConnection.responseCode in (200 until 300)) { // success block
             val bis = BufferedInputStream(httpConnection.inputStream)
             val baos = ByteArrayOutputStream()
             var res = bis.read()
@@ -217,9 +223,8 @@ class WebServiceImpl internal constructor(
             return HttpResponse(
                 httpConnection.responseCode,
                 deserializer.invoke(baos.toString()),
-                null
+                null,
             )
-
         } else {
             val bis = BufferedInputStream(httpConnection.errorStream)
             val baos = ByteArrayOutputStream()
@@ -243,34 +248,40 @@ class WebServiceImpl internal constructor(
             ex.printStackTrace()
 
         }*/
-
     }
 
     private fun createHttpConnection(
         endpoint: String,
-        headers: Map<String, String>?, type: HttpMethod,
+        headers: Map<String, String>?,
+        type: HttpMethod,
         query: Map<String, String>?,
-        body: String?, defaultTimeout: Int,
-        onHttpConnectionCreated: (HttpURLConnection) -> HttpURLConnection
+        body: String?,
+        defaultTimeout: Int,
+        onHttpConnectionCreated: (HttpURLConnection) -> HttpURLConnection,
     ): HttpURLConnection {
-        //the url to hit
-        val urlStr = "$baseUrl$endpoint" + if (!query.isNullOrEmpty()) query.createQueryString()
-            .let {    //add query params
-                if (it.isNotEmpty()) "?$it" else ""
-            } else ""
+        // the url to hit
+        val urlStr = "$baseUrl$endpoint" + if (!query.isNullOrEmpty()) {
+            query.createQueryString()
+                .let { // add query params
+                    if (it.isNotEmpty()) "?$it" else ""
+                }
+        } else {
+            ""
+        }
         val url = URL(urlStr)
         // get connection object
         var httpConn = url.openConnection() as HttpURLConnection
 
         httpConn.connectTimeout = defaultTimeout
-        //set headers
+        // set headers
         headers?.iterator()?.forEach { headerEntry ->
             httpConn.setRequestProperty(headerEntry.key, headerEntry.value)
         }
 
         //  set content type for network request if not present
-        if (headers?.containsKey("Content-Type") == false)
+        if (headers?.containsKey("Content-Type") == false) {
             httpConn.setRequestProperty("Content-Type", "application/json")
+        }
         // set authorization header
         /*httpConnection.setRequestProperty(
             "Authorization",
@@ -286,7 +297,7 @@ class WebServiceImpl internal constructor(
         httpConn = onHttpConnectionCreated.invoke(httpConn)
 
         // get output stream and write payload content
-        if(type == HttpMethod.POST) {
+        if (type == HttpMethod.POST) {
             // set connection object to return output
             httpConn.doOutput = true
             val os = httpConn.outputStream
@@ -306,6 +317,4 @@ class WebServiceImpl internal constructor(
         takeIf { isNotEmpty() }?.map {
             "${it.key}=${it.value}"
         }?.reduce { acc, s -> "$acc&$s" } ?: ""
-
-
 }

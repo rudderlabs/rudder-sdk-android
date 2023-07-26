@@ -14,13 +14,9 @@
 
 package com.rudderstack.android.gsonrudderadapter
 
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.google.gson.reflect.TypeToken
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
-import com.google.gson.JsonElement
-
 
 /**
  * @see JsonAdapter
@@ -45,7 +41,6 @@ class GsonAdapter : JsonAdapter {
     override fun <T : Any> readMap(map: Map<String, Any>, resultClass: Class<T>): T? {
         val jsonElement = gson.toJsonTree(map)
         return gson.fromJson(jsonElement, resultClass)
-
     }
 
     override fun <T : Any> readJson(json: String, resultClass: Class<T>): T {

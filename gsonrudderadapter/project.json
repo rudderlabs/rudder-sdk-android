@@ -5,16 +5,27 @@
   "sourceRoot": "./gsonrudderadapter/src",
   "targets": {
     "build": {
+      "dependsOn": [
+        {
+          "projects":[
+            "rudderjsonadapter",
+            "models"
+          ],
+          "target":"build"
+        }
+      ],
       "executor": "@jnxplus/nx-gradle:build",
       "outputs": ["./gsonrudderadapter/build"]
     },
     "lint": {
+      "dependsOn": ["build"],
       "executor": "@jnxplus/nx-gradle:lint",
       "options": {
         "linter": "ktlint"
       }
     },
     "test": {
+      "dependsOn": ["build"],
       "executor": "@jnxplus/nx-gradle:test"
     },
     "ktformat": {
@@ -42,12 +53,14 @@
       }
     },
     "release-sonatype": {
+      "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'gsonrudderadapter-release' && ./gradlew :gsonrudderadapter:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
+      "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'gsonrudderadapter-snapshot' && ./gradlew :gsonrudderadapter:publishToSonatype"

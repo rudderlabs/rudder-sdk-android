@@ -19,19 +19,16 @@
   "homepage": "https://github.com/rudderlabs/rudder-sdk-android#readme",
   "scripts": {
     "bump-version:monorepo": "npm version minor --git-tag-version false",
-    "build": "nx affected --base=origin/master-v2 --target=build --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
+    "build": "nx affected --base=origin/master-v2 --target=build --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
     "lint": "nx affected --base=origin/master-v2 --target=lint --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "ktformat": "nx affected --base=origin/master-v2 --target=ktformat --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "test": "nx affected --base=origin/master-v2 --target='test' --parallel=4 --exclude=app,core,android,rudderreporter,web,repository --skipCommitTypes=docs,ci,chore",
+    "ktformat": "nx affected --base=origin/master-v2 --target=ktformat --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
+    "test": "nx affected --base=origin/master-v2 --target='test' --parallel=1 --exclude=app,core,android,rudderreporter,web,repository --skipCommitTypes=docs,ci,chore",
     "release": "nx affected --base=origin/master-v2 --target=version --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
     "release:github": "nx affected --target=github --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
     "release:sonatype": "nx affected --target=release-sonatype --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
     "release-snapshot:sonatype": "nx affected --target=snapshot-release --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore"
   },
   "private": true,
-  "dependencies": {
-    "properties-reader": "^2.2.0"
-  },
   "devDependencies": {
     "@commitlint/cli": "17.5.1",
     "@commitlint/config-conventional": "17.4.4",
@@ -52,6 +49,18 @@
     "conventional-github-releaser": "3.1.5",
     "nx": "16.5.3",
     "@jnxplus/nx-gradle": "^0.6.1"
+  },
+  "dependencies": {
+    "properties-reader": "^2.2.0",
+    "@rudderstack/core": "file: ./core",
+    "@rudderstack/android": "file: ./android",
+    "@rudderstack/web":"file: ./web",
+    "@rudderstack/gsonrudderadapter":"file: ./gsonrudderadapter",
+    "@rudderstack/repository":"file: ./repository",
+    "@rudderstack/models":"file: ./models",
+    "@rudderstack/rudderjsonadapter":"file: ./rudderjsonadapter",
+    "@rudderstack/jacksonrudderadapter":"file: ./jacksonrudderadapter",
+    "@rudderstack/moshirudderadapter":"file: ./moshirudderadapter"
   },
   "config": {
     "commitizen": {

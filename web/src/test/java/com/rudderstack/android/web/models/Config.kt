@@ -14,12 +14,11 @@
 
 package com.rudderstack.android.web.models
 
-
 import com.squareup.moshi.Json
 
 data class Config(
     @Json(name = "iiif_url")
     val iiifUrl: String,
     @Json(name = "website_url")
-    val websiteUrl: String
+    val websiteUrl: String,
 )

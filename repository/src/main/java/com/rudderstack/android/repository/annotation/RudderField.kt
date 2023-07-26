@@ -26,16 +26,20 @@ package com.rudderstack.android.repository.annotation
  *
  */
 
-annotation class RudderField(val type: Type, val fieldName: String, val primaryKey: Boolean = false,
-                             val isNullable : Boolean = true,
-                             val isAutoInc: Boolean = false, val isIndex: Boolean = false){
+annotation class RudderField(
+    val type: Type,
+    val fieldName: String,
+    val primaryKey: Boolean = false,
+    val isNullable: Boolean = true,
+    val isAutoInc: Boolean = false,
+    val isIndex: Boolean = false,
+) {
     /**
      * Represents type of column
      *
      */
-    enum class Type(val notation : String){
+    enum class Type(val notation: String) {
         INTEGER("INTEGER"),
-        TEXT("TEXT")
+        TEXT("TEXT"),
     }
 }
-

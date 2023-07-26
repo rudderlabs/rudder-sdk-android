@@ -9,12 +9,14 @@
       "outputs": ["./rudderjsonadapter/build"]
     },
     "lint": {
+      "dependsOn": ["build"],
       "executor": "@jnxplus/nx-gradle:lint",
       "options": {
         "linter": "ktlint"
       }
     },
     "test": {
+      "dependsOn": ["build"],
       "executor": "@jnxplus/nx-gradle:test"
     },
     "ktformat": {
@@ -42,12 +44,14 @@
       }
     },
     "release-sonatype": {
+      "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'rudderjsonadapter-release' && ./gradlew :rudderjsonadapter:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
+      "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'rudderjsonadapter-snapshot' && ./gradlew :rudderjsonadapter:publishToSonatype"

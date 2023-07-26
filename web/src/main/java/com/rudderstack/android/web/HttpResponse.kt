@@ -22,4 +22,4 @@ package com.rudderstack.android.web
  * @property body returned object of type T
  * @property errorBody In case of error this is non null, and contains raw Error Body returned from server
  */
-data class HttpResponse<T>(val status: Int, val body : T?, val errorBody: String?)
+data class HttpResponse<T>(val status: Int, val body: T?, val errorBody: String?)
