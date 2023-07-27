@@ -19,12 +19,18 @@ import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
 
-@RudderEntity("sample", [RudderField(RudderField.Type.TEXT, "name", true),
-    RudderField(RudderField.Type.INTEGER, "count", false),
-    RudderField(RudderField.Type.TEXT, "items", false)])
+@RudderEntity(
+    "sample",
+    [
+        RudderField(RudderField.Type.TEXT, "name", true),
+        RudderField(RudderField.Type.INTEGER, "count", false),
+        RudderField(RudderField.Type.TEXT, "items", false),
+    ],
+)
 data class SampleEntity(
     val name: String,
-    val count: Int, val items: List<String>
+    val count: Int,
+    val items: List<String>,
 ) : Entity {
     override fun generateContentValues(): ContentValues {
         return ContentValues(3).also {

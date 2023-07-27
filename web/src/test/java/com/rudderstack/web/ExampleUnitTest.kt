@@ -14,9 +14,8 @@
 
 package com.rudderstack.web
 
-import org.junit.Test
-
 import org.junit.Assert.*
+import org.junit.Test
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -28,12 +27,13 @@ class ExampleUnitTest {
     fun addition_isCorrect() {
         assertEquals(4, 2 + 2)
     }
+
     @Test
-    fun testReified(){
-        val testMap = reifiedStr<Map<String,Int>>()
+    fun testReified() {
+        val testMap = reifiedStr<Map<String, Int>>()
         println("test: $testMap")
     }
-    private inline  fun <reified T> reifiedStr(): String?{
+    private inline fun <reified T> reifiedStr(): String? {
         return T::class.java.canonicalName
     }
 }

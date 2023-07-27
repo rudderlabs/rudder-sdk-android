@@ -19,11 +19,14 @@ plugins {
 apply from : "$projectDir/../dependencies.gradle"
 
 android {
+    namespace 'com.rudderstack.android.repository'
     compileSdk library.target_sdk
 
     defaultConfig {
         minSdk library.min_sdk
         targetSdk library.target_sdk
+        minSdk 21
+        targetSdk 31
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -35,25 +38,22 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    java {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     testOptions {
         unitTests {
             includeAndroidResources = true
         }
     }
-    namespace 'com.rudderstack.android.repository'
-    //for testing content providers
-    //deprecated
-
-//    useLibrary 'android.test.base' // for AndroidTestCase
-//    useLibrary 'android.test.runner' // for ProviderTestCase2
-//    useLibrary 'android.test.mock' // for MockContentProvider
 }
 
 dependencies {
@@ -80,3 +80,6 @@ dependencies {
     androidTestImplementation deps.androidXTestExtJunitKtx
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
+
+apply from: rootProject.file('gradle/mvn-publish.gradle')
+apply from: rootProject.file('gradle/codecov.gradle')

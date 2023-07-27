@@ -1,0 +1,62 @@
+{
+  "name": "models",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "./models/src",
+  "targets": {
+    "build": {
+      "executor": "@jnxplus/nx-gradle:build",
+      "outputs": ["./models/build"]
+    },
+    "lint": {
+      "dependsOn": ["build"],
+      "executor": "@jnxplus/nx-gradle:lint",
+      "options": {
+        "linter": "ktlint"
+      }
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "executor": "@jnxplus/nx-gradle:test"
+    },
+    "ktformat": {
+      "executor": "@jnxplus/nx-gradle:ktformat"
+    },
+    "version": {
+      "executor": "@jscutlery/semver:version",
+      "options": {
+        "baseBranch": "master",
+        "preset": "conventional",
+        "tagPrefix": "${projectName}@"
+      }
+    },
+    "sync-bumped-version-properties": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node gradle-updater.js 'models'"
+      }
+    },
+    "github": {
+      "executor": "@jscutlery/semver:github",
+      "options": {
+        "tag": "models@1.0.0",
+        "notesFile": "./models/CHANGELOG_LATEST.md"
+      }
+    },
+    "release-sonatype": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'models-release' && ./gradlew :models:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
+      }
+    },
+    "snapshot-release": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'models-snapshot' && ./gradlew :models:publishToSonatype"
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,0 +1,71 @@
+{
+  "name": "gsonrudderadapter",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "./gsonrudderadapter/src",
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "projects":[
+            "rudderjsonadapter",
+            "models"
+          ],
+          "target":"build"
+        }
+      ],
+      "executor": "@jnxplus/nx-gradle:build",
+      "outputs": ["./gsonrudderadapter/build"]
+    },
+    "lint": {
+      "dependsOn": ["build"],
+      "executor": "@jnxplus/nx-gradle:lint",
+      "options": {
+        "linter": "ktlint"
+      }
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "executor": "@jnxplus/nx-gradle:test"
+    },
+    "ktformat": {
+      "executor": "@jnxplus/nx-gradle:ktformat"
+    },
+    "version": {
+      "executor": "@jscutlery/semver:version",
+      "options": {
+        "baseBranch": "master",
+        "preset": "conventional",
+        "tagPrefix": "${projectName}@"
+      }
+    },
+    "sync-bumped-version-properties": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node gradle-updater.js 'gsonrudderadapter'"
+      }
+    },
+    "github": {
+      "executor": "@jscutlery/semver:github",
+      "options": {
+        "tag": "gsonrudderadapter@1.0.0",
+        "notesFile": "./gsonrudderadapter/CHANGELOG_LATEST.md"
+      }
+    },
+    "release-sonatype": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'gsonrudderadapter-release' && ./gradlew :gsonrudderadapter:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
+      }
+    },
+    "snapshot-release": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'gsonrudderadapter-snapshot' && ./gradlew :gsonrudderadapter:publishToSonatype"
+      }
+    }
+  },
+  "tags": []
+}

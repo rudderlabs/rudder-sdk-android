@@ -16,10 +16,17 @@ plugins {
     id 'java-library'
     id 'kotlin'
 }
-
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+compileKotlin {
+    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.javaParameters = true
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.javaParameters = true
 }
 
 apply from : "$projectDir/../dependencies.gradle"
@@ -50,3 +57,6 @@ dependencies {
 
     testImplementation deps.hamcrest
 }
+
+apply from: rootProject.file('gradle/mvn-publish.gradle')
+apply from: rootProject.file('gradle/codecov.gradle')
