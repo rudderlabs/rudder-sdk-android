@@ -227,7 +227,7 @@ public class RudderDeviceModeManager {
         do {
             messages.clear();
             messageIds.clear();
-            dbPersistentManager.fetchDeviceModeEventsWithPendingStatusFromDb(messageIds, messages, MAX_FLUSH_QUEUE_SIZE);
+            dbPersistentManager.fetchDeviceModeWithProcessedPendingEventsFromDb(messageIds, messages, MAX_FLUSH_QUEUE_SIZE);
             RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: replaying old messages with factories. Count: %d", messageIds.size()));
             for (int i = 0; i < messageIds.size(); i++) {
                 try {
@@ -237,13 +237,13 @@ public class RudderDeviceModeManager {
                     RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: Exception in dumping message %s due to %s", messages.get(i), e.getMessage()));
                 }
             }
-        } while (dbPersistentManager.getDeviceModeRecordCount() > 0 && !messageIds.isEmpty());
+        } while (dbPersistentManager.getDeviceModeWithProcessedPendingEventsRecordCount() > 0);
     }
 
     void makeFactoryDump(RudderMessage message, Integer rowId, boolean fromHistory) {
         synchronized (this) {
             if (this.areDeviceModeFactoriesAbsent) {
-                markDeviceModeStatusDone(rowId);
+                markDeviceModeTransformationDone(rowId);
             } else if (areFactoriesInitialized || fromHistory) {
                 List<String> eligibleDestinations = getEligibleDestinations(message);
                 updateMessageStatusBasedOnTransformations(eligibleDestinations, rowId, message);
@@ -252,15 +252,19 @@ public class RudderDeviceModeManager {
         }
     }
 
-    private void markDeviceModeStatusDone(int rowId) {
-        RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: markDeviceModeDone: Marking event with rowId %s as DEVICE_MODE_PROCESSING DONE", rowId));
-        dbPersistentManager.markDeviceModeDone(Arrays.asList(rowId));
+    /**
+     * This mark the message as device_mode_done and dm_processed_done in the database
+     * @param rowId The rowId of the message
+     */
+    private void markDeviceModeTransformationDone(int rowId) {
+        RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: markDeviceModeTransformationDone: Marking message with rowId %s as DEVICE_MODE_DONE and DM_PROCESSED_DONE", rowId));
+        dbPersistentManager.markDeviceModeTransformationAndDMProcessedDone(Arrays.asList(rowId));
     }
 
     private void updateMessageStatusBasedOnTransformations(List<String> eligibleDestinations, int rowId, RudderMessage message) {
         List<String> destinationsWithTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.ENABLED, eligibleDestinations);
         if (destinationsWithTransformations.isEmpty()) {
-            markDeviceModeStatusDone(rowId);
+            markDeviceModeTransformationDone(rowId);
         } else {
             for (String destinationName : destinationsWithTransformations) {
                 RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: updateMessageStatusBasedOnTransformations: Destination %s needs transformation, hence the event will be batched and sent to transformation service", destinationName));
