@@ -32,7 +32,8 @@ interface JsonAdapter {
      * @see RudderTypeAdapter
      * @return object of type T or null if parsing is unsuccessful
      */
-    fun <T> readJson( json: String,typeAdapter:RudderTypeAdapter<T>) : T?
+    fun <T> readJson(json: String, typeAdapter: RudderTypeAdapter<T>): T?
+
     /**
      * Serialize an object to json
      *
@@ -60,7 +61,7 @@ interface JsonAdapter {
      * @param resultClass The class of object to deserialize to
      * @return The deserialized object or null if serialization fails
      */
-    fun <T : Any> readJson(json: String, resultClass : Class<T>) : T?
+    fun <T : Any> readJson(json: String, resultClass: Class<T>): T?
 
     /**
      * Convert a map to object
@@ -70,5 +71,5 @@ interface JsonAdapter {
      * @param resultClass The type of object expected
      * @return An object of type T if conversion is successful
      */
-    fun <T : Any> readMap(map: Map<String, Any>, resultClass: Class<T>) : T?
+    fun <T : Any> readMap(map: Map<String, Any>, resultClass: Class<T>): T?
 }

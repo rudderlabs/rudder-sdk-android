@@ -16,12 +16,11 @@ package com.rudderstack.android.web.models
 
 import com.squareup.moshi.Json
 
-
 data class Info(
     @Json(name = "license_links")
     val licenseLinks: List<String>,
     @Json(name = "license_text")
     val licenseText: String,
     @Json(name = "version")
-    val version: String
+    val version: String,
 )

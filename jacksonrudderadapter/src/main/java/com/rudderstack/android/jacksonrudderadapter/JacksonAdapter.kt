@@ -15,10 +15,10 @@
 package com.rudderstack.android.jacksonrudderadapter
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.rudderstack.android.rudderjsonadapter.JsonAdapter
 import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
-import com.fasterxml.jackson.databind.DeserializationFeature
 import java.lang.reflect.Type
 
 /**
@@ -35,7 +35,7 @@ class JacksonAdapter : JsonAdapter {
     }
 
     override fun <T> readJson(json: String, typeAdapter: RudderTypeAdapter<T>): T? {
-        val type = typeAdapter.type?:return null
+        val type = typeAdapter.type ?: return null
 
         val typeRef: TypeReference<T> =
             object : TypeReference<T>() {
@@ -56,7 +56,6 @@ class JacksonAdapter : JsonAdapter {
     }
 
     override fun <T : Any> readMap(map: Map<String, Any>, resultClass: Class<T>): T? {
-
         return objectMapper.convertValue(map, resultClass)
     }
 

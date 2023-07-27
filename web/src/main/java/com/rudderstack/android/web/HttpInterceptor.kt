@@ -24,5 +24,5 @@ interface HttpInterceptor {
     /**
      * @param connection The created HttpURLConnection object, could be cast to HttpsURLConnection, if ssl is used
      */
-    fun intercept(connection:HttpURLConnection): HttpURLConnection
+    fun intercept(connection: HttpURLConnection): HttpURLConnection
 }

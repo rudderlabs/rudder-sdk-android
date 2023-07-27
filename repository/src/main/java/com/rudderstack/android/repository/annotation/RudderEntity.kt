@@ -23,4 +23,4 @@ package com.rudderstack.android.repository.annotation
  */
 @Retention
 @Target(AnnotationTarget.CLASS)
-annotation class RudderEntity( val tableName : String, val fields : Array<RudderField>)
+annotation class RudderEntity(val tableName: String, val fields: Array<RudderField>)

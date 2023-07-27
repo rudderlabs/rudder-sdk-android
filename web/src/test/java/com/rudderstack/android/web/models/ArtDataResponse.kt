@@ -14,7 +14,6 @@
 
 package com.rudderstack.android.web.models
 
-
 import com.squareup.moshi.Json
 
 data class ArtDataResponse(
@@ -23,5 +22,5 @@ data class ArtDataResponse(
     @Json(name = "data")
     val `data`: Data,
     @Json(name = "info")
-    val info: Info
+    val info: Info,
 )

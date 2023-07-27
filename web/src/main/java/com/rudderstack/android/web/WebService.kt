@@ -36,7 +36,8 @@ interface WebService {
     fun <T : Any> get(
         headers: Map<String, String>?,
         query: Map<String, String>?,
-        endpoint: String, responseClass: Class<T>,
+        endpoint: String,
+        responseClass: Class<T>,
     ): Future<HttpResponse<T>>
 
     /**
@@ -53,7 +54,8 @@ interface WebService {
     fun <T : Any> get(
         headers: Map<String, String>?,
         query: Map<String, String>?,
-        endpoint: String, responseTypeAdapter: RudderTypeAdapter<T>
+        endpoint: String,
+        responseTypeAdapter: RudderTypeAdapter<T>,
     ): Future<HttpResponse<T>>
 
     /**
@@ -69,8 +71,9 @@ interface WebService {
     fun <T : Any> get(
         headers: Map<String, String>?,
         query: Map<String, String>?,
-        endpoint: String, responseTypeAdapter: RudderTypeAdapter<T>,
-        callback: (HttpResponse<T>) -> Unit
+        endpoint: String,
+        responseTypeAdapter: RudderTypeAdapter<T>,
+        callback: (HttpResponse<T>) -> Unit,
     )
 
     /**
@@ -86,9 +89,11 @@ interface WebService {
     fun <T : Any> get(
         headers: Map<String, String>?,
         query: Map<String, String>?,
-        endpoint: String, responseClass: Class<T>,
-        callback: (HttpResponse<T>) -> Unit
+        endpoint: String,
+        responseClass: Class<T>,
+        callback: (HttpResponse<T>) -> Unit,
     )
+
     /**
      * Performs http post and provides a future.
      * The future.get() must not be called from the main thread as it will block the calling thread.
@@ -105,8 +110,10 @@ interface WebService {
         headers: Map<String, String>?,
         query: Map<String, String>?,
         body: String?,
-        endpoint: String, responseClass: Class<T>
+        endpoint: String,
+        responseClass: Class<T>,
     ): Future<HttpResponse<T>>
+
     /**
      * Performs http post and provides a future.
      * The future.get() must not be called from the main thread as it will block the calling thread.
@@ -123,9 +130,9 @@ interface WebService {
         headers: Map<String, String>?,
         query: Map<String, String>?,
         body: String?,
-        endpoint: String, responseTypeAdapter: RudderTypeAdapter<T>
+        endpoint: String,
+        responseTypeAdapter: RudderTypeAdapter<T>,
     ): Future<HttpResponse<T>>
-
 
     /**
      * Performs http post asynchronously and provides the result in a callback
@@ -142,9 +149,11 @@ interface WebService {
         headers: Map<String, String>?,
         query: Map<String, String>?,
         body: String?,
-        endpoint: String, responseClass: Class<T>,
-        callback: (HttpResponse<T>) -> Unit
+        endpoint: String,
+        responseClass: Class<T>,
+        callback: (HttpResponse<T>) -> Unit,
     )
+
     /**
      * Performs http post and provides a future.
      *
@@ -160,8 +169,9 @@ interface WebService {
         headers: Map<String, String>?,
         query: Map<String, String>?,
         body: String?,
-        endpoint: String, responseTypeAdapter: RudderTypeAdapter<T>,
-        callback: (HttpResponse<T>) -> Unit
+        endpoint: String,
+        responseTypeAdapter: RudderTypeAdapter<T>,
+        callback: (HttpResponse<T>) -> Unit,
     )
 
     /**

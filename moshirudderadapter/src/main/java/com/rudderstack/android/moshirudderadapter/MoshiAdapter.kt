@@ -47,12 +47,11 @@ class MoshiAdapter : JsonAdapter {
     }
 
     override fun <T : Any> readMap(map: Map<String, Any>, resultClass: Class<T>): T? {
-        val serialized = writeToJson(map, object : RudderTypeAdapter<Map<String,Any>>(){})
+        val serialized = writeToJson(map, object : RudderTypeAdapter<Map<String, Any>>() {})
         return serialized?.let {
             readJson(it, resultClass)
         }
     }
-
 
     override fun <T : Any> readJson(json: String, resultClass: Class<T>): T? {
         val adapter: com.squareup.moshi.JsonAdapter<T> =
@@ -62,7 +61,7 @@ class MoshiAdapter : JsonAdapter {
 
     private fun <T : Any> createMoshiAdapter(
         typeAdapter: RudderTypeAdapter<T>?,
-        obj: T
+        obj: T,
     ): com.squareup.moshi.JsonAdapter<T> {
         return typeAdapter?.type?.let {
             moshi.adapter(it)
