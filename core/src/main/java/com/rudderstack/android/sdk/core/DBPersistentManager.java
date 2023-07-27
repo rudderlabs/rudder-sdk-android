@@ -41,7 +41,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
     // SQLite database file name
     private static final String DB_NAME = "rl_persistence.db";
     // SQLite database version number
-    private static final int DB_VERSION = 2;
+    private static final int DB_VERSION = 3;
     static final String EVENT = "EVENT";
 
     static final String EVENTS_TABLE_NAME = "events";
@@ -49,6 +49,8 @@ class DBPersistentManager extends SQLiteOpenHelper {
     static final String MESSAGE_COL = "message";
     static final String UPDATED_COL = "updated";
     private static final String STATUS_COL = "status";
+    // It is used to understand if the event is processed by device mode factories without transformation or not.
+    private static final String DM_PROCESSED_COL = "dm_processed";
 
     //status values for database version 2 =. Check createSchema documentation for details.
     private static final int STATUS_CLOUD_MODE_DONE = 0b10;
@@ -56,25 +58,34 @@ class DBPersistentManager extends SQLiteOpenHelper {
     private static final int STATUS_ALL_DONE = 0b11;
     private static final int STATUS_NEW = 0b00;
 
+    private static final int STATUS_PENDING = 0;
+    private static final int STATUS_DONE = 1;
+
     //command to add status column. For details see onUpgrade or the documentation for createSchema
     //for version 1 to 2
     private static final String DATABASE_ALTER_ADD_STATUS = "ALTER TABLE "
             + EVENTS_TABLE_NAME + " ADD COLUMN " + STATUS_COL + " INTEGER NOT NULL DEFAULT " + STATUS_NEW;
+    private static final String DATABASE_ALTER_ADD_DM_PROCESSED = "ALTER TABLE "
+            + EVENTS_TABLE_NAME + " ADD COLUMN " + DM_PROCESSED_COL + " INTEGER NOT NULL DEFAULT " + STATUS_PENDING;
 
     private static final String SET_STATUS_FOR_EXISTING = "UPDATE " + EVENTS_TABLE_NAME + " SET " + STATUS_COL + " = " + STATUS_DEVICE_MODE_DONE;
+    private static final String SET_DM_PROCESSED_AND_STATUS_FOR_EXISTING = "UPDATE " + EVENTS_TABLE_NAME +
+            " SET " + DM_PROCESSED_COL + " = '" + STATUS_DONE + "'" +
+            ", " + STATUS_COL + " = " + STATUS_DEVICE_MODE_DONE;
 
     static final String BACKSLASH = "\\\\'";
 
     // command to create events table based for the database version 1.
-    private static final String DATABASE_EVENTS_TABLE_SCHEMA_V2 = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS '%s' " +
-                    "('%s' INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "'%s' TEXT NOT NULL, '%s' INTEGER NOT NULL, '%s' INTEGER NOT NULL DEFAULT %d)",
-            EVENTS_TABLE_NAME, MESSAGE_ID_COL, MESSAGE_COL, UPDATED_COL, STATUS_COL, STATUS_NEW);
-
     private static final String DATABASE_EVENTS_TABLE_SCHEMA_V1 = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS '%s' " +
                     "('%s' INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "'%s' TEXT NOT NULL, '%s' INTEGER NOT NULL)",
             EVENTS_TABLE_NAME, MESSAGE_ID_COL, MESSAGE_COL, UPDATED_COL);
+
+    // command to create events table based for the database version 3
+    private static final String DATABASE_EVENTS_TABLE_SCHEMA_V3 = String.format(Locale.US, "CREATE TABLE IF NOT EXISTS '%s' " +
+                    "('%s' INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "'%s' TEXT NOT NULL, '%s' INTEGER NOT NULL, '%s' INTEGER NOT NULL DEFAULT %d, '%s' INTEGER NOT NULL DEFAULT %s)",
+            EVENTS_TABLE_NAME, MESSAGE_ID_COL, MESSAGE_COL, UPDATED_COL, STATUS_COL, STATUS_NEW, DM_PROCESSED_COL, STATUS_PENDING);
 
     private static final String OLD_EVENTS_TABLE = EVENTS_TABLE_NAME + "_old";
     // columns in the events table after the downgrade operation
@@ -115,7 +126,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         if (DB_VERSION == 1) {
             createEventSchemaSQL = DATABASE_EVENTS_TABLE_SCHEMA_V1;
         } else {
-            createEventSchemaSQL = DATABASE_EVENTS_TABLE_SCHEMA_V2;
+            createEventSchemaSQL = DATABASE_EVENTS_TABLE_SCHEMA_V3;
         }
         RudderLogger.logVerbose(String.format(Locale.US, "DBPersistentManager: createSchema: createEventSchemaSQL: %s", createEventSchemaSQL));
         db.execSQL(createEventSchemaSQL);
@@ -297,6 +308,13 @@ class DBPersistentManager extends SQLiteOpenHelper {
         getEventsFromDB(messageIds, messages, selectSQL);
     }
 
+    public void fetchDeviceModeEventsWithPendingStatusFromDb(List<Integer> messageIds, List<String> messages, int limit) {
+        String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) AND %s = %d ORDER BY %s ASC LIMIT %d",
+                EVENTS_TABLE_NAME, DBPersistentManager.STATUS_COL, DBPersistentManager.STATUS_NEW,
+                DBPersistentManager.STATUS_CLOUD_MODE_DONE, DM_PROCESSED_COL, STATUS_PENDING, UPDATED_COL, limit);
+        RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: fetchDeviceModeEventsFromDbWithPendingStatus: selectSQL: %s", selectSQL));
+        getEventsFromDB(messageIds, messages, selectSQL);
+    }
 
     void fetchAllCloudModeEventsFromDB(List<Integer> messageIds, List<String> messages) {
         String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) ORDER BY %s ASC", EVENTS_TABLE_NAME,
@@ -418,19 +436,19 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     @Override
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (checkIfStatusColumnExists(db)) {
-            RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: onDowngrade: DB got downgraded from version: %d to the version: %d, hence running migration to remove the status column", oldVersion, newVersion));
-            deleteStatusColumn(db);
+        if (checkIfColumnExists(db, STATUS_COL) || checkIfColumnExists(db, DM_PROCESSED_COL)) {
+            RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: onDowngrade: DB got downgraded from version: %d to the version: %d, hence running migration to remove the status and dm_processed columns", oldVersion, newVersion));
+            deleteStatusAndDMProcessedColumns(db);
         }
     }
 
-    private void deleteStatusColumn(SQLiteDatabase database) {
+    private void deleteStatusAndDMProcessedColumns(SQLiteDatabase database) {
         if (database.isOpen()) {
             try {
                 database.beginTransaction();
                 // 1. renaming the existing events table to events_old
                 database.execSQL(DATABASE_RENAME_EVENTS_TABLE);
-                // 2. creating new events table which doesn't have the status column
+                // 2. creating new events table which doesn't have the status and dm_processed columns
                 database.execSQL(DATABASE_EVENTS_TABLE_SCHEMA_V1);
                 // 3. copying the data from events_old to events
                 database.execSQL(DATABASE_COPY_EVENTS_FROM_OLD_TO_NEW);
@@ -448,7 +466,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         }
     }
 
-    private boolean checkIfStatusColumnExists(SQLiteDatabase database) {
+    private boolean checkIfColumnExists(SQLiteDatabase database, String newColumn) {
         String checkIfStatusExistsSqlString = "PRAGMA table_info(events)";
         if (!database.isOpen()) {
             RudderLogger.logError("DBPersistentManager: checkIfStatusColumnExists: database is not readable, hence we cannot check the existence of status column");
@@ -464,7 +482,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
                     return false;
                 }
                 String columnName = allRows.getString(index);
-                if (columnName.equals(STATUS_COL))
+                if (columnName.equals(newColumn))
                     return true;
 
             } while (allRows.moveToNext());
@@ -479,12 +497,20 @@ class DBPersistentManager extends SQLiteOpenHelper {
         Runnable runnable = () -> {
             try {
                 SQLiteDatabase database = getWritableDatabase();
-                if (!checkIfStatusColumnExists(database)) {
+                boolean isNewColumnAdded = false;
+                if (!checkIfColumnExists(database, STATUS_COL)) {
                     RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column doesn't exist in the events table, hence performing the migration now");
-                    performMigration(database);
-                    return;
+                    performMigration(database, STATUS_COL);
+                    isNewColumnAdded = true;
                 }
-                RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column exists in the table already, hence no migration required");
+                if (!checkIfColumnExists(database, DM_PROCESSED_COL)) {
+                    RudderLogger.logDebug("DBPersistentManager: checkForMigrations: dm_processed column doesn't exist in the events table, hence performing the migration now");
+                    performMigration(database, DM_PROCESSED_COL);
+                    isNewColumnAdded = true;
+                }
+                if (!isNewColumnAdded) {
+                    RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status and dm_processed column exists in the table already, hence no migration required");
+                }
             } catch (SQLiteDatabaseCorruptException | ConcurrentModificationException |
                      NullPointerException ex) {
                 RudderLogger.logError(DBPERSISTENT_MANAGER_CHECK_FOR_MIGRATIONS_TAG + ex.getLocalizedMessage());
@@ -494,13 +520,21 @@ class DBPersistentManager extends SQLiteOpenHelper {
         executor.execute(runnable);
     }
 
-    private void performMigration(SQLiteDatabase database) {
+    private void performMigration(SQLiteDatabase database, String columnName) {
         try {
             if (database.isOpen()) {
-                RudderLogger.logDebug("DBPersistentManager: performMigration: Adding the status column to the events table");
-                database.execSQL(DATABASE_ALTER_ADD_STATUS);
-                RudderLogger.logDebug("DBPersistentManager: performMigration: Setting the status to DEVICE_MODE_PROCESSING_DONE for the events existing already in the DB");
-                database.execSQL(SET_STATUS_FOR_EXISTING);
+                if (columnName.equals(STATUS_COL)) {
+                    RudderLogger.logDebug("DBPersistentManager: performMigration: Adding the status column to the events table");
+                    database.execSQL(DATABASE_ALTER_ADD_STATUS);
+                    RudderLogger.logDebug("DBPersistentManager: performMigration: Setting the status to DEVICE_MODE_PROCESSING_DONE for the events existing already in the DB");
+                    database.execSQL(SET_STATUS_FOR_EXISTING);
+                } else if (columnName.equals(DM_PROCESSED_COL)) {
+                    RudderLogger.logDebug("DBPersistentManager: performMigration: Adding the dm_processed column to the events table");
+                    database.execSQL(DATABASE_ALTER_ADD_DM_PROCESSED);
+                    // Status also needs to be set to DEVICE_MODE_PROCESSING_DONE for the events already existing already in the DB, otherwise they will be sent again to device mode factories
+                    RudderLogger.logDebug("DBPersistentManager: performMigration: Setting the status to DEVICE_MODE_PROCESSING_DONE and the dm_processed to STATUS_DONE for the events existing already in the DB");
+                    database.execSQL(SET_DM_PROCESSED_AND_STATUS_FOR_EXISTING);
+                }
             } else {
                 RudderLogger.logError("DBPersistentManager: performMigration: database is not readable, hence migration cannot be performed");
             }
@@ -546,6 +580,15 @@ class DBPersistentManager extends SQLiteOpenHelper {
         String rowIdsCSVString = Utils.getCSVString(rowIds);
         if (rowIdsCSVString == null) return;
         updateEventStatus(rowIdsCSVString, DBPersistentManager.STATUS_CLOUD_MODE_DONE);
+    }
+
+    public void markDeviceModeProcessedDone(Integer rowId) {
+        String sql = "UPDATE " + DBPersistentManager.EVENTS_TABLE_NAME + " SET " +
+                DBPersistentManager.DM_PROCESSED_COL + " = " + DBPersistentManager.STATUS_DONE +
+                " WHERE " + MESSAGE_ID_COL + " = " + rowId + ";";
+        synchronized (DB_LOCK) {
+            getWritableDatabase().execSQL(sql);
+        }
     }
 
     //unit test
