@@ -25,8 +25,8 @@
     "test": "nx affected --base=origin/master-v2 --target='test' --parallel=1 --exclude=app,core,android,rudderreporter,web,repository --skipCommitTypes=docs,ci,chore",
     "release": "nx affected --base=origin/master-v2 --target=version --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
     "release:github": "nx affected --target=github --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "release:sonatype": "nx affected --target=release-sonatype --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "release-snapshot:sonatype": "nx affected --target=snapshot-release --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore"
+    "release:sonatype": "nx affected --target=release-sonatype --parallel=1 --exclude=app,core,android,rudderreporter",
+    "release-snapshot:sonatype": "nx affected --target=snapshot-release --parallel=4 --exclude=app,core,android,rudderreporter"
   },
   "private": true,
   "devDependencies": {
