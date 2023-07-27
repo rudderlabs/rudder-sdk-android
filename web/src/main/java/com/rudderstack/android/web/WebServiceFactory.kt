@@ -12,10 +12,10 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.web
+package com.rudderstack.web
 
-import com.rudderstack.android.rudderjsonadapter.JsonAdapter
-import com.rudderstack.android.web.internal.WebServiceImpl
+import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.web.internal.WebServiceImpl
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 

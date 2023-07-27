@@ -12,9 +12,9 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.web
+package com.rudderstack.web
 
-import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import java.util.concurrent.Future
 
 /**

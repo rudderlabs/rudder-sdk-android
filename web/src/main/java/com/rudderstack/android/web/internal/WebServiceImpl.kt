@@ -12,45 +12,60 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.web.internal
+package com.rudderstack.web.internal
 
-import com.rudderstack.android.rudderjsonadapter.JsonAdapter
-import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
-import com.rudderstack.android.web.HttpInterceptor
-import com.rudderstack.android.web.HttpResponse
-import com.rudderstack.android.web.WebService
+import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+import com.rudderstack.web.HttpInterceptor
+import com.rudderstack.web.HttpResponse
+import com.rudderstack.web.WebService
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.*
 
 class WebServiceImpl internal constructor(
-    private val baseUrl: String,
+    baseUrl: String,
     private val jsonAdapter: JsonAdapter,
     private val defaultTimeout: Int = 10000,
-    private val executor: ExecutorService = Executors.newCachedThreadPool(),
+    private val executor: ExecutorService = Executors.newCachedThreadPool()
 ) : WebService {
 
     private var _interceptor: HttpInterceptor? = null
+    private val baseUrl: String
 
     private enum class HttpMethod {
         POST,
-        GET,
+        GET
+    }
+
+    init {
+        this.baseUrl = baseUrl.validatedBaseUrl
     }
 
     override fun <T : Any> get(
         headers: Map<String, String>?,
         query: Map<String, String>?,
         endpoint: String,
-        responseClass: Class<T>,
+        responseClass: Class<T>
     ): Future<HttpResponse<T>> {
-        return executor.submit(
-            Callable {
-                httpCall(headers, query, null, endpoint, HttpMethod.GET, responseClass)
-            },
-        )
+        return executor.submit(Callable {
+            httpCall(headers, query, null, endpoint, HttpMethod.GET, responseClass)
+        })
+    }
+
+    override fun <T : Any> get(
+        headers: Map<String, String>?,
+        query: Map<String, String>?,
+        endpoint: String,
+        responseTypeAdapter: RudderTypeAdapter<T>
+    ): Future<HttpResponse<T>> {
+        return executor.submit(Callable {
+            httpCall(headers, query, null, endpoint, HttpMethod.GET, responseTypeAdapter)
+        })
     }
 
     override fun <T : Any> get(
@@ -58,24 +73,11 @@ class WebServiceImpl internal constructor(
         query: Map<String, String>?,
         endpoint: String,
         responseTypeAdapter: RudderTypeAdapter<T>,
-    ): Future<HttpResponse<T>> {
-        return executor.submit(
-            Callable {
+        callback: (HttpResponse<T>) -> Unit
+    ) {
+        executor.execute {
+            callback.invoke(
                 httpCall(headers, query, null, endpoint, HttpMethod.GET, responseTypeAdapter)
-            },
-        )
-    }
-
-    override fun <T : Any> get(
-        headers: Map<String, String>?,
-        query: Map<String, String>?,
-        endpoint: String,
-        responseTypeAdapter: RudderTypeAdapter<T>,
-        callback: (HttpResponse<T>) -> Unit,
-    ) {
-        executor.execute {
-            callback.invoke(
-                httpCall(headers, query, null, endpoint, HttpMethod.GET, responseTypeAdapter),
             )
         }
     }
@@ -85,11 +87,12 @@ class WebServiceImpl internal constructor(
         query: Map<String, String>?,
         endpoint: String,
         responseClass: Class<T>,
-        callback: (HttpResponse<T>) -> Unit,
+        callback: (HttpResponse<T>) -> Unit
     ) {
+
         executor.execute {
             callback.invoke(
-                httpCall(headers, query, null, endpoint, HttpMethod.GET, responseClass),
+                httpCall(headers, query, null, endpoint, HttpMethod.GET, responseClass)
             )
         }
     }
@@ -99,40 +102,36 @@ class WebServiceImpl internal constructor(
         query: Map<String, String>?,
         body: String?,
         endpoint: String,
-        responseClass: Class<T>,
+        responseClass: Class<T>
     ): Future<HttpResponse<T>> {
-        return executor.submit(
-            Callable {
+        return executor.submit(Callable {
+            httpCall(headers, query, body, endpoint, HttpMethod.POST, responseClass)
+        })
+    }
+
+    override fun <T : Any> post(
+        headers: Map<String, String>?,
+        query: Map<String, String>?,
+        body: String?,
+        endpoint: String,
+        responseTypeAdapter: RudderTypeAdapter<T>
+    ): Future<HttpResponse<T>> {
+        return executor.submit(Callable {
+            httpCall(headers, query, body, endpoint, HttpMethod.POST, responseTypeAdapter)
+        })
+    }
+
+    override fun <T : Any> post(
+        headers: Map<String, String>?,
+        query: Map<String, String>?,
+        body: String?,
+        endpoint: String,
+        responseClass: Class<T>,
+        callback: (HttpResponse<T>) -> Unit
+    ) {
+        executor.execute {
+            callback.invoke(
                 httpCall(headers, query, body, endpoint, HttpMethod.POST, responseClass)
-            },
-        )
-    }
-
-    override fun <T : Any> post(
-        headers: Map<String, String>?,
-        query: Map<String, String>?,
-        body: String?,
-        endpoint: String,
-        responseTypeAdapter: RudderTypeAdapter<T>,
-    ): Future<HttpResponse<T>> {
-        return executor.submit(
-            Callable {
-                httpCall(headers, query, body, endpoint, HttpMethod.POST, responseTypeAdapter)
-            },
-        )
-    }
-
-    override fun <T : Any> post(
-        headers: Map<String, String>?,
-        query: Map<String, String>?,
-        body: String?,
-        endpoint: String,
-        responseClass: Class<T>,
-        callback: (HttpResponse<T>) -> Unit,
-    ) {
-        executor.execute {
-            callback.invoke(
-                httpCall(headers, query, body, endpoint, HttpMethod.POST, responseClass),
             )
         }
     }
@@ -143,20 +142,31 @@ class WebServiceImpl internal constructor(
         body: String?,
         endpoint: String,
         responseTypeAdapter: RudderTypeAdapter<T>,
-        callback: (HttpResponse<T>) -> Unit,
+        callback: (HttpResponse<T>) -> Unit
     ) {
         executor.execute {
             callback.invoke(
-                httpCall(headers, query, body, endpoint, HttpMethod.POST, responseTypeAdapter),
+                httpCall(
+                    headers,
+                    query,
+                    body,
+                    endpoint,
+                    HttpMethod.POST,
+                    responseTypeAdapter
+                ).also {
+                    println("response is $it")
+
+                }
             )
         }
     }
+
 
     override fun setInterceptor(httpInterceptor: HttpInterceptor) {
         _interceptor = httpInterceptor
     }
 
-    @Throws(Throwable::class)
+    //    @Throws(Throwable::class)
     private fun <T : Any> httpCall(
         headers: Map<String, String>?,
         query: Map<String, String>?,
@@ -164,124 +174,130 @@ class WebServiceImpl internal constructor(
         endpoint: String,
         type: HttpMethod,
 
-        responseClass: Class<T>,
+        responseClass: Class<T>
     ): HttpResponse<T> {
         return rawHttpCall(headers, query, body, endpoint, type, deserializer = { json ->
+            println("*******************************")
+            println(json)
+            println("*******************************")
             jsonAdapter.readJson(json, responseClass)
                 ?: throw IllegalArgumentException("Json adapter not able to parse response body")
         })
     }
 
-    @Throws(Throwable::class)
+    @Throws(IOException::class)
     private fun <T> httpCall(
         headers: Map<String, String>?,
         query: Map<String, String>?,
         body: String?,
         endpoint: String,
         type: HttpMethod,
-        typeAdapter: RudderTypeAdapter<T>,
+        typeAdapter: RudderTypeAdapter<T>
     ): HttpResponse<T> {
         return rawHttpCall(headers, query, body, endpoint, type, deserializer = { json ->
-            jsonAdapter.readJson(json, typeAdapter)
-                ?: throw IllegalArgumentException("Json adapter not able to parse response body")
+            if (json.isEmpty()) {
+                //TODO add logger
+//                logger.debug("Empty response body")
+                null
+            } else
+                jsonAdapter.readJson(json, typeAdapter)
+                    ?: throw IllegalArgumentException("Json adapter not able to parse response body")
         })
     }
 
-    @Throws(Throwable::class)
+
     private fun <T> rawHttpCall(
         headers: Map<String, String>?,
         query: Map<String, String>?,
         body: String?,
         endpoint: String,
         type: HttpMethod,
-        deserializer: (String) -> T?,
+        deserializer: (String) -> T?
     ): HttpResponse<T> {
-//        try {
+        try {
 
-        val httpConnection =
-            createHttpConnection(endpoint, headers, type, query, body, defaultTimeout) {
-                // call interceptor if any changes to HttpConnection required
-                _interceptor?.intercept(it) ?: it
-            }
-        // create connection
-        httpConnection.connect()
+            val httpConnection =
+                createHttpConnection(endpoint, headers, type, query, body, defaultTimeout) {
+                    //call interceptor if any changes to HttpConnection required
+                    _interceptor?.intercept(it) ?: it
+                }
+            // create connection
+            httpConnection.connect()
 
-        // get input stream from connection to get output from the server
-        if (httpConnection.responseCode in (200 until 300)) { // success block
-            val bis = BufferedInputStream(httpConnection.inputStream)
-            val baos = ByteArrayOutputStream()
-            var res = bis.read()
-            // read response from the server
-            while (res != -1) {
-                baos.write(res)
-                res = bis.read()
-            }
-            // finally return response when reading from server is completed
-            /*if (baos.toString().equals("OK", ignoreCase = true)) {
-                return Utils.NetworkResponses.SUCCESS
-            }*/
-            return HttpResponse(
-                httpConnection.responseCode,
-                deserializer.invoke(baos.toString()),
-                null,
-            )
-        } else {
-            val bis = BufferedInputStream(httpConnection.errorStream)
-            val baos = ByteArrayOutputStream()
-            var res = bis.read()
-            // read response from the server
-            while (res != -1) {
-                baos.write(res)
-                res = bis.read()
-            }
-            // finally return response when reading from server is completed
-            val errorResp = baos.toString()
+            // get input stream from connection to get output from the server
+            return if (httpConnection.responseCode in (200 until 300)) { //success block
+                val bis = BufferedInputStream(httpConnection.inputStream)
+                val baos = ByteArrayOutputStream()
+                var res = bis.read()
+                // read response from the server
+                while (res != -1) {
+                    baos.write(res)
+                    res = bis.read()
+                }
+                // finally return response when reading from server is completed
+                /*if (baos.toString().equals("OK", ignoreCase = true)) {
+                    return Utils.NetworkResponses.SUCCESS
+                }*/
+                HttpResponse(
+                    httpConnection.responseCode,
+                    deserializer.invoke(baos.toString()),
+                    null
+                )
+
+            } else {
+                val bis = BufferedInputStream(httpConnection.errorStream)
+                val baos = ByteArrayOutputStream()
+                var res = bis.read()
+                // read response from the server
+                while (res != -1) {
+                    baos.write(res)
+                    res = bis.read()
+                }
+                // finally return response when reading from server is completed
+                val errorResp = baos.toString()
 //                RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: $errorResp")
-            // return null as request made is not successful
-//                if (errorResp.lowercase().contains("invalid write key")) {
-//                    return Utils.NetworkResponses.WRITE_KEY_ERROR
-//                }
-            return HttpResponse(httpConnection.responseCode, null, errorResp)
-        }
-        /*} catch (ex : Exception) {
+                HttpResponse(httpConnection.responseCode, null, errorResp)
+            }
+        } catch (ex: Exception) {
 //            RudderLogger.logError(ex)
             ex.printStackTrace()
+            return HttpResponse(
+                status = HttpResponse.HTTP_STATUS_NONE,
+                body = null,
+                errorBody = null,
+                error = ex
+            )
+        }
 
-        }*/
     }
 
+    //    @kotlin.jvm.Throws(IOException::class)
+    @Throws(IOException::class)
     private fun createHttpConnection(
         endpoint: String,
-        headers: Map<String, String>?,
-        type: HttpMethod,
+        headers: Map<String, String>?, type: HttpMethod,
         query: Map<String, String>?,
-        body: String?,
-        defaultTimeout: Int,
-        onHttpConnectionCreated: (HttpURLConnection) -> HttpURLConnection,
+        body: String?, defaultTimeout: Int,
+        onHttpConnectionCreated: (HttpURLConnection) -> HttpURLConnection
     ): HttpURLConnection {
-        // the url to hit
-        val urlStr = "$baseUrl$endpoint" + if (!query.isNullOrEmpty()) {
-            query.createQueryString()
-                .let { // add query params
-                    if (it.isNotEmpty()) "?$it" else ""
-                }
-        } else {
-            ""
-        }
+        //the url to hit
+        val urlStr = "$baseUrl$endpoint" + if (!query.isNullOrEmpty()) query.createQueryString()
+            .let {    //add query params
+                if (it.isNotEmpty()) "?$it" else ""
+            } else ""
         val url = URL(urlStr)
         // get connection object
         var httpConn = url.openConnection() as HttpURLConnection
 
         httpConn.connectTimeout = defaultTimeout
-        // set headers
+        //set headers
         headers?.iterator()?.forEach { headerEntry ->
             httpConn.setRequestProperty(headerEntry.key, headerEntry.value)
         }
 
         //  set content type for network request if not present
-        if (headers?.containsKey("Content-Type") == false) {
+        if (headers?.containsKey("Content-Type") == false)
             httpConn.setRequestProperty("Content-Type", "application/json")
-        }
         // set authorization header
         /*httpConnection.setRequestProperty(
             "Authorization",
@@ -317,4 +333,7 @@ class WebServiceImpl internal constructor(
         takeIf { isNotEmpty() }?.map {
             "${it.key}=${it.value}"
         }?.reduce { acc, s -> "$acc&$s" } ?: ""
+
+    private val String.validatedBaseUrl
+        get() = if (this.endsWith('/')) this else "$this/"
 }

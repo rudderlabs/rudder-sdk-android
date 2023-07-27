@@ -29,14 +29,14 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "17"
     kotlinOptions.javaParameters = true
 }
-apply from : "$rootDir/dependencies.gradle"
+apply from : "$projectDir/../dependencies.gradle"
 
 
 dependencies {
 
     implementation(project(path: ":rudderjsonadapter", configuration: 'default'))
-    implementation(project(path: ":models", configuration: 'default'))
     api deps.jackson
+    api deps.jacksonKotlin
 
     testImplementation deps.hamcrest
     testImplementation 'junit:junit:4.+'

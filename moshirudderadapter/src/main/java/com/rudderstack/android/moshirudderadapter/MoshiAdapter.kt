@@ -12,21 +12,22 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.moshirudderadapter
+package com.rudderstack.moshirudderadapter
 
-import com.rudderstack.android.rudderjsonadapter.JsonAdapter
-import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
+import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import java.lang.reflect.Type
+
 /**
  * @see JsonAdapter
  *
  * A Moshi based implementation of JsonAdapter
  */
-class MoshiAdapter : JsonAdapter {
-    private val moshi = Moshi.Builder()
-        .addLast(KotlinJsonAdapterFactory())
-        .build()
+class MoshiAdapter(private var moshi : Moshi = Moshi.Builder()
+    .addLast(KotlinJsonAdapterFactory())
+    .build()) : JsonAdapter {
 
     override fun <T> readJson(json: String, typeAdapter: RudderTypeAdapter<T>): T? {
         val jsonAdapter = typeAdapter.type?.let {
@@ -54,9 +55,36 @@ class MoshiAdapter : JsonAdapter {
     }
 
     override fun <T : Any> readJson(json: String, resultClass: Class<T>): T? {
-        val adapter: com.squareup.moshi.JsonAdapter<T> =
-            moshi.adapter<T>(resultClass) as com.squareup.moshi.JsonAdapter<T>
-        return adapter.fromJson(json)
+        //in case T is primitive, json needs to be returned as primitive
+        return when (resultClass) {
+            String::class.java, CharSequence::class.java ->
+                json as T
+            Int::class.java -> json.toInt() as T
+            Double::class.java -> json.toDouble() as T
+            Float::class.java -> json.toFloat() as T
+            Long::class.java -> json.toLong() as T
+            else -> {
+                val adapter: com.squareup.moshi.JsonAdapter<T> =
+                    moshi.adapter<T>(resultClass) as com.squareup.moshi.JsonAdapter<T>
+                return adapter.fromJson(json)
+            }
+
+        }
+
+    }
+    fun add(factory: com.squareup.moshi.JsonAdapter.Factory){
+       moshi = moshi.newBuilder().add(factory).build()
+    }
+    fun <T> add(type: Type, jsonAdapter: com.squareup.moshi.JsonAdapter<T>) {
+        moshi = moshi.newBuilder().add(type, jsonAdapter).build()
+    }
+
+    fun <T> add(
+        type: Type,
+        annotation: Class<out Annotation?>,
+        jsonAdapter: com.squareup.moshi.JsonAdapter<T>
+    ){
+        moshi = moshi.newBuilder().add(type, annotation, jsonAdapter).build()
     }
 
     private fun <T : Any> createMoshiAdapter(

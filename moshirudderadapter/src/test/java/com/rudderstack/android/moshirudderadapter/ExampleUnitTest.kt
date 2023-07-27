@@ -12,10 +12,11 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.moshirudderadapter
+package com.rudderstack.moshirudderadapter
+
+import org.junit.Test
 
 import org.junit.Assert.*
-import org.junit.Test
 
 /**
  * Example local unit test, which will execute on the development machine (host).

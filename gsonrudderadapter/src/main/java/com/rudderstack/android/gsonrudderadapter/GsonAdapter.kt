@@ -12,11 +12,12 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.gsonrudderadapter
+package com.rudderstack.gsonrudderadapter
 
 import com.google.gson.GsonBuilder
-import com.rudderstack.android.rudderjsonadapter.JsonAdapter
-import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
+import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+
 
 /**
  * @see JsonAdapter
@@ -41,9 +42,11 @@ class GsonAdapter : JsonAdapter {
     override fun <T : Any> readMap(map: Map<String, Any>, resultClass: Class<T>): T? {
         val jsonElement = gson.toJsonTree(map)
         return gson.fromJson(jsonElement, resultClass)
+
     }
 
     override fun <T : Any> readJson(json: String, resultClass: Class<T>): T {
+        //gson is comfortable in parsing just strings/primitives
         return gson.fromJson(json, resultClass)
     }
 }

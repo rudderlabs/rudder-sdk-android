@@ -12,15 +12,13 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.web.models
+package com.rudderstack.web
 
-import com.squareup.moshi.Json
+import junit.framework.TestSuite
+import org.junit.runner.RunWith
+import org.junit.runners.Suite
 
-data class Info(
-    @Json(name = "license_links")
-    val licenseLinks: List<String>,
-    @Json(name = "license_text")
-    val licenseText: String,
-    @Json(name = "version")
-    val version: String,
-)
+@RunWith(Suite::class)
+@Suite.SuiteClasses(WebApiTestJackson::class, WebApiTestGson::class, WebApiTestMoshi::class)
+class WebApiTestSuite : TestSuite() {
+}

@@ -13,7 +13,6 @@
  */
 
 package com.rudderstack.android.repository
-
 interface EntityFactory {
     /**
      * Create entity for given class.
@@ -30,5 +29,5 @@ interface EntityFactory {
      * @see RudderEntity
      * @return an object of T
      */
-    fun <T : Entity> getEntity(entity: Class<T>, values: Map<String, Any>): T?
+    fun <T : Entity> getEntity(entity: Class<T>, values: Map<String, Any?>): T?
 }

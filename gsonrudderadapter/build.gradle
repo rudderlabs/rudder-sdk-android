@@ -29,14 +29,13 @@ compileTestKotlin {
     kotlinOptions.javaParameters = true
 }
 
-apply from : "$rootDir/dependencies.gradle"
+apply from : "$projectDir/../dependencies.gradle"
 
 
 
 dependencies {
 
     implementation(project(path: ":rudderjsonadapter", configuration: 'default'))
-    implementation(project(path: ":models", configuration: 'default'))
     api deps.gson
 
     testImplementation deps.hamcrest

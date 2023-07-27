@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.rudderjsonadapter
+package com.rudderstack.rudderjsonadapter
 
 /**
  * A default common adapter for different json parsers.

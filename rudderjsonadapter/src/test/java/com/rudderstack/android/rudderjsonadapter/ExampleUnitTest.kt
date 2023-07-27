@@ -12,10 +12,11 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.rudderjsonadapter
+package com.rudderstack.rudderjsonadapter
+
+import org.junit.Test
 
 import org.junit.Assert.*
-import org.junit.Test
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -27,4 +28,6 @@ class ExampleUnitTest {
     fun addition_isCorrect() {
         assertEquals(4, 2 + 2)
     }
+
+
 }

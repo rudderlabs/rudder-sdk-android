@@ -12,13 +12,17 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.web.models
+package com.rudderstack.web.models
 
+
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.squareup.moshi.Json
 
 data class Data(
     @Json(name = "id")
+    @JsonProperty("id")
     val id: Int,
     @Json(name = "title")
-    val title: String,
+    @JsonProperty("title")
+    val title: String
 )

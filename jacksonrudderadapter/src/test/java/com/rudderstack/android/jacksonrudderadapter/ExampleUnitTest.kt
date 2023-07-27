@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.jacksonrudderadapter
+package com.rudderstack.jacksonrudderadapter
 
 import org.junit.Assert.*
 import org.junit.Test

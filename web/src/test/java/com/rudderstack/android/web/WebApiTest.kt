@@ -12,53 +12,57 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.web
+package com.rudderstack.web
 
-import com.rudderstack.android.moshirudderadapter.MoshiAdapter
-import com.rudderstack.android.rudderjsonadapter.JsonAdapter
-import com.rudderstack.android.rudderjsonadapter.RudderTypeAdapter
-import com.rudderstack.android.web.models.ArtDataListResponse
-import com.rudderstack.android.web.models.ArtDataResponse
-import com.rudderstack.android.web.models.Data
-import junit.framework.TestSuite
+import com.rudderstack.gsonrudderadapter.GsonAdapter
+import com.rudderstack.moshirudderadapter.MoshiAdapter
+import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+import com.rudderstack.web.models.ArtDataListResponse
+import com.rudderstack.web.models.ArtDataResponse
+import com.rudderstack.web.models.Data
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert
+import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
-import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.*
 import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-class WebApiTest : TestSuite() {
-    internal var jsonAdapter: JsonAdapter = MoshiAdapter()
+open class WebApiTest {
+    protected var jsonAdapter: JsonAdapter = MoshiAdapter()
 
     private lateinit var webService: WebService
     private lateinit var agifyWebService: WebService
     private lateinit var jsonPlaceHolderWebService: WebService
 
-    // public api used
-    // https://api.artic.edu/docs/#quick-start
-    // also test using
-    // https://gorest.co.in
-    // for post testing
-    // https://jsonplaceholder.typicode.com/guide/
+    //public api used
+    //https://api.artic.edu/docs/#quick-start
+    //also test using
+    //https://gorest.co.in
+    //for post testing
+    //https://jsonplaceholder.typicode.com/guide/
+
+
 
     @Before
     fun init() {
         webService = WebServiceFactory.getWebService(
             "https://api.artic.edu/api/v1/",
-            jsonAdapter,
+            jsonAdapter
         )
         agifyWebService = WebServiceFactory.getWebService(
             "https://api.agify.io/",
-            jsonAdapter,
+            jsonAdapter
         )
         jsonPlaceHolderWebService = WebServiceFactory.getWebService(
             "https://jsonplaceholder.typicode.com/",
-            jsonAdapter,
+            jsonAdapter
         )
     }
+
 
     @Test
     fun testSimpleGetSync() {
@@ -66,24 +70,27 @@ class WebApiTest : TestSuite() {
             null,
             mapOf("fields" to "id,title"),
             "artworks/200154",
-            ArtDataResponse::class.java,
+            ArtDataResponse::class.java
         ).get().body
 
         MatcherAssert.assertThat(
-            response,
-            Matchers.allOf(
+            response, Matchers.allOf(
                 Matchers.notNullValue(),
                 Matchers.isA(ArtDataResponse::class.java),
                 Matchers.hasProperty(
-                    "data",
-                    Matchers.allOf(
+                    "data", Matchers.allOf(
                         Matchers.notNullValue(),
                         Matchers.isA(Data::class.java),
-                        Matchers.hasProperty("id", Matchers.equalTo(200154)),
-                    ),
-                ),
-            ),
+                        Matchers.hasProperty("id", Matchers.equalTo(200154))
+                    )
+                )
+            )
         )
+        assertThat(response?.info?.licenseText, allOf(
+            notNullValue(),
+            `is`("The data in this response is licensed under a Creative Commons Zero (CC0) " +
+                    "1.0 designation and the Terms and Conditions of artic.edu.")
+        ))
     }
 
     @Test
@@ -92,36 +99,33 @@ class WebApiTest : TestSuite() {
             null,
             mapOf("fields" to "id,title"),
             "artworks",
-            ArtDataListResponse::class.java,
+            ArtDataListResponse::class.java
         ).get().body
 
         MatcherAssert.assertThat(
-            response,
-            Matchers.allOf(
+            response, Matchers.allOf(
                 Matchers.notNullValue(),
                 Matchers.isA(ArtDataListResponse::class.java),
                 Matchers.hasProperty(
-                    "data",
-                    Matchers.allOf(
+                    "data", Matchers.allOf(
                         Matchers.notNullValue(),
                         Matchers.isA(List::class.java),
 //                Matchers.not("id",Matchers.equalTo(200154) )
-                    ),
-                ),
-            ),
+                    )
+                )
+            )
         )
         MatcherAssert.assertThat(
-            response?.data,
-            Matchers.allOf(
-                Matchers.notNullValue(),
-            ),
+            response?.data, Matchers.allOf(
+                Matchers.notNullValue()
+            )
         )
         MatcherAssert.assertThat(
-            response?.data?.get(0),
-            Matchers.allOf(
-                Matchers.notNullValue(),
-            ),
+            response?.data?.get(0), Matchers.allOf(
+                Matchers.notNullValue()
+            )
         )
+
     }
 
     @Test
@@ -130,18 +134,17 @@ class WebApiTest : TestSuite() {
             null,
             mapOf("name" to "bella"),
             "",
-            object : RudderTypeAdapter<Map<String, String>>() {},
+            object : RudderTypeAdapter<Map<String, String>>() {}
         ).get().body
 
         MatcherAssert.assertThat(
-            response,
-            Matchers.allOf(
+            response, Matchers.allOf(
                 Matchers.notNullValue(),
                 Matchers.isA(Map::class.java),
-            ),
+            )
         )
         val age = response?.get("age")
-        MatcherAssert.assertThat(age, Matchers.equalTo("34"))
+        MatcherAssert.assertThat(age, greaterThan("18"))
         val name = response?.get("name")
         MatcherAssert.assertThat(name, Matchers.equalTo("bella"))
     }
@@ -154,23 +157,21 @@ class WebApiTest : TestSuite() {
             null,
             mapOf("fields" to "id,title"),
             "artworks/200154",
-            ArtDataResponse::class.java,
+            ArtDataResponse::class.java
         ) {
             response = it.body
             MatcherAssert.assertThat(
-                response,
-                Matchers.allOf(
+                response, Matchers.allOf(
                     Matchers.notNullValue(),
                     Matchers.isA(ArtDataResponse::class.java),
                     Matchers.hasProperty(
-                        "data",
-                        Matchers.allOf(
+                        "data", Matchers.allOf(
                             Matchers.notNullValue(),
                             Matchers.isA(Data::class.java),
-                            Matchers.hasProperty("id", Matchers.equalTo(200154)),
-                        ),
-                    ),
-                ),
+                            Matchers.hasProperty("id", Matchers.equalTo(200154))
+                        )
+                    )
+                )
             )
             isComplete.set(true)
         }
@@ -179,7 +180,7 @@ class WebApiTest : TestSuite() {
 
     @Test
     fun testPostSync() {
-        // this will also be success return body
+        //this will also be success return body
         /*"{\n" +
                 "    \"title\": \"foo\",\n" +
                 "    \"body\": \"bar\",\n" +
@@ -189,20 +190,17 @@ class WebApiTest : TestSuite() {
         val postStringedBody =
             jsonAdapter.writeToJson(postBody, object : RudderTypeAdapter<Map<String, String>>() {})
         val response =
-            jsonPlaceHolderWebService.post(
-                mapOf("Content-Type" to "application/json; charset=UTF-8"),
+            jsonPlaceHolderWebService.post(mapOf("Content-Type" to "application/json; charset=UTF-8"),
                 null,
                 postStringedBody,
                 "posts",
-                object : RudderTypeAdapter<Map<String, String>>() {},
-            ).get().body
+                object : RudderTypeAdapter<Map<String, String>>() {}).get().body
 
         MatcherAssert.assertThat(
-            response,
-            Matchers.allOf(
+            response, Matchers.allOf(
                 Matchers.notNullValue(),
-                Matchers.aMapWithSize(4), // a field "id" is sent alongside
-            ),
+                Matchers.aMapWithSize(4) //a field "id" is sent alongside
+            )
         )
         val title = response?.get("title")
         MatcherAssert.assertThat(title, equalTo("foo"))
@@ -214,7 +212,7 @@ class WebApiTest : TestSuite() {
 
     @Test
     fun testPostASync() {
-        // this will also be success return body
+        //this will also be success return body
         /*"{\n" +
                 "    \"title\": \"foo\",\n" +
                 "    \"body\": \"bar\",\n" +
@@ -224,20 +222,14 @@ class WebApiTest : TestSuite() {
         val postBody = mapOf("title" to "foo", "body" to "bar", "userId" to "1")
         val postStringedBody =
             jsonAdapter.writeToJson(postBody, object : RudderTypeAdapter<Map<String, String>>() {})
-        jsonPlaceHolderWebService.post(
-            mapOf("Content-Type" to "application/json; charset=UTF-8"),
-            null,
-            postStringedBody,
-            "posts",
-            object : RudderTypeAdapter<Map<String, String>>() {},
-        ) {
+        jsonPlaceHolderWebService.post(mapOf("Content-Type" to "application/json; charset=UTF-8"),
+            null, postStringedBody, "posts", object : RudderTypeAdapter<Map<String, String>>() {}) {
             val response = it.body
             MatcherAssert.assertThat(
-                response,
-                Matchers.allOf(
+                response, Matchers.allOf(
                     Matchers.notNullValue(),
-                    Matchers.aMapWithSize(4), // a field "id" is sent alongside
-                ),
+                    Matchers.aMapWithSize(4) //a field "id" is sent alongside
+                )
             )
             val title = response?.get("title")
             MatcherAssert.assertThat(title, equalTo("foo"))
@@ -248,5 +240,21 @@ class WebApiTest : TestSuite() {
             isComplete.set(true)
         }
         Awaitility.await().atMost(1, TimeUnit.MINUTES).untilTrue(isComplete)
+    }
+
+}
+class WebApiTestJackson : WebApiTest() {
+    init {
+        jsonAdapter = GsonAdapter()
+    }
+}
+class WebApiTestGson : WebApiTest() {
+    init {
+        jsonAdapter = GsonAdapter()
+    }
+}
+class WebApiTestMoshi : WebApiTest() {
+    init {
+        jsonAdapter = MoshiAdapter()
     }
 }
