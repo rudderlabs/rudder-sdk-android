@@ -68,7 +68,7 @@ data class RudderServerConfig(
         @Json(name = "destinations")
         @JsonProperty("destinations")
         @SerializedName("destinations")
-        val destinations: LinkedList<RudderServerDestination>? = null
+        val destinations: List<RudderServerDestination>? = null
     ) : Serializable
 
     data class RudderServerDestination(

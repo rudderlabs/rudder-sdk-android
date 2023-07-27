@@ -77,7 +77,7 @@ abstract class AnalyticsTest {
                     mockedResponse
                 )
             }
-            `when`(it.uploadSync(any() as List<Message>, anyOrNull())).thenReturn(
+            `when`(it.uploadSync(any<List<Message>>() , anyOrNull())).thenReturn(
                 mockedResponse
             )
         }

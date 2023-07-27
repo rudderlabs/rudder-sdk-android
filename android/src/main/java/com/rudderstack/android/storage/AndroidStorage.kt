@@ -32,6 +32,7 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
 import java.util.*
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
@@ -39,7 +40,8 @@ internal class AndroidStorage(
     private val androidContext: Context,
     private val jsonAdapter: JsonAdapter,
     useContentProvider: Boolean,
-    private val logger: Logger = AndroidLogger
+    private val logger: Logger = AndroidLogger,
+    executor: ExecutorService?= null
 ) : Storage {
     private val dbName = "db_${androidContext.packageName}"
 
@@ -165,7 +167,7 @@ internal class AndroidStorage(
     init {
         RudderDatabase.init(
             androidContext, dbName, RudderEntityFactory(jsonAdapter), useContentProvider,
-            DB_VERSION
+            DB_VERSION, executorService = executor
         )
         messageDao = RudderDatabase.getDao(MessageEntity::class.java)
         messageDao.addDataChangeListener(_messageDataListener)

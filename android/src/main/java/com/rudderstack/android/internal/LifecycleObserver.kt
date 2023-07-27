@@ -23,37 +23,44 @@ import com.rudderstack.models.ScreenMessage
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.models.android.ScreenProperty
 
-class LifecycleObserver(private val application: Application, private val isTrackLifecycle : Boolean,
-                        private val isRecordScreen : Boolean, private val callback : (Message) -> Unit
-){
+class LifecycleObserver(
+    private val application: Application,
+    private val isTrackLifecycle: Boolean,
+    private val isRecordScreen: Boolean,
+    private val callback: (Message) -> Unit
+) {
 
-    companion object{
+    companion object {
         const val EVENT_NAME_APPLICATION_OPENED = "Application Opened"
         const val EVENT_NAME_APPLICATION_STOPPED = "Application Backgrounded"
     }
-    private var _activityCount = 0
-    set(value) {
-        field = value
-        if(value == 1){
-            //send message activity started
-            sendLifecycleStart()
-        }else if (value == 0){
-            sendLifecycleStop()
-        }
-    }
 
-    private val lifecycleCallback = object : Application.ActivityLifecycleCallbacks{
+    private var _activityCount = 0
+        set(value) {
+            field = value
+            if (value == 1) {
+                //send message activity started
+                sendLifecycleStart()
+            } else if (value == 0) {
+                sendLifecycleStop()
+            }
+        }
+
+    private val lifecycleCallback = object : Application.ActivityLifecycleCallbacks {
         override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
             //nothing to implement
         }
 
         override fun onActivityStarted(activity: Activity) {
-            if(isTrackLifecycle)
-            _activityCount ++
+            if (isTrackLifecycle) _activityCount++
 
-            if(isRecordScreen){
+            if (isRecordScreen) {
                 val screenProperty = ScreenProperty(activity.localClassName, true)
-                ScreenMessage.create(timestamp = RudderUtils.timeStamp, name = activity.localClassName, properties = screenProperty.getMap()).apply(callback)
+                ScreenMessage.create(
+                    timestamp = RudderUtils.timeStamp,
+                    name = activity.localClassName,
+                    properties = screenProperty.getMap()
+                ).apply(callback)
             }
         }
 
@@ -66,8 +73,7 @@ class LifecycleObserver(private val application: Application, private val isTrac
         }
 
         override fun onActivityStopped(activity: Activity) {
-            if(isTrackLifecycle)
-            _activityCount --
+            if (isTrackLifecycle) _activityCount--
         }
 
         override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
@@ -79,22 +85,24 @@ class LifecycleObserver(private val application: Application, private val isTrac
         }
 
     }
+
     init {
         application.registerActivityLifecycleCallbacks(lifecycleCallback)
     }
-    private fun sendLifecycleStart(){
+
+    private fun sendLifecycleStart() {
         TrackMessage.create(
-            eventName = EVENT_NAME_APPLICATION_OPENED,
-            timestamp = RudderUtils.timeStamp
+            eventName = EVENT_NAME_APPLICATION_OPENED, timestamp = RudderUtils.timeStamp
         ).apply(callback)
     }
-    private fun sendLifecycleStop(){
+
+    private fun sendLifecycleStop() {
         TrackMessage.create(
-            eventName = EVENT_NAME_APPLICATION_STOPPED,
-            timestamp = RudderUtils.timeStamp
+            eventName = EVENT_NAME_APPLICATION_STOPPED, timestamp = RudderUtils.timeStamp
         ).apply(callback)
     }
-    internal fun shutdown(){
+
+    internal fun shutdown() {
         application.unregisterActivityLifecycleCallbacks(lifecycleCallback)
     }
 }

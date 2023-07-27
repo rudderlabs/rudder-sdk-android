@@ -288,16 +288,16 @@ class BasicStorageImpl(
         get() = _anonymousId
 
     override val libraryName: String
-        get() = libDetails.getOrDefault(LIB_KEY_NAME, "")
+        get() = libDetails[LIB_KEY_NAME] ?: ""
 
     override val libraryVersion: String
-        get() = libDetails.getOrDefault(LIB_KEY_VERSION, "")
+        get() = libDetails[LIB_KEY_VERSION] ?: ""
 
     override val libraryPlatform: String
-        get() = libDetails.getOrDefault(LIB_KEY_PLATFORM, "")
+        get() = libDetails[LIB_KEY_PLATFORM] ?: ""
 
     override val libraryOsVersion: String
-        get() = libDetails.getOrDefault(LIB_KEY_OS_VERSION, "")
+        get() = libDetails[LIB_KEY_OS_VERSION] ?: ""
 
     private fun onDataChange() {
         synchronized(this) {

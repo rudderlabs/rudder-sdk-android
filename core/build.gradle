@@ -18,17 +18,17 @@ plugins {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 apply from : "$projectDir/../dependencies.gradle"
 
 dependencies {
 //    api project(path: ':repository')
-    api project(path: ':rudderjsonadapter', configuration: 'default')
-    api project(path: ':models', configuration: 'default')
-    api project(path: ':web', configuration: 'default')
+    api project(path: ':rudderjsonadapter')
+    api project(path: ':models')
+    api project(path: ':web')
 
 
 //    api(project(":web"))
@@ -40,7 +40,7 @@ dependencies {
     testImplementation deps.mockito_kotlin
     testImplementation deps.awaitility
 
-    testImplementation(project(path: ':moshirudderadapter', configuration: 'default'))
-    testImplementation(project(path: ':gsonrudderadapter', configuration: 'default'))
-    testImplementation(project(path: ':jacksonrudderadapter', configuration: 'default'))
+    testImplementation(project(path: ':moshirudderadapter'))
+    testImplementation(project(path: ':gsonrudderadapter'))
+    testImplementation(project(path: ':jacksonrudderadapter'))
 }

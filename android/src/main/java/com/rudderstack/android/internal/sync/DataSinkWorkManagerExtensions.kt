@@ -15,7 +15,12 @@
 package com.rudderstack.android.internal.sync
 
 import android.app.Application
-import androidx.work.*
+import androidx.work.Configuration
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import androidx.work.multiprocess.RemoteWorkManager
 import com.rudderstack.android.RudderAnalytics
 import com.rudderstack.core.Analytics
@@ -56,25 +61,21 @@ internal fun Application.createSinkAnalytics() = latestConfig?.let {
 private var latestConfig: RudderWorkerConfig? = null
 
 private val constraints by lazy {
-    Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build()
+    Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 }
 private val sinkWorker by lazy {
     PeriodicWorkRequestBuilder<RudderSyncWorker>(
         REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES
-    ).setInitialDelay(REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES)
-        .setConstraints(constraints)
-        .addTag(WORK_MANAGER_TAG)
-        .build()
+    ).setInitialDelay(REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES).setConstraints(constraints)
+        .addTag(WORK_MANAGER_TAG).build()
 }
+
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<HANDLE MEMORY LEAK>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<block flush works after shutdown>>>>>>>>>>>>>>>>>>>>>>>>>>
 internal fun Application.registerWorkManager(
-    analytics: Analytics,
-    rudderWorkerConfig: RudderWorkerConfig
+    analytics: Analytics, rudderWorkerConfig: RudderWorkerConfig
 ) {
-    analytics.logger.debug(log= "Initializing work manager with config $rudderWorkerConfig")
+    analytics.logger.debug(log = "Initializing work manager with config $rudderWorkerConfig")
     //if analytics object has changed, shutting it down is not this method's responsibility
     analyticsRef = WeakReference(analytics)
     latestConfig = rudderWorkerConfig
@@ -94,13 +95,10 @@ internal fun Application.registerWorkManager(
         }
     if (rudderWorkerConfig.processName != null) {
         RemoteWorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE,
-            sinkWorker
+            WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE, sinkWorker
         )
-    }else
-    WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-        WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE,
-        sinkWorker
+    } else WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+        WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE, sinkWorker
     )
 
 }

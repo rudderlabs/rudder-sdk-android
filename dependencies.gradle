@@ -78,7 +78,7 @@ ext {
     ]
     library = [
             min_sdk     : 19,
-            target_sdk  : 31,
+            target_sdk  : 33,
             version_name: '"2.0"',
             version_code: 1
     ]
