@@ -20,12 +20,17 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    java {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
     testOptions {
         unitTests {
@@ -39,9 +44,9 @@ dependencies {
 //    implementation deps.kotlinCore
     implementation deps.androidXAnnotations
 
-    implementation(project(projects.json_rudder_adapter))
-    implementation project(projects.repository)
-    implementation project(projects.web)
+    implementation(project(path: projects.json_rudder_adapter))
+    implementation(project(path: projects.repository))
+    implementation(project(path: projects.web))
 
     compileOnly deps.gson
     compileOnly deps.jackson
@@ -49,9 +54,9 @@ dependencies {
     compileOnly deps.moshi.kotlin
     compileOnly deps.moshi.adapter
 
-    testImplementation(project(projects.moshi_rudder_adapter))
-    testImplementation(project(projects.gson_rudder_adapter))
-    testImplementation(project(projects.jackson_rudder_adapter))
+    testImplementation(project(path: projects.moshi_rudder_adapter))
+    testImplementation(project(path: projects.gson_rudder_adapter))
+    testImplementation(project(path: projects.jackson_rudder_adapter))
     testImplementation deps.moshi.kotlin
     testImplementation deps.moshi.core
     testImplementation deps.gson
@@ -68,3 +73,6 @@ dependencies {
     testImplementation project(path: projects.repository)
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
+
+apply from: rootProject.file('gradle/mvn-publish.gradle')
+apply from: rootProject.file('gradle/codecov.gradle')

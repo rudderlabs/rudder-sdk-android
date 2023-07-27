@@ -26,9 +26,9 @@ apply from : "$projectDir/../dependencies.gradle"
 
 dependencies {
 //    api project(path: ':repository')
-    api project(path: ':rudderjsonadapter')
-    api project(path: ':models')
-    api project(path: ':web')
+    api project(path: ':rudderjsonadapter', configuration: 'default')
+    api project(path: ':models', configuration: 'default')
+    api project(path: ':web', configuration: 'default')
 
 
 //    api(project(":web"))
@@ -40,7 +40,7 @@ dependencies {
     testImplementation deps.mockito_kotlin
     testImplementation deps.awaitility
 
-    testImplementation(project(':moshirudderadapter'))
-    testImplementation(project(':gsonrudderadapter'))
-    testImplementation(project(':jacksonrudderadapter'))
+    testImplementation(project(path: ':moshirudderadapter', configuration: 'default'))
+    testImplementation(project(path: ':gsonrudderadapter', configuration: 'default'))
+    testImplementation(project(path: ':jacksonrudderadapter', configuration: 'default'))
 }

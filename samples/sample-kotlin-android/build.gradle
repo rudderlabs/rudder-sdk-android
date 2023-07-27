@@ -84,16 +84,16 @@ dependencies {
     implementation 'androidx.compose.runtime:runtime-livedata:1.4.3'
     implementation "androidx.compose.ui:ui-tooling-preview:1.4.3"
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
-    implementation project(path: ':android')
-    implementation project(path: ':moshirudderadapter')
-    implementation project(path: ':gsonrudderadapter')
-    implementation project(path: ':jacksonrudderadapter')
-    implementation project(path: ':repository')
-    implementation project(path: ':core')
-    implementation project(path: ':models')
-    implementation project(path: ':web')
-    implementation project(path: ':rudderjsonadapter')
-    implementation project(path: ':rudderreporter')
+    implementation project(path: ':android', configuration: 'default')
+    implementation project(path: ':moshirudderadapter', configuration: 'default')
+    implementation project(path: ':gsonrudderadapter', configuration: 'default')
+    implementation project(path: ':jacksonrudderadapter', configuration: 'default')
+    implementation project(path: ':repository', configuration: 'default')
+    implementation project(path: ':core', configuration: 'default')
+    implementation project(path: ':models', configuration: 'default')
+    implementation project(path: ':web', configuration: 'default')
+    implementation project(path: ':rudderjsonadapter', configuration: 'default')
+    implementation project(path: ':rudderreporter', configuration: 'default')
 
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'

@@ -39,9 +39,9 @@ dependencies {
 
     //test
     testImplementation 'junit:junit:4.13.2'
-    testImplementation(project(':moshirudderadapter'))
-    testImplementation(project(':gsonrudderadapter'))
-    testImplementation(project(':jacksonrudderadapter'))
+    testImplementation(project(path: ':moshirudderadapter', configuration: 'default'))
+    testImplementation(project(path: ':gsonrudderadapter', configuration: 'default'))
+    testImplementation(project(path: ':jacksonrudderadapter', configuration: 'default'))
     testImplementation deps.moshi.kotlin
     testImplementation deps.moshi.core
     testImplementation deps.gson

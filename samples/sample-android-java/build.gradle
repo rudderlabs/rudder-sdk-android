@@ -53,15 +53,15 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment:2.6.0'
     implementation 'androidx.navigation:navigation-ui:2.6.0'
 
-    implementation project(path: ':android')
-    implementation project(path: ':moshirudderadapter')
+    implementation project(path: ':android', configuration: 'default')
+    implementation project(path: ':moshirudderadapter', configuration: 'default')
 //    implementation project(path: ':gsonrudderadapter')
 //    implementation project(path: ':jacksonrudderadapter')
-    implementation project(path: ':repository')
-    implementation project(path: ':core')
-    implementation project(path: ':models')
-    implementation project(path: ':web')
-    implementation project(path: ':rudderjsonadapter')
+    implementation project(path: ':repository', configuration: 'default')
+    implementation project(path: ':core', configuration: 'default')
+    implementation project(path: ':models', configuration: 'default')
+    implementation project(path: ':web', configuration: 'default')
+    implementation project(path: ':rudderjsonadapter', configuration: 'default')
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

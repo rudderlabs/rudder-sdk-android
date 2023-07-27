@@ -154,7 +154,7 @@ class DefaultReservoirTest {
         defaultStorage.reset()
         val allResetMetrics = defaultStorage.getAllMetricsSync()
         allResetMetrics.forEachIndexed { index, metric ->
-            assertThat(metric.value, Matchers.equalTo(0))
+            assertThat(metric.value, Matchers.equalTo(0L))
             assertThat(metric.name, Matchers.equalTo("testCounter_$index"))
             assertThat(metric.labels, Matchers.equalTo(testCounterToLabelMap[metric.name]))
         }
