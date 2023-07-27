@@ -443,10 +443,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     @Override
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (checkIfColumnExists(db, STATUS_COL) || checkIfColumnExists(db, DM_PROCESSED_COL)) {
-            RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: onDowngrade: DB got downgraded from version: %d to the version: %d, hence running migration to remove the status and dm_processed columns", oldVersion, newVersion));
-            deleteStatusAndDMProcessedColumns(db);
-        }
+        // We have decided not to implement this method currently
     }
 
     private void deleteStatusAndDMProcessedColumns(SQLiteDatabase database) {
