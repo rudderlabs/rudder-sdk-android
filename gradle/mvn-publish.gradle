@@ -81,7 +81,9 @@ signing {
     useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
     sign publishing.publications
 }
+if(POM_PACKAGING == "aar"){
 tasks.named("signReleasePublication").configure { dependsOn("bundleReleaseAar") }
+    }
 publish.dependsOn build
 publishToMavenLocal.dependsOn build
 publishToSonatype.dependsOn publish
