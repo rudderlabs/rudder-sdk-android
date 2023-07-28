@@ -82,8 +82,10 @@ signing {
     sign publishing.publications
 }
 if(POM_PACKAGING == "aar"){
-tasks.named("signReleasePublication").configure { dependsOn("bundleReleaseAar") }
-    }
+    tasks.named("signReleasePublication").configure { dependsOn("bundleReleaseAar") }
+}else{
+    tasks.named("signReleasePublication").configure { dependsOn("jar") }
+}
 publish.dependsOn build
 publishToMavenLocal.dependsOn build
 publishToSonatype.dependsOn publish
