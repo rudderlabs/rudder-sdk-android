@@ -2,10 +2,9 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 33
-
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 31
+        targetSdkVersion 33
         consumerProguardFiles 'proguard-consumer-rules.pro'
         buildConfigField("String", "VERSION_NAME", "\"${VERSION_NAME}\"")
         buildConfigField("String", "VERSION_CODE", "\"${VERSION_CODE}\"")
@@ -33,8 +32,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     namespace 'com.rudderstack.android.sdk.core'
 }
@@ -45,11 +44,13 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'androidx.annotation:annotation:1.6.0'
 
-    implementation(project(':web'))
-    implementation(project(':repository'))
-    implementation(project(':rudderreporter'))
-    implementation(project(':rudderjsonadapter'))
-    implementation(project(':gsonrudderadapter'))
+//    implementation(project(':web'))
+//    implementation(project(':repository'))
+//    implementation(project(':rudderreporter'))
+//    implementation(project(':rudderjsonadapter'))
+//    implementation(project(':gsonrudderadapter'))
+    implementation 'com.rudderstack.kotlin.sdk:gsonrudderadapter:1.0.0-SNAPSHOT'
+    implementation 'com.rudderstack.android.sdk:rudderreporter:1.0.0-SNAPSHOT'
 
     // required for new life cycle methods
     compileOnly 'androidx.lifecycle:lifecycle-process:2.6.1'
