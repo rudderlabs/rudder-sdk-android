@@ -20,6 +20,7 @@ dependencyResolutionManagement {
         jcenter() // Warning: this repository is going to shut down soon
     }
 }
+
 rootProject.name = "Rudder-Android-Libs"
 include ':app'
 include ':web'

@@ -55,8 +55,8 @@ publishing {
                         final dependencyNode = dependenciesNode.appendNode('dependency')
                         dependencyNode.appendNode('artifactId', dep.name)
                         if (dep.version == 'unspecified') {
-                            dependencyNode.appendNode('groupId', project.pomGroupID)
-                            dependencyNode.appendNode('version', project.pomVersion)
+                            dependencyNode.appendNode('groupId', GROUP)
+                            dependencyNode.appendNode('version', version)
                         } else {
                             dependencyNode.appendNode('groupId', dep.group)
                             dependencyNode.appendNode('version', dep.version)
