@@ -34,7 +34,7 @@ apply from : "$projectDir/../dependencies.gradle"
 
 dependencies {
 
-    implementation(project(path: ":rudderjsonadapter", configuration: 'default'))
+    implementation(project(path: ":rudderjsonadapter"))
     api deps.jackson
     api deps.jacksonKotlin
 
