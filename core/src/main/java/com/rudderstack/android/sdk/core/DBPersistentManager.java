@@ -72,7 +72,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
     private static final String SET_STATUS_FOR_EXISTING = "UPDATE " + EVENTS_TABLE_NAME + " SET " + STATUS_COL + " = " + STATUS_DEVICE_MODE_DONE;
     private static final String SET_DM_PROCESSED_AND_STATUS_FOR_EXISTING = "UPDATE " + EVENTS_TABLE_NAME +
             " SET " + DM_PROCESSED_COL + " = " + DM_PROCESSED_DONE +
-            ", " + STATUS_COL + " = " + STATUS_DEVICE_MODE_DONE;
+            ", " + STATUS_COL + " = (" + STATUS_COL + " | " + STATUS_DEVICE_MODE_DONE + ") ";
 
     static final String BACKSLASH = "\\\\'";
 
