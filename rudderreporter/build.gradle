@@ -44,9 +44,9 @@ dependencies {
 //    implementation deps.kotlinCore
     implementation deps.androidXAnnotations
 
-    implementation(project(path: projects.json_rudder_adapter))
-    implementation(project(path: projects.repository))
-    implementation(project(path: projects.web))
+    api(project(path: projects.json_rudder_adapter))
+    api(project(path: projects.repository))
+    api(project(path: projects.web))
 
     compileOnly deps.gson
     compileOnly deps.jackson
@@ -73,6 +73,6 @@ dependencies {
     testImplementation project(path: projects.repository)
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
-apply from: rootProject.file('gradle/artifacts-aar.gradle')
+//apply from: rootProject.file('gradle/artifacts-aar.gradle')
 apply from: rootProject.file('gradle/mvn-publish.gradle')
 apply from: rootProject.file('gradle/codecov.gradle')

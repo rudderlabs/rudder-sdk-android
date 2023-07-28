@@ -1,9 +1,14 @@
+
+//def mod = project.findProperty('POM_ARTIFACT_ID')
+//def mod = POM_ARTIFACT_ID
 task sourcesJar(type: Jar) {
     archiveClassifier.set('sources')
+    println("sourceSets: ${android.sourceSets}")
     from android.sourceSets.main.java.srcDirs
 }
 
 task javadoc(type: Javadoc) {
+    failOnError false
     configurations.implementation.setCanBeResolved(true)
 
     failOnError false
