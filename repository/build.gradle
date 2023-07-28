@@ -78,6 +78,6 @@ dependencies {
     androidTestImplementation deps.androidXTestExtJunitKtx
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
-
+apply from: rootProject.file('gradle/artifacts-aar.gradle')
 apply from: rootProject.file('gradle/mvn-publish.gradle')
 apply from: rootProject.file('gradle/codecov.gradle')

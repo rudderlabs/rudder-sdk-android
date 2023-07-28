@@ -37,6 +37,6 @@ dependencies {
 
     testImplementation 'junit:junit:4.+'
 }
-
+apply from: rootProject.file('gradle/artifacts-jar.gradle')
 apply from: rootProject.file('gradle/mvn-publish.gradle')
 apply from: rootProject.file('gradle/codecov.gradle')
