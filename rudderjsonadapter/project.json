@@ -54,7 +54,7 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'rudderjsonadapter-snapshot' && ./gradlew :rudderjsonadapter:publishToSonatype"
+        "command": "echo 'rudderjsonadapter-snapshot' && cd rudderjsonadapter && ../gradlew publishToSonatype && cd .."
       }
     }
   },

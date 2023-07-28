@@ -65,7 +65,7 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'web-snapshot' && ./gradlew :web:publishToSonatype"
+        "command": "echo 'web-snapshot' && cd web && ../gradlew publishToSonatype && cd .."
       }
     }
   },

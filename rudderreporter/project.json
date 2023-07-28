@@ -54,7 +54,7 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'rudderreporter-snapshot' && ./gradlew :rudderreporter:publishToSonatype"
+        "command": "echo 'rudderreporter-snapshot' && cd rudderreporter && ../gradlew publishToSonatype && cd .."
       }
     }
   },

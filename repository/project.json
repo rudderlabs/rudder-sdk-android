@@ -54,7 +54,7 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'repository-snapshot' && ./gradlew :repository:publishToSonatype"
+        "command": "echo 'repository-snapshot' && cd repository && ../gradlew publishToSonatype && cd .."
       }
     }
   },

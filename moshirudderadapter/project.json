@@ -59,7 +59,7 @@
     "snapshot-release": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'moshirudderadapter-snapshot' && ./gradlew :moshirudderadapter:publishToSonatype"
+        "command": "echo 'moshirudderadapter-snapshot' && cd moshirudderadapter && ../gradlew publishToSonatype && cd .."
       }
     }
   },

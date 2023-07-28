@@ -63,7 +63,7 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'gsonrudderadapter-snapshot' && ./gradlew :gsonrudderadapter:publishToSonatype"
+        "command": "echo 'gsonrudderadapter-snapshot' && cd gsonrudderadapter && sh ../gradlew publishToSonatype && cd .."
       }
     }
   },

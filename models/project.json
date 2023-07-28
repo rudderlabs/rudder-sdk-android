@@ -54,7 +54,7 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'models-snapshot' && ./gradlew :models:publishToSonatype"
+        "command": "echo 'models-snapshot' && cd models && ../gradlew publishToSonatype && cd .."
       }
     }
   },
