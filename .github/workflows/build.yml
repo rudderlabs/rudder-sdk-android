@@ -4,7 +4,7 @@ on:
   push:
     branches: [ 'master','master-mpx' ]
   pull_request:
-    branches: [ 'master', 'develop', 'develop-mpx', 'master-mpx']
+    branches: [ 'master', 'develop', 'develop-mpx', 'master-mpx' ]
     types: [ 'opened', 'reopened', 'edited', 'synchronize' ]
   workflow_dispatch:
 
@@ -22,6 +22,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '17'
       - uses: actions/checkout@v3
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -36,12 +40,12 @@ jobs:
             ${{ runner.os }}-gradle-core-
       - name: Set env MODULE_NAME
         run: |
-            BRANCH="${{ github.event.pull_request.head.ref }}"
-            if [[ $BRANCH == 'master-mpx' || $BRANCH == 'develop-mpx' ]]; then
-                echo "MODULE_NAME=core-mpx" >> "$GITHUB_ENV"
-            else
-                echo "MODULE_NAME=core" >> "$GITHUB_ENV"
-            fi
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          if [[ $BRANCH == 'master-mpx' || $BRANCH == 'develop-mpx' ]]; then
+              echo "MODULE_NAME=core-mpx" >> "$GITHUB_ENV"
+          else
+              echo "MODULE_NAME=core" >> "$GITHUB_ENV"
+          fi
       - name: Run Tests
         run: ./gradlew $MODULE_NAME:test
 #      - name: Generate coverage report
