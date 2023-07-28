@@ -590,7 +590,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
         String rowIdsCSVString = Utils.getCSVString(rowIds);
         if (rowIdsCSVString == null) return;
         String sql = "UPDATE " + DBPersistentManager.EVENTS_TABLE_NAME + " SET " +
-                DBPersistentManager.STATUS_COL + " = " + DBPersistentManager.STATUS_DEVICE_MODE_DONE +
+                DBPersistentManager.STATUS_COL + " = " + "(" + DBPersistentManager.STATUS_COL + " | " + DBPersistentManager.STATUS_DEVICE_MODE_DONE + ")" +
                 ", " + DBPersistentManager.DM_PROCESSED_COL + " = " + DBPersistentManager.DM_PROCESSED_DONE +
                 " WHERE " + MESSAGE_ID_COL + " IN "
                 + rowIdsCSVString + ";";
