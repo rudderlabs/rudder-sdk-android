@@ -63,7 +63,7 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'jacksonrudderadapter-snapshot' && cd jacksonrudderadapter && ../gradlew publishToSonatype && cd .."
+        "command": "echo 'jacksonrudderadapter-snapshot' && cd jacksonrudderadapter && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype && cd .."
       }
     }
   },
