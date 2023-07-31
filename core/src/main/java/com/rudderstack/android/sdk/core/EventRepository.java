@@ -53,6 +53,7 @@ class EventRepository {
 
     private RudderCloudModeManager cloudModeManager;
     private RudderDeviceModeManager deviceModeManager;
+    private ApplicationLifeCycleManager applicationLifeCycleManager;
 
     private @Nullable
     ConsentFilterHandler consentFilterHandler = null;
@@ -132,12 +133,10 @@ class EventRepository {
             this.userSessionManager = new RudderUserSessionManager(this.preferenceManager, this.config);
             this.userSessionManager.startSessionTracking();
 
-            ApplicationLifeCycleManager applicationLifeCycleManager = new ApplicationLifeCycleManager(config, application, rudderFlushWorkManager, this, preferenceManager);
-            applicationLifeCycleManager.trackApplicationUpdateStatus();
+            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(config, application, rudderFlushWorkManager, this, preferenceManager);
+            this.applicationLifeCycleManager.trackApplicationUpdateStatus();
 
             initializeLifecycleTracking(applicationLifeCycleManager);
-
-
         } catch (Exception ex) {
             RudderLogger.logError(ex.getCause());
         }
@@ -218,7 +217,7 @@ class EventRepository {
         new Thread(() -> {
             try {
                 int retryCount = 0;
-                while (!isSDKInitialized && retryCount <= 5) {
+                while (!isSDKInitialized && retryCount <= 10) {
                     RudderNetworkManager.NetworkResponses receivedError = configManager.getError();
                     RudderServerConfig serverConfig = configManager.getConfig();
                     if (serverConfig != null) {

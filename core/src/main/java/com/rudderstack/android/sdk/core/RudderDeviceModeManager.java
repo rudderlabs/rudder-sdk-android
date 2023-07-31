@@ -1,9 +1,10 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.util.Utils.getBooleanFromMap;
-import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedEvent;
-import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedDestination;
 import static com.rudderstack.android.sdk.core.TransformationRequest.TransformationRequestEvent;
+import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedDestination;
+import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedEvent;
+import static com.rudderstack.android.sdk.core.util.Utils.MAX_FLUSH_QUEUE_SIZE;
+import static com.rudderstack.android.sdk.core.util.Utils.getBooleanFromMap;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -20,8 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 enum TRANSFORMATION_STATUS {
     ENABLED(true),
@@ -44,10 +43,10 @@ public class RudderDeviceModeManager {
     private RudderEventFilteringPlugin rudderEventFilteringPlugin;
     private final Map<String, RudderIntegration<?>> integrationOperationsMap;
     private final Map<String, RudderClient.Callback> integrationCallbacks;
-    private final Map<Integer, RudderMessage> eventReplayMessageQueue;
     private final RudderDataResidencyManager dataResidencyManager;
     // required for device mode transform
     private final Map<String, String> destinationsWithTransformationsEnabled = new HashMap<>(); //destination display name to destinationId
+    private boolean areDeviceModeFactoriesAbsent = false;
 
     static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
@@ -62,7 +61,6 @@ public class RudderDeviceModeManager {
         this.areFactoriesInitialized = false;
         this.integrationOperationsMap = new HashMap<>();
         this.integrationCallbacks = new HashMap<>();
-        this.eventReplayMessageQueue = Collections.synchronizedMap(new HashMap<Integer, RudderMessage>());
     }
 
     void initiate(RudderServerConfig serverConfig, ConsentFilterHandler consentFilterHandler) {
@@ -72,6 +70,7 @@ public class RudderDeviceModeManager {
         setupNativeFactoriesWithFiltering(consentedDestinations);
         setDestinationsWithTransformationsEnabled(consentedDestinations);
         initiateCustomFactories();
+        isDeviceModeFactoriesNotPresent();
         replayMessageQueue();
         this.areFactoriesInitialized = true;
         if (doPassedFactoriesHaveTransformationsEnabled()) {
@@ -193,45 +192,91 @@ public class RudderDeviceModeManager {
         }
     }
 
-    private void replayMessageQueue() {
-        synchronized (eventReplayMessageQueue) {
-            RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: replaying old messages with factories. Count: %d", eventReplayMessageQueue.size()));
-            if (!eventReplayMessageQueue.isEmpty()) {
-                SortedSet<Integer> rowIds = new TreeSet<>(eventReplayMessageQueue.keySet());
-                for (Integer rowId : rowIds) {
-                    try {
-                        makeFactoryDump(eventReplayMessageQueue.get(rowId), rowId, true);
-                    } catch (Exception e) {
-                        RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: Exception in dumping message %s due to %s", eventReplayMessageQueue.get(rowId).getEventName(), e.getMessage()));
-                    }
-                }
-            }
-            eventReplayMessageQueue.clear();
+    private void isDeviceModeFactoriesNotPresent() {
+        if (this.integrationOperationsMap.isEmpty()) {
+            areDeviceModeFactoriesAbsent = true;
         }
     }
 
-    void makeFactoryDump(RudderMessage message, Integer rowId, boolean fromHistory) {
-        synchronized (eventReplayMessageQueue) {
-            if (areFactoriesInitialized || fromHistory) {
-                List<String> eligibleDestinations = getEligibleDestinations(message);
-
-                List<String> destinationsWithTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.ENABLED, eligibleDestinations);
-                if (destinationsWithTransformations.isEmpty()) {
-                    RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Marking event with rowId %s as DEVICE_MODE_PROCESSING DONE as it has no device mode destinations with transformations", rowId));
-                    dbPersistentManager.markDeviceModeDone(Arrays.asList(rowId));
-                } else {
-                    for (String destinationName : destinationsWithTransformations) {
-                        RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Destination %s needs transformation, hence the event will be batched and sent to transformation service", destinationName));
-                    }
+    /**
+     * Let's consider the conditions.
+     * 1. Only cloud mode, no device mode
+     *  a. before initialization
+     *   Events are stored with status new in database.
+     *  b. after initialization
+     *   Since areDeviceModeFactoriesAbsent is true, replayMessageQueue is called, device mode events are
+     *   dumped appropriately and marked as device_mode_done
+     * 2. Device Modes are present.
+     *  a. With transformations
+     *      i. before initialization
+     *       As usual saved in db.
+     *      ii. after initialization
+     *      replayMessageQueue is called which fetches events are polled from db, mark them as dm_processed status done,
+     *      and send it to eligible device mode destinations without transformation
+     *  b. Without transformations
+     *      i. before initialization
+     *       Saved to DB
+     *      ii. after initialization
+     *       replay is called and all events are sent over to destinations, also marked as
+     *       device_mode_done
+     *
+     */
+    private void replayMessageQueue() {
+        List<Integer> messageIds = new ArrayList<>();
+        List<String> messages = new ArrayList<>();
+        do {
+            messages.clear();
+            messageIds.clear();
+            dbPersistentManager.fetchDeviceModeWithProcessedPendingEventsFromDb(messageIds, messages, MAX_FLUSH_QUEUE_SIZE);
+            RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: replaying old messages with factories. Count: %d", messageIds.size()));
+            for (int i = 0; i < messageIds.size(); i++) {
+                try {
+                    RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
+                    makeFactoryDump(message, messageIds.get(i), true);
+                } catch (Exception e) {
+                    RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: Exception in dumping message %s due to %s", messages.get(i), e.getMessage()));
                 }
+            }
+        } while (dbPersistentManager.getDeviceModeWithProcessedPendingEventsRecordCount() > 0);
+    }
 
-                List<String> destinationsWithoutTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.DISABLED, eligibleDestinations);
-                dumpEventToDestinations(message, destinationsWithoutTransformations, "makeFactoryDump");
-            } else {
-                RudderLogger.logDebug("RudderDeviceModeManager: makeFactoryDump: factories are not initialized. dumping to replay queue");
-                eventReplayMessageQueue.put(rowId, message);
+    void makeFactoryDump(RudderMessage message, Integer rowId, boolean fromHistory) {
+        synchronized (this) {
+            if (this.areDeviceModeFactoriesAbsent) {
+                markDeviceModeTransformationDone(rowId);
+            } else if (areFactoriesInitialized || fromHistory) {
+                List<String> eligibleDestinations = getEligibleDestinations(message);
+                updateMessageStatusBasedOnTransformations(eligibleDestinations, rowId, message);
+                dumpMessageToDestinationWithoutTransformation(eligibleDestinations, message);
             }
         }
+    }
+
+    /**
+     * This mark the message as device_mode_done and dm_processed_done in the database
+     * @param rowId The rowId of the message
+     */
+    private void markDeviceModeTransformationDone(int rowId) {
+        RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: markDeviceModeTransformationDone: Marking message with rowId %s as DEVICE_MODE_DONE and DM_PROCESSED_DONE", rowId));
+        dbPersistentManager.markDeviceModeTransformationAndDMProcessedDone(Arrays.asList(rowId));
+    }
+
+    private void updateMessageStatusBasedOnTransformations(List<String> eligibleDestinations, int rowId, RudderMessage message) {
+        List<String> destinationsWithTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.ENABLED, eligibleDestinations);
+        if (destinationsWithTransformations.isEmpty()) {
+            markDeviceModeTransformationDone(rowId);
+        } else {
+            for (String destinationName : destinationsWithTransformations) {
+                RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: updateMessageStatusBasedOnTransformations: Destination %s needs transformation, hence the event will be batched and sent to transformation service", destinationName));
+            }
+            dbPersistentManager.markDeviceModeProcessedDone(rowId);
+            RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: updateMessageStatusBasedOnTransformations: marking event: %s, dm_processed status as DONE", message.getEventName()));
+        }
+    }
+
+    private void dumpMessageToDestinationWithoutTransformation(List<String> eligibleDestinations, RudderMessage message) {
+        List<String> destinationsWithoutTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.DISABLED, eligibleDestinations);
+        dumpEventToDestinations(message, destinationsWithoutTransformations, "makeFactoryDump");
     }
 
     /**
@@ -385,7 +430,10 @@ public class RudderDeviceModeManager {
             return false;
         if (destinationsWithTransformationsEnabled.isEmpty())
             return false;
-        for (RudderIntegration.Factory factory : rudderConfig.getFactories()) {
+        List<RudderIntegration.Factory> configuredFactories = rudderConfig.getFactories();
+        if (configuredFactories == null || configuredFactories.isEmpty())
+            return false;
+        for (RudderIntegration.Factory factory : configuredFactories) {
             if (destinationsWithTransformationsEnabled.containsKey(factory.key()))
                 return true;
         }
