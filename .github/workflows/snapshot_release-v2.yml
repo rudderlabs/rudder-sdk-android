@@ -1,4 +1,4 @@
-name: Snapshot
+name: Snapshot-v2
 
 on:
   pull_request:
