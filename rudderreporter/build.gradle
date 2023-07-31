@@ -69,9 +69,7 @@ dependencies {
     testImplementation deps.mockito_kotlin
     testImplementation deps.awaitility
     testImplementation deps.robolectric
-    androidTestImplementation deps.androidXTestExtJunitKtx
     testImplementation project(path: projects.repository)
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
 //apply from: rootProject.file('gradle/artifacts-aar.gradle')
 apply from: rootProject.file('gradle/mvn-publish.gradle')
