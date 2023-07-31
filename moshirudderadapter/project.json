@@ -53,7 +53,7 @@
     "release-sonatype": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'moshirudderadapter-release' && ./gradlew :moshirudderadapter:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
+        "command": "echo 'moshirudderadapter-release' && cd moshirudderadapter && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype  && cd ..  && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
