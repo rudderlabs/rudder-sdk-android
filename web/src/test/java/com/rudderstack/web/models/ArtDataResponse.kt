@@ -14,16 +14,18 @@
 
 package com.rudderstack.web.models
 
+
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.rudderstack.web.Info
 import com.squareup.moshi.Json
 
-data class ArtDataListResponse(
+data class ArtDataResponse(
     @Json(name = "config")
     @JsonProperty("config")
     val config: Config,
     @Json(name = "data")
     @JsonProperty("data")
-    val `data`: List<Data>,
+    val `data`: Data,
     @Json(name = "info")
     @JsonProperty("info")
     val info: Info

@@ -12,13 +12,20 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.web
+package com.rudderstack.web.models
 
-import junit.framework.TestSuite
-import org.junit.runner.RunWith
-import org.junit.runners.Suite
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.rudderstack.web.Info
+import com.squareup.moshi.Json
 
-@RunWith(Suite::class)
-@Suite.SuiteClasses(WebApiTestJackson::class, WebApiTestGson::class, WebApiTestMoshi::class)
-class WebApiTestSuite : TestSuite() {
-}
+data class ArtDataListResponse(
+    @Json(name = "config")
+    @JsonProperty("config")
+    val config: Config,
+    @Json(name = "data")
+    @JsonProperty("data")
+    val `data`: List<Data>,
+    @Json(name = "info")
+    @JsonProperty("info")
+    val info: Info
+)
