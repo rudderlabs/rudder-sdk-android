@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.15.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.14.0...v1.15.0) (2023-07-31)
+
+
+### Bug Fixes
+
+* event not getting removed from db in certain cases ([#239](https://github.com/rudderlabs/rudder-sdk-android/issues/239)) ([ce8d057](https://github.com/rudderlabs/rudder-sdk-android/commit/ce8d057e60b61af0571242b7bfe0c7367b11377f))
+* moved db operations to background thread/executor and fixed leaking objects ([#237](https://github.com/rudderlabs/rudder-sdk-android/issues/237)) ([9b66f65](https://github.com/rudderlabs/rudder-sdk-android/commit/9b66f651b120bd4e9580eb8fb2bb5f058133c871)), closes [#238](https://github.com/rudderlabs/rudder-sdk-android/issues/238)
+* replay message queue dumping logic ([#246](https://github.com/rudderlabs/rudder-sdk-android/issues/246)) ([f5253cd](https://github.com/rudderlabs/rudder-sdk-android/commit/f5253cdddee407acad10b450c1cd43929210c73e))
+
 ## [1.14.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.13.0...v1.14.0) (2023-06-12)
 
 
