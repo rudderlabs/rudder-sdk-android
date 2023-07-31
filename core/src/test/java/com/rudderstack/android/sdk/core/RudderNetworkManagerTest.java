@@ -7,9 +7,6 @@ import org.hamcrest.MatcherAssert;
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.BufferedReader;
@@ -24,8 +21,6 @@ import java.net.URL;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
-@RunWith(PowerMockRunner.class)
-@PowerMockIgnore({ "javax.net.ssl.*" })
 public class RudderNetworkManagerTest {
 
     private final static String DUMMY_AUTH = "dp_auth";

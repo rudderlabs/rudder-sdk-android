@@ -445,6 +445,8 @@ class EventRepository {
      * @return optOut status
      */
     boolean getOptStatus() {
+        if(preferenceManager == null)
+            return false;
         return preferenceManager.getOptStatus();
     }
 

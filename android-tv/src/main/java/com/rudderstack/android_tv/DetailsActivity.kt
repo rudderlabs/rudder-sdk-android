@@ -2,6 +2,7 @@ package com.rudderstack.android_tv
 
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
+import com.rudderstack.android.android_tv.R
 
 /**
  * Details activity class that loads [VideoDetailsFragment] class.

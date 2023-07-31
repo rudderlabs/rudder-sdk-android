@@ -1,7 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
 import static org.junit.Assert.*;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 import androidx.annotation.Nullable;
 
@@ -9,17 +8,12 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
+import org.mockito.Mockito;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({RudderDataResidencyManager.class})
 public class RudderDataResidencyManagerTest {
     private RudderDataResidencyManager rudderDataResidencyManager;
     private RudderServerConfig serverConfig;
@@ -44,10 +38,10 @@ public class RudderDataResidencyManagerTest {
 
     @Before
     public void setup() throws Exception {
-        serverConfig = PowerMockito.mock(RudderServerConfig.class);
-        config = PowerMockito.mock(RudderConfig.class);
+        serverConfig = Mockito.mock(RudderServerConfig.class);
+        config = Mockito.mock(RudderConfig.class);
 
-        when(config, "getDataResidencyServer").thenReturn(RudderDataResidencyServer.US);
+        Mockito.when(config.getDataResidencyServer()).thenReturn(RudderDataResidencyServer.US);
 
         rudderDataResidencyManager = new RudderDataResidencyManager(config);
         rudderDataResidencyManager.setDataResidencyUrls(serverConfig);
@@ -295,7 +289,6 @@ public class RudderDataResidencyManagerTest {
     public void getDataPlaneUrlWrtResidencyConfig() {
         RudderConfig rudderConfig = new RudderConfig.Builder()
                 .build();
-        RudderServerConfig serverConfig = PowerMockito.mock(RudderServerConfig.class);
         rudderDataResidencyManager = new RudderDataResidencyManager(rudderConfig);
         rudderDataResidencyManager.setDataResidencyUrls(serverConfig);
         assertNull(rudderDataResidencyManager.getDataPlaneUrl());

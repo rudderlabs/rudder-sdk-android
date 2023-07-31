@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.ViewGroup
 
 import com.bumptech.glide.Glide
+import com.rudderstack.android.android_tv.R
 import kotlin.properties.Delegates
 
 /**

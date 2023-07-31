@@ -4,11 +4,6 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -66,6 +61,7 @@ public class EventRepositoryTest {
                 )
                 .thenAnswer((Answer<String>) invocation -> "2022-03-14T06:46:41.365Z");
     }
+
     @After
     public void clearMocks() {
         Mockito.framework().clearInlineMocks();
@@ -77,38 +73,28 @@ public class EventRepositoryTest {
     @Test
     public void flush() throws Exception {
 
-        final RudderNetworkManager.Result mockResult= new RudderNetworkManager.Result(RudderNetworkManager.NetworkResponses.SUCCESS,
+        final RudderNetworkManager.Result mockResult = new RudderNetworkManager.Result(RudderNetworkManager.NetworkResponses.SUCCESS,
                 200, "", null);
-        PowerMockito.when(dbPersistentManager, "fetchAllEventsFromDB", anyList(), anyList())
-                .thenAnswer(new Answer<Void>() {
-                    @Override
-                    public Void answer(InvocationOnMock invocation) throws Throwable {
-                        ((ArrayList) invocation.getArgument(0)).addAll(messageIds);
-                        ((ArrayList) invocation.getArgument(1)).addAll(messages);
-                        return null;
-                    }
-                });
-        PowerMockito.doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                List<Integer> msgIdParams = (List<Integer>) invocation.getArguments()[0];
-                List<String> msgParams = (List<String>) invocation.getArguments()[1];
-                msgIdParams.addAll(messageIds);
-                msgParams.addAll(messages);
-                return null;
-            }
+//        Mockito.doNothing().when(dbPersistentManager.fetchAllEventsFromDB(anyList(), anyList()));
+        Mockito.doAnswer((Answer<Void>) invocation -> {
+            ((ArrayList) invocation.getArgument(0)).addAll(messageIds);
+            ((ArrayList) invocation.getArgument(1)).addAll(messages);
+            return null;
+        }).when(dbPersistentManager).fetchAllEventsFromDB(anyList(), anyList());
+        Mockito.doAnswer((Answer<Void>) invocation -> {
+            List<Integer> msgIdParams = (List<Integer>) invocation.getArguments()[0];
+            List<String> msgParams = (List<String>) invocation.getArguments()[1];
+            msgIdParams.addAll(messageIds);
+            msgParams.addAll(messages);
+            return null;
         }).when(dbPersistentManager).fetchAllCloudModeEventsFromDB(ArgumentMatchers.<List<Integer>>any(), ArgumentMatchers.<List<String>>any());
-
-        PowerMockito.when(networkManager, "sendNetworkRequest",
-                        anyString(), anyString(), ArgumentMatchers.any(RudderNetworkManager.RequestMethod.class), anyBoolean()
-                )
-                .thenAnswer(new Answer<RudderNetworkManager.Result>() {
-                    @Override
-                    public RudderNetworkManager.Result answer(InvocationOnMock invocation) {
-                        System.out.println(invocation.getArguments().length);
-                        return mockResult;
-                    }
+        Mockito.when(networkManager.sendNetworkRequest(anyString(), anyString(),
+                        ArgumentMatchers.any(RudderNetworkManager.RequestMethod.class), anyBoolean()))
+                .thenAnswer((Answer<RudderNetworkManager.Result>) invocation -> {
+                    System.out.println(invocation.getArguments().length);
+                    return mockResult;
                 });
+
 
         //expectation
         String expectedPayload = "{\n" +
@@ -175,28 +161,27 @@ public class EventRepositoryTest {
     @Test
     public void testSynchronicity() throws Exception {
         final AtomicInteger threadsCalledDb = new AtomicInteger(0);
-        final RudderNetworkManager.Result mockResult= new RudderNetworkManager.Result(RudderNetworkManager.NetworkResponses.SUCCESS,
+        final RudderNetworkManager.Result mockResult = new RudderNetworkManager.Result(RudderNetworkManager.NetworkResponses.SUCCESS,
                 200, "", null);
         //we add a sleep to db fetch to check for synchronicity
         // take a class level variable to check for thread access
-        PowerMockito.when(dbPersistentManager, "fetchAllCloudModeEventsFromDB", anyList(), anyList())
-                .thenAnswer(new Answer<Void>() {
-                    @Override
-                    public Void answer(InvocationOnMock invocation) throws Throwable {
-                        ++dbFetchCalled;
-                        System.out.println("fetchAllEvents called by: " + Thread.currentThread().getName());
-                        //assert if called by multiple thread
-                        assertThat(dbFetchCalled, Matchers.lessThan(2));
-                        ((ArrayList) invocation.getArgument(0)).addAll(messageIds);
-                        ((ArrayList) invocation.getArgument(1)).addAll(messages);
-                        Thread.sleep(100);
-                        --dbFetchCalled;
-                        assertThat(dbFetchCalled, Matchers.lessThan(1));
-                        System.out.println("return from fetchAllEvents by: " + Thread.currentThread().getName());
-                        threadsCalledDb.incrementAndGet();
-                        return null;
-                    }
-                });
+        Mockito.doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                ++dbFetchCalled;
+                System.out.println("fetchAllEvents called by: " + Thread.currentThread().getName());
+                //assert if called by multiple thread
+                assertThat(dbFetchCalled, Matchers.lessThan(2));
+                ((ArrayList) invocation.getArgument(0)).addAll(messageIds);
+                ((ArrayList) invocation.getArgument(1)).addAll(messages);
+                Thread.sleep(100);
+                --dbFetchCalled;
+                assertThat(dbFetchCalled, Matchers.lessThan(1));
+                System.out.println("return from fetchAllEvents by: " + Thread.currentThread().getName());
+                threadsCalledDb.incrementAndGet();
+                return null;
+            }
+        }).when(dbPersistentManager).fetchAllCloudModeEventsFromDB( anyList(), anyList());
 
         PowerMockito.when(FlushUtils.class, "flushEventsToServer",
                         anyString(), anyString(), anyString(), anyString()

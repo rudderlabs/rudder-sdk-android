@@ -9,7 +9,9 @@ android {
         buildConfigField("String", "VERSION_NAME", "\"${VERSION_NAME}\"")
         buildConfigField("String", "VERSION_CODE", "\"${VERSION_CODE}\"")
     }
-
+    buildFeatures{
+        buildConfig true
+    }
     buildTypes {
         release {
             minifyEnabled false
@@ -32,8 +34,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     namespace 'com.rudderstack.android.sdk.core'
 }

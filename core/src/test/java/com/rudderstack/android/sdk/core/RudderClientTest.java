@@ -40,12 +40,12 @@ public class RudderClientTest {
         });
         PowerMockito.when(application, "getPackageName").thenAnswer((Answer<String>) invocation -> "com.rudderstack.android.sdk.core");
         PowerMockito.spy(URLUtil.class);
-        PowerMockito.doReturn(true).when(URLUtil.class, "isValidUrl", anyString());/*.thenReturn(new Answer<Boolean>() {
+        PowerMockito.when(URLUtil.class, "isValidUrl", any()).thenAnswer(new Answer<Boolean>() {
             @Override
             public Boolean answer(InvocationOnMock invocation) throws Throwable {
                 return true;
             }
-        });*/
+        });
         PowerMockito.spy(RudderClient.class);
         PowerMockito.when(RudderClient.class, "getOptOutStatus").thenAnswer((Answer<Boolean>) invocation -> false);
         config = PowerMockito.mock(RudderConfig.class);
