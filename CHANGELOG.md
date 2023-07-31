@@ -5,11 +5,6 @@ All notable changes to this project will be documented in this file. See [standa
 ## [1.15.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.14.0...v1.15.0) (2023-07-31)
 
 
-### Features
-
-* added support for eliminating device_id from event ([#231](https://github.com/rudderlabs/rudder-sdk-android/issues/231)) ([e68d399](https://github.com/rudderlabs/rudder-sdk-android/commit/e68d39960e47d85845990ab3c629061ea64132a2))
-
-
 ### Bug Fixes
 
 * event not getting removed from db in certain cases ([#239](https://github.com/rudderlabs/rudder-sdk-android/issues/239)) ([ce8d057](https://github.com/rudderlabs/rudder-sdk-android/commit/ce8d057e60b61af0571242b7bfe0c7367b11377f))
