@@ -21,18 +21,17 @@ package com.rudderstack.android.repository.annotation
  * @property type either text or integer supported
  * @property fieldName name of column
  * @property primaryKey true if it's a primary key, false otherwise
- * @property isAutoInc only applicable if primary key and type is Integer
+ * @property isAutoInc only applicable type is Integer. Only one field is considered for autoInc
+ *
  * @property isIndex if this column should serve as a basis for indexing
  *
  */
 
 annotation class RudderField(
-    val type: Type,
-    val fieldName: String,
-    val primaryKey: Boolean = false,
+    val type: Type, val fieldName: String, val primaryKey: Boolean = false,
     val isNullable: Boolean = true,
-    val isAutoInc: Boolean = false,
-    val isIndex: Boolean = false,
+    val isAutoInc: Boolean = false, val isIndex: Boolean = false,
+    val isUnique: Boolean = false
 ) {
     /**
      * Represents type of column
@@ -40,6 +39,7 @@ annotation class RudderField(
      */
     enum class Type(val notation: String) {
         INTEGER("INTEGER"),
-        TEXT("TEXT"),
+        TEXT("TEXT")
     }
 }
+

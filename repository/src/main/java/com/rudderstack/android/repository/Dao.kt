@@ -14,11 +14,15 @@
 
 package com.rudderstack.android.repository
 
+import android.content.ContentValues
+import android.content.Context
+import android.database.Cursor
+import android.database.DatabaseUtils
 import android.database.sqlite.SQLiteDatabase
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
+import com.rudderstack.android.repository.utils.getInsertedRowIdForConflictIgnore
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Future
 
 /**
  * Dao for accessing entities
@@ -26,23 +30,42 @@ import java.util.concurrent.Future
  * @param T The type of entity this dao is associated to
  * @property entityClass
  * @property entityFactory An implementation of EntityFactory to provide Entities based on database stored values
- * @property executorService An executor service to run the database queries
+ * @property executorService An executor service to run the database queries.
+ * TODO create separate objects for database and content provider
  */
 class Dao<T : Entity> internal constructor(
     internal val entityClass: Class<T>,
+    private val useContentProvider: Boolean,
+    private val context: Context,
     private val entityFactory: EntityFactory,
-    private val executorService: ExecutorService,
+    private val executorService: ExecutorService
 ) {
+
+    companion object {
+        private val DB_LOCK = Any();
+    }
+
+    private //create fields statement
+    val fields =
+        entityClass.getAnnotation(RudderEntity::class.java)?.fields?.takeIf { it.isNotEmpty() }
+            ?: throw IllegalArgumentException("There should be at least one field in @Entity")
 
     private val tableName: String = entityClass.getAnnotation(RudderEntity::class.java)?.tableName
         ?: throw IllegalArgumentException(
             "${entityClass.simpleName} is being used to generate Dao, " +
-                "but missing @RudderEntity annotation",
+                    "but missing @RudderEntity annotation"
         )
 
     private var _db: SQLiteDatabase? = null
-    private var todoTransactions: MutableList<Future<*>> = ArrayList(5)
+        get() = if (field?.isOpen == true) field else null
+    private var todoTransactions: MutableList<Runnable> = ArrayList(5)
     private val _dataChangeListeners = HashSet<DataChangeListener<T>>()
+
+    private val entityContentProviderUri by lazy {
+        EntityContentProvider.getContentUri(tableName, context).buildUpon().appendQueryParameter(
+            EntityContentProvider.ECP_ENTITY_CODE, entityClass.name
+        )
+    }
 
     /**
      * usage
@@ -56,54 +79,59 @@ class Dao<T : Entity> internal constructor(
 
     fun List<T>.insert(
         conflictResolutionStrategy: ConflictResolutionStrategy = ConflictResolutionStrategy.CONFLICT_NONE,
-        insertCallback: ((rowIds: List<Long>) -> Unit)? = null,
+        insertCallback: ((rowIds: List<Long>) -> Unit)? = null
     ) {
         runTransactionOrDeferToCreation { db: SQLiteDatabase ->
-            val rowIds = insertDbSync(db, this, conflictResolutionStrategy)
+            val (rowIds, _) = insertData(db, this, conflictResolutionStrategy)
             insertCallback?.invoke(rowIds)
         }
+
     }
 
-    // will return null if db is not yet ready
-    fun List<T>.insertSync(
+    /**
+     * Same as above, except this calls back with a map of rowId to entity
+     * In case the row id is -1, i.e the entity could not be inserted, we
+     * will return the original event mapped to -1
+     *
+     * @param conflictResolutionStrategy
+     * @param insertCallback
+     */
+    fun List<T>.insertWithDataCallback(
         conflictResolutionStrategy: ConflictResolutionStrategy = ConflictResolutionStrategy.CONFLICT_NONE,
+        insertCallback: ((rowIds: List<Long>, data: List<T?>) -> Unit)? = null
+    ) {
+        runTransactionOrDeferToCreation { db: SQLiteDatabase ->
+            val (rowIds, insertedData) = insertData(db, this, conflictResolutionStrategy)
+            insertCallback?.invoke(rowIds, insertedData)
+        }
+
+    }
+
+    //will return null if db is not yet ready
+    fun List<T>.insertSync(
+        conflictResolutionStrategy: ConflictResolutionStrategy = ConflictResolutionStrategy.CONFLICT_NONE
     ): List<Long>? {
         return _db?.let { db ->
-            insertDbSync(db, this, conflictResolutionStrategy)
+            insertData(db, this, conflictResolutionStrategy).first
         }
+
     }
 
-    private fun insertDbSync(
-        db: SQLiteDatabase,
-        items: List<T>,
-        conflictResolutionStrategy: ConflictResolutionStrategy,
-    ): List<Long> {
-        return items.map {
-            db.insertWithOnConflict(
-                tableName,
-                it.nullHackColumn(),
-                it.generateContentValues(),
-                conflictResolutionStrategy.type,
-            )
-        }.also {
-            val allData = getAllSync() ?: listOf()
-            _dataChangeListeners.forEach {
-                it.onDataInserted(items, allData)
-            }
-        }
-    }
 
     fun List<T>.delete(deleteCallback: ((numberOfRows: Int) -> Unit)? = null) {
-        runTransactionOrDeferToCreation { db ->
+
+        runTransactionOrDeferToCreation { _ ->
             val fields = entityClass.getAnnotation(RudderEntity::class.java)?.fields
 
             val args = map {
-                it.getPrimaryKeyValues()
+                it.getPrimaryKeyValues().map {
+                    "\"${it}\""
+                }
             }.reduce { acc, strings ->
                 acc.mapIndexed { index, s ->
 
-                    "\"$s\", \"${strings[index]}\""
-                }.toTypedArray()
+                    "$s, ${strings[index]}"
+                }
             }
             val whereClause = fields?.takeIf {
                 it.isNotEmpty()
@@ -122,26 +150,29 @@ class Dao<T : Entity> internal constructor(
                 }
             }
             delete(whereClause, null, extendedDeleteCb)
+
+
         }
     }
+    //delete
     /**
      * val args = map {
-     it.getPrimaryKeyValues()
-     }
-     val whereClause = fields?.takeIf {
-     it.isNotEmpty()
-     }?.filter {
-     it.primaryKey
-     }?.mapIndexed { index, it ->
-     "${it.fieldName} IN (${args[index]})"
-     }?.reduce { acc, s -> "$acc AND $s" }
-     val numberOfRowsDel = db.delete(tableName,whereClause, null)
-     deleteCallback?.invoke(numberOfRowsDel)
+    it.getPrimaryKeyValues()
+    }
+    val whereClause = fields?.takeIf {
+    it.isNotEmpty()
+    }?.filter {
+    it.primaryKey
+    }?.mapIndexed { index, it ->
+    "${it.fieldName} IN (${args[index]})"
+    }?.reduce { acc, s -> "$acc AND $s" }
+    val numberOfRowsDel = db.delete(tableName,whereClause, null)
+    deleteCallback?.invoke(numberOfRowsDel)
 
-     val allData = getAllSync() ?: listOf()
-     _dataChangeListeners.forEach {
-     it.onDataDeleted(this.subList(0,numberOfRowsDel), allData)
-     }
+    val allData = getAllSync() ?: listOf()
+    _dataChangeListeners.forEach {
+    it.onDataDeleted(this.subList(0,numberOfRowsDel), allData)
+    }
      */
     /**
      * Delete based on where clause
@@ -153,18 +184,49 @@ class Dao<T : Entity> internal constructor(
     fun delete(
         whereClause: String?,
         args: Array<out String>?,
-        deleteCallback: ((numberOfRows: Int) -> Unit)? = null,
+        deleteCallback: ((numberOfRows: Int) -> Unit)? = null
     ) {
         runTransactionOrDeferToCreation { db ->
-            val deletedRows = db.delete(tableName, whereClause, args)
+            val deletedRows = deleteFromDb(db, tableName, whereClause, args)
             deleteCallback?.invoke(deletedRows)
         }
     }
 
+    internal fun deleteFromDb(
+        database: SQLiteDatabase,
+        tableName: String, whereClause: String?, args: Array<out String>?
+    ): Int {
+        return if (useContentProvider) context.contentResolver.delete(
+            entityContentProviderUri.build(),
+            whereClause,
+            args
+        )
+        else synchronized(DB_LOCK) {
+            database.openDatabase?.delete(tableName, whereClause, args)
+        } ?: -1
+    }
+
+    internal fun updateSync(
+        database: SQLiteDatabase, tableName: String, values: ContentValues?,
+        selection: String?,
+        selectionArgs: Array<out String>?
+    ): Int {
+        return if (useContentProvider) context.contentResolver.update(
+            entityContentProviderUri.build(),
+            values,
+            selection,
+            selectionArgs
+        )
+        else synchronized(DB_LOCK) {
+            database.openDatabase?.update(tableName, values, selection, selectionArgs)
+        } ?: -1
+    }
+
     fun getAll(callback: (List<T>) -> Unit) {
         runTransactionOrDeferToCreation { db: SQLiteDatabase ->
-            callback.invoke(getItems(db, "SELECT * FROM $tableName"))
+            callback.invoke(getItems(db, null))
         }
+
     }
 
     /**
@@ -203,12 +265,22 @@ class Dao<T : Entity> internal constructor(
      * @return all data and null if database is not ready yet
      */
     fun getAllSync(): List<T>? {
-        return _db?.let { getItems(it, "SELECT * FROM $tableName") }
+        return _db?.let { getItems(it) }
     }
 
-    fun runGetQuery(query: String, callback: (List<T>) -> Unit) {
-        runTransactionOrDeferToCreation { db: SQLiteDatabase ->
-            callback.invoke(getItems(db, query))
+    fun runGetQuery(
+        columns: Array<String>? = null,
+        selection: String? = null,
+        selectionArgs: Array<String>? = null,
+        orderBy: String? = null,
+        limit: String? = null,
+        offset: String? = null,
+        callback: (List<T>) -> Unit
+    ) {
+        runTransactionOrDeferToCreation { _: SQLiteDatabase ->
+            callback.invoke(
+                runGetQuerySync(columns, selection, selectionArgs, orderBy, limit, offset) ?: listOf()
+            )
         }
     }
 
@@ -217,52 +289,246 @@ class Dao<T : Entity> internal constructor(
      *
      * @return all data and null if database is not ready yet
      */
-    fun runGetQuerySync(query: String): List<T>? {
-        return getItems(_db ?: return null, query)
+    fun runGetQuerySync(
+        columns: Array<String>? = null,
+        selection: String? = null,
+        selectionArgs: Array<String>? = null,
+        orderBy: String? = null,
+        limit: String? = null,
+        offset: String? = null
+    ): List<T>? {
+        return getItems(_db ?: return null, columns, selection, selectionArgs, orderBy, limit, offset)
     }
 
-    private fun getItems(db: SQLiteDatabase, query: String): List<T> {
-        // have to use factory
+    fun getCount(
+        selection: String? = null,
+        selectionArgs: Array<String>? = null,
+        callback: (Long) -> Unit
+    ) {
+        runTransactionOrDeferToCreation { db ->
+            getCountSync(db, selection, selectionArgs).apply(callback)
+        }
+    }
+
+    private fun getCountSync(
+        db: SQLiteDatabase,
+        selection: String? = null,
+        selectionArgs: Array<String>? = null
+    ): Long {
+        return synchronized(DB_LOCK) {
+            if (useContentProvider) (context.contentResolver.query(
+                entityContentProviderUri.build(),
+                arrayOf("count(*)"), selection, selectionArgs, null
+            )
+                ?.use { cursor ->
+                    cursor.moveToFirst()
+                    cursor.getLong(0)
+                } ?: -1L)
+            else
+                DatabaseUtils.queryNumEntries(
+                    db,
+                    tableName,
+                    selection,
+                    selectionArgs
+                )
+        }
+    }
+
+    //create/update
+
+    private fun insertData(
+        db: SQLiteDatabase, items: List<T>,
+        conflictResolutionStrategy: ConflictResolutionStrategy
+    ): Pair<List<Long>, List<T?>> {
+        if (!db.isOpen) return emptyList<Long>() to emptyList()
+        if (!useContentProvider)
+            beginTransaction()
+        //we consider one key which is auto increment but not primary.
+        //These are special cases that needs to be handled here
+        //consider only one auto increment key
+        var (autoIncrementFieldName: String?, nextValue: Long) = fields.firstOrNull {
+            it.type == RudderField.Type.INTEGER &&
+                    it.isAutoInc /*&& !it.primaryKey*/
+        }?.let { autoIncField ->
+            autoIncField.fieldName to getMaxIntValueForColumn(
+                db,
+                tableName,
+                autoIncField.fieldName
+            ) + 1L
+        } ?: (null to 0L)
+        var dbCount =
+            if (conflictResolutionStrategy == ConflictResolutionStrategy.CONFLICT_IGNORE) getCountSync(
+                db
+            ) else 0L
+        var rowIds = listOf<Long>()
+        var returnedItems = listOf<T?>()
+        items.forEach {
+            val contentValues = it.generateContentValues()
+            if (autoIncrementFieldName != null) {
+                contentValues.put(autoIncrementFieldName, nextValue)
+            }
+//            contentValues.
+            val insertedRowId = insertContentValues(
+                db,
+                tableName,
+                contentValues,
+                null,
+                conflictResolutionStrategy.type
+            ).let {
+                if (conflictResolutionStrategy == ConflictResolutionStrategy.CONFLICT_IGNORE) {
+                    getInsertedRowIdForConflictIgnore(dbCount, it)
+                } else it
+            }.also {
+                if (it >= 0) {
+                    nextValue++
+                    dbCount++
+                }
+            }
+            rowIds = rowIds + insertedRowId
+            returnedItems =
+                returnedItems + (if (insertedRowId < 0) it else contentValues.toEntity(entityClass))
+        }
+        if (!useContentProvider) {
+            setTransactionSuccessful()
+            endTransaction()
+        }
+        if (returnedItems.isNotEmpty()) {
+            val allData = getAllSync() ?: listOf()
+            _dataChangeListeners.forEach {
+                it.onDataInserted(returnedItems.filterNotNull(), allData)
+            }
+        }
+        return rowIds to returnedItems
+    }
+
+    private fun <T : Entity> ContentValues.toEntity(classOfT: Class<T>): T? {
+        return entityFactory.getEntity(classOfT, this.toMap())
+    }
+
+    private fun ContentValues.toMap(): Map<String, Any?> {
+        return keySet().associateWith { get(it) }
+    }
+
+    //this method considers database is open and is available for query
+    // -1 if no value present
+    private fun getMaxIntValueForColumn(
+        db: SQLiteDatabase,
+        tableName: String,
+        column: String
+    ): Long {
+        return db.query(
+            tableName,
+            arrayOf("IFNULL(MAX($column), 0)"),
+            null,
+            null,
+            null,
+            null,
+            null
+        )
+            .let { cursor ->
+                (if (cursor.moveToFirst()) {
+                    cursor.getLong(0)
+                } else -1).also {
+                    cursor.close()
+                }
+            }
+    }
+
+    internal fun insertContentValues(
+        database: SQLiteDatabase,
+        tableName: String, contentValues: ContentValues, nullHackColumn: String?,
+        conflictAlgorithm: Int
+    ): Long {
+        return synchronized(DB_LOCK) {
+            if (useContentProvider) (context.contentResolver.insert(
+                entityContentProviderUri
+                    .appendQueryParameter(
+                        EntityContentProvider.ECP_CONFLICT_RESOLUTION_CODE,
+                        conflictAlgorithm.toString()
+                    )
+                    .build(), contentValues
+            )?.let {
+                it.lastPathSegment?.toLongOrNull()
+            } ?: -1)
+            else (database.openDatabase?.insertWithOnConflict(
+                tableName,
+                nullHackColumn,
+                contentValues,
+                conflictAlgorithm
+            ) ?: -1)
+
+        }
+
+    }
+
+    //read
+    private fun getItems(
+        db: SQLiteDatabase,
+        columns: Array<String>? = null,
+        selection: String? = null,
+        selectionArgs: Array<String>? = null,
+        orderBy: String? = null,
+        limit: String? = null,
+        offset: String? = null
+    ): List<T> {
+        //have to use factory
         val fields = entityClass.getAnnotation(RudderEntity::class.java)?.fields
             ?: throw IllegalArgumentException("RudderEntity must have at least one field")
 
-        val cursor = db.rawQuery(query, arrayOf())
-        val items = ArrayList<T>(cursor.count)
+        val cursor =
+            if (synchronized(DB_LOCK) { useContentProvider }) context.contentResolver.query(
+                entityContentProviderUri
+                    .appendQueryParameter(EntityContentProvider.ECP_LIMIT_CODE, limit).build(),
+                columns, selection, selectionArgs, orderBy
+            )
+            else {
+                db.openDatabase?.query(
+                    tableName,
+                    columns,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    orderBy,
+                    if (offset != null) "$limit,$offset" else limit
+                )
+            }
+                ?: return listOf()
+        synchronized(db) {
+            db.openDatabase ?: return emptyList()
+            val items = ArrayList<T>(cursor.count)
 
-        if (cursor.moveToFirst()) {
-            do {
-                fields.associate {
-                    val value = when (it.type) {
-                        RudderField.Type.INTEGER -> cursor.getInt(
-                            cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
-                                ?: throw IllegalArgumentException("No such column ${it.fieldName}"),
-                        )
-                        RudderField.Type.TEXT -> cursor.getString(
-                            cursor.getColumnIndex(it.fieldName).takeIf { it >= 0 }
-                                ?: throw IllegalArgumentException("No such column ${it.fieldName}"),
-                        )
+            if (cursor.moveToFirst()) {
+                do {
+                    fields.associate {
+                        Pair(it.fieldName, it.findValue(cursor))
+                    }.let {
+                        entityFactory.getEntity(entityClass, it)
+                    }?.apply {
+                        items.add(this)
                     }
-                    Pair(it.fieldName, value)
-                }.let {
-                    entityFactory.getEntity(entityClass, it)
-                }?.apply {
-                    items.add(this)
-                }
-            } while (cursor.moveToNext())
+                } while (cursor.moveToNext())
+            }
+            cursor.close()
+
+            return items
         }
-        cursor.close()
-        return items
     }
+
 
     private fun runTransactionOrDeferToCreation(queryTransaction: (SQLiteDatabase) -> Unit) {
         _db?.let { db ->
-            executorService.execute {
-                queryTransaction.invoke(db)
+            executorService.takeUnless { it.isShutdown }?.execute {
+                synchronized(DB_LOCK) {
+                    queryTransaction.invoke(db)
+                }
             }
         } ?: run {
-            executorService.submit {
+            Runnable {
                 _db?.let {
-                    queryTransaction.invoke(it)
+                    synchronized(DB_LOCK) {
+                        queryTransaction.invoke(it)
+                    }
                 }
             }.also {
                 todoTransactions.add(it)
@@ -271,51 +537,90 @@ class Dao<T : Entity> internal constructor(
     }
 
     internal fun setDatabase(sqLiteDatabase: SQLiteDatabase?) {
-        // create fields statement
-        val fields =
-            entityClass.getAnnotation(RudderEntity::class.java)?.fields?.takeIf { it.isNotEmpty() }
-                ?: throw IllegalArgumentException("There should be at least one field in @Entity")
-        // create table if not exist
-        val createTableStmt = createTableStmt(tableName, fields)
-        val indexStmt = createIndexStmt(tableName, fields)
         _db = sqLiteDatabase
-        // run all pending tasks
+        if (sqLiteDatabase == null) return
+
+
+        //run all pending tasks
         executorService.execute {
-            sqLiteDatabase?.execSQL(createTableStmt)
-            indexStmt?.apply {
-                sqLiteDatabase?.execSQL(indexStmt)
+            synchronized(DB_LOCK) {
+                val tableStmt = createTableStmt(tableName, fields)
+                sqLiteDatabase.openDatabase?.execSQL(tableStmt)
+                createIndexStmt(tableName, fields)?.apply {
+                    sqLiteDatabase.openDatabase?.execSQL(this)
+                }
             }
             todoTransactions.forEach {
-                it.get()
+                executorService.takeUnless { it.isShutdown }?.submit(it)
             }
         }
     }
 
+    fun execSqlSync(command: String) {
+        synchronized(DB_LOCK) {
+            _db?.openDatabase?.execSQL(command)
+        }
+    }
+
+    fun beginTransaction() {
+        synchronized(DB_LOCK) {
+            _db?.openDatabase?.beginTransaction()
+        }
+    }
+
+    fun setTransactionSuccessful() {
+        synchronized(DB_LOCK) {
+            _db?.openDatabase?.setTransactionSuccessful()
+        }
+    }
+
+    fun endTransaction() {
+        synchronized(DB_LOCK) {
+            _db?.openDatabase?.endTransaction()
+        }
+    }
+
+    fun execSql(command: String, callback: (() -> Unit)? = null) {
+        runTransactionOrDeferToCreation { db: SQLiteDatabase ->
+            db.openDatabase?.execSQL(command)
+            callback?.invoke()
+        }
+
+    }
+
     private fun createTableStmt(tableName: String, fields: Array<RudderField>): String? {
-        var isAutoIncKeyPresent = false
+
+//        var isAutoIncKeyPresent = false
+//        var isAutoIncrementedKeyPrimaryKeySame = false
         val fieldsStmt = fields.map {
-            if (it.isAutoInc) {
-                isAutoIncKeyPresent = true
-            }
-            "'${it.fieldName}' ${it.type.notation} " + // field name and type
-                // if primary and auto increment
-                if (it.primaryKey && it.isAutoInc && it.type == RudderField.Type.INTEGER) {
-                    " PRIMARY KEY AUTOINCREMENT"
-                } else "" +
-                    if (!it.isNullable && !it.primaryKey) " NOT NULL" else "" // specifying nullability, primary key cannot be null
+//            if (it.isAutoInc) {
+////                isAutoIncKeyPresent = true
+//                isAutoIncrementedKeyPrimaryKeySame = it.primaryKey
+//            }
+            "'${it.fieldName}' ${it.type.notation}" + //field name and type
+                    // if primary and auto increment
+                    /*if (it.primaryKey && it.isAutoInc && it.type == RudderField.Type.INTEGER) " PRIMARY KEY AUTOINCREMENT" else "" +*/
+                            if (!it.isNullable || it.primaryKey) " NOT NULL" else "" //specifying nullability, primary key cannot be null
         }.reduce { acc, s -> "$acc, $s" }
         val primaryKeyStmt =
-            if (isAutoIncKeyPresent) {
-                ""
-            } else { // auto increment is only available for one primary key
+            /*if (isAutoIncrementedKeyPrimaryKeySame) "" else {*/ //auto increment is only available for one primary key
                 fields.filter { it.primaryKey }.takeIf { !it.isNullOrEmpty() }?.map {
                     it.fieldName
                 }?.reduce { acc, s -> "$acc,$s" }?.let {
                     "PRIMARY KEY ($it)"
                 } ?: ""
+//            }
+        val uniqueKeyStmt =
+            fields.filter { it.isUnique }.takeIf { it.isNotEmpty() }?.joinToString(",") {
+                it.fieldName
+            }?.let {
+                "UNIQUE($it)"
             }
 
-        return "CREATE TABLE IF NOT EXISTS '$tableName' ($fieldsStmt ${if (primaryKeyStmt.isNotEmpty()) ", $primaryKeyStmt" else ""})"
+
+
+        return ("CREATE TABLE IF NOT EXISTS '$tableName' ($fieldsStmt ${if (primaryKeyStmt.isNotEmpty()) ", $primaryKeyStmt" else ""}" +
+                "${if (!uniqueKeyStmt.isNullOrEmpty()) ", $uniqueKeyStmt" else ""})")
     }
 
     private fun createIndexStmt(tableName: String, fields: Array<RudderField>): String? {
@@ -337,8 +642,28 @@ class Dao<T : Entity> internal constructor(
         }.reduce { acc, s -> "$acc$s" }.let {
             "${it}_idx"
         }
-        return "CREATE INDEX $indexName ON $tableName $indexFieldsStmt"
+        return "CREATE INDEX IF NOT EXISTS $indexName ON $tableName $indexFieldsStmt"
     }
+
+    private fun RudderField.findValue(cursor: Cursor) = when (type) {
+        RudderField.Type.INTEGER -> if (isNullable) cursor.getLongOrNull(
+            cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
+                ?: throw IllegalArgumentException("No such column $fieldName")
+        ) else cursor.getLong(
+            cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
+                ?: throw IllegalArgumentException("No such column $fieldName")
+        )
+
+        RudderField.Type.TEXT -> if (isNullable) cursor.getStringOrNull(
+            cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
+                ?: throw IllegalArgumentException("No such column $fieldName"))
+        else cursor.getString(
+            cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
+                ?: throw IllegalArgumentException("No such column $fieldName"))
+    }
+
+    private val SQLiteDatabase.openDatabase
+        get() = this.takeIf { synchronized(this) { it.isOpen } }
 
     enum class ConflictResolutionStrategy(val type: Int) {
 
@@ -408,5 +733,23 @@ class Dao<T : Entity> internal constructor(
              * Implementation can be ignored
              */
         }
+
     }
+}
+
+private fun Cursor.getStringOrNull(columnIndex: Int): String? {
+    return try {
+        getString(columnIndex)
+    } catch (_: Exception) {
+        null
+    }
+}
+
+private fun Cursor.getLongOrNull(colIndex: Int): Long? {
+    return try {
+        getLong(colIndex)
+    } catch (_: Exception) {
+        null
+    }
+
 }

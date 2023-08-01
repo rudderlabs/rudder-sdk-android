@@ -19,14 +19,14 @@
   "homepage": "https://github.com/rudderlabs/rudder-sdk-android#readme",
   "scripts": {
     "bump-version:monorepo": "npm version minor --git-tag-version false",
-    "build": "nx affected --base=origin/master-v2 --target=build --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "lint": "nx affected --base=origin/master-v2 --target=lint --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "ktformat": "nx affected --base=origin/master-v2 --target=ktformat --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "test": "nx affected --base=origin/master-v2 --target='test' --parallel=1 --exclude=app,core,android,rudderreporter,web,repository --skipCommitTypes=docs,ci,chore",
-    "release": "nx affected --base=origin/master-v2 --target=version --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "release:github": "nx affected --target=github --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "release:sonatype": "nx affected --target=release-sonatype --parallel=1 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore",
-    "release-snapshot:sonatype": "nx affected --target=snapshot-release --parallel=4 --exclude=app,core,android,rudderreporter --skipCommitTypes=docs,ci,chore"
+    "build": "./gradlew build",
+    "lint": "nx affected --base=origin/master-v2 --target=lint --parallel=4 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
+    "ktformat": "nx affected --base=origin/master-v2 --target=ktformat --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
+    "test": "nx affected --base=origin/master-v2 --target='test' --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
+    "release": "nx affected --base=origin/master-v2 --target=version --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
+    "release:github": "nx affected --target=github --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
+    "release:sonatype": "nx affected --target=release-sonatype --parallel=1 --exclude=app,core,android",
+    "release-snapshot:sonatype": "nx affected --target=snapshot-release --parallel=4 --exclude=app,core,android"
   },
   "private": true,
   "devDependencies": {
@@ -37,9 +37,7 @@
     "@nrwl/cli": "15.8.9",
     "@nrwl/detox": "15.8.9",
     "@nrwl/eslint-plugin-nx": "15.8.9",
-    "@nrwl/jest": "15.8.9",
     "@nrwl/linter": "15.8.9",
-    "@nrwl/react-native": "15.8.9",
     "@nrwl/web": "15.8.9",
     "@nrwl/workspace": "15.8.9",
     "@rnx-kit/metro-resolver-symlinks": "0.1.27",

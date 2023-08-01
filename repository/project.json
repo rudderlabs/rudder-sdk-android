@@ -47,14 +47,14 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'repository-release' && ./gradlew :repository:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
+        "command": "echo 'repository-release' && cd repository && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype  && cd ..  && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'repository-snapshot' && ./gradlew :repository:publishToSonatype"
+        "command": "echo 'repository-snapshot' && cd repository && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype && cd .."
       }
     }
   },

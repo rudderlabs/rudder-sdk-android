@@ -18,18 +18,19 @@ plugins {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 compileKotlin {
-    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.javaParameters = true
 }
+
+apply from : "$projectDir/../dependencies.gradle"
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.javaParameters = true
 }
-apply from : "$rootDir/dependencies.gradle"
 
 
 dependencies {
@@ -38,9 +39,9 @@ dependencies {
 
     //test
     testImplementation 'junit:junit:4.13.2'
-    testImplementation(project(':moshirudderadapter'))
-    testImplementation(project(':gsonrudderadapter'))
-    testImplementation(project(':jacksonrudderadapter'))
+    testImplementation(project(path: ':moshirudderadapter', configuration: 'default'))
+    testImplementation(project(path: ':gsonrudderadapter', configuration: 'default'))
+    testImplementation(project(path: ':jacksonrudderadapter', configuration: 'default'))
     testImplementation deps.moshi.kotlin
     testImplementation deps.moshi.core
     testImplementation deps.gson
@@ -49,6 +50,6 @@ dependencies {
     testImplementation deps.mockito
     testImplementation deps.awaitility
 }
-
+apply from: rootProject.file('gradle/artifacts-jar.gradle')
 apply from: rootProject.file('gradle/mvn-publish.gradle')
 apply from: rootProject.file('gradle/codecov.gradle')
