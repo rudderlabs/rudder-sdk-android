@@ -39,7 +39,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "tag": "rudderjsonadapter@1.0.0",
+        "tag": "rudderjsonadapter@0.1.0",
         "notesFile": "./rudderjsonadapter/CHANGELOG_LATEST.md"
       }
     },
