@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 enum TRANSFORMATION_STATUS {
     ENABLED(true),
@@ -350,7 +348,7 @@ public class RudderDeviceModeManager {
     }
 
     private void sendEventsToTransformedDestinations(TransformedDestination transformedDestination, String destinationName) {
-        if (transformedDestination.payload == null)
+        if (transformedDestination.payload == null || transformedDestination.payload.isEmpty())
             return;
         for (TransformedEvent transformedEvent : transformedDestination.payload) {
             RudderMessage message = transformedEvent.event;
