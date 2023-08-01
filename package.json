@@ -22,8 +22,9 @@
     "build": "./gradlew build",
     "lint": "nx affected --base=origin/master-v2 --target=lint --parallel=4 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
     "ktformat": "nx affected --base=origin/master-v2 --target=ktformat --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
+    "sync-version-gradle": "nx affected --target=sync-bumped-version-properties --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
     "test": "nx affected --base=origin/master-v2 --target='test' --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
-    "release": "nx affected --base=origin/master-v2 --target=version --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
+    "release": "nx affected --base=origin/master-v2 --target=version --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore && npm run sync-version-gradle",
     "release:github": "nx affected --target=github --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
     "release:sonatype": "nx affected --target=release-sonatype --parallel=1 --exclude=app,core,android",
     "release-snapshot:sonatype": "nx affected --target=snapshot-release --parallel=4 --exclude=app,core,android"
