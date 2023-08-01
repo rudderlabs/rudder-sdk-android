@@ -50,7 +50,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "tag": "web@1.0.0",
+        "tag": "web@0.1.0",
         "notesFile": "./web/CHANGELOG_LATEST.md"
       }
     },
