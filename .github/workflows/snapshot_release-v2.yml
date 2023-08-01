@@ -2,19 +2,22 @@ name: Snapshot
 
 on:
   pull_request:
-    branches: [ 'master', 'master-mpx' ]
+    branches: [ 'master-v2']
     types: [ 'opened', 'reopened', 'edited', 'synchronize' ]
 
 jobs:
-  snapshot:
+  snapshot-v2:
     runs-on: ubuntu-latest
     environment: deployment
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: cache gradle dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v2
         with:
           path: |
             ~/.gradle/caches
@@ -22,8 +25,29 @@ jobs:
           key: ${{ runner.os }}-gradle-core-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-core-
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+
+      - name: Set Node 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install node_modules
+        run: |
+          npm ci
+
       - name: Publish snapshot to sonatype
-        run: ./gradlew publishToSonatype
+        run: |
+          git fetch --no-tags --prune --depth=100 origin master-v2
+          npm run release-snapshot:sonatype
         env:
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}

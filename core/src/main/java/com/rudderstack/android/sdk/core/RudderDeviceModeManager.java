@@ -226,14 +226,15 @@ public class RudderDeviceModeManager {
      *  a. before initialization
      *   Events are stored with status new in database.
      *  b. after initialization
-     *   Since areFactoriesInitialized is true, replayMessageQueue is called, device mode events are
-     *   dumped appropiately and marked as device_mode_done
+     *   Since areDeviceModeFactoriesAbsent is true, replayMessageQueue is called, device mode events are
+     *   dumped appropriately and marked as device_mode_done
      * 2. Device Modes are present.
      *  a. With transformations
      *      i. before initialization
      *       As usual saved in db.
      *      ii. after initialization
-     *      They are polled from db, transformed, sent to device modes.
+     *      replayMessageQueue is called which fetches events are polled from db, mark them as dm_processed status done,
+     *      and send it to eligible device mode destinations without transformation
      *  b. Without transformations
      *      i. before initialization
      *       Saved to DB
@@ -246,7 +247,9 @@ public class RudderDeviceModeManager {
         List<Integer> messageIds = new ArrayList<>();
         List<String> messages = new ArrayList<>();
         do {
-            dbPersistentManager.fetchDeviceModeEventsFromDb(messageIds, messages, MAX_FLUSH_QUEUE_SIZE);
+            messages.clear();
+            messageIds.clear();
+            dbPersistentManager.fetchDeviceModeWithProcessedPendingEventsFromDb(messageIds, messages, MAX_FLUSH_QUEUE_SIZE);
             RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: replaying old messages with factories. Count: %d", messageIds.size()));
             for (int i = 0; i < messageIds.size(); i++) {
                 try {
@@ -256,28 +259,46 @@ public class RudderDeviceModeManager {
                     RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: Exception in dumping message %s due to %s", messages.get(i), e.getMessage()));
                 }
             }
-        }while (dbPersistentManager.getDeviceModeRecordCount() > 0);
+        } while (dbPersistentManager.getDeviceModeWithProcessedPendingEventsRecordCount() > 0);
     }
 
     void makeFactoryDump(RudderMessage message, Integer rowId, boolean fromHistory) {
-        if (this.areDeviceModeFactoriesAbsent) {
-            dbPersistentManager.markDeviceModeDone(Arrays.asList(rowId));
-        } else if (areFactoriesInitialized || fromHistory) {
-            List<String> eligibleDestinations = getEligibleDestinations(message);
-
-            List<String> destinationsWithTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.ENABLED, eligibleDestinations);
-            if (destinationsWithTransformations.isEmpty()) {
-                RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Marking event with rowId %s as DEVICE_MODE_PROCESSING DONE as it has no device mode destinations with transformations", rowId));
-                dbPersistentManager.markDeviceModeDone(Arrays.asList(rowId));
-            } else {
-                for (String destinationName : destinationsWithTransformations) {
-                    RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: makeFactoryDump: Destination %s needs transformation, hence the event will be batched and sent to transformation service", destinationName));
-                }
+        synchronized (this) {
+            if (this.areDeviceModeFactoriesAbsent) {
+                markDeviceModeTransformationDone(rowId);
+            } else if (areFactoriesInitialized || fromHistory) {
+                List<String> eligibleDestinations = getEligibleDestinations(message);
+                updateMessageStatusBasedOnTransformations(eligibleDestinations, rowId, message);
+                dumpMessageToDestinationWithoutTransformation(eligibleDestinations, message);
             }
-
-            List<String> destinationsWithoutTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.DISABLED, eligibleDestinations);
-            dumpEventToDestinations(message, destinationsWithoutTransformations, "makeFactoryDump");
         }
+    }
+
+    /**
+     * This mark the message as device_mode_done and dm_processed_done in the database
+     * @param rowId The rowId of the message
+     */
+    private void markDeviceModeTransformationDone(int rowId) {
+        RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: markDeviceModeTransformationDone: Marking message with rowId %s as DEVICE_MODE_DONE and DM_PROCESSED_DONE", rowId));
+        dbPersistentManager.markDeviceModeTransformationAndDMProcessedDone(Arrays.asList(rowId));
+    }
+
+    private void updateMessageStatusBasedOnTransformations(List<String> eligibleDestinations, int rowId, RudderMessage message) {
+        List<String> destinationsWithTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.ENABLED, eligibleDestinations);
+        if (destinationsWithTransformations.isEmpty()) {
+            markDeviceModeTransformationDone(rowId);
+        } else {
+            for (String destinationName : destinationsWithTransformations) {
+                RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: updateMessageStatusBasedOnTransformations: Destination %s needs transformation, hence the event will be batched and sent to transformation service", destinationName));
+            }
+            dbPersistentManager.markDeviceModeProcessedDone(rowId);
+            RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: updateMessageStatusBasedOnTransformations: marking event: %s, dm_processed status as DONE", message.getEventName()));
+        }
+    }
+
+    private void dumpMessageToDestinationWithoutTransformation(List<String> eligibleDestinations, RudderMessage message) {
+        List<String> destinationsWithoutTransformations = getDestinationsWithTransformationStatus(TRANSFORMATION_STATUS.DISABLED, eligibleDestinations);
+        dumpEventToDestinations(message, destinationsWithoutTransformations, "makeFactoryDump");
     }
 
     /**
