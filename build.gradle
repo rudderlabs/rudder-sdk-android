@@ -37,5 +37,5 @@ apply from: rootProject.file('gradle/promote.gradle')
 apply from: rootProject.file('gradle/codecov.gradle')
 subprojects {
     group GROUP
-    version getVersionName()
+    version getVersionName(VERSION_NAME)
 }
