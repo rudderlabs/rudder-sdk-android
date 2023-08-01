@@ -1,9 +1,5 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
-apply from: rootProject.file('gradle/versioning.gradle')
-
-group GROUP
-version getVersionName()
 
 publishing {
     publications {
@@ -12,7 +8,7 @@ publishing {
             // we'll set up in a moment
             groupId GROUP
             artifactId POM_ARTIFACT_ID
-            version getVersionName()
+            version VERSION_NAME
             if (POM_PACKAGING == "aar") {
                 artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
             } else {
