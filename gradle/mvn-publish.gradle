@@ -10,7 +10,7 @@ publishing {
         release(MavenPublication) {
             // The coordinates of the library, being set from variables that
             // we'll set up in a moment
-            groupId group
+            groupId GROUP
             artifactId POM_ARTIFACT_ID
             version getVersionName()
             if (POM_PACKAGING == "aar") {
