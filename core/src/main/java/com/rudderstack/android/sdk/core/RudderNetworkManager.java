@@ -7,8 +7,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.rudderstack.android.sdk.core.util.FunctionUtils;
@@ -17,13 +15,11 @@ import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Locale;
@@ -37,8 +33,6 @@ public class RudderNetworkManager {
     private String anonymousIdHeaderString;
     @Nullable
     private String dmtAuthorisationString;
-
-    private final Gson gson = new GsonBuilder().create();
 
     private static final String DMT_AUTHORISATION_KEY = "Custom-Authorization";
 
@@ -113,15 +107,12 @@ public class RudderNetworkManager {
         try {
             HttpURLConnection httpConnection = updateHttpConnection(requestURL, requestMethod, requestPayload, isDMTRequest, isGzipAvailableForApi);
             if (httpConnection == null) {
-                return new Result(NetworkResponses.ERROR, -1, null, "Http Connection is Null");
+                return new Result(NetworkResponses.NETWORK_UNAVAILABLE, -1, null, "Http Connection is Null");
             }
             synchronized (MessageUploadLock.REQUEST_LOCK) {
                 httpConnection.connect();
             }
             return getResult(httpConnection);
-        } catch (UnknownHostException ex) {
-            RudderLogger.logError(ex);
-            return new Result(NetworkResponses.NETWORK_UNAVAILABLE, -1, null, ex.getLocalizedMessage());
         } catch (Exception ex) {
             RudderLogger.logError("RudderNetworkManager: sendNetworkRequest: Exception occurred while sending the request to " + requestURL + ex.getLocalizedMessage());
             return new Result(NetworkResponses.ERROR, -1, null, ex.getLocalizedMessage());
@@ -225,7 +216,7 @@ public class RudderNetworkManager {
         try (
                 OutputStream os = httpConnection.getOutputStream();
                 OutputStream oss = connectionWrapperOSGenerator != null ? connectionWrapperOSGenerator.apply(os) : null;
-                OutputStreamWriter osw = new OutputStreamWriter(oss != null ? oss : os, StandardCharsets.UTF_8);
+                OutputStreamWriter osw = new OutputStreamWriter(oss != null ? oss : os, StandardCharsets.UTF_8)
         ) {
             httpConnection.setRequestMethod("POST");
             String requestPayloadWithMetadata = withAddedMetadataToRequestPayload(requestPayload, isDMTRequest);
