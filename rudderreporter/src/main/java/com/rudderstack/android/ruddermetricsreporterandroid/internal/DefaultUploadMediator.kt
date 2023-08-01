@@ -47,11 +47,9 @@ internal class DefaultUploadMediator(
         val requestMap = createRequestMap(metrics, error)
         webService.post(null,null, jsonAdapter.writeToJson(requestMap,
             object: RudderTypeAdapter<Map<String, Any?>>() {}).also {
-            println("posting")
             println(it)
         }, METRICS_ENDPOINT,
             object : RudderTypeAdapter<Map<*,*>>(){}){
-            Log.e("DefaultUploadMediator", "upload: $it")
             (it.status in 200..299).apply(callback)
         }
     }

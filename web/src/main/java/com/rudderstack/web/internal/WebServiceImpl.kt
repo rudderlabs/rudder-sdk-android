@@ -153,10 +153,7 @@ class WebServiceImpl internal constructor(
                     endpoint,
                     HttpMethod.POST,
                     responseTypeAdapter
-                ).also {
-                    println("response is $it")
-
-                }
+                )
             )
         }
     }
