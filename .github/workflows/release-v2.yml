@@ -8,6 +8,7 @@ on:
       - closed
 jobs:
   release-v2:
+    if: (startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/')) && github.event.pull_request.merged == true # only merged pull requests must trigger this job
     runs-on: ubuntu-latest
     environment: deployment
     steps:
@@ -30,8 +31,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: 'temurin'
+          java-version: '11'
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
