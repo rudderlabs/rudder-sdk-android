@@ -1,12 +1,16 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
+apply from: rootProject.file('gradle/versioning.gradle')
+
+group GROUP
+version getVersionName()
 
 publishing {
     publications {
         release(MavenPublication) {
             // The coordinates of the library, being set from variables that
             // we'll set up in a moment
-            groupId GROUP
+            groupId group
             artifactId POM_ARTIFACT_ID
             version getVersionName()
             if (POM_PACKAGING == "aar") {

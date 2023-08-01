@@ -1,7 +1,4 @@
-apply from: rootProject.file('gradle/versioning.gradle')
 
-group GROUP
-version getVersionName()
 //project.logger.info("Signing id: ${hasProperty("signing.keyId")}")
 // Create variables with empty default values
 ext["signing.keyId"] = ''
