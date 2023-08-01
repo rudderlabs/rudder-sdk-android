@@ -1,6 +1,6 @@
 {
   "name": "@rudderstack/rudder-sdk-android-monorepo",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Rudder Android SDK monorepo",
   "keywords": [
     "android",
@@ -53,13 +53,13 @@
     "properties-reader": "^2.2.0",
     "@rudderstack/core": "file: ./core",
     "@rudderstack/android": "file: ./android",
-    "@rudderstack/web":"file: ./web",
-    "@rudderstack/gsonrudderadapter":"file: ./gsonrudderadapter",
-    "@rudderstack/repository":"file: ./repository",
-    "@rudderstack/models":"file: ./models",
-    "@rudderstack/rudderjsonadapter":"file: ./rudderjsonadapter",
-    "@rudderstack/jacksonrudderadapter":"file: ./jacksonrudderadapter",
-    "@rudderstack/moshirudderadapter":"file: ./moshirudderadapter"
+    "@rudderstack/web": "file: ./web",
+    "@rudderstack/gsonrudderadapter": "file: ./gsonrudderadapter",
+    "@rudderstack/repository": "file: ./repository",
+    "@rudderstack/models": "file: ./models",
+    "@rudderstack/rudderjsonadapter": "file: ./rudderjsonadapter",
+    "@rudderstack/jacksonrudderadapter": "file: ./jacksonrudderadapter",
+    "@rudderstack/moshirudderadapter": "file: ./moshirudderadapter"
   },
   "config": {
     "commitizen": {
