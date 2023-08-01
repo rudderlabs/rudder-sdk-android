@@ -20,12 +20,14 @@ dependencyResolutionManagement {
         jcenter() // Warning: this repository is going to shut down soon
     }
 }
+
 rootProject.name = "Rudder-Android-Libs"
-include ':app'
+//include ':app'
 include ':web'
 include ':gsonrudderadapter'
 include ':repository'
 include ':models'
 include ':rudderjsonadapter'
+include ':rudderreporter'
 include ':jacksonrudderadapter'
 include ':moshirudderadapter'

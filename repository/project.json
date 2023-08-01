@@ -39,7 +39,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "tag": "repository@1.0.0",
+        "tag": "repository@0.1.0",
         "notesFile": "./repository/CHANGELOG_LATEST.md"
       }
     },
@@ -47,14 +47,14 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'repository-release' && ./gradlew :repository:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
+        "command": "echo 'repository-release' && cd repository && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype  && cd ..  && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'repository-snapshot' && ./gradlew :repository:publishToSonatype"
+        "command": "echo 'repository-snapshot' && cd repository && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype && cd .."
       }
     }
   },

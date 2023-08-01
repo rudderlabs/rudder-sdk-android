@@ -48,7 +48,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "tag": "gsonrudderadapter@1.0.0",
+        "tag": "gsonrudderadapter@0.1.0",
         "notesFile": "./gsonrudderadapter/CHANGELOG_LATEST.md"
       }
     },
@@ -56,14 +56,14 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'gsonrudderadapter-release' && ./gradlew :gsonrudderadapter:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
+        "command": "echo 'gsonrudderadapter-release' && cd gsonrudderadapter && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype  && cd ..  && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'gsonrudderadapter-snapshot' && ./gradlew :gsonrudderadapter:publishToSonatype"
+        "command": "echo 'gsonrudderadapter-snapshot' && cd gsonrudderadapter && sh ../gradlew generatePomFileForReleasePublication && sh ../gradlew publishToSonatype && cd .."
       }
     }
   },

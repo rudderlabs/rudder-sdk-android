@@ -50,7 +50,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "tag": "web@1.0.0",
+        "tag": "web@0.1.0",
         "notesFile": "./web/CHANGELOG_LATEST.md"
       }
     },
@@ -58,14 +58,14 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'web-release' && ./gradlew :web:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
+        "command": "echo 'web-release' && cd web && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype  && cd ..  && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'web-snapshot' && ./gradlew :web:publishToSonatype"
+        "command": "echo 'web-snapshot' && cd web && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype && cd .."
       }
     }
   },

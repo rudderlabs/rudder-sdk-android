@@ -16,17 +16,15 @@ plugins {
     id 'com.android.library'
     id 'kotlin-android'
 }
-apply from : "$rootDir/dependencies.gradle"
+apply from : "$projectDir/../dependencies.gradle"
 
 android {
-    compileSdk 31
     namespace 'com.rudderstack.android.repository'
+    compileSdk library.target_sdk
 
     defaultConfig {
-        minSdk 21
-        targetSdk 31
-        versionCode 1
-        versionName "1.0"
+        minSdk library.min_sdk
+        targetSdk library.target_sdk
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -39,15 +37,15 @@ android {
         }
     }
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = '1.8'
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     java {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     testOptions {
         unitTests {
@@ -58,13 +56,13 @@ android {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.6.0'
-    implementation 'androidx.test.ext:junit-ktx:1.1.3'
+    testImplementation deps.androidXTestExtJunitKtx
+    testImplementation deps.androidXTestRules
 //    implementation 'androidx.appcompat:appcompat:1.3.1'
 //    implementation 'com.google.android.material:material:1.4.0'
 //    implementation(project(":rudderjsonadapter"))
 
-    testImplementation 'junit:junit:4.+'
+    testImplementation deps.junit
 //    testImplementation(project(':moshirudderadapter'))
 //    testImplementation(project(':gsonrudderadapter'))
 //    testImplementation(project(':jacksonrudderadapter'))
@@ -77,9 +75,9 @@ dependencies {
     testImplementation deps.mockito
     testImplementation deps.awaitility
     testImplementation deps.robolectric
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-   // androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+//    androidTestImplementation deps.androidXTestExtJunitKtx
+//    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
-
+apply from: rootProject.file('gradle/artifacts-aar.gradle')
 apply from: rootProject.file('gradle/mvn-publish.gradle')
 apply from: rootProject.file('gradle/codecov.gradle')

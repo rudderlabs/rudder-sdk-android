@@ -43,7 +43,7 @@ import com.rudderstack.android.repository.annotation.RudderField
 data class SampleAutoGenEntity(val name: String) : Entity {
     var id = 0
     override fun generateContentValues(): ContentValues {
-        return ContentValues(2).also {
+        return ContentValues(1).also {
             it.put("name", name)
         }
     }

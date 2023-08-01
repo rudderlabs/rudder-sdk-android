@@ -47,14 +47,14 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'rudderreporter-release' && ./gradlew :rudderreporter:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
+        "command": "echo 'rudderreporter-release' && cd rudderreporter && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype  && cd ..  && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'rudderreporter-snapshot' && ./gradlew :rudderreporter:publishToSonatype"
+        "command": "echo 'rudder-reporter-snapshot' && cd rudderreporter && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype && cd .."
       }
     }
   },
