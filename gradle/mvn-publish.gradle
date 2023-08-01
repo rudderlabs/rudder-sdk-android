@@ -8,7 +8,7 @@ publishing {
             // we'll set up in a moment
             groupId GROUP
             artifactId POM_ARTIFACT_ID
-            version getVersionName()
+            version getVersionName(VERSION_NAME)
             if (POM_PACKAGING == "aar") {
                 artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
             } else {
