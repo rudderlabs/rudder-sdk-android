@@ -2,14 +2,16 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 33
-
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 31
+        targetSdkVersion 33
         consumerProguardFiles 'proguard-consumer-rules.pro'
         buildConfigField("String", "VERSION_NAME", "\"${VERSION_NAME}\"")
+        buildConfigField("String", "VERSION_CODE", "\"${VERSION_CODE}\"")
     }
-
+    buildFeatures{
+        buildConfig true
+    }
     buildTypes {
         release {
             minifyEnabled false
@@ -38,7 +40,11 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'androidx.annotation:annotation:1.1.0'
+    implementation 'androidx.annotation:annotation:1.6.0'
+
+
+    implementation 'com.rudderstack.android.sdk:rudderreporter:0.1.0'
+    implementation 'com.rudderstack.kotlin.sdk:gsonrudderadapter:0.1.0'
 
     // required for new life cycle methods
     compileOnly 'androidx.lifecycle:lifecycle-process:2.6.1'
@@ -51,6 +57,7 @@ dependencies {
     testImplementation "org.hamcrest:hamcrest:2.2"
     testImplementation "org.mockito:mockito-core:3.11.2"
     testImplementation 'androidx.lifecycle:lifecycle-process:2.6.1'
+    testImplementation 'androidx.lifecycle:lifecycle-common:2.6.1'
 
     testImplementation "org.powermock:powermock-core:2.0.9"
     testImplementation ("org.powermock:powermock-module-junit4:2.0.9"){
@@ -63,6 +70,10 @@ dependencies {
     androidTestImplementation ('androidx.test.ext:junit:1.1.5')
     compileOnly "androidx.work:work-runtime:2.7.1"
 
+}
+
+repositories {
+    google()
 }
 tasks.withType(JavaExec) {
     jvmArgs += ['--add-opens', 'java.base/jdk.internal.loader=ALL-UNNAMED']

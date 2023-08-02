@@ -10,6 +10,7 @@ import android.widget.FrameLayout
 import android.widget.ProgressBar
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import com.rudderstack.android.android_tv.R
 
 /**
  * BrowseErrorActivity shows how to use ErrorFragment.

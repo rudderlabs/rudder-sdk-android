@@ -11,6 +11,8 @@ public class RudderServerConfigSource implements Serializable {
     String sourceId;
     @SerializedName("name")
     String sourceName;
+    @SerializedName("config")
+    SourceConfiguration sourceConfiguration;
     @SerializedName("enabled")
     boolean isSourceEnabled;
     @SerializedName("updatedAt")
