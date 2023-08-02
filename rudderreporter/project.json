@@ -47,7 +47,7 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'rudderreporter-release' && cd rudderreporter && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype  && cd ..  && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
+        "command": "echo 'rudderreporter-release' && ./gradlew publishToSonatype -p rudderreporter -Prelease && ./gradlew closeAndReleaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
