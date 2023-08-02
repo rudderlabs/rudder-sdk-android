@@ -1,8 +1,10 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.TransformationRequest.TransformationRequestEvent;
-import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedDestination;
+import static com.rudderstack.android.sdk.core.ReportManager.incrementDeviceModeEventCounter;
+import static com.rudderstack.android.sdk.core.util.Utils.getBooleanFromMap;
 import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedEvent;
+import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedDestination;
+import static com.rudderstack.android.sdk.core.TransformationRequest.TransformationRequestEvent;
 import static com.rudderstack.android.sdk.core.util.Utils.MAX_FLUSH_QUEUE_SIZE;
 import static com.rudderstack.android.sdk.core.util.Utils.getBooleanFromMap;
 
@@ -99,8 +101,24 @@ public class RudderDeviceModeManager {
                 null ? consentFilterHandler.filterDestinationList(destinations) : destinations;
         if (consentedDestinations == null)
             return Collections.emptyList();
+
+        collectDissentedMetrics(destinations, consentedDestinations);
         return consentedDestinations;
 
+    }
+    private static void collectDissentedMetrics(List<RudderServerDestination> destinations, List<RudderServerDestination> consentedDestinations) {
+        List<RudderServerDestination> destinationsCopy = new ArrayList<>(destinations);
+        destinationsCopy.removeAll(consentedDestinations);
+        for (RudderServerDestination destination : destinationsCopy) {
+            reportDiscardedDestinationWithType(destination, ReportManager.LABEL_TYPE_DESTINATION_DISSENTED);
+        }
+
+    }
+    private static void reportDiscardedDestinationWithType(RudderServerDestination destination, String type) {
+        Map<String,String> labelsMap = new HashMap<>();
+        labelsMap.put(ReportManager.LABEL_TYPE, type);
+        labelsMap.put(ReportManager.LABEL_INTEGRATION, destination.getDestinationDefinition().displayName);
+        ReportManager.incrementDeviceModeDiscardedCounter(1, labelsMap);
     }
 
     // The sourceConfig will be used to generate two lists: one containing destinations with enabled transformations,
@@ -183,6 +201,7 @@ public class RudderDeviceModeManager {
                     integrationOperationsMap.put(key, nativeOp);
                     handleCallBacks(key, nativeOp);
                 } else {
+                    reportDiscardedDestinationWithType(destination, ReportManager.LABEL_TYPE_DESTINATION_DISABLED);
                     RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: destination was null or not enabled for %s", key));
                 }
             } else {
@@ -290,6 +309,7 @@ public class RudderDeviceModeManager {
                 try {
                     RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: %s: dumping event %s for %s", logTag, message.getEventName(), destinationName));
                     RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: Dumping: %s", gson.toJson(message)));
+                    addDeviceModeCounter(message.getType(), destinationName);
                     integration.dump(message);
                 } catch (Exception e) {
                     RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: %s: Exception in dumping message %s to %s factory %s", logTag, message.getEventName(), destinationName, e.getMessage()));
@@ -297,7 +317,12 @@ public class RudderDeviceModeManager {
             }
         }
     }
-
+    private void addDeviceModeCounter(String type, String destinationName) {
+        Map<String, String> labelMap = new HashMap<>();
+        labelMap.put(ReportManager.LABEL_TYPE, type);
+        labelMap.put(ReportManager.LABEL_INTEGRATION, destinationName);
+        incrementDeviceModeEventCounter(1, labelMap);
+    }
     void dumpOriginalEvents(TransformationRequest transformationRequest, boolean onTransformationError) {
         if (transformationRequest.batch != null) {
             RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: dumpOriginalEvents: dumping back the original events to the transformations enabled destinations as there is transformation error."));

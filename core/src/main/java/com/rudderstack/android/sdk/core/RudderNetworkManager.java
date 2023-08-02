@@ -15,10 +15,12 @@ import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -113,9 +115,14 @@ public class RudderNetworkManager {
                 httpConnection.connect();
             }
             return getResult(httpConnection);
-        } catch (Exception ex) {
+        } catch (SocketTimeoutException ex) {
             RudderLogger.logError("RudderNetworkManager: sendNetworkRequest: Exception occurred while sending the request to " + requestURL + ex.getLocalizedMessage());
-            return new Result(NetworkResponses.ERROR, -1, null, ex.getLocalizedMessage());
+
+            return new Result(NetworkResponses.ERROR, -1, null, "Request Timed Out");
+        }catch (IOException ex) {
+            RudderLogger.logError(ex);
+            RudderLogger.logError("RudderNetworkManager: sendNetworkRequest: Exception occurred while sending the request to " + requestURL + ex.getLocalizedMessage());
+            return new Result(NetworkResponses.ERROR, -1, null, "Invalid Url");
         }
     }
 

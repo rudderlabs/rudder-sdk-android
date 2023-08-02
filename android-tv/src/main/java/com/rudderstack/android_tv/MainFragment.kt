@@ -33,6 +33,7 @@ import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
+import com.rudderstack.android.android_tv.R
 
 /**
  * Loads a grid of cards with movies to browse.

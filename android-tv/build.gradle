@@ -36,6 +36,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    namespace 'com.rudderstack.android.android_tv'
+
 }
 
 dependencies {
