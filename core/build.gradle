@@ -16,10 +16,6 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-consumer-rules.pro'
-            buildConfigField("String", "STATS_BASE_URL", "\"https://sdk-metrics.rudderstack.com/\"")
-        }
-        debug{
-            buildConfigField("String", "STATS_BASE_URL", "\"https://sdk-metrics.dev-rudder.rudderlabs.com/\"")
         }
     }
     testOptions {
@@ -46,13 +42,9 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'androidx.annotation:annotation:1.6.0'
 
-//    implementation(project(':web'))
-//    implementation(project(':repository'))
-//    implementation(project(':rudderreporter'))
-//    implementation(project(':rudderjsonadapter'))
-//    implementation(project(':gsonrudderadapter'))
-    implementation 'com.rudderstack.kotlin.sdk:gsonrudderadapter:1.0.0-SNAPSHOT'
-    implementation 'com.rudderstack.android.sdk:rudderreporter:1.0.0-SNAPSHOT'
+
+    implementation 'com.rudderstack.android.sdk:rudderreporter:0.1.0'
+    implementation 'com.rudderstack.kotlin.sdk:gsonrudderadapter:0.1.0'
 
     // required for new life cycle methods
     compileOnly 'androidx.lifecycle:lifecycle-process:2.6.1'

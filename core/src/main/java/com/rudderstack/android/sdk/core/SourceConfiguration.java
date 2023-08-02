@@ -7,7 +7,7 @@ public class SourceConfiguration implements Serializable {
         this.statsCollection = statsCollection;
     }
 
-    private final StatsCollection statsCollection;
+    private StatsCollection statsCollection;
 
     public StatsCollection getStatsCollection() {
         return statsCollection;
@@ -19,8 +19,8 @@ public class SourceConfiguration implements Serializable {
             this.metrics = metrics;
         }
 
-        private final Errors errors;
-        private final Metrics metrics;
+        private Errors errors;
+        private Metrics metrics;
 
         public Errors getErrors() {
             return errors;
@@ -36,7 +36,7 @@ public class SourceConfiguration implements Serializable {
             this.enabled = enabled;
         }
 
-        private final boolean enabled;
+        private boolean enabled;
 
         public boolean isEnabled() {
             return enabled;
@@ -48,7 +48,7 @@ public class SourceConfiguration implements Serializable {
             this.enabled = enabled;
         }
 
-        private final boolean enabled;
+        private boolean enabled;
 
         public boolean isEnabled() {
             return enabled;
