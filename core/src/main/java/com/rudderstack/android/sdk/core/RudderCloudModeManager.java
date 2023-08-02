@@ -73,6 +73,7 @@ public class RudderCloudModeManager {
                                 RudderLogger.logError("CloudModeManager: cloudModeProcessor: Wrong WriteKey. Terminating the Cloud Mode Processor");
                                 return;
                             case ERROR:
+                            case NETWORK_UNAVAILABLE:
                                 RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in " + Math.abs(sleepCount - config.getSleepTimeOut()) + "s");
                                 Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000L);
                                 break;

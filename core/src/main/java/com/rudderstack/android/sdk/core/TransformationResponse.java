@@ -3,7 +3,9 @@ package com.rudderstack.android.sdk.core;
 import androidx.annotation.Nullable;
 
 import java.util.List;
+import com.google.gson.annotations.JsonAdapter;
 
+@JsonAdapter(TransformationResponseDeserializer.class)
 public class TransformationResponse {
     @Nullable
     final List<TransformedDestination> transformedBatch;
