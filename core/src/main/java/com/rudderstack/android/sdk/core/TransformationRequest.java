@@ -13,14 +13,17 @@ public class TransformationRequest {
 
     static class TransformationRequestEvent {
 
-        @SerializedName(value="rowId", alternate = {"orderNo"})
-        final Integer rowId;
-        @SerializedName(value="message", alternate = {"event"})
-        final RudderMessage message;
+        @SerializedName(value="orderNo")
+        final Integer orderNo;
+        @SerializedName(value="event")
+        final RudderMessage event;
+        @SerializedName(value="destinationIds")
+        final List<String> destinationIds;
 
-        private TransformationRequestEvent(Integer rowId, RudderMessage message) {
-            this.rowId = rowId;
-            this.message = message;
+        public TransformationRequestEvent(Integer orderNo, RudderMessage event, List<String> destinationIds) {
+            this.orderNo = orderNo;
+            this.event = event;
+            this.destinationIds = destinationIds;
         }
     }
 }

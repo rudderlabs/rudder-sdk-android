@@ -7,8 +7,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.rudderstack.android.sdk.core.util.FunctionUtils;
@@ -17,7 +15,6 @@ import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -38,15 +35,15 @@ public class RudderNetworkManager {
     @Nullable
     private String dmtAuthorisationString;
 
-    private final Gson gson = new GsonBuilder().create();
-
     private static final String DMT_AUTHORISATION_KEY = "Custom-Authorization";
 
     public enum NetworkResponses {
         SUCCESS,
         ERROR,
         WRITE_KEY_ERROR,
-        RESOURCE_NOT_FOUND
+        RESOURCE_NOT_FOUND,
+        NETWORK_UNAVAILABLE,
+        BAD_REQUEST
     }
 
     public enum RequestMethod {
@@ -111,7 +108,7 @@ public class RudderNetworkManager {
         try {
             HttpURLConnection httpConnection = updateHttpConnection(requestURL, requestMethod, requestPayload, isDMTRequest, isGzipAvailableForApi);
             if (httpConnection == null) {
-                return new Result(NetworkResponses.ERROR, -1, null, "Http Connection is Null");
+                return new Result(NetworkResponses.NETWORK_UNAVAILABLE, -1, null, "Http Connection is Null");
             }
             synchronized (MessageUploadLock.REQUEST_LOCK) {
                 httpConnection.connect();
@@ -148,8 +145,10 @@ public class RudderNetworkManager {
                         httpConnection.getURL(), responseCode, errorPayload));
                 if (errorPayload != null && errorPayload.toLowerCase().contains("invalid write key"))
                     networkResponse = NetworkResponses.WRITE_KEY_ERROR;
-                if (responseCode == 404)
+                else if (responseCode == 404)
                     networkResponse = NetworkResponses.RESOURCE_NOT_FOUND;
+                else if (responseCode == 400)
+                    networkResponse = NetworkResponses.BAD_REQUEST;
             }
             // if networkresponse is null (or) if both response and error payload is null, then it is an error
             if (networkResponse == null || (responsePayload == null && errorPayload == null))
@@ -223,7 +222,7 @@ public class RudderNetworkManager {
         try (
                 OutputStream os = httpConnection.getOutputStream();
                 OutputStream oss = connectionWrapperOSGenerator != null ? connectionWrapperOSGenerator.apply(os) : null;
-                OutputStreamWriter osw = new OutputStreamWriter(oss != null ? oss : os, StandardCharsets.UTF_8);
+                OutputStreamWriter osw = new OutputStreamWriter(oss != null ? oss : os, StandardCharsets.UTF_8)
         ) {
             httpConnection.setRequestMethod("POST");
             String requestPayloadWithMetadata = withAddedMetadataToRequestPayload(requestPayload, isDMTRequest);
