@@ -1,1 +1,1 @@
-include ':sample-cdn', ':sample-kotlin', ':core', ':sample-segment-java', ':sample-kotlin-integration', ':dummy-impl', ':android-tv'
+include ':sample-cdn', ':sample-kotlin', ':core', ':sample-segment-java', ':sample-kotlin-integration', ':sample-js-integration:RudderAndroidJS:app', ':dummy-impl', ':android-tv'

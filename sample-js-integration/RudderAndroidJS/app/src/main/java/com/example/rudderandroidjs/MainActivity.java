@@ -77,7 +77,7 @@
                 mWebView.getSettings().setDatabasePath("/data/data/" + mWebView.getContext().getPackageName() + "/databases/");
             }
             mWebView.addJavascriptInterface(new WebAppInterface(this), "Android");
-            mWebView.loadUrl("https://odd-rat-19.loca.lt/Rectified.html");
+            mWebView.loadUrl("https://giant-camels-taste-61-95-158-116.loca.lt/SampleJsApp.html");
             mWebView.setWebViewClient(new WebViewClient() {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {

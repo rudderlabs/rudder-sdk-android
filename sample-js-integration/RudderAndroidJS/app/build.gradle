@@ -39,6 +39,3 @@ dependencies {
 // add the follwing line if you don't have Gson included already
     implementation 'com.google.code.gson:gson:2+'
 }
-repositories {
-    maven { url  "https://dl.bintray.com/rudderstack/rudderstack" }
-}
