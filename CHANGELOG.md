@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.17.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.15.0...v1.17.0) (2023-08-02)
+
+
+### Features
+
+* add metrics to Android SDK V1 ([#241](https://github.com/rudderlabs/rudder-sdk-android/issues/241)) ([fbf93f7](https://github.com/rudderlabs/rudder-sdk-android/commit/fbf93f718b36ca81dde01fd55c7eb90accbb8b23))
+* enhance support for dmt source config changes and retrying with exponential backoff logic ([#236](https://github.com/rudderlabs/rudder-sdk-android/issues/236)) ([c27d39c](https://github.com/rudderlabs/rudder-sdk-android/commit/c27d39c71180c9d2849dcda0fa75721efd96fedb))
+
 ## [1.16.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.15.0...v1.16.0) (2023-08-02)
 
 
