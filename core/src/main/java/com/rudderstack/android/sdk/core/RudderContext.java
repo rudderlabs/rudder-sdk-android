@@ -70,10 +70,9 @@ public class RudderContext {
         RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
 
         if (TextUtils.isEmpty(anonymousId)) {
+            // starting from version 1.18.0, we are completely removing the link between deviceId and anonymousId for compliance reasons
+            // and from here on, UUID will be used as anonymousId
             anonymousId = preferenceManger.getAnonymousId();
-            if (anonymousId == null && collectDeviceId) {
-                anonymousId = Utils.getDeviceId(application);
-            }
             if (anonymousId == null) {
                 anonymousId = UUID.randomUUID().toString();
             }
@@ -94,6 +93,8 @@ public class RudderContext {
             RudderLogger.logDebug("New traits has been saved");
         } else {
             this.traits = Utils.convertToMap(traitsJson);
+            this.traits.put("anonymousId", anonymousId);
+            this.persistTraits();
             RudderLogger.logDebug("Using old traits from persistence");
         }
 
@@ -406,7 +407,7 @@ public class RudderContext {
         this.consentManagement = consentManagement;
     }
 
-    public static class ConsentManagement{
+    public static class ConsentManagement {
         @SerializedName("deniedConsentIds")
         private List<String> deniedConsentIds;
 

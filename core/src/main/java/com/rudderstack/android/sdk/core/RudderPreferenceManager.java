@@ -105,6 +105,10 @@ class RudderPreferenceManager {
         return preferences.getString(RUDDER_ANONYMOUS_ID_KEY, null);
     }
 
+    void clearAnonymousId() {
+        preferences.edit().remove(RUDDER_ANONYMOUS_ID_KEY).apply();
+    }
+
     void saveOptStatus(boolean optStatus) {
         preferences.edit().putBoolean(RUDDER_OPT_STATUS_KEY, optStatus).apply();
     }
