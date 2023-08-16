@@ -98,11 +98,7 @@ class EventRepository {
             // initiate RudderPreferenceManager
             initiatePreferenceManager(_application);
 
-            AppVersion appVersion = new AppVersion(application);
-            // check if the previous version of the SDK is using deviceId as anonymousId, if yes then clear it
-            if (appVersion.isApplicationInstalled() || appVersion.isApplicationUpdated()) {
-                clearAnonymousIdIfRequired();
-            }
+            clearAnonymousIdIfRequired();
 
             // initiate RudderElementCache
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
@@ -145,6 +141,7 @@ class EventRepository {
 
             // initiate ApplicationLifeCycleManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
+            AppVersion appVersion = new AppVersion(application);
             this.applicationLifeCycleManager = new ApplicationLifeCycleManager(config, appVersion, rudderFlushWorkManager, this, preferenceManager);
             this.applicationLifeCycleManager.trackApplicationUpdateStatus();
 
@@ -154,7 +151,10 @@ class EventRepository {
         }
     }
 
+
+    // If the collectDeviceId flag is set to false, then check if deviceId is being used as anonymousId, if yes then clear it
     private void clearAnonymousIdIfRequired() {
+        if (this.config.isCollectDeviceId()) return;
         if (this.preferenceManager.getAnonymousId() == Utils.getDeviceId(application)) {
             RudderLogger.logDebug("EventRepository: clearAnonymousIdIfRequired: Starting from version 1.18.0, we are breaking the relation between anonymousId and device Id. Hence clearing the anonymousId");
             this.preferenceManager.clearAnonymousId();
