@@ -155,9 +155,11 @@ class EventRepository {
     // If the collectDeviceId flag is set to false, then check if deviceId is being used as anonymousId, if yes then clear it
     private void clearAnonymousIdIfRequired() {
         if (this.config.isCollectDeviceId()) return;
-        if (this.preferenceManager.getAnonymousId() == Utils.getDeviceId(application)) {
+        String currentAnonymousIdValue = this.preferenceManager.getCurrentAnonymousIdValue();
+        String deviceId = Utils.getDeviceId(application);
+        if (currentAnonymousIdValue.equals(deviceId)) {
             RudderLogger.logDebug("EventRepository: clearAnonymousIdIfRequired: Starting from version 1.18.0, we are breaking the relation between anonymousId and device Id. Hence clearing the anonymousId");
-            this.preferenceManager.clearAnonymousId();
+            this.preferenceManager.clearCurrentAnonymousIdValue();
         }
     }
 

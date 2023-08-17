@@ -72,8 +72,9 @@ public class RudderContext {
         if (TextUtils.isEmpty(anonymousId)) {
             // starting from version 1.18.0, we are completely removing the link between deviceId and anonymousId for compliance reasons
             // and from here on, UUID will be used as anonymousId
-            anonymousId = preferenceManger.getAnonymousId();
+            anonymousId = preferenceManger.getCurrentAnonymousIdValue();
             if (anonymousId == null) {
+                RudderLogger.logDebug("RudderContext: constructor: anonymousId is null, generating new anonymousId");
                 anonymousId = UUID.randomUUID().toString();
             }
         }

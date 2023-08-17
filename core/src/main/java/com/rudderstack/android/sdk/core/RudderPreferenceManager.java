@@ -6,7 +6,11 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.Nullable;
 
+import com.google.gson.Gson;
+import com.rudderstack.android.sdk.core.util.Utils;
+
 import java.util.Locale;
+import java.util.Map;
 
 class RudderPreferenceManager {
     // keys
@@ -107,6 +111,26 @@ class RudderPreferenceManager {
 
     void clearAnonymousId() {
         preferences.edit().remove(RUDDER_ANONYMOUS_ID_KEY).apply();
+    }
+
+    void clearCurrentAnonymousIdValue() {
+        clearAnonymousId();
+        String traits = getTraits();
+        if (traits != null) {
+            Map<String, Object> traitsMap = Utils.convertToMap(traits);
+            traitsMap.remove("anonymousId");
+            saveTraits(new Gson().toJson(traitsMap));
+        }
+    }
+
+    String getCurrentAnonymousIdValue() {
+        String anonymousId = getAnonymousId();
+        String traits = getTraits();
+        if (anonymousId == null && traits != null) {
+            Map<String, Object> traitsMap = Utils.convertToMap(traits);
+            anonymousId = (String) traitsMap.get("anonymousId");
+        }
+        return anonymousId;
     }
 
     void saveOptStatus(boolean optStatus) {
