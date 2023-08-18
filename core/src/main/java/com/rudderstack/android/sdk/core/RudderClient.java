@@ -708,6 +708,7 @@ public class RudderClient {
 
     /**
      * Reset SDK
+     * @deprecated Use {@link #reset(boolean) reset(false)} instead
      */
     public void reset() {
         RudderElementCache.reset();
