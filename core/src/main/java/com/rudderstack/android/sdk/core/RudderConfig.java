@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
  *
  * */
 public class RudderConfig {
+    private @Nullable String encryptionKey = null;
     @Nullable
     private String dataPlaneUrl;
     private int flushQueueSize;
@@ -55,6 +56,9 @@ public class RudderConfig {
     private RudderDataResidencyServer rudderDataResidencyServer;
     @Nullable private RudderConsentFilter consentFilter;
     private boolean isGzipEnabled = true;
+    private boolean isDbEncryptionEnabled = false;
+
+    private final String persistenceProviderFactoryClassName;
 
     RudderConfig() {
         this(
@@ -79,7 +83,10 @@ public class RudderConfig {
                 null,
                 Constants.DATA_RESIDENCY_SERVER,
                 null,
-                Constants.DEFAULT_GZIP_ENABLED
+                Constants.DEFAULT_GZIP_ENABLED,
+                Constants.DEFAULT_DB_ENCRYPTION_ENABLED,
+                null,
+                null
         );
     }
 
@@ -105,7 +112,11 @@ public class RudderConfig {
             List<RudderIntegration.Factory> customFactories,
             RudderDataResidencyServer rudderDataResidencyServer,
             @Nullable RudderConsentFilter consentFilter,
-            boolean isGzipEnabled
+            boolean isGzipEnabled,
+            boolean isDbEncryptionEnabled,
+            @Nullable String encryptionKey,
+            @Nullable String persistenceProviderFactoryClassName
+
     ) {
         RudderLogger.init(logLevel);
 
@@ -191,6 +202,9 @@ public class RudderConfig {
         this.rudderDataResidencyServer = rudderDataResidencyServer;
         this.consentFilter = consentFilter;
         this.isGzipEnabled = isGzipEnabled;
+        this.isDbEncryptionEnabled = isDbEncryptionEnabled;
+        this.encryptionKey = encryptionKey;
+        this.persistenceProviderFactoryClassName = persistenceProviderFactoryClassName;
     }
 
     /**
@@ -200,6 +214,10 @@ public class RudderConfig {
     @NonNull
     public String getEndPointUri() {
         return dataPlaneUrl;
+    }
+
+    public String getPersistenceProviderFactoryClassName() {
+        return persistenceProviderFactoryClassName;
     }
 
     /**
@@ -425,6 +443,14 @@ public class RudderConfig {
         this.rudderDataResidencyServer = rudderDataResidencyServer;
     }
 
+    @Nullable
+    public String getEncryptionKey() {
+        return encryptionKey;
+    }
+
+    public boolean isDbEncryptionEnabled() {
+        return isDbEncryptionEnabled;
+    }
 
     /**
      * @return custom toString implementation for RudderConfig
@@ -445,6 +471,9 @@ public class RudderConfig {
         private @Nullable RudderConsentFilter consentFilter = null;
         private @Nullable String dataPlaneUrl = null;
         private boolean isGzipEnabled = Constants.DEFAULT_GZIP_ENABLED;
+        private boolean isDbEncryptionEnabled = Constants.DEFAULT_DB_ENCRYPTION_ENABLED;
+        private String encryptionKey = null;
+        private String persistenceProviderFactoryClassName = null;
 
         /**
          * @param factory : Instance of RudderIntegration.Factory (for more information visit https://docs.rudderstack.com)
@@ -618,6 +647,11 @@ public class RudderConfig {
             this.isGzipEnabled = isGzip;
             return this;
         }
+        public Builder withDbEncryptionEnabled(boolean isDbEncryptionEnabled, @Nullable String encryptionKey) {
+            this.isDbEncryptionEnabled = isDbEncryptionEnabled;
+            this.encryptionKey = encryptionKey;
+            return this;
+        }
 
         private int configRefreshInterval = Constants.CONFIG_REFRESH_INTERVAL;
 
@@ -762,6 +796,10 @@ public class RudderConfig {
             this.autoSessionTracking = autoSessionTracking;
             return this;
         }
+        public Builder withPersistenceProviderFactoryClassName(String persistenceProviderFactoryClassName) {
+            this.persistenceProviderFactoryClassName = persistenceProviderFactoryClassName;
+            return this;
+        }
 
         /**
          * Finalize your config building
@@ -791,7 +829,10 @@ public class RudderConfig {
                     this.customFactories,
                     this.rudderDataResidencyServer,
                     consentFilter,
-                    this.isGzipEnabled
+                    this.isGzipEnabled,
+                    this.isDbEncryptionEnabled,
+                    this.encryptionKey,
+                    this.persistenceProviderFactoryClassName
             );
         }
     }

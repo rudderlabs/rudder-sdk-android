@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Base64;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -147,6 +148,7 @@ class EventRepository {
 
             initializeLifecycleTracking(applicationLifeCycleManager);
         } catch (Exception ex) {
+            Log.e("RudderSDK", "EventRepository: constructor: Exception occurred: ", ex );
             RudderLogger.logError(ex.getCause());
         }
     }
@@ -178,9 +180,10 @@ class EventRepository {
     }
 
     private void initializeDbManager(Application application) {
-        this.dbManager = DBPersistentManager.getInstance(application);
-        this.dbManager.checkForMigrations();
-        this.dbManager.startHandlerThread();
+        DBPersistentManager.DbManagerParams dbManagerParams = new DBPersistentManager.DbManagerParams(config.isDbEncryptionEnabled(),
+                config.getPersistenceProviderFactoryClassName(), config.getEncryptionKey());
+        this.dbManager = DBPersistentManager.getInstance(application,dbManagerParams);
+
     }
 
     private void updateAnonymousIdHeaderString() throws UnsupportedEncodingException {
@@ -290,7 +293,8 @@ class EventRepository {
 
     private void saveFlushConfig() {
         RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString,
-                anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel(), config.isGzipEnabled());
+                anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel(), config.isGzipEnabled(),
+                config.isDbEncryptionEnabled(), config.getEncryptionKey());
         rudderFlushWorkManager.saveRudderFlushConfig(rudderFlushConfig);
     }
 

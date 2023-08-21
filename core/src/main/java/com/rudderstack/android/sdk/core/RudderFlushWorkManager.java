@@ -3,6 +3,7 @@ package com.rudderstack.android.sdk.core;
 import android.content.Context;
 
 import androidx.work.Constraints;
+import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.PeriodicWorkRequest;
@@ -21,6 +22,7 @@ public class RudderFlushWorkManager {
     RudderConfig config;
     RudderPreferenceManager preferenceManager;
     static final String RUDDER_FLUSH_CONFIG_FILE_NAME = "RudderFlushConfig";
+    static final String PERSISTENCE_PROVIDER_FACTORY_CLASS_NAME_KEY = "persistenceProviderFactory";
 
     RudderFlushWorkManager(Context context, RudderConfig config, RudderPreferenceManager preferenceManager) {
         this.context = context;
@@ -61,10 +63,15 @@ public class RudderFlushWorkManager {
                 return;
             }
             Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
+            String persistenceProviderFactory = config.getPersistenceProviderFactoryClassName();
+            if(persistenceProviderFactory == null)
+                persistenceProviderFactory = "";
             PeriodicWorkRequest flushPendingEvents =
                     new PeriodicWorkRequest.Builder(FlushEventsWorker.class, config.getRepeatInterval(), config.getRepeatIntervalTimeUnit())
                             .addTag("Flushing Pending Events Periodically")
                             .setConstraints(constraints)
+                            .setInputData(new Data.Builder().putString(PERSISTENCE_PROVIDER_FACTORY_CLASS_NAME_KEY,
+                                    persistenceProviderFactory).build())
                             .build();
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(

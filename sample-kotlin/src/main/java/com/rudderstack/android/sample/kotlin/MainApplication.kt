@@ -32,6 +32,7 @@ class MainApplication : Application(), Configuration.Provider {
                 .withTrackLifecycleEvents(true)
                 .withNewLifecycleEvents(true)
                 .withRecordScreenViews(false)
+                .withDbEncryptionEnabled(false, "versys")
                 .build()
         )
 
