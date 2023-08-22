@@ -19,7 +19,7 @@ public class ApplicationLifeCycleManager {
     private final RudderPreferenceManager preferenceManager;
     private final AppVersion appVersion;
 
-    public ApplicationLifeCycleManager(RudderConfig config, Application application,
+    public ApplicationLifeCycleManager(RudderConfig config, AppVersion appVersion,
                                        RudderFlushWorkManager rudderFlushWorkManager,
                                        EventRepository repository,
                                        RudderPreferenceManager preferenceManager) {
@@ -27,7 +27,7 @@ public class ApplicationLifeCycleManager {
         this.rudderFlushWorkManager = rudderFlushWorkManager;
         this.repository = repository;
         this.preferenceManager = preferenceManager;
-        this.appVersion = new AppVersion(application);
+        this.appVersion = appVersion;
     }
 
     /*
@@ -40,18 +40,15 @@ public class ApplicationLifeCycleManager {
         if (!this.config.isTrackLifecycleEvents() && !this.config.isNewLifeCycleEvents()) {
             return;
         }
-        if (this.appVersion.previousBuild == -1) {
+        if (this.appVersion.isApplicationInstalled()) {
             // application was not installed previously, now triggering Application Installed event
             sendApplicationInstalled(appVersion.currentBuild, appVersion.currentVersion);
             rudderFlushWorkManager.registerPeriodicFlushWorker();
-        } else if (isApplicationUpdated()) {
+        } else if (this.appVersion.isApplicationUpdated()) {
             sendApplicationUpdated(appVersion.previousBuild, appVersion.currentBuild, appVersion.previousVersion, appVersion.currentVersion);
         }
     }
 
-    boolean isApplicationUpdated() {
-        return this.appVersion.previousBuild != -1 && (this.appVersion.previousBuild != this.appVersion.currentBuild);
-    }
 
     void sendApplicationInstalled(int currentBuild, String currentVersion) {
         RudderLogger.logDebug("ApplicationLifeCycleManager: sendApplicationInstalled: Tracking Application Installed");
@@ -122,56 +119,4 @@ public class ApplicationLifeCycleManager {
     public static Boolean isFirstLaunch() {
         return isFirstLaunch.get();
     }
-
-    private class AppVersion {
-
-        int previousBuild;
-        int currentBuild;
-        String previousVersion;
-        String currentVersion;
-
-        AppVersion(Application application) {
-            try {
-                previousBuild = preferenceManager.getBuildNumber();
-                previousVersion = preferenceManager.getVersionName();
-                RudderLogger.logDebug("Previous Installed Version: " + previousVersion);
-                RudderLogger.logDebug("Previous Installed Build: " + previousBuild);
-                String packageName = application.getPackageName();
-                PackageManager packageManager = application.getPackageManager();
-                if (packageManager == null)
-                    return;
-                PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
-                currentVersion = packageInfo.versionName;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    currentBuild = (int) packageInfo.getLongVersionCode();
-                } else {
-                    currentBuild = packageInfo.versionCode;
-                }
-                RudderLogger.logDebug("Current Installed Version: " + currentVersion);
-                RudderLogger.logDebug("Current Installed Build: " + currentBuild);
-            } catch (PackageManager.NameNotFoundException ex) {
-                RudderLogger.logError(ex);
-            }
-        }
-
-        /*
-         * Call this method to store the Current Build and Current Version of the app.
-         * In case of the LifeCycle events Application Installed or Application Updated only.
-         */
-        void storeCurrentBuildAndVersion() {
-            preferenceManager.saveBuildNumber(currentBuild);
-            preferenceManager.saveVersionName(currentVersion);
-        }
-    }
-
 }
-    /*create or replace view app_opened_installed as select result.event_name, result.userId,
-    result.timestamp as sent_at, result.platform as platform, result.writeKey as write_key, result.anon_id as anonymous_id, result.sdk_version as sdk_version from (
-        select gw_jobs_1.event ->> 'event' as event_name, gw_jobs_1.event->>'userId' as userId, gw_jobs_1.event->>'anonymousId' as anon_id, gw_jobs_1.event ->> 'originalTimestamp' as timestamp, gw_jobs_1.event->'context'->'library'->>'name' as platform, gw_jobs_1.event->'context'->'library'->>'version' as sdk_version, writeKey as writeKey from (select jsonb_array_elements(jsonb_extract_path(event_payload, 'batch')) as event, event_payload ->> 'writeKey' as writeKey
-        from gw_jobs_4584) as gw_jobs_1 where gw_jobs_1.event->'context'->'library'->>'name' = 'com.rudderstack.android.sdk.core' )
-        as result order by timestamp
-
-
-        with app_installed as (select * from app_opened_installed order by sent_at),
-        app_opened as( select event_name, lead(event_name,1) over (order by sent_at) next_event, userid, anonymous_id, sent_at, write_key, platform, sdk_version from app_installed)
-        select * from app_opened where event_name = 'Application Installed'*/

@@ -3,7 +3,6 @@ package com.rudderstack.android.sdk.core;
 
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_DATA_PLANE_URL_INVALID;
-import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_SOURCE_CONFIG_URL_INVALID;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_SOURCE_DISABLED;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_WRITE_KEY_INVALID;
 import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
@@ -25,7 +24,6 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.rudderstack.android.ruddermetricsreporterandroid.Metrics;
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
 import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
 import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
@@ -87,14 +85,6 @@ class EventRepository {
 
     /*
      * constructor to be called from RudderClient internally.
-     * -- tasks to be performed
-     * 1. persist the value of config
-     * 2. initiate RudderElementCache
-     * 3. initiate DBPersistentManager for SQLite operations
-     * 4. initiate RudderServerConfigManager
-     * 5. initiate FlushWorkManager
-     * 6. start processor thread
-     * 7. initiate factories
      * */
     EventRepository(Application _application, RudderConfig _config, Identifiers identifiers) {
         // 1. set the values of writeKey, config
@@ -105,14 +95,22 @@ class EventRepository {
         RudderLogger.logDebug(String.format("EventRepository: constructor: %s", this.config.toString()));
 
         try {
+
             // initiate RudderPreferenceManager
-            initiatePreferenceManager(_application, config, identifiers);
+            initiatePreferenceManager(_application);
+
+            clearAnonymousIdIfRequired();
+
+            // initiate RudderElementCache
+            RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
+            initiateRudderElementCache(application, config, identifiers);
             updateAnonymousIdHeaderString();
 
-            // 3. initiate DBPersistentManager for SQLite operations
+            // initiate DBPersistentManager for SQLite operations
             RudderLogger.logDebug("EventRepository: constructor: Initiating DBPersistentManager and starting Handler thread");
             initializeDbManager(_application);
 
+            // initiate RudderNetworkManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderNetworkManager");
             this.networkManager = new RudderNetworkManager(authHeaderString, anonymousIdHeaderString, getSavedAuthToken(), config.isGzipEnabled());
 
@@ -120,36 +118,51 @@ class EventRepository {
                 updateAuthToken(identifiers.authToken);
             }
 
-            // 4. initiate RudderServerConfigManager
+            // initiate RudderServerConfigManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating RudderServerConfigManager");
             this.configManager = new RudderServerConfigManager(_application, _config, networkManager);
 
-            // 5. initiate FlushWorkManager
+            // initiate RudderFlushWorkManager
             rudderFlushWorkManager = new RudderFlushWorkManager(context, config, preferenceManager);
 
-            // 6. Initiating RudderDataResidencyManager
+            // initiate RudderDataResidencyManager
             this.dataResidencyManager = new RudderDataResidencyManager(config);
 
-            // 7. Initiate Cloud Mode Manager and Device mode Manager
+            // initiate Cloud Mode Manager and Device mode Manager
             RudderLogger.logDebug("EventRepository: constructor: Initiating processor and factories");
             this.cloudModeManager = new RudderCloudModeManager(dbManager, networkManager, config, dataResidencyManager);
             this.deviceModeManager = new RudderDeviceModeManager(dbManager, networkManager, config, dataResidencyManager);
 
+            // initiate SDK
             this.initiateSDK(_config.getConsentFilter());
 
-            // 8. Initiate ApplicationLifeCycleManager
-            RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
-
+            // initiate RudderUserSessionManager
             this.userSessionManager = new RudderUserSessionManager(this.preferenceManager, this.config);
             this.userSessionManager.startSessionTracking();
 
-            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(config, application, rudderFlushWorkManager, this, preferenceManager);
+            // initiate ApplicationLifeCycleManager
+            RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
+            AppVersion appVersion = new AppVersion(application);
+            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(config, appVersion, rudderFlushWorkManager, this, preferenceManager);
             this.applicationLifeCycleManager.trackApplicationUpdateStatus();
 
             initializeLifecycleTracking(applicationLifeCycleManager);
         } catch (Exception ex) {
             RudderLogger.logError("EventRepository: constructor: Exception occurred: " + ex.getMessage());
             RudderLogger.logError(ex.getCause());
+        }
+    }
+
+
+    // If the collectDeviceId flag is set to false, then check if deviceId is being used as anonymousId, if yes then clear it
+    private void clearAnonymousIdIfRequired() {
+        if (this.config.isCollectDeviceId()) return;
+        String currentAnonymousIdValue = this.preferenceManager.getCurrentAnonymousIdValue();
+        String deviceId = Utils.getDeviceId(application);
+        if (currentAnonymousIdValue == null || deviceId == null) return;
+        if (currentAnonymousIdValue.equals(deviceId)) {
+            RudderLogger.logDebug("EventRepository: clearAnonymousIdIfRequired: Starting from version 1.18.0, we are breaking the relation between anonymousId and device Id. Hence clearing the anonymousId");
+            this.preferenceManager.clearCurrentAnonymousIdValue();
         }
     }
 
@@ -188,26 +201,27 @@ class EventRepository {
         dbManager.startHandlerThread();
     }
 
+    private void initiatePreferenceManager(Application application) {
+        preferenceManager = RudderPreferenceManager.getInstance(application);
+        preferenceManager.performMigration();
+    }
+
+    private void initiateRudderElementCache(Application application, RudderConfig config, Identifiers identifiers) {
+        if (preferenceManager.getOptStatus()) {
+            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the identifiers");
+            RudderElementCache.initiate(application, null, null, null, config.isAutoCollectAdvertId(), config.isCollectDeviceId());
+        } else {
+            // We first send the anonymousId to RudderElementCache which will just set the anonymousId static variable in RudderContext class.
+            RudderElementCache.initiate(application, identifiers.anonymousId,
+                    identifiers.advertisingId, identifiers.deviceToken, config.isAutoCollectAdvertId(), config.isCollectDeviceId());
+        }
+    }
+
     private void updateAnonymousIdHeaderString() throws UnsupportedEncodingException {
         String anonymousId = RudderContext.getAnonymousId();
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousId: %s", anonymousId));
         this.anonymousIdHeaderString = Base64.encodeToString(anonymousId.getBytes(CHARSET_UTF_8), Base64.NO_WRAP);
         RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: anonymousIdHeaderString: %s", this.anonymousIdHeaderString));
-    }
-
-    private void initiatePreferenceManager(Application application, RudderConfig config, Identifiers identifiers) {
-        preferenceManager = RudderPreferenceManager.getInstance(application);
-        preferenceManager.performMigration();
-        RudderLogger.logDebug("EventRepository: constructor: Initiating RudderElementCache");
-        // 2. initiate RudderElementCache
-        if (preferenceManager.getOptStatus()) {
-            RudderLogger.logDebug("User Opted out for tracking the activity, hence dropping the identifiers");
-            RudderElementCache.initiate(application, null, null, null, config.isAutoCollectAdvertId());
-        } else {
-            // We first send the anonymousId to RudderElementCache which will just set the anonymousId static variable in RudderContext class.
-            RudderElementCache.initiate(application, identifiers.anonymousId,
-                    identifiers.advertisingId, identifiers.deviceToken, config.isAutoCollectAdvertId());
-        }
     }
 
     private void updateAuthHeaderString(String writeKey) {
@@ -288,7 +302,7 @@ class EventRepository {
     private void enableStatsCollection(SourceConfiguration.StatsCollection statsCollection) {
         Metrics rudderMetrics = ReportManager.getMetrics();
         boolean metricsCollection = statsCollection.getMetrics().isEnabled();
-        if(rudderMetrics!= null && !metricsCollection) {
+        if (rudderMetrics != null && !metricsCollection) {
             rudderMetrics.enable(false);
         }
     }
@@ -436,7 +450,7 @@ class EventRepository {
      * @return optOut status
      */
     boolean getOptStatus() {
-        if(preferenceManager == null)
+        if (preferenceManager == null)
             return false;
         return preferenceManager.getOptStatus();
     }

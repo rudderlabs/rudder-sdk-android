@@ -44,6 +44,8 @@ class Constants {
     static final long DEFAULT_SESSION_TIMEOUT = 300000;
     // default for automatic session tracking
     static final boolean AUTO_SESSION_TRACKING = true;
+    // default for collect deviceId
+    static final boolean COLLECT_DEVICE_ID = true;
     // default residency server
     static final RudderDataResidencyServer DATA_RESIDENCY_SERVER = RudderDataResidencyServer.US;
 
