@@ -20,6 +20,7 @@ import com.rudderstack.gsonrudderadapter.GsonAdapter;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -162,8 +163,8 @@ public class RudderClient {
         if (rudderReporter == null) {
             rudderReporter = new DefaultRudderReporter(context, METRICS_URL_PROD,
                     new Configuration(new LibraryMetadata(
-                    BuildConfig.LIBRARY_PACKAGE_NAME, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, writeKeyOrBlank
-            )), new GsonAdapter());
+                            BuildConfig.LIBRARY_PACKAGE_NAME, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, writeKeyOrBlank
+                    )), new GsonAdapter());
             rudderReporter.getMetrics().getSyncer().startScheduledSyncs(30000, true, 10);
             ReportManager.initiate(rudderReporter.getMetrics());
 
@@ -707,11 +708,19 @@ public class RudderClient {
 
     /**
      * Reset SDK
+     * @deprecated Use {@link #reset(boolean) reset(false)} instead
      */
     public void reset() {
         RudderElementCache.reset();
         if (repository != null) {
             repository.reset();
+        }
+    }
+
+    public void reset(boolean clearAnonymousId) {
+        reset();
+        if (clearAnonymousId && repository != null) {
+            repository.updateAnonymousId(UUID.randomUUID().toString());
         }
     }
 

@@ -18,10 +18,10 @@ class RudderElementCache {
         // stop instantiating
     }
 
-    static void initiate(Application application, String anonymousId, String advertisingId, String deviceToken, boolean isAutoCollectAdvertId) {
+    static void initiate(Application application, String anonymousId, String advertisingId, String deviceToken, boolean isAutoCollectAdvertId, boolean isCollectDeviceId) {
         if (cachedContext == null) {
             RudderLogger.logDebug("RudderElementCache: initiating RudderContext");
-            cachedContext = new RudderContext(application, anonymousId, advertisingId, deviceToken);
+            cachedContext = new RudderContext(application, anonymousId, advertisingId, deviceToken, isCollectDeviceId);
             if (isAutoCollectAdvertId) {
                 cachedContext.updateDeviceWithAdId();
             }

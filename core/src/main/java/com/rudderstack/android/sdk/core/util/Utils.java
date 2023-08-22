@@ -82,6 +82,7 @@ public class Utils {
         return formatter.format(date);
     }
 
+    @Nullable
     public static String getDeviceId(Application application) {
         String androidId = getString(application.getContentResolver(), ANDROID_ID);
         if (!TextUtils.isEmpty(androidId)
@@ -91,8 +92,7 @@ public class Utils {
         ) {
             return androidId;
         }
-        // If this still fails, generate random identifier that does not persist across installations
-        return UUID.randomUUID().toString();
+        return null;
     }
 
     public static Map<String, Object> convertToMap(String json) {
