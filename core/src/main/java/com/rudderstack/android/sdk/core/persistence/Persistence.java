@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 
@@ -20,8 +19,8 @@ import java.util.Locale;
 public interface Persistence {
 
 
-
     void addDbCloseListener(DbCloseListener listener);
+
     void addDbCreateListener(DbCreateListener listener);
 
     boolean isAccessible();

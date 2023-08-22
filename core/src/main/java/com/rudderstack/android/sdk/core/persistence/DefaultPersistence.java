@@ -43,11 +43,6 @@ public class DefaultPersistence extends SQLiteOpenHelper implements Persistence 
         initialDatabase = null;
     }
 
-    @Override
-    public void onOpen(SQLiteDatabase db) {
-        super.onOpen(db);
-        RudderLogger.logError("DefaultPersistence: onOpen: db: " + db.isOpen());
-    }
 
     @Override
     public SQLiteDatabase getWritableDatabase() {

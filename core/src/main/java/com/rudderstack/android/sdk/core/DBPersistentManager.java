@@ -132,10 +132,9 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         PersistenceProvider.Factory persistenceFactory = createPersistenceFactory(params);
         if (instance == null) {
             RudderLogger.logInfo("DBPersistentManager: getInstance: creating instance");
-            if(persistenceFactory != null) {
+            if (persistenceFactory != null) {
                 instance = new DBPersistentManager(application, persistenceFactory);
-                RudderLogger.logError("persistence.isAccessible: " + instance.persistence.isAccessible());
-            }else {
+            } else {
                 RudderLogger.logError("DBPersistentManager: Initialization failed. PersistenceFactory is null");
 
             }
@@ -143,18 +142,19 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         return instance;
     }
 
-    static @Nullable DBPersistentManager getInstance(){
+    static @Nullable DBPersistentManager getInstance() {
         return instance;
     }
+
     private static @Nullable PersistenceProvider.Factory createPersistenceFactory(DbManagerParams params) {
         try {
             String persistenceProviderFactoryClassName = params.persistenceProviderFactoryClassName;
-            if(Utils.isEmpty(persistenceProviderFactoryClassName)){
+            if (Utils.isEmpty(persistenceProviderFactoryClassName)) {
                 RudderLogger.logDebug("DBPersistentManager: persistenceProviderFactoryClassName is null or empty. Switching to default persistence provider");
                 persistenceProviderFactoryClassName = DefaultPersistenceProviderFactory.class.getName();
 
             }
-            PersistenceProvider.Factory factory = (PersistenceProvider.Factory)Class.forName(persistenceProviderFactoryClassName).newInstance();
+            PersistenceProvider.Factory factory = (PersistenceProvider.Factory) Class.forName(persistenceProviderFactoryClassName).newInstance();
             factory.setDbName(DB_NAME);
             factory.setDbVersion(DB_VERSION);
             factory.setEncryptedDbName(ENCRYPTED_DB_NAME);
@@ -637,7 +637,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         persistence.close();
     }
 
-    static class DbManagerParams{
+    static class DbManagerParams {
         final boolean isDBEncryptionEnabled;
         final String persistenceProviderFactoryClassName;
         final String encryptionKey;

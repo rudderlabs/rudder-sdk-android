@@ -3,12 +3,6 @@ package com.rudderstack.android.sdk.core.persistence;
 import android.app.Application;
 import android.content.ContentValues;
 import android.database.Cursor;
-
-import net.sqlcipher.database.SQLiteCursorDriver;
-import net.sqlcipher.database.SQLiteDatabase;
-import net.sqlcipher.database.SQLiteOpenHelper;
-import net.sqlcipher.database.SQLiteQuery;
-
 import android.database.SQLException;
 import android.os.Build;
 import android.os.CancellationSignal;
@@ -19,6 +13,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.rudderstack.android.sdk.core.RudderLogger;
+
+import net.sqlcipher.database.SQLiteDatabase;
+import net.sqlcipher.database.SQLiteOpenHelper;
 
 import java.io.File;
 import java.util.List;
@@ -38,14 +35,15 @@ public class EncryptedPersistence extends SQLiteOpenHelper implements Persistenc
     EncryptedPersistence(Application application, DbParams params) {
         super(application, params.dbName, null, params.dbVersion);
         this.encryptPassword = params.encryptPassword;
-//        this.application = application;
     }
+
     private SQLiteDatabase getWritableDatabase() {
-        if(initialDatabase != null){
+        if (initialDatabase != null) {
             return initialDatabase;
         }
         return getWritableDatabase(encryptPassword);
     }
+
     @Override
     public void onCreate(SQLiteDatabase db) {
         this.initialDatabase = db;
@@ -197,7 +195,6 @@ public class EncryptedPersistence extends SQLiteOpenHelper implements Persistenc
     }
 
 
-
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void validateSql(@NonNull String sql, @Nullable CancellationSignal cancellationSignal) {
@@ -277,7 +274,7 @@ public class EncryptedPersistence extends SQLiteOpenHelper implements Persistenc
         final @Nullable String encryptPassword;
 
         public DbParams(String dbName, int dbVersion) {
-            this(dbName, dbVersion,  null);
+            this(dbName, dbVersion, null);
         }
 
         public DbParams(String dbName, int dbVersion,
