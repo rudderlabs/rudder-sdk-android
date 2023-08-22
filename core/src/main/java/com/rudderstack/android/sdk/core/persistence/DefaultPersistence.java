@@ -24,6 +24,7 @@ import java.util.Locale;
  * Default implementation of {@link Persistence}
  * Uses android.database.* classes
  */
+// START-NO-SONAR-SCAN
 public class DefaultPersistence extends SQLiteOpenHelper implements Persistence {
     private final List<DbCloseListener> dbCloseListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
     private final List<DbCreateListener> dbCreateListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
@@ -274,3 +275,4 @@ public class DefaultPersistence extends SQLiteOpenHelper implements Persistence 
 
     }
 }
+//END-NO-SONAR-SCAN

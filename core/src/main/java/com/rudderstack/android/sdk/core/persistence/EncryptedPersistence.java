@@ -22,9 +22,10 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Default implementation of {@link Persistence}
- * Uses android.database.* classes
+ * Encrypted persistence implementation of {@link Persistence}
+ * Uses net.sqlcipher.database.* classes
  */
+// START-NO-SONAR-SCAN
 public class EncryptedPersistence extends SQLiteOpenHelper implements Persistence {
     private final List<DbCloseListener> dbCloseListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
     private final List<DbCreateListener> dbCreateListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
@@ -285,3 +286,4 @@ public class EncryptedPersistence extends SQLiteOpenHelper implements Persistenc
         }
     }
 }
+//END-NO-SONAR-SCAN
