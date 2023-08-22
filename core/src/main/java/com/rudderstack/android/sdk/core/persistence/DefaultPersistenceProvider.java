@@ -53,8 +53,8 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
     private EncryptedPersistence getEncryptedPersistence() {
         //enable sqlcipher db
         initCipheredDatabase();
-        if(! checkDatabaseExists(application, params.encryptedDbName)
-        && checkDatabaseExists(application, params.dbName)){
+        if(! checkDatabaseExists(params.encryptedDbName)
+        && checkDatabaseExists(params.dbName)){
             migrateToEncryptedDatabase(application.getDatabasePath(params.encryptedDbName));
         }
         return new EncryptedPersistence(application, new EncryptedPersistence.DbParams(params.encryptedDbName,
@@ -63,8 +63,8 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
 
     @NonNull
     private DefaultPersistence getDefaultPersistence() {
-        if(! checkDatabaseExists(application, params.dbName) &&
-                checkDatabaseExists(application, params.encryptedDbName)){
+        if(! checkDatabaseExists(params.dbName) &&
+                checkDatabaseExists(params.encryptedDbName)){
             initCipheredDatabase();
             migrateToDefaultDatabase(application.getDatabasePath(params.dbName));
         }
@@ -105,7 +105,7 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
         decryptedDb.delete();
     }
 
-    private boolean checkDatabaseExists(Application application, String dbName) {
+    private boolean checkDatabaseExists( String dbName) {
         return application.getDatabasePath(dbName).exists();
     }
 

@@ -110,4 +110,5 @@ public interface Persistence {
     interface DbCreateListener {
         void onDbCreate();
     }
+
 }

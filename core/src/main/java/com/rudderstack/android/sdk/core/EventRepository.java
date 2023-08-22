@@ -148,7 +148,7 @@ class EventRepository {
 
             initializeLifecycleTracking(applicationLifeCycleManager);
         } catch (Exception ex) {
-            Log.e("RudderSDK", "EventRepository: constructor: Exception occurred: ", ex );
+            RudderLogger.logError("EventRepository: constructor: Exception occurred: " + ex.getMessage());
             RudderLogger.logError(ex.getCause());
         }
     }
@@ -180,10 +180,12 @@ class EventRepository {
     }
 
     private void initializeDbManager(Application application) {
-        DBPersistentManager.DbManagerParams dbManagerParams = new DBPersistentManager.DbManagerParams(config.isDbEncryptionEnabled(),
-                config.getPersistenceProviderFactoryClassName(), config.getEncryptionKey());
+        RudderConfig.DBEncryption dbEncryption = config.getDbEncryption();
+        DBPersistentManager.DbManagerParams dbManagerParams = new DBPersistentManager.DbManagerParams(dbEncryption.enable,
+                dbEncryption.getPersistenceProviderFactoryClassName(), dbEncryption.key);
         this.dbManager = DBPersistentManager.getInstance(application,dbManagerParams);
-
+        dbManager.checkForMigrations();
+        dbManager.startHandlerThread();
     }
 
     private void updateAnonymousIdHeaderString() throws UnsupportedEncodingException {
@@ -294,7 +296,7 @@ class EventRepository {
     private void saveFlushConfig() {
         RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString,
                 anonymousIdHeaderString, config.getFlushQueueSize(), config.getLogLevel(), config.isGzipEnabled(),
-                config.isDbEncryptionEnabled(), config.getEncryptionKey());
+                config.getDbEncryption().enable, config.getDbEncryption().key);
         rudderFlushWorkManager.saveRudderFlushConfig(rudderFlushConfig);
     }
 

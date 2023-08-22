@@ -115,8 +115,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         persistence.addDbCreateListener(() -> {
             String eventSchemaSQL = getSchemaStatement();
             createSchema(eventSchemaSQL);
-            checkForMigrations();
-            startHandlerThread();
+
         });
     }
 
@@ -133,9 +132,10 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         PersistenceProvider.Factory persistenceFactory = createPersistenceFactory(params);
         if (instance == null) {
             RudderLogger.logInfo("DBPersistentManager: getInstance: creating instance");
-            if(persistenceFactory != null)
+            if(persistenceFactory != null) {
                 instance = new DBPersistentManager(application, persistenceFactory);
-            else {
+                RudderLogger.logError("persistence.isAccessible: " + instance.persistence.isAccessible());
+            }else {
                 RudderLogger.logError("DBPersistentManager: Initialization failed. PersistenceFactory is null");
 
             }
@@ -149,7 +149,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
     private static @Nullable PersistenceProvider.Factory createPersistenceFactory(DbManagerParams params) {
         try {
             String persistenceProviderFactoryClassName = params.persistenceProviderFactoryClassName;
-            if(persistenceProviderFactoryClassName == null || persistenceProviderFactoryClassName.isEmpty()){
+            if(Utils.isEmpty(persistenceProviderFactoryClassName)){
                 RudderLogger.logDebug("DBPersistentManager: persistenceProviderFactoryClassName is null or empty. Switching to default persistence provider");
                 persistenceProviderFactoryClassName = DefaultPersistenceProviderFactory.class.getName();
 
@@ -450,7 +450,6 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
        Starts the Handler thread, which is responsible for storing the messages in its internal queue, and
        save them to the sqlite db sequentially.
      */
-    @VisibleForTesting
     void startHandlerThread() {
         Runnable runnable = () -> {
             try {

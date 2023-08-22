@@ -63,7 +63,7 @@ public class RudderFlushWorkManager {
                 return;
             }
             Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
-            String persistenceProviderFactory = config.getPersistenceProviderFactoryClassName();
+            String persistenceProviderFactory = config.getDbEncryption().getPersistenceProviderFactoryClassName();
             if(persistenceProviderFactory == null)
                 persistenceProviderFactory = "";
             PeriodicWorkRequest flushPendingEvents =

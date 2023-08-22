@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
  *
  * */
 public class RudderConfig {
-    private @Nullable String encryptionKey = null;
     @Nullable
     private String dataPlaneUrl;
     private int flushQueueSize;
@@ -54,11 +53,13 @@ public class RudderConfig {
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
     private RudderDataResidencyServer rudderDataResidencyServer;
-    @Nullable private RudderConsentFilter consentFilter;
+    @Nullable
+    private RudderConsentFilter consentFilter;
     private boolean isGzipEnabled = true;
-    private boolean isDbEncryptionEnabled = false;
 
-    private final String persistenceProviderFactoryClassName;
+    private DBEncryption dbEncryption = new DBEncryption(Constants.DEFAULT_DB_ENCRYPTION_ENABLED,
+            null);
+
 
     RudderConfig() {
         this(
@@ -84,8 +85,6 @@ public class RudderConfig {
                 Constants.DATA_RESIDENCY_SERVER,
                 null,
                 Constants.DEFAULT_GZIP_ENABLED,
-                Constants.DEFAULT_DB_ENCRYPTION_ENABLED,
-                null,
                 null
         );
     }
@@ -113,9 +112,8 @@ public class RudderConfig {
             RudderDataResidencyServer rudderDataResidencyServer,
             @Nullable RudderConsentFilter consentFilter,
             boolean isGzipEnabled,
-            boolean isDbEncryptionEnabled,
-            @Nullable String encryptionKey,
-            @Nullable String persistenceProviderFactoryClassName
+            @Nullable DBEncryption dbEncryption
+
 
     ) {
         RudderLogger.init(logLevel);
@@ -202,9 +200,9 @@ public class RudderConfig {
         this.rudderDataResidencyServer = rudderDataResidencyServer;
         this.consentFilter = consentFilter;
         this.isGzipEnabled = isGzipEnabled;
-        this.isDbEncryptionEnabled = isDbEncryptionEnabled;
-        this.encryptionKey = encryptionKey;
-        this.persistenceProviderFactoryClassName = persistenceProviderFactoryClassName;
+        if (dbEncryption != null) {
+            this.dbEncryption = dbEncryption;
+        }
     }
 
     /**
@@ -216,8 +214,8 @@ public class RudderConfig {
         return dataPlaneUrl;
     }
 
-    public String getPersistenceProviderFactoryClassName() {
-        return persistenceProviderFactoryClassName;
+    public @NonNull DBEncryption getDbEncryption() {
+        return dbEncryption;
     }
 
     /**
@@ -342,6 +340,7 @@ public class RudderConfig {
     public boolean isGzipEnabled() {
         return isGzipEnabled;
     }
+
     /**
      * @return configPlaneUrl (Link to your hosted version of source-config)
      * @deprecated use getControlPlaneUrl()
@@ -443,15 +442,6 @@ public class RudderConfig {
         this.rudderDataResidencyServer = rudderDataResidencyServer;
     }
 
-    @Nullable
-    public String getEncryptionKey() {
-        return encryptionKey;
-    }
-
-    public boolean isDbEncryptionEnabled() {
-        return isDbEncryptionEnabled;
-    }
-
     /**
      * @return custom toString implementation for RudderConfig
      */
@@ -471,9 +461,7 @@ public class RudderConfig {
         private @Nullable RudderConsentFilter consentFilter = null;
         private @Nullable String dataPlaneUrl = null;
         private boolean isGzipEnabled = Constants.DEFAULT_GZIP_ENABLED;
-        private boolean isDbEncryptionEnabled = Constants.DEFAULT_DB_ENCRYPTION_ENABLED;
-        private String encryptionKey = null;
-        private String persistenceProviderFactoryClassName = null;
+        private @Nullable DBEncryption dbEncryption = null;
 
         /**
          * @param factory : Instance of RudderIntegration.Factory (for more information visit https://docs.rudderstack.com)
@@ -640,6 +628,7 @@ public class RudderConfig {
         /**
          * Enable/Disable Gzip.
          * Gzip is enabled by default
+         *
          * @param isGzip true to enable and vice-versa
          * @return RudderConfig.Builder
          */
@@ -647,9 +636,9 @@ public class RudderConfig {
             this.isGzipEnabled = isGzip;
             return this;
         }
-        public Builder withDbEncryptionEnabled(boolean isDbEncryptionEnabled, @Nullable String encryptionKey) {
-            this.isDbEncryptionEnabled = isDbEncryptionEnabled;
-            this.encryptionKey = encryptionKey;
+
+        public Builder withDbEncryption(DBEncryption dbEncryption) {
+            this.dbEncryption = dbEncryption;
             return this;
         }
 
@@ -796,10 +785,7 @@ public class RudderConfig {
             this.autoSessionTracking = autoSessionTracking;
             return this;
         }
-        public Builder withPersistenceProviderFactoryClassName(String persistenceProviderFactoryClassName) {
-            this.persistenceProviderFactoryClassName = persistenceProviderFactoryClassName;
-            return this;
-        }
+
 
         /**
          * Finalize your config building
@@ -830,10 +816,39 @@ public class RudderConfig {
                     this.rudderDataResidencyServer,
                     consentFilter,
                     this.isGzipEnabled,
-                    this.isDbEncryptionEnabled,
-                    this.encryptionKey,
-                    this.persistenceProviderFactoryClassName
+                    this.dbEncryption
             );
+        }
+    }
+
+    public static class DBEncryption {
+        public final boolean enable;
+        public final @Nullable String key;
+        /**
+         * Not documented. This is to set the custom persistence provider factory.
+         * The SDK creates an instance of this factory and uses it to get the PersistenceProvider.
+         * This is experimental and not encouraged to be used by external users
+         */
+        private @Nullable String persistenceProviderFactoryClassName = null;
+
+        public DBEncryption(boolean enable, @Nullable String key) {
+            this(enable, key, null);
+        }
+
+        public DBEncryption(boolean enable, @Nullable String key,
+                            @Nullable String persistenceProviderFactoryClassName) {
+            this.enable = enable;
+            this.key = key;
+            this.persistenceProviderFactoryClassName = persistenceProviderFactoryClassName;
+        }
+
+        public void setPersistenceProviderFactoryClassName(String persistenceProviderFactoryClassName) {
+            this.persistenceProviderFactoryClassName = persistenceProviderFactoryClassName;
+        }
+
+        @Nullable
+        String getPersistenceProviderFactoryClassName() {
+            return persistenceProviderFactoryClassName;
         }
     }
 }

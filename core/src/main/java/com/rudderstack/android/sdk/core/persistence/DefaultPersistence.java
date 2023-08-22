@@ -14,6 +14,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.rudderstack.android.sdk.core.RudderLogger;
+
 import java.io.File;
 import java.util.List;
 import java.util.Locale;
@@ -39,6 +41,12 @@ public class DefaultPersistence extends SQLiteOpenHelper implements Persistence 
             listener.onDbCreate();
         }
         initialDatabase = null;
+    }
+
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        RudderLogger.logError("DefaultPersistence: onOpen: db: " + db.isOpen());
     }
 
     @Override
