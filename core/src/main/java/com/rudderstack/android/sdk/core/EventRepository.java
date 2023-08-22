@@ -157,6 +157,7 @@ class EventRepository {
         if (this.config.isCollectDeviceId()) return;
         String currentAnonymousIdValue = this.preferenceManager.getCurrentAnonymousIdValue();
         String deviceId = Utils.getDeviceId(application);
+        if (currentAnonymousIdValue == null || deviceId == null) return;
         if (currentAnonymousIdValue.equals(deviceId)) {
             RudderLogger.logDebug("EventRepository: clearAnonymousIdIfRequired: Starting from version 1.18.0, we are breaking the relation between anonymousId and device Id. Hence clearing the anonymousId");
             this.preferenceManager.clearCurrentAnonymousIdValue();
