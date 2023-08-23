@@ -1,5 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
+import static com.rudderstack.android.sdk.core.RudderFlushWorkManager.PERSISTENCE_PROVIDER_FACTORY_CLASS_NAME_KEY;
+
 import android.app.Application;
 import android.content.Context;
 
@@ -8,11 +10,13 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 public class FlushEventsWorker extends Worker {
+    private String persistenceProviderFactoryClassName = "";
 
     public FlushEventsWorker(
             @NonNull Context context,
             @NonNull WorkerParameters params) {
         super(context, params);
+        persistenceProviderFactoryClassName = params.getInputData().getString(PERSISTENCE_PROVIDER_FACTORY_CLASS_NAME_KEY);
     }
 
     @Override
@@ -24,7 +28,9 @@ public class FlushEventsWorker extends Worker {
         }
         RudderLogger.init(flushConfig.getLogLevel());
 
-        DBPersistentManager dbManager = DBPersistentManager.getInstance((Application) getApplicationContext());
+        DBPersistentManager.DbManagerParams params = new DBPersistentManager
+                .DbManagerParams(flushConfig.isDbEncrypted(), persistenceProviderFactoryClassName, flushConfig.getEncryptionKey());
+        DBPersistentManager dbManager = DBPersistentManager.getInstance((Application) getApplicationContext(), params);
         RudderNetworkManager networkManager = new RudderNetworkManager(flushConfig.getAuthHeaderString(), flushConfig.getAnonymousHeaderString(),
                 flushConfig.isGzipConfigured());
         if (dbManager == null) {

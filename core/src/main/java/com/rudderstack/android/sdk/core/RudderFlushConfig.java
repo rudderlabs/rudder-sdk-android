@@ -18,6 +18,11 @@ public class RudderFlushConfig implements Serializable {
     @SerializedName("isGzipConfigured")
     private final boolean isGzipConfigured;
 
+    private final boolean isDbEncrypted;
+    private final String encryptionKey;
+
+
+
     public String getDataPlaneUrl() {
         return dataPlaneUrl;
     }
@@ -38,16 +43,28 @@ public class RudderFlushConfig implements Serializable {
         return logLevel;
     }
 
+    public boolean isDbEncrypted() {
+        return isDbEncrypted;
+    }
+
+    public String getEncryptionKey() {
+        return encryptionKey;
+    }
+
     public boolean isGzipConfigured() {
         return isGzipConfigured;
     }
-    public RudderFlushConfig(String dataPlaneUrl, String authHeaderString, String anonymousHeaderString, int flushQueueSize, int logLevel,
-                             boolean isGzipConfigured) {
+    public RudderFlushConfig(String dataPlaneUrl, String authHeaderString,
+                             String anonymousHeaderString, int flushQueueSize, int logLevel,
+                             boolean isGzipConfigured, boolean isDbEncrypted, String encryptionKey) {
         this.dataPlaneUrl = dataPlaneUrl;
         this.authHeaderString = authHeaderString;
         this.anonymousHeaderString = anonymousHeaderString;
         this.flushQueueSize = flushQueueSize;
         this.logLevel = logLevel;
         this.isGzipConfigured = isGzipConfigured;
+        this.isDbEncrypted = isDbEncrypted;
+        this.encryptionKey = encryptionKey;
+
     }
 }

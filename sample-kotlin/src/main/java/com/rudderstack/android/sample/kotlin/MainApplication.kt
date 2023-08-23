@@ -33,6 +33,7 @@ class MainApplication : Application(), Configuration.Provider {
                 .withTrackLifecycleEvents(true)
                 .withNewLifecycleEvents(true)
                 .withRecordScreenViews(false)
+                .withDbEncryption(RudderConfig.DBEncryption(false, "versys"))
                 .build()
         )
 

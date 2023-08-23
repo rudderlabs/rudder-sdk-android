@@ -168,7 +168,7 @@ public class DBPersistentManagerTest {
     @Test
     public void doneEventsTest() {
         final DBPersistentManager dbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider
-                .<Application>getApplicationContext());
+                .<Application>getApplicationContext(), new DBPersistentManager.DbManagerParams(false, null, null));
 
         //insert data into db
         dbPersistentManager.saveEventSync(MESSAGE_1);
