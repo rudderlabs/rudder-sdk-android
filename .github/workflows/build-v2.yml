@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  cancel_previous:
+  cancel_previous-v2:
 
     runs-on: ubuntu-latest
     steps:
@@ -17,7 +17,7 @@ jobs:
         with:
           workflow_id: ${{ github.event.workflow.id }}
 
-  build:
+  build-v2:
     needs: cancel_previous
     name: Build & Code Quality Checks
     runs-on: ubuntu-latest
@@ -38,7 +38,8 @@ jobs:
       - name: Set Node 16
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version-file: '.nvmrc'
+          cache: 'npm'
 
       - name: Install node_modules
         run: |
