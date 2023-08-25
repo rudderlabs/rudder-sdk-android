@@ -1,9 +1,13 @@
 package com.rudderstack.android.sdk.core.persistence;
 
 import android.app.Application;
+import android.database.sqlite.SQLiteException;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.rudderstack.android.sdk.core.RudderLogger;
 
 import net.sqlcipher.database.SQLiteDatabase;
 
@@ -57,8 +61,24 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
                 && checkDatabaseExists(params.dbName)) {
             migrateToEncryptedDatabase(application.getDatabasePath(params.encryptedDbName));
         }
+        EncryptedPersistence encryptedPersistence = new EncryptedPersistence(application, new EncryptedPersistence.DbParams(params.encryptedDbName,
+                params.dbVersion, params.encryptionKey));
+        if (checkIfEncryptionIsValid(encryptedPersistence))
+            return encryptedPersistence;
+        //drop database
+        deleteEncryptedDb();
         return new EncryptedPersistence(application, new EncryptedPersistence.DbParams(params.encryptedDbName,
                 params.dbVersion, params.encryptionKey));
+    }
+
+    private static boolean checkIfEncryptionIsValid(EncryptedPersistence encryptedPersistence) {
+        try {
+            encryptedPersistence.isDatabaseIntegrityOk();
+            return true;
+        } catch (SQLiteException e) {
+            RudderLogger.logError("Encryption key is invalid: Dumping the database and constructing a new one");
+        }
+        return false;
     }
 
     @NonNull
@@ -66,22 +86,40 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
         if (!checkDatabaseExists(params.dbName) &&
                 checkDatabaseExists(params.encryptedDbName)) {
             initCipheredDatabase();
-            migrateToDefaultDatabase(application.getDatabasePath(params.dbName));
+            createDefaultDatabase();
+            try{
+                migrateToDefaultDatabase(application.getDatabasePath(params.dbName));
+            } catch (Exception e) {
+                RudderLogger.logError("Encryption key is invalid: Dumping the database and constructing a new unencrypted one");
+                deleteEncryptedDb();
+            }
         }
         return new DefaultPersistence(application, new DefaultPersistence.DbParams(params.dbName, params.dbVersion));
+    }
+
+    private void createDefaultDatabase() {
+        File databasePath = application.getDatabasePath(params.dbName);
+        SQLiteDatabase database = SQLiteDatabase.openOrCreateDatabase(databasePath.getAbsolutePath(), "", null);
+        database.close();
     }
 
     private void initCipheredDatabase() {
         SQLiteDatabase.loadLibs(application);
     }
 
+    private boolean deleteEncryptedDb() {
+        File encryptedDb = application.getDatabasePath(params.encryptedDbName);
+        if (encryptedDb.exists())
+            return encryptedDb.delete();
+        return false;
+    }
 
     private void migrateToDefaultDatabase(File databasePath) {
-        SQLiteDatabase database = SQLiteDatabase.openOrCreateDatabase(databasePath.getAbsolutePath(), "", null);
-        database.close();
+
         File encryptedDb = application.getDatabasePath(params.encryptedDbName);
         String encryptedPath = encryptedDb.getAbsolutePath();
-        database = SQLiteDatabase.openDatabase(encryptedPath, params.encryptionKey, null, SQLiteDatabase.OPEN_READWRITE);
+        SQLiteDatabase database = SQLiteDatabase.openDatabase(encryptedPath, params.encryptionKey, null, SQLiteDatabase.OPEN_READWRITE);
+        database.isDatabaseIntegrityOk();
         database.rawExecSQL(String.format("ATTACH DATABASE '%s' AS rl_persistence KEY ''",
                 databasePath.getAbsolutePath()));
         database.rawExecSQL("select sqlcipher_export('rl_persistence')");
@@ -103,7 +141,9 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
         database.rawExecSQL("DETACH DATABASE rl_persistence_encrypted");
         database.close();
         decryptedDb.delete();
+
     }
+
 
     private boolean checkDatabaseExists(String dbName) {
         return application.getDatabasePath(dbName).exists();
