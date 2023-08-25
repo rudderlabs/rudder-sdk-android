@@ -28,14 +28,15 @@ import java.util.Locale;
 // START-NO-SONAR-SCAN
 public class EncryptedPersistence extends SQLiteOpenHelper implements Persistence {
     private final List<DbCloseListener> dbCloseListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
-    private final List<DbCreateListener> dbCreateListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private final DbCreateListener dbCreateListener;
     private final String encryptPassword;
     private SQLiteDatabase initialDatabase = null;
 
 
-    EncryptedPersistence(Application application, DbParams params) {
+    EncryptedPersistence(Application application, DbParams params, @Nullable DbCreateListener dbCreateListener) {
         super(application, params.dbName, null, params.dbVersion);
         this.encryptPassword = params.encryptPassword;
+        this.dbCreateListener = dbCreateListener;
     }
 
     private SQLiteDatabase getWritableDatabase() {
@@ -48,8 +49,8 @@ public class EncryptedPersistence extends SQLiteOpenHelper implements Persistenc
     @Override
     public void onCreate(SQLiteDatabase db) {
         this.initialDatabase = db;
-        for (DbCreateListener listener : dbCreateListeners) {
-            listener.onDbCreate();
+        if(dbCreateListener != null){
+            dbCreateListener.onDbCreate();
         }
         this.initialDatabase = null;
     }
@@ -257,11 +258,6 @@ public class EncryptedPersistence extends SQLiteOpenHelper implements Persistenc
     @Override
     public void addDbCloseListener(DbCloseListener listener) {
         dbCloseListeners.add(listener);
-    }
-
-    @Override
-    public void addDbCreateListener(DbCreateListener listener) {
-        dbCreateListeners.add(listener);
     }
 
     @Override

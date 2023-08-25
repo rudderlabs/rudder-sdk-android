@@ -3,7 +3,7 @@ package com.rudderstack.android.sdk.core.persistence;
 import android.app.Application;
 
 public interface PersistenceProvider {
-    Persistence get();
+    Persistence get(Persistence.DbCreateListener dbCreateListener);
 
     /**
      * Must have a default constructor.

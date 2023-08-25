@@ -2,13 +2,13 @@ package com.rudderstack.android.sdk.core.persistence;
 
 import android.app.Application;
 import android.database.sqlite.SQLiteException;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.rudderstack.android.sdk.core.RudderLogger;
 
+import net.sqlcipher.Cursor;
 import net.sqlcipher.database.SQLiteDatabase;
 
 import java.io.File;
@@ -45,35 +45,42 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
     }
 
     @Override
-    public Persistence get() {
+    public Persistence get(Persistence.DbCreateListener dbCreateListener) {
         if (!params.isEncrypted) {
-            return getDefaultPersistence();
+            return getDefaultPersistence(dbCreateListener);
         } else {
-            return getEncryptedPersistence();
+            return getEncryptedPersistence(dbCreateListener);
         }
     }
 
     @NonNull
-    private EncryptedPersistence getEncryptedPersistence() {
+    private EncryptedPersistence getEncryptedPersistence(@Nullable Persistence.DbCreateListener dbCreateListener) {
         //enable sqlcipher db
         initCipheredDatabase();
+        File encryptedDbPath = application.getDatabasePath(params.encryptedDbName);
         if (!checkDatabaseExists(params.encryptedDbName)
                 && checkDatabaseExists(params.dbName)) {
-            migrateToEncryptedDatabase(application.getDatabasePath(params.encryptedDbName));
+            migrateToEncryptedDatabase(encryptedDbPath);
+        }else {
+            if (!checkIfEncryptionIsValid(encryptedDbPath))
+                deleteEncryptedDb();             //drop database
         }
-        EncryptedPersistence encryptedPersistence = new EncryptedPersistence(application, new EncryptedPersistence.DbParams(params.encryptedDbName,
-                params.dbVersion, params.encryptionKey));
-        if (checkIfEncryptionIsValid(encryptedPersistence))
-            return encryptedPersistence;
-        //drop database
-        deleteEncryptedDb();
-        return new EncryptedPersistence(application, new EncryptedPersistence.DbParams(params.encryptedDbName,
-                params.dbVersion, params.encryptionKey));
+        return createEncryptedObject(dbCreateListener);
     }
 
-    private static boolean checkIfEncryptionIsValid(EncryptedPersistence encryptedPersistence) {
-        try {
-            encryptedPersistence.isDatabaseIntegrityOk();
+    @NonNull
+    private EncryptedPersistence createEncryptedObject(@Nullable Persistence.DbCreateListener dbCreateListener) {
+        return new EncryptedPersistence(application,
+                new EncryptedPersistence.DbParams(params.encryptedDbName,
+                params.dbVersion, params.encryptionKey), dbCreateListener);
+    }
+
+
+    private boolean checkIfEncryptionIsValid(File encryptedDbPath) {
+        try (SQLiteDatabase database = SQLiteDatabase.openDatabase(encryptedDbPath.getAbsolutePath(),
+                params.encryptionKey, null, SQLiteDatabase.OPEN_READWRITE)) {
+            Cursor cursor = database.rawQuery("PRAGMA cipher_version", null);
+            cursor.close();
             return true;
         } catch (SQLiteException e) {
             RudderLogger.logError("Encryption key is invalid: Dumping the database and constructing a new one");
@@ -82,7 +89,7 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
     }
 
     @NonNull
-    private DefaultPersistence getDefaultPersistence() {
+    private DefaultPersistence getDefaultPersistence(@Nullable Persistence.DbCreateListener dbCreateListener) {
         if (!checkDatabaseExists(params.dbName) &&
                 checkDatabaseExists(params.encryptedDbName)) {
             initCipheredDatabase();
@@ -94,7 +101,7 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
                 deleteEncryptedDb();
             }
         }
-        return new DefaultPersistence(application, new DefaultPersistence.DbParams(params.dbName, params.dbVersion));
+        return new DefaultPersistence(application, new DefaultPersistence.DbParams(params.dbName, params.dbVersion), dbCreateListener);
     }
 
     private void createDefaultDatabase() {
