@@ -14,15 +14,21 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.error
 
-import com.rudderstack.android.ruddermetricsreporterandroid.Logger
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.*
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.google.gson.annotations.SerializedName
+import com.rudderstack.android.ruddermetricsreporterandroid.JSerialize
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.AppWithState
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.DeviceWithState
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.Error
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.Error.Companion.createError
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.ImmutableConfig
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.MetadataAware
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.Severity
+import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.squareup.moshi.Json
 
-class ErrorEvent : MetadataAware {
+class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
     @JvmOverloads
     internal constructor(
         originalError: Throwable? = null,
@@ -62,10 +68,28 @@ class ErrorEvent : MetadataAware {
         this.severityReason = severityReason
     }
 
+    @JsonIgnore
+    @Transient
+    @Json(ignore = true)
     val originalError: Throwable?
-    internal var severityReason: SeverityReason
 
+    @JsonIgnore
+    @Transient
+    @Json(ignore = true)
+    internal var severityReason: SeverityReason
+    @JsonIgnore
+    @Transient
+    @Json(ignore = true)
     val metadata: Metadata
+    @get:SerializedName("metadata")
+    @get:JsonProperty("metadata")
+    @get:Json(name = "metadata")
+    val metadataMap
+        get() = metadata.toMap()
+
+    @JsonIgnore
+    @Transient
+    @Json(ignore = true)
     private val discardClasses: Set<String>
     internal var projectPackages: Collection<String>
 
@@ -153,40 +177,6 @@ class ErrorEvent : MetadataAware {
 
     fun getSeverityReasonType(): String = severityReason.severityReasonType
 
-//    fun trimMetadataStringsTo(maxLength: Int): TrimMetrics {
-//        var stringCount = 0
-//        var charCount = 0
-//
-//        var stringAndCharCounts = metadata.trimMetadataStringsTo(maxLength)
-//        stringCount += stringAndCharCounts.itemsTrimmed
-//        charCount += stringAndCharCounts.dataTrimmed
-//        for (breadcrumb in breadcrumbs) {
-//            stringAndCharCounts = breadcrumb.impl.trimMetadataStringsTo(maxLength)
-//            stringCount += stringAndCharCounts.itemsTrimmed
-//            charCount += stringAndCharCounts.dataTrimmed
-//        }
-//        return TrimMetrics(stringCount, charCount)
-//    }
-
-//    fun trimBreadcrumbsBy(byteCount: Int): TrimMetrics {
-//        var removedBreadcrumbCount = 0
-//        var removedByteCount = 0
-//        while (removedByteCount < byteCount && breadcrumbs.isNotEmpty()) {
-//            val breadcrumb = breadcrumbs.removeAt(0)
-//            removedByteCount += JsonHelper.serialize(breadcrumb).size
-//            removedBreadcrumbCount++
-//        }
-//        when (removedBreadcrumbCount) {
-//            1 -> breadcrumbs.add(Breadcrumb("Removed to reduce payload size", logger))
-//            else -> breadcrumbs.add(
-//                Breadcrumb(
-//                    "Removed, along with ${removedBreadcrumbCount - 1} older breadcrumbs, to reduce payload size",
-//                    logger
-//                )
-//            )
-//        }
-//        return TrimMetrics(removedBreadcrumbCount, removedByteCount)
-//    }
 
     override fun addMetadata(section: String, value: Map<String, Any?>) =
         metadata.addMetadata(section, value)
@@ -201,6 +191,9 @@ class ErrorEvent : MetadataAware {
     override fun getMetadata(section: String) = metadata.getMetadata(section)
 
     override fun getMetadata(section: String, key: String) = metadata.getMetadata(section, key)
+    override fun serialize(jsonAdapter: JsonAdapter): String? {
+        return jsonAdapter.writeToJson(this)
+    }
 
     override fun toString(): String {
         return "ErrorEvent{" +
@@ -215,4 +208,6 @@ class ErrorEvent : MetadataAware {
                 ", context='" + context + '\'' +
                 "}"
     }
+
+
 }

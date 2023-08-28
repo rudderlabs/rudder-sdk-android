@@ -16,6 +16,7 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.error
 
+import com.rudderstack.android.ruddermetricsreporterandroid.JSerialize
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.MetadataAware
 import java.util.concurrent.ConcurrentHashMap
 
@@ -25,9 +26,9 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * Diagnostic information is presented on your Bugsnag dashboard in tabs.
  */
-data class Metadata @JvmOverloads constructor(
+data class Metadata @JvmOverloads constructor (
     internal val store: MutableMap<String, MutableMap<String, Any>> = ConcurrentHashMap()
-) : MetadataAware {
+) : MetadataAware{
 
     override fun addMetadata(section: String, value: Map<String, Any?>) {
         value.entries.forEach {

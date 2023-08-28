@@ -57,7 +57,7 @@ internal class BreadcrumbState(
         updateState {
             // use direct field access to avoid overhead of accessor method
             StateEvent.AddBreadcrumb(
-                breadcrumb.message,
+                breadcrumb.name,
                 breadcrumb.type,
                 // an encoding of milliseconds since the epoch
                 "t${breadcrumb.timestamp.time}",

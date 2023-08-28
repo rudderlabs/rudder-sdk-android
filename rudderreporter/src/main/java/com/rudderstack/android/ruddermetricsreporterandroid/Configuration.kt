@@ -61,8 +61,6 @@ class Configuration(var libraryMetadata: LibraryMetadata) {
         private const val DEFAULT_LAUNCH_CRASH_THRESHOLD_MS: Long = 5000
         private const val DEFAULT_MAX_STRING_VALUE_LENGTH = 10000
 
-        @JvmStatic
-        fun load(context: Context): Configuration = load(context)
 
     }
 }

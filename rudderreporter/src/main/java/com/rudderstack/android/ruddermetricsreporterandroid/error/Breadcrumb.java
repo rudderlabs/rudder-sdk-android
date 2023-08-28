@@ -17,27 +17,33 @@ package com.rudderstack.android.ruddermetricsreporterandroid.error;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rudderstack.android.ruddermetricsreporterandroid.Logger;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DateUtils;
+import com.squareup.moshi.Json;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import kotlin.jvm.Transient;
+
 @SuppressWarnings("ConstantConditions")
 public class Breadcrumb {
 
     // non-private to allow direct field access optimizations
-    private String message;
+    private String name;
     private BreadcrumbType type = BreadcrumbType.MANUAL;
     private Map<String, Object> metadata = new HashMap<>();
     private Date timestamp = new Date();
+    @JsonIgnore
+    @Transient
+    @Json(ignore = true)
     private final Logger logger;
 
 
     Breadcrumb(@NonNull String message, @NonNull Logger logger) {
-        this.message = message;
+        this.name = message;
         this.logger = logger;
     }
 
@@ -47,7 +53,7 @@ public class Breadcrumb {
                @NonNull Date timestamp,
                @NonNull Logger logger) {
         this.logger = logger;
-        this.message = message;
+        this.name = message;
         this.type = type;
         this.metadata = metadata;
         this.timestamp = timestamp;
@@ -60,9 +66,9 @@ public class Breadcrumb {
     /**
      * Sets the description of the breadcrumb
      */
-    public void setMessage(@NonNull String message) {
-        if (message != null) {
-            this.message = message;
+    public void setName(@NonNull String name) {
+        if (name != null) {
+            this.name = name;
         } else {
             logNull("message");
         }
@@ -72,8 +78,8 @@ public class Breadcrumb {
      * Gets the description of the breadcrumb
      */
     @NonNull
-    public String getMessage() {
-        return message;
+    public String getName() {
+        return name;
     }
 
 
@@ -123,7 +129,7 @@ public class Breadcrumb {
     @Override
     public String toString() {
         return "Breadcrumb{" +
-                "message='" + message + '\'' +
+                "message='" + name + '\'' +
                 ", type=" + type +
                 ", metadata=" + metadata +
                 ", timestamp=" + timestamp +

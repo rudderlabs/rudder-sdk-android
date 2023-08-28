@@ -20,6 +20,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.metrics.Meter
 
 interface Metrics {
     fun getMeter(): Meter
+    @Deprecated("Use [RudderReporter.syncer] instead")
     fun getSyncer():Syncer
     fun enable(enable: Boolean)
     fun shutdown()

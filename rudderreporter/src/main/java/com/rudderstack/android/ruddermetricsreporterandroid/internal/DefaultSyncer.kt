@@ -57,16 +57,16 @@ class DefaultSyncer internal constructor(
     }
     private fun flushMetrics(startIndex: Long, flushCount: Long) {
         //TODO: add error handling getMetricsAndErrorFirst
-        reservoir.getMetricsFirst(startIndex, flushCount) {
-            val validMetrics = it.filterWithValidValues()
-            if (validMetrics.isEmpty()) {
+        reservoir.getMetricsAndErrors(startIndex, flushCount) { metrics, errors ->
+            val validMetrics = metrics.filterWithValidValues()
+            if (validMetrics.isEmpty() && errors.isEmpty()) {
                 _atomicRunning.set(false)
                 if (_isShutDown.get())
                     stopScheduling()
-                return@getMetricsFirst
+                return@getMetricsAndErrors
             }
 
-            uploader.upload(validMetrics, ErrorModel()) { success ->
+            uploader.upload(validMetrics, ErrorModel(errors.map { it.errorEvent })) { success ->
                 if (success) {
                     reservoir.resetTillSync(validMetrics)
                 }

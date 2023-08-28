@@ -14,9 +14,12 @@
 package com.rudderstack.android.ruddermetricsreporterandroid
 
 import android.content.Context
+import com.rudderstack.android.ruddermetricsreporterandroid.error.DefaultErrorClient
+import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClient
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.BackgroundTaskService
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.Connectivity
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.ConnectivityCompat
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.DataCollectionModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultMetrics
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultReservoir
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultSyncer
@@ -24,112 +27,210 @@ import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultUplo
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.NetworkChangeCallback
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextModule
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.SystemServiceModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.MemoryTrimState
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.metrics.DefaultAggregatorHandler
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.AggregatorHandler
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class DefaultRudderReporter(
-    private val aggregatorHandler: AggregatorHandler,
-    private val syncer: Syncer
+    private val _metrics: Metrics,
+    private val _errorClient: ErrorClient?,
+    override val syncer: Syncer,
 ) : RudderReporter {
 
+    private var connectivity: Connectivity? = null
     private var backgroundTaskService: BackgroundTaskService? = null
 
-    constructor(reservoir: Reservoir, syncer: Syncer, isMetricsAggregatorEnabled : Boolean) : this(
-        DefaultAggregatorHandler(reservoir, isMetricsAggregatorEnabled),
-        syncer
-    )
-
-    constructor(reservoir: Reservoir, uploadMediator: UploadMediator, isMetricsAggregatorEnabled : Boolean
-    ) : this(
-        reservoir,
-        DefaultSyncer(reservoir, uploadMediator), isMetricsAggregatorEnabled
-    )
     @JvmOverloads
     constructor(
         context: Context,
         baseUrl: String,
         configuration: Configuration,
         jsonAdapter: JsonAdapter,
-        isMetricsEnabled : Boolean = true,
-        isErrorEnabled : Boolean = true,
+        isMetricsEnabled: Boolean = true,
+        isErrorEnabled: Boolean = true,
+        networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
         backgroundTaskService: BackgroundTaskService? = null,
         useContentProvider: Boolean = false,
     ) : this(
-        ContextModule(context), ConnectivityCompat(context, RudderReporterNetworkChangeCallback()),
-        MemoryTrimState(), baseUrl, configuration, jsonAdapter,
-        backgroundTaskService ?: BackgroundTaskService(), useContentProvider, isMetricsEnabled
+        ContextModule(context),
+        baseUrl,
+        configuration,
+        jsonAdapter,
+        isMetricsEnabled, isErrorEnabled,
+        networkExecutor,
+        backgroundTaskService ?: BackgroundTaskService(),
+        useContentProvider,
     )
 
     internal constructor(
         contextModule: ContextModule,
-        connectivity: Connectivity,
-        memoryTrimState: MemoryTrimState,
         baseUrl: String,
         configuration: Configuration,
         jsonAdapter: JsonAdapter,
-        backgroundTaskService: BackgroundTaskService,
-        useContentProvider: Boolean,
-        isMetricsAggregatorEnabled : Boolean
+        isMetricsEnabled: Boolean = true,
+        isErrorEnabled: Boolean = true,
+        networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
+        backgroundTaskService: BackgroundTaskService? = null,
+        useContentProvider: Boolean = false,
     ) : this(
         contextModule,
-        connectivity,
-        memoryTrimState,
+        MemoryTrimState(),
         baseUrl,
+        configuration,
         ConfigModule(contextModule, configuration),
         jsonAdapter,
-        backgroundTaskService,
+        networkExecutor,
+        backgroundTaskService ?: BackgroundTaskService(),
         useContentProvider,
-        isMetricsAggregatorEnabled
+        isMetricsEnabled,
+        isErrorEnabled
+    )
+
+    constructor(
+        context: Context,
+        reservoir: Reservoir,
+        configuration: Configuration,
+        uploadMediator: UploadMediator,
+        jsonAdapter: JsonAdapter,
+        isMetricsEnabled: Boolean = true,
+        isErrorEnabled: Boolean = true,
+        backgroundTaskService: BackgroundTaskService? = null
+    ) : this(
+        ContextModule(context),
+        reservoir,
+        configuration,
+        uploadMediator,
+        jsonAdapter,
+        MemoryTrimState(),
+        isMetricsEnabled,
+        isErrorEnabled,
+        backgroundTaskService
+    )
+
+
+    internal constructor(
+        contextModule: ContextModule,
+        memoryTrimState: MemoryTrimState,
+        baseUrl: String,
+        configuration: Configuration,
+        configModule: ConfigModule,
+        jsonAdapter: JsonAdapter,
+        networkExecutor: ExecutorService,
+        backgroundTaskService: BackgroundTaskService,
+        useContentProvider: Boolean,
+        isMetricsAggregatorEnabled: Boolean,
+        isErrorEnabled: Boolean
+    ) : this(
+        contextModule,
+        DefaultReservoir(contextModule.ctx, useContentProvider),
+        configuration,
+        DefaultUploadMediator(configModule, baseUrl, jsonAdapter, networkExecutor),
+        jsonAdapter,
+        memoryTrimState,
+        isMetricsAggregatorEnabled,
+        isErrorEnabled,
+        backgroundTaskService
     )
 
     internal constructor(
         contextModule: ContextModule,
-        connectivity: Connectivity,
-        memoryTrimState: MemoryTrimState,
-        baseUrl: String,
-        configModule: ConfigModule,
+        reservoir: Reservoir,
+        configuration: Configuration,
+        uploadMediator: UploadMediator,
         jsonAdapter: JsonAdapter,
-        backgroundTaskService: BackgroundTaskService,
-        useContentProvider: Boolean,
-        isMetricsAggregatorEnabled : Boolean
+        memoryTrimState: MemoryTrimState,
+        isMetricsEnabled: Boolean = true,
+        isErrorEnabled: Boolean = true,
+        backgroundTaskService: BackgroundTaskService? = null
     ) : this(
-        DefaultReservoir(
-            contextModule.ctx,
-            useContentProvider,
-            backgroundTaskService.databaseExecutor
-        ),
-        DefaultUploadMediator(
-            /*DataCollectionModule(
+        contextModule,
+        reservoir,
+        configuration,
+        ConfigModule(contextModule, configuration),
+        DefaultSyncer(reservoir, uploadMediator),
+        jsonAdapter,
+        memoryTrimState,
+        isMetricsEnabled,
+        isErrorEnabled,
+        backgroundTaskService
+    )
+
+    private constructor(
+        contextModule: ContextModule,
+        reservoir: Reservoir,
+        configuration: Configuration,
+        configModule: ConfigModule,
+        syncer: Syncer,
+        jsonAdapter: JsonAdapter,
+        memoryTrimState: MemoryTrimState,
+        isMetricsEnabled: Boolean = true,
+        isErrorEnabled: Boolean = true,
+        backgroundTaskService: BackgroundTaskService? = null
+    ):this(contextModule, reservoir, configuration, configModule, syncer, jsonAdapter, memoryTrimState,
+        ConnectivityCompat(contextModule.ctx, RudderReporterNetworkChangeCallback(syncer)),
+        isMetricsEnabled, isErrorEnabled, backgroundTaskService)
+
+    private constructor(
+        contextModule: ContextModule,
+        reservoir: Reservoir,
+        configuration: Configuration,
+        configModule: ConfigModule,
+        syncer: Syncer,
+        jsonAdapter: JsonAdapter,
+        memoryTrimState: MemoryTrimState,
+        connectivity: Connectivity,
+        isMetricsEnabled: Boolean = true,
+        isErrorEnabled: Boolean = true,
+        backgroundTaskService: BackgroundTaskService? = null
+    ): this(
+        DefaultMetrics(DefaultAggregatorHandler(reservoir, isMetricsEnabled), syncer),
+        DefaultErrorClient(
+            contextModule, configuration, configModule, DataCollectionModule(
                 contextModule,
                 configModule,
                 SystemServiceModule(contextModule),
-                backgroundTaskService, connectivity,
+                backgroundTaskService ?: BackgroundTaskService(),
+                connectivity,
                 memoryTrimState
-            ),*/ configModule, baseUrl, jsonAdapter, backgroundTaskService.ioExecutor
-        ), isMetricsAggregatorEnabled
+            ), reservoir, jsonAdapter, memoryTrimState, syncer
+        ),
+        syncer
     ) {
+        this.connectivity = connectivity
         this.backgroundTaskService = backgroundTaskService
     }
 
-    override val metrics: Metrics = DefaultMetrics(aggregatorHandler, syncer)
+    init {
+        connectivity?.registerForNetworkChanges()
+    }
+    override val metrics: Metrics get() = _metrics
+
+    override val errorClient: ErrorClient
+        get() = _errorClient ?: throw IllegalStateException(
+            "ErrorClient is not initialized. " + "Using deprecated constructor?"
+        )
 
     override fun shutdown() {
         metrics.shutdown()
         backgroundTaskService?.shutdown()
+        connectivity?.unregisterForNetworkChanges()
     }
 
-    internal class RudderReporterNetworkChangeCallback : NetworkChangeCallback {
+    //call unregister on shutdown
+    internal class RudderReporterNetworkChangeCallback(private val syncer: Syncer) :
+        NetworkChangeCallback {
         override fun invoke(hasConnection: Boolean, networkState: String) {
-//            val data: MutableMap<String, Any> = HashMap()
-//            data["hasConnection"] = hasConnection
-//            data["networkState"] = networkState
-//            leaveAutoBreadcrumb("Connectivity changed", BreadcrumbType.STATE, data)
+
             if (hasConnection) {
-//                    eventStore.flushAsync();
+                try {
+                    syncer.flushAllMetrics()
+                } catch (ex: Exception) {
+                    ex.printStackTrace()
+                }
             }
-//            return null
         }
     }
 }

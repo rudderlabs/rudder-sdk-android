@@ -17,9 +17,10 @@ package com.rudderstack.android.ruddermetricsreporterandroid.error
 import com.rudderstack.android.ruddermetricsreporterandroid.JSerialize
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 
-class ErrorModel : JSerialize<ErrorModel> {
+class ErrorModel(val events: List<String>) : JSerialize<ErrorModel> {
+
     override fun serialize(jsonAdapter: JsonAdapter): String? {
-        return null
+        return jsonAdapter.writeToJson(this)
     }
 
 }
