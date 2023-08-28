@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
  * Default value holder class
  * */
 class Constants {
+    public static final boolean DEFAULT_DB_ENCRYPTION_ENABLED = false;
     public static final boolean DEFAULT_GZIP_ENABLED = true;
     // how often config should be fetched from the server (in hours) (2 hrs by default)
     static final int CONFIG_REFRESH_INTERVAL = 2; // probably change it to 1 hr, or every time
@@ -43,6 +44,8 @@ class Constants {
     static final long DEFAULT_SESSION_TIMEOUT = 300000;
     // default for automatic session tracking
     static final boolean AUTO_SESSION_TRACKING = true;
+    // default for collect deviceId
+    static final boolean COLLECT_DEVICE_ID = true;
     // default residency server
     static final RudderDataResidencyServer DATA_RESIDENCY_SERVER = RudderDataResidencyServer.US;
 

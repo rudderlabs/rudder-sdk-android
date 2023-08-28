@@ -48,13 +48,19 @@ public class RudderConfig {
     private boolean trackAutoSession;
     private boolean useNewLifeCycleEvents;
     private boolean trackDeepLinks;
+    private boolean collectDeviceId;
     private long sessionTimeout;
     private String controlPlaneUrl;
     private List<RudderIntegration.Factory> factories;
     private List<RudderIntegration.Factory> customFactories;
     private RudderDataResidencyServer rudderDataResidencyServer;
-    @Nullable private RudderConsentFilter consentFilter;
+    @Nullable
+    private RudderConsentFilter consentFilter;
     private boolean isGzipEnabled = true;
+
+    private DBEncryption dbEncryption = new DBEncryption(Constants.DEFAULT_DB_ENCRYPTION_ENABLED,
+            null);
+
 
     RudderConfig() {
         this(
@@ -73,13 +79,15 @@ public class RudderConfig {
                 Constants.AUTO_COLLECT_ADVERT_ID,
                 Constants.RECORD_SCREEN_VIEWS,
                 Constants.AUTO_SESSION_TRACKING,
+                Constants.COLLECT_DEVICE_ID,
                 Constants.DEFAULT_SESSION_TIMEOUT,
                 Constants.CONTROL_PLANE_URL,
                 null,
                 null,
                 Constants.DATA_RESIDENCY_SERVER,
                 null,
-                Constants.DEFAULT_GZIP_ENABLED
+                Constants.DEFAULT_GZIP_ENABLED,
+                null
         );
     }
 
@@ -99,13 +107,17 @@ public class RudderConfig {
             boolean autoCollectAdvertId,
             boolean recordScreenViews,
             boolean trackAutoSession,
+            boolean collectDeviceId,
             long sessionTimeout,
             String controlPlaneUrl,
             List<RudderIntegration.Factory> factories,
             List<RudderIntegration.Factory> customFactories,
             RudderDataResidencyServer rudderDataResidencyServer,
             @Nullable RudderConsentFilter consentFilter,
-            boolean isGzipEnabled
+            boolean isGzipEnabled,
+            @Nullable DBEncryption dbEncryption
+
+
     ) {
         RudderLogger.init(logLevel);
 
@@ -187,10 +199,14 @@ public class RudderConfig {
             this.sessionTimeout = Constants.DEFAULT_SESSION_TIMEOUT;
         }
         this.trackAutoSession = trackAutoSession;
+        this.collectDeviceId = collectDeviceId;
 
         this.rudderDataResidencyServer = rudderDataResidencyServer;
         this.consentFilter = consentFilter;
         this.isGzipEnabled = isGzipEnabled;
+        if (dbEncryption != null) {
+            this.dbEncryption = dbEncryption;
+        }
     }
 
     /**
@@ -200,6 +216,10 @@ public class RudderConfig {
     @NonNull
     public String getEndPointUri() {
         return dataPlaneUrl;
+    }
+
+    public @NonNull DBEncryption getDbEncryption() {
+        return dbEncryption;
     }
 
     /**
@@ -324,6 +344,7 @@ public class RudderConfig {
     public boolean isGzipEnabled() {
         return isGzipEnabled;
     }
+
     /**
      * @return configPlaneUrl (Link to your hosted version of source-config)
      * @deprecated use getControlPlaneUrl()
@@ -344,6 +365,13 @@ public class RudderConfig {
      */
     public boolean isTrackAutoSession() {
         return trackAutoSession;
+    }
+
+    /**
+     * @return isCollectDeviceId (whether we want to collect the device ID)
+     */
+    public boolean isCollectDeviceId() {
+        return collectDeviceId;
     }
 
     /**
@@ -425,7 +453,6 @@ public class RudderConfig {
         this.rudderDataResidencyServer = rudderDataResidencyServer;
     }
 
-
     /**
      * @return custom toString implementation for RudderConfig
      */
@@ -445,6 +472,7 @@ public class RudderConfig {
         private @Nullable RudderConsentFilter consentFilter = null;
         private @Nullable String dataPlaneUrl = null;
         private boolean isGzipEnabled = Constants.DEFAULT_GZIP_ENABLED;
+        private @Nullable DBEncryption dbEncryption = null;
 
         /**
          * @param factory : Instance of RudderIntegration.Factory (for more information visit https://docs.rudderstack.com)
@@ -611,11 +639,17 @@ public class RudderConfig {
         /**
          * Enable/Disable Gzip.
          * Gzip is enabled by default
+         *
          * @param isGzip true to enable and vice-versa
          * @return RudderConfig.Builder
          */
         public Builder withGzip(boolean isGzip) {
             this.isGzipEnabled = isGzip;
+            return this;
+        }
+
+        public Builder withDbEncryption(DBEncryption dbEncryption) {
+            this.dbEncryption = dbEncryption;
             return this;
         }
 
@@ -763,6 +797,17 @@ public class RudderConfig {
             return this;
         }
 
+        private boolean collectDeviceId = Constants.COLLECT_DEVICE_ID;
+
+        /**
+         * @param collectDeviceId (whether we are collecting the device ID)
+         * @return RudderConfig.Builder
+         */
+        public Builder withCollectDeviceId(boolean collectDeviceId) {
+            this.collectDeviceId = collectDeviceId;
+            return this;
+        }
+
         /**
          * Finalize your config building
          *
@@ -785,14 +830,47 @@ public class RudderConfig {
                     this.autoCollectAdvertId,
                     this.recordScreenViews,
                     this.autoSessionTracking,
+                    this.collectDeviceId,
                     this.sessionTimeout,
                     this.controlPlaneUrl,
                     this.factories,
                     this.customFactories,
                     this.rudderDataResidencyServer,
                     consentFilter,
-                    this.isGzipEnabled
+                    this.isGzipEnabled,
+                    this.dbEncryption
             );
+        }
+    }
+
+    public static class DBEncryption {
+        public final boolean enable;
+        public final @Nullable String key;
+        /**
+         * Not documented. This is to set the custom persistence provider factory.
+         * The SDK creates an instance of this factory and uses it to get the PersistenceProvider.
+         * This is experimental and not encouraged to be used by external users
+         */
+        private @Nullable String persistenceProviderFactoryClassName = null;
+
+        public DBEncryption(boolean enable, @Nullable String key) {
+            this(enable, key, null);
+        }
+
+        public DBEncryption(boolean enable, @Nullable String key,
+                            @Nullable String persistenceProviderFactoryClassName) {
+            this.enable = enable;
+            this.key = key;
+            this.persistenceProviderFactoryClassName = persistenceProviderFactoryClassName;
+        }
+
+        public void setPersistenceProviderFactoryClassName(String persistenceProviderFactoryClassName) {
+            this.persistenceProviderFactoryClassName = persistenceProviderFactoryClassName;
+        }
+
+        @Nullable
+        String getPersistenceProviderFactoryClassName() {
+            return persistenceProviderFactoryClassName;
         }
     }
 }

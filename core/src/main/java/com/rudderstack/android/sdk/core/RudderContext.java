@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.rudderstack.android.sdk.core.util.Utils.isOnClassPath;
 
@@ -65,14 +66,19 @@ public class RudderContext {
         // cachedContext is used every time, once initialized
     }
 
-    RudderContext(Application application, String anonymousId, String advertisingId, String deviceToken) {
+    RudderContext(Application application, String anonymousId, String advertisingId, String deviceToken, boolean collectDeviceId) {
         RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(application);
 
         if (TextUtils.isEmpty(anonymousId)) {
-            anonymousId = preferenceManger.getAnonymousId() != null ? preferenceManger.getAnonymousId() : Utils.getDeviceId(application);
-        } else {
-            preferenceManger.saveAnonymousId(anonymousId);
+            // starting from version 1.18.0, we are completely removing the link between deviceId and anonymousId for compliance reasons
+            // and from here on, UUID will be used as anonymousId
+            anonymousId = preferenceManger.getCurrentAnonymousIdValue();
+            if (anonymousId == null) {
+                RudderLogger.logDebug("RudderContext: constructor: anonymousId is null, generating new anonymousId");
+                anonymousId = UUID.randomUUID().toString();
+            }
         }
+        preferenceManger.saveAnonymousId(anonymousId);
 
         _anonymousId = anonymousId;
 
@@ -88,6 +94,8 @@ public class RudderContext {
             RudderLogger.logDebug("New traits has been saved");
         } else {
             this.traits = Utils.convertToMap(traitsJson);
+            this.traits.put("anonymousId", anonymousId);
+            this.persistTraits();
             RudderLogger.logDebug("Using old traits from persistence");
         }
 
@@ -101,7 +109,7 @@ public class RudderContext {
 
         this.screenInfo = new RudderScreenInfo(application);
         this.userAgent = System.getProperty("http.agent");
-        this.deviceInfo = new RudderDeviceInfo(advertisingId, deviceToken);
+        this.deviceInfo = new RudderDeviceInfo(advertisingId, deviceToken, collectDeviceId);
         this.networkInfo = new RudderNetwork(application);
         this.osInfo = new RudderOSInfo();
         this.libraryInfo = new RudderLibraryInfo();
@@ -400,7 +408,7 @@ public class RudderContext {
         this.consentManagement = consentManagement;
     }
 
-    public static class ConsentManagement{
+    public static class ConsentManagement {
         @SerializedName("deniedConsentIds")
         private List<String> deniedConsentIds;
 
