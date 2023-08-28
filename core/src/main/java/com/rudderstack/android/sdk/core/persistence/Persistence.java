@@ -21,7 +21,6 @@ public interface Persistence {
 
     void addDbCloseListener(DbCloseListener listener);
 
-    void addDbCreateListener(DbCreateListener listener);
 
     boolean isAccessible();
 

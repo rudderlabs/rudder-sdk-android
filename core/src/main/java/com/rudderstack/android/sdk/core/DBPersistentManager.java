@@ -106,17 +106,14 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
     private DBPersistentManager(Application application,
                                 PersistenceProvider.Factory persistenceProviderFactory) {
         PersistenceProvider persistenceProvider = persistenceProviderFactory.create(application);
-        persistence = persistenceProvider.get();
-        addOnCreateListeners();
+        persistence = persistenceProvider.get(this::onCreate);
+
         persistence.addDbCloseListener(() -> instance = null);
     }
 
-    private void addOnCreateListeners() {
-        persistence.addDbCreateListener(() -> {
-            String eventSchemaSQL = getSchemaStatement();
-            createSchema(eventSchemaSQL);
-
-        });
+    private void onCreate() {
+        String eventSchemaSQL = getSchemaStatement();
+        createSchema(eventSchemaSQL);
     }
 
 

@@ -27,20 +27,21 @@ import java.util.Locale;
 // START-NO-SONAR-SCAN
 public class DefaultPersistence extends SQLiteOpenHelper implements Persistence {
     private final List<DbCloseListener> dbCloseListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
-    private final List<DbCreateListener> dbCreateListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private final DbCreateListener dbCreateListener;
     private SQLiteDatabase initialDatabase = null;
 
 
-     DefaultPersistence(Application application, DbParams params) {
+     DefaultPersistence(Application application, DbParams params, @Nullable DbCreateListener dbCreateListener) {
         super(application, params.dbName, null, params.dbVersion);
+        this.dbCreateListener = dbCreateListener;
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
          initialDatabase = db;
-    for (DbCreateListener listener : dbCreateListeners) {
-            listener.onDbCreate();
-        }
+    if(dbCreateListener != null){
+        dbCreateListener.onDbCreate();
+    }
         initialDatabase = null;
     }
 
@@ -253,11 +254,6 @@ public class DefaultPersistence extends SQLiteOpenHelper implements Persistence 
     @Override
     public void addDbCloseListener(DbCloseListener listener) {
         dbCloseListeners.add(listener);
-    }
-
-    @Override
-    public void addDbCreateListener(DbCreateListener listener) {
-        dbCreateListeners.add(listener);
     }
 
     @Override
