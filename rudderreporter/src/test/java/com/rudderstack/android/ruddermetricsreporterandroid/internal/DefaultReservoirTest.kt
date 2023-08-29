@@ -95,14 +95,12 @@ class DefaultReservoirTest {
     @Test
     fun insertOrIncrement() {
         testCounterToLabelMap.forEach { (counterName, labels) ->
-            println("inserting first time for $counterName, $labels")
             //insert 1 as default value
             defaultStorage.insertOrIncrement(MetricModel(counterName, MetricType.COUNTER, 1, labels))
         }
         var index = 0
         //increase counters by index
         testCounterToLabelMap.forEach { (counterName, labels) ->
-            println("inserting second time for $counterName, $labels")
             defaultStorage.insertOrIncrement(MetricModel(counterName, MetricType.COUNTER, index.toLong(), labels))
 
             index++

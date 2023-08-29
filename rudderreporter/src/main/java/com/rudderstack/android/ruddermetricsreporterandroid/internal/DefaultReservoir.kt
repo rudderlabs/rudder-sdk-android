@@ -143,7 +143,6 @@ class DefaultReservoir(
                 Dao.ConflictResolutionStrategy.CONFLICT_IGNORE
             )?.firstOrNull()
             if (insertedRowId == -1L) {
-                println("updating metric ${metric.name} label mask $labelMaskForMetric")
                 this.execSqlSync(
                     "UPDATE " + MetricEntity.TABLE_NAME + " SET " +
                             MetricEntity.ColumnNames.VALUE + " = (" + MetricEntity.ColumnNames.VALUE + " + " + metric.value +
@@ -152,9 +151,7 @@ class DefaultReservoir(
                             + " AND " + MetricEntity.ColumnNames.TYPE + "='" + MetricType.COUNTER.value + "'"
                             + ";"
                 )
-            } else {
-                println("inserting metric ${metric.name} label mask $labelMaskForMetric")
-            }
+            } 
         }
     }
 
@@ -236,7 +233,7 @@ class DefaultReservoir(
 //            dbExecutor?.execute {
             beginTransaction()
             dumpedMetrics.forEach { metric ->
-                println("Reducing metric ${metric.name} by ${metric.value}")
+
                 execSqlSync(
                     "UPDATE ${MetricEntity.TABLE_NAME} " +
                             "SET ${MetricEntity.ColumnNames.VALUE}=${MetricEntity.ColumnNames.VALUE}-${metric.value}" +

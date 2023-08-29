@@ -45,7 +45,7 @@ dependencies {
     implementation deps.androidXAnnotations
 
     api(project(path: projects.json_rudder_adapter))
-    api(project(path: projects.repository))
+    api(project(projects.repository))
     api(project(path: projects.web))
 
     compileOnly deps.gson
@@ -71,6 +71,7 @@ dependencies {
     testImplementation deps.robolectric
     testImplementation project(path: projects.repository)
 }
-//apply from: rootProject.file('gradle/artifacts-aar.gradle')
+apply from: rootProject.file('gradle/artifacts-aar.gradle')
+
 apply from: rootProject.file('gradle/mvn-publish.gradle')
 apply from: rootProject.file('gradle/codecov.gradle')

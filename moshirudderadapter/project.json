@@ -46,14 +46,14 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "tag": "moshirudderadapter@1.0.0",
+        "tag": "moshirudderadapter@0.1.0",
         "notesFile": "./moshirudderadapter/CHANGELOG_LATEST.md"
       }
     },
     "release-sonatype": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'moshirudderadapter-release' && cd moshirudderadapter && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype  && cd ..  && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
+        "command": "echo 'moshirudderadapter-release' && ./gradlew publishToSonatype -p moshirudderadapter -Prelease && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {

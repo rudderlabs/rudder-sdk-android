@@ -153,10 +153,7 @@ class WebServiceImpl internal constructor(
                     endpoint,
                     HttpMethod.POST,
                     responseTypeAdapter
-                ).also {
-                    println("response is $it")
-
-                }
+                )
             )
         }
     }
@@ -177,9 +174,6 @@ class WebServiceImpl internal constructor(
         responseClass: Class<T>
     ): HttpResponse<T> {
         return rawHttpCall(headers, query, body, endpoint, type, deserializer = { json ->
-            println("*******************************")
-            println(json)
-            println("*******************************")
             jsonAdapter.readJson(json, responseClass)
                 ?: throw IllegalArgumentException("Json adapter not able to parse response body")
         })
