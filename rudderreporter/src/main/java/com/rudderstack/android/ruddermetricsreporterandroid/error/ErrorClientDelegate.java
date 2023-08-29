@@ -1,6 +1,6 @@
 /*
  * Creator: Debanjan Chatterjee on 09/06/23, 7:59 pm Last modified: 09/06/23, 5:32 pm
- * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
+ * Copyright: All rights reserved 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -55,15 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * A Bugsnag Client instance allows you to use Bugsnag in your Android app.
- * Typically you'd instead use the static access provided in the Bugsnag class.
- * <p/>
- * Example usage:
- * <p/>
- * Client client = new Client(this, "your-api-key");
- * client.notify(new RuntimeException("something broke!"));
- */
+
 @SuppressWarnings({"checkstyle:JavadocTagContinuationIndentation", "ConstantConditions"})
 public class ErrorClientDelegate implements MetadataAware {
 

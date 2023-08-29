@@ -3,18 +3,22 @@
 //def mod = POM_ARTIFACT_ID
 task sourcesJar(type: Jar) {
     archiveClassifier.set('sources')
-    println("sourceSets: ${android.sourceSets}")
     from android.sourceSets.main.java.srcDirs
 }
 
-task javadoc(type: Javadoc) {
+task javadoc(type: Javadoc, dependsOn: 'assembleRelease') {
     failOnError false
     configurations.implementation.setCanBeResolved(true)
 
     failOnError false
     source = android.sourceSets.main.java.sourceFiles
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    classpath += configurations.implementation
+//    classpath += configurations.implementation
+    android.libraryVariants.all { variant ->
+        if (variant.name == 'release') {
+            owner.classpath += variant.javaCompile.classpath
+        }
+    }
 }
 
 // build a jar with javadoc
