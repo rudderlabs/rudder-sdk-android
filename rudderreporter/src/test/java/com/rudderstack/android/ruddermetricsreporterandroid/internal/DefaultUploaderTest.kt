@@ -40,7 +40,7 @@ open class DefaultUploaderTest {
     protected var jsonAdapter: JsonAdapter = MoshiAdapter()
     private val defaultUploader = DefaultUploadMediator(
          ConfigModule(ContextModule(ApplicationProvider.getApplicationContext()), Configuration(
-            LibraryMetadata("","","","")
+            LibraryMetadata("test","1.0","4","abcde")
         )),"https://some-api.com",
         jsonAdapter, TestExecutor()
     )
