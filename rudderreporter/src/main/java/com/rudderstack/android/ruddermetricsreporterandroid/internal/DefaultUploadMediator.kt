@@ -50,6 +50,7 @@ internal class DefaultUploadMediator(
             println(it)
         }, METRICS_ENDPOINT,
             object : RudderTypeAdapter<Map<*,*>>(){}){
+
             (it.status in 200..299).apply(callback)
         }
     }

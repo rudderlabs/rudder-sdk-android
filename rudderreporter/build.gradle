@@ -72,5 +72,6 @@ dependencies {
     testImplementation project(path: projects.repository)
 }
 apply from: rootProject.file('gradle/artifacts-aar.gradle')
+
 apply from: rootProject.file('gradle/mvn-publish.gradle')
 apply from: rootProject.file('gradle/codecov.gradle')
