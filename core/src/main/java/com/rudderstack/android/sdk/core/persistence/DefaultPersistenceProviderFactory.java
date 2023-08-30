@@ -48,9 +48,10 @@ public class DefaultPersistenceProviderFactory implements PersistenceProvider.Fa
         }
         if (isEncrypted) {
             if (encryptionKey == null) {
-                RudderLogger.logWarn("DBPersistentManager: isEncrypted is true but encryptionKey is null. Proceeding with null key");
+                RudderLogger.logWarn("DBPersistentManager: isEncrypted is true but encryptionKey is null. Proceeding with unencrypted database");
+                isEncrypted = false;
             }
-            if (encryptedDbName == null) {
+            else if (encryptedDbName == null) {
                 RudderLogger.logError("DBPersistentManager: isEncrypted is true but encryptedDbName is null. Aborting Db creation");
                 return null;
             }
