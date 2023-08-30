@@ -1,6 +1,7 @@
 package com.rudderstack.android.sdk.core.persistence;
 
 import android.app.Application;
+import android.text.TextUtils;
 
 import com.rudderstack.android.sdk.core.RudderLogger;
 
@@ -47,8 +48,8 @@ public class DefaultPersistenceProviderFactory implements PersistenceProvider.Fa
             dbVersion = 1;
         }
         if (isEncrypted) {
-            if (encryptionKey == null) {
-                RudderLogger.logWarn("DBPersistentManager: isEncrypted is true but encryptionKey is null. Proceeding with unencrypted database");
+            if (TextUtils.isEmpty(encryptionKey)) {
+                RudderLogger.logWarn("DBPersistentManager: isEncrypted is true but encryptionKey is null or empty. Proceeding with unencrypted database");
                 isEncrypted = false;
             }
             else if (encryptedDbName == null) {
