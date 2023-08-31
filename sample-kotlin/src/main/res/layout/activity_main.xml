@@ -52,6 +52,26 @@
             android:layout_margin="16dp"
             android:text="Alias" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <Button
+                android:id="@+id/error"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:layout_weight="1"
+                android:text="Gen Error" />
+            <Button
+                android:id="@+id/crash"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:layout_weight="1"
+                android:text="Crash" />
+        </LinearLayout>
+
         <Button
             android:id="@+id/resetBtn"
             android:layout_width="match_parent"

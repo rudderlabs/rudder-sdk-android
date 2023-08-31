@@ -12,6 +12,8 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
 import com.rudderstack.android.sdk.core.*
+import java.lang.reflect.Field
+import java.util.Date
 import javax.net.ssl.SSLContext
 
 
@@ -69,6 +71,20 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.alias).setOnClickListener {
             MainApplication.rudderClient!!.alias("new user $userCount");
+        }
+
+        findViewById<Button>(R.id.error).setOnClickListener {
+            val rudderReporterField = MainApplication.rudderClient?.javaClass?.getDeclaredField("rudderReporter")
+            rudderReporterField?.isAccessible = true
+            val rudderReporter = rudderReporterField?.get(null)
+            val errorMethod = rudderReporter?.javaClass?.getDeclaredMethod("getErrorClient")
+            val errorClient = errorMethod?.invoke(rudderReporter)
+            val notifyErrorMethod = errorClient?.javaClass?.getDeclaredMethod("notify", Throwable::class.java)
+            val error = Exception("Test Error-" + Date())
+            notifyErrorMethod?.invoke(errorClient, error)
+        }
+        findViewById<Button>(R.id.crash).setOnClickListener {
+            throw RuntimeException("Test Crash")
         }
 
         findViewById<Button>(R.id.resetBtn).setOnClickListener {

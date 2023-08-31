@@ -43,7 +43,8 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.6.0'
 
 
-    implementation 'com.rudderstack.android.sdk:rudderreporter:0.1.0'
+//    implementation ('com.rudderstack.android.sdk:rudderreporter:0.1.0-SNAPSHOT')
+    implementation(project(path: ':rudderreporter'))
     implementation 'com.rudderstack.kotlin.sdk:gsonrudderadapter:0.1.0'
 
     // required for new life cycle methods
