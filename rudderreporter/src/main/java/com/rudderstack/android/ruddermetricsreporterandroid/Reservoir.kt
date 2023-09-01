@@ -44,7 +44,7 @@ interface Reservoir {
     fun getErrorsFirst(limit : Long, callback : (List<ErrorEntity>) -> Unit)
     fun getErrorsCount(callback : (Long) -> Unit)
     fun clearErrors()
-    fun clearErrors(ids: Array<Int>)
+    fun clearErrors(ids: Array<Long>)
 
     /**
      * Will reset each element up to the value

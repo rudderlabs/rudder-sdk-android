@@ -254,10 +254,10 @@ class DefaultReservoir(
     }
 
     override fun saveError(errorEntity: ErrorEntity) {
-        with(errorDao){
-            listOf( errorEntity).insert {
+        with(errorDao) {
+            listOf(errorEntity).insert {
                 //TODO (add log if failed)
-                if(it.isNotEmpty() && it.first().toLong() > -1)
+                if (it.isNotEmpty() && it.first().toLong() > -1)
                     _storageListeners.forEach { it.onDataChange() }
             }
         }
@@ -306,17 +306,20 @@ class DefaultReservoir(
         errorDao.delete(null, null)
     }
 
-    override fun clearErrors(ids: Array<Int>) {
+    override fun clearErrors(ids: Array<Long>) {
         errorDao.delete(
-            whereClause = "? IN (?)", arrayOf(ErrorEntity
-                .ColumnNames.ID, ids.joinToString(",") { "'${it}'" })
+            whereClause = "${
+                ErrorEntity
+                    .ColumnNames.ID
+            } IN (${ids.joinToString(",") { it.toString() }})", null
         )
+
     }
 
     override fun resetTillSync(dumpedMetrics: List<MetricModelWithId<out Number>>) {
         with(metricDao) {
 //            dbExecutor?.execute {
-            beginTransaction()
+//            execTransaction {
             dumpedMetrics.forEach { metric ->
                 execSqlSync(
                     "UPDATE ${MetricEntity.TABLE_NAME} " +
@@ -324,8 +327,6 @@ class DefaultReservoir(
                             " WHERE ${MetricEntity.ColumnNames.ID}='${metric.id}'"
                 )
             }
-            setTransactionSuccessful()
-            endTransaction()
 //            }
         }
     }

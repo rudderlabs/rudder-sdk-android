@@ -14,13 +14,24 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.error
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.rudderstack.android.ruddermetricsreporterandroid.JSerialize
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+import com.squareup.moshi.Json
 
-class ErrorModel(val events: List<String>) : JSerialize<ErrorModel> {
+class ErrorModel(
+
+    private val eventsJson: List<String>) : JSerialize<ErrorModel> {
 
     override fun serialize(jsonAdapter: JsonAdapter): String? {
-        return jsonAdapter.writeToJson(this)
+        return jsonAdapter.writeToJson(toMap(jsonAdapter))
     }
-
+    fun toMap(jsonAdapter: JsonAdapter) = mapOf("events" to
+            eventsJson.map {
+                jsonAdapter.readJson(it,
+                    object: RudderTypeAdapter<Map<String, Any>>(){}
+                )
+            }
+    )
 }

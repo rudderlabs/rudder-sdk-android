@@ -49,4 +49,12 @@ public interface ErrorClient {
     void leaveBreadcrumb(@NonNull String message,
                          @NonNull Map<String, Object> metadata,
                          @NonNull BreadcrumbType type);
+
+    /**
+     * Enables or disables recording of errors. However unless shut down, already recorded
+     * events will reach server
+     *
+     * @param enable
+     */
+    void enable(boolean enable);
 }

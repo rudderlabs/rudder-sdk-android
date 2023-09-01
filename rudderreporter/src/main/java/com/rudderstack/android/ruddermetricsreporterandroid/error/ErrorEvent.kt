@@ -101,11 +101,12 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
 
     lateinit var app: AppWithState
     lateinit var device: DeviceWithState
-    var unhandled: Boolean
+
+    val unhandled: Boolean
         get() = severityReason.unhandled
-        set(value) {
-            severityReason.unhandled = value
-        }
+//        set(value) {
+//            severityReason.unhandled = value
+//        }
 
     var breadcrumbs: MutableList<Breadcrumb>
     var errors: MutableList<Error>
@@ -192,7 +193,17 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
 
     override fun getMetadata(section: String, key: String) = metadata.getMetadata(section, key)
     override fun serialize(jsonAdapter: JsonAdapter): String? {
-        return jsonAdapter.writeToJson(this)
+        return jsonAdapter.writeToJson(mapOf(
+            "exceptions" to errors,
+            "severity" to severity,
+            "breadcrumbs" to breadcrumbs,
+            "context" to context,
+            "unhandled" to unhandled,
+            "projectPackages" to projectPackages,
+            "app" to app,
+            "device" to device,
+            "metadata" to metadataMap
+        ))
     }
 
     override fun toString(): String {

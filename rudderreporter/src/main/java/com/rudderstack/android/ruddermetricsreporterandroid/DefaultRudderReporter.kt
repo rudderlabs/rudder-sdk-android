@@ -195,7 +195,7 @@ class DefaultRudderReporter(
                 backgroundTaskService ?: BackgroundTaskService(),
                 connectivity,
                 memoryTrimState
-            ), reservoir, jsonAdapter, memoryTrimState, syncer
+            ), reservoir, jsonAdapter, memoryTrimState, isErrorEnabled
         ),
         syncer
     ) {
@@ -214,10 +214,11 @@ class DefaultRudderReporter(
         )
 
     override fun shutdown() {
-        metrics.shutdown()
+        syncer.stopScheduling()
         backgroundTaskService?.shutdown()
         connectivity?.unregisterForNetworkChanges()
     }
+
 
     //call unregister on shutdown
     internal class RudderReporterNetworkChangeCallback(private val syncer: Syncer) :

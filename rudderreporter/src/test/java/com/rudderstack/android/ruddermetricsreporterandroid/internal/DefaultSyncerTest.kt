@@ -19,6 +19,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.UploadMediator
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModelWithId
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricType
+import com.rudderstack.android.ruddermetricsreporterandroid.models.ErrorEntity
 import org.awaitility.Awaitility
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.*
@@ -43,13 +44,14 @@ class DefaultSyncerTest {
         val interval = 2000L
         (1..5)
         Mockito.`when`(
-            mockReservoir.getMetricsFirst(
+            mockReservoir.getMetricsAndErrors(
                 Mockito.anyLong(),
                 Mockito.anyLong(),
                 org.mockito.kotlin.any()
             )
         ).then {
-            val callback = it.arguments[2] as ((List<MetricModelWithId<Number>>) -> Unit)
+            val callback = it.arguments[2] as ((List<MetricModelWithId<out
+            Number>>, List<ErrorEntity>) -> Unit)
             val skip = (it.arguments[0] as Long).toInt().coerceAtLeast(0)
             val limitArgument = (it.arguments[1] as Long).toInt()
             val metrics = if (skip < maxMetrics) getTestMetricList(
@@ -57,7 +59,7 @@ class DefaultSyncerTest {
                 (maxMetrics - skip).coerceAtMost(limitArgument),
             ) else emptyList()
 //            lastMetricsIndex += metrics.size
-            callback.invoke(metrics)
+            callback.invoke(metrics, emptyList())
         }
 
         Mockito.`when`(

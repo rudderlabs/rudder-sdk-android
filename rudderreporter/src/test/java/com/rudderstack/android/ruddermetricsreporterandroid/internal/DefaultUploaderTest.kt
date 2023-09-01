@@ -47,7 +47,7 @@ open class DefaultUploaderTest {
 
     @Test
     fun upload() {
-        defaultUploader.upload(listOf(), ErrorModel()) {
+        defaultUploader.upload(listOf(), ErrorModel(listOf())) {
 
         }
     }

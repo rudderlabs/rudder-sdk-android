@@ -43,7 +43,7 @@ class ErrorEntity(val errorEvent: String): Entity {
         const val ERROR_EVENT = "error_event"
     }
     companion object {
-        const val TABLE_NAME = "metrics"
+        const val TABLE_NAME = "error_events"
 
         // This object is not generated from database.
         const val UNINITIALIZED_ID = -1L

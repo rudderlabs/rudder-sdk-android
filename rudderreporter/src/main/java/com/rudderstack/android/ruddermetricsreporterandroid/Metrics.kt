@@ -22,7 +22,21 @@ interface Metrics {
     fun getMeter(): Meter
     @Deprecated("Use [RudderReporter.syncer] instead")
     fun getSyncer():Syncer
+
+    /**
+     * Enables or disables recording of metrics. However unless shut down, already recorded
+     * events will reach server
+     *
+     * @param enable
+     */
     fun enable(enable: Boolean)
+
+    /**
+     * Shuts down the metrics reporter. No more events including errors will be sent to
+     * server, however errors will be recorded. Do not use this if you're notifying errors
+     *
+     */
+    @Deprecated("Use [RudderReporter.shutdown] instead")
     fun shutdown()
     fun getLongCounter(name: String): LongCounter = getMeter().longCounter(name)
 }

@@ -69,6 +69,7 @@ class DefaultSyncer internal constructor(
             uploader.upload(validMetrics, ErrorModel(errors.map { it.errorEvent })) { success ->
                 if (success) {
                     reservoir.resetTillSync(validMetrics)
+                    reservoir.clearErrors(errors.map { it.id }.toTypedArray())
                 }
 
                 callback?.invoke(validMetrics, success)
@@ -78,7 +79,7 @@ class DefaultSyncer internal constructor(
                     return@upload
                 }
                 if(success)
-                    flushMetrics(startIndex + validMetrics.size.toLong(), flushCount)
+                    flushMetrics(startIndex + flushCount, flushCount)
                 else
                     _atomicRunning.set(false)
             }
