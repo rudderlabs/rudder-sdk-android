@@ -115,11 +115,11 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
         SQLiteDatabase.loadLibs(application);
     }
 
-    private boolean deleteEncryptedDb() {
+    private void deleteEncryptedDb() {
         File encryptedDb = application.getDatabasePath(params.encryptedDbName);
-        if (encryptedDb.exists())
-            return encryptedDb.delete();
-        return false;
+        if (encryptedDb.exists()) {
+            deleteFile(encryptedDb);
+        }
     }
 
     private void migrateToDefaultDatabase(File databasePath) {
@@ -134,7 +134,13 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
         database.rawExecSQL("select sqlcipher_export('rl_persistence')");
         database.rawExecSQL("DETACH DATABASE rl_persistence");
         database.close();
-        encryptedDb.delete();// No-Op
+        deleteFile(encryptedDb);
+    }
+
+    private void deleteFile(File encryptedDb) {
+        if (!encryptedDb.delete()) {
+            RudderLogger.logError("Unable to delete database " + encryptedDb.getAbsolutePath());
+        }
     }
 
 
@@ -149,7 +155,7 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
         database.rawExecSQL("select sqlcipher_export('rl_persistence_encrypted')");
         database.rawExecSQL("DETACH DATABASE rl_persistence_encrypted");
         database.close();
-        decryptedDb.delete(); //No-Op
+        deleteFile(decryptedDb);
 
     }
 
