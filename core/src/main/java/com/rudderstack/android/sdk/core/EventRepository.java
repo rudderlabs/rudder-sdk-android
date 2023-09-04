@@ -151,19 +151,25 @@ class EventRepository {
 
             initializeLifecycleTracking(applicationLifeCycleManager);
 
-            //initiate rudder reporter
-            RudderServerConfig serverConfig = configManager.getConfig();
-            if(serverConfig != null && serverConfig.source != null
-                    && serverConfig.source.sourceConfiguration != null) {
-                enableStatsCollection(serverConfig.source.sourceConfiguration.getStatsCollection());
-            }
-            else {
-                RudderLogger.logDebug("EventRepository: constructor: Metrics collection is disabled");
-            }
+            initiateRudderReporterFromPrefetchedConfig();
         } catch (Exception ex) {
             RudderLogger.logError("EventRepository: constructor: Exception occurred: " + ex.getMessage());
             RudderLogger.logError(ex.getCause());
         }
+    }
+
+    private void initiateRudderReporterFromPrefetchedConfig() {
+        //initiate rudder reporter
+        configManager.getFetchedConfig(serverConfig -> {
+            if (serverConfig != null && serverConfig.source != null
+                    && serverConfig.source.sourceConfiguration != null) {
+                RudderLogger.logDebug("EventRepository: constructor: Prefetched source serverConfig is available");
+                enableStatsCollection(serverConfig.source.sourceConfiguration.getStatsCollection());
+            } else {
+                RudderLogger.logDebug("EventRepository: constructor: Prefetched source serverConfig is not available");
+            }
+        });
+
     }
 
 
@@ -318,9 +324,11 @@ class EventRepository {
     private void enableStatsCollection( @NonNull SourceConfiguration.StatsCollection statsCollection) {
         if(!isStatsReporterAvailable()){
             if(statsCollection.getMetrics().isEnabled()){
-                RudderLogger.logDebug("EventRepository: Enabling Metrics Collection:");
+                RudderLogger.logDebug("EventRepository: Creating Metrics Reporter");
                 initiateRudderReporter(application, writeKey );
+                return;
             }
+            RudderLogger.logDebug("EventRepository: Metrics collection is not initialized");
             return;
         }
         Metrics rudderMetrics = ReportManager.getMetrics();
@@ -330,7 +338,10 @@ class EventRepository {
         if (!metricsCollection) {
             RudderLogger.logDebug("EventRepository: Disabling Metrics Collection:");
             rudderMetrics.enable(false);
+            return;
         }
+        RudderLogger.logDebug("EventRepository: Metrics Collection is enabled");
+
     }
 
     private void saveFlushConfig() {
