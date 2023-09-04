@@ -160,7 +160,7 @@ public class RudderClient {
 
     private static void initiateRudderReporter(Context context, @Nullable String writeKey) {
         String writeKeyOrBlank = writeKey == null ? "" : writeKey;
-        if (rudderReporter == null) {
+        if (rudderReporter == null && context.getResources() != null) {
             rudderReporter = new DefaultRudderReporter(context, METRICS_URL_PROD,
                     new Configuration(new LibraryMetadata(
                             BuildConfig.LIBRARY_PACKAGE_NAME, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, writeKeyOrBlank
