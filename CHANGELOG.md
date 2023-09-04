@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.18.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.18.0...v1.18.1) (2023-09-04)
+
+
+### Bug Fixes
+
+* ci actions in draft_new_release ([195c162](https://github.com/rudderlabs/rudder-sdk-android/commit/195c162171a53fc7e95d01d5ded28e85b1b15697))
+* remove depth from draft new release ([d851b62](https://github.com/rudderlabs/rudder-sdk-android/commit/d851b627ec5a2089a3b64b5680ad3012c36b98fe))
+* sdk 197 metrics initialization fix ([#294](https://github.com/rudderlabs/rudder-sdk-android/issues/294)) ([82fd548](https://github.com/rudderlabs/rudder-sdk-android/commit/82fd5481e7781be0c589d9780afa058bb089b8fd))
+* sdk 400 ensure empty key is not accepted as encryption key for ([#293](https://github.com/rudderlabs/rudder-sdk-android/issues/293)) ([a7176b1](https://github.com/rudderlabs/rudder-sdk-android/commit/a7176b1bb6ca2e9d626c440fb6dad20e626eeef8))
+
 ## [1.18.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.16.0...v1.18.0) (2023-08-28)
 
 
