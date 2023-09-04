@@ -38,7 +38,7 @@ jobs:
           grep -q "hotfix/" <<< "${GITHUB_REF}" && release_type=hotfix-release
           grep -q "mpx" <<< "${GITHUB_REF}" && branch_type=-mpx && main_branch=master-mpx
           
-          git fetch origin "$main_branch" --depth=1
+          git fetch origin "$main_branch"
           git fetch --tags origin
           git merge "origin/$main_branch"
           current_version=$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)
