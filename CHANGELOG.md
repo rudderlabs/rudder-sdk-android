@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.19.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.17.0...v1.19.0) (2023-09-04)
+
+
+### Features
+
+*  sdk-173 encrypt values in sqlite3 database ([#283](https://github.com/rudderlabs/rudder-sdk-android/issues/283)) ([4f26ef9](https://github.com/rudderlabs/rudder-sdk-android/commit/4f26ef98fda8d3e85ca4712aac0e188ba57fe6b0))
+* making device id collection configurable and de-linking anonymousId and deviceId ([#281](https://github.com/rudderlabs/rudder-sdk-android/issues/281)) ([7e81e74](https://github.com/rudderlabs/rudder-sdk-android/commit/7e81e748d94f0910866ed0ae999c20785bf39991))
+
+
+### Bug Fixes
+
+* sdk 197 metrics initialization fix ([#294](https://github.com/rudderlabs/rudder-sdk-android/issues/294)) ([82fd548](https://github.com/rudderlabs/rudder-sdk-android/commit/82fd5481e7781be0c589d9780afa058bb089b8fd))
+* sdk 392 sqlcipher recreate database if key is wrong ([#287](https://github.com/rudderlabs/rudder-sdk-android/issues/287)) ([2e057ef](https://github.com/rudderlabs/rudder-sdk-android/commit/2e057ef65cf36b074d1aca9c366a959bef5e8835))
+* sdk 400 ensure empty key is not accepted as encryption key for ([#293](https://github.com/rudderlabs/rudder-sdk-android/issues/293)) ([a7176b1](https://github.com/rudderlabs/rudder-sdk-android/commit/a7176b1bb6ca2e9d626c440fb6dad20e626eeef8))
+
 ## [1.18.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.16.0...v1.18.0) (2023-08-28)
 
 
