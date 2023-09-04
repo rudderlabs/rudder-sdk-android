@@ -318,6 +318,7 @@ class EventRepository {
     private void enableStatsCollection( @NonNull SourceConfiguration.StatsCollection statsCollection) {
         if(!isStatsReporterAvailable()){
             if(statsCollection.getMetrics().isEnabled()){
+                RudderLogger.logDebug("EventRepository: Enabling Metrics Collection:");
                 initiateRudderReporter(application, writeKey );
             }
             return;
@@ -327,6 +328,7 @@ class EventRepository {
             return;
         boolean metricsCollection = statsCollection.getMetrics().isEnabled();
         if (!metricsCollection) {
+            RudderLogger.logDebug("EventRepository: Disabling Metrics Collection:");
             rudderMetrics.enable(false);
         }
     }
