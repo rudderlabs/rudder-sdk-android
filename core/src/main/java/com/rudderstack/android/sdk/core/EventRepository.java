@@ -4,8 +4,9 @@ package com.rudderstack.android.sdk.core;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_DATA_PLANE_URL_INVALID;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_SOURCE_DISABLED;
-import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_WRITE_KEY_INVALID;
 import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
+import static com.rudderstack.android.sdk.core.ReportManager.initiateRudderReporter;
+import static com.rudderstack.android.sdk.core.ReportManager.isStatsReporterAvailable;
 import static com.rudderstack.android.sdk.core.util.Utils.lifeCycleDependenciesExists;
 
 import android.app.Application;
@@ -71,6 +72,7 @@ class EventRepository {
             .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
             .create();
     private String dataPlaneUrl;
+    private final String writeKey;
 
     private static final String CHARSET_UTF_8 = "UTF-8";
 
@@ -92,6 +94,7 @@ class EventRepository {
         Context context = _application.getApplicationContext();
         this.config = _config;
         this.application = _application;
+        this.writeKey = identifiers.writeKey;
         RudderLogger.logDebug(String.format("EventRepository: constructor: %s", this.config.toString()));
 
         try {
@@ -147,10 +150,26 @@ class EventRepository {
             this.applicationLifeCycleManager.trackApplicationUpdateStatus();
 
             initializeLifecycleTracking(applicationLifeCycleManager);
+
+            initiateRudderReporterFromPrefetchedConfig();
         } catch (Exception ex) {
             RudderLogger.logError("EventRepository: constructor: Exception occurred: " + ex.getMessage());
             RudderLogger.logError(ex.getCause());
         }
+    }
+
+    private void initiateRudderReporterFromPrefetchedConfig() {
+        //initiate rudder reporter
+        configManager.getFetchedConfig(serverConfig -> {
+            if (serverConfig != null && serverConfig.source != null
+                    && serverConfig.source.sourceConfiguration != null) {
+                RudderLogger.logDebug("EventRepository: constructor: Prefetched source serverConfig is available");
+                enableStatsCollection(serverConfig.source.sourceConfiguration.getStatsCollection());
+            } else {
+                RudderLogger.logDebug("EventRepository: constructor: Prefetched source serverConfig is not available");
+            }
+        });
+
     }
 
 
@@ -239,6 +258,7 @@ class EventRepository {
     EventRepository() {
         //using this constructor requires mocking of all objects that are initialised in
         //proper constructor
+        this.writeKey = "";
     }
 
     private void initiateSDK(@Nullable RudderConsentFilter consentFilter) {
@@ -254,7 +274,8 @@ class EventRepository {
                     if (serverConfig != null) {
                         isSDKEnabled = serverConfig.source.isSourceEnabled;
                         if (isSDKEnabled) {
-                            enableStatsCollection(serverConfig.source.sourceConfiguration.getStatsCollection());
+                            if(serverConfig.source.sourceConfiguration != null)
+                                enableStatsCollection(serverConfig.source.sourceConfiguration.getStatsCollection());
                             dataResidencyManager.setDataResidencyUrls(serverConfig);
                             dataPlaneUrl = dataResidencyManager.getDataPlaneUrl();
                             if (dataPlaneUrl == null) {
@@ -283,8 +304,9 @@ class EventRepository {
                         isSDKInitialized = true;
                     } else if (receivedError == RudderNetworkManager.NetworkResponses.WRITE_KEY_ERROR) {
                         RudderLogger.logError("WRONG WRITE_KEY");
-                        ReportManager.incrementSourceConfigDownloadAbortCounter(1,
-                                Collections.singletonMap(LABEL_TYPE, LABEL_TYPE_WRITE_KEY_INVALID));
+                        // we do not need this metric
+//                        ReportManager.incrementSourceConfigDownloadAbortCounter(1,
+//                                Collections.singletonMap(LABEL_TYPE, LABEL_TYPE_WRITE_KEY_INVALID));
                         break;
                     } else {
                         retryCount += 1;
@@ -299,12 +321,27 @@ class EventRepository {
         }).start();
     }
 
-    private void enableStatsCollection(SourceConfiguration.StatsCollection statsCollection) {
-        Metrics rudderMetrics = ReportManager.getMetrics();
-        boolean metricsCollection = statsCollection.getMetrics().isEnabled();
-        if (rudderMetrics != null && !metricsCollection) {
-            rudderMetrics.enable(false);
+    private void enableStatsCollection( @NonNull SourceConfiguration.StatsCollection statsCollection) {
+        if(!isStatsReporterAvailable()){
+            if(statsCollection.getMetrics().isEnabled()){
+                RudderLogger.logDebug("EventRepository: Creating Metrics Reporter");
+                initiateRudderReporter(application, writeKey );
+                return;
+            }
+            RudderLogger.logDebug("EventRepository: Metrics collection is not initialized");
+            return;
         }
+        Metrics rudderMetrics = ReportManager.getMetrics();
+        if(rudderMetrics == null)
+            return;
+        boolean metricsCollection = statsCollection.getMetrics().isEnabled();
+        if (!metricsCollection) {
+            RudderLogger.logDebug("EventRepository: Disabling Metrics Collection:");
+            rudderMetrics.enable(false);
+            return;
+        }
+        RudderLogger.logDebug("EventRepository: Metrics Collection is enabled");
+
     }
 
     private void saveFlushConfig() {
