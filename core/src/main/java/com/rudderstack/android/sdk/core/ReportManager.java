@@ -1,9 +1,16 @@
 package com.rudderstack.android.sdk.core;
 
+import android.content.Context;
+
 import androidx.annotation.Nullable;
 
+import com.rudderstack.android.ruddermetricsreporterandroid.Configuration;
+import com.rudderstack.android.ruddermetricsreporterandroid.DefaultRudderReporter;
+import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata;
 import com.rudderstack.android.ruddermetricsreporterandroid.Metrics;
+import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter;
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
+import com.rudderstack.gsonrudderadapter.GsonAdapter;
 
 import java.util.Map;
 
@@ -31,7 +38,7 @@ public class ReportManager {
     public static final String LABEL_TYPE_SOURCE_CONFIG_URL_INVALID = "control_plane_url_invalid";
     public static final String LABEL_TYPE_DATA_PLANE_URL_INVALID = "data_plane_url_invalid";
     public static final String LABEL_TYPE_SOURCE_DISABLED = "source_disabled";
-    public static final String LABEL_TYPE_WRITE_KEY_INVALID = "writekey_invalid";
+//    public static final String LABEL_TYPE_WRITE_KEY_INVALID = "writekey_invalid";
 
 
     private static LongCounter messageCounter = null;
@@ -59,7 +66,8 @@ public class ReportManager {
     private static final String SOURCE_CONFIG_DOWNLOAD_SUCCESS_COUNTER_TAG = "sc_attempt_success";
     private static final String SOURCE_CONFIG_DOWNLOAD_RETRY_COUNTER_TAG = "sc_attempt_retry";
     private static final String SOURCE_CONFIG_DOWNLOAD_ABORT_COUNTER_TAG = "sc_attempt_abort";
-
+    private static final String METRICS_URL_DEV = "https://sdk-metrics.dev-rudder.rudderlabs.com/";
+    private static final String METRICS_URL_PROD = "https://sdk-metrics.rudderstack.com/";
     private static Metrics metrics = null;
 
     static @Nullable Metrics getMetrics() {
@@ -92,7 +100,19 @@ public class ReportManager {
             counter.add(value);
         }
     }
+    private static @Nullable RudderReporter rudderReporter;
+    static void initiateRudderReporter(Context context, @Nullable String writeKey) {
+        String writeKeyOrBlank = writeKey == null ? "" : writeKey;
+        if (rudderReporter == null) {
+            rudderReporter = new DefaultRudderReporter(context, METRICS_URL_PROD,
+                    new Configuration(new LibraryMetadata(
+                            BuildConfig.LIBRARY_PACKAGE_NAME, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, writeKeyOrBlank
+                    )), new GsonAdapter());
+            rudderReporter.getMetrics().getSyncer().startScheduledSyncs(30000, true, 10);
+            ReportManager.initiate(rudderReporter.getMetrics());
 
+        }
+    }
     static void incrementMessageCounter(int value, Map<String, String> attributes) {
         incrementCounter(messageCounter, value, attributes);
     }
@@ -155,5 +175,9 @@ public class ReportManager {
     }
     static void incrementCloudModeUploadAbortCounter(int value, Map<String, String> attributes) {
         incrementCounter(cloudModeUploadAbortCounter, value, attributes);
+    }
+
+    static boolean isStatsReporterAvailable() {
+        return rudderReporter != null;
     }
 }
