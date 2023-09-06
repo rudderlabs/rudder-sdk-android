@@ -17,14 +17,23 @@ public class RudderUserSessionManager {
         // 8. clear session if automatic session tracking was enabled previously
         // but disabled presently or vice versa.
         boolean previousAutoSessionTrackingStatus = preferenceManager.getAutoSessionTrackingStatus();
-        if (previousAutoSessionTrackingStatus != config.isTrackAutoSession()) {
+        boolean currentAutomaticSessionTrackingStatus = isAutomaticSessionTrackingEnabled();
+        if (previousAutoSessionTrackingStatus != currentAutomaticSessionTrackingStatus) {
             userSession.clearSession();
         }
-        preferenceManager.saveAutoSessionTrackingStatus(config.isTrackAutoSession());
+        preferenceManager.saveAutoSessionTrackingStatus(currentAutomaticSessionTrackingStatus);
         // starting automatic session tracking if enabled.
-        if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
+        if (currentAutomaticSessionTrackingStatus) {
             userSession.startSessionIfNeeded();
         }
+    }
+
+    private boolean isAutomaticSessionTrackingEnabled() {
+        return config.isTrackAutoSession() && isAutomaticLifeCycleEnabled();
+    }
+
+    private boolean isAutomaticLifeCycleEnabled() {
+        return config.isTrackLifecycleEvents() || config.isNewLifeCycleEvents();
     }
 
     void applySessionTracking(RudderMessage message) {
