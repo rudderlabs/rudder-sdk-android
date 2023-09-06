@@ -20,6 +20,6 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep class com.rudderstack.android.sdk.core.* { *; }
--keep class com.rudderstack.android.sdk.core.ecomm.* { *; }
--keep class com.rudderstack.android.sdk.core.util.* { *; }
+#-keep class com.rudderstack.android.sdk.core.* { *; }
+#-keep class com.rudderstack.android.sdk.core.ecomm.* { *; }
+#-keep class com.rudderstack.android.sdk.core.util.* { *; }
