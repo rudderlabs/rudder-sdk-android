@@ -500,7 +500,7 @@ class Dao<T : Entity> internal constructor(
                         null,
                         null,
                         orderBy,
-                        if (offset != null) "$limit,$offset" else limit
+                        if (offset != null) "$offset,$limit" else limit
                     )
                 }) ?: return listOf()
 

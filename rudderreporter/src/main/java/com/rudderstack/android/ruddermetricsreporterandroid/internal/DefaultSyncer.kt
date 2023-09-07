@@ -28,7 +28,9 @@ class DefaultSyncer internal constructor(
     private val reservoir: Reservoir,
     private val uploader: UploadMediator
 ) : Syncer {
-    private var callback: ((uploaded: List<MetricModel<out Number>>, success: Boolean) -> Unit)? =
+    private var callback: ((uploadedMetrics: List<MetricModel<out Number>>,
+                            uploadedErrorModel: ErrorModel,
+                            success: Boolean) -> Unit)? =
         null
 
     private val _isShutDown = AtomicBoolean(false)
@@ -48,7 +50,9 @@ class DefaultSyncer internal constructor(
     }
 
 
-    override fun setCallback(callback: ((uploaded: List<MetricModel<out Number>>, success: Boolean) -> Unit)?) {
+    override fun setCallback(callback: ((uploadedMetrics: List<MetricModel<out Number>>,
+                                         uploadedErrorModel: ErrorModel, success:
+    Boolean) -> Unit)?) {
         this.callback = callback
     }
 
@@ -56,8 +60,7 @@ class DefaultSyncer internal constructor(
         flushMetrics(0L, flushCount)
     }
     private fun flushMetrics(startIndex: Long, flushCount: Long) {
-        //TODO: add error handling getMetricsAndErrorFirst
-        reservoir.getMetricsAndErrors(startIndex, flushCount) { metrics, errors ->
+        reservoir.getMetricsAndErrors(startIndex,0, flushCount) { metrics, errors ->
             val validMetrics = metrics.filterWithValidValues()
             if (validMetrics.isEmpty() && errors.isEmpty()) {
                 _atomicRunning.set(false)
@@ -65,14 +68,14 @@ class DefaultSyncer internal constructor(
                     stopScheduling()
                 return@getMetricsAndErrors
             }
-
-            uploader.upload(validMetrics, ErrorModel(errors.map { it.errorEvent })) { success ->
+            val errorModel = ErrorModel(errors.map { it.errorEvent })
+            uploader.upload(validMetrics, errorModel) { success ->
                 if (success) {
                     reservoir.resetTillSync(validMetrics)
                     reservoir.clearErrors(errors.map { it.id }.toTypedArray())
                 }
 
-                callback?.invoke(validMetrics, success)
+                callback?.invoke(validMetrics, errorModel, success)
                 if (_isShutDown.get()) {
                     _atomicRunning.set(false)
                     stopScheduling()

@@ -19,13 +19,14 @@ import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModelW
 import com.rudderstack.android.ruddermetricsreporterandroid.models.ErrorEntity
 
 interface Reservoir {
-    fun insertOrIncrement(metric: MetricModel<Number>)
+    fun insertOrIncrement(metric: MetricModel<out Number>)
     fun getAllMetricsSync(): List<MetricModelWithId<out Number>>
     fun getAllMetrics(callback : (List<MetricModelWithId<out Number>>) -> Unit)
 
     fun getMetricsFirstSync(limit : Long): List<MetricModelWithId<out Number>>
     fun getMetricsFirst(skip: Long, limit : Long, callback : (List<MetricModelWithId<out Number>>) -> Unit)
-    fun getMetricsAndErrors(skip: Long, limit : Long, callback : (List<MetricModelWithId<out
+    fun getMetricsAndErrors(skipForMetrics: Long, skipForErrors: Long, limit : Long, callback :
+        (List<MetricModelWithId<out
     Number>>, List<ErrorEntity>) -> Unit)
     fun getMetricsFirst(limit : Long, callback : (List<MetricModelWithId<out Number>>) -> Unit)
 //    fun getMetricsAndErrorFirst(limit : Long, callback : (List<MetricModel<Number>>, List<ErrorModel>) -> Unit)

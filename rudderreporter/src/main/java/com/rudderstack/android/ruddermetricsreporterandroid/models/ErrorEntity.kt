@@ -68,5 +68,12 @@ class ErrorEntity(val errorEvent: String): Entity {
         return arrayOf(id.toString())
     }
 
+    override fun equals(other: Any?): Boolean {
+        return other is ErrorEntity && other.id == id
+               && other.errorEvent == errorEvent
+    }
 
+    override fun hashCode(): Int {
+        return id.hashCode() + errorEvent.hashCode()
+    }
 }
