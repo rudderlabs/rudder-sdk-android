@@ -41,7 +41,7 @@ public class RudderUserSessionManager {
         if (userSession.getSessionId() != null) {
             message.setSession(userSession);
         }
-        if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
+        if (isAutomaticSessionTrackingEnabled()) {
             userSession.updateLastEventTimeStamp();
         }
     }
