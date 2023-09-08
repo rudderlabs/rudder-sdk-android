@@ -1,5 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
+import androidx.annotation.Nullable;
+
 public class RudderUserSessionManager {
     private RudderUserSession userSession;
     private RudderPreferenceManager preferenceManager;
@@ -38,7 +40,7 @@ public class RudderUserSessionManager {
 
     void applySessionTracking(RudderMessage message) {
         // Session Tracking
-        if (userSession.getSessionId() != null) {
+        if (getSessionId() != null) {
             message.setSession(userSession);
         }
         if (isAutomaticSessionTrackingEnabled()) {
@@ -69,8 +71,13 @@ public class RudderUserSessionManager {
         userSession.clearSession();
     }
 
+    @Nullable
+    Long getSessionId() {
+        return userSession.getSessionId();
+    }
+
     public void reset() {
-        if (userSession.getSessionId() != null) {
+        if (getSessionId() != null) {
             userSession.refreshSession();
         }
     }
