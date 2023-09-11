@@ -283,7 +283,7 @@ class DefaultReservoirTest {
     fun `test getMetricsAndErrors when limit exceeds metrics count`() {
         defaultStorage.clear()
         val insertMetricModels = TestDataGenerator.generateTestMetrics(20)
-        val insertedErrors = TestDataGenerator.generateTestErrorEventsJson(32)
+        val insertedErrors = TestDataGenerator.generateTestErrorEventsJson(12)
         insertMetricModels.forEach {
             defaultStorage.insertOrIncrement(it)
         }

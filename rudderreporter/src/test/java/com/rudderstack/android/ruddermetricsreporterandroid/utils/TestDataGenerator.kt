@@ -32,7 +32,8 @@ object TestDataGenerator {
         getTestErrorEventJsonWithIdentity(it)
     }
 
-    fun generateTestErrorEventsJson(range: Iterable<Int>) = range.map {
+    fun generateTestErrorEventsJson(range: Iterable<Int>) =
+        range.map {
         getTestErrorEventJsonWithIdentity(it)
     }
     fun getTestErrorEventJsonWithIdentity(identity : Int) = """

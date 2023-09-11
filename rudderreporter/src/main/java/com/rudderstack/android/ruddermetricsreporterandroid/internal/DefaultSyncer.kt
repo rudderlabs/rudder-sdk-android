@@ -28,10 +28,14 @@ class DefaultSyncer internal constructor(
     private val reservoir: Reservoir,
     private val uploader: UploadMediator
 ) : Syncer {
-    private var callback: ((uploadedMetrics: List<MetricModel<out Number>>,
-                            uploadedErrorModel: ErrorModel,
-                            success: Boolean) -> Unit)? =
-        null
+    private var _callback: ((uploadedMetrics: List<MetricModel<out Number>>,
+                             uploadedErrorModel: ErrorModel,
+                             success: Boolean) -> Unit)? = null
+        set(value) {
+            synchronized(this) {
+                field = value
+            }
+        }
 
     private val _isShutDown = AtomicBoolean(false)
     private val _atomicRunning = AtomicBoolean(false)
@@ -49,17 +53,25 @@ class DefaultSyncer internal constructor(
         }
     }
 
-
+    /**
+     * Set a callback for the syncer to invoke after every flush
+     *
+     * @param callback A higher order function that calls back with the metrics and error model
+     * that were uploaded and a boolean indicating if the upload was successful.
+     * Even in case of the upload being unsuccessful, the metrics and error model params contains
+     * the metrics and errors that were attempted to be uploaded.
+     *
+     */
     override fun setCallback(callback: ((uploadedMetrics: List<MetricModel<out Number>>,
                                          uploadedErrorModel: ErrorModel, success:
     Boolean) -> Unit)?) {
-        this.callback = callback
+        this._callback = callback
     }
 
-    private fun flushMetrics(flushCount: Long) {
-        flushMetrics(0L, flushCount)
+    private fun flush(flushCount: Long) {
+        flush(0L, flushCount)
     }
-    private fun flushMetrics(startIndex: Long, flushCount: Long) {
+    private fun flush(startIndex: Long, flushCount: Long) {
         reservoir.getMetricsAndErrors(startIndex,0, flushCount) { metrics, errors ->
             val validMetrics = metrics.filterWithValidValues()
             if (validMetrics.isEmpty() && errors.isEmpty()) {
@@ -74,15 +86,16 @@ class DefaultSyncer internal constructor(
                     reservoir.resetTillSync(validMetrics)
                     reservoir.clearErrors(errors.map { it.id }.toTypedArray())
                 }
-
-                callback?.invoke(validMetrics, errorModel, success)
+                synchronized(this) {
+                    _callback?.invoke(validMetrics, errorModel, success)
+                }
                 if (_isShutDown.get()) {
                     _atomicRunning.set(false)
                     stopScheduling()
                     return@upload
                 }
                 if(success)
-                    flushMetrics(startIndex + flushCount, flushCount)
+                    flush(startIndex + flushCount, flushCount)
                 else
                     _atomicRunning.set(false)
             }
@@ -100,7 +113,7 @@ class DefaultSyncer internal constructor(
         if (_isShutDown.get())
             return
         if (_atomicRunning.compareAndSet(false, true)) {
-            flushMetrics(flushCount)
+            flush(flushCount)
         }
     }
 

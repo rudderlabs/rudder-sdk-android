@@ -22,7 +22,7 @@ import com.squareup.moshi.Json
 
 class ErrorModel(
 
-    private val eventsJson: List<String>) : JSerialize<ErrorModel> {
+    internal val eventsJson: List<String>) : JSerialize<ErrorModel> {
 
     override fun serialize(jsonAdapter: JsonAdapter): String? {
         return jsonAdapter.writeToJson(toMap(jsonAdapter))
