@@ -144,9 +144,11 @@ class Dao<T : Entity> internal constructor(
             // receives the number of deleted rows and fires callback
             val extendedDeleteCb = { numberOfRows: Int ->
                 deleteCallback?.invoke(numberOfRows)
-                val allData = getAllSync() ?: listOf()
-                _dataChangeListeners.forEach {
-                    it.onDataDeleted(this.subList(0, numberOfRows), allData)
+                if(_dataChangeListeners.isNotEmpty()) {
+                    val allData = getAllSync() ?: listOf()
+                    _dataChangeListeners.forEach {
+                        it.onDataDeleted(this.subList(0, numberOfRows), allData)
+                    }
                 }
             }
             delete(whereClause, null, extendedDeleteCb)
@@ -403,7 +405,7 @@ class Dao<T : Entity> internal constructor(
                 }
             }
 
-        if (returnedItems.isNotEmpty()) {
+        if (returnedItems.isNotEmpty() && _dataChangeListeners.isNotEmpty()) {
             val allData = getAllSync() ?: listOf()
             _dataChangeListeners.forEach {
                 it.onDataInserted(returnedItems.filterNotNull(), allData)

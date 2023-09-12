@@ -28,9 +28,10 @@ import com.rudderstack.android.ruddermetricsreporterandroid.models.MetricEntity
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.pow
 
-class DefaultReservoir(
+class DefaultReservoir @JvmOverloads constructor(
     androidContext: Context,
     useContentProvider: Boolean,
     private val dbExecutor: ExecutorService? = null
@@ -41,6 +42,7 @@ class DefaultReservoir(
     private val errorDao: Dao<ErrorEntity>
     private var _storageListeners = listOf<Reservoir.DataListener>()
 
+    private val maxErrorCount = AtomicLong(MAX_ERROR_COUNT)
     init {
         RudderDatabase.init(
             androidContext,
@@ -229,14 +231,27 @@ class DefaultReservoir(
         }
     }
 
+    override fun setMaxErrorCount(maxErrorCount: Long) {
+        synchronized(this.maxErrorCount) {
+            this.maxErrorCount.set(maxErrorCount)
+        }
+    }
+
     override fun saveError(errorEntity: ErrorEntity) {
         with(errorDao) {
-            listOf(errorEntity).insert {
-                //TODO (add log if failed)
-                if (it.isNotEmpty() && it.first()
-                        .toLong() > -1
-                ) _storageListeners.forEach { it.onDataChange() }
+            getCount {
+                synchronized(maxErrorCount) {
+                    if (it >= maxErrorCount.get()) return@getCount
+                }
+                //TODO (add log if exceeded)
+                listOf(errorEntity).insert {
+                    //TODO (add log if failed)
+                    if (it.isNotEmpty() && it.first()
+                            .toLong() > -1
+                    ) _storageListeners.forEach { it.onDataChange() }
+                }
             }
+
         }
     }
 
@@ -395,5 +410,6 @@ class DefaultReservoir(
 
     companion object {
         private const val DB_VERSION = 1
+        private const val MAX_ERROR_COUNT = 1000L
     }
 }

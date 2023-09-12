@@ -132,7 +132,10 @@ data class Metadata @JvmOverloads constructor (
             }
         }
     }
+    fun copy(): Metadata {
+        return this.copy(store = toMap())
 
+    }
 
 
 //    fun trimMetadataStringsTo(maxStringLength: Int): TrimMetrics {

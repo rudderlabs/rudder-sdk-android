@@ -56,7 +56,7 @@ class Configuration(var libraryMetadata: LibraryMetadata) {
     companion object {
         private const val DEFAULT_MAX_BREADCRUMBS = 100
         private const val DEFAULT_MAX_PERSISTED_SESSIONS = 128
-        private const val DEFAULT_MAX_PERSISTED_EVENTS = 32
+        private const val DEFAULT_MAX_PERSISTED_EVENTS = 1000
         private const val DEFAULT_MAX_REPORTED_THREADS = 200
         private const val DEFAULT_LAUNCH_CRASH_THRESHOLD_MS: Long = 5000
         private const val DEFAULT_MAX_STRING_VALUE_LENGTH = 10000

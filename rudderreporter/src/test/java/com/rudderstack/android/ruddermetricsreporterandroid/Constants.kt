@@ -25,7 +25,7 @@ const val TEST_ERROR_EVENTS_JSON =
             {
                 "method": "com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorEventTest.serialize",
                 "file": "ErrorEventTest.kt",
-                "lineNumber": 315,
+                "lineNumber": 69,
                 "inProject": true
             },
             {
@@ -231,43 +231,42 @@ const val TEST_ERROR_EVENTS_JSON =
             ]
         }
         ],
-        "severity": "ERROR",
-        "breadcrumbs": [
-
-        ],
-        "unhandled": true,
-        "projectPackages": [
-        "com.rudderstack.android"
-        ],
-        "app": {
-        "binaryArch": "arm64",
-        "id": "write_key",
-        "version": "2.1.0",
-        "versionCode": "14"
-    },
-    "device": {
-    "freeDisk": 54354354,
-    "freeMemory": 45345345,
-    "time": "Aug 31, 2023, 5:32:32 PM",
-    "cpuAbi": [
-    "x86_64"
-    ],
-    "jailbroken": false,
-    "locale": "locale",
-    "totalMemory": 1234556,
+ "severity": "ERROR",
+  "breadcrumbs": [],
+  "unhandled": true,
+  "projectPackages": [
+    "com.rudderstack.android"
+  ],
+  "app": {
+    "binaryArch": "arm64",
+    "id": "write_key",
+    "releaseStage": "release",
+    "version": "2.1.0",
+    "codeBundleId": "reporter.test",
+    "versionCode": "14"
+  },
+  "device": {
     "manufacturer": "LG",
     "model": "Nexus",
     "osName": "android",
     "osVersion": "8.0.1",
+    "cpuAbi": "x86_64",
+    "jailbroken": "false",
+    "locale": "locale",
+    "totalMemory": "1234556",
     "runtimeVersions": {
-    "androidApiLevel": "29",
-    "osBuild": "sdk_gphone_x86-userdebug 10 QSR1.210802.001 7603624 dev-keys"
-}
-},
-"metadata": {
-"m1": {
-"dumb": "dumber"
-}
+      "androidApiLevel": "29",
+      "osBuild": "sdk_gphone_x86-userdebug 10 QSR1.210802.001 7603624 dev-keys"
+    },
+    "freeDisk": "54354354",
+    "freeMemory": "45345345",
+    "orientation": "null",
+    "time": "Thu Aug 31 17:32:32 IST 2023"
+  },
+  "metadata": {
+    "m1": {
+      "dumb": "dumber"
+    }
 }
 }
 

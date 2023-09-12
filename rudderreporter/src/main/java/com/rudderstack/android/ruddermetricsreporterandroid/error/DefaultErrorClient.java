@@ -19,6 +19,8 @@ import static com.rudderstack.android.ruddermetricsreporterandroid.error.Severit
 
 import android.app.Application;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,12 +32,16 @@ import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.AppDataCollector;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.BackgroundTaskService;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.ClientComponentCallbacks;
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.ConnectivityCompat;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DataCollectionModule;
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultReservoir;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DeviceDataCollector;
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.NoopLogger;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.StateObserver;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.TaskType;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextModule;
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.SystemServiceModule;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.BreadcrumbState;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.Error;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.ExceptionHandler;
@@ -108,13 +114,14 @@ public class DefaultErrorClient implements MetadataAware, ErrorClient {
     /**
      * Initialize a Bugsnag client
      *
-     * @param configuration  a configuration for the Client
+     * @param configuration a configuration for the Client
      */
     public DefaultErrorClient(@NonNull ContextModule contextModule,
                               @NonNull final Configuration configuration,
                               @NonNull ConfigModule configModule,
-                              DataCollectionModule dataCollectionModule,
-                              @NonNull Reservoir reservoir, @NonNull JsonAdapter jsonAdapter,
+                              @NonNull DataCollectionModule dataCollectionModule,
+                              @NonNull Reservoir reservoir,
+                              @NonNull JsonAdapter jsonAdapter,
                               @NonNull MemoryTrimState memoryTrimState,
                               boolean isErrorEnabled) {
         appContext = contextModule.getCtx();
@@ -151,40 +158,88 @@ public class DefaultErrorClient implements MetadataAware, ErrorClient {
         this.reservoir = reservoir;
         exceptionHandler = new ExceptionHandler(this, logger);
 
+        this.reservoir.setMaxErrorCount(configuration.getMaxPersistedEvents());
         start();
     }
 
-    @VisibleForTesting
-    DefaultErrorClient(
-            ImmutableConfig immutableConfig,
-            MetadataState metadataState,
-            Context appContext,
-            @NonNull DeviceDataCollector deviceDataCollector,
-            @NonNull AppDataCollector appDataCollector,
-            @NonNull BreadcrumbState breadcrumbState,
-            Logger logger,
-//            DeliveryDelegate deliveryDelegate,
-            ExceptionHandler exceptionHandler,
-            Reservoir reservoir, @NonNull JsonAdapter jsonAdapter,
-            @NonNull MemoryTrimState memoryTrimState,
-            boolean isErrorEnabled
-            ) {
-        this.immutableConfig = immutableConfig;
-        this.metadataState = metadataState;
-        this.appContext = appContext;
-        this.deviceDataCollector = deviceDataCollector;
-        this.appDataCollector = appDataCollector;
-        this.breadcrumbState = breadcrumbState;
-//        this.eventStore = eventStore;
-        this.logger = logger;
-//        this.deliveryDelegate = deliveryDelegate;
-        this.exceptionHandler = exceptionHandler;
-        this.reservoir = reservoir;
-        this.jsonAdapter = jsonAdapter;
-        this.memoryTrimState = memoryTrimState;
-        this.isErrorEnabled = new AtomicBoolean(isErrorEnabled);
+    @NonNull
+    BreadcrumbState getBreadcrumbState() {
+        return breadcrumbState;
     }
 
+    @NonNull
+    MemoryTrimState getMemoryTrimState() {
+        return memoryTrimState;
+    }
+
+    public DefaultErrorClient(@NonNull Context context,
+                              @NonNull Configuration configuration,
+                              @NonNull JsonAdapter jsonAdapter) {
+        this(context, configuration, new DefaultReservoir(context, false), jsonAdapter);
+    }
+
+    public DefaultErrorClient(@NonNull Context context,
+                              @NonNull Configuration configuration,
+                              @NonNull Reservoir reservoir,
+                              @NonNull JsonAdapter jsonAdapter) {
+
+        appContext = context;
+        this.isErrorEnabled = new AtomicBoolean(true);
+        this.memoryTrimState = new MemoryTrimState();
+        this.jsonAdapter = jsonAdapter;
+        PackageInfo packageInfo = null;
+        try {
+            if (context.getPackageManager() != null) {
+                packageInfo = context.getPackageManager().getPackageInfo(
+                        context.getPackageName(),
+                        PackageManager.GET_PERMISSIONS
+                );
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        // set sensible defaults for delivery/project packages etc if not set
+        immutableConfig = new ImmutableConfig(configuration.getLibraryMetadata(),
+                configuration.getProjectPackages(),
+                configuration.getEnabledBreadcrumbTypes(), configuration.getDiscardClasses(),
+                NoopLogger.INSTANCE,
+                configuration.getMaxBreadcrumbs(), configuration.getMaxPersistedEvents(),
+                configuration.getEnabledReleaseStages(), "release",
+                packageInfo, null);
+        logger = immutableConfig.getLogger();
+
+        if (!(appContext instanceof Application)) {
+            logger.w("You should initialize Bugsnag from the onCreate() callback of your "
+                    + "Application subclass, as this guarantees errors are captured as early "
+                    + "as possible. "
+                    + "If a custom Application subclass is not possible in your app then you "
+                    + "should suppress this warning by passing the Application context instead: "
+                    + "Bugsnag.start(context.getApplicationContext()). "
+                    + "For further info see: "
+                    + "https://docs.bugsnag.com/platforms/android/#basic-configuration");
+
+        }
+
+        // setup state trackers for error handling
+        RudderErrorStateModule errorStateModule = new RudderErrorStateModule(
+                immutableConfig, configuration);
+        breadcrumbState = errorStateModule.getBreadcrumbState();
+        metadataState = errorStateModule.getMetadataState();
+        ContextModule contextModule = new ContextModule(context);
+        DataCollectionModule dataCollectionModule = new DataCollectionModule(
+                contextModule, new ConfigModule(contextModule, configuration),
+                new SystemServiceModule(contextModule), new BackgroundTaskService(),
+                new ConnectivityCompat(contextModule.getCtx(), null), new MemoryTrimState());
+        dataCollectionModule.resolveDependencies(bgTaskService, TaskType.IO);
+        appDataCollector = dataCollectionModule.getAppDataCollector();
+        deviceDataCollector = dataCollectionModule.getDeviceDataCollector();
+
+        this.reservoir = reservoir;
+        exceptionHandler = new ExceptionHandler(this, logger);
+        this.reservoir.setMaxErrorCount(configuration.getMaxPersistedEvents());
+
+        start();
+    }
     private void start() {
         exceptionHandler.install();
         registerComponentCallbacks();
@@ -308,16 +363,15 @@ public class DefaultErrorClient implements MetadataAware, ErrorClient {
 
     private void notifyInternal(@NonNull ErrorEvent event) {
 
-        if(! isErrorEnabled.get())
+        if (!isErrorEnabled.get())
             return;
         // leave an error breadcrumb of this event - for the next event
         leaveErrorBreadcrumb(event);
         String serializedEvent =
-        event.serialize(jsonAdapter);
-        if(serializedEvent != null){
+                event.serialize(jsonAdapter);
+        if (serializedEvent != null) {
             reservoir.saveError(new ErrorEntity(serializedEvent));
-        }
-        else{
+        } else {
             logger.e("Rudder Error Collector notifyInternal: Cannot serialize event: " + event);
         }
     }

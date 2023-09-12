@@ -43,6 +43,9 @@ internal class Stacktrace {
 
     val trace: List<Stackframe>
 
+    private constructor(){
+        trace = emptyList()
+    }
     constructor(frames: List<Stackframe>) {
         trace = limitTraceLength(frames)
     }

@@ -18,6 +18,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import com.rudderstack.android.ruddermetricsreporterandroid.Logger;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DateUtils;
 import com.squareup.moshi.Json;
@@ -35,7 +37,14 @@ public class Breadcrumb {
     private String name;
     private BreadcrumbType type = BreadcrumbType.MANUAL;
     private Map<String, Object> metadata = new HashMap<>();
-    private Date timestamp = new Date();
+    @JsonIgnore
+    @Transient
+    @Json(ignore = true)
+    private final Date timestamp;
+    @JsonProperty("timestamp")
+    @SerializedName("timestamp")
+    @Json(name = "timestamp")
+    private final String timestampString;
     @JsonIgnore
     @Transient
     @Json(ignore = true)
@@ -45,6 +54,8 @@ public class Breadcrumb {
     Breadcrumb(@NonNull String message, @NonNull Logger logger) {
         this.name = message;
         this.logger = logger;
+        this.timestamp = new Date();
+        timestampString = DateUtils.toIso8601(timestamp);
     }
 
     Breadcrumb(@NonNull String message,
@@ -57,6 +68,7 @@ public class Breadcrumb {
         this.type = type;
         this.metadata = metadata;
         this.timestamp = timestamp;
+        timestampString = DateUtils.toIso8601(timestamp);
     }
 
     private void logNull(String property) {
@@ -122,7 +134,7 @@ public class Breadcrumb {
 
     @NonNull
     String getStringTimestamp() {
-        return DateUtils.toIso8601(this.timestamp);
+        return timestampString;
     }
 
     @NonNull

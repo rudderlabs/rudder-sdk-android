@@ -35,6 +35,7 @@ interface Reservoir {
     fun clearMetrics()
     fun resetMetricsFirst(limit: Long)
 
+    fun setMaxErrorCount(maxErrorCount: Long)
     fun saveError(errorEntity: ErrorEntity)
     fun getAllErrorsSync(): List<ErrorEntity>
     fun getAllErrors(callback : (List<ErrorEntity>) -> Unit)

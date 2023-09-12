@@ -14,8 +14,8 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal.error
 
-import com.rudderstack.android.ruddermetricsreporterandroid.error.Breadcrumb
 import com.rudderstack.android.ruddermetricsreporterandroid.Logger
+import com.rudderstack.android.ruddermetricsreporterandroid.error.Breadcrumb
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.BaseObservable
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.StateEvent
 import java.util.concurrent.atomic.AtomicInteger

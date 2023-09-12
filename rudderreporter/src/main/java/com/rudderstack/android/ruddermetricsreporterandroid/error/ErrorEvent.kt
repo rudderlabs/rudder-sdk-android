@@ -26,7 +26,12 @@ import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.Immut
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.MetadataAware
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.Severity
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonWriter
+import com.squareup.moshi.ToJson
 
 class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
     @JvmOverloads
@@ -36,16 +41,10 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
         severityReason: SeverityReason,
         data: Metadata = Metadata()
     ) : this(
-        mutableListOf(),
-        config.discardClasses.toSet(),
-        when (originalError) {
+        mutableListOf(), config.discardClasses.toSet(), when (originalError) {
             null -> mutableListOf()
             else -> createError(originalError, config.projectPackages, config.logger)
-        },
-        data.copy(),
-        originalError,
-        config.projectPackages,
-        severityReason
+        }, data.copy(), originalError, config.projectPackages, severityReason
     )
 
     internal constructor(
@@ -77,10 +76,12 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
     @Transient
     @Json(ignore = true)
     internal var severityReason: SeverityReason
+
     @JsonIgnore
     @Transient
     @Json(ignore = true)
     val metadata: Metadata
+
     @get:SerializedName("metadata")
     @get:JsonProperty("metadata")
     @get:Json(name = "metadata")
@@ -153,27 +154,25 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
     }
 
     protected fun updateSeverityInternal(severity: Severity) {
-        severityReason =
-            SeverityReason(
-                severityReason.severityReasonType,
-                severity,
-                severityReason.unhandled,
-                severityReason.unhandledOverridden,
-                severityReason.attributeValue,
-                severityReason.attributeKey
-            )
+        severityReason = SeverityReason(
+            severityReason.severityReasonType,
+            severity,
+            severityReason.unhandled,
+            severityReason.unhandledOverridden,
+            severityReason.attributeValue,
+            severityReason.attributeKey
+        )
     }
 
     protected fun updateSeverityReason(@SeverityReason.SeverityReasonType reason: String) {
-        severityReason =
-            SeverityReason(
-                reason,
-                severityReason.currentSeverity,
-                severityReason.unhandled,
-                severityReason.unhandledOverridden,
-                severityReason.attributeValue,
-                severityReason.attributeKey
-            )
+        severityReason = SeverityReason(
+            reason,
+            severityReason.currentSeverity,
+            severityReason.unhandled,
+            severityReason.unhandledOverridden,
+            severityReason.attributeValue,
+            severityReason.attributeKey
+        )
     }
 
     fun getSeverityReasonType(): String = severityReason.severityReasonType
@@ -194,31 +193,61 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
     override fun getMetadata(section: String, key: String) = metadata.getMetadata(section, key)
     override fun serialize(jsonAdapter: JsonAdapter): String? {
         return jsonAdapter.writeToJson(mapOf(
-            "exceptions" to errors,
+            "exceptions" to errors.map { it.toMap() },
             "severity" to severity,
             "breadcrumbs" to breadcrumbs,
             "context" to context,
             "unhandled" to unhandled,
             "projectPackages" to projectPackages,
             "app" to app,
-            "device" to device,
-            "metadata" to metadataMap
-        ))
+            "device" to device.toMap(),
+            "metadata" to metadataMap/*.let {
+                var map: Map<String, Any> = mutableMapOf<String, Any>()
+                it.forEach { (key, value) ->
+                    map = map + (key to value)
+                }
+            }*/
+        ).filterValues { it != null }, object : RudderTypeAdapter<Map<String, Any?>>() {})
     }
 
     override fun toString(): String {
-        return "ErrorEvent{" +
-                "originalError=" + originalError +
-                ", severityReason=" + severityReason +
-                ", metadata=" + metadata +
-                ", discardClasses=" + discardClasses +
-                ", projectPackages=" + projectPackages +
-                ", breadcrumbs=" + breadcrumbs +
-                ", errors=" + errors +
-                ", groupingHash='" + groupingHash + '\'' +
-                ", context='" + context + '\'' +
-                "}"
+        return "ErrorEvent{originalError=$originalError, severityReason=$severityReason, metadata=$metadata, discardClasses=$discardClasses, projectPackages=$projectPackages, breadcrumbs=$breadcrumbs, errors=$errors, groupingHash='$groupingHash', context='$context'}"
     }
 
+    class ErrorEventAdapter {
+        @FromJson
+        fun fromJson(
+            jsonReader: JsonReader,
+            delegate: com.squareup.moshi.JsonAdapter<ErrorEvent>
+        ): ErrorEvent? {
+            //we don't need to serialize this class
+            return ErrorEvent()
+        }
+        @ToJson
+        fun toJson(errorEvent: ErrorEvent): Map<String, Any?>{
+           return mapOf(
+                "exceptions" to errorEvent.errors.map { it.toMap() },
+                "severity" to errorEvent.severity,
+                "breadcrumbs" to errorEvent.breadcrumbs,
+                "context" to errorEvent.context,
+                "unhandled" to errorEvent.unhandled,
+                "projectPackages" to errorEvent.projectPackages,
+                "app" to errorEvent.app,
+                "device" to errorEvent.device,
+                "metadata" to errorEvent.metadataMap/*.let {
+                    var map: Map<String, Any> = mutableMapOf<String, Any>()
+                    it.forEach { (key, value) ->
+                        map = map + (key to value)
+                    }
+                }*/
+            )
+//            try {
+//                writer.
+//                delegate.toJson(writer, eventMap)
+//            } finally {
+//                writer.setLenient(wasSerializeNulls)
+//            }
+        }
 
+    }
 }

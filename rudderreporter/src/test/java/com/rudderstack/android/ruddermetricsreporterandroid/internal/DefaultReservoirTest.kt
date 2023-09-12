@@ -819,6 +819,21 @@ class DefaultReservoirTest {
             assertThat(errors, empty())
         }
     }
+
+    @Test
+    fun testMaxErrorCount() {
+        defaultStorage.clear()
+        defaultStorage.setMaxErrorCount(10)
+        val errorEntities = TestDataGenerator.generateTestErrorEventsJson(12).map {
+            ErrorEntity(it)
+        }
+        errorEntities.forEach {
+            defaultStorage.saveError(it)
+        }
+        defaultStorage.getErrorsCount {
+            assertThat(it, equalTo(10L))
+        }
+    }
 }
 
 typealias Labels = Map<String, String>

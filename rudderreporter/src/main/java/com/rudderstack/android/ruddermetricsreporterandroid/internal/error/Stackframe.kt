@@ -18,6 +18,7 @@ package com.rudderstack.android.ruddermetricsreporterandroid.internal.error
  * Represents a single stackframe from a [Throwable]
  */
 class Stackframe{
+
     /**
      * The name of the method that was being executed
      */
@@ -96,7 +97,22 @@ class Stackframe{
         this.code = code
         this.columnNumber = columnNumber
     }
-
+    internal fun toMap(): Map<String, Any?> {
+        return mapOf(
+            "type" to type,
+            "method" to method,
+            "file" to file,
+            "lineNumber" to lineNumber,
+            "inProject" to inProject,
+            "code" to code,
+            "columnNumber" to columnNumber,
+            "frameAddress" to frameAddress,
+            "symbolAddress" to symbolAddress,
+            "loadAddress" to loadAddress,
+            "codeIdentifier" to codeIdentifier,
+            "isPC" to isPC,
+        ).filterValues { it != null }
+    }
 
     override fun toString(): String {
         return "Stackframe{method='$method', file='$file', lineNumber=$lineNumber, " +

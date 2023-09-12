@@ -19,6 +19,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClient
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.BackgroundTaskService
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.Connectivity
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.ConnectivityCompat
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.CustomDateAdapterMoshi
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DataCollectionModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultMetrics
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultReservoir
@@ -30,6 +31,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextM
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.SystemServiceModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.MemoryTrimState
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.metrics.DefaultAggregatorHandler
+import com.rudderstack.moshirudderadapter.MoshiAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -169,7 +171,8 @@ class DefaultRudderReporter(
         isMetricsEnabled: Boolean = true,
         isErrorEnabled: Boolean = true,
         backgroundTaskService: BackgroundTaskService? = null
-    ):this(contextModule, reservoir, configuration, configModule, syncer, jsonAdapter, memoryTrimState,
+    ):this(contextModule, reservoir, configuration, configModule, syncer, jsonAdapter.manipulate(),
+        memoryTrimState,
         ConnectivityCompat(contextModule.ctx, RudderReporterNetworkChangeCallback(syncer)),
         isMetricsEnabled, isErrorEnabled, backgroundTaskService)
 
@@ -232,6 +235,15 @@ class DefaultRudderReporter(
                     ex.printStackTrace()
                 }
             }
+        }
+    }
+
+    companion object{
+        internal fun JsonAdapter.manipulate(): JsonAdapter {
+            if(this is MoshiAdapter){
+                add(CustomDateAdapterMoshi())
+            }
+            return this
         }
     }
 }

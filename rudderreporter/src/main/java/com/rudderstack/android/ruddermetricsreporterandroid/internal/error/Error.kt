@@ -40,5 +40,12 @@ class Error @JvmOverloads internal constructor(
     override fun toString(): String {
         return "Error(errorClass='$errorClass', errorMessage=$errorMessage, stacktrace=$stacktrace, type=$type)"
     }
-
+internal fun toMap(): Map<String, Any?> {
+        return mapOf(
+            "errorClass" to errorClass,
+            "errorMessage" to errorMessage,
+            "stacktrace" to stacktrace.map { it.toMap() },
+            "type" to type.toString()
+        )
+    }
 }
