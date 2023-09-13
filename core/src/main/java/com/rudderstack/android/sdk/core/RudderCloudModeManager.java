@@ -62,7 +62,7 @@ public class RudderCloudModeManager {
                                     dbManager.markCloudModeDone(messageIds);
                                     dbManager.runGcForEvents();
                                     sleepCount = 0;
-                                }else {
+                                } else {
                                     incrementCloudModeUploadRetryCounter(1);
                                 }
                             }
@@ -123,6 +123,7 @@ public class RudderCloudModeManager {
      * again from the object
      * */
     static String getPayloadFromMessages(List<Integer> messageIds, List<String> messages) {
+        if (messageIds.isEmpty() || messages.isEmpty()) return null;
         try {
             RudderLogger.logDebug("CloudModeManager: getPayloadFromMessages: recordCount: " + messages.size());
             String sentAtTimestamp = Utils.getTimeStamp();
