@@ -4,8 +4,8 @@ package com.rudderstack.android.sdk.core;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_DATA_PLANE_URL_INVALID;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_SOURCE_DISABLED;
+import static com.rudderstack.android.sdk.core.ReportManager.enableStatsCollection;
 import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
-import static com.rudderstack.android.sdk.core.ReportManager.initiateRudderReporter;
 import static com.rudderstack.android.sdk.core.ReportManager.isStatsReporterAvailable;
 import static com.rudderstack.android.sdk.core.util.Utils.lifeCycleDependenciesExists;
 
@@ -164,7 +164,7 @@ class EventRepository {
             if (serverConfig != null && serverConfig.source != null
                     && serverConfig.source.sourceConfiguration != null) {
                 RudderLogger.logDebug("EventRepository: constructor: Prefetched source serverConfig is available");
-                enableStatsCollection(serverConfig.source.sourceConfiguration.getStatsCollection());
+                enableStatsCollection(application, writeKey, serverConfig.source.sourceConfiguration.getStatsCollection());
             } else {
                 RudderLogger.logDebug("EventRepository: constructor: Prefetched source serverConfig is not available");
             }
@@ -275,7 +275,7 @@ class EventRepository {
                         isSDKEnabled = serverConfig.source.isSourceEnabled;
                         if (isSDKEnabled) {
                             if(serverConfig.source.sourceConfiguration != null)
-                                enableStatsCollection(serverConfig.source.sourceConfiguration.getStatsCollection());
+                                enableStatsCollection(application, writeKey, serverConfig.source.sourceConfiguration.getStatsCollection());
                             dataResidencyManager.setDataResidencyUrls(serverConfig);
                             dataPlaneUrl = dataResidencyManager.getDataPlaneUrl();
                             if (dataPlaneUrl == null) {
@@ -321,28 +321,7 @@ class EventRepository {
         }).start();
     }
 
-    private void enableStatsCollection( @NonNull SourceConfiguration.StatsCollection statsCollection) {
-        if(!isStatsReporterAvailable()){
-            if(statsCollection.getMetrics().isEnabled()){
-                RudderLogger.logDebug("EventRepository: Creating Metrics Reporter");
-                initiateRudderReporter(application, writeKey );
-                return;
-            }
-            RudderLogger.logDebug("EventRepository: Metrics collection is not initialized");
-            return;
-        }
-        Metrics rudderMetrics = ReportManager.getMetrics();
-        if(rudderMetrics == null)
-            return;
-        boolean metricsCollection = statsCollection.getMetrics().isEnabled();
-        if (!metricsCollection) {
-            RudderLogger.logDebug("EventRepository: Disabling Metrics Collection:");
-            rudderMetrics.enable(false);
-            return;
-        }
-        RudderLogger.logDebug("EventRepository: Metrics Collection is enabled");
 
-    }
 
     private void saveFlushConfig() {
         RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString,

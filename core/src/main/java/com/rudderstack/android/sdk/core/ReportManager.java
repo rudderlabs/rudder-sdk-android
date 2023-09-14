@@ -1,7 +1,9 @@
 package com.rudderstack.android.sdk.core;
 
+import android.app.Application;
 import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration;
@@ -9,6 +11,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.DefaultRudderReporte
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata;
 import com.rudderstack.android.ruddermetricsreporterandroid.Metrics;
 import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter;
+import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClient;
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
 import com.rudderstack.gsonrudderadapter.GsonAdapter;
 
@@ -40,6 +43,8 @@ public class ReportManager {
     public static final String LABEL_TYPE_SOURCE_DISABLED = "source_disabled";
 //    public static final String LABEL_TYPE_WRITE_KEY_INVALID = "writekey_invalid";
 
+    private static final long METRICS_UPLOAD_INTERVAL = 30_000;
+    private static final long METRICS_FLUSH_COUNT = 10;
 
     private static LongCounter messageCounter = null;
     private static LongCounter discardedCounter = null;
@@ -69,12 +74,24 @@ public class ReportManager {
     private static final String METRICS_URL_DEV = "https://sdk-metrics.dev-rudder.rudderlabs.com/";
     private static final String METRICS_URL_PROD = "https://sdk-metrics.rudderstack.com/";
     private static Metrics metrics = null;
+    private static ErrorClient errorStatsClient = null;
 
     static @Nullable Metrics getMetrics() {
         return metrics;
     }
-    public static void initiate(Metrics metrics) {
+
+    static @Nullable ErrorClient getErrorStatsClient() {
+        return errorStatsClient;
+    }
+
+    public static void initiate(Metrics metrics, ErrorClient errorStatsClient) {
         ReportManager.metrics = metrics;
+        ReportManager.errorStatsClient = errorStatsClient;
+        createCounters(metrics);
+
+    }
+
+    private static void createCounters(Metrics metrics) {
         ReportManager.messageCounter = metrics.getLongCounter(EVENTS_SUBMITTED_COUNTER_TAG);
         ReportManager.discardedCounter = metrics.getLongCounter(EVENTS_DISCARDED_COUNTER_TAG);
         ReportManager.deviceModeEventCounter = metrics.getLongCounter(DEVICE_MODE_EVENT_COUNTER_TAG);
@@ -88,31 +105,85 @@ public class ReportManager {
         sourceConfigDownloadRetryCounter = metrics.getLongCounter(SOURCE_CONFIG_DOWNLOAD_RETRY_COUNTER_TAG);
         sourceConfigDownloadSuccessCounter = metrics.getLongCounter(SOURCE_CONFIG_DOWNLOAD_SUCCESS_COUNTER_TAG);
         sourceConfigDownloadAbortCounter = metrics.getLongCounter(SOURCE_CONFIG_DOWNLOAD_ABORT_COUNTER_TAG);
-
     }
+
     private static void incrementCounter(LongCounter counter, int value, Map<String, String> attributes) {
         if (counter != null) {
             counter.add(value, attributes);
         }
     }
+
     private static void incrementCounter(LongCounter counter, int value) {
         if (counter != null) {
             counter.add(value);
         }
     }
+
     private static @Nullable RudderReporter rudderReporter;
-    static void initiateRudderReporter(Context context, @Nullable String writeKey) {
+
+    static void enableStatsCollection(Application application, String writeKey,
+                                      @NonNull SourceConfiguration.StatsCollection statsCollection) {
+        if (!isStatsReporterAvailable()) {
+            if (!(statsCollection.getMetrics().isEnabled() || statsCollection.getErrors().isEnabled())) {
+                RudderLogger.logDebug("EventRepository: Stats collection is not enabled");
+                return;
+            }
+            RudderLogger.logDebug("EventRepository: Creating Stats Reporter");
+            initiateRudderReporter(application, writeKey, statsCollection.getMetrics().isEnabled(),
+                    statsCollection.getErrors().isEnabled());
+            RudderLogger.logDebug("EventRepository: Metrics collection is not initialized");
+            return;
+        }
+        checkAndUpdateMetricsCollection(statsCollection.getMetrics().isEnabled());
+        checkAndUpdateErrorsCollection(statsCollection.getErrors().isEnabled());
+        RudderLogger.logDebug("EventRepository: Metrics Collection is enabled");
+
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private static void checkAndUpdateMetricsCollection(boolean isMetricsEnabled) {
+        if (!isStatsReporterAvailable())
+            return;
+        RudderLogger.logDebug("EventRepository: Enabling Metrics Collection: " + isMetricsEnabled);
+        Metrics rudderMetrics = ReportManager.getMetrics();
+        if (rudderMetrics == null) {
+            if (!isMetricsEnabled)
+                return;
+            rudderMetrics = rudderReporter.getMetrics();
+        }
+        rudderMetrics.enable(isMetricsEnabled);
+    }
+    @SuppressWarnings("ConstantConditions")
+    private static void checkAndUpdateErrorsCollection(boolean isErrorsEnabled) {
+        if (!isStatsReporterAvailable())
+            return;
+        RudderLogger.logDebug("EventRepository: Enabling Errors Collection: " + isErrorsEnabled);
+        ErrorClient errorClient = ReportManager.getErrorStatsClient();
+        if (errorClient == null) {
+            if (!isErrorsEnabled)
+                return;
+            errorClient = rudderReporter.getErrorClient();
+        }
+        errorClient.enable(isErrorsEnabled);
+    }
+
+    private static void initiateRudderReporter(Context context, @Nullable String writeKey,
+                                               boolean isMetricsEnabled, boolean isErrorsEnabled) {
+        RudderLogger.logDebug("EventRepository: Creating RudderReporter isMetricsEnabled: " + isMetricsEnabled + " isErrorsEnabled: " + isErrorsEnabled);
         String writeKeyOrBlank = writeKey == null ? "" : writeKey;
         if (rudderReporter == null) {
             rudderReporter = new DefaultRudderReporter(context, METRICS_URL_PROD,
                     new Configuration(new LibraryMetadata(
                             BuildConfig.LIBRARY_PACKAGE_NAME, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, writeKeyOrBlank
-                    )), new GsonAdapter());
-            rudderReporter.getMetrics().getSyncer().startScheduledSyncs(30000, true, 10);
-            ReportManager.initiate(rudderReporter.getMetrics());
-
+                    )), new GsonAdapter(), isMetricsEnabled, isErrorsEnabled);
+            rudderReporter.getSyncer().startScheduledSyncs(METRICS_UPLOAD_INTERVAL,
+                    true, METRICS_FLUSH_COUNT);
+            //we default to null if metrics or errors are not enabled
+            ReportManager.initiate(isMetricsEnabled ? rudderReporter.getMetrics() : null,
+                    isErrorsEnabled ? rudderReporter.getErrorClient() : null);
         }
     }
+
     static void incrementMessageCounter(int value, Map<String, String> attributes) {
         incrementCounter(messageCounter, value, attributes);
     }
@@ -152,27 +223,35 @@ public class ReportManager {
     static void incrementDeviceModeDiscardedCounter(int value) {
         incrementCounter(deviceModeDiscardedCounter, value);
     }
+
     static void incrementSourceConfigDownloadSuccessCounter(int value) {
         incrementCounter(sourceConfigDownloadSuccessCounter, value);
     }
+
     static void incrementSourceConfigDownloadAbortCounter(int value) {
         incrementCounter(sourceConfigDownloadAbortCounter, value);
     }
+
     static void incrementSourceConfigDownloadAbortCounter(int value, Map<String, String> attributes) {
         incrementCounter(sourceConfigDownloadAbortCounter, value, attributes);
     }
+
     static void incrementSourceConfigDownloadRetryCounter(int value) {
         incrementCounter(sourceConfigDownloadRetryCounter, value);
     }
+
     static void incrementCloudModeUploadSuccessCounter(int value) {
         incrementCounter(cloudModeUploadSuccessCounter, value);
     }
+
     static void incrementCloudModeUploadRetryCounter(int value) {
         incrementCounter(cloudModeUploadRetryCounter, value);
     }
+
     static void incrementCloudModeUploadAbortCounter(int value) {
         incrementCounter(cloudModeUploadAbortCounter, value);
     }
+
     static void incrementCloudModeUploadAbortCounter(int value, Map<String, String> attributes) {
         incrementCounter(cloudModeUploadAbortCounter, value, attributes);
     }
