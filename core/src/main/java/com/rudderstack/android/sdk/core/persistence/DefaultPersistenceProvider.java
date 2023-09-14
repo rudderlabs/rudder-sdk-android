@@ -46,7 +46,8 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
 
     @Override
     public Persistence get(Persistence.DbCreateListener dbCreateListener) {
-        if (!params.isEncrypted) {
+        if (!params.isEncrypted
+                || params.encryptionKey == null || params.encryptedDbName == null) {
             return getDefaultPersistence(dbCreateListener);
         } else {
             return getEncryptedPersistence(dbCreateListener);
@@ -61,7 +62,7 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
         if (!checkDatabaseExists(params.encryptedDbName)
                 && checkDatabaseExists(params.dbName)) {
             migrateToEncryptedDatabase(encryptedDbPath);
-        }else {
+        } else {
             if (!checkIfEncryptionIsValid(encryptedDbPath))
                 deleteEncryptedDb();             //drop database
         }
@@ -72,7 +73,7 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
     private EncryptedPersistence createEncryptedObject(@Nullable Persistence.DbCreateListener dbCreateListener) {
         return new EncryptedPersistence(application,
                 new EncryptedPersistence.DbParams(params.encryptedDbName,
-                params.dbVersion, params.encryptionKey), dbCreateListener);
+                        params.dbVersion, params.encryptionKey), dbCreateListener);
     }
 
 
@@ -94,7 +95,7 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
                 checkDatabaseExists(params.encryptedDbName)) {
             initCipheredDatabase();
             createDefaultDatabase();
-            try{
+            try {
                 migrateToDefaultDatabase(application.getDatabasePath(params.dbName));
             } catch (Exception e) {
                 RudderLogger.logError("Encryption key is invalid: Dumping the database and constructing a new unencrypted one");
@@ -114,11 +115,11 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
         SQLiteDatabase.loadLibs(application);
     }
 
-    private boolean deleteEncryptedDb() {
+    private void deleteEncryptedDb() {
         File encryptedDb = application.getDatabasePath(params.encryptedDbName);
-        if (encryptedDb.exists())
-            return encryptedDb.delete();
-        return false;
+        if (encryptedDb.exists()) {
+            deleteFile(encryptedDb);
+        }
     }
 
     private void migrateToDefaultDatabase(File databasePath) {
@@ -126,13 +127,20 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
         File encryptedDb = application.getDatabasePath(params.encryptedDbName);
         String encryptedPath = encryptedDb.getAbsolutePath();
         SQLiteDatabase database = SQLiteDatabase.openDatabase(encryptedPath, params.encryptionKey, null, SQLiteDatabase.OPEN_READWRITE);
+        //will throw exception if encryption key is invalid
         database.isDatabaseIntegrityOk();
         database.rawExecSQL(String.format("ATTACH DATABASE '%s' AS rl_persistence KEY ''",
                 databasePath.getAbsolutePath()));
         database.rawExecSQL("select sqlcipher_export('rl_persistence')");
         database.rawExecSQL("DETACH DATABASE rl_persistence");
         database.close();
-        encryptedDb.delete();
+        deleteFile(encryptedDb);
+    }
+
+    private void deleteFile(File encryptedDb) {
+        if (!encryptedDb.delete()) {
+            RudderLogger.logError("Unable to delete database " + encryptedDb.getAbsolutePath());
+        }
     }
 
 
@@ -147,13 +155,13 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
         database.rawExecSQL("select sqlcipher_export('rl_persistence_encrypted')");
         database.rawExecSQL("DETACH DATABASE rl_persistence_encrypted");
         database.close();
-        decryptedDb.delete();
+        deleteFile(decryptedDb);
 
     }
 
 
-    private boolean checkDatabaseExists(String dbName) {
-        return application.getDatabasePath(dbName).exists();
+    private boolean checkDatabaseExists(@Nullable String dbName) {
+        return dbName != null && application.getDatabasePath(dbName).exists();
     }
 
 

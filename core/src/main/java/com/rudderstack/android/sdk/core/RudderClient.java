@@ -43,11 +43,9 @@ public class RudderClient {
     private static String deviceToken;
     private static String authToken;
 
-    static RudderReporter rudderReporter;
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
-    private static final String METRICS_URL_DEV = "https://sdk-metrics.dev-rudder.rudderlabs.com/";
-    private static final String METRICS_URL_PROD = "https://sdk-metrics.rudderstack.com/";
+
 
     /*
      * private constructor
@@ -153,23 +151,12 @@ public class RudderClient {
                         .Identifiers(writeKey, deviceToken, anonymousId, advertisingId, authToken);
                 repository = new EventRepository(application, config, identifiers);
             }
-            initiateRudderReporter(context, writeKey);
+
         }
         return instance;
     }
 
-    private static void initiateRudderReporter(Context context, @Nullable String writeKey) {
-        String writeKeyOrBlank = writeKey == null ? "" : writeKey;
-        if (rudderReporter == null) {
-            rudderReporter = new DefaultRudderReporter(context, METRICS_URL_PROD,
-                    new Configuration(new LibraryMetadata(
-                            BuildConfig.LIBRARY_PACKAGE_NAME, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, writeKeyOrBlank
-                    )), new GsonAdapter());
-            rudderReporter.getMetrics().getSyncer().startScheduledSyncs(30000, true, 10);
-            ReportManager.initiate(rudderReporter.getMetrics());
 
-        }
-    }
 
     private static void updateConfigWithValidValuesIfNecessary(@NonNull RudderConfig config) {
         if (config.getFlushQueueSize() < 0 || config.getFlushQueueSize() > 100) {

@@ -11,7 +11,8 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Locale;
-import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
@@ -28,6 +29,7 @@ class RudderServerConfigManager {
     private RudderServerConfig serverConfig;
 
     private NetworkResponses receivedError = NetworkResponses.SUCCESS;
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     private static final String RUDDER_SERVER_CONFIG_FILE_NAME = "RudderServerConfig";
     private static final ReentrantLock lock = new ReentrantLock();
@@ -44,17 +46,23 @@ class RudderServerConfigManager {
 
     private void fetchConfig() {
 
-        Thread thread = new Thread(() -> {
+        executorService.submit(() -> {
             downloadConfig();
             lock.lock();
-            serverConfig = getRudderServerConfig();
+            serverConfig = getFetchedRudderServerConfig();
             if (serverConfig == null) {
                 RudderLogger.logError("Failed to fetch server config");
             }
             lock.unlock();
         });
-        RudderLogger.logVerbose("Download Thread Id:" + thread.getId());
-        thread.start();
+    }
+    void getFetchedConfig(FetchedConfigCallback callback) {
+        executorService.submit(() -> {
+            lock.lock();
+            callback.onConfigFetched(getFetchedRudderServerConfig());
+            lock.unlock();
+        });
+
     }
 
     private void downloadConfig() {
@@ -110,7 +118,7 @@ class RudderServerConfigManager {
         }
     }
 
-    private RudderServerConfig getRudderServerConfig() {
+    private RudderServerConfig getFetchedRudderServerConfig() {
         RudderServerConfig rudderServerConfig = null;
         if (!Utils.fileExists(context, RUDDER_SERVER_CONFIG_FILE_NAME)) {
             return null;
@@ -145,5 +153,8 @@ class RudderServerConfigManager {
         } catch (InterruptedException ex) {
             RudderLogger.logError(String.format(Locale.US, "RudderServerConfigManager: Sleep: Exception while the thread is in sleep %s", ex.getLocalizedMessage()));
         }
+    }
+    interface FetchedConfigCallback {
+        void onConfigFetched(RudderServerConfig config);
     }
 }
