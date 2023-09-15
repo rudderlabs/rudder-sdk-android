@@ -33,6 +33,7 @@ public class TransformationResponseDeserializer implements JsonDeserializer<Tran
                         try {
                             message = gson.fromJson(eventObject, RudderMessage.class);
                         } catch (Exception e) {
+                            ReportManager.reportError(e);
                             RudderLogger.logError(String.format("TransformationResponseDeserializer: Error while parsing event object for the destinationId: %s, and error: %s", id, e));
                             continue;
                         }

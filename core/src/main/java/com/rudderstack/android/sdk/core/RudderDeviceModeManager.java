@@ -175,6 +175,7 @@ public class RudderDeviceModeManager {
                 integrationOperationsMap.put(key, nativeOp);
                 handleCallBacks(key, nativeOp);
             } catch (Exception e) {
+                ReportManager.reportError(e);
                 RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: initiateCustomFactories: Failed to initiate %s native SDK Factory due to %s", key, e.getLocalizedMessage()));
             }
         }
@@ -252,6 +253,7 @@ public class RudderDeviceModeManager {
                     RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
                     makeFactoryDump(message, messageIds.get(i), true);
                 } catch (Exception e) {
+                    ReportManager.reportError(e);
                     RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: Exception in dumping message %s due to %s", messages.get(i), e.getMessage()));
                 }
             }
@@ -312,6 +314,7 @@ public class RudderDeviceModeManager {
                     addDeviceModeCounter(message.getType(), destinationName);
                     integration.dump(message);
                 } catch (Exception e) {
+                    ReportManager.reportError(e);
                     RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: %s: Exception in dumping message %s to %s factory %s", logTag, message.getEventName(), destinationName, e.getMessage()));
                 }
             }

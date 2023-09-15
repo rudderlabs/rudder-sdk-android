@@ -76,13 +76,11 @@ public class ReportManager {
     private static Metrics metrics = null;
     private static ErrorClient errorStatsClient = null;
 
-    static @Nullable Metrics getMetrics() {
-        return metrics;
-    }
+    public static final String METADATA_SECTION_PERSISTENCE = "persistence";
+    public static final String METADATA_SECTION_GZIP = "gzip";
 
-    static @Nullable ErrorClient getErrorStatsClient() {
-        return errorStatsClient;
-    }
+    public static final String METADATA_PERSISTENCE_KEY_IS_ENCRYPTED = "encrypted";
+    public static final String METADATA_GZIP_KEY_IS_ENABLED = "enabled";
 
     public static void initiate(Metrics metrics, ErrorClient errorStatsClient) {
         ReportManager.metrics = metrics;
@@ -121,6 +119,7 @@ public class ReportManager {
 
     private static @Nullable RudderReporter rudderReporter;
 
+    @SuppressWarnings("ConstantConditions")
     static void enableStatsCollection(Application application, String writeKey,
                                       @NonNull SourceConfiguration.StatsCollection statsCollection) {
         if (!isStatsReporterAvailable()) {
@@ -134,6 +133,11 @@ public class ReportManager {
             RudderLogger.logDebug("EventRepository: Metrics collection is not initialized");
             return;
         }
+        if(!(statsCollection.getMetrics().isEnabled() || statsCollection.getErrors().isEnabled())) {
+            RudderLogger.logDebug("EventRepository: Stats collection is not enabled: Shutting down Stats Reporter");
+            rudderReporter.shutdown();
+            return;
+        }
         checkAndUpdateMetricsCollection(statsCollection.getMetrics().isEnabled());
         checkAndUpdateErrorsCollection(statsCollection.getErrors().isEnabled());
         RudderLogger.logDebug("EventRepository: Metrics Collection is enabled");
@@ -145,26 +149,24 @@ public class ReportManager {
         if (!isStatsReporterAvailable())
             return;
         RudderLogger.logDebug("EventRepository: Enabling Metrics Collection: " + isMetricsEnabled);
-        Metrics rudderMetrics = ReportManager.getMetrics();
-        if (rudderMetrics == null) {
+        if (metrics == null) {
             if (!isMetricsEnabled)
                 return;
-            rudderMetrics = rudderReporter.getMetrics();
+            metrics = rudderReporter.getMetrics();
         }
-        rudderMetrics.enable(isMetricsEnabled);
+        metrics.enable(isMetricsEnabled);
     }
     @SuppressWarnings("ConstantConditions")
     private static void checkAndUpdateErrorsCollection(boolean isErrorsEnabled) {
         if (!isStatsReporterAvailable())
             return;
         RudderLogger.logDebug("EventRepository: Enabling Errors Collection: " + isErrorsEnabled);
-        ErrorClient errorClient = ReportManager.getErrorStatsClient();
-        if (errorClient == null) {
+        if (errorStatsClient == null) {
             if (!isErrorsEnabled)
                 return;
-            errorClient = rudderReporter.getErrorClient();
+            errorStatsClient = rudderReporter.getErrorClient();
         }
-        errorClient.enable(isErrorsEnabled);
+        errorStatsClient.enable(isErrorsEnabled);
     }
 
     private static void initiateRudderReporter(Context context, @Nullable String writeKey,
@@ -254,6 +256,22 @@ public class ReportManager {
 
     static void incrementCloudModeUploadAbortCounter(int value, Map<String, String> attributes) {
         incrementCounter(cloudModeUploadAbortCounter, value, attributes);
+    }
+
+    public static void reportError(Throwable throwable) {
+        if (errorStatsClient != null) {
+            errorStatsClient.notify(throwable);
+        }
+    }
+    public static void addErrorMetadata(String section, Map<String, ?> value) {
+        if (errorStatsClient != null) {
+            errorStatsClient.addMetadata(section, value);
+        }
+    }
+    public static void addErrorMetadata(String section, String key, Object value) {
+        if (errorStatsClient != null) {
+            errorStatsClient.addMetadata(section, key, value);
+        }
     }
 
     static boolean isStatsReporterAvailable() {
