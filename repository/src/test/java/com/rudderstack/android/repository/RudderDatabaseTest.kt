@@ -30,8 +30,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -40,13 +38,16 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Config(sdk = [29])
 class RudderDatabaseTest {
     //    private lateinit var
+//    private val delayedExecutor = Executors.newSingleThreadExecutor()
     @Before
     fun initialize() {
-//        RudderDatabase.init(
-//            ApplicationProvider.getApplicationContext(),
-////            RuntimeEnvironment.application,
-//            "testDb", TestEntityFactory, executorService = TestExecutor()
-//        )
+        RudderDatabase.init(
+            ApplicationProvider.getApplicationContext(),
+            "testDb",
+            TestEntityFactory,
+            false,
+            executorService = TestExecutor()
+        )
 
     }
 
@@ -56,19 +57,18 @@ class RudderDatabaseTest {
     }
 
     @Test
-    fun `test race condition in dao list initialisation`(){
-        val delayedExecutor = Executors.newSingleThreadExecutor()
-        RudderDatabase.init(
-            ApplicationProvider.getApplicationContext(), "testDb", TestEntityFactory,false,
-            executorService = delayedExecutor)
+    fun `test race condition in dao list initialisation`() {
+
         val sampleDao = RudderDatabase.createNewDao(SampleEntity::class.java, TestExecutor())
-        val sampleAutoGenDao = RudderDatabase.createNewDao(SampleAutoGenEntity::class.java,
-            TestExecutor())
+        val sampleAutoGenDao = RudderDatabase.createNewDao(
+            SampleAutoGenEntity::class.java, TestExecutor()
+        )
         val sampleDaoCheck = RudderDatabase.getDao(SampleEntity::class.java)
         MatcherAssert.assertThat(sampleDao, Matchers.equalTo(sampleDaoCheck))
         MatcherAssert.assertThat(sampleAutoGenDao, Matchers.equalTo(sampleAutoGenDao))
         Thread.sleep(5000)
     }
+
     @Test
     fun multipleDaoCallsToReturnSameDaoObject() {
         val sampleDaoCheck = RudderDatabase.getDao(SampleEntity::class.java)
@@ -98,8 +98,7 @@ class RudderDatabaseTest {
 
         MatcherAssert.assertThat(
             savedData, allOf(
-                Matchers.iterableWithSize(2),
-                contains(*sampleEntitiesToSave.toTypedArray())
+                Matchers.iterableWithSize(2), contains(*sampleEntitiesToSave.toTypedArray())
             )
         )
 
@@ -128,8 +127,7 @@ class RudderDatabaseTest {
             getAll() {
                 assertThat(
                     it, allOf(
-                        Matchers.iterableWithSize(2),
-                        contains(*sampleEntitiesToSave.toTypedArray())
+                        Matchers.iterableWithSize(2), contains(*sampleEntitiesToSave.toTypedArray())
                     )
                 )
                 isGetComplete.set(true)
@@ -161,8 +159,7 @@ class RudderDatabaseTest {
                 val items = getAllSync()
                 assertThat(
                     items, allOf(
-                        iterableWithSize(1),
-                        contains(sampleEntitiesToSave[2])
+                        iterableWithSize(1), contains(sampleEntitiesToSave[2])
                     )
                 )
                 isCompleted.set(true)
@@ -171,12 +168,11 @@ class RudderDatabaseTest {
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(isCompleted)
 
     }
+
     @Test
     fun testAutoGenEntities() {
         val entitiesToSave = listOf(
-            SampleAutoGenEntity("abc"),
-            SampleAutoGenEntity("fgh"),
-            SampleAutoGenEntity("def")
+            SampleAutoGenEntity("abc"), SampleAutoGenEntity("fgh"), SampleAutoGenEntity("def")
         )
         val sampleDao = RudderDatabase.getDao(SampleAutoGenEntity::class.java)
         //save data
@@ -196,8 +192,7 @@ class RudderDatabaseTest {
                 val items = getAllSync()
                 assertThat(
                     items, allOf(
-                        iterableWithSize(1),
-                        contains(savedEntities[2])
+                        iterableWithSize(1), contains(savedEntities[2])
                     )
                 )
                 isCompleted.set(true)

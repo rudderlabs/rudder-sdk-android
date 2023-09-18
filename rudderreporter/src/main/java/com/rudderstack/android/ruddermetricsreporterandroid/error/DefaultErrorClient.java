@@ -64,13 +64,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
- * A Bugsnag Client instance allows you to use Bugsnag in your Android app.
- * Typically you'd instead use the static access provided in the Bugsnag class.
- * <p/>
- * Example usage:
- * <p/>
- * Client client = new Client(this, "your-api-key");
- * client.notify(new RuntimeException("something broke!"));
+ * A Rudder Error Client instance allows you to send error stats from Rudder SDK.
  */
 @SuppressWarnings({"checkstyle:JavadocTagContinuationIndentation", "ConstantConditions"})
 public class DefaultErrorClient implements MetadataAware, ErrorClient {

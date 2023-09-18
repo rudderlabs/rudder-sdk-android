@@ -73,6 +73,7 @@ public class Breadcrumb {
 
     /**
      * Sets the description of the breadcrumb
+     * @param name name for the breadcrumb
      */
     public void setName(@NonNull String name) {
         if (name != null) {

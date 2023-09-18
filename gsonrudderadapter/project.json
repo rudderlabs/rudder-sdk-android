@@ -8,9 +8,7 @@
       "dependsOn": [
         {
           "projects":[
-            "rudderjsonadapter",
-            "models"
-          ],
+            "rudderjsonadapter"],
           "target":"build"
         }
       ],
@@ -34,7 +32,7 @@
     "version": {
       "executor": "@jscutlery/semver:version",
       "options": {
-        "baseBranch": "master",
+        "baseBranch": "master-v2",
         "preset": "conventional",
         "tagPrefix": "${projectName}@"
       }
@@ -48,7 +46,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "tag": "gsonrudderadapter@0.1.0",
+        "tag": "gsonrudderadapter@1.0.0",
         "notesFile": "./gsonrudderadapter/CHANGELOG_LATEST.md"
       }
     },

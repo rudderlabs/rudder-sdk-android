@@ -31,7 +31,6 @@ import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextM
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.SystemServiceModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.MemoryTrimState
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.metrics.DefaultAggregatorHandler
-import com.rudderstack.moshirudderadapter.MoshiAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -171,7 +170,7 @@ class DefaultRudderReporter(
         isMetricsEnabled: Boolean = true,
         isErrorEnabled: Boolean = true,
         backgroundTaskService: BackgroundTaskService? = null
-    ):this(contextModule, reservoir, configuration, configModule, syncer, jsonAdapter.manipulate(),
+    ):this(contextModule, reservoir, configuration, configModule, syncer, jsonAdapter,
         memoryTrimState,
         ConnectivityCompat(contextModule.ctx, RudderReporterNetworkChangeCallback(syncer)),
         isMetricsEnabled, isErrorEnabled, backgroundTaskService)
@@ -238,14 +237,14 @@ class DefaultRudderReporter(
         }
     }
 
-    companion object{
-        internal fun JsonAdapter.manipulate(): JsonAdapter {
-            if(this is MoshiAdapter){
-                add(CustomDateAdapterMoshi())
-            }
-            return this
-        }
-    }
+//    companion object{
+//        internal fun JsonAdapter.manipulate(): JsonAdapter {
+//            if(this is MoshiAdapter){
+//                add(CustomDateAdapterMoshi())
+//            }
+//            return this
+//        }
+//    }
 }
 
 
