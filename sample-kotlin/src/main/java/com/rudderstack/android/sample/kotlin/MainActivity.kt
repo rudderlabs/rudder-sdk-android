@@ -74,14 +74,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.error).setOnClickListener {
-            val rudderReporterField = MainApplication.rudderClient?.javaClass?.getDeclaredField("rudderReporter")
-            rudderReporterField?.isAccessible = true
-            val rudderReporter = rudderReporterField?.get(null)
-            val errorMethod = rudderReporter?.javaClass?.getDeclaredMethod("getErrorClient")
-            val errorClient = errorMethod?.invoke(rudderReporter)
-            val notifyErrorMethod = errorClient?.javaClass?.getDeclaredMethod("notify", Throwable::class.java)
-            val error = Exception("Test Error-" + Date())
-            notifyErrorMethod?.invoke(errorClient, error)
+//            try {
+                val error = Exception("Test Error-" + Date())
+                ReportManager.reportError(error)
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//            }
         }
         findViewById<Button>(R.id.crash).setOnClickListener {
             throw RuntimeException("Test Crash")
