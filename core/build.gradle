@@ -8,6 +8,7 @@ android {
         consumerProguardFiles 'proguard-consumer-rules.pro'
         buildConfigField("String", "VERSION_NAME", "\"${VERSION_NAME}\"")
         buildConfigField("String", "VERSION_CODE", "\"${VERSION_CODE}\"")
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures{
         buildConfig true
@@ -73,8 +74,8 @@ dependencies {
     testImplementation "org.powermock:powermock-api-mockito2:2.0.9"
     testImplementation 'org.awaitility:awaitility:4.2.0'
     androidTestImplementation ('androidx.test.ext:junit:1.1.5')
+    androidTestImplementation ('androidx.test.espresso:espresso-core:3.5.1')
     compileOnly "androidx.work:work-runtime:2.7.1"
-
 }
 
 repositories {
