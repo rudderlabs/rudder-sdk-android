@@ -46,7 +46,7 @@ internal class DefaultUploadMediator(
             object: RudderTypeAdapter<Map<String, Any?>>() {}).also {
             println(it)
         }, METRICS_ENDPOINT,
-            object : RudderTypeAdapter<Map<*,*>>(){}){
+            object : RudderTypeAdapter<Map<*,*>>(){}, true){
 
             (it.status in 200..299).apply(callback)
         }
