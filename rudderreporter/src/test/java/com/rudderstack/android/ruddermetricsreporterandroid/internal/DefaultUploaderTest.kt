@@ -19,7 +19,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextModule
 import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
