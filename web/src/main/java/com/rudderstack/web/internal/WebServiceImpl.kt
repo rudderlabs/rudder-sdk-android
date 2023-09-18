@@ -19,6 +19,7 @@ import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpInterceptor
 import com.rudderstack.web.HttpResponse
 import com.rudderstack.web.WebService
+import com.rudderstack.web.utils.GzipUtils
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -38,8 +39,7 @@ class WebServiceImpl internal constructor(
     private val baseUrl: String
 
     private enum class HttpMethod {
-        POST,
-        GET
+        POST, GET
     }
 
     init {
@@ -53,7 +53,7 @@ class WebServiceImpl internal constructor(
         responseClass: Class<T>
     ): Future<HttpResponse<T>> {
         return executor.submit(Callable {
-            httpCall(headers, query, null, endpoint, HttpMethod.GET, responseClass)
+            httpCall(headers, query, null, endpoint, HttpMethod.GET, responseClass, false)
         })
     }
 
@@ -64,7 +64,7 @@ class WebServiceImpl internal constructor(
         responseTypeAdapter: RudderTypeAdapter<T>
     ): Future<HttpResponse<T>> {
         return executor.submit(Callable {
-            httpCall(headers, query, null, endpoint, HttpMethod.GET, responseTypeAdapter)
+            httpCall(headers, query, null, endpoint, HttpMethod.GET, responseTypeAdapter, false)
         })
     }
 
@@ -77,7 +77,7 @@ class WebServiceImpl internal constructor(
     ) {
         executor.execute {
             callback.invoke(
-                httpCall(headers, query, null, endpoint, HttpMethod.GET, responseTypeAdapter)
+                httpCall(headers, query, null, endpoint, HttpMethod.GET, responseTypeAdapter, false)
             )
         }
     }
@@ -92,7 +92,7 @@ class WebServiceImpl internal constructor(
 
         executor.execute {
             callback.invoke(
-                httpCall(headers, query, null, endpoint, HttpMethod.GET, responseClass)
+                httpCall(headers, query, null, endpoint, HttpMethod.GET, responseClass, false)
             )
         }
     }
@@ -102,10 +102,11 @@ class WebServiceImpl internal constructor(
         query: Map<String, String>?,
         body: String?,
         endpoint: String,
-        responseClass: Class<T>
+        responseClass: Class<T>,
+        isGzipEnabled: Boolean
     ): Future<HttpResponse<T>> {
         return executor.submit(Callable {
-            httpCall(headers, query, body, endpoint, HttpMethod.POST, responseClass)
+            httpCall(headers, query, body, endpoint, HttpMethod.POST, responseClass, isGzipEnabled)
         })
     }
 
@@ -114,10 +115,19 @@ class WebServiceImpl internal constructor(
         query: Map<String, String>?,
         body: String?,
         endpoint: String,
-        responseTypeAdapter: RudderTypeAdapter<T>
+        responseTypeAdapter: RudderTypeAdapter<T>,
+        isGzipEnabled: Boolean
     ): Future<HttpResponse<T>> {
         return executor.submit(Callable {
-            httpCall(headers, query, body, endpoint, HttpMethod.POST, responseTypeAdapter)
+            httpCall(
+                headers,
+                query,
+                body,
+                endpoint,
+                HttpMethod.POST,
+                responseTypeAdapter,
+                isGzipEnabled
+            )
         })
     }
 
@@ -127,21 +137,7 @@ class WebServiceImpl internal constructor(
         body: String?,
         endpoint: String,
         responseClass: Class<T>,
-        callback: (HttpResponse<T>) -> Unit
-    ) {
-        executor.execute {
-            callback.invoke(
-                httpCall(headers, query, body, endpoint, HttpMethod.POST, responseClass)
-            )
-        }
-    }
-
-    override fun <T : Any> post(
-        headers: Map<String, String>?,
-        query: Map<String, String>?,
-        body: String?,
-        endpoint: String,
-        responseTypeAdapter: RudderTypeAdapter<T>,
+        isGzipEnabled: Boolean,
         callback: (HttpResponse<T>) -> Unit
     ) {
         executor.execute {
@@ -152,7 +148,32 @@ class WebServiceImpl internal constructor(
                     body,
                     endpoint,
                     HttpMethod.POST,
-                    responseTypeAdapter
+                    responseClass,
+                    isGzipEnabled
+                )
+            )
+        }
+    }
+
+    override fun <T : Any> post(
+        headers: Map<String, String>?,
+        query: Map<String, String>?,
+        body: String?,
+        endpoint: String,
+        responseTypeAdapter: RudderTypeAdapter<T>,
+        isGzipEnabled: Boolean,
+        callback: (HttpResponse<T>) -> Unit
+    ) {
+        executor.execute {
+            callback.invoke(
+                httpCall(
+                    headers,
+                    query,
+                    body,
+                    endpoint,
+                    HttpMethod.POST,
+                    responseTypeAdapter,
+                    isGzipEnabled
                 )
             )
         }
@@ -163,6 +184,12 @@ class WebServiceImpl internal constructor(
         _interceptor = httpInterceptor
     }
 
+    override fun shutdown(shutdownExecutor: Boolean) {
+        if(shutdownExecutor)
+            executor.shutdown()
+        _interceptor = null
+    }
+
     //    @Throws(Throwable::class)
     private fun <T : Any> httpCall(
         headers: Map<String, String>?,
@@ -170,13 +197,13 @@ class WebServiceImpl internal constructor(
         body: String?,
         endpoint: String,
         type: HttpMethod,
-
-        responseClass: Class<T>
+        responseClass: Class<T>,
+        isGzipEncoded: Boolean
     ): HttpResponse<T> {
         return rawHttpCall(headers, query, body, endpoint, type, deserializer = { json ->
             jsonAdapter.readJson(json, responseClass)
-                ?: throw IllegalArgumentException("Json adapter not able to parse response body")
-        })
+            ?: throw IllegalArgumentException("Json adapter not able to parse response body")
+        }, isGzipEncoded = isGzipEncoded)
     }
 
     @Throws(IOException::class)
@@ -186,17 +213,17 @@ class WebServiceImpl internal constructor(
         body: String?,
         endpoint: String,
         type: HttpMethod,
-        typeAdapter: RudderTypeAdapter<T>
+        typeAdapter: RudderTypeAdapter<T>,
+        isGzipEncoded: Boolean
     ): HttpResponse<T> {
         return rawHttpCall(headers, query, body, endpoint, type, deserializer = { json ->
             if (json.isEmpty()) {
                 //TODO add logger
 //                logger.debug("Empty response body")
                 null
-            } else
-                jsonAdapter.readJson(json, typeAdapter)
-                    ?: throw IllegalArgumentException("Json adapter not able to parse response body")
-        })
+            } else jsonAdapter.readJson(json, typeAdapter)
+                   ?: throw IllegalArgumentException("Json adapter not able to parse response body")
+        }, isGzipEncoded = isGzipEncoded)
     }
 
 
@@ -206,15 +233,23 @@ class WebServiceImpl internal constructor(
         body: String?,
         endpoint: String,
         type: HttpMethod,
+        isGzipEncoded: Boolean,
         deserializer: (String) -> T?
     ): HttpResponse<T> {
         try {
 
-            val httpConnection =
-                createHttpConnection(endpoint, headers, type, query, body, defaultTimeout) {
-                    //call interceptor if any changes to HttpConnection required
-                    _interceptor?.intercept(it) ?: it
-                }
+            val httpConnection = createHttpConnection(
+                endpoint,
+                headers,
+                type,
+                query,
+                body,
+                defaultTimeout,
+                isGzipEncoded
+            ) {
+                //call interceptor if any changes to HttpConnection required
+                _interceptor?.intercept(it) ?: it
+            }
             // create connection
             httpConnection.connect()
 
@@ -233,9 +268,7 @@ class WebServiceImpl internal constructor(
                     return Utils.NetworkResponses.SUCCESS
                 }*/
                 HttpResponse(
-                    httpConnection.responseCode,
-                    deserializer.invoke(baos.toString()),
-                    null
+                    httpConnection.responseCode, deserializer.invoke(baos.toString()), null
                 )
 
             } else {
@@ -256,10 +289,7 @@ class WebServiceImpl internal constructor(
 //            RudderLogger.logError(ex)
             ex.printStackTrace()
             return HttpResponse(
-                status = HttpResponse.HTTP_STATUS_NONE,
-                body = null,
-                errorBody = null,
-                error = ex
+                status = HttpResponse.HTTP_STATUS_NONE, body = null, errorBody = null, error = ex
             )
         }
 
@@ -269,9 +299,12 @@ class WebServiceImpl internal constructor(
     @Throws(IOException::class)
     private fun createHttpConnection(
         endpoint: String,
-        headers: Map<String, String>?, type: HttpMethod,
+        headers: Map<String, String>?,
+        type: HttpMethod,
         query: Map<String, String>?,
-        body: String?, defaultTimeout: Int,
+        body: String?,
+        defaultTimeout: Int,
+        isGzipEncoded: Boolean,
         onHttpConnectionCreated: (HttpURLConnection) -> HttpURLConnection
     ): HttpURLConnection {
         //the url to hit
@@ -290,15 +323,10 @@ class WebServiceImpl internal constructor(
         }
 
         //  set content type for network request if not present
-        if (headers?.containsKey("Content-Type") == false)
-            httpConn.setRequestProperty("Content-Type", "application/json")
-        // set authorization header
-        /*httpConnection.setRequestProperty(
-            "Authorization",
-            String.format(Locale.US, "Basic %s", this.authHeaderString)
-        )*/
-        // set anonymousId header for definitive routing
-//            httpConnection.setRequestProperty("AnonymousId", this.anonymousIdHeaderString)
+        if (headers?.containsKey("Content-Type") == false) httpConn.setRequestProperty(
+            "Content-Type", "application/json"
+        )
+
         // set request method
         httpConn.requestMethod = when (type) {
             HttpMethod.GET -> "GET"
@@ -310,7 +338,10 @@ class WebServiceImpl internal constructor(
         if (type == HttpMethod.POST) {
             // set connection object to return output
             httpConn.doOutput = true
-            val os = httpConn.outputStream
+            val os = if (isGzipEncoded) GzipUtils.getGzipOutputStream(httpConn.outputStream)
+                                        ?: //TODO add logger.debug("Gzip compression not supported")
+                                        httpConn.outputStream
+            else httpConn.outputStream
             val osw = OutputStreamWriter(os, "UTF-8")
 
             body?.apply {
@@ -323,10 +354,9 @@ class WebServiceImpl internal constructor(
         return httpConn
     }
 
-    private fun Map<String, String>.createQueryString() =
-        takeIf { isNotEmpty() }?.map {
-            "${it.key}=${it.value}"
-        }?.reduce { acc, s -> "$acc&$s" } ?: ""
+    private fun Map<String, String>.createQueryString() = takeIf { isNotEmpty() }?.map {
+        "${it.key}=${it.value}"
+    }?.reduce { acc, s -> "$acc&$s" } ?: ""
 
     private val String.validatedBaseUrl
         get() = if (this.endsWith('/')) this else "$this/"
