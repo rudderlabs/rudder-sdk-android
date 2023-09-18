@@ -76,7 +76,7 @@ internal class DefaultUploadMediator(
 //        private const val LIBRARY_METADATA_KEY = "libraryMetadata"
         private const val SOURCE_KEY = "source"
         private const val METRICS_KEY = "metrics"
-        private const val ERROR_KEY = "error"
+        private const val ERROR_KEY = "errors"
         private const val VERSION_KEY = "version"
         private const val METRICS_ENDPOINT = "sdkmetrics"
     }

@@ -261,7 +261,7 @@ const val TEST_ERROR_EVENTS_JSON =
     "freeDisk": "54354354",
     "freeMemory": "45345345",
     "orientation": "null",
-    "time": "Thu Aug 31 17:32:32 IST 2023"
+    "time": "2023-08-31T12:02:32.000Z"
   },
   "metadata": {
     "m1": {

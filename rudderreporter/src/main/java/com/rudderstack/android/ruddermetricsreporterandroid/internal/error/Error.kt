@@ -43,7 +43,7 @@ class Error @JvmOverloads internal constructor(
 internal fun toMap(): Map<String, Any?> {
         return mapOf(
             "errorClass" to errorClass,
-            "errorMessage" to errorMessage,
+            "message" to errorMessage,
             "stacktrace" to stacktrace.map { it.toMap() },
             "type" to type.toString()
         )

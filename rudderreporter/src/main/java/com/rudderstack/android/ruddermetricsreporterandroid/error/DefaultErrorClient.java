@@ -423,7 +423,6 @@ public class DefaultErrorClient implements MetadataAware, ErrorClient {
     public void addMetadata(@NonNull String section, @NonNull String key, @Nullable Object value) {
         if (section != null && key != null) {
             metadataState.addMetadata(section, key, value);
-
         } else {
             logNull("addMetadata");
         }

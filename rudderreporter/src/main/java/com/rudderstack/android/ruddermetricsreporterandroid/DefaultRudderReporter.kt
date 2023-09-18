@@ -152,7 +152,7 @@ class DefaultRudderReporter(
         reservoir,
         configuration,
         ConfigModule(contextModule, configuration),
-        DefaultSyncer(reservoir, uploadMediator),
+        DefaultSyncer(reservoir, uploadMediator, configuration.libraryMetadata),
         jsonAdapter,
         memoryTrimState,
         isMetricsEnabled,

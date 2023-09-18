@@ -28,8 +28,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import kotlin.jvm.Transient;
-
 @SuppressWarnings("ConstantConditions")
 public class Breadcrumb {
 
@@ -38,17 +36,15 @@ public class Breadcrumb {
     private BreadcrumbType type = BreadcrumbType.MANUAL;
     private Map<String, Object> metadata = new HashMap<>();
     @JsonIgnore
-    @Transient
     @Json(ignore = true)
-    private final Date timestamp;
+    private final transient Date timestamp;
     @JsonProperty("timestamp")
     @SerializedName("timestamp")
     @Json(name = "timestamp")
     private final String timestampString;
     @JsonIgnore
-    @Transient
     @Json(ignore = true)
-    private final Logger logger;
+    private final transient Logger logger;
 
 
     Breadcrumb(@NonNull String message, @NonNull Logger logger) {
@@ -127,7 +123,7 @@ public class Breadcrumb {
     /**
      * The timestamp that the breadcrumb was left
      */
-    @NonNull
+    @Json(ignore = true)
     public Date getTimestamp() {
         return this.timestamp;
     }

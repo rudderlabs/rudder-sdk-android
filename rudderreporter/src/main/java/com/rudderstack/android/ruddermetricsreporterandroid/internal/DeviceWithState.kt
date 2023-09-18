@@ -48,7 +48,7 @@ class DeviceWithState internal constructor(
             "freeDisk" to freeDisk.toString(),
             "freeMemory" to freeMemory.toString(),
             "orientation" to orientation.toString(),
-            "time" to time.toString(),
+            "time" to time?.let {  DateUtils.toIso8601(it)},
         )
     }
 }

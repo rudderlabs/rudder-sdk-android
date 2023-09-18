@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
+import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
 import com.rudderstack.android.ruddermetricsreporterandroid.UploadMediator
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
@@ -42,6 +43,7 @@ class DefaultSyncerTest {
 
     val mockReservoir = Mockito.mock(Reservoir::class.java)
     val mockUploader = Mockito.mock(UploadMediator::class.java)
+    private val mockLibraryMetadata = LibraryMetadata("test", "1.0.0", "14", "testKey")
 
     @Test
     fun checkSyncWithSuccess() {
@@ -57,7 +59,7 @@ class DefaultSyncerTest {
         mockTheReservoir(maxMetrics, maxErrors)
 
         mockTheUploaderToSucceed()
-        val syncer = DefaultSyncer(mockReservoir, mockUploader)
+        val syncer = DefaultSyncer(mockReservoir, mockUploader, mockLibraryMetadata)
         var cumulativeIndexMetrics = 0
         var cumulativeIndexMErrors = 0
         syncer.setCallback { uploadedMetrics, uploadedErrorModel, success ->
@@ -141,7 +143,7 @@ class DefaultSyncerTest {
         mockTheReservoir(maxMetrics, maxErrors)
 
         mockTheUploaderToFail()
-        val syncer = DefaultSyncer(mockReservoir, mockUploader)
+        val syncer = DefaultSyncer(mockReservoir, mockUploader, mockLibraryMetadata)
         val expectedMetrics = getTestMetricList(
             0,
             (maxMetrics).coerceAtMost(limit)
@@ -182,7 +184,7 @@ class DefaultSyncerTest {
         mockTheReservoir(maxMetrics, maxErrors)
 
         mockTheUploaderToSucceed()
-        val syncer = DefaultSyncer(mockReservoir, mockUploader)
+        val syncer = DefaultSyncer(mockReservoir, mockUploader, mockLibraryMetadata)
         syncer.startScheduledSyncs(interval, true, limit.toLong())
         Thread.sleep(interval/2) //some time elapse before stopping
         syncer.stopScheduling()

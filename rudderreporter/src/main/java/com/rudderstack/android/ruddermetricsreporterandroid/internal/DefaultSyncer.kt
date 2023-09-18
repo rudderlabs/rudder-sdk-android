@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
+import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
 import com.rudderstack.android.ruddermetricsreporterandroid.Syncer
 import com.rudderstack.android.ruddermetricsreporterandroid.UploadMediator
@@ -26,7 +27,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class DefaultSyncer internal constructor(
     private val reservoir: Reservoir,
-    private val uploader: UploadMediator
+    private val uploader: UploadMediator,
+    private val libraryMetadata: LibraryMetadata
 ) : Syncer {
     private var _callback: ((uploadedMetrics: List<MetricModel<out Number>>,
                              uploadedErrorModel: ErrorModel,
@@ -80,7 +82,7 @@ class DefaultSyncer internal constructor(
                     stopScheduling()
                 return@getMetricsAndErrors
             }
-            val errorModel = ErrorModel(errors.map { it.errorEvent })
+            val errorModel = ErrorModel(libraryMetadata, errors.map { it.errorEvent })
             uploader.upload(validMetrics, errorModel) { success ->
                 if (success) {
                     reservoir.resetTillSync(validMetrics)

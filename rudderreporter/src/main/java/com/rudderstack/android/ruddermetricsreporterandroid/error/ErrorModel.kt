@@ -16,12 +16,13 @@ package com.rudderstack.android.ruddermetricsreporterandroid.error
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.rudderstack.android.ruddermetricsreporterandroid.JSerialize
+import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.squareup.moshi.Json
 
 class ErrorModel(
-
+    private val libraryMetadata: LibraryMetadata,
     internal val eventsJson: List<String>) : JSerialize<ErrorModel> {
 
     override fun serialize(jsonAdapter: JsonAdapter): String? {
@@ -32,6 +33,12 @@ class ErrorModel(
                 jsonAdapter.readJson(it,
                     object: RudderTypeAdapter<Map<String, Any>>(){}
                 )
-            }
+            },
+        "payloadVersion" to 5,
+        "notifier" to mapOf(
+            "name" to libraryMetadata.name,
+            "version" to libraryMetadata.sdkVersion,
+            "url" to "https://github.com/rudderlabs/rudder-sdk-android"
+        )
     )
 }
