@@ -18,7 +18,6 @@ jobs:
           workflow_id: ${{ github.event.workflow.id }}
 
   build-v2:
-    needs: cancel_previous
     name: Build & Code Quality Checks
     runs-on: ubuntu-latest
 
