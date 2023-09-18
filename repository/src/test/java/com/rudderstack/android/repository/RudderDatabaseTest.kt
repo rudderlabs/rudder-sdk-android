@@ -30,6 +30,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -40,11 +42,11 @@ class RudderDatabaseTest {
     //    private lateinit var
     @Before
     fun initialize() {
-        RudderDatabase.init(
-            ApplicationProvider.getApplicationContext(),
-//            RuntimeEnvironment.application,
-            "testDb", TestEntityFactory, executorService = TestExecutor()
-        )
+//        RudderDatabase.init(
+//            ApplicationProvider.getApplicationContext(),
+////            RuntimeEnvironment.application,
+//            "testDb", TestEntityFactory, executorService = TestExecutor()
+//        )
 
     }
 
@@ -53,6 +55,20 @@ class RudderDatabaseTest {
         RudderDatabase.shutDown()
     }
 
+    @Test
+    fun `test race condition in dao list initialisation`(){
+        val delayedExecutor = Executors.newSingleThreadExecutor()
+        RudderDatabase.init(
+            ApplicationProvider.getApplicationContext(), "testDb", TestEntityFactory,false,
+            executorService = delayedExecutor)
+        val sampleDao = RudderDatabase.createNewDao(SampleEntity::class.java, TestExecutor())
+        val sampleAutoGenDao = RudderDatabase.createNewDao(SampleAutoGenEntity::class.java,
+            TestExecutor())
+        val sampleDaoCheck = RudderDatabase.getDao(SampleEntity::class.java)
+        MatcherAssert.assertThat(sampleDao, Matchers.equalTo(sampleDaoCheck))
+        MatcherAssert.assertThat(sampleAutoGenDao, Matchers.equalTo(sampleAutoGenDao))
+        Thread.sleep(5000)
+    }
     @Test
     fun multipleDaoCallsToReturnSameDaoObject() {
         val sampleDaoCheck = RudderDatabase.getDao(SampleEntity::class.java)

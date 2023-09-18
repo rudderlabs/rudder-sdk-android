@@ -112,6 +112,7 @@ interface WebService {
         body: String?,
         endpoint: String,
         responseClass: Class<T>,
+        isGzipEnabled: Boolean = false,
     ): Future<HttpResponse<T>>
 
     /**
@@ -132,6 +133,7 @@ interface WebService {
         body: String?,
         endpoint: String,
         responseTypeAdapter: RudderTypeAdapter<T>,
+        isGzipEnabled: Boolean = false,
     ): Future<HttpResponse<T>>
 
     /**
@@ -151,6 +153,7 @@ interface WebService {
         body: String?,
         endpoint: String,
         responseClass: Class<T>,
+        isGzipEnabled: Boolean = false,
         callback: (HttpResponse<T>) -> Unit,
     )
 
@@ -171,6 +174,7 @@ interface WebService {
         body: String?,
         endpoint: String,
         responseTypeAdapter: RudderTypeAdapter<T>,
+        isGzipEnabled: Boolean = false,
         callback: (HttpResponse<T>) -> Unit,
     )
 
@@ -181,4 +185,11 @@ interface WebService {
      * @see HttpInterceptor
      */
     fun setInterceptor(httpInterceptor: HttpInterceptor)
+
+    /**
+     * Performs Cleanup. Also shuts down the executor service. Do not call this method if the
+     * same executor service is being used by other objects. In that case handle the executor
+     * shutdown yourself.
+     */
+    fun shutdown(shutdownExecutor: Boolean = true)
 }

@@ -18,6 +18,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -28,7 +29,8 @@ import java.util.concurrent.Executors
 object RudderDatabase {
     private var sqliteOpenHelper: SQLiteOpenHelper? = null
     private var database: SQLiteDatabase? = null
-    private var registeredDaoList = HashMap<Class<out Entity>, Dao<out Entity>>(20)
+    private var registeredDaoList : MutableMap<Class<out Entity>, Dao<out Entity>> =
+        ConcurrentHashMap<Class<out Entity>, Dao<out Entity>>()
     private var context : Context? = null
     private var useContentProvider = false
     private var dbDetailsListeners = listOf<(
@@ -122,7 +124,6 @@ object RudderDatabase {
             it as Dao<T>
         } ?: createNewDao(entityClass, executorService)
     }
-
     /**
      * Creates a new [Dao] object for an entity.
      * Usage of this method directly, is highly discouraged.
@@ -178,6 +179,7 @@ object RudderDatabase {
     }
 
     fun shutDown() {
+        if(context == null)return
         registeredDaoList.clear() //clearing all cached dao
         database?.apply{
             //synchronizing on database allows other database users to synchronize on the same
