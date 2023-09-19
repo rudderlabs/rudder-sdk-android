@@ -27,7 +27,7 @@
       "options": {
         "baseBranch": "master-v2",
         "preset": "conventional",
-        "tagPrefix": "${projectName}@"
+        "tagPrefix": "{projectName}@"
       }
     },
     "sync-bumped-version-properties": {
@@ -39,7 +39,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "tag": "repository@0.1.0",
+        "tag": "repository@0.2.0",
         "notesFile": "./repository/CHANGELOG_LATEST.md"
       }
     },

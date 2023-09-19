@@ -35,7 +35,7 @@
       "options": {
         "baseBranch": "master-v2",
         "preset": "conventional",
-        "tagPrefix": "${projectName}@"
+        "tagPrefix": "{projectName}@"
       }
     },
     "sync-bumped-version-properties": {
@@ -47,7 +47,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "tag": "jacksonrudderadapter@0.1.0",
+        "tag": "jacksonrudderadapter@0.2.0",
         "notesFile": "./jacksonrudderadapter/CHANGELOG_LATEST.md"
       }
     },
