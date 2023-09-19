@@ -35,7 +35,7 @@
       "options": {
         "baseBranch": "master-v2",
         "preset": "conventional",
-        "tagPrefix": "${projectName}@"
+        "tagPrefix": "{projectName}@"
       }
     },
     "sync-bumped-version-properties": {
