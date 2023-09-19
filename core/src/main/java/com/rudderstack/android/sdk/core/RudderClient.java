@@ -832,6 +832,15 @@ public class RudderClient {
         repository.endSession();
     }
 
+    /**
+     * Public method for getting the current session id.
+     * @return
+     */
+    @Nullable
+    public Long getSessionId() {
+        return (repository != null) ? repository.getSessionId() : null;
+    }
+
     /*
      * RudderClient.Builder for building RudderClient with context, writeKey, endPointUrl
      * */

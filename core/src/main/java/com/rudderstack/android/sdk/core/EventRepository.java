@@ -519,6 +519,11 @@ class EventRepository {
         userSessionManager.endSession();
     }
 
+    @Nullable
+    public Long getSessionId() {
+        return userSessionManager.getSessionId();
+    }
+
     private RudderMessage updateMessageWithConsentedDestinations(RudderMessage message) {
         RudderClient rudderClient = RudderClient.getInstance();
         if (rudderClient == null)
