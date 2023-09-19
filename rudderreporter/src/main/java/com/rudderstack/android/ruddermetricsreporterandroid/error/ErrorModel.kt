@@ -31,7 +31,7 @@ class ErrorModel(
     fun toMap(jsonAdapter: JsonAdapter) = mapOf("events" to
             eventsJson.map {
                 jsonAdapter.readJson(it,
-                    object: RudderTypeAdapter<Map<String, Any>>(){}
+                    RudderTypeAdapter<Map<String, Any>>{}
                 )
             },
         "payloadVersion" to 5,

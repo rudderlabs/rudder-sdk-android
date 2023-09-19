@@ -338,6 +338,8 @@ class WebServiceImpl internal constructor(
         if (type == HttpMethod.POST) {
             // set connection object to return output
             httpConn.doOutput = true
+            if(isGzipEncoded)
+                httpConn.setRequestProperty("Content-Encoding", "gzip")
             val os = if (isGzipEncoded) GzipUtils.getGzipOutputStream(httpConn.outputStream)
                                         ?: //TODO add logger.debug("Gzip compression not supported")
                                         httpConn.outputStream
