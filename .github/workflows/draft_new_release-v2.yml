@@ -40,7 +40,9 @@ jobs:
           source_branch_name=${GITHUB_REF##*/}
           release_type=release-v2
           grep -q "hotfix-v2/" <<< "${GITHUB_REF}" && release_type=hotfix-release-v2
-          git fetch origin master-v2 --depth=1
+          git fetch origin master-v2
+          git fetch --tags origin
+
           git merge origin/master-v2
           current_version=$(jq -r .version package.json)
 
