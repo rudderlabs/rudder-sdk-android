@@ -133,11 +133,14 @@ class FlushUtils {
      * again from the object
      * */
     static String getPayloadFromMessages(List<Integer> messageIds, List<String> messages) {
-        if (messageIds.isEmpty() || messages.isEmpty()) return null;
+        if (messageIds.isEmpty() || messages.isEmpty()) {
+            RudderLogger.logWarn("FlushUtils: getPayloadFromMessages: Payload Construction failed: no messages to send");
+            return null;
+        }
         try {
-            RudderLogger.logDebug("EventRepository: getPayloadFromMessages: recordCount: " + messages.size());
+            RudderLogger.logDebug("FlushUtils: getPayloadFromMessages: recordCount: " + messages.size());
             String sentAtTimestamp = Utils.getTimeStamp();
-            RudderLogger.logDebug("EventRepository: getPayloadFromMessages: sentAtTimestamp: " + sentAtTimestamp);
+            RudderLogger.logDebug("FlushUtils: getPayloadFromMessages: sentAtTimestamp: " + sentAtTimestamp);
             // initialize ArrayLists to store current batch
             ArrayList<Integer> batchMessageIds = new ArrayList<>();
             // get string builder
@@ -150,6 +153,7 @@ class FlushUtils {
             builder.append("\"batch\": [");
             int totalBatchSize = Utils.getUTF8Length(builder) + 2; // we add 2 characters at the end
             int messageSize;
+            StringBuilder batchMessagesBuilder = new StringBuilder();
             // loop through messages list and add in the builder
             for (int index = 0; index < messages.size(); index++) {
                 String message = messages.get(index);
@@ -162,19 +166,25 @@ class FlushUtils {
                 totalBatchSize += messageSize;
                 // check batch size
                 if (totalBatchSize >= Utils.MAX_BATCH_SIZE) {
-                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: getPayloadFromMessages: MAX_BATCH_SIZE reached at index: %d | Total: %d", index, totalBatchSize));
+                    RudderLogger.logDebug(String.format(Locale.US, "FlushUtils: getPayloadFromMessages: MAX_BATCH_SIZE reached at index: %d | Total: %d", index, totalBatchSize));
                     incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_BATCH_SIZE_INVALID));
                     break;
                 }
                 // finally add message string to builder
-                builder.append(message);
+                batchMessagesBuilder.append(message);
                 // add message to batch ArrayLists
                 batchMessageIds.add(messageIds.get(index));
             }
-            if (builder.charAt(builder.length() - 1) == ',') {
+            if (batchMessagesBuilder.charAt(batchMessagesBuilder.length() - 1) == ',') {
                 // remove trailing ','
-                builder.deleteCharAt(builder.length() - 1);
+                batchMessagesBuilder.deleteCharAt(batchMessagesBuilder.length() - 1);
             }
+            // add batch messages to the builder
+            if (batchMessagesBuilder.length() == 0) {
+                RudderLogger.logWarn("FlushUtils: getPayloadFromMessages: Payload Construction failed: batchMessagesBuilder is empty");
+                return null;
+            }
+            builder.append(batchMessagesBuilder);
             // close batch array in the json
             builder.append("]");
             // append closing token in the json
