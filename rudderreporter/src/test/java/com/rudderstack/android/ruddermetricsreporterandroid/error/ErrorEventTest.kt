@@ -94,8 +94,14 @@ abstract class ErrorEventTest {
             })
 
         MatcherAssert.assertThat(actual?.entries?.filter {
-            it.key != "exceptions" }, contains
-            (*(expected!!.entries!!.filter { it.key != "exceptions" }.toTypedArray()))
+            it.key != "exceptions" }?.also { println("parser: ${jsonAdapter::class.simpleName}")
+                                           println(it)
+                                           },
+            contains
+            (*(expected!!.entries!!.filter { it.key != "exceptions" }.toTypedArray().also {
+                println("expected for parser: ${jsonAdapter::class.simpleName}")
+                println(it)
+            }))
         )
     }
 }

@@ -67,6 +67,18 @@ class BreadcrumbTest {
             breadcrumbJson!!,
             object : RudderTypeAdapter<Map<String, Any>>() {
             })
+        println("***bc-gson*****")
+        println(breadcrumbJson)
+        println("***bc-jackson*****")
+        println(breadcrumbJsonJackson)
+        println("******gson actual*********")
+        println(gsonActual)
+        println("******jackson actual*********")
+        println(jacksonActual)
+        println("******gson expected*********")
+        println(gsonExpected)
+        println("******jackson expected*********")
+        println(jacksonExpected)
         assertThat(breadcrumbJson, equalTo( breadcrumbJsonJackson))
         assertThat(gsonActual, equalTo(gsonExpected))
         assertThat(jacksonActual, equalTo(jacksonExpected))
