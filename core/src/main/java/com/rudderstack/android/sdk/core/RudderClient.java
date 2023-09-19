@@ -680,6 +680,14 @@ public class RudderClient {
         }
     }
 
+    @Nullable
+    public String getAnonymousId() {
+        if (getOptOutStatus()) {
+            return null;
+        }
+        return RudderContext.getAnonymousId();
+    }
+
     public static void putAuthToken(@NonNull String authToken) {
         if (instance == null) {
             RudderClient.authToken = authToken;
