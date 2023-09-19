@@ -29,15 +29,13 @@ internal class DefaultUploadMediator(
     baseUrl: String,
     private val jsonAdapter: JsonAdapter,
     networkExecutor: ExecutorService,
-    private val apiVersion : Int = 1
+    private val apiVersion : Int = 1,
+    private val isGzipEnabled : Boolean = true
 ) : UploadMediator {
 //    private val deviceDataCollector: DeviceDataCollector
     private val webService = WebServiceFactory.getWebService(baseUrl, jsonAdapter,
         executor = networkExecutor)
-//    private val libraryMetadataJson = configModule.config.libraryMetadata.serialize(jsonAdapter)
-//    init {
-//        deviceDataCollector = dataCollectionModule.deviceDataCollector
-//    }
+
 
     override fun upload(metrics: List<MetricModel<out Number>>, error: ErrorModel,
                         callback: (success : Boolean) -> Unit) {
@@ -46,7 +44,7 @@ internal class DefaultUploadMediator(
             object: RudderTypeAdapter<Map<String, Any?>>() {}).also {
             println(it)
         }, METRICS_ENDPOINT,
-            object : RudderTypeAdapter<Map<*,*>>(){}, true){
+            object : RudderTypeAdapter<Map<*,*>>(){}, isGzipEnabled){
 
             (it.status in 200..299).apply(callback)
         }

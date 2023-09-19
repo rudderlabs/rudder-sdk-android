@@ -40,7 +40,10 @@ import org.hamcrest.Matchers.equalTo
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
+import java.util.Calendar
 import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 abstract class ErrorEventTest {
     abstract val jsonAdapter: JsonAdapter
@@ -83,7 +86,15 @@ abstract class ErrorEventTest {
                 "androidApiLevel" to "29",
                 "osBuild" to "sdk_gphone_x86-userdebug 10 QSR1.210802.001 7603624 dev-keys"
             ), 54354354L,
-            45345345L, null, Date(123, 7, 31, 17, 32, 32)
+            45345345L, null, Calendar.getInstance(TimeZone.getTimeZone("US")).apply {
+                set(Calendar.YEAR, 2023)
+                set(Calendar.MONTH, 7)
+                set(Calendar.DAY_OF_MONTH, 31)
+                set(Calendar.HOUR_OF_DAY, 17)
+                set(Calendar.MINUTE, 32)
+                set(Calendar.SECOND, 32)
+                set(Calendar.MILLISECOND, 0)
+            }.time
         )
         val actual = jsonAdapter.readJson(errorEvent.serialize(jsonAdapter)!!.also { println(it) },
             object : RudderTypeAdapter<Map<String, Any>>() {

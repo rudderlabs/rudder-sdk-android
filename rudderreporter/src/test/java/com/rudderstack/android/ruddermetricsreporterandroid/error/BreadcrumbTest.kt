@@ -23,7 +23,10 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.junit.Test
+import java.util.Calendar
 import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class BreadcrumbTest {
     private val TEST_BREADCRUMB_JSON = """
@@ -33,7 +36,7 @@ class BreadcrumbTest {
           "metadata": {
             "test_m": "test_m_v"
           },
-          "timestamp": "2023-08-31T12:02:32.000Z"
+          "timestamp": "2023-08-31T17:32:32.000Z"
         }
 
     """.trimIndent()
@@ -46,7 +49,15 @@ class BreadcrumbTest {
             "test",
             BreadcrumbType.ERROR,
             mapOf("test_m" to "test_m_v"),
-            Date(123, 7, 31, 17, 32, 32),
+            Calendar.getInstance(TimeZone.getTimeZone("US")).apply {
+                set(Calendar.YEAR, 2023)
+                set(Calendar.MONTH, 7)
+                set(Calendar.DAY_OF_MONTH, 31)
+                set(Calendar.HOUR_OF_DAY, 17)
+                set(Calendar.MINUTE, 32)
+                set(Calendar.SECOND, 32)
+                set(Calendar.MILLISECOND, 0)
+            }.time,
             NoopLogger
         )
         val breadcrumbJson = gsonAdapter.writeToJson(breadcrumb)
@@ -67,18 +78,6 @@ class BreadcrumbTest {
             breadcrumbJson!!,
             object : RudderTypeAdapter<Map<String, Any>>() {
             })
-        println("***bc-gson*****")
-        println(breadcrumbJson)
-        println("***bc-jackson*****")
-        println(breadcrumbJsonJackson)
-        println("******gson actual*********")
-        println(gsonActual)
-        println("******jackson actual*********")
-        println(jacksonActual)
-        println("******gson expected*********")
-        println(gsonExpected)
-        println("******jackson expected*********")
-        println(jacksonExpected)
         assertThat(breadcrumbJson, equalTo( breadcrumbJsonJackson))
         assertThat(gsonActual, equalTo(gsonExpected))
         assertThat(jacksonActual, equalTo(jacksonExpected))

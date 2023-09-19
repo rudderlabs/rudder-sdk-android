@@ -55,6 +55,7 @@ class DefaultRudderReporter(
         networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
         backgroundTaskService: BackgroundTaskService? = null,
         useContentProvider: Boolean = false,
+        isGzipEnabled: Boolean = true
     ) : this(
         ContextModule(context),
         baseUrl,
@@ -64,6 +65,7 @@ class DefaultRudderReporter(
         networkExecutor,
         backgroundTaskService ?: BackgroundTaskService(),
         useContentProvider,
+        isGzipEnabled
     )
 
     internal constructor(
@@ -76,6 +78,7 @@ class DefaultRudderReporter(
         networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
         backgroundTaskService: BackgroundTaskService? = null,
         useContentProvider: Boolean = false,
+        isGzipEnabled: Boolean = true
     ) : this(
         contextModule,
         MemoryTrimState(),
@@ -87,7 +90,8 @@ class DefaultRudderReporter(
         backgroundTaskService ?: BackgroundTaskService(),
         useContentProvider,
         isMetricsEnabled,
-        isErrorEnabled
+        isErrorEnabled,
+        isGzipEnabled
     )
 
     constructor(
@@ -98,7 +102,7 @@ class DefaultRudderReporter(
         jsonAdapter: JsonAdapter,
         isMetricsEnabled: Boolean = true,
         isErrorEnabled: Boolean = true,
-        backgroundTaskService: BackgroundTaskService? = null
+        backgroundTaskService: BackgroundTaskService? = null,
     ) : this(
         ContextModule(context),
         reservoir,
@@ -123,12 +127,14 @@ class DefaultRudderReporter(
         backgroundTaskService: BackgroundTaskService,
         useContentProvider: Boolean,
         isMetricsAggregatorEnabled: Boolean,
-        isErrorEnabled: Boolean
+        isErrorEnabled: Boolean,
+        isGzipEnabled: Boolean
     ) : this(
         contextModule,
         DefaultReservoir(contextModule.ctx, useContentProvider),
         configuration,
-        DefaultUploadMediator(configModule, baseUrl, jsonAdapter, networkExecutor),
+        DefaultUploadMediator(configModule, baseUrl, jsonAdapter, networkExecutor,
+            isGzipEnabled = isGzipEnabled),
         jsonAdapter,
         memoryTrimState,
         isMetricsAggregatorEnabled,
