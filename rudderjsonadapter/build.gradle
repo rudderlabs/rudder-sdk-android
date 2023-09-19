@@ -29,13 +29,14 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.javaParameters = true
 }
-apply from : "$rootDir/dependencies.gradle"
+apply from : "$projectDir/../dependencies.gradle"
 
 
 
 dependencies {
 
     testImplementation 'junit:junit:4.+'
+    testImplementation deps.hamcrest
 }
 apply from: rootProject.file('gradle/artifacts-jar.gradle')
 apply from: rootProject.file('gradle/mvn-publish.gradle')

@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
+    id 'org.jetbrains.kotlin.android'
 }
 apply from : "$projectDir/../dependencies.gradle"
 android {
@@ -47,6 +48,7 @@ dependencies {
     api(project(path: projects.json_rudder_adapter))
     api(project(projects.repository))
     api(project(path: projects.web))
+    api(project(path: projects.moshi_rudder_adapter))
 
     compileOnly deps.gson
     compileOnly deps.jackson
@@ -70,8 +72,26 @@ dependencies {
     testImplementation deps.awaitility
     testImplementation deps.robolectric
     testImplementation project(path: projects.repository)
+
+
+//    androidTestImplementation(project(path: projects.moshi_rudder_adapter))
+//    androidTestImplementation(project(path: projects.gson_rudder_adapter))
+    androidTestImplementation(project(path: projects.jackson_rudder_adapter))
+    androidTestImplementation deps.moshi.kotlin
+    androidTestImplementation deps.moshi.core
+//    androidTestImplementation deps.gson
+//    androidTestImplementation deps.jackson
+    androidTestImplementation deps.androidXTestExtJunitKtx
+    androidTestImplementation deps.androidXTestRules
+    androidTestImplementation deps.androidXTest
+//    androidTestImplementation deps.hamcrest
+//    androidTestImplementation deps.mockito
+//    androidTestImplementation deps.mockito_kotlin
+    androidTestImplementation deps.androidXTestRunner
+//    androidTestImplementation('androidx.test.espresso:espresso-contrib:3.5.1') {
+//        exclude module: "protobuf-lite"
+//    }
 }
 apply from: rootProject.file('gradle/artifacts-aar.gradle')
-
 apply from: rootProject.file('gradle/mvn-publish.gradle')
 apply from: rootProject.file('gradle/codecov.gradle')

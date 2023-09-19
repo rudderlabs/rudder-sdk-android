@@ -14,8 +14,6 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
-import android.util.Log
-import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.UploadMediator
 import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule
@@ -24,7 +22,6 @@ import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.WebServiceFactory
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 internal class DefaultUploadMediator(
 //    dataCollectionModule: DataCollectionModule,
@@ -32,15 +29,13 @@ internal class DefaultUploadMediator(
     baseUrl: String,
     private val jsonAdapter: JsonAdapter,
     networkExecutor: ExecutorService,
-    private val apiVersion : Int = 1
+    private val apiVersion : Int = 1,
+    private val isGzipEnabled : Boolean = true
 ) : UploadMediator {
 //    private val deviceDataCollector: DeviceDataCollector
     private val webService = WebServiceFactory.getWebService(baseUrl, jsonAdapter,
         executor = networkExecutor)
-//    private val libraryMetadataJson = configModule.config.libraryMetadata.serialize(jsonAdapter)
-//    init {
-//        deviceDataCollector = dataCollectionModule.deviceDataCollector
-//    }
+
 
     override fun upload(metrics: List<MetricModel<out Number>>, error: ErrorModel,
                         callback: (success : Boolean) -> Unit) {
@@ -49,7 +44,7 @@ internal class DefaultUploadMediator(
             object: RudderTypeAdapter<Map<String, Any?>>() {}).also {
             println(it)
         }, METRICS_ENDPOINT,
-            object : RudderTypeAdapter<Map<*,*>>(){}){
+            object : RudderTypeAdapter<Map<*,*>>(){}, isGzipEnabled){
 
             (it.status in 200..299).apply(callback)
         }
@@ -59,12 +54,9 @@ internal class DefaultUploadMediator(
         val requestMap = HashMap<String, Any?>()
 //        requestMap[DEVICE_KEY] =
         requestMap[METRICS_KEY] = metrics
-        requestMap[ERROR_KEY] = error
+        requestMap[ERROR_KEY] = error.toMap(jsonAdapter)
         requestMap[SOURCE_KEY] = configModule.config.libraryMetadata
-                /*mapOf(
-            DEVICE_KEY to deviceDataCollector.generateDeviceWithState(System.currentTimeMillis()),
-            LIBRARY_METADATA_KEY to configModule.config.libraryMetadata
-        )*/
+
         requestMap[VERSION_KEY] = apiVersion.toString()
         return requestMap
     }
@@ -82,7 +74,7 @@ internal class DefaultUploadMediator(
 //        private const val LIBRARY_METADATA_KEY = "libraryMetadata"
         private const val SOURCE_KEY = "source"
         private const val METRICS_KEY = "metrics"
-        private const val ERROR_KEY = "error"
+        private const val ERROR_KEY = "errors"
         private const val VERSION_KEY = "version"
         private const val METRICS_ENDPOINT = "sdkmetrics"
     }

@@ -32,7 +32,8 @@ ext {
             robolectric            : "4.10.3",
             jsonAssert             : "1.5.0",
             mockito_kotlin         : "4.0.0",
-            mockito_inline         : "4.7.0"
+            mockito_inline         : "4.7.0",
+            androidXTestRunner     : "1.4.0",
     ]
 
     deps = [
@@ -62,6 +63,7 @@ ext {
             mockk                  : "io.mockk:mockk:${versions.mockk}",
             mockk_agent_jvm        : "io.mockk:mockk-agent-jvm:${versions.mockk}",
             workTest               : "androidx.work:work-testing:${versions.work}",
+            androidXTestRunner     : "androidx.test:runner:${versions.androidXTestRunner}",
 
     ]
 

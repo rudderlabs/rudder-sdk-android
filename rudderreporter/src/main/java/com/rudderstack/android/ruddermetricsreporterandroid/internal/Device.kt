@@ -57,15 +57,27 @@ open class Device internal constructor(
      */
     var osVersion: String? = buildInfo.osVersion
 
-    var runtimeVersions: MutableMap<String, Any>? = sanitizeRuntimeVersions(runtimeVersions)
+    var runtimeVersions: MutableMap<String, Any> = sanitizeRuntimeVersions(runtimeVersions)
         set(value) {
             field = sanitizeRuntimeVersions(value)
         }
 
-    private fun sanitizeRuntimeVersions(value: MutableMap<String, Any>?): MutableMap<String, Any>? =
-        value?.mapValuesTo(mutableMapOf()) { (_, value) -> value.toString() }
+    private fun sanitizeRuntimeVersions(value: MutableMap<String, Any>?): MutableMap<String, Any> =
+        value?.mapValuesTo(mutableMapOf()) { (_, value) -> value.toString() }?: mutableMapOf()
 
     override fun serialize(jsonAdapter: JsonAdapter): String? {
         return jsonAdapter.writeToJson(this)
     }
+
+    internal open  fun toMap(): Map<String, Any?> = mapOf(
+        "manufacturer" to manufacturer,
+        "model" to model,
+        "osName" to osName,
+        "osVersion" to osVersion,
+        "cpuAbi" to cpuAbi?.joinToString(","),
+        "jailbroken" to jailbroken?.toString(),
+        "locale" to locale,
+        "totalMemory" to totalMemory.toString(),
+        "runtimeVersions" to runtimeVersions.toMap() as? Map<String, String?>
+    )
 }

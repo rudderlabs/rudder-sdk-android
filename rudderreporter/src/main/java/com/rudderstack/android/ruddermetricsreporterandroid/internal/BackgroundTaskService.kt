@@ -85,7 +85,7 @@ internal fun createExecutor(name: String, type: TaskType, keepAlive: Boolean): E
  * It also avoids short-running operations being held up by long-running operations submitted
  * to the same executor.
  */
-class BackgroundTaskService(
+class BackgroundTaskService @JvmOverloads constructor(
     // these executors must remain single-threaded - the SDK makes assumptions
     // about synchronization based on this.
     @get:VisibleForTesting
