@@ -46,7 +46,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "tag": "gsonrudderadapter@1.0.0",
+        "tag": "gsonrudderadapter@0.1.0",
         "notesFile": "./gsonrudderadapter/CHANGELOG_LATEST.md"
       }
     },
