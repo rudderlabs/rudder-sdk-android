@@ -19,21 +19,30 @@ import static com.rudderstack.android.ruddermetricsreporterandroid.error.Severit
 
 import android.app.Application;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.rudderstack.android.ruddermetricsreporterandroid.Configuration;
 import com.rudderstack.android.ruddermetricsreporterandroid.Logger;
+import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.AppDataCollector;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.BackgroundTaskService;
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.BreadcrumbState;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.ClientComponentCallbacks;
-import com.rudderstack.android.ruddermetricsreporterandroid.Configuration;
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.Connectivity;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.ConnectivityCompat;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DataCollectionModule;
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultReservoir;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DeviceDataCollector;
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.NoopLogger;
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.StateObserver;
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.TaskType;
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule;
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextModule;
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.SystemServiceModule;
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.BreadcrumbState;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.Error;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.ExceptionHandler;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.ImmutableConfig;
@@ -42,11 +51,8 @@ import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.Metad
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.MetadataState;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.RudderErrorStateModule;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.Severity;
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.StateObserver;
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.TaskType;
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule;
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextModule;
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.SystemServiceModule;
+import com.rudderstack.android.ruddermetricsreporterandroid.models.ErrorEntity;
+import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import java.util.Collections;
 import java.util.Date;
@@ -54,83 +60,74 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
+/**
+ * A Rudder Error Client instance allows you to send error stats from Rudder SDK.
+ */
 @SuppressWarnings({"checkstyle:JavadocTagContinuationIndentation", "ConstantConditions"})
-public class ErrorClientDelegate implements MetadataAware {
+public class DefaultErrorClient implements MetadataAware, ErrorClient {
 
     final ImmutableConfig immutableConfig;
 
     final MetadataState metadataState;
 
-    final Context appContext;
+    private final Context appContext;
 
     @NonNull
-    final DeviceDataCollector deviceDataCollector;
+    private final DeviceDataCollector deviceDataCollector;
 
     @NonNull
-    final AppDataCollector appDataCollector;
+    private final AppDataCollector appDataCollector;
 
     @NonNull
-    final BreadcrumbState breadcrumbState;
+    private final BreadcrumbState breadcrumbState;
 
     @NonNull
-    //TODO ("move this to constructor")
-    final MemoryTrimState memoryTrimState = new MemoryTrimState();
-
-//    @NonNull
-//    protected final EventStore eventStore;
-
+    private final MemoryTrimState memoryTrimState;
+    @NonNull
+    private final JsonAdapter jsonAdapter;
 
     final Logger logger;
-    final Connectivity connectivity;
 
-//    final Notifier notifier;
-
-    //    @Nullable
-//    final LastRunInfo lastRunInfo;
-//    final LastRunInfoStore lastRunInfoStore;
-//    final LaunchCrashTracker launchCrashTracker;
     final BackgroundTaskService bgTaskService = new BackgroundTaskService();
     private final ExceptionHandler exceptionHandler;
+    private final Reservoir reservoir;
 
-    /**
-     * Initialize a Bugsnag client
-     *
-     * @param androidContext an Android context, usually <code>this</code>
-     */
-    public ErrorClientDelegate(@NonNull Context androidContext) {
-        this(androidContext, Configuration.load(androidContext));
-    }
+    private final AtomicBoolean isErrorEnabled;
 
 
     /**
      * Initialize a Bugsnag client
      *
      * @param androidContext an Android context, usually <code>this</code>
-     * @param configuration  a configuration for the Client
      */
-    public ErrorClientDelegate(@NonNull Context androidContext, @NonNull final Configuration configuration) {
-        ContextModule contextModule = new ContextModule(androidContext);
+
+
+    /**
+     * Initialize a Bugsnag client
+     *
+     * @param configuration a configuration for the Client
+     */
+    public DefaultErrorClient(@NonNull ContextModule contextModule,
+                              @NonNull final Configuration configuration,
+                              @NonNull ConfigModule configModule,
+                              @NonNull DataCollectionModule dataCollectionModule,
+                              @NonNull Reservoir reservoir,
+                              @NonNull JsonAdapter jsonAdapter,
+                              @NonNull MemoryTrimState memoryTrimState,
+                              boolean isErrorEnabled) {
         appContext = contextModule.getCtx();
-        //TODO( move to common place)
-         connectivity = new ConnectivityCompat(appContext, (hasConnection, networkState) -> {
-            Map<String, Object> data = new HashMap<>();
-            data.put("hasConnection", hasConnection);
-            data.put("networkState", networkState);
-            leaveAutoBreadcrumb("Connectivity changed", BreadcrumbType.STATE, data);
-            if (hasConnection) {
-//                    eventStore.flushAsync();
-            }
-            return null;
-        });
+        this.isErrorEnabled = new AtomicBoolean(isErrorEnabled);
+        this.memoryTrimState = memoryTrimState;
+        this.jsonAdapter = jsonAdapter;
 
         // set sensible defaults for delivery/project packages etc if not set
-        ConfigModule configModule = new ConfigModule(contextModule, configuration);
         immutableConfig = configModule.getConfig();
         logger = immutableConfig.getLogger();
 
-        if (!(androidContext instanceof Application)) {
+        if (!(appContext instanceof Application)) {
             logger.w("You should initialize Bugsnag from the onCreate() callback of your "
                     + "Application subclass, as this guarantees errors are captured as early "
                     + "as possible. "
@@ -142,90 +139,103 @@ public class ErrorClientDelegate implements MetadataAware {
 
         }
 
-        // setup storage as soon as possible
-//        final StorageModule storageModule = new StorageModule(appContext,
-//                immutableConfig, logger);
-
         // setup state trackers for error handling
         RudderErrorStateModule errorStateModule = new RudderErrorStateModule(
                 immutableConfig, configuration);
-//        clientObservable = errorStateModule.getClientObservable();
-//        callbackState = errorStateModule.getCallbackState();
         breadcrumbState = errorStateModule.getBreadcrumbState();
         metadataState = errorStateModule.getMetadataState();
 
-        // lookup system services
-        final SystemServiceModule systemServiceModule = new SystemServiceModule(contextModule);
-
-        // block until storage module has resolved everything
-//        storageModule.resolveDependencies(bgTaskService, TaskType.IO);
-
-        // setup further state trackers and data collection
-//        TrackerModule trackerModule = new TrackerModule(configModule,
-//                storageModule, this, bgTaskService, callbackState);
-//Todo take dataCollectionModule as constructor parameter
-        DataCollectionModule dataCollectionModule = new DataCollectionModule(contextModule,
-                configModule, systemServiceModule,
-                bgTaskService, connectivity,
-                memoryTrimState);
         dataCollectionModule.resolveDependencies(bgTaskService, TaskType.IO);
         appDataCollector = dataCollectionModule.getAppDataCollector();
         deviceDataCollector = dataCollectionModule.getDeviceDataCollector();
 
-        // load the device + user information
-//        EventStorageModule eventStorageModule = new EventStorageModule(contextModule, configModule,
-//                dataCollectionModule, bgTaskService, trackerModule, systemServiceModule, notifier,
-//                callbackState);
-//        eventStorageModule.resolveDependencies(bgTaskService, TaskType.IO);
-//        eventStore = eventStorageModule.getEventStore();
-
-//        deliveryDelegate = new DeliveryDelegate(logger, eventStore,
-//                immutableConfig, callbackState, notifier, bgTaskService);
-
+        this.reservoir = reservoir;
         exceptionHandler = new ExceptionHandler(this, logger);
 
+        this.reservoir.setMaxErrorCount(configuration.getMaxPersistedEvents());
         start();
     }
 
-    @VisibleForTesting
-    ErrorClientDelegate(
-            ImmutableConfig immutableConfig,
-            MetadataState metadataState,
-            Context appContext,
-            @NonNull DeviceDataCollector deviceDataCollector,
-            @NonNull AppDataCollector appDataCollector,
-            @NonNull BreadcrumbState breadcrumbState,
-            Connectivity connectivity,
-            Logger logger,
-//            DeliveryDelegate deliveryDelegate,
-            ExceptionHandler exceptionHandler
-//            Notifier notifier
-    ) {
-        this.immutableConfig = immutableConfig;
-        this.metadataState = metadataState;
-        this.appContext = appContext;
-        this.deviceDataCollector = deviceDataCollector;
-        this.appDataCollector = appDataCollector;
-        this.breadcrumbState = breadcrumbState;
-//        this.eventStore = eventStore;
-        this.connectivity = connectivity;
-        this.logger = logger;
-//        this.deliveryDelegate = deliveryDelegate;
-        this.exceptionHandler = exceptionHandler;
-
+    @NonNull
+    BreadcrumbState getBreadcrumbState() {
+        return breadcrumbState;
     }
 
+    @NonNull
+    MemoryTrimState getMemoryTrimState() {
+        return memoryTrimState;
+    }
+
+    public DefaultErrorClient(@NonNull Context context,
+                              @NonNull Configuration configuration,
+                              @NonNull JsonAdapter jsonAdapter) {
+        this(context, configuration, new DefaultReservoir(context, false), jsonAdapter);
+    }
+
+    public DefaultErrorClient(@NonNull Context context,
+                              @NonNull Configuration configuration,
+                              @NonNull Reservoir reservoir,
+                              @NonNull JsonAdapter jsonAdapter) {
+
+        appContext = context;
+        this.isErrorEnabled = new AtomicBoolean(true);
+        this.memoryTrimState = new MemoryTrimState();
+        this.jsonAdapter = jsonAdapter;
+        PackageInfo packageInfo = null;
+        try {
+            if (context.getPackageManager() != null) {
+                packageInfo = context.getPackageManager().getPackageInfo(
+                        context.getPackageName(),
+                        PackageManager.GET_PERMISSIONS
+                );
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        // set sensible defaults for delivery/project packages etc if not set
+        immutableConfig = new ImmutableConfig(configuration.getLibraryMetadata(),
+                configuration.getProjectPackages(),
+                configuration.getEnabledBreadcrumbTypes(), configuration.getDiscardClasses(),
+                NoopLogger.INSTANCE,
+                configuration.getMaxBreadcrumbs(), configuration.getMaxPersistedEvents(),
+                configuration.getEnabledReleaseStages(), "release",
+                packageInfo, null);
+        logger = immutableConfig.getLogger();
+
+        if (!(appContext instanceof Application)) {
+            logger.w("You should initialize Bugsnag from the onCreate() callback of your "
+                    + "Application subclass, as this guarantees errors are captured as early "
+                    + "as possible. "
+                    + "If a custom Application subclass is not possible in your app then you "
+                    + "should suppress this warning by passing the Application context instead: "
+                    + "Bugsnag.start(context.getApplicationContext()). "
+                    + "For further info see: "
+                    + "https://docs.bugsnag.com/platforms/android/#basic-configuration");
+
+        }
+
+        // setup state trackers for error handling
+        RudderErrorStateModule errorStateModule = new RudderErrorStateModule(
+                immutableConfig, configuration);
+        breadcrumbState = errorStateModule.getBreadcrumbState();
+        metadataState = errorStateModule.getMetadataState();
+        ContextModule contextModule = new ContextModule(context);
+        DataCollectionModule dataCollectionModule = new DataCollectionModule(
+                contextModule, new ConfigModule(contextModule, configuration),
+                new SystemServiceModule(contextModule), new BackgroundTaskService(),
+                new ConnectivityCompat(contextModule.getCtx(), null), new MemoryTrimState());
+        dataCollectionModule.resolveDependencies(bgTaskService, TaskType.IO);
+        appDataCollector = dataCollectionModule.getAppDataCollector();
+        deviceDataCollector = dataCollectionModule.getDeviceDataCollector();
+
+        this.reservoir = reservoir;
+        exceptionHandler = new ExceptionHandler(this, logger);
+        this.reservoir.setMaxErrorCount(configuration.getMaxPersistedEvents());
+
+        start();
+    }
     private void start() {
         exceptionHandler.install();
-        // Flush any on-disk errors and sessions
-//        eventStore.flushOnLaunch();
-//        eventStore.flushAsync();
-
-        // These call into NdkPluginCaller to sync with the native side, so they must happen later
-//        internalMetrics.setConfigDifferences(configDifferences);
-//        callbackState.setInternalMetrics(internalMetrics);
-
-        // Register listeners for system events in the background
         registerComponentCallbacks();
 
         logger.d("Rudder Error Colloector loaded");
@@ -292,6 +302,7 @@ public class ErrorClientDelegate implements MetadataAware {
      *
      * @param exc the exception to send to Bugsnag
      */
+    @Override
     public void notify(@NonNull Throwable exc) {
         if (null == exc) {
             logNull("notify");
@@ -312,6 +323,7 @@ public class ErrorClientDelegate implements MetadataAware {
      * <p>
      * Should only ever be called from the {@link ExceptionHandler}.
      */
+    @Override
     public void notifyUnhandledException(@NonNull Throwable exc, Metadata metadata,
                                          @SeverityReason.SeverityReasonType String severityReason,
                                          @Nullable String attributeValue) {
@@ -343,12 +355,19 @@ public class ErrorClientDelegate implements MetadataAware {
         notifyInternal(event);
     }
 
-    void notifyInternal(@NonNull ErrorEvent event) {
+    private void notifyInternal(@NonNull ErrorEvent event) {
+
+        if (!isErrorEnabled.get())
+            return;
         // leave an error breadcrumb of this event - for the next event
         leaveErrorBreadcrumb(event);
-        logger.e("Rudder Error Colloector notifyInternal: ");
-        logger.e(event.toString());
-//        deliveryDelegate.deliver(event);
+        String serializedEvent =
+                event.serialize(jsonAdapter);
+        if (serializedEvent != null) {
+            reservoir.saveError(new ErrorEntity(serializedEvent));
+        } else {
+            logger.e("Rudder Error Collector notifyInternal: Cannot serialize event: " + event);
+        }
     }
 
     /**
@@ -362,6 +381,7 @@ public class ErrorClientDelegate implements MetadataAware {
      *
      * @return a list of collected breadcrumbs
      */
+    @Override
     @NonNull
     public List<Breadcrumb> getBreadcrumbs() {
         return breadcrumbState.copy();
@@ -397,7 +417,6 @@ public class ErrorClientDelegate implements MetadataAware {
     public void addMetadata(@NonNull String section, @NonNull String key, @Nullable Object value) {
         if (section != null && key != null) {
             metadataState.addMetadata(section, key, value);
-
         } else {
             logNull("addMetadata");
         }
@@ -469,6 +488,7 @@ public class ErrorClientDelegate implements MetadataAware {
      *
      * @param message the log message to leave
      */
+    @Override
     public void leaveBreadcrumb(@NonNull String message) {
         if (message != null) {
             breadcrumbState.add(new Breadcrumb(message, logger));
@@ -485,6 +505,7 @@ public class ErrorClientDelegate implements MetadataAware {
      * @param metadata Additional diagnostic information about the app environment
      * @param type     A category for the breadcrumb
      */
+    @Override
     public void leaveBreadcrumb(@NonNull String message,
                                 @NonNull Map<String, Object> metadata,
                                 @NonNull BreadcrumbType type) {
@@ -494,6 +515,13 @@ public class ErrorClientDelegate implements MetadataAware {
             logNull("leaveBreadcrumb");
         }
     }
+
+    @Override
+    public void enable(boolean enable) {
+        this.isErrorEnabled.set(enable);
+
+    }
+
 
     /**
      * Intended for internal use only - leaves a breadcrumb if the type is enabled for automatic
@@ -529,11 +557,6 @@ public class ErrorClientDelegate implements MetadataAware {
         }
     }
 
-//    @NonNull
-//    EventStore getEventStore() {
-//        return eventStore;
-//    }
-
     public ImmutableConfig getConfig() {
         return immutableConfig;
     }
@@ -567,7 +590,6 @@ public class ErrorClientDelegate implements MetadataAware {
 
     @VisibleForTesting
     void close() {
-        connectivity.unregisterForNetworkChanges();
         bgTaskService.shutdown();
     }
 

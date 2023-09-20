@@ -16,7 +16,6 @@ internal class DataCollectionModule(
     contextModule: ContextModule,
     configModule: ConfigModule,
     systemServiceModule: SystemServiceModule,
-//    trackerModule: TrackerModule,
     bgTaskService: BackgroundTaskService,
     connectivity: Connectivity,
     memoryTrimState: MemoryTrimState

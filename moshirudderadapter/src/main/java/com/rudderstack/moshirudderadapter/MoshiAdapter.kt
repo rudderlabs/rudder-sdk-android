@@ -78,6 +78,9 @@ class MoshiAdapter(private var moshi : Moshi = Moshi.Builder()
     fun <T> add(type: Type, jsonAdapter: com.squareup.moshi.JsonAdapter<T>) {
         moshi = moshi.newBuilder().add(type, jsonAdapter).build()
     }
+    fun <T> add(jsonAdapter: com.squareup.moshi.JsonAdapter<T>) {
+        moshi = moshi.newBuilder().add(jsonAdapter).build()
+    }
 
     fun <T> add(
         type: Type,

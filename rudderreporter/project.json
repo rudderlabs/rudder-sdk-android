@@ -5,18 +5,36 @@
   "sourceRoot": "./rudderreporter/src",
   "targets": {
     "build": {
+      "dependsOn": [
+        {
+          "projects": [
+            "gsonrudderadapter",
+            "jacksonrudderadapter",
+            "moshirudderadapter",
+            "repository",
+            "web"
+          ],
+          "target": "build"
+        }
+      ],
       "executor": "@jnxplus/nx-gradle:build",
-      "outputs": ["./rudderreporter/build"]
+      "outputs": [
+        "./rudderreporter/build"
+      ]
     },
     "lint": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:lint",
       "options": {
         "linter": "ktlint"
       }
     },
     "test": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:test"
     },
     "ktformat": {
@@ -25,9 +43,9 @@
     "version": {
       "executor": "@jscutlery/semver:version",
       "options": {
-        "baseBranch": "master",
+        "baseBranch": "master-v2",
         "preset": "conventional",
-        "tagPrefix": "${projectName}@"
+        "tagPrefix": "{projectName}@"
       }
     },
     "sync-bumped-version-properties": {
@@ -39,22 +57,26 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "tag": "rudderreporter@1.0.0",
+        "tag": "rudderreporter@0.2.0",
         "notesFile": "./rudderreporter/CHANGELOG_LATEST.md"
       }
     },
     "release-sonatype": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'rudderreporter-release' && ./gradlew publishToSonatype -p rudderreporter -Prelease && ./gradlew closeAndReleaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'rudder-reporter-snapshot' && cd rudderreporter && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype && cd .."
+        "command": "echo 'rudder-reporter-snapshot'  && sh ./gradlew generatePomFileForReleasePublication -p rudderreporter && ./gradlew publishToSonatype -p rudderreporter"
       }
     }
   },

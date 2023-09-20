@@ -14,25 +14,46 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModelWithId
+import com.rudderstack.android.ruddermetricsreporterandroid.models.ErrorEntity
 
 interface Reservoir {
-    fun insertOrIncrement(metric: MetricModel<Number>)
+    fun insertOrIncrement(metric: MetricModel<out Number>)
     fun getAllMetricsSync(): List<MetricModelWithId<out Number>>
     fun getAllMetrics(callback : (List<MetricModelWithId<out Number>>) -> Unit)
 
     fun getMetricsFirstSync(limit : Long): List<MetricModelWithId<out Number>>
     fun getMetricsFirst(skip: Long, limit : Long, callback : (List<MetricModelWithId<out Number>>) -> Unit)
+    fun getMetricsAndErrors(skipForMetrics: Long, skipForErrors: Long, limit : Long, callback :
+        (List<MetricModelWithId<out
+    Number>>, List<ErrorEntity>) -> Unit)
     fun getMetricsFirst(limit : Long, callback : (List<MetricModelWithId<out Number>>) -> Unit)
 //    fun getMetricsAndErrorFirst(limit : Long, callback : (List<MetricModel<Number>>, List<ErrorModel>) -> Unit)
     fun getMetricsCount(callback : (Long) -> Unit)
     fun clear()
-    fun resetFirst(limit: Long)
+    fun clearMetrics()
+    fun resetMetricsFirst(limit: Long)
+
+    fun setMaxErrorCount(maxErrorCount: Long)
+    fun saveError(errorEntity: ErrorEntity)
+    fun getAllErrorsSync(): List<ErrorEntity>
+    fun getAllErrors(callback : (List<ErrorEntity>) -> Unit)
+
+    fun getErrorsFirstSync(limit : Long): List<ErrorEntity>
+    fun getErrors(skip: Long, limit : Long, callback : (List<ErrorEntity>) ->
+    Unit)
+    fun getErrorsFirst(limit : Long, callback : (List<ErrorEntity>) -> Unit)
+    fun getErrorsCount(callback : (Long) -> Unit)
+    fun clearErrors()
+    fun clearErrors(ids: Array<Long>)
 
     /**
-     * Will reset upto the value present in the list
+     * Will reset each element up to the value
+     * Let's say a metric with value 10 is fetched and being uploaded
+     * Meanwhile the value gets incremented to 15.
+     * After the upload is complete, the value should be reset to 5 and not 0
+     * This is where is method comes in handy
      *
      * @param dumpedMetrics
      */
