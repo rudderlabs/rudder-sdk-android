@@ -50,6 +50,7 @@ class RudderNetwork {
                     RudderLogger.logWarn("RudderNetwork: Cannot check bluetooth status as permission is absent");
                 }
             } catch (Exception e) {
+                ReportManager.reportError(e);
                 RudderLogger.logError("RudderNetwork: Exception during bluetooth permission check");
             }
 
@@ -64,6 +65,7 @@ class RudderNetwork {
                 }
             }
         } catch (Exception ex) {
+            ReportManager.reportError(ex);
             RudderLogger.logError(ex);
         }
     }

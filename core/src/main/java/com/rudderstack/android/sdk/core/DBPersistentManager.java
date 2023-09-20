@@ -1,12 +1,12 @@
 package com.rudderstack.android.sdk.core;
 
 import static com.rudderstack.android.sdk.core.DBPersistentManager.BACKSLASH;
-import static com.rudderstack.android.sdk.core.DBPersistentManager.EVENT;
 
 import android.app.Application;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
+import android.icu.text.Collator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -160,6 +160,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             return factory;
         } catch (Exception e) {
             RudderLogger.logError("DBPersistentManager: createPersistenceFactory: Failed to instantiate class: " + params.persistenceProviderFactoryClassName);
+            ReportManager.reportError(e);
         }
         return null;
 
@@ -254,6 +255,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             }
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
+            ReportManager.reportError(ex);
         }
     }
 
@@ -284,13 +286,15 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             }
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
+            ReportManager.reportError(ex);
         }
     }
 
     /*
      * returns messageIds and messages returned on executing the supplied SQL statement
      * */
-    void getEventsFromDB(List<Integer> messageIds, List<String> messages, String selectSQL) {
+    void getEventsFromDB(List<Integer> messageIds, List<String> messages, String
+            selectSQL) {
         Map<Integer, Integer> messageIdStatusMap = new HashMap<>();
         getEventsFromDB(messageIdStatusMap, messages, selectSQL);
         messageIds.addAll(messageIdStatusMap.keySet());
@@ -336,6 +340,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
 
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
+            ReportManager.reportError(ex);
         }
     }
 
@@ -343,7 +348,8 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
      * retrieve `count` number of messages from DB and store messageIds and messages separately
      * */
     //unit test this
-    void fetchCloudModeEventsFromDB(ArrayList<Integer> messageIds, ArrayList<String> messages, int count) {
+    void fetchCloudModeEventsFromDB
+    (ArrayList<Integer> messageIds, ArrayList<String> messages, int count) {
         String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) ORDER BY %s ASC LIMIT %d",
                 EVENTS_TABLE_NAME, DBPersistentManager.STATUS_COL, DBPersistentManager.STATUS_NEW,
                 DBPersistentManager.STATUS_DEVICE_MODE_DONE, UPDATED_COL, count);
@@ -352,7 +358,8 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
     }
 
     //unit test this
-    void fetchDeviceModeEventsFromDb(List<Integer> messageIds, List<String> messages, int count) {
+    void fetchDeviceModeEventsFromDb(List<Integer> messageIds, List<String> messages,
+                                     int count) {
         String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) ORDER BY %s ASC LIMIT %d",
                 EVENTS_TABLE_NAME, DBPersistentManager.STATUS_COL, DBPersistentManager.STATUS_NEW,
                 DBPersistentManager.STATUS_CLOUD_MODE_DONE, UPDATED_COL, count);
@@ -360,7 +367,8 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         getEventsFromDB(messageIds, messages, selectSQL);
     }
 
-    public void fetchDeviceModeWithProcessedPendingEventsFromDb(List<Integer> messageIds, List<String> messages, int limit) {
+    public void fetchDeviceModeWithProcessedPendingEventsFromDb
+            (List<Integer> messageIds, List<String> messages, int limit) {
         String selectSQL = String.format(Locale.US, "SELECT * FROM %s WHERE %s IN (%d, %d) AND %s = %d ORDER BY %s ASC LIMIT %d",
                 EVENTS_TABLE_NAME, DBPersistentManager.STATUS_COL, DBPersistentManager.STATUS_NEW,
                 DBPersistentManager.STATUS_CLOUD_MODE_DONE, DM_PROCESSED_COL, DM_PROCESSED_PENDING, UPDATED_COL, limit);
@@ -438,6 +446,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
 
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
+            ReportManager.reportError(ex);
         }
 
         return count;
@@ -460,6 +469,8 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             } catch (SQLiteDatabaseCorruptException | ConcurrentModificationException |
                      NullPointerException ex) {
                 RudderLogger.logError(ex);
+                ReportManager.reportError(ex);
+
             }
         };
         // Need to perform db operations on a separate thread to support strict mode.
@@ -678,7 +689,7 @@ class DBInsertionHandlerThread extends HandlerThread {
             if (this.persistence.isAccessible()) {
                 EventInsertionCallback callback = (EventInsertionCallback) msg.obj;
                 Bundle msgBundle = msg.getData();
-                String messageJson = msgBundle.getString(EVENT);
+                String messageJson = msgBundle.getString(DBPersistentManager.EVENT);
                 long updatedTime = System.currentTimeMillis();
                 RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: " +
                                 "saveEvent: Inserting Message %s into table %s as Updated at %d",

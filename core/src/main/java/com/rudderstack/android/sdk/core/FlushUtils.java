@@ -194,6 +194,7 @@ class FlushUtils {
             // finally return the entire payload
             return builder.toString();
         } catch (Exception ex) {
+            ReportManager.reportError(ex);
             RudderLogger.logError(ex);
         }
         return null;

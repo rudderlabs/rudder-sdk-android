@@ -1,13 +1,5 @@
 package com.rudderstack.android.sdk.core;
 
-import com.rudderstack.android.sdk.core.util.MessageUploadLock;
-import com.rudderstack.android.sdk.core.util.Utils;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE;
 import static com.rudderstack.android.sdk.core.ReportManager.incrementCloudModeUploadRetryCounter;
 import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
@@ -15,6 +7,14 @@ import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkRespo
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
+
+import com.rudderstack.android.sdk.core.util.MessageUploadLock;
+import com.rudderstack.android.sdk.core.util.Utils;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 
 public class RudderCloudModeManager {
 
@@ -89,6 +89,7 @@ public class RudderCloudModeManager {
                                 Thread.sleep(1000);
                         }
                     } catch (Exception ex) {
+                        ReportManager.reportError(ex);
                         RudderLogger.logError(String.format("CloudModeManager: cloudModeProcessor: Exception while trying to send events to Data plane URL %s due to %s", config.getDataPlaneUrl(), ex.getLocalizedMessage()));
                         Thread.currentThread().interrupt();
                     }
