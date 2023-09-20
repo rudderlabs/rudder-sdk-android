@@ -1,5 +1,7 @@
 package com.rudderstack.android.sdk.core;
 
+import androidx.annotation.Nullable;
+
 public class RudderUserSessionManager {
     private RudderUserSession userSession;
     private RudderPreferenceManager preferenceManager;
@@ -17,22 +19,31 @@ public class RudderUserSessionManager {
         // 8. clear session if automatic session tracking was enabled previously
         // but disabled presently or vice versa.
         boolean previousAutoSessionTrackingStatus = preferenceManager.getAutoSessionTrackingStatus();
-        if (previousAutoSessionTrackingStatus != config.isTrackAutoSession()) {
+        boolean currentAutomaticSessionTrackingStatus = isAutomaticSessionTrackingEnabled();
+        if (previousAutoSessionTrackingStatus != currentAutomaticSessionTrackingStatus) {
             userSession.clearSession();
         }
-        preferenceManager.saveAutoSessionTrackingStatus(config.isTrackAutoSession());
+        preferenceManager.saveAutoSessionTrackingStatus(currentAutomaticSessionTrackingStatus);
         // starting automatic session tracking if enabled.
-        if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
+        if (currentAutomaticSessionTrackingStatus) {
             userSession.startSessionIfNeeded();
         }
     }
 
+    private boolean isAutomaticSessionTrackingEnabled() {
+        return config.isTrackAutoSession() && isAutomaticLifeCycleEnabled();
+    }
+
+    private boolean isAutomaticLifeCycleEnabled() {
+        return config.isTrackLifecycleEvents() || config.isNewLifeCycleEvents();
+    }
+
     void applySessionTracking(RudderMessage message) {
         // Session Tracking
-        if (userSession.getSessionId() != null) {
+        if (getSessionId() != null) {
             message.setSession(userSession);
         }
-        if (config.isTrackLifecycleEvents() && config.isTrackAutoSession()) {
+        if (isAutomaticSessionTrackingEnabled()) {
             userSession.updateLastEventTimeStamp();
         }
     }
@@ -60,8 +71,13 @@ public class RudderUserSessionManager {
         userSession.clearSession();
     }
 
+    @Nullable
+    Long getSessionId() {
+        return userSession.getSessionId();
+    }
+
     public void reset() {
-        if (userSession.getSessionId() != null) {
+        if (getSessionId() != null) {
             userSession.refreshSession();
         }
     }
