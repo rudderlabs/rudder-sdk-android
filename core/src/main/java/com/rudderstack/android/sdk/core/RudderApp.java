@@ -31,6 +31,7 @@ class RudderApp {
             this.nameSpace = packageName;
             this.version = packageInfo.versionName;
         } catch (PackageManager.NameNotFoundException ex) {
+            ReportManager.reportError(ex);
             RudderLogger.logError(ex.getCause());
         }
     }

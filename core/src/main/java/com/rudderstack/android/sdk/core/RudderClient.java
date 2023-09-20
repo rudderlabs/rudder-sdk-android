@@ -10,11 +10,6 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.rudderstack.android.ruddermetricsreporterandroid.Configuration;
-import com.rudderstack.android.ruddermetricsreporterandroid.DefaultRudderReporter;
-import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata;
-import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter;
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
 import com.rudderstack.android.sdk.core.util.Utils;
 import com.rudderstack.gsonrudderadapter.GsonAdapter;
 

@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteException;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderLogger;
 
 import net.sqlcipher.Cursor;
@@ -48,8 +49,12 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
     public Persistence get(Persistence.DbCreateListener dbCreateListener) {
         if (!params.isEncrypted
                 || params.encryptionKey == null || params.encryptedDbName == null) {
+            ReportManager.addErrorMetadata(ReportManager.METADATA_SECTION_PERSISTENCE, ReportManager.METADATA_PERSISTENCE_KEY_IS_ENCRYPTED,
+                    true);
             return getDefaultPersistence(dbCreateListener);
         } else {
+            ReportManager.addErrorMetadata(ReportManager.METADATA_SECTION_PERSISTENCE, ReportManager.METADATA_PERSISTENCE_KEY_IS_ENCRYPTED,
+                    false);
             return getEncryptedPersistence(dbCreateListener);
         }
     }
@@ -84,6 +89,7 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
             cursor.close();
             return true;
         } catch (SQLiteException e) {
+            ReportManager.reportError(e);
             RudderLogger.logError("Encryption key is invalid: Dumping the database and constructing a new one");
         }
         return false;
@@ -98,6 +104,7 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
             try {
                 migrateToDefaultDatabase(application.getDatabasePath(params.dbName));
             } catch (Exception e) {
+                ReportManager.reportError(e);
                 RudderLogger.logError("Encryption key is invalid: Dumping the database and constructing a new unencrypted one");
                 deleteEncryptedDb();
             }
