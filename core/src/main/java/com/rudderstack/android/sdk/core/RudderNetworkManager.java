@@ -123,7 +123,7 @@ public class RudderNetworkManager {
 
             return new Result(NetworkResponses.ERROR, -1, null, "Request Timed Out");
         } catch (IOException ex) {
-            ReportManager.reportError(ex);
+//            ReportManager.reportError(ex);
             RudderLogger.logError(ex);
             RudderLogger.logError("RudderNetworkManager: sendNetworkRequest: Exception occurred while sending the request to " + requestURL + ex.getLocalizedMessage());
             return new Result(NetworkResponses.ERROR, -1, null, "Invalid Url");

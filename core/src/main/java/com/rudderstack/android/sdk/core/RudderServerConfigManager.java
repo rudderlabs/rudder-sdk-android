@@ -130,7 +130,8 @@ class RudderServerConfigManager {
 
                 rudderServerConfig = (RudderServerConfig) is.readObject();
             } catch (Exception e) {
-                ReportManager.reportError(e);
+                //will cause too many exceptions
+//                ReportManager.reportError(e);
                 RudderLogger.logError("RudderServerConfigManager: getRudderServerConfig: Failed to read RudderServerConfig Object from File");
                 e.printStackTrace();
             }
