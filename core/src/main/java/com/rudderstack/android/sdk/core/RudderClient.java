@@ -680,6 +680,14 @@ public class RudderClient {
         }
     }
 
+    @Nullable
+    public String getAnonymousId() {
+        if (getOptOutStatus()) {
+            return null;
+        }
+        return RudderContext.getAnonymousId();
+    }
+
     public static void putAuthToken(@NonNull String authToken) {
         if (instance == null) {
             RudderClient.authToken = authToken;
@@ -830,6 +838,15 @@ public class RudderClient {
             return;
         }
         repository.endSession();
+    }
+
+    /**
+     * Public method for getting the current session id.
+     * @return
+     */
+    @Nullable
+    public Long getSessionId() {
+        return (repository != null) ? repository.getSessionId() : null;
     }
 
     /*
