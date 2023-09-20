@@ -181,12 +181,8 @@ public class EventRepositoryTest {
                 threadsCalledDb.incrementAndGet();
                 return null;
             }
-        }).when(dbPersistentManager).fetchAllCloudModeEventsFromDB( anyList(), anyList());
+        }).when(dbPersistentManager).fetchAllCloudModeEventsFromDB(anyList(), anyList());
 
-        PowerMockito.when(FlushUtils.class, "flushEventsToServer",
-                        anyString(), anyString(), anyString(), anyString()
-                )
-                .thenAnswer((Answer<RudderNetworkManager.NetworkResponses>) invocation -> RudderNetworkManager.NetworkResponses.SUCCESS);
         PowerMockito.when(networkManager, "sendNetworkRequest",
                         anyString(), anyString(), ArgumentMatchers.any(), anyBoolean()
                 )

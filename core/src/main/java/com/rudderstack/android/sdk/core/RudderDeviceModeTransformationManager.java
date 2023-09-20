@@ -133,6 +133,7 @@ public class RudderDeviceModeTransformationManager {
             try {
                 Thread.sleep(delay);
             } catch (Exception e) {
+                ReportManager.reportError(e);
                 RudderLogger.logError(e);
                 Thread.currentThread().interrupt();
             }
@@ -158,6 +159,7 @@ public class RudderDeviceModeTransformationManager {
             rudderDeviceModeManager.dumpTransformedEvents(transformationResponse);
             completeDeviceModeEventProcessing();
         } catch (Exception e) {
+            ReportManager.reportError(e);
             RudderLogger.logError("DeviceModeTransformationManager: handleSuccess: Error encountered during transformed response deserialization to TransformationResponse schema: " + e);
         }
     }

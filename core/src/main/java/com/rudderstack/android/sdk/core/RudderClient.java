@@ -10,11 +10,6 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.rudderstack.android.ruddermetricsreporterandroid.Configuration;
-import com.rudderstack.android.ruddermetricsreporterandroid.DefaultRudderReporter;
-import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata;
-import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter;
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
 import com.rudderstack.android.sdk.core.util.Utils;
 import com.rudderstack.gsonrudderadapter.GsonAdapter;
 
@@ -680,6 +675,14 @@ public class RudderClient {
         }
     }
 
+    @Nullable
+    public String getAnonymousId() {
+        if (getOptOutStatus()) {
+            return null;
+        }
+        return RudderContext.getAnonymousId();
+    }
+
     public static void putAuthToken(@NonNull String authToken) {
         if (instance == null) {
             RudderClient.authToken = authToken;
@@ -830,6 +833,15 @@ public class RudderClient {
             return;
         }
         repository.endSession();
+    }
+
+    /**
+     * Public method for getting the current session id.
+     * @return
+     */
+    @Nullable
+    public Long getSessionId() {
+        return (repository != null) ? repository.getSessionId() : null;
     }
 
     /*

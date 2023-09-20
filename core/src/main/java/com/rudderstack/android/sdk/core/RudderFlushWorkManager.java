@@ -31,10 +31,11 @@ public class RudderFlushWorkManager {
     }
 
     void saveRudderFlushConfig(RudderFlushConfig rudderFlushConfig) {
-        try(FileOutputStream fos = context.openFileOutput(RUDDER_FLUSH_CONFIG_FILE_NAME, Context.MODE_PRIVATE);
-            ObjectOutputStream os = new ObjectOutputStream(fos)) {
+        try (FileOutputStream fos = context.openFileOutput(RUDDER_FLUSH_CONFIG_FILE_NAME, Context.MODE_PRIVATE);
+             ObjectOutputStream os = new ObjectOutputStream(fos)) {
             os.writeObject(rudderFlushConfig);
         } catch (Exception e) {
+            ReportManager.reportError(e);
             RudderLogger.logError("RudderServerConfigManager: saveRudderFlushConfig: Exception while saving RudderServerConfig Object to File");
             e.printStackTrace();
         }
@@ -44,11 +45,12 @@ public class RudderFlushWorkManager {
         RudderFlushConfig rudderFlushConfig = null;
 
         if (Utils.fileExists(context, RUDDER_FLUSH_CONFIG_FILE_NAME)) {
-            try(FileInputStream fis = context.openFileInput(RUDDER_FLUSH_CONFIG_FILE_NAME);
-                ObjectInputStream is = new ObjectInputStream(fis)) {
+            try (FileInputStream fis = context.openFileInput(RUDDER_FLUSH_CONFIG_FILE_NAME);
+                 ObjectInputStream is = new ObjectInputStream(fis)) {
                 rudderFlushConfig = (RudderFlushConfig) is.readObject();
 
             } catch (Exception e) {
+                ReportManager.reportError(e);
                 RudderLogger.logError("RudderServerConfigManager: getRudderFlushConfig: Failed to read RudderServerConfig Object from File");
                 e.printStackTrace();
             }
@@ -64,7 +66,7 @@ public class RudderFlushWorkManager {
             }
             Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
             String persistenceProviderFactory = config.getDbEncryption().getPersistenceProviderFactoryClassName();
-            if(persistenceProviderFactory == null)
+            if (persistenceProviderFactory == null)
                 persistenceProviderFactory = "";
             PeriodicWorkRequest flushPendingEvents =
                     new PeriodicWorkRequest.Builder(FlushEventsWorker.class, config.getRepeatInterval(), config.getRepeatIntervalTimeUnit())

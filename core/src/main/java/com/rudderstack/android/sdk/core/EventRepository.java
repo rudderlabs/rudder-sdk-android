@@ -4,9 +4,8 @@ package com.rudderstack.android.sdk.core;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_DATA_PLANE_URL_INVALID;
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE_SOURCE_DISABLED;
+import static com.rudderstack.android.sdk.core.ReportManager.enableStatsCollection;
 import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
-import static com.rudderstack.android.sdk.core.ReportManager.initiateRudderReporter;
-import static com.rudderstack.android.sdk.core.ReportManager.isStatsReporterAvailable;
 import static com.rudderstack.android.sdk.core.util.Utils.lifeCycleDependenciesExists;
 
 import android.app.Application;
@@ -15,7 +14,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Base64;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,7 +22,6 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.rudderstack.android.ruddermetricsreporterandroid.Metrics;
 import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
 import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
 import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
@@ -98,7 +95,8 @@ class EventRepository {
         RudderLogger.logDebug(String.format("EventRepository: constructor: %s", this.config.toString()));
 
         try {
-
+            ReportManager.addErrorMetadata(ReportManager.METADATA_SECTION_GZIP, ReportManager.METADATA_GZIP_KEY_IS_ENABLED,
+                    _config.isGzipEnabled());
             // initiate RudderPreferenceManager
             initiatePreferenceManager(_application);
 
@@ -153,6 +151,7 @@ class EventRepository {
 
             initiateRudderReporterFromPrefetchedConfig();
         } catch (Exception ex) {
+            ReportManager.reportError(ex);
             RudderLogger.logError("EventRepository: constructor: Exception occurred: " + ex.getMessage());
             RudderLogger.logError(ex.getCause());
         }
@@ -164,7 +163,7 @@ class EventRepository {
             if (serverConfig != null && serverConfig.source != null
                     && serverConfig.source.sourceConfiguration != null) {
                 RudderLogger.logDebug("EventRepository: constructor: Prefetched source serverConfig is available");
-                enableStatsCollection(serverConfig.source.sourceConfiguration.getStatsCollection());
+                enableStatsCollection(application, writeKey, serverConfig.source.sourceConfiguration.getStatsCollection());
             } else {
                 RudderLogger.logDebug("EventRepository: constructor: Prefetched source serverConfig is not available");
             }
@@ -215,7 +214,7 @@ class EventRepository {
         RudderConfig.DBEncryption dbEncryption = config.getDbEncryption();
         DBPersistentManager.DbManagerParams dbManagerParams = new DBPersistentManager.DbManagerParams(dbEncryption.enable,
                 dbEncryption.getPersistenceProviderFactoryClassName(), dbEncryption.key);
-        this.dbManager = DBPersistentManager.getInstance(application,dbManagerParams);
+        this.dbManager = DBPersistentManager.getInstance(application, dbManagerParams);
         dbManager.checkForMigrations();
         dbManager.startHandlerThread();
     }
@@ -249,6 +248,7 @@ class EventRepository {
             this.authHeaderString = Base64.encodeToString((String.format(Locale.US, "%s:", writeKey)).getBytes(CHARSET_UTF_8), Base64.NO_WRAP);
             RudderLogger.logDebug(String.format(Locale.US, "EventRepository: constructor: authHeaderString: %s", this.authHeaderString));
         } catch (UnsupportedEncodingException ex) {
+            ReportManager.reportError(ex);
             RudderLogger.logError(ex);
         }
     }
@@ -274,8 +274,8 @@ class EventRepository {
                     if (serverConfig != null) {
                         isSDKEnabled = serverConfig.source.isSourceEnabled;
                         if (isSDKEnabled) {
-                            if(serverConfig.source.sourceConfiguration != null)
-                                enableStatsCollection(serverConfig.source.sourceConfiguration.getStatsCollection());
+                            if (serverConfig.source.sourceConfiguration != null)
+                                enableStatsCollection(application, writeKey, serverConfig.source.sourceConfiguration.getStatsCollection());
                             dataResidencyManager.setDataResidencyUrls(serverConfig);
                             dataPlaneUrl = dataResidencyManager.getDataPlaneUrl();
                             if (dataPlaneUrl == null) {
@@ -317,32 +317,11 @@ class EventRepository {
                 }
             } catch (Exception ex) {
                 RudderLogger.logError(ex);
+                ReportManager.reportError(ex);
             }
         }).start();
     }
 
-    private void enableStatsCollection( @NonNull SourceConfiguration.StatsCollection statsCollection) {
-        if(!isStatsReporterAvailable()){
-            if(statsCollection.getMetrics().isEnabled()){
-                RudderLogger.logDebug("EventRepository: Creating Metrics Reporter");
-                initiateRudderReporter(application, writeKey );
-                return;
-            }
-            RudderLogger.logDebug("EventRepository: Metrics collection is not initialized");
-            return;
-        }
-        Metrics rudderMetrics = ReportManager.getMetrics();
-        if(rudderMetrics == null)
-            return;
-        boolean metricsCollection = statsCollection.getMetrics().isEnabled();
-        if (!metricsCollection) {
-            RudderLogger.logDebug("EventRepository: Disabling Metrics Collection:");
-            rudderMetrics.enable(false);
-            return;
-        }
-        RudderLogger.logDebug("EventRepository: Metrics Collection is enabled");
-
-    }
 
     private void saveFlushConfig() {
         RudderFlushConfig rudderFlushConfig = new RudderFlushConfig(dataPlaneUrl, authHeaderString,
@@ -499,6 +478,7 @@ class EventRepository {
         try {
             this.anonymousIdHeaderString = Base64.encodeToString(RudderContext.getAnonymousId().getBytes(CHARSET_UTF_8), Base64.NO_WRAP);
         } catch (Exception ex) {
+            ReportManager.reportError(ex);
             RudderLogger.logError(ex.getCause());
         }
         networkManager.updateAnonymousIdHeaderString();
@@ -517,6 +497,11 @@ class EventRepository {
 
     public void endSession() {
         userSessionManager.endSession();
+    }
+
+    @Nullable
+    public Long getSessionId() {
+        return userSessionManager.getSessionId();
     }
 
     private RudderMessage updateMessageWithConsentedDestinations(RudderMessage message) {

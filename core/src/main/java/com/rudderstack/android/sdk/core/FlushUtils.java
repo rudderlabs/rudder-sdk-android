@@ -86,7 +86,7 @@ class FlushUtils {
                         ReportManager.incrementCloudModeUploadRetryCounter(1);
                         lastErrorMessage = getLastErrorMessage(networkResponse);
 
-                    }else {
+                    } else {
                         lastErrorMessage = ReportManager.LABEL_TYPE_PAYLOAD_NULL;
                     }
                     RudderLogger.logWarn(String.format(Locale.US, "EventRepository: flush: Failed to send batch %d/%d retrying again, %d retries left", i, numberOfBatches, retries));
@@ -104,14 +104,17 @@ class FlushUtils {
 
     private static String getLastErrorMessage(Result networkResponse) {
         String lastErrorMessage;
-        switch(networkResponse.error){
-            case "Request Timed Out": lastErrorMessage = ReportManager.LABEL_TYPE_REQUEST_TIMEOUT;
-            break;
-            case "Invalid Url": lastErrorMessage = ReportManager.LABEL_TYPE_DATA_PLANE_URL_INVALID;
-            break;
-            default: lastErrorMessage = networkResponse.error;
+        switch (networkResponse.error) {
+            case "Request Timed Out":
+                lastErrorMessage = ReportManager.LABEL_TYPE_REQUEST_TIMEOUT;
+                break;
+            case "Invalid Url":
+                lastErrorMessage = ReportManager.LABEL_TYPE_DATA_PLANE_URL_INVALID;
+                break;
+            default:
+                lastErrorMessage = networkResponse.error;
         }
-        if(networkResponse.status == NetworkResponses.RESOURCE_NOT_FOUND){
+        if (networkResponse.status == NetworkResponses.RESOURCE_NOT_FOUND) {
             lastErrorMessage = ReportManager.LABEL_TYPE_DATA_PLANE_URL_INVALID;
         }
         return lastErrorMessage;
@@ -124,82 +127,20 @@ class FlushUtils {
 
 
     /*
-     * flush events payload to server and return response as String
-     * */
-    static NetworkResponses flushEventsToServer(String payload, String dataPlaneUrl, String authHeaderString, String anonymousIdHeaderString) {
-        try {
-            if (TextUtils.isEmpty(authHeaderString)) {
-                RudderLogger.logError("EventRepository: flushEventsToServer: WriteKey was not correct. Aborting flush to server");
-                return null;
-            }
-
-            // get endPointUrl form config object
-            String dataPlaneEndPoint = dataPlaneUrl + "v1/batch";
-            RudderLogger.logDebug("EventRepository: flushEventsToServer: dataPlaneEndPoint: " + dataPlaneEndPoint);
-
-            // create url object
-            URL url = new URL(dataPlaneEndPoint);
-            // get connection object
-            HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection();
-            // set connection object to return output
-            httpConnection.setDoOutput(true);
-            //  set content type for network request
-            httpConnection.setRequestProperty("Content-Type", "application/json");
-            // set authorization header
-            httpConnection.setRequestProperty("Authorization", String.format(Locale.US, "Basic %s", authHeaderString));
-            // set anonymousId header for definitive routing
-            httpConnection.setRequestProperty("AnonymousId", anonymousIdHeaderString);
-            // set request method
-            httpConnection.setRequestMethod("POST");
-            // get output stream and write payload content
-            OutputStream os = httpConnection.getOutputStream();
-            //locks to prevent concurrent server access.
-            synchronized (FLUSH_LOCK) {
-                OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
-                osw.write(payload);
-                osw.flush();
-                osw.close();
-                os.close();
-                // create connection
-                httpConnection.connect();
-            }
-            // get input stream from connection to get output from the server
-            if (httpConnection.getResponseCode() == 200) {
-                return NetworkResponses.SUCCESS;
-            } else {
-                BufferedInputStream bis = new BufferedInputStream(httpConnection.getErrorStream());
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                int res = bis.read();
-                // read response from the server
-                while (res != -1) {
-                    baos.write((byte) res);
-                    res = bis.read();
-                }
-                // finally return response when reading from server is completed
-                String errorResp = baos.toString();
-                RudderLogger.logError("EventRepository: flushEventsToServer: ServerError: " + errorResp);
-                // return null as request made is not successful
-                if (errorResp.toLowerCase().contains("invalid write key")) {
-                    return NetworkResponses.WRITE_KEY_ERROR;
-                }
-            }
-        } catch (Exception ex) {
-            RudderLogger.logError(ex);
-        }
-        return NetworkResponses.ERROR;
-    }
-
-    /*
      * create payload string from messages list
      * - we created payload from individual message json strings to reduce the complexity
      * of deserialization and forming the payload object and creating the json string
      * again from the object
      * */
     static String getPayloadFromMessages(List<Integer> messageIds, List<String> messages) {
+        if (messageIds.isEmpty() || messages.isEmpty()) {
+            RudderLogger.logWarn("FlushUtils: getPayloadFromMessages: Payload Construction failed: no messages to send");
+            return null;
+        }
         try {
-            RudderLogger.logDebug("EventRepository: getPayloadFromMessages: recordCount: " + messages.size());
+            RudderLogger.logDebug("FlushUtils: getPayloadFromMessages: recordCount: " + messages.size());
             String sentAtTimestamp = Utils.getTimeStamp();
-            RudderLogger.logDebug("EventRepository: getPayloadFromMessages: sentAtTimestamp: " + sentAtTimestamp);
+            RudderLogger.logDebug("FlushUtils: getPayloadFromMessages: sentAtTimestamp: " + sentAtTimestamp);
             // initialize ArrayLists to store current batch
             ArrayList<Integer> batchMessageIds = new ArrayList<>();
             // get string builder
@@ -212,6 +153,7 @@ class FlushUtils {
             builder.append("\"batch\": [");
             int totalBatchSize = Utils.getUTF8Length(builder) + 2; // we add 2 characters at the end
             int messageSize;
+            StringBuilder batchMessagesBuilder = new StringBuilder();
             // loop through messages list and add in the builder
             for (int index = 0; index < messages.size(); index++) {
                 String message = messages.get(index);
@@ -224,19 +166,25 @@ class FlushUtils {
                 totalBatchSize += messageSize;
                 // check batch size
                 if (totalBatchSize >= Utils.MAX_BATCH_SIZE) {
-                    RudderLogger.logDebug(String.format(Locale.US, "EventRepository: getPayloadFromMessages: MAX_BATCH_SIZE reached at index: %d | Total: %d", index, totalBatchSize));
+                    RudderLogger.logDebug(String.format(Locale.US, "FlushUtils: getPayloadFromMessages: MAX_BATCH_SIZE reached at index: %d | Total: %d", index, totalBatchSize));
                     incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_BATCH_SIZE_INVALID));
                     break;
                 }
                 // finally add message string to builder
-                builder.append(message);
+                batchMessagesBuilder.append(message);
                 // add message to batch ArrayLists
                 batchMessageIds.add(messageIds.get(index));
             }
-            if (builder.charAt(builder.length() - 1) == ',') {
+            if (batchMessagesBuilder.charAt(batchMessagesBuilder.length() - 1) == ',') {
                 // remove trailing ','
-                builder.deleteCharAt(builder.length() - 1);
+                batchMessagesBuilder.deleteCharAt(batchMessagesBuilder.length() - 1);
             }
+            // add batch messages to the builder
+            if (batchMessagesBuilder.length() == 0) {
+                RudderLogger.logWarn("FlushUtils: getPayloadFromMessages: Payload Construction failed: batchMessagesBuilder is empty");
+                return null;
+            }
+            builder.append(batchMessagesBuilder);
             // close batch array in the json
             builder.append("]");
             // append closing token in the json
@@ -246,6 +194,7 @@ class FlushUtils {
             // finally return the entire payload
             return builder.toString();
         } catch (Exception ex) {
+            ReportManager.reportError(ex);
             RudderLogger.logError(ex);
         }
         return null;

@@ -1,13 +1,5 @@
 package com.rudderstack.android.sdk.core;
 
-import com.rudderstack.android.sdk.core.util.MessageUploadLock;
-import com.rudderstack.android.sdk.core.util.Utils;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-
 import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE;
 import static com.rudderstack.android.sdk.core.ReportManager.incrementCloudModeUploadRetryCounter;
 import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
@@ -15,6 +7,14 @@ import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkRespo
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
+
+import com.rudderstack.android.sdk.core.util.MessageUploadLock;
+import com.rudderstack.android.sdk.core.util.Utils;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 
 public class RudderCloudModeManager {
 
@@ -51,7 +51,7 @@ public class RudderCloudModeManager {
                         dbManager.fetchCloudModeEventsFromDB(messageIds, messages, config.getFlushQueueSize());
                         if (messages.size() >= config.getFlushQueueSize() || (!messages.isEmpty() && sleepCount >= config.getSleepTimeOut())) {
                             // form payload JSON form the list of messages
-                            String payload = getPayloadFromMessages(messageIds, messages);
+                            String payload = FlushUtils.getPayloadFromMessages(messageIds, messages);
                             RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: payload: %s", payload));
                             RudderLogger.logInfo(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: %d", messageIds.size()));
                             if (payload != null) {
@@ -62,7 +62,7 @@ public class RudderCloudModeManager {
                                     dbManager.markCloudModeDone(messageIds);
                                     dbManager.runGcForEvents();
                                     sleepCount = 0;
-                                }else {
+                                } else {
                                     incrementCloudModeUploadRetryCounter(1);
                                 }
                             }
@@ -89,6 +89,7 @@ public class RudderCloudModeManager {
                                 Thread.sleep(1000);
                         }
                     } catch (Exception ex) {
+                        ReportManager.reportError(ex);
                         RudderLogger.logError(String.format("CloudModeManager: cloudModeProcessor: Exception while trying to send events to Data plane URL %s due to %s", config.getDataPlaneUrl(), ex.getLocalizedMessage()));
                         Thread.currentThread().interrupt();
                     }
@@ -114,67 +115,5 @@ public class RudderCloudModeManager {
                     ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_OUT_OF_MEMORY
             ));
         }
-    }
-
-    /*
-     * create payload string from messages list
-     * - we created payload from individual message json strings to reduce the complexity
-     * of deserialization and forming the payload object and creating the json string
-     * again from the object
-     * */
-    static String getPayloadFromMessages(List<Integer> messageIds, List<String> messages) {
-        try {
-            RudderLogger.logDebug("CloudModeManager: getPayloadFromMessages: recordCount: " + messages.size());
-            String sentAtTimestamp = Utils.getTimeStamp();
-            RudderLogger.logDebug("CloudModeManager: getPayloadFromMessages: sentAtTimestamp: " + sentAtTimestamp);
-            // initialize ArrayLists to store current batch
-            ArrayList<Integer> batchMessageIds = new ArrayList<>();
-            // get string builder
-            StringBuilder builder = new StringBuilder();
-            // append initial json token
-            builder.append("{");
-            // append sent_at time stamp
-            builder.append("\"sentAt\":\"").append(sentAtTimestamp).append("\",");
-            // initiate batch array in the json
-            builder.append("\"batch\": [");
-            int totalBatchSize = Utils.getUTF8Length(builder) + 2; // we add 2 characters at the end
-            int messageSize;
-            // loop through messages list and add in the builder
-            for (int index = 0; index < messages.size(); index++) {
-                String message = messages.get(index);
-                // strip last ending object character
-                message = message.substring(0, message.length() - 1);
-                // add sentAt time stamp
-                message = String.format("%s,\"sentAt\":\"%s\"},", message, sentAtTimestamp);
-                // add message size to batch size
-                messageSize = Utils.getUTF8Length(message);
-                totalBatchSize += messageSize;
-                // check batch size
-                if (totalBatchSize >= Utils.MAX_BATCH_SIZE) {
-                    incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_BATCH_SIZE_INVALID));
-                    RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: getPayloadFromMessages: MAX_BATCH_SIZE reached at index: %d | Total: %d", index, totalBatchSize));
-                    break;
-                }
-                // finally add message string to builder
-                builder.append(message);
-                // add message to batch ArrayLists
-                batchMessageIds.add(messageIds.get(index));
-            }
-            if (builder.charAt(builder.length() - 1) == ',') {
-                // remove trailing ','
-                builder.deleteCharAt(builder.length() - 1);
-            }
-            // close batch array in the json
-            builder.append("]");
-            // append closing token in the json
-            builder.append("}");
-            // retain all events belonging to the batch
-            messageIds.retainAll(batchMessageIds);
-            // finally return the entire payload
-            return builder.toString();
-        } catch (Exception ex) {
-            RudderLogger.logError(ex);
-        }
-        return null;
     }
 }
