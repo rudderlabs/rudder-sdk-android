@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.19.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.18.1...v1.19.0) (2023-09-20)
+
+
+### Features
+
+* add getAnonymousId() API support ([#308](https://github.com/rudderlabs/rudder-sdk-android/issues/308)) ([3e1a67a](https://github.com/rudderlabs/rudder-sdk-android/commit/3e1a67ae77dec5d7a2f87b2ad789d945d4349046))
+* add getsessionid api support ([#301](https://github.com/rudderlabs/rudder-sdk-android/issues/301)) ([d63f1d2](https://github.com/rudderlabs/rudder-sdk-android/commit/d63f1d2e33fdcfcd41313569d2edfec246250acc))
+* sdk 94 error stats integrations ([#309](https://github.com/rudderlabs/rudder-sdk-android/issues/309)) ([96cc9f1](https://github.com/rudderlabs/rudder-sdk-android/commit/96cc9f1b5d27926f5eff75cbe3fcdfacaab5f6c8))
+
+
+### Bug Fixes
+
+* fixed batch payload being sent as empty to data plane ([#304](https://github.com/rudderlabs/rudder-sdk-android/issues/304)) ([c5602e7](https://github.com/rudderlabs/rudder-sdk-android/commit/c5602e7a4cee0e485d331beaa979a12eb4614fd2))
+* github actions ([c239454](https://github.com/rudderlabs/rudder-sdk-android/commit/c239454b6f2c8566dff5ebe42a6377f1a37224f9))
+* sessionId not getting cleared issue ([#300](https://github.com/rudderlabs/rudder-sdk-android/issues/300)) ([12e09ca](https://github.com/rudderlabs/rudder-sdk-android/commit/12e09caa236eccf98c3f112608c950ad0ddca195))
+
 ### [1.18.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.18.0...v1.18.1) (2023-09-04)
 
 
