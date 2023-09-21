@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.19.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.19.0...v1.19.1) (2023-09-21)
+
+
+### Bug Fixes
+
+* null pointer exception in metrics ([#315](https://github.com/rudderlabs/rudder-sdk-android/issues/315)) ([2818904](https://github.com/rudderlabs/rudder-sdk-android/commit/28189049ed5e1ae446880dd7bb70d8992c1d9681))
+
 ## [1.19.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.18.1...v1.19.0) (2023-09-20)
 
 
