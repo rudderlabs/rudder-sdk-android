@@ -82,14 +82,15 @@ public class ReportManager {
     public static final String METADATA_PERSISTENCE_KEY_IS_ENCRYPTED = "encrypted";
     public static final String METADATA_GZIP_KEY_IS_ENABLED = "enabled";
 
-    public static void initiate(Metrics metrics, ErrorClient errorStatsClient) {
+    public static void initiate(@Nullable Metrics metrics, @Nullable ErrorClient errorStatsClient) {
         ReportManager.metrics = metrics;
         ReportManager.errorStatsClient = errorStatsClient;
-        createCounters(metrics);
+        if(metrics != null)
+            createCounters(metrics);
 
     }
 
-    private static void createCounters(Metrics metrics) {
+    private static void createCounters(@NonNull Metrics metrics) {
         ReportManager.messageCounter = metrics.getLongCounter(EVENTS_SUBMITTED_COUNTER_TAG);
         ReportManager.discardedCounter = metrics.getLongCounter(EVENTS_DISCARDED_COUNTER_TAG);
         ReportManager.deviceModeEventCounter = metrics.getLongCounter(DEVICE_MODE_EVENT_COUNTER_TAG);
