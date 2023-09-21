@@ -117,6 +117,44 @@ The variable `it` contains the intialized nativeSDK object.
 
 [**Registering Lotame's onSync callback**](https://github.com/rudderlabs/rudder-integration-lotame-android#register-your-onsync-callback) shows one more example of registering a callback using `onIntegrationReady`.
 
+## Do I need to add anything to my ProGuard rules?
+
+If you are using Proguard full mode to optimize your app, add the following lines to your Android ProGuard rules:
+
+```java
+// Reporter Module
+-keep class com.rudderstack.android.ruddermetricsreporterandroid.models.LabelEntity { *; }
+-keep class com.rudderstack.android.ruddermetricsreporterandroid.models.MetricEntity { *; }
+-keep class com.rudderstack.android.ruddermetricsreporterandroid.models.ErrorEntity { *; }
+
+// Required for the usage off TypeToken class in Utils.converToMap, Utils.convertToList
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+
+// Required for the serialization of SourceConfig once it is downloaded.
+-keep class com.google.gson.internal.LinkedTreeMap { *; }
+-keep class * implements java.io.Serializable { *; }
+-keep class com.rudderstack.rudderjsonadapter.RudderTypeAdapter { *; }
+-keep class * extends com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+
+// Required to ensure the DefaultPersistenceProviderFactory is not removed by Proguard 
+// and works as expected even when the customer is not using encryption feature.
+-dontwarn net.sqlcipher.Cursor
+-dontwarn net.sqlcipher.database.SQLiteDatabase$CursorFactory
+-dontwarn net.sqlcipher.database.SQLiteDatabase
+-dontwarn net.sqlcipher.database.SQLiteOpenHelper
+-keep class com.rudderstack.android.sdk.core.persistence.DefaultPersistenceProviderFactory { *; }
+
+// Required for the usage of annotations across reporter and web modules
+-dontwarn com.fasterxml.jackson.annotation.JsonIgnore
+-dontwarn com.squareup.moshi.Json
+-dontwarn com.fasterxml.jackson.annotation.JsonProperty
+
+// Required for Device Mode Transformations
+-keep class com.rudderstack.android.sdk.core.TransformationResponse { *; }
+-keep class com.rudderstack.android.sdk.core.TransformationResponseDeserializer { *; }
+```
+
 ## Contribute
 
 We would love to see you contribute to this project. Get more information on how to contribute [**here**](./CONTRIBUTING.md).
