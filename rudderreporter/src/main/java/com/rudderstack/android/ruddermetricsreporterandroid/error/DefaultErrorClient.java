@@ -196,6 +196,7 @@ public class DefaultErrorClient implements MetadataAware, ErrorClient {
         immutableConfig = new ImmutableConfig(configuration.getLibraryMetadata(),
                 configuration.getProjectPackages(),
                 configuration.getEnabledBreadcrumbTypes(), configuration.getDiscardClasses(),
+                configuration.getCrashFilter(),
                 NoopLogger.INSTANCE,
                 configuration.getMaxBreadcrumbs(), configuration.getMaxPersistedEvents(),
                 configuration.getEnabledReleaseStages(), "release",
@@ -234,6 +235,7 @@ public class DefaultErrorClient implements MetadataAware, ErrorClient {
 
         start();
     }
+
     private void start() {
         exceptionHandler.install();
         registerComponentCallbacks();
@@ -277,7 +279,6 @@ public class DefaultErrorClient implements MetadataAware, ErrorClient {
     void addObserver(StateObserver observer) {
         metadataState.addObserver(observer);
         breadcrumbState.addObserver(observer);
-//        deliveryDelegate.addObserver(observer);
         memoryTrimState.addObserver(observer);
     }
 
@@ -285,7 +286,6 @@ public class DefaultErrorClient implements MetadataAware, ErrorClient {
     void removeObserver(StateObserver observer) {
         metadataState.removeObserver(observer);
         breadcrumbState.removeObserver(observer);
-//        deliveryDelegate.removeObserver(observer);
         memoryTrimState.removeObserver(observer);
     }
 
@@ -522,6 +522,33 @@ public class DefaultErrorClient implements MetadataAware, ErrorClient {
 
     }
 
+    private static boolean isExceptionValid(@NonNull List<String> keywords, Throwable exc) {
+        if(keywords.isEmpty()) return true;
+        for (String keyword : keywords) {
+            if (exc.getMessage().contains(keyword)) {
+                return true;
+            }
+            if (exc.getStackTrace() != null && isStackTraceValid(exc, keyword)) {
+                return true;
+            }
+        }
+        if(exc.getCause() != null){
+            return isExceptionValid(keywords, exc.getCause());
+        }
+        return false;
+    }
+
+    private static boolean isStackTraceValid(Throwable exc, String keyword) {
+        for (StackTraceElement element : exc.getStackTrace()) {
+            if (element.getClassName().contains(keyword) ||
+                    element.getFileName().contains(keyword)
+                    || element.getMethodName().contains(keyword)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Intended for internal use only - leaves a breadcrumb if the type is enabled for automatic
@@ -543,7 +570,7 @@ public class DefaultErrorClient implements MetadataAware, ErrorClient {
         // Add a breadcrumb for this event occurring
         List<Error> errors = event.getErrors();
 
-        if (errors.size() > 0) {
+        if (!errors.isEmpty()) {
             String errorClass = errors.get(0).getErrorClass();
             String message = errors.get(0).getErrorMessage();
 

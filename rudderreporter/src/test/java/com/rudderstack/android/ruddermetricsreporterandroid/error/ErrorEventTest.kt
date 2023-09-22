@@ -59,6 +59,7 @@ abstract class ErrorEventTest {
             listOf("com.rudderstack.android"),
             setOf(BreadcrumbType.ERROR),
             listOf("com.rudderstack.android.MyClass"),
+            CrashFilter.generateWithKeyWords(listOf()),
             object : Logger {},
             15,
             16,
