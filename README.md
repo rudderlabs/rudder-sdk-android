@@ -153,6 +153,11 @@ If you are using Proguard full mode to optimize your app, add the following line
 // Required for Device Mode Transformations
 -keep class com.rudderstack.android.sdk.core.TransformationResponse { *; }
 -keep class com.rudderstack.android.sdk.core.TransformationResponseDeserializer { *; }
+
+// to make sure that serialized name annotations are not removed by the Proguard full mode.
+-keepclassmembers,allowobfuscation class * {
+  @com.google.gson.annotations.SerializedName <fields>;
+}
 ```
 
 ## Contribute
