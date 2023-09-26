@@ -11,7 +11,7 @@ android {
     defaultConfig {
         minSdk library.min_sdk
         targetSdk library.target_sdk
-
+        consumerProguardFiles 'proguard-rules.pro'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
