@@ -209,11 +209,9 @@ class DefaultRudderReporter(
     ) {
         this.connectivity = connectivity
         this.backgroundTaskService = backgroundTaskService
+        connectivity.registerForNetworkChanges()
     }
 
-    init {
-        connectivity?.registerForNetworkChanges()
-    }
     override val metrics: Metrics get() = _metrics
 
     override val errorClient: ErrorClient
