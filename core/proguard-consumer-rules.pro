@@ -46,3 +46,14 @@
 -keepclassmembers,allowobfuscation class * {
   @com.google.gson.annotations.SerializedName <fields>;
 }
+
+# Required for proper serialization of the custom traits and custom context
+-keep class * implements com.google.gson.JsonSerializer { *; }
+
+# to make sure that the customContextMap, custom traits are sent in the proper format
+-keepclassmembers class com.rudderstack.android.sdk.core.RudderContext { java.util.Map customContextMap; }
+-keepclassmembers class com.rudderstack.android.sdk.core.RudderTraits { java.util.Map extras; }
+
+# Required for DBEncryption feature using SQLCipher
+-keep class net.sqlcipher.** { *; }
+-keep class net.sqlcipher.database.* { *; }
