@@ -185,7 +185,7 @@ public class RudderNetworkManager {
             return updateHttpConnection(httpConnection, requestMethod, requestPayload, isDMTRequest,
                     null, null);
         } catch (Exception ex) {
-            ReportManager.reportError(ex);
+//            ReportManager.reportError(ex);
             RudderLogger.logError("RudderNetworkManager: sendNetworkRequest: Exception occurred while creating HttpURLConnection" + ex.getLocalizedMessage());
             return null;
         }
@@ -238,7 +238,7 @@ public class RudderNetworkManager {
             osw.flush();
             return httpConnection;
         } catch (Exception ex) {
-            ReportManager.reportError(ex);
+//            ReportManager.reportError(ex);
             RudderLogger.logError("RudderNetworkManager: updateHttpConnection: Error while updating the http connection" + ex.getLocalizedMessage());
             return null;
         }
