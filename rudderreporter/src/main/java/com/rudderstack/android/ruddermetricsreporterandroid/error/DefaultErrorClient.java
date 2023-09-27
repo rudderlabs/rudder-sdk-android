@@ -308,9 +308,6 @@ public class DefaultErrorClient implements MetadataAware, ErrorClient {
             logNull("notify");
             return;
         }
-        if (immutableConfig.shouldDiscardError(exc)) {
-            return;
-        }
         SeverityReason severityReason = SeverityReason.newInstance(REASON_HANDLED_EXCEPTION);
         Metadata metadata = metadataState.getMetadata();
         ErrorEvent event = new ErrorEvent(exc, immutableConfig, severityReason, metadata);
