@@ -13,6 +13,7 @@ import net.sqlcipher.Cursor;
 import net.sqlcipher.database.SQLiteDatabase;
 
 import java.io.File;
+import java.util.Collections;
 
 
 public class DefaultPersistenceProvider implements PersistenceProvider {
@@ -49,11 +50,14 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
     public Persistence get(Persistence.DbCreateListener dbCreateListener) {
         if (!params.isEncrypted
                 || params.encryptionKey == null || params.encryptedDbName == null) {
-            ReportManager.addErrorMetadata(ReportManager.METADATA_SECTION_PERSISTENCE, ReportManager.METADATA_PERSISTENCE_KEY_IS_ENCRYPTED,
+            ReportManager.leaveBreadcrumb(ReportManager.METADATA_SECTION_PERSISTENCE, ReportManager.METADATA_PERSISTENCE_KEY_IS_ENCRYPTED,
                     true);
             return getDefaultPersistence(dbCreateListener);
         } else {
-            ReportManager.addErrorMetadata(ReportManager.METADATA_SECTION_PERSISTENCE, ReportManager.METADATA_PERSISTENCE_KEY_IS_ENCRYPTED,
+            ReportManager.incrementDbEncryptionCounter(1, Collections.singletonMap(
+                    ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_CREATED
+            ));
+            ReportManager.leaveBreadcrumb(ReportManager.METADATA_SECTION_PERSISTENCE, ReportManager.METADATA_PERSISTENCE_KEY_IS_ENCRYPTED,
                     false);
             return getEncryptedPersistence(dbCreateListener);
         }
@@ -130,6 +134,9 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
     }
 
     private void migrateToDefaultDatabase(File databasePath) {
+        ReportManager.incrementDbEncryptionCounter(1, Collections.singletonMap(
+                ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_MIGRATE_TO_DECRYPT
+        ));
 
         File encryptedDb = application.getDatabasePath(params.encryptedDbName);
         String encryptedPath = encryptedDb.getAbsolutePath();
@@ -152,6 +159,10 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
 
 
     private void migrateToEncryptedDatabase(File encryptedDbPath) {
+        ReportManager.incrementDbEncryptionCounter(1, Collections.singletonMap(
+                ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_MIGRATE_TO_ENCRYPT
+        ));
+
         SQLiteDatabase database = SQLiteDatabase.openOrCreateDatabase(encryptedDbPath.getAbsolutePath(), params.encryptionKey, null);
         database.close();
         File decryptedDb = application.getDatabasePath(params.dbName);

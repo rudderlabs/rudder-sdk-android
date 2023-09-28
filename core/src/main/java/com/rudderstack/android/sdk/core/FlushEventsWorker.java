@@ -17,6 +17,11 @@ public class FlushEventsWorker extends Worker {
             @NonNull WorkerParameters params) {
         super(context, params);
         persistenceProviderFactoryClassName = params.getInputData().getString(PERSISTENCE_PROVIDER_FACTORY_CLASS_NAME_KEY);
+        addWorkerMetrics();
+    }
+
+    private void addWorkerMetrics() {
+        ReportManager.incrementWorkManagerInitializationCounter(1);
     }
 
     @Override
