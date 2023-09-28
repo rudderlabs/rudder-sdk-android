@@ -126,11 +126,17 @@ public class RudderDeviceModeTransformationManager {
         } else if (result.status == NetworkResponses.ERROR) {
             handleError(transformationRequest);
         } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
+            reportResourceNotFoundMetric();
             handleResourceNotFound(transformationRequest);
         } else {
             handleSuccess(result);
         }
         return false;
+    }
+
+    private void reportResourceNotFoundMetric() {
+        ReportManager.incrementDMTErrorCounter(1,
+                Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_FAIL_RESOURCE_NOT_FOUND));
     }
 
     private void reportBadRequestMetric() {
@@ -147,6 +153,7 @@ public class RudderDeviceModeTransformationManager {
         int delay = Math.min((1 << retryCount) * 500, MAX_DELAY); // Exponential backoff
         if (retryCount++ == MAX_RETRIES) {
             retryCount = 0;
+            reportMaxRetryExceededMetric();
             dumpOriginalEvents(transformationRequest);
         } else {
             incrementRetryCountMetric();
@@ -159,6 +166,11 @@ public class RudderDeviceModeTransformationManager {
                 Thread.currentThread().interrupt();
             }
         }
+    }
+
+    private void reportMaxRetryExceededMetric() {
+        ReportManager.incrementDMTErrorCounter(1,
+                Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_FAIL_MAX_RETRY));
     }
 
     private void incrementRetryCountMetric() {

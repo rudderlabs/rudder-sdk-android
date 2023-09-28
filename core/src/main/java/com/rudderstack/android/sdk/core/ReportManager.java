@@ -50,6 +50,7 @@ public class ReportManager {
     public static final String LABEL_TYPE_MIGRATE_TO_DECRYPT = "migrate_to_decrypt";
     public static final String LABEL_TYPE_FAIL_BAD_REQUEST = "bad_request";
     public static final String LABEL_TYPE_FAIL_WRITE_KEY = "writekey_invalid";
+    public static final String LABEL_TYPE_FAIL_RESOURCE_NOT_FOUND = "resource_not_found";
     public static final String LABEL_TYPE_FAIL_MAX_RETRY = "max_retries_exhausted";
 //    public static final String LABEL_TYPE_WRITE_KEY_INVALID = "writekey_invalid";
 
@@ -74,7 +75,7 @@ public class ReportManager {
     private static LongCounter sourceConfigDownloadAbortCounter = null;
     private static LongCounter dbEncryptionCounter = null;
 
-    private static LongCounter workManagerInitializationCounter = null;
+    private static LongCounter workManagerSuccessInitializationCounter = null;
 
 
     private static final String EVENTS_SUBMITTED_COUNTER_TAG = "submitted_events";
@@ -93,7 +94,7 @@ public class ReportManager {
     private static final String SOURCE_CONFIG_DOWNLOAD_RETRY_COUNTER_TAG = "sc_attempt_retry";
 
     private static final String SOURCE_CONFIG_DOWNLOAD_ABORT_COUNTER_TAG = "sc_attempt_abort";
-    private static final String FLUSH_WORKER_INIT_COUNTER_TAG = "flush_worker_init";
+    private static final String FLUSH_WORKER_INIT_COUNTER_TAG = "flush_worker_call";
     private static final String ENCRYPTED_DB_COUNTER_TAG = "db_encrypt";
 
     private static final String METRICS_URL_DEV = "https://sdk-metrics.dev-rudder.rudderlabs.com/";
@@ -137,7 +138,7 @@ public class ReportManager {
         dmtEventRetryCounter = metrics.getLongCounter(DMT_RETRY_COUNTER_TAG);
         dmtEventAbortCounter = metrics.getLongCounter(DMT_DISCARD_COUNTER_TAG);
 
-        workManagerInitializationCounter = metrics.getLongCounter(FLUSH_WORKER_INIT_COUNTER_TAG);
+        workManagerSuccessInitializationCounter = metrics.getLongCounter(FLUSH_WORKER_INIT_COUNTER_TAG);
     }
 
     private static void incrementCounter(LongCounter counter, int value, Map<String, String> attributes) {
@@ -313,7 +314,7 @@ public class ReportManager {
     }
 
     static void incrementWorkManagerInitializationCounter(int value) {
-        incrementCounter(workManagerInitializationCounter, value);
+        incrementCounter(workManagerSuccessInitializationCounter, value);
     }
 
     public static void reportError(Throwable throwable) {

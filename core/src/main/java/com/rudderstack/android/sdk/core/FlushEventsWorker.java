@@ -17,7 +17,6 @@ public class FlushEventsWorker extends Worker {
             @NonNull WorkerParameters params) {
         super(context, params);
         persistenceProviderFactoryClassName = params.getInputData().getString(PERSISTENCE_PROVIDER_FACTORY_CLASS_NAME_KEY);
-        addWorkerMetrics();
     }
 
     private void addWorkerMetrics() {
@@ -26,13 +25,13 @@ public class FlushEventsWorker extends Worker {
 
     @Override
     public Result doWork() {
+        addWorkerMetrics();
         RudderFlushConfig flushConfig = RudderFlushWorkManager.getRudderFlushConfig(getApplicationContext());
         if (flushConfig == null) {
             RudderLogger.logWarn("FlushEventsWorker: doWork: RudderFlushConfig is empty, couldn't flush the events, aborting the work");
             return Result.failure();
         }
         RudderLogger.init(flushConfig.getLogLevel());
-
         DBPersistentManager.DbManagerParams params = new DBPersistentManager
                 .DbManagerParams(flushConfig.isDbEncrypted(), persistenceProviderFactoryClassName, flushConfig.getEncryptionKey());
         DBPersistentManager dbManager = DBPersistentManager.getInstance((Application) getApplicationContext(), params);
