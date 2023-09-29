@@ -83,9 +83,10 @@ class DefaultReservoir @JvmOverloads constructor(
                     if (useBigDec) {
                         getLabelMaskForMetricWithBigDec(insertedIds)
                     } else {
-                        getLabelMaskForMetricWithLong(insertedIds).also {
-                            println("label mask for metric ${metric.name} and labels $insertedIds is $it")
-                        }
+                        getLabelMaskForMetricWithLong(insertedIds)
+//                            .also {
+//                            println("label mask for metric ${metric.name} and labels $insertedIds is $it")
+//                        }
                     }
                 }
                 insertCounterWithLabelMask(metric, labelMaskForMetric)
