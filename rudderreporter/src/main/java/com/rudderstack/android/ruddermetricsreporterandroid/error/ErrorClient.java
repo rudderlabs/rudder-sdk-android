@@ -57,4 +57,6 @@ public interface ErrorClient {
      * @param enable
      */
     void enable(boolean enable);
+
+
 }

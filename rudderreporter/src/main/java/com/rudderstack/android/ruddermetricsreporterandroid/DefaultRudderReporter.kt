@@ -52,7 +52,7 @@ class DefaultRudderReporter(
         jsonAdapter: JsonAdapter,
         isMetricsEnabled: Boolean = true,
         isErrorEnabled: Boolean = true,
-        networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
+        networkExecutor: ExecutorService? = null,
         backgroundTaskService: BackgroundTaskService? = null,
         useContentProvider: Boolean = false,
         isGzipEnabled: Boolean = true
@@ -62,7 +62,7 @@ class DefaultRudderReporter(
         configuration,
         jsonAdapter,
         isMetricsEnabled, isErrorEnabled,
-        networkExecutor,
+        networkExecutor?:Executors.newCachedThreadPool(),
         backgroundTaskService ?: BackgroundTaskService(),
         useContentProvider,
         isGzipEnabled
@@ -209,11 +209,9 @@ class DefaultRudderReporter(
     ) {
         this.connectivity = connectivity
         this.backgroundTaskService = backgroundTaskService
+        connectivity.registerForNetworkChanges()
     }
 
-    init {
-        connectivity?.registerForNetworkChanges()
-    }
     override val metrics: Metrics get() = _metrics
 
     override val errorClient: ErrorClient

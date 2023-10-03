@@ -135,7 +135,6 @@ class DefaultSyncer internal constructor(
                     callback.invoke()
                 }
             }
-            println("rescheduling : $this")
             thresholdCountDownTimer.scheduleAtFixedRate(
                 periodicTaskScheduler,
                 if (callbackOnStart) 0 else flushInterval,

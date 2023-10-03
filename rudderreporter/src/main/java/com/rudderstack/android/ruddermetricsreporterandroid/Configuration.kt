@@ -14,8 +14,8 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
-import android.content.Context
 import com.rudderstack.android.ruddermetricsreporterandroid.error.BreadcrumbType
+import com.rudderstack.android.ruddermetricsreporterandroid.error.CrashFilter
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DebugLogger
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.MetadataState
 
@@ -38,6 +38,9 @@ class Configuration(var libraryMetadata: LibraryMetadata) {
     var maxPersistedSessions: Int = DEFAULT_MAX_PERSISTED_SESSIONS
     var maxReportedThreads: Int = DEFAULT_MAX_REPORTED_THREADS
     var maxStringValueLength: Int = DEFAULT_MAX_STRING_VALUE_LENGTH
+
+
+    var crashFilter : CrashFilter? = null
 
     var discardClasses: Set<String> = emptySet()
     var enabledReleaseStages: Set<String>? = null
