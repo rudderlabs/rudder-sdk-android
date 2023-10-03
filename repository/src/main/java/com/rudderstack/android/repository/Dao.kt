@@ -386,13 +386,11 @@ class Dao<T : Entity>(
         var returnedItems = listOf<T?>()
         if (!useContentProvider)
             synchronized(DB_LOCK) {
-    //                beginTransaction()
                 items.forEach {
                     val contentValues = it.generateContentValues()
                     if (autoIncrementFieldName != null) {
                         contentValues.put(autoIncrementFieldName, nextValue)
                     }
-    //            contentValues.
 
                     val insertedRowId = insertContentValues(
                         db,
@@ -491,7 +489,6 @@ class Dao<T : Entity>(
             it.lastPathSegment?.toLongOrNull()
         } ?: -1)
         else {
-            println("issue-623: ${contentValues.toMap()}")
             (database.openDatabase?.insertWithOnConflict(
                 tableName,
                 nullHackColumn,
@@ -558,10 +555,7 @@ class Dao<T : Entity>(
     private fun runTransactionOrDeferToCreation(queryTransaction: (SQLiteDatabase) -> Unit) {
         _db?.let { db ->
             awaitDbInitialization()
-            println("todoLock: acquired at rtodtc $this")
             executorService.takeUnless { it.isShutdown }?.execute {
-                println("issue-623: executing query $this@Dao")
-
                 queryTransaction.invoke(db)
             }
         } ?: run {
@@ -570,7 +564,6 @@ class Dao<T : Entity>(
                     queryTransaction.invoke(it)
                 }
             }.also {
-                println("add todo $this@Dao")
                 todoTransactions.put(it)
             }
         }
@@ -588,13 +581,9 @@ class Dao<T : Entity>(
                     sqLiteDatabase.openDatabase?.execSQL(this)
                 }
                 _db = sqLiteDatabase
-                println("issue-623: table-created-db-set $this")
                 todoLock.lock()
             }
-            println("todo: lock acquired at start $this@Dao")
-            println("todo_count: ${todoTransactions.count()} $this")
             while (todoTransactions.isNotEmpty()){
-                println("Running todo in $this")
                 try {
                     executorService.takeUnless { it.isShutdown }?.submit(
                         todoTransactions.poll(
@@ -604,7 +593,6 @@ class Dao<T : Entity>(
                 }catch (ex: InterruptedException){
                     ex.printStackTrace()
                 }
-                println("todo-remains: ${todoTransactions.size} $this@Dao")
             }
             todoLock.unlock()
         }
@@ -653,35 +641,25 @@ class Dao<T : Entity>(
 
     private fun createTableStmt(tableName: String, fields: Array<RudderField>): String? {
 
-//        var isAutoIncKeyPresent = false
-//        var isAutoIncrementedKeyPrimaryKeySame = false
         val fieldsStmt = fields.map {
-//            if (it.isAutoInc) {
-////                isAutoIncKeyPresent = true
-//                isAutoIncrementedKeyPrimaryKeySame = it.primaryKey
-//            }
             "'${it.fieldName}' ${it.type.notation}" + //field name and type
                     // if primary and auto increment
                     /*if (it.primaryKey && it.isAutoInc && it.type == RudderField.Type.INTEGER) " PRIMARY KEY AUTOINCREMENT" else "" +*/
                     if (!it.isNullable || it.primaryKey) " NOT NULL" else "" //specifying nullability, primary key cannot be null
         }.reduce { acc, s -> "$acc, $s" }
         val primaryKeyStmt =
-                /*if (isAutoIncrementedKeyPrimaryKeySame) "" else {*/
             //auto increment is only available for one primary key
             fields.filter { it.primaryKey }.takeIf { !it.isNullOrEmpty() }?.map {
                 it.fieldName
             }?.reduce { acc, s -> "$acc,$s" }?.let {
                 "PRIMARY KEY ($it)"
             } ?: ""
-//            }
         val uniqueKeyStmt =
             fields.filter { it.isUnique }.takeIf { it.isNotEmpty() }?.joinToString(",") {
                 it.fieldName
             }?.let {
                 "UNIQUE($it)"
             }
-
-
 
         return ("CREATE TABLE IF NOT EXISTS '$tableName' ($fieldsStmt ${if (primaryKeyStmt.isNotEmpty()) ", $primaryKeyStmt" else ""}" +
                 "${if (!uniqueKeyStmt.isNullOrEmpty()) ", $uniqueKeyStmt" else ""})")
@@ -694,7 +672,6 @@ class Dao<T : Entity>(
             it.isNotEmpty()
         } ?: return null
         val indexFieldsStmt = indexedFields.map {
-//            it.indexName.takeIf { it.isNotEmpty() }?:"${it.fieldName}_idx"
             it.fieldName
         }.reduce { acc, s ->
             "$acc,$s"

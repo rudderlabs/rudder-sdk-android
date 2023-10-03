@@ -41,9 +41,7 @@ internal class DefaultUploadMediator(
                         callback: (success : Boolean) -> Unit) {
         val requestMap = createRequestMap(metrics, error)
         webService.post(null,null, jsonAdapter.writeToJson(requestMap,
-            object: RudderTypeAdapter<Map<String, Any?>>() {}).also {
-            println(it)
-        }, METRICS_ENDPOINT,
+            object: RudderTypeAdapter<Map<String, Any?>>() {}), METRICS_ENDPOINT,
             object : RudderTypeAdapter<Map<*,*>>(){}, isGzipEnabled){
 
             (it.status in 200..299).apply(callback)
