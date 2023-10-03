@@ -24,6 +24,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.error.BreadcrumbType
 import com.rudderstack.android.ruddermetricsreporterandroid.Logger
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
+import com.rudderstack.android.ruddermetricsreporterandroid.error.CrashFilter
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DebugLogger
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.NoopLogger
 
@@ -32,6 +33,7 @@ data class ImmutableConfig(
     val projectPackages: Collection<String>,
     val enabledBreadcrumbTypes: Set<BreadcrumbType>?,
     val discardClasses: Collection<String>,
+    val crashFilter: CrashFilter?,
     val logger: Logger,
     val maxBreadcrumbs: Int,
     val maxPersistedEvents: Int,
@@ -47,6 +49,11 @@ data class ImmutableConfig(
      */
     fun shouldDiscardError(exc: Throwable): Boolean {
         return shouldDiscardByReleaseStage() || shouldDiscardByErrorClass(exc)
+               || shouldDiscardByCrashFilter(exc)
+    }
+
+    private fun shouldDiscardByCrashFilter(exc: Throwable): Boolean {
+        return crashFilter?.shouldKeep(exc) == false
     }
 
     /**
@@ -98,10 +105,6 @@ internal fun convertToImmutableConfig(
     packageInfo: PackageInfo? = null,
     appInfo: ApplicationInfo? = null
 ): ImmutableConfig {
-//    val errorTypes = when {
-//        config.autoDetectErrors -> config.enabledErrorTypes.copy()
-//        else -> ErrorTypes(false)
-//    }
 
     return ImmutableConfig(
         libraryMetadata = config.libraryMetadata,
@@ -115,6 +118,7 @@ internal fun convertToImmutableConfig(
         enabledBreadcrumbTypes = config.enabledBreadcrumbTypes?.toSet(),
         packageInfo = packageInfo,
         appInfo = appInfo,
+        crashFilter = config.crashFilter
     )
 }
 internal fun sanitiseConfiguration(
