@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.20.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.19.1...v1.20.0) (2023-10-03)
+
+
+### Features
+
+* adding metrics for workmanager dbEncryption and dmt ([#329](https://github.com/rudderlabs/rudder-sdk-android/issues/329)) ([d38ad43](https://github.com/rudderlabs/rudder-sdk-android/commit/d38ad433b3dded21cbe57ce4e05699232e502954))
+
+
+### Bug Fixes
+
+* added filter for rudderstack crashes ([#325](https://github.com/rudderlabs/rudder-sdk-android/issues/325)) ([b804a32](https://github.com/rudderlabs/rudder-sdk-android/commit/b804a32b5928f8a5bab081de624e245a17cc4305))
+* expose proguard rules as part of the library to ensure safer builds ([#321](https://github.com/rudderlabs/rudder-sdk-android/issues/321)) ([46a5413](https://github.com/rudderlabs/rudder-sdk-android/commit/46a54137990b171b6430de6ca8e0fc90aa26cde0))
+
 ### [1.19.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.19.0...v1.19.1) (2023-09-21)
 
 

@@ -5,7 +5,7 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 33
-//        consumerProguardFiles 'proguard-consumer-rules.pro'
+        consumerProguardFiles 'proguard-consumer-rules.pro'
         buildConfigField("String", "VERSION_NAME", "\"${VERSION_NAME}\"")
         buildConfigField("String", "VERSION_CODE", "\"${VERSION_CODE}\"")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -44,7 +44,7 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.6.0'
 
 
-    implementation ('com.rudderstack.android.sdk:rudderreporter:0.2.0')
+    implementation ('com.rudderstack.android.sdk:rudderreporter:0.3.0')
 //    implementation(project(path: ':rudderreporter'))
 //    implementation(project(path: ':gsonrudderadapter'))
     implementation 'com.rudderstack.kotlin.sdk:gsonrudderadapter:0.2.0'

@@ -1,5 +1,10 @@
 package com.rudderstack.android.sdk.core;
 
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
+import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
@@ -7,6 +12,7 @@ import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -14,11 +20,6 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
-import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
-import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
-import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
 
 public class RudderDeviceModeTransformationManager {
 
@@ -98,24 +99,34 @@ public class RudderDeviceModeTransformationManager {
 
     private void createMessageIdTransformationRequestMap() {
         for (int i = 0; i < messageIds.size(); i++) {
+
             RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
+            reportMessageSubmittedMetric(message);
             messageIdTransformationRequestMap.put(messageIds.get(i), message);
         }
     }
 
+    private void reportMessageSubmittedMetric(RudderMessage message) {
+        ReportManager.incrementDMTSubmittedCounter(1,
+                Collections.singletonMap(ReportManager.LABEL_TYPE, message.getType()));
+    }
+
     private boolean handleTransformationResponse(Result result, TransformationRequest transformationRequest) {
         if (result.status == NetworkResponses.WRITE_KEY_ERROR) {
+            reportWriteKeyErrorMetric();
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Wrong WriteKey. Aborting");
             return true;
         } else if (result.status == NetworkResponses.NETWORK_UNAVAILABLE) {
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Network unavailable. Aborting");
             return true;
         } else if (result.status == NetworkResponses.BAD_REQUEST) {
+            reportBadRequestMetric();
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Bad request, dumping back the original events to the factories");
             dumpOriginalEvents(transformationRequest);
         } else if (result.status == NetworkResponses.ERROR) {
             handleError(transformationRequest);
         } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
+            reportResourceNotFoundMetric();
             handleResourceNotFound(transformationRequest);
         } else {
             handleSuccess(result);
@@ -123,12 +134,29 @@ public class RudderDeviceModeTransformationManager {
         return false;
     }
 
+    private void reportResourceNotFoundMetric() {
+        ReportManager.incrementDMTErrorCounter(1,
+                Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_FAIL_RESOURCE_NOT_FOUND));
+    }
+
+    private void reportBadRequestMetric() {
+        ReportManager.incrementDMTErrorCounter(1,
+                Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_FAIL_BAD_REQUEST));
+    }
+
+    private void reportWriteKeyErrorMetric() {
+        ReportManager.incrementDMTErrorCounter(1,
+                Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_FAIL_WRITE_KEY));
+    }
+
     private void handleError(TransformationRequest transformationRequest) {
         int delay = Math.min((1 << retryCount) * 500, MAX_DELAY); // Exponential backoff
         if (retryCount++ == MAX_RETRIES) {
             retryCount = 0;
+            reportMaxRetryExceededMetric();
             dumpOriginalEvents(transformationRequest);
         } else {
+            incrementRetryCountMetric();
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Retrying in " + delay + "s");
             try {
                 Thread.sleep(delay);
@@ -138,6 +166,15 @@ public class RudderDeviceModeTransformationManager {
                 Thread.currentThread().interrupt();
             }
         }
+    }
+
+    private void reportMaxRetryExceededMetric() {
+        ReportManager.incrementDMTErrorCounter(1,
+                Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_FAIL_MAX_RETRY));
+    }
+
+    private void incrementRetryCountMetric() {
+        ReportManager.incrementDMTRetryCounter(1);
     }
 
     private void dumpOriginalEvents(TransformationRequest transformationRequest) {
@@ -156,11 +193,32 @@ public class RudderDeviceModeTransformationManager {
         deviceModeSleepCount = 0;
         try {
             TransformationResponse transformationResponse = gson.fromJson(result.response, TransformationResponse.class);
+            incrementDmtSuccessMetric(transformationResponse);
             rudderDeviceModeManager.dumpTransformedEvents(transformationResponse);
             completeDeviceModeEventProcessing();
         } catch (Exception e) {
             ReportManager.reportError(e);
             RudderLogger.logError("DeviceModeTransformationManager: handleSuccess: Error encountered during transformed response deserialization to TransformationResponse schema: " + e);
+        }
+    }
+
+    private void incrementDmtSuccessMetric(TransformationResponse transformationResponse) {
+        if(transformationResponse == null || transformationResponse.transformedBatch == null) {
+            return;
+        }
+        for (TransformationResponse.TransformedDestination transformedDestination : transformationResponse.transformedBatch) {
+             if(transformedDestination.payload == null) {
+                 continue;
+             }
+            for (TransformationResponse.TransformedEvent transformedEvent:
+            transformedDestination.payload) {
+                if(transformedEvent.event == null) {
+                    continue;
+                }
+                ReportManager.incrementDMTEventSuccessResponseCounter(1,
+                        Collections.singletonMap(ReportManager.LABEL_TYPE, transformedEvent.event.getType()));
+            }
+
         }
     }
 
@@ -184,7 +242,7 @@ public class RudderDeviceModeTransformationManager {
         for (int i = 0; i < messageIds.size(); i++) {
             // For each message get the list of destinationIds for which transformation is enabled
             RudderMessage message = messageIdTransformationRequestMap.get(messageIds.get(i));
-            List<String>  destinationIds = this.rudderDeviceModeManager.getTransformationEnabledDestinationIds(message);
+            List<String> destinationIds = this.rudderDeviceModeManager.getTransformationEnabledDestinationIds(message);
 
             TransformationRequest.TransformationRequestEvent transformationRequestEvent = new TransformationRequest.TransformationRequestEvent(messageIds.get(i), message, destinationIds);
             transformationRequestEvents.add(transformationRequestEvent);
