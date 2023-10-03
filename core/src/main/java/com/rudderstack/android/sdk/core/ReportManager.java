@@ -84,7 +84,7 @@ public class ReportManager {
     private static final String DEVICE_MODE_DISCARD_COUNTER_TAG = "dm_discard";
     private static final String CLOUD_MODE_EVENT_COUNTER_TAG = "cm_event";
     private static final String DMT_SUBMITTED_COUNTER_TAG = "dmt_submitted";
-    private static final String DMT_RESPONSE_COUNTER_TAG = "dmt_response";
+    private static final String DMT_RESPONSE_COUNTER_TAG = "dmt_success";
     private static final String DMT_DISCARD_COUNTER_TAG = "dmt_discard";
     private static final String DMT_RETRY_COUNTER_TAG = "dmt_retry";
     private static final String CLOUD_MODE_EVENT_UPLOAD_SUCCESS_COUNTER_TAG = "cm_attempt_success";
