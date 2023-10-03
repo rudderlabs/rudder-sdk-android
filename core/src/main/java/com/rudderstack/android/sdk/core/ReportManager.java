@@ -5,18 +5,22 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration;
 import com.rudderstack.android.ruddermetricsreporterandroid.DefaultRudderReporter;
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata;
 import com.rudderstack.android.ruddermetricsreporterandroid.Metrics;
 import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter;
+import com.rudderstack.android.ruddermetricsreporterandroid.error.BreadcrumbType;
 import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClient;
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
 import com.rudderstack.gsonrudderadapter.GsonAdapter;
 
+import java.util.Collections;
 import java.util.Map;
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ReportManager {
 
     public static final String LABEL_TYPE_OUT_OF_MEMORY = "out_of_memory";
@@ -41,6 +45,13 @@ public class ReportManager {
     public static final String LABEL_TYPE_SOURCE_CONFIG_URL_INVALID = "control_plane_url_invalid";
     public static final String LABEL_TYPE_DATA_PLANE_URL_INVALID = "data_plane_url_invalid";
     public static final String LABEL_TYPE_SOURCE_DISABLED = "source_disabled";
+    public static final String LABEL_TYPE_CREATED = "created";
+    public static final String LABEL_TYPE_MIGRATE_TO_ENCRYPT = "migrate_to_encrypt";
+    public static final String LABEL_TYPE_MIGRATE_TO_DECRYPT = "migrate_to_decrypt";
+    public static final String LABEL_TYPE_FAIL_BAD_REQUEST = "bad_request";
+    public static final String LABEL_TYPE_FAIL_WRITE_KEY = "writekey_invalid";
+    public static final String LABEL_TYPE_FAIL_RESOURCE_NOT_FOUND = "resource_not_found";
+    public static final String LABEL_TYPE_FAIL_MAX_RETRY = "max_retries_exhausted";
 //    public static final String LABEL_TYPE_WRITE_KEY_INVALID = "writekey_invalid";
 
     private static final long METRICS_UPLOAD_INTERVAL = 30_000;
@@ -51,6 +62,10 @@ public class ReportManager {
 
     private static LongCounter deviceModeEventCounter = null;
     private static LongCounter cloudModeEventCounter = null;
+    private static LongCounter dmtEventSubmittedCounter = null;
+    private static LongCounter dmtEventSuccessResponseCounter = null;
+    private static LongCounter dmtEventRetryCounter = null;
+    private static LongCounter dmtEventAbortCounter = null;
     private static LongCounter deviceModeDiscardedCounter = null;
     private static LongCounter cloudModeUploadSuccessCounter = null;
     private static LongCounter cloudModeUploadAbortCounter = null;
@@ -58,6 +73,9 @@ public class ReportManager {
     private static LongCounter sourceConfigDownloadRetryCounter = null;
     private static LongCounter sourceConfigDownloadSuccessCounter = null;
     private static LongCounter sourceConfigDownloadAbortCounter = null;
+    private static LongCounter dbEncryptionCounter = null;
+
+    private static LongCounter workManagerSuccessInitializationCounter = null;
 
 
     private static final String EVENTS_SUBMITTED_COUNTER_TAG = "submitted_events";
@@ -65,12 +83,20 @@ public class ReportManager {
     private static final String DEVICE_MODE_EVENT_COUNTER_TAG = "dm_event";
     private static final String DEVICE_MODE_DISCARD_COUNTER_TAG = "dm_discard";
     private static final String CLOUD_MODE_EVENT_COUNTER_TAG = "cm_event";
+    private static final String DMT_SUBMITTED_COUNTER_TAG = "dmt_submitted";
+    private static final String DMT_RESPONSE_COUNTER_TAG = "dmt_response";
+    private static final String DMT_DISCARD_COUNTER_TAG = "dmt_discard";
+    private static final String DMT_RETRY_COUNTER_TAG = "dmt_retry";
     private static final String CLOUD_MODE_EVENT_UPLOAD_SUCCESS_COUNTER_TAG = "cm_attempt_success";
     private static final String CLOUD_MODE_EVENT_UPLOAD_ABORT_COUNTER_TAG = "cm_attempt_abort";
     private static final String CLOUD_MODE_EVENT_UPLOAD_RETRY_COUNTER_TAG = "cm_attempt_retry";
     private static final String SOURCE_CONFIG_DOWNLOAD_SUCCESS_COUNTER_TAG = "sc_attempt_success";
     private static final String SOURCE_CONFIG_DOWNLOAD_RETRY_COUNTER_TAG = "sc_attempt_retry";
+
     private static final String SOURCE_CONFIG_DOWNLOAD_ABORT_COUNTER_TAG = "sc_attempt_abort";
+    private static final String FLUSH_WORKER_INIT_COUNTER_TAG = "flush_worker_call";
+    private static final String ENCRYPTED_DB_COUNTER_TAG = "db_encrypt";
+
     private static final String METRICS_URL_DEV = "https://sdk-metrics.dev-rudder.rudderlabs.com/";
     private static final String METRICS_URL_PROD = "https://sdk-metrics.rudderstack.com/";
     private static Metrics metrics = null;
@@ -85,7 +111,7 @@ public class ReportManager {
     public static void initiate(@Nullable Metrics metrics, @Nullable ErrorClient errorStatsClient) {
         ReportManager.metrics = metrics;
         ReportManager.errorStatsClient = errorStatsClient;
-        if(metrics != null)
+        if (metrics != null)
             createCounters(metrics);
 
     }
@@ -95,6 +121,7 @@ public class ReportManager {
         ReportManager.discardedCounter = metrics.getLongCounter(EVENTS_DISCARDED_COUNTER_TAG);
         ReportManager.deviceModeEventCounter = metrics.getLongCounter(DEVICE_MODE_EVENT_COUNTER_TAG);
         ReportManager.cloudModeEventCounter = metrics.getLongCounter(CLOUD_MODE_EVENT_COUNTER_TAG);
+        ReportManager.dmtEventSubmittedCounter = metrics.getLongCounter(DMT_SUBMITTED_COUNTER_TAG);
         ReportManager.deviceModeDiscardedCounter = metrics.getLongCounter(DEVICE_MODE_DISCARD_COUNTER_TAG);
 
         cloudModeUploadSuccessCounter = metrics.getLongCounter(CLOUD_MODE_EVENT_UPLOAD_SUCCESS_COUNTER_TAG);
@@ -104,6 +131,14 @@ public class ReportManager {
         sourceConfigDownloadRetryCounter = metrics.getLongCounter(SOURCE_CONFIG_DOWNLOAD_RETRY_COUNTER_TAG);
         sourceConfigDownloadSuccessCounter = metrics.getLongCounter(SOURCE_CONFIG_DOWNLOAD_SUCCESS_COUNTER_TAG);
         sourceConfigDownloadAbortCounter = metrics.getLongCounter(SOURCE_CONFIG_DOWNLOAD_ABORT_COUNTER_TAG);
+        dbEncryptionCounter = metrics.getLongCounter(ENCRYPTED_DB_COUNTER_TAG);
+
+        dmtEventSubmittedCounter = metrics.getLongCounter(DMT_SUBMITTED_COUNTER_TAG);
+        dmtEventSuccessResponseCounter = metrics.getLongCounter(DMT_RESPONSE_COUNTER_TAG);
+        dmtEventRetryCounter = metrics.getLongCounter(DMT_RETRY_COUNTER_TAG);
+        dmtEventAbortCounter = metrics.getLongCounter(DMT_DISCARD_COUNTER_TAG);
+
+        workManagerSuccessInitializationCounter = metrics.getLongCounter(FLUSH_WORKER_INIT_COUNTER_TAG);
     }
 
     private static void incrementCounter(LongCounter counter, int value, Map<String, String> attributes) {
@@ -134,7 +169,7 @@ public class ReportManager {
             RudderLogger.logDebug("EventRepository: Metrics collection is not initialized");
             return;
         }
-        if(!(statsCollection.getMetrics().isEnabled() || statsCollection.getErrors().isEnabled())) {
+        if (!(statsCollection.getMetrics().isEnabled() || statsCollection.getErrors().isEnabled())) {
             RudderLogger.logDebug("EventRepository: Stats collection is not enabled: Shutting down Stats Reporter");
             rudderReporter.shutdown();
             return;
@@ -157,6 +192,7 @@ public class ReportManager {
         }
         metrics.enable(isMetricsEnabled);
     }
+
     @SuppressWarnings("ConstantConditions")
     private static void checkAndUpdateErrorsCollection(boolean isErrorsEnabled) {
         if (!isStatsReporterAvailable())
@@ -258,20 +294,45 @@ public class ReportManager {
     static void incrementCloudModeUploadAbortCounter(int value, Map<String, String> attributes) {
         incrementCounter(cloudModeUploadAbortCounter, value, attributes);
     }
+    static void incrementDMTSubmittedCounter(int value, Map<String, String> attributes) {
+        incrementCounter(dmtEventSubmittedCounter, value, attributes);
+    }
+    static void incrementDMTEventSuccessResponseCounter(int value, Map<String, String> attributes) {
+        incrementCounter(dmtEventSuccessResponseCounter, value, attributes);
+    }
+    static void incrementDMTRetryCounter(int value) {
+        incrementCounter(dmtEventRetryCounter, value);
+    }
+
+    static void incrementDMTErrorCounter(int value, Map<String, String> attributes) {
+        incrementCounter(dmtEventAbortCounter, value, attributes);
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public static void incrementDbEncryptionCounter(int value, Map<String, String> attributes) {
+        incrementCounter(dbEncryptionCounter, value, attributes);
+    }
+
+    static void incrementWorkManagerInitializationCounter(int value) {
+        incrementCounter(workManagerSuccessInitializationCounter, value);
+    }
 
     public static void reportError(Throwable throwable) {
         if (errorStatsClient != null) {
             errorStatsClient.notify(throwable);
         }
     }
-    public static void addErrorMetadata(String section, Map<String, ?> value) {
+
+    public static void leaveBreadcrumb(String message, Map<String, Object> value) {
         if (errorStatsClient != null) {
-            errorStatsClient.addMetadata(section, value);
+            errorStatsClient.leaveBreadcrumb(message, value, BreadcrumbType.MANUAL);
         }
     }
-    public static void addErrorMetadata(String section, String key, Object value) {
+
+    public static void leaveBreadcrumb(String message, String key, Object value) {
         if (errorStatsClient != null) {
-            errorStatsClient.addMetadata(section, key, value);
+            errorStatsClient.leaveBreadcrumb(message, Collections.singletonMap(key, value),
+                    BreadcrumbType.MANUAL);
         }
     }
 
