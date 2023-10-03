@@ -13,6 +13,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata;
 import com.rudderstack.android.ruddermetricsreporterandroid.Metrics;
 import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter;
 import com.rudderstack.android.ruddermetricsreporterandroid.error.BreadcrumbType;
+import com.rudderstack.android.ruddermetricsreporterandroid.error.CrashFilter;
 import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClient;
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
 import com.rudderstack.gsonrudderadapter.GsonAdapter;
@@ -209,18 +210,24 @@ public class ReportManager {
     private static void initiateRudderReporter(Context context, @Nullable String writeKey,
                                                boolean isMetricsEnabled, boolean isErrorsEnabled) {
         RudderLogger.logDebug("EventRepository: Creating RudderReporter isMetricsEnabled: " + isMetricsEnabled + " isErrorsEnabled: " + isErrorsEnabled);
-        String writeKeyOrBlank = writeKey == null ? "" : writeKey;
         if (rudderReporter == null) {
             rudderReporter = new DefaultRudderReporter(context, METRICS_URL_PROD,
-                    new Configuration(new LibraryMetadata(
-                            BuildConfig.LIBRARY_PACKAGE_NAME, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, writeKeyOrBlank
-                    )), new GsonAdapter(), isMetricsEnabled, isErrorsEnabled);
+                    getStatsConfig(writeKey), new GsonAdapter(), isMetricsEnabled, isErrorsEnabled);
             rudderReporter.getSyncer().startScheduledSyncs(METRICS_UPLOAD_INTERVAL,
                     true, METRICS_FLUSH_COUNT);
             //we default to null if metrics or errors are not enabled
             ReportManager.initiate(isMetricsEnabled ? rudderReporter.getMetrics() : null,
                     isErrorsEnabled ? rudderReporter.getErrorClient() : null);
         }
+    }
+
+    private static Configuration getStatsConfig(@Nullable String writeKey) {
+        String writeKeyOrBlank = writeKey == null ? "" : writeKey;
+        Configuration config =  new Configuration(new LibraryMetadata(
+                BuildConfig.LIBRARY_PACKAGE_NAME, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, writeKeyOrBlank
+        ));
+        config.setCrashFilter(CrashFilter.generateWithKeyWords(Collections.singletonList("rudderstack")));
+        return config;
     }
 
     static void incrementMessageCounter(int value, Map<String, String> attributes) {
