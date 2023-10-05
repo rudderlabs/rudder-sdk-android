@@ -45,6 +45,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
+        "title": "moshirudderadapter@0.1.0",
         "tag": "moshirudderadapter@0.1.0",
         "notesFile": "./moshirudderadapter/CHANGELOG_LATEST.md"
       }

@@ -57,6 +57,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
+        "title": "rudderreporter@0.2.0",
         "tag": "rudderreporter@0.2.0",
         "notesFile": "./rudderreporter/CHANGELOG_LATEST.md"
       }

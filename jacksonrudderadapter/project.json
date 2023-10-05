@@ -47,6 +47,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
+        "title": "jacksonrudderadapter@0.2.0",
         "tag": "jacksonrudderadapter@0.2.0",
         "notesFile": "./jacksonrudderadapter/CHANGELOG_LATEST.md"
       }

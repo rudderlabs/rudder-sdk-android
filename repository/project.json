@@ -39,6 +39,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
+        "title": "repository@0.2.0",
         "tag": "repository@0.2.0",
         "notesFile": "./repository/CHANGELOG_LATEST.md"
       }
