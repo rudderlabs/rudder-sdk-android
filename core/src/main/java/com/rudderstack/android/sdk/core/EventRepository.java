@@ -95,7 +95,7 @@ class EventRepository {
         RudderLogger.logDebug(String.format("EventRepository: constructor: %s", this.config.toString()));
 
         try {
-            ReportManager.addErrorMetadata(ReportManager.METADATA_SECTION_GZIP, ReportManager.METADATA_GZIP_KEY_IS_ENABLED,
+            ReportManager.leaveBreadcrumb(ReportManager.METADATA_SECTION_GZIP, ReportManager.METADATA_GZIP_KEY_IS_ENABLED,
                     _config.isGzipEnabled());
             // initiate RudderPreferenceManager
             initiatePreferenceManager(_application);

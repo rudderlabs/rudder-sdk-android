@@ -30,7 +30,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "DATA_PLANE_URL", properties.getProperty('dataplaneUrl', 'https://api.rudderstack.com'))
         buildConfigField("String", "CONTROL_PLANE_URL", properties.getProperty('controlplaneUrl', "\"https://api.rudderstack.com\""))
-        buildConfigField("String", "WRITE_KEY", properties.getProperty('writeKey', ''))
+        buildConfigField("String", "WRITE_KEY", properties.getProperty('writeKey', "\"\""))
     }
     buildTypes {
         debug {
@@ -63,6 +63,7 @@ dependencies {
 
     // Rudder Android Core SDK
     implementation project(':core')
+//    implementation 'com.rudderstack.android.sdk:core:1.19.1'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation "androidx.work:work-runtime:2.7.1"
 
