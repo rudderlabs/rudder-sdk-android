@@ -28,7 +28,7 @@ android {
         versionCode 4
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "DATA_PLANE_URL", properties.getProperty('dataplaneUrl', 'https://api.rudderstack.com'))
+        buildConfigField("String", "DATA_PLANE_URL", properties.getProperty('dataplaneUrl',  "\"https://api.rudderstack.com\""))
         buildConfigField("String", "CONTROL_PLANE_URL", properties.getProperty('controlplaneUrl', "\"https://api.rudderstack.com\""))
         buildConfigField("String", "WRITE_KEY", properties.getProperty('writeKey', "\"\""))
     }
