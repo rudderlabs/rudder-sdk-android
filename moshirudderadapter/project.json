@@ -7,14 +7,16 @@
     "build": {
       "dependsOn": [
         {
-          "projects":[
+          "projects": [
             "rudderjsonadapter"
           ],
-          "target":"build"
+          "target": "build"
         }
       ],
       "executor": "@jnxplus/nx-gradle:build",
-      "outputs": ["./moshirudderadapter/build"]
+      "outputs": [
+        "{projectRoot}/moshirudderadapter/build"
+      ]
     },
     "lint": {
       "executor": "@jnxplus/nx-gradle:lint",

@@ -6,17 +6,23 @@
   "targets": {
     "build": {
       "executor": "@jnxplus/nx-gradle:build",
-      "outputs": ["./core/build"]
+      "outputs": [
+        "{projectRoot}/core/build"
+      ]
     },
     "lint": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:lint",
       "options": {
         "linter": "ktlint"
       }
     },
     "test": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:test"
     },
     "ktformat": {
@@ -44,14 +50,18 @@
       }
     },
     "release-sonatype": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'core-release' && ./gradlew :core:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'core-snapshot' && ./gradlew :core:publishToSonatype"
