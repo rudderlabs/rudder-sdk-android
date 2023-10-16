@@ -1,7 +1,6 @@
-## 0.2.1 (2023-10-03)
-
+## 0.2.1 (2023-10-04)
 
 ### Bug Fixes
+* table not found in database. added locks ([#326](https://github.com/rudderlabs/rudder-sdk-android/issues/326)) ([1b5e670](https://github.com/rudderlabs/rudder-sdk-android/commit/1b5e670d5b10fe640099dc11353ae746ea6035b0))
 
-* manual release + last minute fixes ([#275](https://github.com/rudderlabs/rudder-sdk-android/issues/275)) ([a52e9f7](https://github.com/rudderlabs/rudder-sdk-android/commit/a52e9f7567eb494a83ed6f57f6bd36017afaf39b)), closes [#256](https://github.com/rudderlabs/rudder-sdk-android/issues/256)
 
