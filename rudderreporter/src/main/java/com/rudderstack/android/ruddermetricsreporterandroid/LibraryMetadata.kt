@@ -20,6 +20,9 @@ import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.squareup.moshi.Json
 
 data class LibraryMetadata(
+    @get:JsonProperty("name")
+    @SerializedName("name")
+    @Json(name = "name")
     val name: String,
     @get:JsonProperty("sdk_version")
     @SerializedName("sdk_version")
