@@ -88,6 +88,8 @@ dependencies {
     implementation 'com.rudderstack.android.integration:braze:1.0.6'
     implementation "com.appboy:android-sdk-ui:21.0.0"
 
+    //work-manager
+    implementation 'androidx.work:work-runtime:2.8.1'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'

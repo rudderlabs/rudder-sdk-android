@@ -76,7 +76,8 @@ public class ReportManager {
     private static LongCounter sourceConfigDownloadAbortCounter = null;
     private static LongCounter dbEncryptionCounter = null;
 
-    private static LongCounter workManagerSuccessInitializationCounter = null;
+    private static LongCounter workManagerCallCounter = null;
+    private static LongCounter workManagerInitCounter = null;
 
 
     private static final String EVENTS_SUBMITTED_COUNTER_TAG = "submitted_events";
@@ -95,7 +96,8 @@ public class ReportManager {
     private static final String SOURCE_CONFIG_DOWNLOAD_RETRY_COUNTER_TAG = "sc_attempt_retry";
 
     private static final String SOURCE_CONFIG_DOWNLOAD_ABORT_COUNTER_TAG = "sc_attempt_abort";
-    private static final String FLUSH_WORKER_INIT_COUNTER_TAG = "flush_worker_call";
+    private static final String FLUSH_WORKER_CALL_COUNTER_TAG = "flush_worker_call";
+    private static final String FLUSH_WORKER_INIT_COUNTER_TAG = "flush_worker_init";
     private static final String ENCRYPTED_DB_COUNTER_TAG = "db_encrypt";
 
     private static final String METRICS_URL_DEV = "https://sdk-metrics.dev-rudder.rudderlabs.com/";
@@ -139,7 +141,8 @@ public class ReportManager {
         dmtEventRetryCounter = metrics.getLongCounter(DMT_RETRY_COUNTER_TAG);
         dmtEventAbortCounter = metrics.getLongCounter(DMT_DISCARD_COUNTER_TAG);
 
-        workManagerSuccessInitializationCounter = metrics.getLongCounter(FLUSH_WORKER_INIT_COUNTER_TAG);
+        workManagerCallCounter = metrics.getLongCounter(FLUSH_WORKER_CALL_COUNTER_TAG);
+        workManagerInitCounter = metrics.getLongCounter(FLUSH_WORKER_INIT_COUNTER_TAG);
     }
 
     private static void incrementCounter(LongCounter counter, int value, Map<String, String> attributes) {
@@ -320,8 +323,11 @@ public class ReportManager {
         incrementCounter(dbEncryptionCounter, value, attributes);
     }
 
-    static void incrementWorkManagerInitializationCounter(int value) {
-        incrementCounter(workManagerSuccessInitializationCounter, value);
+    static void incrementWorkManagerCallCounter(int value) {
+        incrementCounter(workManagerCallCounter, value);
+    }
+    static void incrementWorkManagerInitCounter(int value) {
+        incrementCounter(workManagerInitCounter, value);
     }
 
     public static void reportError(Throwable throwable) {

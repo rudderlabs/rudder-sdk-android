@@ -7,6 +7,7 @@ import com.rudderstack.android.integrations.amplitude.AmplitudeIntegrationFactor
 import com.rudderstack.android.sdk.core.RudderClient
 import com.rudderstack.android.sdk.core.RudderConfig
 import com.rudderstack.android.sdk.core.RudderLogger
+import java.util.concurrent.TimeUnit
 
 class MainApplication : Application(), Configuration.Provider {
     companion object {
@@ -27,6 +28,7 @@ class MainApplication : Application(), Configuration.Provider {
                 .withDataPlaneUrl(DATA_PLANE_URL)
                 .withControlPlaneUrl(BuildConfig.CONTROL_PLANE_URL)
                 .withLogLevel(RudderLogger.RudderLogLevel.NONE)
+                .withFlushPeriodically(20,TimeUnit.MINUTES)
                 .withCollectDeviceId(false)
                 .withFactory(BrazeIntegrationFactory.FACTORY)
                 .withFactory(AmplitudeIntegrationFactory.FACTORY)

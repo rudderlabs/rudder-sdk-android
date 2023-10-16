@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 33
+    compileSdk 33
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 33
@@ -44,10 +44,10 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.6.0'
 
 
-    implementation ('com.rudderstack.android.sdk:rudderreporter:0.3.0')
+    implementation ('com.rudderstack.android.sdk:rudderreporter:0.3.+')
 //    implementation(project(path: ':rudderreporter'))
 //    implementation(project(path: ':gsonrudderadapter'))
-    implementation 'com.rudderstack.kotlin.sdk:gsonrudderadapter:0.2.0'
+    implementation 'com.rudderstack.kotlin.sdk:gsonrudderadapter:0.2.+'
 
     // required for new life cycle methods
     compileOnly 'androidx.lifecycle:lifecycle-process:2.6.1'

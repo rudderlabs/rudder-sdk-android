@@ -110,14 +110,14 @@ public class RudderDeviceModeManager {
         List<RudderServerDestination> destinationsCopy = new ArrayList<>(destinations);
         destinationsCopy.removeAll(consentedDestinations);
         for (RudderServerDestination destination : destinationsCopy) {
-            reportDiscardedDestinationWithType(destination, ReportManager.LABEL_TYPE_DESTINATION_DISSENTED);
+            reportDiscardedDestinationWithType(destination.getDestinationDefinition().displayName, ReportManager.LABEL_TYPE_DESTINATION_DISSENTED);
         }
 
     }
-    private static void reportDiscardedDestinationWithType(RudderServerDestination destination, String type) {
+    private static void reportDiscardedDestinationWithType(String destinationName, String type) {
         Map<String,String> labelsMap = new HashMap<>();
         labelsMap.put(ReportManager.LABEL_TYPE, type);
-        labelsMap.put(ReportManager.LABEL_INTEGRATION, destination.getDestinationDefinition().displayName);
+        labelsMap.put(ReportManager.LABEL_INTEGRATION, destinationName);
         ReportManager.incrementDeviceModeDiscardedCounter(1, labelsMap);
     }
 
@@ -202,7 +202,8 @@ public class RudderDeviceModeManager {
                     integrationOperationsMap.put(key, nativeOp);
                     handleCallBacks(key, nativeOp);
                 } else {
-                    reportDiscardedDestinationWithType(destination, ReportManager.LABEL_TYPE_DESTINATION_DISABLED);
+                    reportDiscardedDestinationWithType(destination == null? key : destination.destinationDefinition.displayName
+                            , ReportManager.LABEL_TYPE_DESTINATION_DISABLED);
                     RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: destination was null or not enabled for %s", key));
                 }
             } else {

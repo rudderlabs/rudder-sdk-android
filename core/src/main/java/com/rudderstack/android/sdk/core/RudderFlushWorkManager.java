@@ -24,6 +24,7 @@ public class RudderFlushWorkManager {
     static final String RUDDER_FLUSH_CONFIG_FILE_NAME = "RudderFlushConfig";
     static final String PERSISTENCE_PROVIDER_FACTORY_CLASS_NAME_KEY = "persistenceProviderFactory";
 
+    private static final String UNIQUE_FLUSH_WORK_NAME = "flushEvents";
     RudderFlushWorkManager(Context context, RudderConfig config, RudderPreferenceManager preferenceManager) {
         this.context = context;
         this.config = config;
@@ -77,14 +78,11 @@ public class RudderFlushWorkManager {
                             .build();
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                    "flushEvents",
+                    UNIQUE_FLUSH_WORK_NAME,
                     ExistingPeriodicWorkPolicy.KEEP,
                     flushPendingEvents);
 
-            String periodicWorkRequestId = flushPendingEvents.getId().toString();
-            preferenceManager.savePeriodicWorkRequestId(periodicWorkRequestId);
-
-            RudderLogger.logDebug("EventRepository: registerPeriodicFlushWorker: Registered PeriodicWorkRequest with ID " + periodicWorkRequestId);
+            RudderLogger.logDebug("EventRepository: registerPeriodicFlushWorker: Registered PeriodicWorkRequest with name " + UNIQUE_FLUSH_WORK_NAME);
         }
     }
 
@@ -97,12 +95,7 @@ public class RudderFlushWorkManager {
             RudderLogger.logWarn("EventRepository: cancelPeriodicFlushWorker: WorkManager dependency not found, please add it to your build.gradle");
             return;
         }
-        String periodicWorkRequestId = preferenceManager.getPeriodicWorkRequestId();
-        if (periodicWorkRequestId == null) {
-            RudderLogger.logWarn("EventRepository: cancelPeriodicFlushWorker: Couldn't find PeriodicWorkRequest Id, cannot cancel PeriodicWorkRequest");
-            return;
-        }
-        WorkManager.getInstance(context).cancelWorkById(UUID.fromString(periodicWorkRequestId));
-        RudderLogger.logDebug("EventRepository: cancelPeriodicFlushWorker: Successfully cancelled PeriodicWorkRequest With ID " + periodicWorkRequestId);
+        WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_FLUSH_WORK_NAME);
+        RudderLogger.logDebug("EventRepository: cancelPeriodicFlushWorker: Successfully cancelled PeriodicWorkRequest With name " + UNIQUE_FLUSH_WORK_NAME);
     }
 }

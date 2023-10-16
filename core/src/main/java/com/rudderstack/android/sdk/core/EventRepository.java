@@ -144,8 +144,10 @@ class EventRepository {
             // initiate ApplicationLifeCycleManager
             RudderLogger.logDebug("EventRepository: constructor: Initiating ApplicationLifeCycleManager");
             AppVersion appVersion = new AppVersion(application);
-            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(config, appVersion, rudderFlushWorkManager, this, preferenceManager);
+            this.applicationLifeCycleManager = new ApplicationLifeCycleManager(config, appVersion, this, preferenceManager);
             this.applicationLifeCycleManager.trackApplicationUpdateStatus();
+
+            rudderFlushWorkManager.registerPeriodicFlushWorker();
 
             initializeLifecycleTracking(applicationLifeCycleManager);
 
