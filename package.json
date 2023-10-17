@@ -1,6 +1,6 @@
 {
   "name": "@rudderstack/rudder-sdk-android-monorepo",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Rudder Android SDK monorepo",
   "keywords": [
     "android",
@@ -31,26 +31,24 @@
   },
   "private": true,
   "devDependencies": {
-    "@commitlint/cli": "17.5.1",
-    "@commitlint/config-conventional": "17.4.4",
-    "@digitalroute/cz-conventional-changelog-for-jira": "8.0.0",
+    "@commitlint/cli": "17.7.2",
+    "@commitlint/config-conventional": "17.7.0",
+    "@digitalroute/cz-conventional-changelog-for-jira": "8.0.1",
     "@jscutlery/semver": "3.1.0",
-    "@nrwl/cli": "15.8.9",
-    "@nrwl/detox": "15.8.9",
-    "@nrwl/eslint-plugin-nx": "15.8.9",
-    "@nrwl/linter": "15.8.9",
-    "@nrwl/web": "15.8.9",
-    "@nrwl/workspace": "15.8.9",
-    "@rnx-kit/metro-resolver-symlinks": "0.1.27",
     "commitizen": "4.3.0",
-    "commitlint": "17.5.1",
-    "conventional-changelog-cli": "2.2.2",
-    "conventional-github-releaser": "3.1.5",
-    "nx": "16.8.1",
-    "@jnxplus/nx-gradle": "^0.6.1"
+    "commitlint": "17.7.2",
+    "@jnxplus/nx-gradle": "0.6.1",
+    "@nx/workspace": "16.10.0",
+    "nx": "16.10.0"
+  },
+  "optionalDependencies": {
+    "@nx/nx-darwin-arm64": "16.10.0",
+    "@nx/nx-darwin-x64": "16.10.0",
+    "@nx/nx-linux-x64-gnu": "16.10.0",
+    "@nx/nx-win32-x64-msvc": "16.10.0"
   },
   "dependencies": {
-    "properties-reader": "^2.2.0",
+    "properties-reader": "2.3.0",
     "@rudderstack/core": "file: ./core",
     "@rudderstack/android": "file: ./android",
     "@rudderstack/web": "file: ./web",

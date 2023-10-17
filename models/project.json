@@ -6,17 +6,23 @@
   "targets": {
     "build": {
       "executor": "@jnxplus/nx-gradle:build",
-      "outputs": ["./models/build"]
+      "outputs": [
+        "{projectRoot}/models/build"
+      ]
     },
     "lint": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:lint",
       "options": {
         "linter": "ktlint"
       }
     },
     "test": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:test"
     },
     "ktformat": {
@@ -39,19 +45,24 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
+        "title": "models@0.1.0",
         "tag": "models@0.1.0",
         "notesFile": "./models/CHANGELOG_LATEST.md"
       }
     },
     "release-sonatype": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'models-release' && cd models && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype  && cd ..  && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'models-snapshot' && cd models && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype && cd .."

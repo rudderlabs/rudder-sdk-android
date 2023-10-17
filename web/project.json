@@ -7,25 +7,32 @@
     "build": {
       "dependsOn": [
         {
-          "projects":[
+          "projects": [
             "moshirudderadapter",
             "gsonrudderadapter",
-            "jacksonrudderadapter"],
-          "target":"build"
+            "jacksonrudderadapter"
+          ],
+          "target": "build"
         }
       ],
       "executor": "@jnxplus/nx-gradle:build",
-      "outputs": ["./web/build"]
+      "outputs": [
+        "{projectRoot}/web/build"
+      ]
     },
     "lint": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:lint",
       "options": {
         "linter": "ktlint"
       }
     },
     "test": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:test"
     },
     "ktformat": {
@@ -48,19 +55,24 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
+        "title": "web@0.2.0",
         "tag": "web@0.2.0",
         "notesFile": "./web/CHANGELOG_LATEST.md"
       }
     },
     "release-sonatype": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'web-release' && ./gradlew publishToSonatype -p web -Prelease && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'web-snapshot' && cd web && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype && cd .."

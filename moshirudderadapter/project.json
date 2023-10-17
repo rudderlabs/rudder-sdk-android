@@ -7,14 +7,16 @@
     "build": {
       "dependsOn": [
         {
-          "projects":[
+          "projects": [
             "rudderjsonadapter"
           ],
-          "target":"build"
+          "target": "build"
         }
       ],
       "executor": "@jnxplus/nx-gradle:build",
-      "outputs": ["./moshirudderadapter/build"]
+      "outputs": [
+        "{projectRoot}/moshirudderadapter/build"
+      ]
     },
     "lint": {
       "executor": "@jnxplus/nx-gradle:lint",
@@ -33,7 +35,7 @@
       "options": {
         "baseBranch": "master-v2",
         "preset": "conventional",
-        "tagPrefix": "${projectName}@"
+        "tagPrefix": "{projectName}@"
       }
     },
     "sync-bumped-version-properties": {
@@ -45,6 +47,7 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
+        "title": "moshirudderadapter@0.1.0",
         "tag": "moshirudderadapter@0.1.0",
         "notesFile": "./moshirudderadapter/CHANGELOG_LATEST.md"
       }

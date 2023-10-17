@@ -2,6 +2,13 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.3.1](https://github.com/rudderlabs/rudder-sdk-android/compare/rudderreporter@0.3.0...rudderreporter@0.3.1) (2023-10-16)
+
+
+### Bug Fixes
+
+* keep string literals to refrain from getting obfuscated by dexguard ([#339](https://github.com/rudderlabs/rudder-sdk-android/issues/339)) ([9d2f5e3](https://github.com/rudderlabs/rudder-sdk-android/commit/9d2f5e3d1255a05326438badb485d5c3648e793a))
+
 ## 0.3.0 (2023-10-03)
 
 

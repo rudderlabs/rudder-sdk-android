@@ -6,17 +6,23 @@
   "targets": {
     "build": {
       "executor": "@jnxplus/nx-gradle:build",
-      "outputs": ["./repository/build"]
+      "outputs": [
+        "{projectRoot}/repository/build"
+      ]
     },
     "lint": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:lint",
       "options": {
         "linter": "ktlint"
       }
     },
     "test": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:test"
     },
     "ktformat": {
@@ -39,19 +45,24 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
+        "title": "repository@0.2.1",
         "tag": "repository@0.2.1",
         "notesFile": "./repository/CHANGELOG_LATEST.md"
       }
     },
     "release-sonatype": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'repository-release' && ./gradlew publishToSonatype -p repository -Prelease && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'repository-snapshot' && cd repository && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype && cd .."
