@@ -50,8 +50,7 @@ jobs:
       - name: Get the two latest versions
         run: |
           CURRENT_VERSION=$(git tag -l "v2*" --sort=-version:refname | head -n 1)
-          LAST_VERSION=$(git tag -l "v2*" --sort=-version:refname | head -n 2 | awk 'NR == 2 { 
-          print $1 }')
+          LAST_VERSION=$(git tag -l "v2*" --sort=-version:refname | head -n 2 | awk 'NR == 2 { print $1 }')
           
           echo "Current version: $CURRENT_VERSION"
           echo "Previous version: $LAST_VERSION"
