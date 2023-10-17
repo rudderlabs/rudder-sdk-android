@@ -6,9 +6,10 @@ on:
       - master-v2
     types:
       - closed
+  workflow_dispatch:
 jobs:
   release-v2:
-    if: (startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/')) && github.event.pull_request.merged == true # only merged pull requests must trigger this job
+    if: startsWith(github.ref, 'refs/heads/master-v2') || ((startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/')) && github.event.pull_request.merged == true) # only merged pull requests must trigger this job
     runs-on: ubuntu-latest
     environment: deployment
     steps:
@@ -48,19 +49,21 @@ jobs:
 
       - name: Get the two latest versions
         run: |
-          CURRENT_VERSION=$(git tag -l "v*" --sort=-version:refname | head -n 1)
-          LAST_VERSION=$(git tag -l "v*" --sort=-version:refname | head -n 2 | awk 'NR == 2 { print $1 }')
+          CURRENT_VERSION=$(git tag -l "v2*" --sort=-version:refname | head -n 1)
+          LAST_VERSION=$(git tag -l "v2*" --sort=-version:refname | head -n 2 | awk 'NR == 2 { 
+          print $1 }')
           
           echo "Current version: $CURRENT_VERSION"
           echo "Previous version: $LAST_VERSION"
           
-          echo "current_version=$(echo $CURRENT_VERSION)" >> $GITHUB_ENV
-          echo "last_version=$(echo $LAST_VERSION)" >> $GITHUB_ENV
+          echo "current_monorepo_version=$(echo $CURRENT_VERSION)" >> $GITHUB_ENV
+          echo "last_monorepo_version=$(echo $LAST_VERSION)" >> $GITHUB_ENV
           echo "DATE=$(date)" >> $GITHUB_ENV
+
       - name: Publish release to sonatype
         run: |
           git fetch --no-tags --prune --depth=100 origin master-v2
-          npm run release:sonatype -- --base=$last_version --head=$current_version
+          npm run release:sonatype -- --base=${{ env.last_monorepo_version }} --head=${{ env.current_monorepo_version }}
 
         env:
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
