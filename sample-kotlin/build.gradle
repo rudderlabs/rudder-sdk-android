@@ -28,7 +28,7 @@ android {
         versionCode 4
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "DATA_PLANE_URL", properties.getProperty('dataplaneUrl', 'https://api.rudderstack.com'))
+        buildConfigField("String", "DATA_PLANE_URL", properties.getProperty('dataplaneUrl',  "\"https://api.rudderstack.com\""))
         buildConfigField("String", "CONTROL_PLANE_URL", properties.getProperty('controlplaneUrl', "\"https://api.rudderstack.com\""))
         buildConfigField("String", "WRITE_KEY", properties.getProperty('writeKey', "\"\""))
     }
@@ -88,6 +88,8 @@ dependencies {
     implementation 'com.rudderstack.android.integration:braze:1.0.6'
     implementation "com.appboy:android-sdk-ui:21.0.0"
 
+    //work-manager
+    implementation 'androidx.work:work-runtime:2.8.1'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'

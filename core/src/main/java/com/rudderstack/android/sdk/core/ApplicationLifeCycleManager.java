@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ApplicationLifeCycleManager {
     private final RudderConfig config;
-    private final RudderFlushWorkManager rudderFlushWorkManager;
     private final EventRepository repository;
     public static final String VERSION = "version";
     private static final AtomicBoolean isFirstLaunch = new AtomicBoolean(true);
@@ -20,11 +19,9 @@ public class ApplicationLifeCycleManager {
     private final AppVersion appVersion;
 
     public ApplicationLifeCycleManager(RudderConfig config, AppVersion appVersion,
-                                       RudderFlushWorkManager rudderFlushWorkManager,
                                        EventRepository repository,
                                        RudderPreferenceManager preferenceManager) {
         this.config = config;
-        this.rudderFlushWorkManager = rudderFlushWorkManager;
         this.repository = repository;
         this.preferenceManager = preferenceManager;
         this.appVersion = appVersion;
@@ -43,7 +40,6 @@ public class ApplicationLifeCycleManager {
         if (this.appVersion.isApplicationInstalled()) {
             // application was not installed previously, now triggering Application Installed event
             sendApplicationInstalled(appVersion.currentBuild, appVersion.currentVersion);
-            rudderFlushWorkManager.registerPeriodicFlushWorker();
         } else if (this.appVersion.isApplicationUpdated()) {
             sendApplicationUpdated(appVersion.previousBuild, appVersion.currentBuild, appVersion.previousVersion, appVersion.currentVersion);
         }

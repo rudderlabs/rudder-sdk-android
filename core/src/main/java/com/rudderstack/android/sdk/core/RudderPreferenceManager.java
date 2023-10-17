@@ -157,14 +157,6 @@ class RudderPreferenceManager {
         return preferences.getLong(RUDDER_OPT_OUT_TIME_KEY, -1);
     }
 
-    void savePeriodicWorkRequestId(String periodicWorkRequestId) {
-        preferences.edit().putString(RUDDER_PERIODIC_WORK_REQUEST_ID_KEY, periodicWorkRequestId).apply();
-    }
-
-    String getPeriodicWorkRequestId() {
-        return preferences.getString(RUDDER_PERIODIC_WORK_REQUEST_ID_KEY, null);
-    }
-
     void saveLastEventTimeStamp(Long time) {
         preferences.edit().putLong(RUDDER_LAST_EVENT_TIMESTAMP_KEY, time).apply();
     }
