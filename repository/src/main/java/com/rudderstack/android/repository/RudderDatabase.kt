@@ -21,6 +21,10 @@ import android.database.sqlite.SQLiteOpenHelper
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+
 
 /**
  * Singleton class to act as the Database helper
@@ -65,7 +69,14 @@ object RudderDatabase {
         databaseCreatedCallback: ((SQLiteDatabase?) -> Unit)? = null,
         databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)? = null
     ) {
-        commonExecutor = executorService ?: Executors.newCachedThreadPool()
+        Executors.newCachedThreadPool()
+        commonExecutor = executorService ?: ThreadPoolExecutor(
+            0,
+            Int.MAX_VALUE,
+            60L,
+            TimeUnit.SECONDS,
+            SynchronousQueue(), ThreadPoolExecutor.DiscardPolicy()
+        );
         this.entityFactory = entityFactory
         if (sqliteOpenHelper != null)
             return
