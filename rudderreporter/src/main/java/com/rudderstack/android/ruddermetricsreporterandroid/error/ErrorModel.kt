@@ -38,7 +38,8 @@ class ErrorModel(
         "notifier" to mapOf(
             "name" to libraryMetadata.name,
             "version" to libraryMetadata.sdkVersion,
-            "url" to "https://github.com/rudderlabs/rudder-sdk-android"
+            "url" to "https://github.com/rudderlabs/rudder-sdk-android",
+            "os_version" to libraryMetadata.osVersion
         )
     )
 }
