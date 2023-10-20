@@ -469,10 +469,15 @@ public class RudderClient {
      * @param option RudderOptions for this event
      */
     public void alias(@NonNull String newId, @Nullable RudderOption option) {
-
-        Map<String, Object> traits = getRudderContext().getTraits();
-
+        RudderContext context = getRudderContext();
+        Map<String, Object> traits= null;
+        if (context != null) {
+            traits = context.getTraits();
+        }
+        if(traits == null)
+            return;
         String prevUserId = null;
+
         if (traits.containsKey("userId")) {
             prevUserId = (String) traits.get("userId");
         } else if (traits.containsKey("id")) {
@@ -591,7 +596,7 @@ public class RudderClient {
      *
      * @return cached RudderContext object
      */
-    public RudderContext getRudderContext() {
+    public @Nullable RudderContext getRudderContext() {
         if (getOptOutStatus()) {
             return null;
         }
