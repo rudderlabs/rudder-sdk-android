@@ -8,8 +8,8 @@ import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
-import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
-import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
+import com.rudderstack.android.sdk.core.gsonadapters.RudderContextSerializer;
+import com.rudderstack.android.sdk.core.gsonadapters.RudderTraitsSerializer;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -13,7 +13,7 @@ import androidx.annotation.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
-import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
+import com.rudderstack.android.sdk.core.gsonadapters.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.rudderstack.android.sdk.core.util;
+package com.rudderstack.android.sdk.core.gsonadapters;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;

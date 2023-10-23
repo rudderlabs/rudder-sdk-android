@@ -11,8 +11,8 @@ import static com.rudderstack.android.sdk.core.util.Utils.getBooleanFromMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
-import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
-import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
+import com.rudderstack.android.sdk.core.gsonadapters.RudderContextSerializer;
+import com.rudderstack.android.sdk.core.gsonadapters.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
