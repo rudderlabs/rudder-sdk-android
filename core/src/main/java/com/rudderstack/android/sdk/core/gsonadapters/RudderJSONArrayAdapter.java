@@ -38,7 +38,6 @@ public class RudderJSONArrayAdapter implements JsonSerializer<JSONArray>, JsonDe
         try {
             return new JSONArray(json.toString());
         } catch (JSONException e) {
-            e.printStackTrace();
             throw new JsonParseException(e);
         }
     }

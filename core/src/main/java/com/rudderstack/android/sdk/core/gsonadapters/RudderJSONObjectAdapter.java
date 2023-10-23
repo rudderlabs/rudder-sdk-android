@@ -42,7 +42,6 @@ public class RudderJSONObjectAdapter implements JsonSerializer<JSONObject>, Json
         try {
             return new JSONObject(json.toString());
         } catch (JSONException e) {
-            e.printStackTrace();
             throw new JsonParseException(e);
         }
     }
