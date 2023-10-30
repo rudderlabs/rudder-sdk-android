@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
+import android.os.Build
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultUploaderTestGson
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultUploaderTestJackson
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultUploaderTestMoshi
@@ -33,7 +34,15 @@ abstract class LibraryMetadataTest {
     fun serialize() {
         val libraryMetadata = LibraryMetadata("test","1.0","4","abcde")
         val json = libraryMetadata.serialize(jsonAdapter)
-        assertEquals("{\"name\":\"test\",\"sdk_version\":\"1.0\",\"version_code\":\"4\",\"write_key\":\"abcde\"}",json)
+        assertEquals("{\"name\":\"test\",\"sdk_version\":\"1.0\",\"version_code\":\"4\"," +
+                     "\"write_key\":\"abcde\",\"os_version\":\"${Build.VERSION.SDK_INT}\"}",json)
+    }
+    @Test
+    fun `serialize with version`() {
+        val libraryMetadata = LibraryMetadata("test","1.0","4","abcde", "[14]")
+        val json = libraryMetadata.serialize(jsonAdapter)
+        assertEquals("{\"name\":\"test\",\"sdk_version\":\"1.0\",\"version_code\":\"4\"," +
+                     "\"write_key\":\"abcde\",\"os_version\":\"[14]\"}",json)
     }
 }
 class LibraryMetadataTestGson : LibraryMetadataTest() {
