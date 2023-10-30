@@ -69,7 +69,6 @@ object RudderDatabase {
         databaseCreatedCallback: ((SQLiteDatabase?) -> Unit)? = null,
         databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)? = null
     ) {
-        Executors.newCachedThreadPool()
         commonExecutor = executorService ?: ThreadPoolExecutor(
             0,
             Int.MAX_VALUE,
