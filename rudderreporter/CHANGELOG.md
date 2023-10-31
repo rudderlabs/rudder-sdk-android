@@ -2,6 +2,13 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.4.0](https://github.com/rudderlabs/rudder-sdk-android/compare/rudderreporter@0.3.1...rudderreporter@0.4.0) (2023-10-31)
+
+
+### Features
+
+* added os version to labels ([#348](https://github.com/rudderlabs/rudder-sdk-android/issues/348)) ([0e6aaf1](https://github.com/rudderlabs/rudder-sdk-android/commit/0e6aaf13407dd0601026f216b1fe662f8f9db46b))
+
 ## [0.3.1](https://github.com/rudderlabs/rudder-sdk-android/compare/rudderreporter@0.3.0...rudderreporter@0.3.1) (2023-10-16)
 
 
