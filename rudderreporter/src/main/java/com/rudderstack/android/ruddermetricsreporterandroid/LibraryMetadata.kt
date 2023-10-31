@@ -20,7 +20,7 @@ import com.google.gson.annotations.SerializedName
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.squareup.moshi.Json
 
-data class LibraryMetadata(
+data class LibraryMetadata @JvmOverloads constructor(
     @get:JsonProperty("name")
     @SerializedName("name")
     @Json(name = "name")
