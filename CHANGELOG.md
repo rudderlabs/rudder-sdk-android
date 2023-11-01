@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.20.2](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.20.1...v1.20.2) (2023-11-01)
+
+
+### Bug Fixes
+
+* Null pointer exception in alias call ([#349](https://github.com/rudderlabs/rudder-sdk-android/issues/349)) ([e025fd2](https://github.com/rudderlabs/rudder-sdk-android/commit/e025fd295ed3f0839285e297e76d8f6b52cbe5ab))
+
 ### [1.20.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.20.0...v1.20.1) (2023-10-16)
 
 
