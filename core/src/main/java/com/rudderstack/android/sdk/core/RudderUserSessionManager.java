@@ -4,8 +4,8 @@ import androidx.annotation.Nullable;
 
 public class RudderUserSessionManager {
     private RudderUserSession userSession;
-    private RudderPreferenceManager preferenceManager;
-    private RudderConfig config;
+    private final RudderPreferenceManager preferenceManager;
+    private final RudderConfig config;
 
     public RudderUserSessionManager(RudderPreferenceManager preferenceManager, RudderConfig config) {
         this.preferenceManager = preferenceManager;

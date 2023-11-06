@@ -11,7 +11,7 @@ class RudderUserSession {
     private Long sessionId;
     private boolean sessionStart;
     private Long lastActiveTimestamp;
-    private RudderPreferenceManager preferenceManager;
+    private final RudderPreferenceManager preferenceManager;
 
     RudderUserSession(RudderPreferenceManager _preferenceManager, RudderConfig _config) {
         this.config = _config;
