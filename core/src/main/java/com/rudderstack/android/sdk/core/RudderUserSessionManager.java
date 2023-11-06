@@ -79,6 +79,9 @@ public class RudderUserSessionManager {
     public void reset() {
         if (getSessionId() != null) {
             userSession.refreshSession();
+            if (isAutomaticSessionTrackingEnabled()) {
+                userSession.updateLastActiveTimestamp();
+            }
         }
     }
 }
