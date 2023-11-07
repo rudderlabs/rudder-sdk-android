@@ -27,7 +27,7 @@ class RudderPreferenceManager {
     private static final String RUDDER_OPT_OUT_TIME_KEY = "rl_opt_out_time";
     private static final String RUDDER_ANONYMOUS_ID_KEY = "rl_anonymous_id_key";
     private static final String RUDDER_PERIODIC_WORK_REQUEST_ID_KEY = "rl_periodic_work_request_key";
-    private static final String RUDDER_LAST_EVENT_TIMESTAMP_KEY = "rl_last_event_timestamp_key";
+    private static final String RUDDER_LAST_ACTIVE_TIMESTAMP_KEY = "rl_last_event_timestamp_key";
     private static final String RUDDER_SESSION_ID_KEY = "rl_session_id_key";
     private static final String RUDDER_AUTO_SESSION_TRACKING_STATUS_KEY = "rl_auto_session_tracking_status_key";
     private static final String RUDDER_DMT_HEADER_KEY = "rl_dmt_header_key";
@@ -157,18 +157,18 @@ class RudderPreferenceManager {
         return preferences.getLong(RUDDER_OPT_OUT_TIME_KEY, -1);
     }
 
-    void saveLastEventTimeStamp(Long time) {
-        preferences.edit().putLong(RUDDER_LAST_EVENT_TIMESTAMP_KEY, time).apply();
+    void saveLastActiveTimestamp(Long time) {
+        preferences.edit().putLong(RUDDER_LAST_ACTIVE_TIMESTAMP_KEY, time).apply();
     }
 
     @Nullable
-    Long getLastEventTimeStamp() {
-        long time = preferences.getLong(RUDDER_LAST_EVENT_TIMESTAMP_KEY, -1);
+    Long getLastActiveTimestamp() {
+        long time = preferences.getLong(RUDDER_LAST_ACTIVE_TIMESTAMP_KEY, -1);
         return (time == -1) ? null : new Long(time);
     }
 
-    void clearLastEventTimeStamp() {
-        preferences.edit().remove(RUDDER_LAST_EVENT_TIMESTAMP_KEY).apply();
+    void clearLastActiveTimestamp() {
+        preferences.edit().remove(RUDDER_LAST_ACTIVE_TIMESTAMP_KEY).apply();
     }
 
     void saveSessionId(Long sessionId) {

@@ -17,7 +17,7 @@ class RudderUserSession {
         this.config = _config;
         this.preferenceManager = _preferenceManager;
         this.sessionId = _preferenceManager.getSessionId();
-        this.lastActiveTimestamp = _preferenceManager.getLastEventTimeStamp();
+        this.lastActiveTimestamp = _preferenceManager.getLastActiveTimestamp();
     }
 
     public void startSession() {
@@ -55,7 +55,7 @@ class RudderUserSession {
 
     public synchronized void updateLastActiveTimestamp() {
         this.lastActiveTimestamp = Utils.getCurrentTimeInMilliSeconds();
-        this.preferenceManager.saveLastEventTimeStamp(this.lastActiveTimestamp);
+        this.preferenceManager.saveLastActiveTimestamp(this.lastActiveTimestamp);
     }
 
     @Nullable
@@ -76,6 +76,6 @@ class RudderUserSession {
         this.preferenceManager.clearSessionId();
         this.sessionStart = true;
         this.lastActiveTimestamp = null;
-        this.preferenceManager.clearLastEventTimeStamp();
+        this.preferenceManager.clearLastActiveTimestamp();
     }
 }
