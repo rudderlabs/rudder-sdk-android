@@ -24,9 +24,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
 import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
+import com.rudderstack.android.sdk.core.gsonadapters.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.gsonadapters.RudderJSONArrayAdapter;
 import com.rudderstack.android.sdk.core.gsonadapters.RudderJSONObjectAdapter;
-import com.rudderstack.android.sdk.core.gsonadapters.RudderContextSerializer;
 import com.rudderstack.android.sdk.core.gsonadapters.RudderTraitsSerializer;
 import com.rudderstack.android.sdk.core.util.Utils;
 
@@ -354,7 +354,7 @@ class EventRepository {
         RudderMessage updatedMessage = updateMessageWithConsentedDestinations(message);
         userSessionManager.applySessionTracking(updatedMessage);
 
-        String eventJson = gson.toJson(updatedMessage);
+        String eventJson = getEventJsonString(updatedMessage);
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
         if (isMessageJsonExceedingMaxSize(eventJson)) {
             incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_SIZE_INVALID));
@@ -362,6 +362,10 @@ class EventRepository {
             return;
         }
         dbManager.saveEvent(eventJson, new EventInsertionCallback(message, deviceModeManager));
+    }
+
+    String getEventJsonString(RudderMessage updatedMessage) {
+        return gson.toJson(updatedMessage);
     }
 
     private boolean isMessageJsonExceedingMaxSize(String eventJson) {
