@@ -1,4 +1,4 @@
-package com.rudderstack.android.sdk.core.gsonadapters;
+package com.rudderstack.android.sdk.core.gson.gsonadapters;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
@@ -14,7 +14,7 @@ import org.json.JSONException;
 import java.lang.reflect.Type;
 
 
-public class RudderJSONArrayAdapter implements JsonSerializer<JSONArray>, JsonDeserializer<JSONArray> {
+public class RudderJSONArrayTypeAdapter implements JsonSerializer<JSONArray>, JsonDeserializer<JSONArray> {
 
     @Override
     public JsonElement serialize(JSONArray src, Type typeOfSrc, JsonSerializationContext context) {
