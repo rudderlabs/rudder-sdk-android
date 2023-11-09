@@ -6,12 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 import org.powermock.reflect.Whitebox;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
@@ -21,12 +17,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.os.Build;
 import android.os.Message;
-import static com.rudderstack.android.sdk.core.DBPersistentManager.UPDATED_COL;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
@@ -37,18 +32,14 @@ import static org.hamcrest.Matchers.hasProperty;
 import static java.lang.Thread.sleep;
 
 import android.app.Application;
-import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.runner.AndroidJUnit4;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.rudderstack.android.sdk.core.gsonadapters.RudderContextSerializer;
-import com.rudderstack.android.sdk.core.gsonadapters.RudderTraitsSerializer;
 
 import com.google.common.collect.ImmutableList;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -63,10 +54,6 @@ public class DBPersistentManagerTest {
     DBPersistentManager dbPersistentManager;
     private final List<String> messages = new ArrayList<String>(ImmutableList.of("{\"message\":\"m-1\"}",
             "{\"message\":\"m-2\"}", "{\"message\":\"m-3\"}", "{\"message\":\"m-4\"}", "{\"message\":\"m-5\"}", "{\"message\":\"m-6\"}", "{\"message\":\"m-7\"}", "{\"message\":\"m-8\"}", "{\"message\":\"m-9\"}"));
-    private final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
-            .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
-            .create();
     private static final String MESSAGE_1 = "    {\n" +
             "       \"event\": \"mess-1\",\n" +
             "       \"messageId\": \"e-1\",\n" +
@@ -228,7 +215,7 @@ public class DBPersistentManagerTest {
         List<RudderMessage> messages = new ArrayList<>();
         for (String mJson :
                 messageJsons) {
-            messages.add(gson.<RudderMessage>fromJson(mJson, RudderMessage.class));
+            messages.add(RudderGson.getInstance().fromJson(mJson, RudderMessage.class));
         }
         return messages;
     }

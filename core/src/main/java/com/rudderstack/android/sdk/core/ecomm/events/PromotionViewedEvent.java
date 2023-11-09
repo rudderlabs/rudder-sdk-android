@@ -1,10 +1,10 @@
 package com.rudderstack.android.sdk.core.ecomm.events;
 
-import com.google.gson.Gson;
 import com.rudderstack.android.sdk.core.RudderProperty;
 import com.rudderstack.android.sdk.core.ecomm.ECommerceEvents;
 import com.rudderstack.android.sdk.core.ecomm.ECommercePromotion;
 import com.rudderstack.android.sdk.core.ecomm.ECommercePropertyBuilder;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 public class PromotionViewedEvent extends ECommercePropertyBuilder {
@@ -30,7 +30,7 @@ public class PromotionViewedEvent extends ECommercePropertyBuilder {
     public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.promotion != null) {
-            property.putValue(Utils.convertToMap(new Gson().toJson(this.promotion)));
+            property.putValue(Utils.convertToMap(RudderGson.getInstance().toJson(this.promotion)));
         }
         return property;
     }

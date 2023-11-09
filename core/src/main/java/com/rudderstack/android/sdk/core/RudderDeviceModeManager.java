@@ -6,13 +6,9 @@ import static com.rudderstack.android.sdk.core.TransformationResponse.Transforme
 import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedDestination;
 import static com.rudderstack.android.sdk.core.TransformationRequest.TransformationRequestEvent;
 import static com.rudderstack.android.sdk.core.util.Utils.MAX_FLUSH_QUEUE_SIZE;
-import static com.rudderstack.android.sdk.core.util.Utils.getBooleanFromMap;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
-import com.rudderstack.android.sdk.core.gsonadapters.RudderContextSerializer;
-import com.rudderstack.android.sdk.core.gsonadapters.RudderTraitsSerializer;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
@@ -53,11 +49,6 @@ public class RudderDeviceModeManager {
     private final Set<String> destinationsExcludedOnTransformationError = new HashSet<>();
     RudderDeviceModeTransformationManager deviceModeTransformationManager;
     private boolean areDeviceModeFactoriesAbsent = false;
-
-    static final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
-            .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
-            .create();
 
     RudderDeviceModeManager(DBPersistentManager dbPersistentManager, RudderNetworkManager networkManager, RudderConfig rudderConfig, RudderDataResidencyManager dataResidencyManager) {
         this.dbPersistentManager = dbPersistentManager;
@@ -251,7 +242,7 @@ public class RudderDeviceModeManager {
             RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: replaying old messages with factories. Count: %d", messageIds.size()));
             for (int i = 0; i < messageIds.size(); i++) {
                 try {
-                    RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
+                    RudderMessage message = RudderGson.getInstance().fromJson(messages.get(i), RudderMessage.class);
                     makeFactoryDump(message, messageIds.get(i), true);
                 } catch (Exception e) {
                     ReportManager.reportError(e);
@@ -311,7 +302,7 @@ public class RudderDeviceModeManager {
             if (integration != null) {
                 try {
                     RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: %s: dumping event %s for %s", logTag, message.getEventName(), destinationName));
-                    RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: Dumping: %s", gson.toJson(message)));
+                    RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: Dumping: %s", RudderGson.getInstance().toJson(message)));
                     addDeviceModeCounter(message.getType(), destinationName);
                     integration.dump(message);
                 } catch (Exception e) {

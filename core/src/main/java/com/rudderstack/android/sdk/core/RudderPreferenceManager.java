@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.Nullable;
 
-import com.google.gson.Gson;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Locale;
@@ -119,7 +119,7 @@ class RudderPreferenceManager {
         if (traits != null) {
             Map<String, Object> traitsMap = Utils.convertToMap(traits);
             traitsMap.remove("anonymousId");
-            saveTraits(new Gson().toJson(traitsMap));
+            saveTraits(RudderGson.getInstance().toJson(traitsMap));
         }
     }
 

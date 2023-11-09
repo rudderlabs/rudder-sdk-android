@@ -1,10 +1,10 @@
 package com.rudderstack.android.sdk.core.ecomm.events;
 
-import com.google.gson.Gson;
 import com.rudderstack.android.sdk.core.RudderProperty;
 import com.rudderstack.android.sdk.core.ecomm.ECommerceCheckout;
 import com.rudderstack.android.sdk.core.ecomm.ECommerceEvents;
 import com.rudderstack.android.sdk.core.ecomm.ECommercePropertyBuilder;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 public class CheckoutStepViewedEvent extends ECommercePropertyBuilder {
@@ -29,7 +29,7 @@ public class CheckoutStepViewedEvent extends ECommercePropertyBuilder {
     public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.checkout != null) {
-            property.putValue(Utils.convertToMap(new Gson().toJson(this.checkout)));
+            property.putValue(Utils.convertToMap(RudderGson.getInstance().toJson(this.checkout)));
         }
         return property;
     }

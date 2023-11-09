@@ -1,10 +1,10 @@
 package com.rudderstack.android.sdk.core.ecomm.events;
 
-import com.google.gson.Gson;
 import com.rudderstack.android.sdk.core.RudderProperty;
 import com.rudderstack.android.sdk.core.ecomm.ECommerceCart;
 import com.rudderstack.android.sdk.core.ecomm.ECommerceEvents;
 import com.rudderstack.android.sdk.core.ecomm.ECommercePropertyBuilder;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 public class CartViewedEvent extends ECommercePropertyBuilder {
@@ -28,7 +28,7 @@ public class CartViewedEvent extends ECommercePropertyBuilder {
     @Override
     public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
-        property.putValue(Utils.convertToMap(new Gson().toJson(this.cart)));
+        property.putValue(Utils.convertToMap(RudderGson.getInstance().toJson(this.cart)));
         return property;
     }
 }

@@ -5,21 +5,17 @@ import android.app.Application;
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.ParseException;
 import android.net.Uri;
 import android.os.BadParcelableException;
 import android.os.Build;
-import android.os.Message;
 import android.text.TextUtils;
 
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderLogger;
-import com.rudderstack.android.sdk.core.RudderProperty;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -31,9 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static android.content.Context.UI_MODE_SERVICE;
 import static android.provider.Settings.Secure.ANDROID_ID;
@@ -97,12 +91,13 @@ public class Utils {
     }
 
     public static Map<String, Object> convertToMap(String json) {
-        return new Gson().fromJson(json, new TypeToken<Map<String, Object>>() {
-        }.getType());
+        return RudderGson.getInstance().fromJson(json, new TypeToken<Map<String, Object>>() {
+        }.getType()
+        );
     }
 
     public static List<Map<String, Object>> convertToList(String json) {
-        return new Gson().fromJson(json, new TypeToken<List<Map<String, Object>>>() {
+        return RudderGson.getInstance().fromJson(json, new TypeToken<List<Map<String, Object>>>() {
         }.getType());
     }
 

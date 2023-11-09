@@ -5,11 +5,8 @@ import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMetho
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
-import com.rudderstack.android.sdk.core.gsonadapters.RudderContextSerializer;
-import com.rudderstack.android.sdk.core.gsonadapters.RudderTraitsSerializer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,10 +37,6 @@ public class RudderDeviceModeTransformationManager {
     private static final String TRANSFORMATION_ENDPOINT = "transform";
     private static final int MAX_RETRIES = 2; // Maximum number of retries
     private static final int MAX_DELAY = 1000; // Maximum delay in milliseconds
-    private static final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
-            .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
-            .create();
 
     RudderDeviceModeTransformationManager(DBPersistentManager dbManager, RudderNetworkManager rudderNetworkManager, RudderDeviceModeManager rudderDeviceModeManager, RudderConfig config, RudderDataResidencyManager dataResidencyManager) {
         this.dbManager = dbManager;
@@ -76,7 +69,7 @@ public class RudderDeviceModeTransformationManager {
                                 }
                                 createMessageIdTransformationRequestMap();
                                 TransformationRequest transformationRequest = createTransformationRequestPayload();
-                                String requestJson = gson.toJson(transformationRequest);
+                                String requestJson = RudderGson.getInstance().toJson(transformationRequest);
 
                                 RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: Payload: %s", requestJson));
                                 RudderLogger.logInfo(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: EventCount: %d", messageIds.size()));
@@ -100,7 +93,7 @@ public class RudderDeviceModeTransformationManager {
     private void createMessageIdTransformationRequestMap() {
         for (int i = 0; i < messageIds.size(); i++) {
 
-            RudderMessage message = gson.fromJson(messages.get(i), RudderMessage.class);
+            RudderMessage message = RudderGson.getInstance().fromJson(messages.get(i), RudderMessage.class);
             reportMessageSubmittedMetric(message);
             messageIdTransformationRequestMap.put(messageIds.get(i), message);
         }
@@ -192,7 +185,7 @@ public class RudderDeviceModeTransformationManager {
     private void handleSuccess(Result result) {
         deviceModeSleepCount = 0;
         try {
-            TransformationResponse transformationResponse = gson.fromJson(result.response, TransformationResponse.class);
+            TransformationResponse transformationResponse = RudderGson.getInstance().fromJson(result.response, TransformationResponse.class);
             incrementDmtSuccessMetric(transformationResponse);
             rudderDeviceModeManager.dumpTransformedEvents(transformationResponse);
             completeDeviceModeEventProcessing();

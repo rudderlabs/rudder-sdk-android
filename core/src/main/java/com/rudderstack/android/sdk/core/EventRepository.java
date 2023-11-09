@@ -20,18 +20,10 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
 import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
-import com.rudderstack.android.sdk.core.gsonadapters.RudderContextSerializer;
-import com.rudderstack.android.sdk.core.gsonadapters.RudderJSONArrayAdapter;
-import com.rudderstack.android.sdk.core.gsonadapters.RudderJSONObjectAdapter;
-import com.rudderstack.android.sdk.core.gsonadapters.RudderTraitsSerializer;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
@@ -68,13 +60,6 @@ class EventRepository {
 
     private @Nullable
     ConsentFilterHandler consentFilterHandler = null;
-
-    private final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
-            .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
-            .registerTypeAdapter(JSONObject.class, new RudderJSONObjectAdapter())
-            .registerTypeAdapter(JSONArray.class, new RudderJSONArrayAdapter())
-            .create();
     private String dataPlaneUrl;
     private final String writeKey;
 
@@ -365,7 +350,7 @@ class EventRepository {
     }
 
     String getEventJsonString(RudderMessage updatedMessage) {
-        return gson.toJson(updatedMessage);
+        return RudderGson.getInstance().toJson(updatedMessage);
     }
 
     private boolean isMessageJsonExceedingMaxSize(String eventJson) {
