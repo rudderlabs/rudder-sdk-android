@@ -19,13 +19,14 @@ import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClient
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.BackgroundTaskService
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.Connectivity
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.ConnectivityCompat
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.CustomDateAdapterMoshi
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DataCollectionModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultMetrics
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultPeriodicSyncer
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultReservoir
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultSyncer
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultSnapshotCapturer
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultUploadMediator
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.NetworkChangeCallback
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.SnapshotCreator
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.SystemServiceModule
@@ -38,11 +39,12 @@ import java.util.concurrent.Executors
 class DefaultRudderReporter(
     private val _metrics: Metrics,
     private val _errorClient: ErrorClient?,
-    override val syncer: Syncer,
+    override val syncer: PeriodicSyncer
 ) : RudderReporter {
 
     private var connectivity: Connectivity? = null
     private var backgroundTaskService: BackgroundTaskService? = null
+
 
     @JvmOverloads
     constructor(
@@ -61,8 +63,9 @@ class DefaultRudderReporter(
         baseUrl,
         configuration,
         jsonAdapter,
-        isMetricsEnabled, isErrorEnabled,
-        networkExecutor?:Executors.newCachedThreadPool(),
+        isMetricsEnabled,
+        isErrorEnabled,
+        networkExecutor ?: Executors.newCachedThreadPool(),
         backgroundTaskService ?: BackgroundTaskService(),
         useContentProvider,
         isGzipEnabled
@@ -133,8 +136,9 @@ class DefaultRudderReporter(
         contextModule,
         DefaultReservoir(contextModule.ctx, useContentProvider),
         configuration,
-        DefaultUploadMediator(configModule, baseUrl, jsonAdapter, networkExecutor,
-            isGzipEnabled = isGzipEnabled),
+        DefaultUploadMediator(
+            baseUrl, jsonAdapter, networkExecutor, isGzipEnabled = isGzipEnabled
+        ),
         jsonAdapter,
         memoryTrimState,
         isMetricsAggregatorEnabled,
@@ -157,7 +161,13 @@ class DefaultRudderReporter(
         reservoir,
         configuration,
         ConfigModule(contextModule, configuration),
-        DefaultSyncer(reservoir, uploadMediator, configuration.libraryMetadata),
+        DefaultPeriodicSyncer(
+            reservoir, uploadMediator, DefaultSnapshotCapturer(
+                SnapshotCreator(
+                    configuration.libraryMetadata, apiVersion, jsonAdapter
+                )
+            )
+        ),
         jsonAdapter,
         memoryTrimState,
         isMetricsEnabled,
@@ -170,31 +180,40 @@ class DefaultRudderReporter(
         reservoir: Reservoir,
         configuration: Configuration,
         configModule: ConfigModule,
-        syncer: Syncer,
+        periodicSyncer: PeriodicSyncer,
         jsonAdapter: JsonAdapter,
         memoryTrimState: MemoryTrimState,
         isMetricsEnabled: Boolean = true,
         isErrorEnabled: Boolean = true,
         backgroundTaskService: BackgroundTaskService? = null
-    ):this(contextModule, reservoir, configuration, configModule, syncer, jsonAdapter,
+    ) : this(
+        contextModule,
+        reservoir,
+        configuration,
+        configModule,
+        periodicSyncer,
+        jsonAdapter,
         memoryTrimState,
-        ConnectivityCompat(contextModule.ctx, RudderReporterNetworkChangeCallback(syncer)),
-        isMetricsEnabled, isErrorEnabled, backgroundTaskService)
+        ConnectivityCompat(contextModule.ctx, RudderReporterNetworkChangeCallback(periodicSyncer)),
+        isMetricsEnabled,
+        isErrorEnabled,
+        backgroundTaskService
+    )
 
     private constructor(
         contextModule: ContextModule,
         reservoir: Reservoir,
         configuration: Configuration,
         configModule: ConfigModule,
-        syncer: Syncer,
+        periodicSyncer: PeriodicSyncer,
         jsonAdapter: JsonAdapter,
         memoryTrimState: MemoryTrimState,
         connectivity: Connectivity,
         isMetricsEnabled: Boolean = true,
         isErrorEnabled: Boolean = true,
         backgroundTaskService: BackgroundTaskService? = null
-    ): this(
-        DefaultMetrics(DefaultAggregatorHandler(reservoir, isMetricsEnabled), syncer),
+    ) : this(
+        DefaultMetrics(DefaultAggregatorHandler(reservoir, isMetricsEnabled), periodicSyncer),
         DefaultErrorClient(
             contextModule, configuration, configModule, DataCollectionModule(
                 contextModule,
@@ -205,7 +224,7 @@ class DefaultRudderReporter(
                 memoryTrimState
             ), reservoir, jsonAdapter, memoryTrimState, isErrorEnabled
         ),
-        syncer
+        periodicSyncer
     ) {
         this.connectivity = connectivity
         this.backgroundTaskService = backgroundTaskService
@@ -227,13 +246,13 @@ class DefaultRudderReporter(
 
 
     //call unregister on shutdown
-    internal class RudderReporterNetworkChangeCallback(private val syncer: Syncer) :
+    internal class RudderReporterNetworkChangeCallback(private val periodicSyncer: PeriodicSyncer) :
         NetworkChangeCallback {
         override fun invoke(hasConnection: Boolean, networkState: String) {
 
             if (hasConnection) {
                 try {
-                    syncer.flushAllMetrics()
+                    periodicSyncer.flushAllMetrics()
                 } catch (ex: Exception) {
                     ex.printStackTrace()
                 }
@@ -241,14 +260,16 @@ class DefaultRudderReporter(
         }
     }
 
-//    companion object{
-//        internal fun JsonAdapter.manipulate(): JsonAdapter {
+    companion object {
+        //        internal fun JsonAdapter.manipulate(): JsonAdapter {
 //            if(this is MoshiAdapter){
 //                add(CustomDateAdapterMoshi())
 //            }
 //            return this
 //        }
-//    }
+        private const val apiVersion: Int = 1;
+
+    }
 }
 
 

@@ -14,25 +14,24 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
-import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
-import com.rudderstack.android.ruddermetricsreporterandroid.Syncer
+import com.rudderstack.android.ruddermetricsreporterandroid.models.Snapshot
+import com.rudderstack.android.ruddermetricsreporterandroid.SnapshotCapturer
+import com.rudderstack.android.ruddermetricsreporterandroid.PeriodicSyncer
 import com.rudderstack.android.ruddermetricsreporterandroid.UploadMediator
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModelWithId
 import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.atomic.AtomicBoolean
 
-class DefaultSyncer internal constructor(
+class DefaultPeriodicSyncer internal constructor(
     private val reservoir: Reservoir,
     private val uploader: UploadMediator,
-    private val libraryMetadata: LibraryMetadata
-) : Syncer {
-    private var _callback: ((uploadedMetrics: List<MetricModel<out Number>>,
-                             uploadedErrorModel: ErrorModel,
-                             success: Boolean) -> Unit)? = null
+    private val snapshotCapturer: SnapshotCapturer,
+//    private val libraryMetadata: LibraryMetadata
+) : PeriodicSyncer {
+    private var _callback: ((
+        snapshot: Snapshot, success: Boolean
+    ) -> Unit)? = null
         set(value) {
             synchronized(this) {
                 field = value
@@ -44,14 +43,32 @@ class DefaultSyncer internal constructor(
 
     private var flushCount = DEFAULT_FLUSH_SIZE
     private val scheduler = Scheduler()
-    override fun startScheduledSyncs(
-        interval: Long, flushOnStart: Boolean,
-        flushCount: Long
+    @Deprecated("Use startPeriodicSyncs instead",
+        ReplaceWith("startPeriodicSyncs(interval, flushOnStart, flushCount)")
+    )
+    override fun startScheduledSyncs(interval: Long, flushOnStart: Boolean, flushCount: Long) {
+        startPeriodicSyncs(interval, flushOnStart, flushCount)
+    }
+
+    override fun startPeriodicSyncs(
+        interval: Long, flushOnStart: Boolean, flushCount: Long
     ) {
         this.flushCount = flushCount
         _isShutDown.set(false)
         scheduler.scheduleTimer(flushOnStart, interval) {
-            flushAllMetrics()
+            captureSnapshotAndFlush(flushCount)
+        }
+    }
+
+    private fun captureSnapshotAndFlush(flushCount: Long) {
+        snapshotCapturer.captureSnapshotsAndResetReservoir(flushCount, reservoir) {
+            flushAllSnapshots()
+        }
+    }
+    private fun flushAllSnapshots(){
+        if (_isShutDown.get()) return
+        if (_atomicRunning.compareAndSet(false, true)) {
+            uploadSnapshots()
         }
     }
 
@@ -64,66 +81,53 @@ class DefaultSyncer internal constructor(
      * the metrics and errors that were attempted to be uploaded.
      *
      */
-    override fun setCallback(callback: ((uploadedMetrics: List<MetricModel<out Number>>,
-                                         uploadedErrorModel: ErrorModel, success:
-    Boolean) -> Unit)?) {
+    override fun setCallback(
+        callback: ((
+            snapshot: Snapshot, success: Boolean
+        ) -> Unit)?
+    ) {
         this._callback = callback
     }
 
-    private fun flush(flushCount: Long) {
-        flush(0L, flushCount)
-    }
-    private fun flush(startIndex: Long, flushCount: Long) {
-        reservoir.getMetricsAndErrors(startIndex,0, flushCount) { metrics, errors ->
-            val validMetrics = metrics.filterWithValidValues()
-            if (validMetrics.isEmpty() && errors.isEmpty()) {
-                _atomicRunning.set(false)
-                if (_isShutDown.get())
-                    stopScheduling()
-                return@getMetricsAndErrors
-            }
-            val errorModel = ErrorModel(libraryMetadata, errors.map { it.errorEvent })
-            uploader.upload(validMetrics, errorModel) { success ->
-                if (success) {
-                    reservoir.resetTillSync(validMetrics)
-                    reservoir.clearErrors(errors.map { it.id }.toTypedArray())
-                }
-                synchronized(this) {
-                    _callback?.invoke(validMetrics, errorModel, success)
-                }
-                if (_isShutDown.get()) {
+    private fun uploadSnapshots() {
+        val snapshotToUpload = reservoir.getSnapshots(1)
+        if (snapshotToUpload.isNotEmpty()) {
+            uploader.upload(snapshotToUpload.first()) {
+                if (it) {
+                    reservoir.deleteSnapshots(snapshotToUpload.map { it.id })
+                    _callback?.invoke(snapshotToUpload.first(), true)
+                    if (_isShutDown.get()) {
+                        _atomicRunning.set(false)
+                        stopScheduling()
+                        return@upload
+                    }
+                    uploadSnapshots()
+                } else {
+                    _callback?.invoke(snapshotToUpload.first(), false)
                     _atomicRunning.set(false)
-                    stopScheduling()
-                    return@upload
+                    if (_isShutDown.get()) stopScheduling()
                 }
-                if(success)
-                    flush(startIndex + flushCount, flushCount)
-                else
-                    _atomicRunning.set(false)
             }
         }
     }
 
     override fun stopScheduling() {
         _isShutDown.set(true)
-        if (_atomicRunning.get())
-            return
+        if (_atomicRunning.get()) return
         scheduler.stop()
+        snapshotCapturer.shutdown()
     }
 
     override fun flushAllMetrics() {
-        if (_isShutDown.get())
-            return
-        if (_atomicRunning.compareAndSet(false, true)) {
-            flush(flushCount)
-        }
+        if (_isShutDown.get()) return
+        captureSnapshotAndFlush(flushCount)
     }
 
     companion object {
         private const val DEFAULT_FLUSH_SIZE = 20L
     }
 
-    class Scheduler internal constructor(){
+    class Scheduler internal constructor() {
         private val thresholdCountDownTimer = Timer("metrics_scheduler")
         private var periodicTaskScheduler: TimerTask? = null
 
@@ -136,20 +140,15 @@ class DefaultSyncer internal constructor(
                 }
             }
             thresholdCountDownTimer.scheduleAtFixedRate(
-                periodicTaskScheduler,
-                if (callbackOnStart) 0 else flushInterval,
-                flushInterval
+                periodicTaskScheduler, if (callbackOnStart) 0 else flushInterval, flushInterval
             )
 
         }
-        fun stop(){
+
+        fun stop() {
             periodicTaskScheduler?.cancel()
             thresholdCountDownTimer.cancel()
         }
     }
-    private fun List<MetricModelWithId<out Number>>.filterWithValidValues(): List<MetricModelWithId<out Number>> {
-        return this.filter {
-            it.value.toLong() > 0
-        }
-    }
+
 }

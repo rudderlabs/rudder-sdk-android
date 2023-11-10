@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 22/06/23, 7:59 pm Last modified: 22/06/23, 7:54 pm
+ * Creator: Debanjan Chatterjee on 02/11/23, 5:08 pm Last modified: 02/11/23, 5:08 pm
  * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,20 +14,12 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
+interface SnapshotCapturer {
 
-interface Syncer {
-    fun startScheduledSyncs(
-        interval: Long, flushOnStart: Boolean, flushCount: Long
-    )
-    //setting null will nullify the callback
-    fun setCallback(callback: ((uploaded: List<MetricModel<out Number>>,
-                                uploadedErrorModel: ErrorModel,
-                                success: Boolean) -> Unit)?)
+    fun captureSnapshotsAndResetReservoir(batchItemCount: Long, reservoir: Reservoir) : Int
+    fun captureSnapshotsAndResetReservoir(batchItemCount: Long, reservoir: Reservoir, callback :
+        (totalBatches: Int) -> Unit)
 
-    fun stopScheduling()
-
-    fun flushAllMetrics()
-
+    fun shutdown()
 }
+

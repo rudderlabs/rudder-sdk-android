@@ -19,6 +19,7 @@ import com.rudderstack.android.repository.EntityFactory
 import com.rudderstack.android.ruddermetricsreporterandroid.models.ErrorEntity
 import com.rudderstack.android.ruddermetricsreporterandroid.models.LabelEntity
 import com.rudderstack.android.ruddermetricsreporterandroid.models.MetricEntity
+import com.rudderstack.android.ruddermetricsreporterandroid.models.SnapshotEntity
 
 class DefaultEntityFactory : EntityFactory {
 
@@ -27,6 +28,7 @@ class DefaultEntityFactory : EntityFactory {
             MetricEntity::class.java -> MetricEntity.create(values) as? T?
             LabelEntity::class.java -> LabelEntity.create(values) as? T?
             ErrorEntity::class.java -> ErrorEntity.create(values) as? T?
+            SnapshotEntity::class.java -> SnapshotEntity.create(values) as? T?
             else -> null
         }
     }

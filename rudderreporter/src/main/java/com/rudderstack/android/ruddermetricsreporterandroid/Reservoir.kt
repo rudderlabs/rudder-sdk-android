@@ -17,20 +17,31 @@ package com.rudderstack.android.ruddermetricsreporterandroid
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModelWithId
 import com.rudderstack.android.ruddermetricsreporterandroid.models.ErrorEntity
+import com.rudderstack.android.ruddermetricsreporterandroid.models.Snapshot
 
 interface Reservoir {
     fun insertOrIncrement(metric: MetricModel<out Number>)
     fun getAllMetricsSync(): List<MetricModelWithId<out Number>>
-    fun getAllMetrics(callback : (List<MetricModelWithId<out Number>>) -> Unit)
+    fun getAllMetrics(callback: (List<MetricModelWithId<out Number>>) -> Unit)
 
-    fun getMetricsFirstSync(limit : Long): List<MetricModelWithId<out Number>>
-    fun getMetricsFirst(skip: Long, limit : Long, callback : (List<MetricModelWithId<out Number>>) -> Unit)
-    fun getMetricsAndErrors(skipForMetrics: Long, skipForErrors: Long, limit : Long, callback :
-        (List<MetricModelWithId<out
-    Number>>, List<ErrorEntity>) -> Unit)
-    fun getMetricsFirst(limit : Long, callback : (List<MetricModelWithId<out Number>>) -> Unit)
-//    fun getMetricsAndErrorFirst(limit : Long, callback : (List<MetricModel<Number>>, List<ErrorModel>) -> Unit)
-    fun getMetricsCount(callback : (Long) -> Unit)
+    fun getMetricsFirstSync(limit: Long): List<MetricModelWithId<out Number>>
+    fun getMetricsFirstSync(skip: Long, limit: Long): List<MetricModelWithId<out Number>>
+    fun getMetricsFirst(
+        skip: Long,
+        limit: Long,
+        callback: (List<MetricModelWithId<out Number>>) -> Unit
+    )
+
+    fun getMetricsAndErrors(
+        skipForMetrics: Long, skipForErrors: Long, limit: Long, callback: (
+            List<MetricModelWithId<out Number>>, List<ErrorEntity>
+        ) -> Unit
+    )
+
+    fun getMetricsFirst(limit: Long, callback: (List<MetricModelWithId<out Number>>) -> Unit)
+
+    //    fun getMetricsAndErrorFirst(limit : Long, callback : (List<MetricModel<Number>>, List<ErrorModel>) -> Unit)
+    fun getMetricsCount(callback: (Long) -> Unit)
     fun clear()
     fun clearMetrics()
     fun resetMetricsFirst(limit: Long)
@@ -38,15 +49,27 @@ interface Reservoir {
     fun setMaxErrorCount(maxErrorCount: Long)
     fun saveError(errorEntity: ErrorEntity)
     fun getAllErrorsSync(): List<ErrorEntity>
-    fun getAllErrors(callback : (List<ErrorEntity>) -> Unit)
+    fun getAllErrors(callback: (List<ErrorEntity>) -> Unit)
 
-    fun getErrorsFirstSync(limit : Long): List<ErrorEntity>
-    fun getErrors(skip: Long, limit : Long, callback : (List<ErrorEntity>) ->
-    Unit)
-    fun getErrorsFirst(limit : Long, callback : (List<ErrorEntity>) -> Unit)
-    fun getErrorsCount(callback : (Long) -> Unit)
+    fun getErrorsFirstSync(limit: Long): List<ErrorEntity>
+    fun getErrors(
+        skip: Long, limit: Long, callback: (List<ErrorEntity>) -> Unit
+    )
+
+    fun getErrorsFirst(limit: Long, callback: (List<ErrorEntity>) -> Unit)
+    fun getErrorsCount(callback: (Long) -> Unit)
     fun clearErrors()
     fun clearErrors(ids: Array<Long>)
+    fun clearErrorsSync(ids: Array<Long>)
+
+    fun saveSnapshot(snapshot: Snapshot, callback: ((Long) -> Unit)?= null)
+    fun saveSnapshotSync(snapshot: Snapshot) : Long
+    fun getAllSnapshotsSync(): List<Snapshot>
+    fun getAllSnapshots(callback: (List<Snapshot>) -> Unit)
+
+    fun getSnapshots(limit: Long, offset: Int = 0): List<Snapshot>
+    fun deleteSnapshots(snapshotIds: List<String>)
+    fun deleteSnapshotsSync(snapshotIds: List<String>)
 
     /**
      * Will reset each element up to the value

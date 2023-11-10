@@ -34,4 +34,5 @@
 -dontwarn com.fasterxml.jackson.annotation.JsonIgnore
 -keep class com.rudderstack.android.ruddermetricsreporterandroid.models.LabelEntity { *; }
 -keep class com.rudderstack.android.ruddermetricsreporterandroid.models.MetricEntity { *; }
+-keep class com.rudderstack.android.ruddermetricsreporterandroid.models.SnapshotEntity { *; }
 -keep class com.rudderstack.android.ruddermetricsreporterandroid.models.ErrorEntity { *; }

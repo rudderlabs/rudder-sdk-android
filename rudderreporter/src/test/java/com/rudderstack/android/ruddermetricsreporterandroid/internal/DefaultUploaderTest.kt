@@ -37,12 +37,12 @@ import java.util.Date
 open class DefaultUploaderTest {
 
     protected var jsonAdapter: JsonAdapter = MoshiAdapter()
-    private val defaultUploader = DefaultUploadMediator(
-         ConfigModule(ContextModule(ApplicationProvider.getApplicationContext()), Configuration(
-            LibraryMetadata("test","1.0","4","abcde")
-        )),"https://some-api.com",
-        jsonAdapter, TestExecutor()
-    )
+//    private val defaultUploader = DefaultUploadMediator(
+//         ConfigModule(ContextModule(ApplicationProvider.getApplicationContext()), Configuration(
+//            LibraryMetadata("test","1.0","4","abcde")
+//        )),"https://some-api.com",
+//        jsonAdapter, TestExecutor()
+//    )
 
     @Test
     fun upload() {

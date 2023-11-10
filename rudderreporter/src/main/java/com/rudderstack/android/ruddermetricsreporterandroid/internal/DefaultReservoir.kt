@@ -19,12 +19,14 @@ import androidx.annotation.VisibleForTesting
 import com.rudderstack.android.repository.Dao
 import com.rudderstack.android.repository.RudderDatabase
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
+import com.rudderstack.android.ruddermetricsreporterandroid.models.Snapshot
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModelWithId
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricType
 import com.rudderstack.android.ruddermetricsreporterandroid.models.ErrorEntity
 import com.rudderstack.android.ruddermetricsreporterandroid.models.LabelEntity
 import com.rudderstack.android.ruddermetricsreporterandroid.models.MetricEntity
+import com.rudderstack.android.ruddermetricsreporterandroid.models.SnapshotEntity
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.concurrent.ExecutorService
@@ -34,12 +36,13 @@ import kotlin.math.pow
 class DefaultReservoir @JvmOverloads constructor(
     androidContext: Context,
     useContentProvider: Boolean,
-    private val dbExecutor: ExecutorService? = null
+    dbExecutor: ExecutorService? = null
 ) : Reservoir {
     private val dbName = "metrics_db_${androidContext.packageName}.db"
     private val metricDao: Dao<MetricEntity>
     private val labelDao: Dao<LabelEntity>
     private val errorDao: Dao<ErrorEntity>
+    private val snapshotDao: Dao<SnapshotEntity>
     private var _storageListeners = listOf<Reservoir.DataListener>()
 
     private val maxErrorCount = AtomicLong(MAX_ERROR_COUNT)
@@ -55,6 +58,7 @@ class DefaultReservoir @JvmOverloads constructor(
         metricDao = RudderDatabase.getDao(MetricEntity::class.java)
         labelDao = RudderDatabase.getDao(LabelEntity::class.java)
         errorDao = RudderDatabase.getDao(ErrorEntity::class.java)
+        snapshotDao = RudderDatabase.getDao(SnapshotEntity::class.java)
     }
 
     override fun insertOrIncrement(
@@ -144,7 +148,6 @@ class DefaultReservoir @JvmOverloads constructor(
                 conflictResolutionStrategy = Dao.ConflictResolutionStrategy.CONFLICT_IGNORE
             )?.firstOrNull()
             if (insertedRowId == -1L) {
-//                println("updating metric ${metric.name} label mask $labelMaskForMetric")
                 this.execSqlSync(
                     "UPDATE " + MetricEntity.TABLE_NAME + " SET " + MetricEntity.ColumnNames.VALUE + " = (" + MetricEntity.ColumnNames.VALUE + " + " + metric.value + ") WHERE " + MetricEntity.ColumnNames.NAME + "='" + metric.name + "'" + " AND " + MetricEntity.ColumnNames.LABEL + "='" + labelMaskForMetric + "'" + " AND " + MetricEntity.ColumnNames.TYPE + "='" + MetricType.COUNTER.value + "'" + ";"
                 )
@@ -157,6 +160,19 @@ class DefaultReservoir @JvmOverloads constructor(
     override fun getMetricsFirstSync(limit: Long): List<MetricModelWithId<out Number>> {
         with(metricDao) {
             val metricEntities = runGetQuerySync(limit = limit.toString())
+            return metricEntities?.map {
+                val labels = getLabelsForMetric(it)
+                MetricModelWithId(
+                    it.id.toString(), it.name, MetricType.getType(it.type), it.value, labels
+                )
+            } ?: listOf()
+        }
+    }
+
+    override fun getMetricsFirstSync(skip: Long, limit: Long): List<MetricModelWithId<out Number>> {
+        with(metricDao) {
+            val metricEntities = runGetQuerySync(limit = limit.toString(),
+                offset = if (skip > 0) skip.toString() else null)
             return metricEntities?.map {
                 val labels = getLabelsForMetric(it)
                 MetricModelWithId(
@@ -308,6 +324,73 @@ class DefaultReservoir @JvmOverloads constructor(
 
     }
 
+    override fun clearErrorsSync(ids: Array<Long>) {
+        errorDao.deleteSync(
+            whereClause = "${
+                ErrorEntity.ColumnNames.ID
+            } IN (${ids.joinToString(",") { it.toString() }})", null
+        )
+    }
+
+    override fun saveSnapshot(snapshot: Snapshot, callback: ((Long) -> Unit)?) {
+        with(snapshotDao) {
+            val snapshotEntity = SnapshotEntity(
+                snapshot
+            )
+            listOf(snapshotEntity).insert {
+                callback?.invoke(it.firstOrNull()?:0L)
+            }
+        }
+    }
+
+    override fun saveSnapshotSync(snapshot: Snapshot) : Long {
+        with(snapshotDao){
+            val snapshotEntity = SnapshotEntity(
+                snapshot
+            )
+            return listOf(snapshotEntity).insertSync()?.firstOrNull() ?: -1L
+        }
+    }
+
+    override fun getAllSnapshotsSync(): List<Snapshot> {
+        return snapshotDao.getAllSync()?.map {
+            it.toSnapshot()
+        } ?: listOf()
+    }
+
+    override fun getAllSnapshots(callback: (List<Snapshot>) -> Unit) {
+        with(snapshotDao) {
+            runGetQuery { snapshotEntities ->
+                callback(snapshotEntities.map {
+                    it.toSnapshot()
+                })
+            }
+        }
+    }
+
+    override fun getSnapshots(limit: Long, offset: Int): List<Snapshot> {
+        return snapshotDao.runGetQuerySync(limit = limit.toString(), offset = offset.toString())
+            ?.map {
+                it.toSnapshot()
+            } ?: listOf()
+    }
+
+    override fun deleteSnapshots(snapshotIds: List<String>) {
+        snapshotDao.delete(
+            whereClause = "${
+                SnapshotEntity.ColumnNames.ID
+            } IN (${snapshotIds.joinToString(",") { "'$it'" }})", null
+        )
+    }
+
+    override fun deleteSnapshotsSync(snapshotIds: List<String>) {
+        snapshotDao.execSqlSync(
+            "DELETE FROM ${SnapshotEntity.TABLE_NAME} WHERE ${
+                SnapshotEntity.ColumnNames.ID
+            } IN (${snapshotIds.joinToString(",") { "'$it'" }})")
+    }
+
+
     override fun resetTillSync(dumpedMetrics: List<MetricModelWithId<out Number>>) {
         with(metricDao) {
 //            dbExecutor?.execute {
@@ -350,7 +433,6 @@ class DefaultReservoir @JvmOverloads constructor(
     }
 
     override fun getAllMetricsSync(): List<MetricModelWithId<out Number>> {
-
         return with(metricDao) {
             val metricEntities = getAllSync()
             metricEntities?.map {

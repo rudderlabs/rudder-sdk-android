@@ -17,6 +17,7 @@ package com.rudderstack.android.ruddermetricsreporterandroid.utils
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricType
+import com.rudderstack.android.ruddermetricsreporterandroid.models.Snapshot
 
 object TestDataGenerator {
 
@@ -299,4 +300,1560 @@ object TestDataGenerator {
 }
 
 """
+    fun mockSnapshot(id: String = "3cc8e4a4-71ca-491e-a5eb-aef83a4b0489") = Snapshot(id,
+        """
+            {
+              "message_id": "$id",
+              "metrics": [
+                
+              ],
+              "source": {
+                "name": "com.rudderstack.android.sdk.core",
+                "os_version": "29",
+                "sdk_version": "1.20.1",
+                "version_code": "20",
+                "write_key": "1xXCubSHWXbpBI2h6EpCjKOsxmQ"
+              },
+              "version": "1",
+              "errors": {
+                "events": [
+                  {
+                    "exceptions": [
+                      {
+                        "errorClass": "java.lang.Exception",
+                        "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023",
+                        "stacktrace": [
+                          {
+                            "method": "com.rudderstack.android.sample.kotlin.MainActivity
+                            .onCreate${"$"}lambda\${"$"}{'$'}5",
+                            "file": "MainActivity.kt",
+                            "lineNumber": 78.0
+                          },
+                          {
+                            "method": "com.rudderstack.android.sample.kotlin.MainActivity.${"$"}r8${"$"}lambda${"$"}{'$'}0jx5-_ODOzEyJmgtXRqjTRGD--8",
+                            "file": "MainActivity.kt",
+                            "lineNumber": 0.0
+                          },
+                          {
+                            "method": "com.rudderstack.android.sample.kotlin.MainActivity${'$'}${"$"}ExternalSyntheticLambda5.onClick",
+                            "file": "R8${'$'}${"$"}SyntheticClass",
+                            "lineNumber": 0.0
+                          },
+                          {
+                            "method": "android.view.View.performClick",
+                            "file": "View.java",
+                            "lineNumber": 7125.0
+                          },
+                          {
+                            "method": "android.view.View.performClickInternal",
+                            "file": "View.java",
+                            "lineNumber": 7102.0
+                          },
+                          {
+                            "method": "android.view.View.access${'$'}3500",
+                            "file": "View.java",
+                            "lineNumber": 801.0
+                          },
+                          {
+                            "method": "android.view.View${"$"}PerformClick.run",
+                            "file": "View.java",
+                            "lineNumber": 27336.0
+                          },
+                          {
+                            "method": "android.os.Handler.handleCallback",
+                            "file": "Handler.java",
+                            "lineNumber": 883.0
+                          },
+                          {
+                            "method": "android.os.Handler.dispatchMessage",
+                            "file": "Handler.java",
+                            "lineNumber": 100.0
+                          },
+                          {
+                            "method": "android.os.Looper.loop",
+                            "file": "Looper.java",
+                            "lineNumber": 214.0
+                          },
+                          {
+                            "method": "android.app.ActivityThread.main",
+                            "file": "ActivityThread.java",
+                            "lineNumber": 7356.0
+                          },
+                          {
+                            "method": "java.lang.reflect.Method.invoke",
+                            "file": "Method.java",
+                            "lineNumber": -2.0
+                          },
+                          {
+                            "method": "com.android.internal.os.RuntimeInit${"$"}MethodAndArgsCaller.run",
+                            "file": "RuntimeInit.java",
+                            "lineNumber": 492.0
+                          },
+                          {
+                            "method": "com.android.internal.os.ZygoteInit.main",
+                            "file": "ZygoteInit.java",
+                            "lineNumber": 930.0
+                          }
+                        ],
+                        "type": "ANDROID"
+                      }
+                    ],
+                    "severity": "WARNING",
+                    "breadcrumbs": [
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.020Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.160Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.329Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.478Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.626Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.774Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.928Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.099Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.242Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.393Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.545Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.693Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.859Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:43 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:43.045Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:43 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:43.177Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:54 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:54.539Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:54 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:54.691Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:54 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:54.862Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.010Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.178Z",
+                        "type": "ERROR"
+                      }
+                    ],
+                    "unhandled": false,
+                    "projectPackages": [
+                      "com.example.testapp1mg"
+                    ],
+                    "app": {
+                      "id": "com.example.testapp1mg",
+                      "releaseStage": "development",
+                      "version": "1.20.1",
+                      "versionCode": "20"
+                    },
+                    "device": {
+                      "manufacturer": "Google",
+                      "model": "Android SDK built for x86",
+                      "osName": "android",
+                      "osVersion": "10",
+                      "cpuAbi": "x86",
+                      "jailbroken": "true",
+                      "locale": "en_US",
+                      "totalMemory": "2089168896",
+                      "runtimeVersions": {
+                        "androidApiLevel": "29",
+                        "osBuild": "sdk_gphone_x86-userdebug 10 QSR1.210802.001 7603624 dev-keys"
+                      },
+                      "freeDisk": "1690099712",
+                      "freeMemory": "942084096",
+                      "orientation": "portrait",
+                      "time": "2023-11-08T19:23:55.304Z"
+                    },
+                    "metadata": {
+                      "app": {
+                        "memoryUsage": 4672792.0,
+                        "memoryTrimLevel": "None",
+                        "totalMemory": 6594415.0,
+                        "processName": "com.example.testapp1mg",
+                        "name": "Sample Kotlin",
+                        "memoryLimit": 5.36870912E8,
+                        "lowMemory": false,
+                        "freeMemory": 1921623.0
+                      },
+                      "device": {
+                        "osBuild": "sdk_gphone_x86-userdebug 10 QSR1.210802.001 7603624 dev-keys",
+                        "manufacturer": "Google",
+                        "locationStatus": "allowed",
+                        "networkAccess": "none",
+                        "osVersion": "10",
+                        "fingerprint": "google/sdk_gphone_x86/generic_x86:10/QSR1.210802.001/7603624:userdebug/dev-keys",
+                        "model": "Android SDK built for x86",
+                        "dpi": 480.0,
+                        "screenResolution": "1776x1080",
+                        "brand": "google",
+                        "apiLevel": 29.0,
+                        "batteryLevel": 1.0,
+                        "cpuAbis": [
+                          "x86"
+                        ],
+                        "charging": false,
+                        "tags": "dev-keys",
+                        "emulator": true,
+                        "screenDensity": 3.0
+                      }
+                    }
+                  },
+                  {
+                    "exceptions": [
+                      {
+                        "errorClass": "java.lang.Exception",
+                        "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023",
+                        "stacktrace": [
+                          {
+                            "method": "com.rudderstack.android.sample.kotlin.MainActivity.onCreate${"$"}lambda${'$'}5",
+                            "file": "MainActivity.kt",
+                            "lineNumber": 78.0
+                          },
+                          {
+                            "method": "com.rudderstack.android.sample.kotlin.MainActivity.${"$"}r8${"$"}lambda${'$'}0jx5-_ODOzEyJmgtXRqjTRGD--8",
+                            "file": "MainActivity.kt",
+                            "lineNumber": 0.0
+                          },
+                          {
+                            "method": "com.rudderstack.android.sample.kotlin.MainActivity${'$'}${"$"}ExternalSyntheticLambda5.onClick",
+                            "file": "R8${'$'}${"$"}SyntheticClass",
+                            "lineNumber": 0.0
+                          },
+                          {
+                            "method": "android.view.View.performClick",
+                            "file": "View.java",
+                            "lineNumber": 7125.0
+                          },
+                          {
+                            "method": "android.view.View.performClickInternal",
+                            "file": "View.java",
+                            "lineNumber": 7102.0
+                          },
+                          {
+                            "method": "android.view.View.access${'$'}3500",
+                            "file": "View.java",
+                            "lineNumber": 801.0
+                          },
+                          {
+                            "method": "android.view.View${"$"}PerformClick.run",
+                            "file": "View.java",
+                            "lineNumber": 27336.0
+                          },
+                          {
+                            "method": "android.os.Handler.handleCallback",
+                            "file": "Handler.java",
+                            "lineNumber": 883.0
+                          },
+                          {
+                            "method": "android.os.Handler.dispatchMessage",
+                            "file": "Handler.java",
+                            "lineNumber": 100.0
+                          },
+                          {
+                            "method": "android.os.Looper.loop",
+                            "file": "Looper.java",
+                            "lineNumber": 214.0
+                          },
+                          {
+                            "method": "android.app.ActivityThread.main",
+                            "file": "ActivityThread.java",
+                            "lineNumber": 7356.0
+                          },
+                          {
+                            "method": "java.lang.reflect.Method.invoke",
+                            "file": "Method.java",
+                            "lineNumber": -2.0
+                          },
+                          {
+                            "method": "com.android.internal.os.RuntimeInit${"$"}MethodAndArgsCaller.run",
+                            "file": "RuntimeInit.java",
+                            "lineNumber": 492.0
+                          },
+                          {
+                            "method": "com.android.internal.os.ZygoteInit.main",
+                            "file": "ZygoteInit.java",
+                            "lineNumber": 930.0
+                          }
+                        ],
+                        "type": "ANDROID"
+                      }
+                    ],
+                    "severity": "WARNING",
+                    "breadcrumbs": [
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.020Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.160Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.329Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.478Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.626Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.774Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.928Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.099Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.242Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.393Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.545Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.693Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.859Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:43 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:43.045Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:43 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:43.177Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:54 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:54.539Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:54 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:54.691Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:54 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:54.862Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.010Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.178Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.310Z",
+                        "type": "ERROR"
+                      }
+                    ],
+                    "unhandled": false,
+                    "projectPackages": [
+                      "com.example.testapp1mg"
+                    ],
+                    "app": {
+                      "id": "com.example.testapp1mg",
+                      "releaseStage": "development",
+                      "version": "1.20.1",
+                      "versionCode": "20"
+                    },
+                    "device": {
+                      "manufacturer": "Google",
+                      "model": "Android SDK built for x86",
+                      "osName": "android",
+                      "osVersion": "10",
+                      "cpuAbi": "x86",
+                      "jailbroken": "true",
+                      "locale": "en_US",
+                      "totalMemory": "2089168896",
+                      "runtimeVersions": {
+                        "androidApiLevel": "29",
+                        "osBuild": "sdk_gphone_x86-userdebug 10 QSR1.210802.001 7603624 dev-keys"
+                      },
+                      "freeDisk": "1690091520",
+                      "freeMemory": "942030848",
+                      "orientation": "portrait",
+                      "time": "2023-11-08T19:23:55.437Z"
+                    },
+                    "metadata": {
+                      "app": {
+                        "memoryUsage": 4792008.0,
+                        "memoryTrimLevel": "None",
+                        "totalMemory": 6594415.0,
+                        "processName": "com.example.testapp1mg",
+                        "name": "Sample Kotlin",
+                        "memoryLimit": 5.36870912E8,
+                        "lowMemory": false,
+                        "freeMemory": 1802407.0
+                      },
+                      "device": {
+                        "osBuild": "sdk_gphone_x86-userdebug 10 QSR1.210802.001 7603624 dev-keys",
+                        "manufacturer": "Google",
+                        "locationStatus": "allowed",
+                        "networkAccess": "none",
+                        "osVersion": "10",
+                        "fingerprint": "google/sdk_gphone_x86/generic_x86:10/QSR1.210802.001/7603624:userdebug/dev-keys",
+                        "model": "Android SDK built for x86",
+                        "dpi": 480.0,
+                        "screenResolution": "1776x1080",
+                        "brand": "google",
+                        "apiLevel": 29.0,
+                        "batteryLevel": 1.0,
+                        "cpuAbis": [
+                          "x86"
+                        ],
+                        "charging": false,
+                        "tags": "dev-keys",
+                        "emulator": true,
+                        "screenDensity": 3.0
+                      }
+                    }
+                  },
+                  {
+                    "exceptions": [
+                      {
+                        "errorClass": "java.lang.Exception",
+                        "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023",
+                        "stacktrace": [
+                          {
+                            "method": "com.rudderstack.android.sample.kotlin.MainActivity.onCreate${"$"}lambda${'$'}5",
+                            "file": "MainActivity.kt",
+                            "lineNumber": 78.0
+                          },
+                          {
+                            "method": "com.rudderstack.android.sample.kotlin.MainActivity.${"$"}r8${"$"}lambda${"$"}{'$'}0jx5-_ODOzEyJmgtXRqjTRGD--8",
+                            "file": "MainActivity.kt",
+                            "lineNumber": 0.0
+                          },
+                          {
+                            "method": "com.rudderstack.android.sample.kotlin.MainActivity${'$'}${"$"}ExternalSyntheticLambda5.onClick",
+                            "file": "R8${'$'}${"$"}SyntheticClass",
+                            "lineNumber": 0.0
+                          },
+                          {
+                            "method": "android.view.View.performClick",
+                            "file": "View.java",
+                            "lineNumber": 7125.0
+                          },
+                          {
+                            "method": "android.view.View.performClickInternal",
+                            "file": "View.java",
+                            "lineNumber": 7102.0
+                          },
+                          {
+                            "method": "android.view.View.access${'$'}3500",
+                            "file": "View.java",
+                            "lineNumber": 801.0
+                          },
+                          {
+                            "method": "android.view.View${"$"}PerformClick.run",
+                            "file": "View.java",
+                            "lineNumber": 27336.0
+                          },
+                          {
+                            "method": "android.os.Handler.handleCallback",
+                            "file": "Handler.java",
+                            "lineNumber": 883.0
+                          },
+                          {
+                            "method": "android.os.Handler.dispatchMessage",
+                            "file": "Handler.java",
+                            "lineNumber": 100.0
+                          },
+                          {
+                            "method": "android.os.Looper.loop",
+                            "file": "Looper.java",
+                            "lineNumber": 214.0
+                          },
+                          {
+                            "method": "android.app.ActivityThread.main",
+                            "file": "ActivityThread.java",
+                            "lineNumber": 7356.0
+                          },
+                          {
+                            "method": "java.lang.reflect.Method.invoke",
+                            "file": "Method.java",
+                            "lineNumber": -2.0
+                          },
+                          {
+                            "method": "com.android.internal.os.RuntimeInit${"$"}MethodAndArgsCaller.run",
+                            "file": "RuntimeInit.java",
+                            "lineNumber": 492.0
+                          },
+                          {
+                            "method": "com.android.internal.os.ZygoteInit.main",
+                            "file": "ZygoteInit.java",
+                            "lineNumber": 930.0
+                          }
+                        ],
+                        "type": "ANDROID"
+                      }
+                    ],
+                    "severity": "WARNING",
+                    "breadcrumbs": [
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.020Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.160Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.329Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.478Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.626Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.774Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.928Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.099Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.242Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.393Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.545Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.693Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.859Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:43 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:43.045Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:43 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:43.177Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:54 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:54.539Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:54 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:54.691Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:54 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:54.862Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.010Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.178Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.310Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.443Z",
+                        "type": "ERROR"
+                      }
+                    ],
+                    "unhandled": false,
+                    "projectPackages": [
+                      "com.example.testapp1mg"
+                    ],
+                    "app": {
+                      "id": "com.example.testapp1mg",
+                      "releaseStage": "development",
+                      "version": "1.20.1",
+                      "versionCode": "20"
+                    },
+                    "device": {
+                      "manufacturer": "Google",
+                      "model": "Android SDK built for x86",
+                      "osName": "android",
+                      "osVersion": "10",
+                      "cpuAbi": "x86",
+                      "jailbroken": "true",
+                      "locale": "en_US",
+                      "totalMemory": "2089168896",
+                      "runtimeVersions": {
+                        "androidApiLevel": "29",
+                        "osBuild": "sdk_gphone_x86-userdebug 10 QSR1.210802.001 7603624 dev-keys"
+                      },
+                      "freeDisk": "1690083328",
+                      "freeMemory": "941907968",
+                      "orientation": "portrait",
+                      "time": "2023-11-08T19:23:55.585Z"
+                    },
+                    "metadata": {
+                      "app": {
+                        "memoryUsage": 4943992.0,
+                        "memoryTrimLevel": "None",
+                        "totalMemory": 6594415.0,
+                        "processName": "com.example.testapp1mg",
+                        "name": "Sample Kotlin",
+                        "memoryLimit": 5.36870912E8,
+                        "lowMemory": false,
+                        "freeMemory": 1650423.0
+                      },
+                      "device": {
+                        "osBuild": "sdk_gphone_x86-userdebug 10 QSR1.210802.001 7603624 dev-keys",
+                        "manufacturer": "Google",
+                        "locationStatus": "allowed",
+                        "networkAccess": "none",
+                        "osVersion": "10",
+                        "fingerprint": "google/sdk_gphone_x86/generic_x86:10/QSR1.210802.001/7603624:userdebug/dev-keys",
+                        "model": "Android SDK built for x86",
+                        "dpi": 480.0,
+                        "screenResolution": "1776x1080",
+                        "brand": "google",
+                        "apiLevel": 29.0,
+                        "batteryLevel": 1.0,
+                        "cpuAbis": [
+                          "x86"
+                        ],
+                        "charging": false,
+                        "tags": "dev-keys",
+                        "emulator": true,
+                        "screenDensity": 3.0
+                      }
+                    }
+                  },
+                  {
+                    "exceptions": [
+                      {
+                        "errorClass": "java.lang.Exception",
+                        "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023",
+                        "stacktrace": [
+                          {
+                            "method": "com.rudderstack.android.sample.kotlin.MainActivity.onCreate${"$"}lambda${'$'}5",
+                            "file": "MainActivity.kt",
+                            "lineNumber": 78.0
+                          },
+                          {
+                            "method": "com.rudderstack.android.sample.kotlin.MainActivity.${"$"}r8${"$"}lambda${'$'}0jx5-_ODOzEyJmgtXRqjTRGD--8",
+                            "file": "MainActivity.kt",
+                            "lineNumber": 0.0
+                          },
+                          {
+                            "method": "com.rudderstack.android.sample.kotlin.MainActivity${'$'}${"$"}ExternalSyntheticLambda5.onClick",
+                            "file": "R8${'$'}${"$"}SyntheticClass",
+                            "lineNumber": 0.0
+                          },
+                          {
+                            "method": "android.view.View.performClick",
+                            "file": "View.java",
+                            "lineNumber": 7125.0
+                          },
+                          {
+                            "method": "android.view.View.performClickInternal",
+                            "file": "View.java",
+                            "lineNumber": 7102.0
+                          },
+                          {
+                            "method": "android.view.View.access${'$'}3500",
+                            "file": "View.java",
+                            "lineNumber": 801.0
+                          },
+                          {
+                            "method": "android.view.View${"$"}PerformClick.run",
+                            "file": "View.java",
+                            "lineNumber": 27336.0
+                          },
+                          {
+                            "method": "android.os.Handler.handleCallback",
+                            "file": "Handler.java",
+                            "lineNumber": 883.0
+                          },
+                          {
+                            "method": "android.os.Handler.dispatchMessage",
+                            "file": "Handler.java",
+                            "lineNumber": 100.0
+                          },
+                          {
+                            "method": "android.os.Looper.loop",
+                            "file": "Looper.java",
+                            "lineNumber": 214.0
+                          },
+                          {
+                            "method": "android.app.ActivityThread.main",
+                            "file": "ActivityThread.java",
+                            "lineNumber": 7356.0
+                          },
+                          {
+                            "method": "java.lang.reflect.Method.invoke",
+                            "file": "Method.java",
+                            "lineNumber": -2.0
+                          },
+                          {
+                            "method": "com.android.internal.os.RuntimeInit${"$"}MethodAndArgsCaller.run",
+                            "file": "RuntimeInit.java",
+                            "lineNumber": 492.0
+                          },
+                          {
+                            "method": "com.android.internal.os.ZygoteInit.main",
+                            "file": "ZygoteInit.java",
+                            "lineNumber": 930.0
+                          }
+                        ],
+                        "type": "ANDROID"
+                      }
+                    ],
+                    "severity": "WARNING",
+                    "breadcrumbs": [
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.020Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.160Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.329Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.478Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.626Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.774Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:41 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:41.928Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.099Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.242Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.393Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.545Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.693Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:42 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:42.859Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:43 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:43.045Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:43 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:43.177Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:54 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:54.539Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:54 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:54.691Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:54 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:54.862Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.010Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.178Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.310Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.443Z",
+                        "type": "ERROR"
+                      },
+                      {
+                        "metadata": {
+                          "unhandled": "false",
+                          "severity": "WARNING",
+                          "errorClass": "java.lang.Exception",
+                          "message": "Test Error-Thu Nov 09 00:53:55 GMT+05:30 2023"
+                        },
+                        "name": "java.lang.Exception",
+                        "timestamp": "2023-11-08T19:23:55.589Z",
+                        "type": "ERROR"
+                      }
+                    ],
+                    "unhandled": false,
+                    "projectPackages": [
+                      "com.example.testapp1mg"
+                    ],
+                    "app": {
+                      "id": "com.example.testapp1mg",
+                      "releaseStage": "development",
+                      "version": "1.20.1",
+                      "versionCode": "20"
+                    },
+                    "device": {
+                      "manufacturer": "Google",
+                      "model": "Android SDK built for x86",
+                      "osName": "android",
+                      "osVersion": "10",
+                      "cpuAbi": "x86",
+                      "jailbroken": "true",
+                      "locale": "en_US",
+                      "totalMemory": "2089168896",
+                      "runtimeVersions": {
+                        "androidApiLevel": "29",
+                        "osBuild": "sdk_gphone_x86-userdebug 10 QSR1.210802.001 7603624 dev-keys"
+                      },
+                      "freeDisk": "1690075136",
+                      "freeMemory": "941797376",
+                      "orientation": "portrait",
+                      "time": "2023-11-08T19:23:55.737Z"
+                    },
+                    "metadata": {
+                      "app": {
+                        "memoryUsage": 5063208.0,
+                        "memoryTrimLevel": "None",
+                        "totalMemory": 6594415.0,
+                        "processName": "com.example.testapp1mg",
+                        "name": "Sample Kotlin",
+                        "memoryLimit": 5.36870912E8,
+                        "lowMemory": false,
+                        "freeMemory": 1531207.0
+                      },
+                      "device": {
+                        "osBuild": "sdk_gphone_x86-userdebug 10 QSR1.210802.001 7603624 dev-keys",
+                        "manufacturer": "Google",
+                        "locationStatus": "allowed",
+                        "networkAccess": "none",
+                        "osVersion": "10",
+                        "fingerprint": "google/sdk_gphone_x86/generic_x86:10/QSR1.210802.001/7603624:userdebug/dev-keys",
+                        "model": "Android SDK built for x86",
+                        "dpi": 480.0,
+                        "screenResolution": "1776x1080",
+                        "brand": "google",
+                        "apiLevel": 29.0,
+                        "batteryLevel": 1.0,
+                        "cpuAbis": [
+                          "x86"
+                        ],
+                        "charging": false,
+                        "tags": "dev-keys",
+                        "emulator": true,
+                        "screenDensity": 3.0
+                      }
+                    }
+                  }
+                ],
+                "payloadVersion": 5,
+                "notifier": {
+                  "name": "com.rudderstack.android.sdk.core",
+                  "version": "1.20.1",
+                  "url": "https://github.com/rudderlabs/rudder-sdk-android",
+                  "os_version": "29"
+                }
+              }
+            }
+            
+        """.trimIndent())
 }

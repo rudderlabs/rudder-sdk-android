@@ -14,13 +14,11 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
+import com.rudderstack.android.ruddermetricsreporterandroid.models.Snapshot
 
 fun interface UploadMediator {
     fun upload(
-        metrics: List<MetricModel<out Number>>,
-        error: ErrorModel,
+        snapshot: Snapshot,
         callback: (success: Boolean) -> Unit
     )
 }
