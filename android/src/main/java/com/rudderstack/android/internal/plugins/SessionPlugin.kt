@@ -15,6 +15,7 @@
 package com.rudderstack.android.internal.plugins
 
 import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.androidStorage
 import com.rudderstack.android.internal.extensions.withSessionId
 import com.rudderstack.android.internal.extensions.withSessionStart
 import com.rudderstack.android.utilities.defaultLastActiveTimestamp
@@ -41,6 +42,7 @@ internal class SessionPlugin : Plugin {
         if (configuration !is ConfigurationAndroid) return
         if (currentConfiguration?.trackAutoSession == configuration.trackAutoSession
             && currentConfiguration?.trackLifecycleEvents == configuration.trackLifecycleEvents) return
+        _analytics?.androidStorage?.setTrackAutoSession(configuration.trackAutoSession)
         if( !configuration.trackAutoSession || !configuration.trackLifecycleEvents) {
             _analytics?.updateSessionEnd()
             return
