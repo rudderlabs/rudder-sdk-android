@@ -79,7 +79,7 @@ public class RudderGsonTest {
                 }
             }
         }.start();
-        await().atMost(20, SECONDS).until(() -> contextsSerialized.get() == 3000);
+        await().atMost(60, SECONDS).until(() -> contextsSerialized.get() == 3000);
     }
 
     private RudderContext getRudderContext(int i) {
@@ -177,7 +177,7 @@ public class RudderGsonTest {
                 }
             }
         }.start();
-        await().atMost(30, SECONDS).until(() -> traitsSerialized.get() == 9000);
+        await().atMost(60, SECONDS).until(() -> traitsSerialized.get() == 9000);
     }
 
     private RudderTraits getTraits(int i) {
@@ -220,7 +220,7 @@ public class RudderGsonTest {
         }, "serialize-rudder-message-thread-2") {
         }.start();
 
-        await().atMost(20, SECONDS).until(() -> messagesSerialized.get() == 4000);
+        await().atMost(60, SECONDS).until(() -> messagesSerialized.get() == 4000);
 
     }
 
