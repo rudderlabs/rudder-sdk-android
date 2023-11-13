@@ -26,7 +26,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultRese
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultSnapshotCapturer
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultUploadMediator
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.NetworkChangeCallback
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.SnapshotCreator
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultSnapshotCreator
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.SystemServiceModule
@@ -163,7 +163,7 @@ class DefaultRudderReporter(
         ConfigModule(contextModule, configuration),
         DefaultPeriodicSyncer(
             reservoir, uploadMediator, DefaultSnapshotCapturer(
-                SnapshotCreator(
+                DefaultSnapshotCreator(
                     configuration.libraryMetadata, apiVersion, jsonAdapter
                 )
             )

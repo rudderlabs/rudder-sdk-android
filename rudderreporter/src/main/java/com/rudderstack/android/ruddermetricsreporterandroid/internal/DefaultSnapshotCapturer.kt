@@ -17,6 +17,7 @@ package com.rudderstack.android.ruddermetricsreporterandroid.internal
 import android.util.Log
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
 import com.rudderstack.android.ruddermetricsreporterandroid.SnapshotCapturer
+import com.rudderstack.android.ruddermetricsreporterandroid.SnapshotCreator
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModelWithId
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -33,28 +34,23 @@ internal class DefaultSnapshotCapturer(
         snapshotLock.lock()
         var metrics = reservoir.getMetricsFirstSync(batchItemCount)
         var errors = reservoir.getErrorsFirstSync(batchItemCount)
-        Log.e("snapshot-maker", "m.size: ${metrics.size}, e.size: ${errors.size}")
         var totalBatches = 0
         var validMetrics = metrics.filterWithValidValues()
-        Log.e("snapshot-maker", "v.m.size: ${validMetrics.size}")
         while (validMetrics.isNotEmpty() || errors.isNotEmpty()) {
 
             snapshotCreator.createSnapshot(validMetrics, errors.map { it.errorEvent })?.apply {
                 if (reservoir.saveSnapshotSync(this) > -1) {
-                    Log.e("snapshot-maker", "success ss: $this")
                     reservoir.resetTillSync(metrics)
                     reservoir.clearErrorsSync(errors.map { it.id }.toTypedArray())
                 } else return totalBatches
 
             } ?: return totalBatches
             totalBatches++
-            Log.e("snapshot-maker", "tot_batch: ${totalBatches}, batch_item_c: ${batchItemCount}")
             metrics = if (metrics.size >= batchItemCount) reservoir.getMetricsFirstSync(
                 batchItemCount * totalBatches, batchItemCount
             ) else listOf()
             validMetrics = metrics.filterWithValidValues()
             errors = reservoir.getErrorsFirstSync(batchItemCount)
-            Log.e("snapshot-maker", "next.m.size: ${metrics.size}, next.e.size: ${errors.size}")
         }
         snapshotLock.unlock()
         return totalBatches

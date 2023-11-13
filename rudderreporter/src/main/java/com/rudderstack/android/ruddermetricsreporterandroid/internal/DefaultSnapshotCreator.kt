@@ -15,6 +15,7 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
+import com.rudderstack.android.ruddermetricsreporterandroid.SnapshotCreator
 import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 import com.rudderstack.android.ruddermetricsreporterandroid.models.Snapshot
@@ -22,8 +23,9 @@ import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import java.util.UUID
 
-internal class SnapshotCreator(private val libraryMetadata: LibraryMetadata,
-                               private val apiVersion: Int, private val jsonAdapter: JsonAdapter) {
+internal class DefaultSnapshotCreator(private val libraryMetadata: LibraryMetadata,
+                                      private val apiVersion: Int, private val jsonAdapter:
+                                      JsonAdapter): SnapshotCreator {
     companion object {
         private const val SOURCE_KEY = "source"
         private const val METRICS_KEY = "metrics"
@@ -32,7 +34,7 @@ internal class SnapshotCreator(private val libraryMetadata: LibraryMetadata,
         private const val MESSAGE_ID_KEY = "message_id"
 
     }
-    fun createSnapshot(metrics: List<MetricModel<out Number>>, errorEvents: List<String>):
+    override fun createSnapshot(metrics: List<MetricModel<out Number>>, errorEvents: List<String>):
             Snapshot? {
         val requestMap = HashMap<String, Any?>()
         requestMap[METRICS_KEY] = metrics
