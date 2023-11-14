@@ -11,16 +11,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.reflect.Whitebox;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,18 +24,7 @@ import com.google.gson.JsonParser;
 import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
-@RunWith(PowerMockRunner.class)
-@PowerMockIgnore("jdk.internal.reflect.*")
-@PrepareForTest({Utils.class})
 public class RudderGsonTest {
-
-    @Before
-    public void setUp() throws Exception {
-        PowerMockito.spy(Utils.class);
-        PowerMockito.when(Utils.class, "getTimeStamp")
-                .thenAnswer((Answer<String>) invocation -> "2022-03-14T06:46:41.365Z");
-    }
-
     @Test
     public void testRudderContextSerializationSynchronicity() {
         AtomicInteger contextsSerialized = new AtomicInteger(0);
@@ -51,7 +33,14 @@ public class RudderGsonTest {
             public void run() {
                 super.run();
                 for (int i = 1; i <= 1000; i++) {
-                    RudderContext context = getRudderContext(i);
+                    RudderContext context = null;
+                    try {
+                        context = getRudderContext(i);
+                    } catch (NoSuchFieldException e) {
+                        throw new RuntimeException(e);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
                     assertThat("contexts got serialized perfectly " + i, areJsonStringsEqual(RudderGson.getInstance().toJson(context), getRudderContextJsonString(i)), is(true));
                     contextsSerialized.addAndGet(1);
                 }
@@ -62,7 +51,14 @@ public class RudderGsonTest {
             public void run() {
                 super.run();
                 for (int i = 1001; i <= 2000; i++) {
-                    RudderContext context = getRudderContext(i);
+                    RudderContext context = null;
+                    try {
+                        context = getRudderContext(i);
+                    } catch (NoSuchFieldException e) {
+                        throw new RuntimeException(e);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
                     assertThat("contexts got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(context), getRudderContextJsonString(i)), is(true));
                     contextsSerialized.addAndGet(1);
                 }
@@ -73,7 +69,14 @@ public class RudderGsonTest {
             public void run() {
                 super.run();
                 for (int i = 2001; i <= 3000; i++) {
-                    RudderContext context = getRudderContext(i);
+                    RudderContext context = null;
+                    try {
+                        context = getRudderContext(i);
+                    } catch (NoSuchFieldException e) {
+                        throw new RuntimeException(e);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
                     assertThat("contexts got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(context), getRudderContextJsonString(i)), is(true));
                     contextsSerialized.addAndGet(1);
                 }
@@ -82,7 +85,7 @@ public class RudderGsonTest {
         await().atMost(60, SECONDS).until(() -> contextsSerialized.get() == 3000);
     }
 
-    private RudderContext getRudderContext(int i) {
+    private RudderContext getRudderContext(int i) throws NoSuchFieldException, IllegalAccessException {
         RudderContext context = getDefaultRudderContext();
         Map<String, Object> customContextMap = new HashMap<>();
         Map<String, String> companyContext = new HashMap<>();
@@ -92,48 +95,47 @@ public class RudderGsonTest {
         Map<String, String> personContext = new HashMap<>();
         personContext.put("tier", "enterprise" + i);
         customContextMap.put("person", personContext);
-        Whitebox.setInternalState(context, "customContextMap", customContextMap);
+        ReflectionUtils.setPrivateField(context, "customContextMap", customContextMap);
         return context;
     }
-
-    private RudderContext getDefaultRudderContext() {
-        RudderContext context = PowerMockito.mock(RudderContext.class);
-        RudderApp app = PowerMockito.mock(RudderApp.class);
-        Whitebox.setInternalState(app, "build", "2");
-        Whitebox.setInternalState(app, "name", "rudderstack-android-sdk-desu");
-        Whitebox.setInternalState(app, "nameSpace", "com.rudderstack.android.sdk.core");
-        Whitebox.setInternalState(app, "version", "1.1");
-        Whitebox.setInternalState(context, "app", app);
-        RudderLibraryInfo libraryInfo = PowerMockito.mock(RudderLibraryInfo.class);
-        Whitebox.setInternalState(libraryInfo, "name", "com.rudderstack.android.sdk.core");
-        Whitebox.setInternalState(libraryInfo, "version", "1.20.1");
-        Whitebox.setInternalState(context, "libraryInfo", libraryInfo);
-        RudderOSInfo osInfo = PowerMockito.mock(RudderOSInfo.class);
-        Whitebox.setInternalState(osInfo, "name", "Android");
-        Whitebox.setInternalState(osInfo, "version", "14");
-        Whitebox.setInternalState(context, "osInfo", osInfo);
+    private RudderContext getDefaultRudderContext() throws NoSuchFieldException, IllegalAccessException {
+        RudderContext context = Mockito.mock(RudderContext.class);
+        RudderApp app = Mockito.mock(RudderApp.class);
+        ReflectionUtils.setPrivateField(app, "build", "2");
+        ReflectionUtils.setPrivateField(app, "name", "rudderstack-android-sdk-desu");
+        ReflectionUtils.setPrivateField(app, "nameSpace", "com.rudderstack.android.sdk.core");
+        ReflectionUtils.setPrivateField(app, "version", "1.1");
+        ReflectionUtils.setPrivateField(context, "app", app);
+        RudderLibraryInfo libraryInfo = Mockito.mock(RudderLibraryInfo.class);
+        ReflectionUtils.setPrivateField(libraryInfo, "name", "com.rudderstack.android.sdk.core");
+        ReflectionUtils.setPrivateField(libraryInfo, "version", "1.20.1");
+        ReflectionUtils.setPrivateField(context, "libraryInfo", libraryInfo);
+        RudderOSInfo osInfo = Mockito.mock(RudderOSInfo.class);
+        ReflectionUtils.setPrivateField(osInfo, "name", "Android");
+        ReflectionUtils.setPrivateField(osInfo, "version", "14");
+        ReflectionUtils.setPrivateField(context, "osInfo", osInfo);
         RudderScreenInfo screenInfo = Mockito.mock(RudderScreenInfo.class);
-        Whitebox.setInternalState(screenInfo, "density", 3);
-        Whitebox.setInternalState(screenInfo, "height", 736);
-        Whitebox.setInternalState(screenInfo, "width", 414);
-        Whitebox.setInternalState(context, "screenInfo", screenInfo);
-        Whitebox.setInternalState(context, "userAgent", "Dalvik/2.1.0 (Linux; U; Android 14; sdk_gphone64_arm64 Build/UPB4.230623.005)");
-        Whitebox.setInternalState(context, "locale", "en-US");
+        ReflectionUtils.setPrivateField(screenInfo, "density", 3);
+        ReflectionUtils.setPrivateField(screenInfo, "height", 736);
+        ReflectionUtils.setPrivateField(screenInfo, "width", 414);
+        ReflectionUtils.setPrivateField(context, "screenInfo", screenInfo);
+        ReflectionUtils.setPrivateField(context, "userAgent", "Dalvik/2.1.0 (Linux; U; Android 14; sdk_gphone64_arm64 Build/UPB4.230623.005)");
+        ReflectionUtils.setPrivateField(context, "locale", "en-US");
         RudderNetwork networkInfo = Mockito.mock(RudderNetwork.class);
-        Whitebox.setInternalState(networkInfo, "isCellularEnabled", true);
-        Whitebox.setInternalState(networkInfo, "isWifiEnabled", true);
-        Whitebox.setInternalState(networkInfo, "isBluetoothEnabled", false);
-        Whitebox.setInternalState(networkInfo, "carrier", "T-Mobile");
-        Whitebox.setInternalState(context, "networkInfo", networkInfo);
+        ReflectionUtils.setPrivateField(networkInfo, "isCellularEnabled", true);
+        ReflectionUtils.setPrivateField(networkInfo, "isWifiEnabled", true);
+        ReflectionUtils.setPrivateField(networkInfo, "isBluetoothEnabled", false);
+        ReflectionUtils.setPrivateField(networkInfo, "carrier", "T-Mobile");
+        ReflectionUtils.setPrivateField(context, "networkInfo", networkInfo);
         RudderDeviceInfo deviceInfo = Mockito.mock(RudderDeviceInfo.class);
-        Whitebox.setInternalState(deviceInfo, "type", "Android");
-        Whitebox.setInternalState(deviceInfo, "manufacturer", "Google");
-        Whitebox.setInternalState(deviceInfo, "model", "sdk_gphone64_arm64");
-        Whitebox.setInternalState(deviceInfo, "name", "emu64a");
-        Whitebox.setInternalState(deviceInfo, "deviceId", "10f9e80f-5342-48e0-8908-1b221179895b");
-        Whitebox.setInternalState(context, "deviceInfo", deviceInfo);
-        Whitebox.setInternalState(context, "timezone", "Asia/Kolkata");
-        Whitebox.setInternalState(context, "sessionId", 1699538605l);
+        ReflectionUtils.setPrivateField(deviceInfo, "type", "Android");
+        ReflectionUtils.setPrivateField(deviceInfo, "manufacturer", "Google");
+        ReflectionUtils.setPrivateField(deviceInfo, "model", "sdk_gphone64_arm64");
+        ReflectionUtils.setPrivateField(deviceInfo, "name", "emu64a");
+        ReflectionUtils.setPrivateField(deviceInfo, "deviceId", "10f9e80f-5342-48e0-8908-1b221179895b");
+        ReflectionUtils.setPrivateField(context, "deviceInfo", deviceInfo);
+        ReflectionUtils.setPrivateField(context, "timezone", "Asia/Kolkata");
+        ReflectionUtils.setPrivateField(context, "sessionId", 1699538605l);
         return context;
     }
 
@@ -199,23 +201,29 @@ public class RudderGsonTest {
     public void testJSONArrayJSONObjectSerializationSynchronicity() {
         AtomicInteger messagesSerialized = new AtomicInteger(0);
         new Thread(() -> {
-            for (int i = 1; i <= 1000; i++) {
-                RudderMessage trackMessage = getTrackMessage(i);
-                assertThat("track message got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(trackMessage), getTrackJsonString(i, trackMessage)), is(true));
-                RudderMessage identifyMessage = getIdentifyMessage(i);
-                assertThat("identify message got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(identifyMessage), getIdentifyJsonString(i, identifyMessage)), is(true));
-                messagesSerialized.addAndGet(2);
+            try (MockedStatic<Utils> utilities = Mockito.mockStatic(Utils.class)) {
+                utilities.when(Utils::getTimeStamp).thenReturn("2022-03-14T06:46:41.365Z");
+                for (int i = 1; i <= 1000; i++) {
+                    RudderMessage trackMessage = getTrackMessage(i);
+                    assertThat("track message got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(trackMessage), getTrackJsonString(i, trackMessage)), is(true));
+                    RudderMessage identifyMessage = getIdentifyMessage(i);
+                    assertThat("identify message got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(identifyMessage), getIdentifyJsonString(i, identifyMessage)), is(true));
+                    messagesSerialized.addAndGet(2);
+                }
             }
         }, "serialize-rudder-message-thread-1") {
         }.start();
 
         new Thread(() -> {
-            for (int i = 1001; i <= 2000; i++) {
-                RudderMessage trackMessage = getTrackMessage(i);
-                assertThat("track message got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(trackMessage), getTrackJsonString(i, trackMessage)), is(true));
-                RudderMessage identifyMessage = getIdentifyMessage(i);
-                assertThat("identify message got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(identifyMessage), getIdentifyJsonString(i, identifyMessage)), is(true));
-                messagesSerialized.addAndGet(2);
+            try (MockedStatic<Utils> utilities = Mockito.mockStatic(Utils.class)) {
+                utilities.when(Utils::getTimeStamp).thenReturn("2022-03-14T06:46:41.365Z");
+                for (int i = 1001; i <= 2000; i++) {
+                    RudderMessage trackMessage = getTrackMessage(i);
+                    assertThat("track message got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(trackMessage), getTrackJsonString(i, trackMessage)), is(true));
+                    RudderMessage identifyMessage = getIdentifyMessage(i);
+                    assertThat("identify message got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(identifyMessage), getIdentifyJsonString(i, identifyMessage)), is(true));
+                    messagesSerialized.addAndGet(2);
+                }
             }
         }, "serialize-rudder-message-thread-2") {
         }.start();
@@ -261,11 +269,6 @@ public class RudderGsonTest {
         JsonObject obj1 = JsonParser.parseString(json1).getAsJsonObject();
         JsonObject obj2 = JsonParser.parseString(json2).getAsJsonObject();
         boolean result = obj1.equals(obj2);
-        if (!result) {
-            System.out.println(Thread.currentThread().getName() + " " + json1);
-            System.out.println(Thread.currentThread().getName() + " " + json2);
-            System.out.println(Thread.currentThread().getName() + " " + "#################");
-        }
         return result;
     }
 }

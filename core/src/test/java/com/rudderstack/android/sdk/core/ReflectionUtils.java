@@ -23,5 +23,11 @@ public class ReflectionUtils {
         field.setAccessible(true);
         return (R) field.get(object);
     }
+    public static void setPrivateField(Object target, String fieldName, Object value)
+            throws NoSuchFieldException, IllegalAccessException {
+        Field field = target.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
+    }
 
 }
