@@ -8,12 +8,9 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
-import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
@@ -89,7 +86,7 @@ public class RudderContext {
         RudderLogger.logDebug(String.format(Locale.US, "Traits from persistence storage%s", traitsJson));
         if (traitsJson == null) {
             RudderTraits traits = new RudderTraits(anonymousId);
-            this.traits = Utils.convertToMap(new Gson().toJson(traits));
+            this.traits = Utils.convertToMap(RudderGson.getInstance().toJson(traits));
             this.persistTraits();
             RudderLogger.logDebug("New traits has been saved");
         } else {
@@ -121,8 +118,7 @@ public class RudderContext {
     void resetTraits() {
         RudderTraits traits = new RudderTraits();
         // convert the whole traits to map and take care of the extras
-        Gson gson = new GsonBuilder().registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer()).create();
-        this.traits = Utils.convertToMap(gson.toJson(traits));
+        this.traits = Utils.convertToMap(RudderGson.getInstance().toJson(traits));
     }
 
     void updateTraits(RudderTraits traits) {
@@ -132,8 +128,7 @@ public class RudderContext {
         }
 
         // convert the whole traits to map and take care of the extras
-        Gson gson = new GsonBuilder().registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer()).create();
-        Map<String, Object> traitsMap = Utils.convertToMap(gson.toJson(traits));
+        Map<String, Object> traitsMap = Utils.convertToMap(RudderGson.getInstance().toJson(traits));
 
         String existingId = (String) this.traits.get("id");
         String newId = (String) traitsMap.get("id");
@@ -159,7 +154,7 @@ public class RudderContext {
         try {
             if (RudderClient.getApplication() != null) {
                 RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getApplication());
-                preferenceManger.saveTraits(new Gson().toJson(this.traits));
+                preferenceManger.saveTraits(RudderGson.getInstance().toJson(this.traits));
             }
         } catch (NullPointerException ex) {
             ReportManager.reportError(ex);
@@ -340,7 +335,7 @@ public class RudderContext {
         try {
             if (RudderClient.getApplication() != null) {
                 RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getApplication());
-                preferenceManger.saveExternalIds(new Gson().toJson(this.externalIds));
+                preferenceManger.saveExternalIds(RudderGson.getInstance().toJson(this.externalIds));
             }
         } catch (NullPointerException ex) {
             ReportManager.reportError(ex);

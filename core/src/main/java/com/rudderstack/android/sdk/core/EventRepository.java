@@ -20,12 +20,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.rudderstack.android.sdk.core.consent.ConsentFilterHandler;
 import com.rudderstack.android.sdk.core.consent.RudderConsentFilter;
-import com.rudderstack.android.sdk.core.util.RudderContextSerializer;
-import com.rudderstack.android.sdk.core.util.RudderTraitsSerializer;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.io.UnsupportedEncodingException;
@@ -63,11 +60,6 @@ class EventRepository {
 
     private @Nullable
     ConsentFilterHandler consentFilterHandler = null;
-
-    private final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(RudderTraits.class, new RudderTraitsSerializer())
-            .registerTypeAdapter(RudderContext.class, new RudderContextSerializer())
-            .create();
     private String dataPlaneUrl;
     private final String writeKey;
 
@@ -347,7 +339,7 @@ class EventRepository {
         RudderMessage updatedMessage = updateMessageWithConsentedDestinations(message);
         userSessionManager.applySessionTracking(updatedMessage);
 
-        String eventJson = gson.toJson(updatedMessage);
+        String eventJson = getEventJsonString(updatedMessage);
         RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
         if (isMessageJsonExceedingMaxSize(eventJson)) {
             incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_SIZE_INVALID));
@@ -355,6 +347,10 @@ class EventRepository {
             return;
         }
         dbManager.saveEvent(eventJson, new EventInsertionCallback(message, deviceModeManager));
+    }
+
+    String getEventJsonString(RudderMessage updatedMessage) {
+        return RudderGson.getInstance().toJson(updatedMessage);
     }
 
     private boolean isMessageJsonExceedingMaxSize(String eventJson) {

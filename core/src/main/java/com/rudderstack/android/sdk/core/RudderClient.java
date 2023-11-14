@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.rudderstack.android.sdk.core.util.Utils;
-import com.rudderstack.gsonrudderadapter.GsonAdapter;
 
 import java.util.Collections;
 import java.util.Map;

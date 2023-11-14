@@ -2,6 +2,7 @@ package com.rudderstack.android.sdk.core;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.google.gson.annotations.SerializedName;
 import com.rudderstack.android.sdk.core.util.Utils;
@@ -261,5 +262,10 @@ public class RudderMessage {
 
     void setSession(RudderUserSession userSession) {
         this.context.setSession(userSession);
+    }
+
+    @VisibleForTesting
+    String getMessageId () {
+        return this.messageId;
     }
 }

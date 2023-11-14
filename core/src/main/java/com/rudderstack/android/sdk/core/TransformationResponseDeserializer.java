@@ -1,8 +1,12 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.RudderDeviceModeManager.gson;
-
-import com.google.gson.*;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -31,7 +35,7 @@ public class TransformationResponseDeserializer implements JsonDeserializer<Tran
                     JsonObject eventObject = payloadObject.getAsJsonObject("event");
                     if (eventObject.size() > 0) {
                         try {
-                            message = gson.fromJson(eventObject, RudderMessage.class);
+                            message = RudderGson.getInstance().fromJson(eventObject, RudderMessage.class);
                         } catch (Exception e) {
                             ReportManager.reportError(e);
                             RudderLogger.logError(String.format("TransformationResponseDeserializer: Error while parsing event object for the destinationId: %s, and error: %s", id, e));

@@ -2,8 +2,8 @@ package com.rudderstack.android.sdk.core;
 
 import android.app.Application;
 
-import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.Date;
@@ -84,7 +84,7 @@ public class RudderTraits {
      */
     public static String getAddress(Map<String, Object> traitsMap) {
         if (traitsMap != null & traitsMap.containsKey(ADDRESS_KEY))
-            return new Gson().toJson(traitsMap.get(ADDRESS_KEY));
+            return RudderGson.getInstance().toJson(traitsMap.get(ADDRESS_KEY));
         return null;
     }
 
@@ -672,7 +672,7 @@ public class RudderTraits {
          * @return address Address
          */
         public static Address fromString(String address) {
-            return new Gson().fromJson(address, Address.class);
+            return RudderGson.getInstance().fromJson(address, Address.class);
         }
     }
 
