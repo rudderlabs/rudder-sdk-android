@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 07/07/23, 11:29 am Last modified: 07/07/23, 11:29 am
+ * Creator: Debanjan Chatterjee on 22/06/23, 7:59 pm Last modified: 22/06/23, 7:54 pm
  * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,11 +14,22 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClient
+import com.rudderstack.android.ruddermetricsreporterandroid.models.Snapshot
 
-interface RudderReporter {
-    val metrics: Metrics
-    val errorClient : ErrorClient
-    val syncer: PeriodicSyncer
-    fun shutdown()
+interface PeriodicSyncer {
+    @Deprecated("Use startPeriodicSyncs instead")
+    fun startScheduledSyncs(
+        interval: Long, flushOnStart: Boolean, flushCount: Long
+    )
+    fun startPeriodicSyncs(
+        interval: Long, flushOnStart: Boolean, flushCount: Long
+    )
+    //setting null will nullify the callback
+    fun setCallback(callback: ((uploadedSnapshot: Snapshot,
+                                success: Boolean) -> Unit)?)
+
+    fun stopScheduling()
+
+    fun flushAllMetrics()
+
 }

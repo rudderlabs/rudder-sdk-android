@@ -14,66 +14,33 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
+import com.rudderstack.android.ruddermetricsreporterandroid.models.Snapshot
 import com.rudderstack.android.ruddermetricsreporterandroid.UploadMediator
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+import com.rudderstack.web.WebService
 import com.rudderstack.web.WebServiceFactory
 import java.util.concurrent.ExecutorService
 
 internal class DefaultUploadMediator(
-//    dataCollectionModule: DataCollectionModule,
-    private val configModule: ConfigModule,
     baseUrl: String,
-    private val jsonAdapter: JsonAdapter,
+    jsonAdapter: JsonAdapter,
     networkExecutor: ExecutorService,
-    private val apiVersion : Int = 1,
-    private val isGzipEnabled : Boolean = true
+    private val isGzipEnabled : Boolean = true,
+    private val webService: WebService = WebServiceFactory.getWebService(baseUrl, jsonAdapter,
+        executor = networkExecutor),
 ) : UploadMediator {
 //    private val deviceDataCollector: DeviceDataCollector
-    private val webService = WebServiceFactory.getWebService(baseUrl, jsonAdapter,
-        executor = networkExecutor)
+    companion object{
+        private const val METRICS_ENDPOINT = "sdkmetrics"
+    }
 
-
-    override fun upload(metrics: List<MetricModel<out Number>>, error: ErrorModel,
-                        callback: (success : Boolean) -> Unit) {
-        val requestMap = createRequestMap(metrics, error)
-        webService.post(null,null, jsonAdapter.writeToJson(requestMap,
-            object: RudderTypeAdapter<Map<String, Any?>>() {}), METRICS_ENDPOINT,
+    override fun upload(snapshot: Snapshot, callback: (success: Boolean) -> Unit) {
+        webService.post(null,null, snapshot.snapshot, METRICS_ENDPOINT,
             object : RudderTypeAdapter<Map<*,*>>(){}, isGzipEnabled){
 
             (it.status in 200..299).apply(callback)
         }
-    }
-
-    private fun createRequestMap(metrics: List<MetricModel<out Number>>, error: ErrorModel): Map<String, Any?> {
-        val requestMap = HashMap<String, Any?>()
-//        requestMap[DEVICE_KEY] =
-        requestMap[METRICS_KEY] = metrics
-        requestMap[ERROR_KEY] = error.toMap(jsonAdapter)
-        requestMap[SOURCE_KEY] = configModule.config.libraryMetadata
-
-        requestMap[VERSION_KEY] = apiVersion.toString()
-        return requestMap
-    }
-//    private fun getSourceJsonFromDeviceAndLibrary(deviceJson: String?,
-//                                                  libraryMetadataJson: String?): String? {
-//        return jsonAdapter.writeToJson(
-//            mapOf(
-//                DEVICE_KEY to deviceJson,
-//                LIBRARY_METADATA_KEY to libraryMetadataJson
-//            ), object : RudderTypeAdapter<Map<*,*>>(){}
-//        )
-//    }
-    companion object{
-//        private const val DEVICE_KEY = "device"
-//        private const val LIBRARY_METADATA_KEY = "libraryMetadata"
-        private const val SOURCE_KEY = "source"
-        private const val METRICS_KEY = "metrics"
-        private const val ERROR_KEY = "errors"
-        private const val VERSION_KEY = "version"
-        private const val METRICS_ENDPOINT = "sdkmetrics"
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 07/07/23, 11:29 am Last modified: 07/07/23, 11:29 am
+ * Creator: Debanjan Chatterjee on 10/11/23, 12:53 pm Last modified: 10/11/23, 12:53 pm
  * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,11 +14,10 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClient
+import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
+import com.rudderstack.android.ruddermetricsreporterandroid.models.Snapshot
 
-interface RudderReporter {
-    val metrics: Metrics
-    val errorClient : ErrorClient
-    val syncer: PeriodicSyncer
-    fun shutdown()
+fun interface SnapshotCreator {
+    fun createSnapshot(metrics: List<MetricModel<out Number>>, errorEvents: List<String>):
+            Snapshot?
 }

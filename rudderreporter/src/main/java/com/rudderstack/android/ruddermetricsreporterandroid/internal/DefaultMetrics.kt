@@ -15,19 +15,19 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
 import com.rudderstack.android.ruddermetricsreporterandroid.Metrics
-import com.rudderstack.android.ruddermetricsreporterandroid.Syncer
+import com.rudderstack.android.ruddermetricsreporterandroid.PeriodicSyncer
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.metrics.DefaultMeter
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.AggregatorHandler
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.Meter
 
 class DefaultMetrics(private val aggregatorHandler: AggregatorHandler,
-private val syncer: Syncer) : Metrics {
+private val periodicSyncer: PeriodicSyncer) : Metrics {
     override fun getMeter(): Meter {
         return DefaultMeter(aggregatorHandler)
     }
     @Deprecated("Use [RudderReporter.syncer] instead")
-    override fun getSyncer(): Syncer {
-        return syncer
+    override fun getSyncer(): PeriodicSyncer {
+        return periodicSyncer
     }
 
     override fun enable(enable: Boolean) {
@@ -36,6 +36,6 @@ private val syncer: Syncer) : Metrics {
 
     override fun shutdown() {
 //        aggregatorHandler.shutdown()
-        syncer.stopScheduling()
+        periodicSyncer.stopScheduling()
     }
 }

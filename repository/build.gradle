@@ -66,6 +66,6 @@ dependencies {
     testImplementation deps.awaitility
     testImplementation deps.robolectric
 }
-apply from: rootProject.file('gradle/artifacts-aar.gradle')
-apply from: rootProject.file('gradle/mvn-publish.gradle')
-apply from: rootProject.file('gradle/codecov.gradle')
+apply from: "$projectDir/../gradle/artifacts-aar.gradle"
+apply from: "$projectDir/../gradle/mvn-publish.gradle"
+apply from: "$projectDir/../gradle/codecov.gradle"

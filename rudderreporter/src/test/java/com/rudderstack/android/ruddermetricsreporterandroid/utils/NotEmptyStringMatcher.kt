@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 07/07/23, 11:29 am Last modified: 07/07/23, 11:29 am
+ * Creator: Debanjan Chatterjee on 13/11/23, 12:21 pm Last modified: 13/11/23, 12:21 pm
  * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,13 +12,17 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.ruddermetricsreporterandroid
+package com.rudderstack.android.ruddermetricsreporterandroid.utils
 
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClient
+import org.hamcrest.BaseMatcher
+import org.hamcrest.Description
 
-interface RudderReporter {
-    val metrics: Metrics
-    val errorClient : ErrorClient
-    val syncer: PeriodicSyncer
-    fun shutdown()
+class NotEmptyStringMatcher : BaseMatcher<Any>() {
+    override fun describeTo(description: Description?) {
+        description?.appendText("Not empty string")
+    }
+
+    override fun matches(item: Any?): Boolean {
+        return (item is String && item.isNotEmpty()) || (item != null && item.toString() != "")
+    }
 }
