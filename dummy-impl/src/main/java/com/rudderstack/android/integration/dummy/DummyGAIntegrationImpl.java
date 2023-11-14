@@ -1,13 +1,10 @@
 package com.rudderstack.android.integration.dummy;
 
-import com.google.gson.Gson;
 import com.rudderstack.android.sdk.core.RudderClient;
 import com.rudderstack.android.sdk.core.RudderConfig;
 import com.rudderstack.android.sdk.core.RudderIntegration;
 import com.rudderstack.android.sdk.core.RudderMessage;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package com.rudderstack.android.sdk.core.util;
+package com.rudderstack.android.sdk.core.gson.gsonadapters;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -11,14 +11,14 @@ import com.rudderstack.android.sdk.core.RudderTraits;
 import java.lang.reflect.Type;
 import java.util.Map;
 
-public class RudderTraitsSerializer implements JsonSerializer<RudderTraits> {
+public class RudderTraitsTypeAdapter implements JsonSerializer<RudderTraits> {
     @Override
     public JsonElement serialize(RudderTraits traits,
                                  Type typeOfSrc,
                                  JsonSerializationContext context) {
         try {
-            Gson gson = new Gson();
             JsonObject outputTraits = new JsonObject();
+            Gson gson = new Gson();
             JsonObject inputTraits = (JsonObject) gson.toJsonTree(traits);
             for (Map.Entry<String, JsonElement> entry : inputTraits.entrySet()) {
                 if (entry.getKey().equals("extras")) {

@@ -10,14 +10,14 @@ class RudderUserSession {
     private final RudderConfig config;
     private Long sessionId;
     private boolean sessionStart;
-    private Long lastEventTimeStamp;
-    private RudderPreferenceManager preferenceManager;
+    private Long lastActiveTimestamp;
+    private final RudderPreferenceManager preferenceManager;
 
     RudderUserSession(RudderPreferenceManager _preferenceManager, RudderConfig _config) {
         this.config = _config;
         this.preferenceManager = _preferenceManager;
         this.sessionId = _preferenceManager.getSessionId();
-        this.lastEventTimeStamp = _preferenceManager.getLastEventTimeStamp();
+        this.lastActiveTimestamp = _preferenceManager.getLastActiveTimestamp();
     }
 
     public void startSession() {
@@ -35,13 +35,13 @@ class RudderUserSession {
 
 
     public void startSessionIfNeeded() {
-        if (this.lastEventTimeStamp == null) {
+        if (this.lastActiveTimestamp == null) {
             this.startSession();
             return;
         }
         final long timeDifference;
         synchronized (this) {
-            timeDifference = Math.abs((Utils.getCurrentTimeInMilliSeconds() - this.lastEventTimeStamp));
+            timeDifference = Math.abs((Utils.getCurrentTimeInMilliSeconds() - this.lastActiveTimestamp));
         }
         if (timeDifference > this.config.getSessionTimeout()) {
             refreshSession();
@@ -53,9 +53,9 @@ class RudderUserSession {
         this.startSession();
     }
 
-    public synchronized void updateLastEventTimeStamp() {
-        this.lastEventTimeStamp = Utils.getCurrentTimeInMilliSeconds();
-        this.preferenceManager.saveLastEventTimeStamp(this.lastEventTimeStamp);
+    public synchronized void updateLastActiveTimestamp() {
+        this.lastActiveTimestamp = Utils.getCurrentTimeInMilliSeconds();
+        this.preferenceManager.saveLastActiveTimestamp(this.lastActiveTimestamp);
     }
 
     @Nullable
@@ -75,7 +75,7 @@ class RudderUserSession {
         this.sessionId = null;
         this.preferenceManager.clearSessionId();
         this.sessionStart = true;
-        this.lastEventTimeStamp = null;
-        this.preferenceManager.clearLastEventTimeStamp();
+        this.lastActiveTimestamp = null;
+        this.preferenceManager.clearLastActiveTimestamp();
     }
 }

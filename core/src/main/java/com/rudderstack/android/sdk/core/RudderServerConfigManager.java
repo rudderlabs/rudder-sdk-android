@@ -3,7 +3,7 @@ package com.rudderstack.android.sdk.core;
 import android.app.Application;
 import android.content.Context;
 
-import com.google.gson.Gson;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.io.FileInputStream;
@@ -75,7 +75,7 @@ class RudderServerConfigManager {
             Result result = networkManager.sendNetworkRequest(null, requestUrl, RequestMethod.GET, false);
             if (result.status == NetworkResponses.SUCCESS) {
                 try {
-                    RudderServerConfig rudderServerConfig = new Gson().fromJson(result.response, RudderServerConfig.class);
+                    RudderServerConfig rudderServerConfig = RudderGson.getInstance().fromJson(result.response, RudderServerConfig.class);
                     RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configJson: %s", result.response));
                     // save config for future use
                     preferenceManger.updateLastUpdatedTime();
