@@ -233,6 +233,7 @@ class DefaultReservoir @JvmOverloads constructor(
     override fun clear() {
         clearErrors()
         clearMetrics()
+        clearSnapshots()
     }
 
     override fun clearMetrics() {
@@ -375,7 +376,7 @@ class DefaultReservoir @JvmOverloads constructor(
             } ?: listOf()
     }
 
-    override fun deleteSnapshots(snapshotIds: List<String>) {
+    override fun deleteSnapshots(snapshotIds: List<String>, callback: ((Int) -> Unit)?) {
         snapshotDao.delete(
             whereClause = "${
                 SnapshotEntity.ColumnNames.ID
@@ -383,11 +384,15 @@ class DefaultReservoir @JvmOverloads constructor(
         )
     }
 
-    override fun deleteSnapshotsSync(snapshotIds: List<String>) {
-        snapshotDao.execSqlSync(
-            "DELETE FROM ${SnapshotEntity.TABLE_NAME} WHERE ${
+    override fun deleteSnapshotsSync(snapshotIds: List<String>): Int {
+        return snapshotDao.deleteSync(
+            "${
                 SnapshotEntity.ColumnNames.ID
-            } IN (${snapshotIds.joinToString(",") { "'$it'" }})")
+            } IN (${snapshotIds.joinToString(",") { "'$it'" }})", null)
+    }
+
+    override fun clearSnapshots() {
+        snapshotDao.delete(null, null)
     }
 
 

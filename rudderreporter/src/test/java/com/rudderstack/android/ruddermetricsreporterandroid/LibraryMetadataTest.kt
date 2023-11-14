@@ -15,9 +15,6 @@
 package com.rudderstack.android.ruddermetricsreporterandroid
 
 import android.os.Build
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultUploaderTestGson
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultUploaderTestJackson
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultUploaderTestMoshi
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.moshirudderadapter.MoshiAdapter

@@ -21,33 +21,64 @@ import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextModule
+import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestDataGenerator
 import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.moshirudderadapter.MoshiAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+import com.rudderstack.web.HttpInterceptor
+import com.rudderstack.web.HttpResponse
+import com.rudderstack.web.WebService
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
+import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.robolectric.annotation.Config
 import java.util.Date
+import java.util.concurrent.Future
+
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29])
 open class DefaultUploaderTest {
 
-    protected var jsonAdapter: JsonAdapter = MoshiAdapter()
-//    private val defaultUploader = DefaultUploadMediator(
-//         ConfigModule(ContextModule(ApplicationProvider.getApplicationContext()), Configuration(
-//            LibraryMetadata("test","1.0","4","abcde")
-//        )),"https://some-api.com",
-//        jsonAdapter, TestExecutor()
-//    )
-
     @Test
-    fun upload() {
-        //TODO: add test for upload
+    fun `test uploadWithSuccessfulUpload`() {
+        val mockSnapshot = TestDataGenerator.mockSnapshot()
+        val callbackMock = mock<(Boolean) -> Unit>()
+        val mockWebService = MockPostWebService(200)
+        val uploadMediator = DefaultUploadMediator("https://api.example.com", mock(), mock(), true, mockWebService)
+
+
+        uploadMediator.upload(mockSnapshot, callbackMock)
+
+        verify(callbackMock, times(1)).invoke(true)
     }
+    @Test
+    fun `test uploadWithFailedUpload`() {
+        val mockSnapshot = TestDataGenerator.mockSnapshot()
+        val callbackMock = mock<(Boolean) -> Unit>()
+        val mockWebService = MockPostWebService(400)
+        val uploadMediator = DefaultUploadMediator("https://api.example.com", mock(), mock(), true, mockWebService)
+
+
+        uploadMediator.upload(mockSnapshot, callbackMock)
+
+        verify(callbackMock, times(1)).invoke(false)
+    }
+
+
 
     companion object {
         private const val MANUFACTURER = "Google"
@@ -58,31 +89,99 @@ open class DefaultUploaderTest {
         private const val ID = "id"
 
     }
-}
 
-class DefaultUploaderTestGson : DefaultUploaderTest() {
-    init {
-        jsonAdapter = GsonAdapter()
+    class MockPostWebService(private val statusCode: Int) : WebService {
+        override fun <T : Any> get(
+            headers: Map<String, String>?,
+            query: Map<String, String>?,
+            endpoint: String,
+            responseClass: Class<T>
+        ): Future<HttpResponse<T>> {
+            TODO("Not yet implemented")
+        }
+
+        override fun <T : Any> get(
+            headers: Map<String, String>?,
+            query: Map<String, String>?,
+            endpoint: String,
+            responseTypeAdapter: RudderTypeAdapter<T>
+        ): Future<HttpResponse<T>> {
+            TODO("Not yet implemented")
+        }
+
+        override fun <T : Any> get(
+            headers: Map<String, String>?,
+            query: Map<String, String>?,
+            endpoint: String,
+            responseTypeAdapter: RudderTypeAdapter<T>,
+            callback: (HttpResponse<T>) -> Unit
+        ) {
+            TODO("Not yet implemented")
+        }
+
+        override fun <T : Any> get(
+            headers: Map<String, String>?,
+            query: Map<String, String>?,
+            endpoint: String,
+            responseClass: Class<T>,
+            callback: (HttpResponse<T>) -> Unit
+        ) {
+            TODO("Not yet implemented")
+        }
+
+        override fun <T : Any> post(
+            headers: Map<String, String>?,
+            query: Map<String, String>?,
+            body: String?,
+            endpoint: String,
+            responseClass: Class<T>,
+            isGzipEnabled: Boolean
+        ): Future<HttpResponse<T>> {
+            TODO("Not yet implemented")
+        }
+
+        override fun <T : Any> post(
+            headers: Map<String, String>?,
+            query: Map<String, String>?,
+            body: String?,
+            endpoint: String,
+            responseTypeAdapter: RudderTypeAdapter<T>,
+            isGzipEnabled: Boolean
+        ): Future<HttpResponse<T>> {
+            TODO("Not yet implemented")
+        }
+
+        override fun <T : Any> post(
+            headers: Map<String, String>?,
+            query: Map<String, String>?,
+            body: String?,
+            endpoint: String,
+            responseClass: Class<T>,
+            isGzipEnabled: Boolean,
+            callback: (HttpResponse<T>) -> Unit
+        ) {
+            callback.invoke(HttpResponse(statusCode, null, null))
+        }
+
+        override fun <T : Any> post(
+            headers: Map<String, String>?,
+            query: Map<String, String>?,
+            body: String?,
+            endpoint: String,
+            responseTypeAdapter: RudderTypeAdapter<T>,
+            isGzipEnabled: Boolean,
+            callback: (HttpResponse<T>) -> Unit
+        ) {
+            callback.invoke(HttpResponse(statusCode, null, null))
+        }
+
+        override fun setInterceptor(httpInterceptor: HttpInterceptor) {
+            TODO("Not yet implemented")
+        }
+
+        override fun shutdown(shutdownExecutor: Boolean) {
+            TODO("Not yet implemented")
+        }
     }
 }
 
-class DefaultUploaderTestJackson : DefaultUploaderTest() {
-    init {
-        jsonAdapter = JacksonAdapter()
-    }
-}
-
-class DefaultUploaderTestMoshi : DefaultUploaderTest() {
-    init {
-        jsonAdapter = MoshiAdapter()
-    }
-}
-
-@RunWith(Suite::class)
-@Suite.SuiteClasses(
-    DefaultUploaderTestGson::class,
-    DefaultUploaderTestJackson::class,
-    DefaultUploaderTestMoshi::class
-)
-class DefaultUploaderTestSuite {
-}

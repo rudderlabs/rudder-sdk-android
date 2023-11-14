@@ -41,10 +41,10 @@ internal class SnapshotEntity(private val id: String, private val snapshot: Stri
     }
     companion object {
         const val TABLE_NAME = "snapshots"
-        fun create(values: Map<String, Any?>): Snapshot{
+        fun create(values: Map<String, Any?>): SnapshotEntity{
             val id = values[ColumnNames.ID] as String
             val snapshot = values[ColumnNames.SNAPSHOT] as String
-            return Snapshot(id, snapshot)
+            return SnapshotEntity(id, snapshot)
         }
     }
 

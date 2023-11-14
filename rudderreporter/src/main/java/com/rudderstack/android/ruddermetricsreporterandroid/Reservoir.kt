@@ -68,8 +68,16 @@ interface Reservoir {
     fun getAllSnapshots(callback: (List<Snapshot>) -> Unit)
 
     fun getSnapshots(limit: Long, offset: Int = 0): List<Snapshot>
-    fun deleteSnapshots(snapshotIds: List<String>)
-    fun deleteSnapshotsSync(snapshotIds: List<String>)
+    fun deleteSnapshots(snapshotIds: List<String>, callback: ((numberOfRows: Int) -> Unit)?= null)
+
+    /**
+     * Deletes the snapshots with the given ids
+     *
+     * @param snapshotIds : List of snapshot ids
+     * @return number of rows deleted
+     */
+    fun deleteSnapshotsSync(snapshotIds: List<String>) : Int
+    fun clearSnapshots()
 
     /**
      * Will reset each element up to the value

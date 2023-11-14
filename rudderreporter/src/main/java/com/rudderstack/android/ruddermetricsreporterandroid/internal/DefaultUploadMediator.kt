@@ -19,6 +19,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.UploadMediator
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+import com.rudderstack.web.WebService
 import com.rudderstack.web.WebServiceFactory
 import java.util.concurrent.ExecutorService
 
@@ -26,25 +27,11 @@ internal class DefaultUploadMediator(
     baseUrl: String,
     jsonAdapter: JsonAdapter,
     networkExecutor: ExecutorService,
-    private val isGzipEnabled : Boolean = true
+    private val isGzipEnabled : Boolean = true,
+    private val webService: WebService = WebServiceFactory.getWebService(baseUrl, jsonAdapter,
+        executor = networkExecutor),
 ) : UploadMediator {
 //    private val deviceDataCollector: DeviceDataCollector
-    private val webService = WebServiceFactory.getWebService(baseUrl, jsonAdapter,
-        executor = networkExecutor)
-
-
-/*    override fun upload(metrics: List<MetricModel<out Number>>, error: ErrorModel,
-                        callback: (success : Boolean) -> Unit) {
-        webService.post(null,null, BatchOperator.createBatchJson(
-            metrics, error, configModule.config.libraryMetadata, apiVersion, jsonAdapter)
-        , METRICS_ENDPOINT,
-            object : RudderTypeAdapter<Map<*,*>>(){}, isGzipEnabled){
-
-            (it.status in 200..299).apply(callback)
-        }
-    }*/
-
-
     companion object{
         private const val METRICS_ENDPOINT = "sdkmetrics"
     }

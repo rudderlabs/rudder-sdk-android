@@ -15,7 +15,6 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorEvent
 import com.rudderstack.android.ruddermetricsreporterandroid.utils.NotEmptyStringMatcher
 import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestDataGenerator
 import com.rudderstack.rudderjsonadapter.JsonAdapter
@@ -23,22 +22,12 @@ import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.empty
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.hasEntry
 import org.hamcrest.Matchers.hasKey
-import org.hamcrest.Matchers.isA
-import org.hamcrest.Matchers.not
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.kotlin.KArgumentCaptor
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.isA
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever

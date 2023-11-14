@@ -31,6 +31,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anyOf
+import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.empty
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.everyItem
@@ -833,6 +834,123 @@ class DefaultReservoirTest {
         defaultStorage.getErrorsCount {
             assertThat(it, equalTo(10L))
         }
+    }
+    @Test
+    fun `test saveSnapshot`(){
+        defaultStorage.clear()
+        val snapshot = TestDataGenerator.mockSnapshot()
+        defaultStorage.saveSnapshot(snapshot){
+            assertThat(it, Matchers.greaterThan(-1L))
+        }
+        val snapshots = defaultStorage.getAllSnapshotsSync()
+        println("snaphot: $snapshots")
+        assertThat(snapshots, Matchers.contains(snapshot))
+
+    }
+    @Test
+    fun `test saveSnapshotSync`(){
+        defaultStorage.clear()
+        val snapshot = TestDataGenerator.mockSnapshot()
+        val rowId = defaultStorage.saveSnapshotSync(snapshot)
+        assertThat(rowId, Matchers.greaterThan(-1L))
+
+        val snapshots = defaultStorage.getAllSnapshotsSync()
+        println("snaphot: $snapshots")
+        assertThat(snapshots, Matchers.contains(snapshot))
+
+    }
+    @Test
+    fun `test getAllSnapshotsSync`(){
+
+        defaultStorage.clear()
+        val snapshotsInput = (1..10).map {  TestDataGenerator.mockSnapshot("uuid_$it")}
+        snapshotsInput.forEach {
+            val rowId = defaultStorage.saveSnapshotSync(it)
+            assertThat(rowId, Matchers.greaterThan(-1L))
+        }
+
+        val snapshots = defaultStorage.getAllSnapshotsSync()
+        assertThat(snapshots, allOf(hasSize(10), Matchers.contains(*snapshotsInput.toTypedArray())))
+    }
+    @Test
+    fun `test getAllSnapshots`(){
+        defaultStorage.clear()
+        val snapshotsInput = (1..10).map {  TestDataGenerator.mockSnapshot("uuid_$it")}
+        snapshotsInput.forEach {
+            val rowId = defaultStorage.saveSnapshotSync(it)
+            assertThat(rowId, Matchers.greaterThan(-1L))
+        }
+
+        defaultStorage.getAllSnapshots{
+            assertThat(it, allOf(hasSize(10), Matchers.contains(*snapshotsInput.toTypedArray())))
+        }
+    }
+    @Test
+    fun `test getSnapshots`(){
+        defaultStorage.clear()
+        val snapshotsInput = (1..10).map {  TestDataGenerator.mockSnapshot("uuid_$it")}
+        snapshotsInput.forEach {
+            val rowId = defaultStorage.saveSnapshotSync(it)
+            assertThat(rowId, Matchers.greaterThan(-1L))
+        }
+
+        defaultStorage.getAllSnapshots{
+            assertThat(it, allOf(hasSize(10), Matchers.contains(*snapshotsInput.toTypedArray())))
+        }
+    }
+    @Test
+    fun `test deleteSnapshots`(){
+        defaultStorage.clear()
+        val snapshotsInput = (1..10).map {  TestDataGenerator.mockSnapshot("uuid_$it")}
+        snapshotsInput.forEach {
+            val rowId = defaultStorage.saveSnapshotSync(it)
+            assertThat(rowId, Matchers.greaterThan(-1L))
+        }
+        defaultStorage.deleteSnapshots(snapshotsInput.map { it.id }){
+            assertThat(it, Matchers.equalTo(10))
+        }
+        val snapshots = defaultStorage.getAllSnapshotsSync()
+        assertThat(snapshots, Matchers.empty())
+    }
+    @Test
+    fun `test deleteSnapshots partly`(){
+        defaultStorage.clear()
+        val snapshotsInput = (1..10).map {  TestDataGenerator.mockSnapshot("uuid_$it")}
+        snapshotsInput.forEach {
+            val rowId = defaultStorage.saveSnapshotSync(it)
+            assertThat(rowId, Matchers.greaterThan(-1L))
+        }
+        defaultStorage.deleteSnapshots(listOf(snapshotsInput.first ().id)){
+            assertThat(it, Matchers.equalTo(1))
+        }
+        val snapshots = defaultStorage.getAllSnapshotsSync()
+        assertThat(snapshots, allOf( Matchers.hasSize (9), not(contains(snapshotsInput.first()))))
+    }
+    @Test
+    fun `test deleteSnapshotsSync`(){
+        defaultStorage.clear()
+        val snapshotsInput = (1..10).map {  TestDataGenerator.mockSnapshot("uuid_$it")}
+        snapshotsInput.forEach {
+            val rowId = defaultStorage.saveSnapshotSync(it)
+            assertThat(rowId, Matchers.greaterThan(-1L))
+        }
+        val deletedCount = defaultStorage.deleteSnapshotsSync(snapshotsInput.map { it.id })
+        assertThat(deletedCount, Matchers.equalTo(10))
+        val snapshots = defaultStorage.getAllSnapshotsSync()
+        assertThat(snapshots, Matchers.empty())
+    }
+    @Test
+    fun `test deleteSnapshotsSync partly`(){
+        defaultStorage.clear()
+        val snapshotsInput = (1..10).map {  TestDataGenerator.mockSnapshot("uuid_$it")}
+        snapshotsInput.forEach {
+            val rowId = defaultStorage.saveSnapshotSync(it)
+            assertThat(rowId, Matchers.greaterThan(-1L))
+        }
+        val deletedCount = defaultStorage.deleteSnapshotsSync(listOf(snapshotsInput.first().id))
+        assertThat(deletedCount, Matchers.equalTo(1))
+        val snapshots = defaultStorage.getAllSnapshotsSync()
+        assertThat(snapshots, allOf( Matchers.hasSize (9), not(contains(snapshotsInput.first()))))
     }
 }
 
