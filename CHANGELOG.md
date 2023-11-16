@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.21.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.20.2...v1.21.0) (2023-11-14)
+
+
+### Features
+
+* added support for JSONObject and JSONArray as part of RudderMessage object ([#350](https://github.com/rudderlabs/rudder-sdk-android/issues/350)) ([c9bb58f](https://github.com/rudderlabs/rudder-sdk-android/commit/c9bb58f7e2e2b76f9aaed817e36d5f46c3b86bab))
+
+
+### Bug Fixes
+
+* update lastActiveTimestamp value when reset call is made ([#360](https://github.com/rudderlabs/rudder-sdk-android/issues/360)) ([7596d71](https://github.com/rudderlabs/rudder-sdk-android/commit/7596d718fa63dda0e1d5cb683749acfc6691b295))
+
 ### [1.20.2](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.20.1...v1.20.2) (2023-11-01)
 
 
