@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
+import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 
 interface Syncer {
@@ -21,7 +22,9 @@ interface Syncer {
         interval: Long, flushOnStart: Boolean, flushCount: Long
     )
     //setting null will nullify the callback
-    fun setCallback(callback: ((uploaded: List<MetricModel<out Number>>, success: Boolean) -> Unit)?)
+    fun setCallback(callback: ((uploaded: List<MetricModel<out Number>>,
+                                uploadedErrorModel: ErrorModel,
+                                success: Boolean) -> Unit)?)
 
     fun stopScheduling()
 

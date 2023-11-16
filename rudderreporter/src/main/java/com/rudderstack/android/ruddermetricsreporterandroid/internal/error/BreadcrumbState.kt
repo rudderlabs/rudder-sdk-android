@@ -14,8 +14,8 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal.error
 
-import com.rudderstack.android.ruddermetricsreporterandroid.error.Breadcrumb
 import com.rudderstack.android.ruddermetricsreporterandroid.Logger
+import com.rudderstack.android.ruddermetricsreporterandroid.error.Breadcrumb
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.BaseObservable
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.StateEvent
 import java.util.concurrent.atomic.AtomicInteger
@@ -57,7 +57,7 @@ internal class BreadcrumbState(
         updateState {
             // use direct field access to avoid overhead of accessor method
             StateEvent.AddBreadcrumb(
-                breadcrumb.message,
+                breadcrumb.name,
                 breadcrumb.type,
                 // an encoding of milliseconds since the epoch
                 "t${breadcrumb.timestamp.time}",

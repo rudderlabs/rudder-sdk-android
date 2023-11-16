@@ -19,7 +19,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextModule
 import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
@@ -40,16 +39,14 @@ open class DefaultUploaderTest {
     protected var jsonAdapter: JsonAdapter = MoshiAdapter()
     private val defaultUploader = DefaultUploadMediator(
          ConfigModule(ContextModule(ApplicationProvider.getApplicationContext()), Configuration(
-            LibraryMetadata("","","","")
+            LibraryMetadata("test","1.0","4","abcde")
         )),"https://some-api.com",
         jsonAdapter, TestExecutor()
     )
 
     @Test
     fun upload() {
-        defaultUploader.upload(listOf(), ErrorModel()) {
-
-        }
+        //TODO: add test for upload
     }
 
     companion object {

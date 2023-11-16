@@ -16,6 +16,7 @@ package com.rudderstack.android.ruddermetricsreporterandroid.internal.error
 
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.DependencyModule
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * A dependency module which constructs the objects that track state in Bugsnag. For example, this

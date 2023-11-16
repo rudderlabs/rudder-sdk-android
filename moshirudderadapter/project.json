@@ -4,18 +4,19 @@
   "projectType": "library",
   "sourceRoot": "./moshirudderadapter/src",
   "targets": {
-    "dependsOn": [
-      {
-        "projects":[
-          "rudderjsonadapter",
-          "models"
-        ],
-        "target":"build"
-      }
-    ],
     "build": {
+      "dependsOn": [
+        {
+          "projects": [
+            "rudderjsonadapter"
+          ],
+          "target": "build"
+        }
+      ],
       "executor": "@jnxplus/nx-gradle:build",
-      "outputs": ["./moshirudderadapter/build"]
+      "outputs": [
+        "{projectRoot}/moshirudderadapter/build"
+      ]
     },
     "lint": {
       "executor": "@jnxplus/nx-gradle:lint",
@@ -32,9 +33,9 @@
     "version": {
       "executor": "@jscutlery/semver:version",
       "options": {
-        "baseBranch": "master",
+        "baseBranch": "master-v2",
         "preset": "conventional",
-        "tagPrefix": "${projectName}@"
+        "tagPrefix": "{projectName}@"
       }
     },
     "sync-bumped-version-properties": {
@@ -46,20 +47,21 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "tag": "moshirudderadapter@1.0.0",
+        "title": "moshirudderadapter@0.1.0",
+        "tag": "moshirudderadapter@0.1.0",
         "notesFile": "./moshirudderadapter/CHANGELOG_LATEST.md"
       }
     },
     "release-sonatype": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'moshirudderadapter-release' && ./gradlew :moshirudderadapter:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
+        "command": "echo 'moshirudderadapter-release' && ./gradlew publishToSonatype -p moshirudderadapter -Prelease && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'moshirudderadapter-snapshot' && ./gradlew :moshirudderadapter:publishToSonatype"
+        "command": "echo 'moshirudderadapter-snapshot' && cd moshirudderadapter && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype && cd .."
       }
     }
   },

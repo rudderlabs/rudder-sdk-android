@@ -1,6 +1,6 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
-apply from: rootProject.file('gradle/versioning.gradle')
+
 publishing {
     publications {
         release(MavenPublication) {
@@ -8,14 +8,15 @@ publishing {
             // we'll set up in a moment
             groupId GROUP
             artifactId POM_ARTIFACT_ID
-            version getVersionName()
+            version getVersionName(VERSION_NAME)
             if (POM_PACKAGING == "aar") {
                 artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
             } else {
                 artifact("$buildDir/libs/${project.getName()}-${version}.jar")
             }
-//            artifact sourcesJar
-//            artifact javadocJar
+            artifact sourcesJar
+            artifact javadocJar
+
 
             // Self-explanatory metadata for the most part
             pom {
@@ -55,8 +56,8 @@ publishing {
                         final dependencyNode = dependenciesNode.appendNode('dependency')
                         dependencyNode.appendNode('artifactId', dep.name)
                         if (dep.version == 'unspecified') {
-                            dependencyNode.appendNode('groupId', project.ext.pomGroupID)
-                            dependencyNode.appendNode('version', project.ext.pomVersion)
+                            dependencyNode.appendNode('groupId', GROUP)
+                            dependencyNode.appendNode('version', version)
                         } else {
                             dependencyNode.appendNode('groupId', dep.group)
                             dependencyNode.appendNode('version', dep.version)
@@ -73,14 +74,19 @@ publishing {
 }
 
 
+
 signing {
-    def signingKeyId = System.getenv("SIGNING_KEY_ID")
-    def signingKey = System.getenv("SIGNING_PRIVATE_KEY_BASE64")
-    def signingPassword = System.getenv("SIGNING_KEY_PASSWORD")
+    def signingKeyId = rootProject.ext["signing.keyId"]
+    def signingKey = rootProject.ext["signing.key"]
+    def signingPassword = rootProject.ext["signing.password"]
     useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
     sign publishing.publications
 }
-
+if(POM_PACKAGING == "aar"){
+    tasks.named("signReleasePublication").configure { dependsOn("bundleReleaseAar") }
+}else{
+    tasks.named("signReleasePublication").configure { dependsOn("jar") }
+}
 publish.dependsOn build
 publishToMavenLocal.dependsOn build
 publishToSonatype.dependsOn publish

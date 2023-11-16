@@ -1,0 +1,34 @@
+
+//def mod = project.findProperty('POM_ARTIFACT_ID')
+//def mod = POM_ARTIFACT_ID
+task sourcesJar(type: Jar) {
+    archiveClassifier.set('sources')
+    from android.sourceSets.main.java.srcDirs
+}
+
+task javadoc(type: Javadoc, dependsOn: 'assembleRelease') {
+    failOnError false
+    configurations.implementation.setCanBeResolved(true)
+
+    failOnError false
+    source = android.sourceSets.main.java.sourceFiles
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+//    classpath += configurations.implementation
+    android.libraryVariants.all { variant ->
+        if (variant.name == 'release') {
+            owner.classpath += variant.javaCompile.classpath
+        }
+    }
+}
+
+// build a jar with javadoc
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    archiveClassifier.set('javadoc')
+    from javadoc.destinationDir
+}
+
+// Attach Javadocs and Sources jar
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}

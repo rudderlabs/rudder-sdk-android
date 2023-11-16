@@ -3,7 +3,7 @@ name: Draft new release for v2
 on:
   workflow_dispatch:
 env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.PAT }}
 
 jobs:
   draft-new-release-v2:
@@ -12,7 +12,7 @@ jobs:
     if: startsWith(github.ref, 'refs/heads/develop-v2') || startsWith(github.ref, 'refs/heads/hotfix-v2/')
     steps:
       - name: Checkout source branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -40,7 +40,9 @@ jobs:
           source_branch_name=${GITHUB_REF##*/}
           release_type=release-v2
           grep -q "hotfix-v2/" <<< "${GITHUB_REF}" && release_type=hotfix-release-v2
-          git fetch origin master-v2 --depth=1
+          git fetch origin master-v2
+          git fetch --tags origin
+
           git merge origin/master-v2
           current_version=$(jq -r .version package.json)
 

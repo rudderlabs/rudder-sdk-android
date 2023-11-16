@@ -25,7 +25,7 @@ private val syncer: Syncer) : Metrics {
     override fun getMeter(): Meter {
         return DefaultMeter(aggregatorHandler)
     }
-
+    @Deprecated("Use [RudderReporter.syncer] instead")
     override fun getSyncer(): Syncer {
         return syncer
     }

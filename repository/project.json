@@ -6,17 +6,23 @@
   "targets": {
     "build": {
       "executor": "@jnxplus/nx-gradle:build",
-      "outputs": ["./repository/build"]
+      "outputs": [
+        "{projectRoot}/repository/build"
+      ]
     },
     "lint": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:lint",
       "options": {
         "linter": "ktlint"
       }
     },
     "test": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:test"
     },
     "ktformat": {
@@ -25,9 +31,9 @@
     "version": {
       "executor": "@jscutlery/semver:version",
       "options": {
-        "baseBranch": "master",
+        "baseBranch": "master-v2",
         "preset": "conventional",
-        "tagPrefix": "${projectName}@"
+        "tagPrefix": "{projectName}@"
       }
     },
     "sync-bumped-version-properties": {
@@ -39,22 +45,27 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "tag": "repository@1.0.0",
+        "title": "repository@0.2.2",
+        "tag": "repository@0.2.2",
         "notesFile": "./repository/CHANGELOG_LATEST.md"
       }
     },
     "release-sonatype": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'repository-release' && ./gradlew :repository:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
+        "command": "echo 'repository-release' && ./gradlew publishToSonatype -p repository -Prelease && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'repository-snapshot' && ./gradlew :repository:publishToSonatype"
+        "command": "echo 'repository-snapshot' && cd repository && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype && cd .."
       }
     }
   },
