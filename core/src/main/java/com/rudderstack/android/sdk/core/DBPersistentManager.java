@@ -255,6 +255,10 @@ class DBPersistentManager extends SQLiteOpenHelper {
         // basically do nothing
     }
 
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    }
+
     public void deleteAllEvents() {
         try {
             SQLiteDatabase database = getWritableDatabase();
