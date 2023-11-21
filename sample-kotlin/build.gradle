@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-//apply plugin: 'kotlin-android-extensions'
 
 
 android {
@@ -18,7 +17,6 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-//            useProguard true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -34,20 +32,16 @@ repositories {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-//    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.core:core-ktx:1.3.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'com.google.android.material:material:1.1.0'
 
-//    implementation 'com.rudderstack.android.sdk:core:1.5.1'
     implementation project(':core')  // 1.5.3
-//    implementation 'com.rudderstack.android.sdk:core:1.21.0'
 
 
     implementation 'com.google.code.gson:gson:2.8.6'
 
-//    implementation 'com.google.android.gms:play-services-ads:19.3.0'
 
     implementation "androidx.work:work-runtime:2.7.1"
     //multidex

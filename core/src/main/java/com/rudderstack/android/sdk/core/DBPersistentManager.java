@@ -257,6 +257,7 @@ class DBPersistentManager extends SQLiteOpenHelper {
 
     @Override
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // ignore the downgrade
     }
 
     public void deleteAllEvents() {
