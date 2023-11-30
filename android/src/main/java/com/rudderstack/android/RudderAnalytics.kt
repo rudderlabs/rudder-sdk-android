@@ -11,23 +11,19 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-@file:JvmName("AnalyticsFactory")
-@file:Suppress("FunctionName")
+@file:JvmName("AnalyticsFactory") @file:Suppress("FunctionName")
 
 package com.rudderstack.android
 
 import android.app.Application
-import android.util.Base64
-import com.rudderstack.android.internal.AndroidLogger
-import com.rudderstack.android.internal.LifecycleObserver
 import com.rudderstack.android.internal.RudderPreferenceManager
+import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
+import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
+import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
 import com.rudderstack.android.internal.plugins.AndroidContextPlugin
-import com.rudderstack.android.internal.sync.RudderWorkerConfig
-import com.rudderstack.android.internal.sync.registerWorkManager
-import com.rudderstack.android.storage.AndroidStorage
+import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.core.*
 import com.rudderstack.models.*
-import com.rudderstack.rudderjsonadapter.JsonAdapter
 import java.util.*
 
 //device info and stuff
@@ -36,70 +32,27 @@ import java.util.*
 //tv,
 //work manager
 fun RudderAnalytics(
-    application: Application,
     writeKey: String,
-    settings: Settings,
-    jsonAdapter: JsonAdapter,
-    dataPlaneUrl: String? = null,
-    shouldVerifySdk: Boolean = true,
-    controlPlaneUrl: String? = null,
-    trackLifecycleEvents: Boolean = false,
-    recordScreenViews: Boolean = false,
-    isPeriodicFlushEnabled: Boolean = false,
-    autoCollectAdvertId: Boolean = false,
-    multiProcessEnabled: Boolean = false,
-    defaultProcessName: String? = null,
-    useContentProvider: Boolean = multiProcessEnabled,
-    defaultTraits: IdentifyTraits? = null,
-    defaultExternalIds: List<Map<String, String>>? = null,
-    defaultContextMap: Map<String, Any>? = null,
-    logger: Logger = AndroidLogger,
-    sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
+    configuration: ConfigurationAndroid,
+    dataUploadService: DataUploadService? = null,
+    configDownloadService: ConfigDownloadService? = null,
     initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
 ): Analytics {
-    initialize(application)
-    val storage = AndroidStorage(application, jsonAdapter, useContentProvider, logger)
+    initialize(configuration.application)
     return Analytics(
         writeKey,
-        settings.takeIf { it.anonymousId != null }
-            ?: settings.copy(anonymousId = AndroidUtils.getDeviceId(application)),
-        jsonAdapter,
-        shouldVerifySdk,
-        sdkVerifyRetryStrategy,
-
-        dataPlaneUrl,
-        controlPlaneUrl,
-        logger,
-        storage,
-        base64Generator = Base64Generator {
-            Base64.encodeToString(
-                String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8")),
-                Base64.DEFAULT
-            )
-        },
-        defaultTraits = defaultTraits,
-        defaultExternalIds = defaultExternalIds,
+        configuration,
+        dataUploadService,
+        configDownloadService,
         initializationListener = initializationListener,
-        defaultContextMap = defaultContextMap,
         shutdownHook = ::shutdown
     ).apply {
-        startup(
-            application,
-            jsonAdapter,
-            isPeriodicFlushEnabled,
-            trackLifecycleEvents,
-            autoCollectAdvertId,
-            recordScreenViews,
-            writeKey, dataPlaneUrl, controlPlaneUrl, logger,
-            if (multiProcessEnabled) defaultProcessName else null
-        )
+        startup()
     }
 
 }
 
-//android specific properties
-private var androidContextPlugin: AndroidContextPlugin? = null
-private var lifecycleObserver: LifecycleObserver? = null
+
 
 /**
  * Set the AdvertisingId yourself. If set, SDK will not capture idfa automatically
@@ -108,10 +61,13 @@ private var lifecycleObserver: LifecycleObserver? = null
  */
 fun Analytics.putAdvertisingId(advertisingId: String) {
 
-    // sets into context plugin
-    androidContextPlugin?.setAdvertisingId(advertisingId) ?: logger.warn(
-        log = "Analytics not initialized. Setting advertising id failed"
-    )
+    applyConfiguration {
+    if (this is ConfigurationAndroid)
+        copy(
+            advertisingId = advertisingId
+        )
+    else this
+    }
 }
 
 /**
@@ -120,74 +76,88 @@ fun Analytics.putAdvertisingId(advertisingId: String) {
  * @param deviceToken Push Token from FCM
  */
 fun Analytics.putDeviceToken(deviceToken: String) {
-
-    //set device token in context plugin
-    androidContextPlugin?.putDeviceToken(deviceToken) ?: logger.warn(
-        log = "Analytics not initialized. Setting device token failed"
-    )
+    applyConfiguration {
+        if (this is ConfigurationAndroid)
+            copy(
+                deviceToken = deviceToken
+            )
+        else this
+    }
 }
+/**
+ * Anonymous id to be used for all consecutive calls.
+ * Anonymous id is mostly used for messages sent prior to user identification or in case of
+ * anonymous usage.
+ *
+ * @param anonymousId String to be used as anonymousId
+ */
+fun Analytics.setAnonymousId(anonymousId : String) {
+    currentConfigurationAndroid?.storage?.setAnonymousId(anonymousId)
+    applyConfiguration {
+        if (this is ConfigurationAndroid)
+            copy(
+                anonymousId = anonymousId
+            )
+        else this
+    }
+}
+/**
+ * Setting the [ConfigurationAndroid.userId] explicitly.
 
+ *
+ * @param userId String to be used as userId
+ */
+fun Analytics.setUserId(userId : String) {
+    currentConfigurationAndroid?.storage?.setUserId(userId)
+    applyConfiguration {
+        if (this is ConfigurationAndroid)
+            copy(
+                userId = userId
+            )
+        else this
+    }
+}
 private fun initialize(application: Application) {
     RudderPreferenceManager.initialize(application)
 }
-
-private fun Analytics.startup(
-    application: Application,
-    jsonAdapter: JsonAdapter,
-    isPeriodicFlushEnabled: Boolean,
-    trackLifecycleEvents: Boolean,
-    autoCollectAdvertId: Boolean,
-    recordScreenViews: Boolean,
-    writeKey: String,
-    dataPlaneUrl: String?,
-    controlPlaneUrl: String?,
-    logger: Logger,
-    defaultProcessName: String? = null
-) {
-    //lifecycle observer
-    lifecycleObserver = LifecycleObserver(
-        application,
-        trackLifecycleEvents,
-        recordScreenViews, ::send
+private val infrastructurePlugins
+    get() = arrayOf(AnonymousIdHeaderPlugin(),
+        LifecycleObserverPlugin(),
+        ActivityBroadcasterPlugin())
+private val messagePlugins
+    get() = listOf(
+        AndroidContextPlugin(),
     )
-
-    //add android context
-    androidContextPlugin =
-        AndroidContextPlugin(
-            application,
-            autoCollectAdvertId,
-            analyticsExecutor,
-            jsonAdapter
-        ).also {
-            addPlugin(it)
-        }
-    if (isPeriodicFlushEnabled)
-        application.registerWorkManager(
-            this, RudderWorkerConfig(
-                writeKey, defaultProcessName != null,
-                dataPlaneUrl, controlPlaneUrl, jsonAdapter, logger, defaultProcessName
-            )
-        )
-}
-
-private fun Analytics.send(message: Message) {
-    when (message) {
-        is AliasMessage -> alias(message)
-        is GroupMessage -> group(message)
-        is IdentifyMessage -> identify(message)
-        is PageMessage -> {
-            /**not supported in mobile**/
-            logger.warn(log = "Page Message is not supported")
-        }
-        is ScreenMessage -> screen(message)
-        is TrackMessage -> track(message)
+private fun Analytics.startup() {
+    addInfrastructurePlugin(*infrastructurePlugins)
+    addPlugin(*messagePlugins.toTypedArray())
+    generateNewContext(currentConfigurationAndroid ?: return).also {
+        processNewContext(currentConfigurationAndroid ?: return, it)
     }
 }
+private fun generateNewContext(configuration: ConfigurationAndroid): MessageContext {
+    return createContext(
+        configuration.defaultTraits,
+        configuration.defaultExternalIds,
+        configuration.defaultContextMap,
+        configuration.contextAddOns
+    )
+}
+internal fun processNewContext(
+    configuration: ConfigurationAndroid,
+    newContext: MessageContext
+) {
+    configuration.analyticsExecutor.submit {
+        configuration.storage.cacheContext(newContext)
+    }
+    ContextState.update(newContext)
+}
 
+
+internal val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
+    get() = (currentConfiguration as? ConfigurationAndroid)
 private fun shutdown() {
-    androidContextPlugin = null
-    lifecycleObserver?.shutdown()
-    lifecycleObserver = null
+    //no-op
 }
 
 

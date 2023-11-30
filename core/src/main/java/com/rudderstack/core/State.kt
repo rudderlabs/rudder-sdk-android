@@ -27,7 +27,7 @@ import java.lang.ref.WeakReference
  *
  * @param initialValue An initial value can be supplied, which defaults to null
  */
-internal abstract class State<T>(initialValue: T? = null) {
+abstract class State<T>(initialValue: T? = null) {
 
 
     private var _value: T? = initialValue
@@ -51,7 +51,7 @@ internal abstract class State<T>(initialValue: T? = null) {
      * @see Observer
      * @param observer an instance of Observer
      */
-    internal fun subscribe(observer: Observer<T>) {
+     fun subscribe(observer: Observer<T>) {
         synchronized(this){
             observers.add(WeakReference(observer))
             observer.onStateChange(value)
@@ -64,16 +64,16 @@ internal abstract class State<T>(initialValue: T? = null) {
      *
      * @param value New value of state
      */
-    internal fun update(value : T?){
+    fun update(value : T?){
         this._value = value
     }
 
-    internal fun removeObserver(observer: Observer<T>){
+    fun removeObserver(observer: Observer<T>){
         synchronized(this) {
-            observers.removeIf {
+            observers.removeAll(observers.filter{
                 //remove if observer ref is removed or observer is same as given one
                 it.get()?.equals(observer) ?: true
-            }
+            }.toSet())
         }
     }
 

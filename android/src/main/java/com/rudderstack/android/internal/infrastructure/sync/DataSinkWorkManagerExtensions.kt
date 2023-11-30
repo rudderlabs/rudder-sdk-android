@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 15/08/22, 12:52 AM Last modified: 15/08/22, 12:52 AM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 23/11/23, 6:20 pm Last modified: 21/11/23, 5:14 pm
+ * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,19 +12,19 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.internal.sync
+package com.rudderstack.android.internal.infrastructure.sync
 
 import android.app.Application
 import androidx.work.Configuration
 import androidx.work.Constraints
+import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.multiprocess.RemoteWorkManager
-import com.rudderstack.android.RudderAnalytics
+import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.Settings
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 
@@ -44,61 +44,52 @@ private const val REPEAT_INTERVAL_IN_MINS = 15L
 internal val Application.sinkAnalytics
     get() = analyticsRef?.get()?.takeUnless { it.isShutdown }
 
-internal fun Application.createSinkAnalytics() = latestConfig?.let {
-    RudderAnalytics(
-        this,
-        it.writeKey,
-        Settings(),
-        it.jsonAdapter,
-        dataPlaneUrl = it.dataPlaneUrl,
-        controlPlaneUrl = it.controlPlaneUrl,
-        logger = it.logger,
-        defaultProcessName = it.processName,
-        multiProcessEnabled = it.processName != null
-    )
-}
-
-private var latestConfig: RudderWorkerConfig? = null
 
 private val constraints by lazy {
     Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 }
-private val sinkWorker by lazy {
+private fun sinkWorker(workManagerAnalyticsFactoryClassName: Class<out
+WorkManagerAnalyticsFactory>) =
     PeriodicWorkRequestBuilder<RudderSyncWorker>(
         REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES
     ).setInitialDelay(REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES).setConstraints(constraints)
+        .setInputData(Data.Builder().putString(
+            RudderSyncWorker.WORKER_ANALYTICS_FACTORY_KEY,
+            workManagerAnalyticsFactoryClassName.name
+        ).build())
         .addTag(WORK_MANAGER_TAG).build()
-}
 
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<HANDLE MEMORY LEAK>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<block flush works after shutdown>>>>>>>>>>>>>>>>>>>>>>>>>>
 internal fun Application.registerWorkManager(
-    analytics: Analytics, rudderWorkerConfig: RudderWorkerConfig
+    analytics: Analytics, workManagerAnalyticsFactoryClass: Class<out WorkManagerAnalyticsFactory>
 ) {
-    analytics.logger.debug(log = "Initializing work manager with config $rudderWorkerConfig")
+    analytics.logger.debug(log = "Initializing work manager")
     //if analytics object has changed, shutting it down is not this method's responsibility
     analyticsRef = WeakReference(analytics)
-    latestConfig = rudderWorkerConfig
 
     Configuration.Builder().also {
         // if process name is available, this is a multi-process app
-        rudderWorkerConfig.processName?.apply {
+        analytics.currentConfigurationAndroid?.defaultProcessName?.apply {
             it.setDefaultProcessName(this)
         }
-        rudderWorkerConfig.networkExecutorService?.apply {
+        analytics.currentConfigurationAndroid?.networkExecutor?.apply {
             it.setExecutor(this)
         }
-    }
-//        .takeIf { rudderWorkerConfig.processName != null || rudderWorkerConfig.networkExecutorService != null }
-        .let {
+    }.let {
             WorkManager.initialize(this, it.build())
         }
-    if (rudderWorkerConfig.processName != null) {
+    if (analytics.currentConfigurationAndroid?.multiProcessEnabled == true) {
         RemoteWorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE, sinkWorker
+            WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE, sinkWorker(workManagerAnalyticsFactoryClass)
         )
     } else WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-        WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE, sinkWorker
+        WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE, sinkWorker(workManagerAnalyticsFactoryClass)
     )
 
+}
+internal fun Application.unregisterWorkManager() {
+    analyticsRef?.clear()
+    analyticsRef = null
+    WorkManager.getInstance(this).cancelAllWorkByTag(WORK_MANAGER_TAG)
+    RemoteWorkManager.getInstance(this).cancelAllWorkByTag(WORK_MANAGER_TAG)
 }

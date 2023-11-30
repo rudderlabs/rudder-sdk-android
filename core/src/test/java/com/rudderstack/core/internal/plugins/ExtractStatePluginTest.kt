@@ -20,10 +20,8 @@ import com.rudderstack.core.BasicStorageImpl
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.core.internal.states.ContextState
-import com.rudderstack.core.internal.states.SettingsState
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.IdentifyMessage
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
 import org.junit.Test
 
 /**
@@ -41,7 +39,7 @@ class ExtractStatePluginTest {
             "dest-1" to "dest-1-id"
         ))).build()
         val extractStatePlugin = ExtractStatePlugin(
-            ContextState, SettingsState,
+            ContextState, ConfigurationsState,
             /*options,*/ storage
         )
         val identifyMsg = IdentifyMessage.create(timestamp = RudderUtils.timeStamp,
@@ -68,7 +66,7 @@ class ExtractStatePluginTest {
         )
         )).build()
         val extractStatePlugin = ExtractStatePlugin(
-            ContextState, SettingsState,
+            ContextState, ConfigurationsState,
             /*options,*/ storage
         )
         val identifyMsg = IdentifyMessage.create(timestamp = RudderUtils.timeStamp,
@@ -102,7 +100,7 @@ class ExtractStatePluginTest {
         val storage = BasicStorageImpl( logger = KotlinLogger)
         val options = RudderOptions.default()
         val extractStatePlugin = ExtractStatePlugin(
-            ContextState, SettingsState,
+            ContextState, ConfigurationsState,
             /*options,*/ storage
         )
         val identifyMsg = IdentifyMessage.create(timestamp = RudderUtils.timeStamp,

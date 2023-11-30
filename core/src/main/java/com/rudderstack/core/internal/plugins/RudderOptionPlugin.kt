@@ -18,7 +18,7 @@ import com.rudderstack.models.*
 import com.rudderstack.core.DestinationPlugin
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
-import com.rudderstack.core.internal.minusWrtKeys
+import com.rudderstack.core.minusWrtKeys
 
 /**
  * Alters flow and adds values to [Message] depending on options.

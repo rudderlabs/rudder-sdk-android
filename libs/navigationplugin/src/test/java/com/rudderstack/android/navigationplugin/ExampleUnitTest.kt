@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 22/03/22, 3:18 PM Last modified: 22/03/22, 3:18 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 20/11/23, 4:02 pm Last modified: 20/11/23, 4:02 pm
+ * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,12 +12,20 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.core.internal
+package com.rudderstack.android.navigationplugin
+
+import org.junit.Test
+
+import org.junit.Assert.*
 
 /**
- * Thrown when an event misses any property
+ * Example local unit test, which will execute on the development machine (host).
  *
- *
- * @param message String passed to [Throwable]
+ * See [testing documentation](http://d.android.com/tools/testing).
  */
-class MissingPropertiesException(message: String) : Throwable(message)
+class ExampleUnitTest {
+    @Test
+    fun addition_isCorrect() {
+        assertEquals(4, 2 + 2)
+    }
+}

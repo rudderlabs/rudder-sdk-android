@@ -53,7 +53,6 @@ class BasicStorageImpl(
     private var _serverConfig: RudderServerConfig? = null
     private var _traits: IdentifyTraits? = null
 //    private var _externalIds: List<Map<String, String>>? = null
-    private var _anonymousId: String? = null
 
     //library details
     private val libDetails: Map<String, String> by lazy {
@@ -218,22 +217,6 @@ class BasicStorageImpl(
             _optInTime = System.currentTimeMillis()
     }
 
-    /*override fun saveTraits(traits: IdentifyTraits) {
-        this._traits = traits
-    }*/
-
-    /*override fun saveExternalIds(externalIds: List<Map<String, String>>) {
-        _externalIds = externalIds
-    }*/
-
-    /*override fun clearExternalIds() {
-        _externalIds = listOf()
-    }*/
-
-    override fun saveAnonymousId(anonymousId: String) {
-        _anonymousId = anonymousId
-    }
-
     override fun saveStartupMessageInQueue(message: Message) {
         startupQ.add(message)
     }
@@ -251,8 +234,6 @@ class BasicStorageImpl(
         synchronized(this) {
             queue.clear()
             startupQ.clear()
-            _anonymousId = null
-//            _externalIds = null
             _traits = null
             _serverConfig = null
             _cachedContext = mapOf()
@@ -280,12 +261,6 @@ class BasicStorageImpl(
         get() = _optOutTime
     override val optInTime: Long
         get() = _optInTime
-    /*override val traits: IdentifyTraits?
-        get() = _traits
-    override val externalIds: List<Map<String, String>>?
-        get() = _externalIds*/
-    override val anonymousId: String?
-        get() = _anonymousId
 
     override val libraryName: String
         get() = libDetails[LIB_KEY_NAME] ?: ""

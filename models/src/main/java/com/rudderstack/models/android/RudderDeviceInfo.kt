@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.Json
 
-internal class RudderDeviceInfo (
+class RudderDeviceInfo (
     /*RudderDeviceInfo(String advertisingId, String token) {
         this.deviceId = Utils.getDeviceId(RudderClient.getApplication());
         if (advertisingId != null && !advertisingId.isEmpty()) {

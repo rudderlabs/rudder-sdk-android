@@ -17,8 +17,7 @@ package com.rudderstack.android.android
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.android.utils.TestExecutor
-import com.rudderstack.android.repository.RudderDatabase
-import com.rudderstack.android.storage.AndroidStorage
+import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.Storage
 import com.rudderstack.gsonrudderadapter.GsonAdapter
@@ -42,7 +41,7 @@ abstract class AndroidStorageTest {
     protected abstract val jsonAdapter: JsonAdapter
     @Before
     fun setup(){
-        storage = AndroidStorage(ApplicationProvider.getApplicationContext(), jsonAdapter, false,
+        storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(), jsonAdapter, false,
             executor = TestExecutor()
         )
     }

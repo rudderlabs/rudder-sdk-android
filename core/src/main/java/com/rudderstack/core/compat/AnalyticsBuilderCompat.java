@@ -24,12 +24,12 @@ import com.rudderstack.core.ConfigDownloadService;
 import com.rudderstack.core.DataUploadService;
 import com.rudderstack.core.Logger;
 import com.rudderstack.core.RetryStrategy;
-import com.rudderstack.core.Settings;
+import com.rudderstack.core.Configuration;
 import com.rudderstack.core.Storage;
 import com.rudderstack.core.internal.ConfigDownloadServiceImpl;
 import com.rudderstack.core.internal.DataUploadServiceImpl;
 import com.rudderstack.core.internal.KotlinLogger;
-import com.rudderstack.core.internal.states.SettingsState;
+import com.rudderstack.core.internal.states.ConfigurationsState;
 import com.rudderstack.models.Message;
 import com.rudderstack.models.MessageUtils;
 import com.rudderstack.rudderjsonadapter.JsonAdapter;
@@ -52,7 +52,7 @@ import kotlin.jvm.functions.Function2;
 public final class AnalyticsBuilderCompat {
     private final String writeKey;
 
-    private final Settings settings;
+    private final Configuration configuration;
 
     private final JsonAdapter jsonAdapter;
     private String dataPlaneUrl = null;
@@ -79,9 +79,9 @@ public final class AnalyticsBuilderCompat {
     private Function0<Unit> shutdownHook = null;
     private Function2<Boolean, String, Unit> initializationListener;
 
-    public AnalyticsBuilderCompat(String writeKey, Settings settings, JsonAdapter jsonAdapter) {
+    public AnalyticsBuilderCompat(String writeKey, Configuration configuration, JsonAdapter jsonAdapter) {
         this.writeKey = writeKey;
-        this.settings = settings;
+        this.configuration = configuration;
         this.jsonAdapter = jsonAdapter;
     }
 
@@ -186,11 +186,11 @@ public final class AnalyticsBuilderCompat {
                 DATA_PLANE_URL : dataPlaneUrl;
         String usableControlPlaneUrl = controlPlaneUrl == null ? CONTROL_PLANE_URL :
                 controlPlaneUrl;
-        return new Analytics(writeKey, settings, jsonAdapter, shouldVerifySdk,
+        return new Analytics(writeKey, configuration, jsonAdapter, shouldVerifySdk,
                 sdkVerifyRetryStrategy, dataPlaneUrl, controlPlaneUrl, logger, usableStorage
                 , analyticsExecutor, networkExecutor, base64Generator,
                 dataUploadService == null ? new DataUploadServiceImpl(
-                        writeKey, jsonAdapter, base64Generator, SettingsState.INSTANCE, usableDataPlaneUrl, networkExecutor
+                        writeKey, jsonAdapter, base64Generator, ConfigurationsState.INSTANCE, usableDataPlaneUrl, networkExecutor
                 ) : dataUploadService, configDownloadService == null ? new ConfigDownloadServiceImpl(
                 base64Generator.generateBase64(writeKey), usableControlPlaneUrl, jsonAdapter, analyticsExecutor
         ) : configDownloadService, getDefaultTraits(defaultTraits, usableStorage),

@@ -23,6 +23,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "Rudder-Android-Libs"
 //include ':app'
+include ':core'
+include ':android'
 include ':web'
 include ':gsonrudderadapter'
 include ':repository'
@@ -31,3 +33,4 @@ include ':rudderjsonadapter'
 include ':rudderreporter'
 include ':jacksonrudderadapter'
 include ':moshirudderadapter'
+include ':libs:navigationplugin'

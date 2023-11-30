@@ -14,13 +14,14 @@
 
 package com.rudderstack.core.internal
 
-import com.rudderstack.core.Settings
+import com.rudderstack.core.Configuration
 import com.rudderstack.core.State
 import com.rudderstack.core.Storage
-import com.rudderstack.core.internal.states.SettingsState
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.Message
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Storage Decorator that invokes the listener based on the threshold set, with respect to time or
@@ -30,22 +31,25 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 internal class StorageDecorator(
     private val storage: Storage,
-    private val settingsState: State<Settings> = SettingsState,
+    private val configurationState: State<Configuration> = ConfigurationsState,
     private val dataChangeListener: Listener? = null
 ) : Storage by storage {
     private val thresholdCountDownTimer = Timer("data_listen")
     private var periodicTaskScheduler: TimerTask? = null
     private val _isShutDown = AtomicBoolean(false)
+    private var _currentFlushIntervalAtomic = AtomicLong(0L)
+    private val _currentFlushInterval
+        get() = _currentFlushIntervalAtomic.get()
 
     private val onDataChange = object : Storage.DataListener {
         override fun onDataChange() {
             if(_isShutDown.get())
                 return
             getCount {
-                if (it >= (settingsState.value?.flushQueueSize ?: 0)
+                if (it >= (configurationState.value?.flushQueueSize ?: 0)
                 ) {
                     dataChangeListener?.onDataChange()
-                    rescheduleTimer(settingsState.value)
+                    rescheduleTimer()
                 }
             }
         }
@@ -56,40 +60,42 @@ internal class StorageDecorator(
              */
         }
     }
-    private val _settingsObserver = { settings : Settings? ->
-//        println("settings state listen this: $this")
-        rescheduleTimer(settings)
+    private val _configurationObserver = { configuration : Configuration? ->
+        if(shouldRescheduleTimer(configuration)) {
+            rescheduleTimer()
+        }
+    }
+
+    private fun shouldRescheduleTimer(configuration: Configuration?): Boolean {
+        return configuration != null &&
+               _currentFlushInterval != _currentFlushIntervalAtomic.getAndSet(configuration
+                   .maxFlushInterval.coerceAtLeast(0L))
     }
 
 
-        init {
-        settingsState.subscribe (_settingsObserver)
+    init {
+        configurationState.subscribe (_configurationObserver)
         addDataListener(onDataChange)
     }
 
-    private fun rescheduleTimer(settings: Settings?) {
+    private fun rescheduleTimer() {
         periodicTaskScheduler?.cancel()
         thresholdCountDownTimer.purge()
-        if (settings != null) {
+//        if (configuration != null) {
             periodicTaskScheduler = object : TimerTask() {
                 override fun run() {
-                    /*getData { data ->
-                        if (data.isNotEmpty())*/
-//                    println("periodic_task_call, $this, timer: $thresholdCountDownTimer, " +
-//                            "decorator: ${this@StorageDecorator}")
                     dataChangeListener?.onDataChange()
-//                    }
                 }
             }
             if (!_isShutDown.get()) {
                 println("rescheduling : $this")
                 thresholdCountDownTimer.schedule(
                     periodicTaskScheduler,
-                    settings.maxFlushInterval,
-                    settings.maxFlushInterval
+                    _currentFlushInterval,
+                    _currentFlushInterval
                 )
             }
-        }
+//        }
     }
 
     override fun shutdown() {
@@ -98,12 +104,12 @@ internal class StorageDecorator(
             storage.shutdown()
             removeDataListener(onDataChange)
             thresholdCountDownTimer.cancel()
-            settingsState.removeObserver(_settingsObserver)
+            configurationState.removeObserver(_configurationObserver)
         }
     }
 
     /**
-     * Listener for listening to data change. Should adhere to [Settings]
+     * Listener for listening to data change. Should adhere to [Configuration]
      *
      *
      */

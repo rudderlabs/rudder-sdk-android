@@ -34,6 +34,7 @@ ext {
             mockito_kotlin         : "4.0.0",
             mockito_inline         : "4.7.0",
             androidXTestRunner     : "1.4.0",
+            navigationRuntime      : "2.7.5",
     ]
 
     deps = [
@@ -64,11 +65,14 @@ ext {
             mockk_agent_jvm        : "io.mockk:mockk-agent-jvm:${versions.mockk}",
             workTest               : "androidx.work:work-testing:${versions.work}",
             androidXTestRunner     : "androidx.test:runner:${versions.androidXTestRunner}",
+            navigationFragment     : "androidx.navigation:navigation-fragment-ktx:${versions.navigationFragment}",
+            navigationRuntime      : "androidx.navigation:navigation-runtime:${versions.navigationRuntime}",
 
     ]
 
     projects = [
             core                  : ':core',
+            android               : ':android',
             models                : ':models',
             json_rudder_adapter   : ':rudderjsonadapter',
             jackson_rudder_adapter: ':jacksonrudderadapter',

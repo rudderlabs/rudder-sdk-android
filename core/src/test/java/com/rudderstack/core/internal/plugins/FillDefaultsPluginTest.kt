@@ -14,12 +14,12 @@
 
 package com.rudderstack.core.internal.plugins
 
-import com.rudderstack.core.Settings
+import com.rudderstack.core.Configuration
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.core.internal.states.ContextState
-import com.rudderstack.core.internal.states.SettingsState
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
@@ -34,7 +34,7 @@ class FillDefaultsPluginTest {
     )
     private val fillDefaultsPlugin = FillDefaultsPlugin(
         commonContext,
-        SettingsState, ContextState, KotlinLogger
+        ConfigurationsState, ContextState, KotlinLogger
     )
 
     /**
@@ -43,8 +43,8 @@ class FillDefaultsPluginTest {
      */
     @Test
     fun `test insertion of defaults`() {
-        SettingsState.update(
-            Settings(
+        ConfigurationsState.update(
+            Configuration(
                 "anon_id", "user_id"
             )
         )

@@ -26,7 +26,7 @@ import com.squareup.moshi.Json
 //import android.net.wifi.WifiManager;
 //import android.provider.Settings;
 //import android.telephony.TelephonyManager;
-internal class RudderNetwork (
+class RudderNetwork (
     @SerializedName("carrier")
     @JsonProperty("carrier")
     @Json( name = "carrier")

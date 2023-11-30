@@ -12,21 +12,19 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.models
+package com.rudderstack.android.models
 
-import junit.framework.TestSuite
-import org.junit.runner.RunWith
-import org.junit.runners.Suite
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.google.gson.annotations.SerializedName
 
-@RunWith(Suite::class)
-@Suite.SuiteClasses(
-    RudderServerConfigParseTestJackson::class, RudderServerConfigParseTestGson::class,
-    RudderServerConfigParseTestMoshi::class,
-    //message
-    MessageParseGsonTest::class,
-    MessageParseJacksonTest::class,
-    MessageParseMoshiTest::class
+data class OrderEntity(
+    @SerializedName("order_id")
+    @get:JsonProperty("order_id")
+    val orderId: Int,
+    @SerializedName("quantity")
+    @get:JsonProperty("quantity")
+    var quantity: Int,
+    @SerializedName("total_price")
+    @get:JsonProperty("total_price")
+    val totalPrice: Double,
 )
-class ParseTestSuite : TestSuite() {
-
-}

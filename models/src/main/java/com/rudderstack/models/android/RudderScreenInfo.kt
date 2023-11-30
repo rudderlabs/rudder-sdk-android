@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.Json
 
 
-internal class RudderScreenInfo (
+class RudderScreenInfo (
     @SerializedName("density")
     @JsonProperty("density")
     @Json(name = "density")

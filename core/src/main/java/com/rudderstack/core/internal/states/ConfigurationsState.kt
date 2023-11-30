@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 26/03/22, 11:55 AM Last modified: 26/03/22, 11:55 AM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 29/12/21, 5:38 PM Last modified: 29/12/21, 5:37 PM
+ * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,11 +12,12 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.core.internal
+package com.rudderstack.core.internal.states
 
-internal object KeyConstants {
-    const val CONTEXT_USER_ID_KEY = "user_id"
-    const val CONTEXT_USER_ID_KEY_ALIAS = "userId"
-    const val CONTEXT_ID_KEY = "id"
-    const val CONTEXT_EXTERNAL_ID_KEY = "externalIds"
+import com.rudderstack.core.Configuration
+import com.rudderstack.core.State
+
+internal object ConfigurationsState : State<Configuration>() {
+
+
 }

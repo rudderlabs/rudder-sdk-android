@@ -14,7 +14,7 @@
 
 package com.rudderstack.core
 
-import com.rudderstack.core.internal.states.SettingsState
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.*
@@ -83,7 +83,7 @@ abstract class AnalyticsTest {
         }
         analytics = Analytics(
             writeKey,
-            Settings(anonymousId = "anon_id"),
+            Configuration(anonymousId = "anon_id"),
             jsonAdapter,
             storage = storage,
             initializationListener = { success, message ->
@@ -106,7 +106,7 @@ abstract class AnalyticsTest {
         val isDone = AtomicBoolean(false)
         analytics = Analytics(
             writeKey,
-            Settings(),
+            Configuration(),
             jsonAdapter,
             initializationListener = { success, message ->
                 assertThat(success, `is`(true))
@@ -121,7 +121,7 @@ abstract class AnalyticsTest {
         analytics.shutdown()
         analytics = Analytics(
             "some wrong write key",
-            Settings(),
+            Configuration(),
             jsonAdapter,
             initializationListener = { success, message ->
                 assertThat(success, `is`(false))
@@ -149,7 +149,7 @@ abstract class AnalyticsTest {
                     )
                 )
                 //check settings and storage
-                val currentSettings = SettingsState.value
+                val currentSettings = ConfigurationsState.value
                 assertThat(
                     currentSettings, allOf(
                         notNullValue(),
@@ -189,7 +189,7 @@ abstract class AnalyticsTest {
     fun `test put anonymous id`() {
         analytics.setAnonymousId("anon_id")
         assertThat(
-            SettingsState.value?.anonymousId, allOf(
+            ConfigurationsState.value?.anonymousId, allOf(
                 notNullValue(),
                 `is`("anon_id")
             )
@@ -296,13 +296,13 @@ abstract class AnalyticsTest {
 //        analytics.shutdown()
         val isDone = AtomicBoolean(false)
         //we change settings to change the flush queue size
-        val newSettings = Settings(flushQueueSize = 3, anonymousId = "anon_id")
-        analytics.applySettings(newSettings)
+        val newConfiguration = Configuration(flushQueueSize = 3, anonymousId = "anon_id")
+        analytics.applyConfiguration(newConfiguration)
         analytics.setMaxFetchLimit(3)
         val items = (1..5).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
-        val itemNamesThatShouldBePresent = items.take(newSettings.flushQueueSize)
+        val itemNamesThatShouldBePresent = items.take(newConfiguration.flushQueueSize)
             .map {
                 it.eventName
             }
@@ -328,11 +328,11 @@ abstract class AnalyticsTest {
                             )
                     )
 
-                    if (incomingMsgs > newSettings.flushQueueSize) {
+                    if (incomingMsgs > newConfiguration.flushQueueSize) {
                         assert(false)
                         isDone.set(true)
                     }
-                    if (incomingMsgs == newSettings.flushQueueSize)
+                    if (incomingMsgs == newConfiguration.flushQueueSize)
                         thread {
                             Thread.sleep(100) // the time should be good enough to check if number of messages is
                             //crossing max_fetch size, but should be less than it takes for an API call. since
@@ -351,7 +351,7 @@ abstract class AnalyticsTest {
         for (i in items) {
             analytics.track(i)
         }
-        Awaitility.await().atMost(newSettings.maxFlushInterval, TimeUnit.SECONDS)
+        Awaitility.await().atMost(newConfiguration.maxFlushInterval, TimeUnit.SECONDS)
             .untilTrue(isDone)
     }
 
@@ -390,10 +390,10 @@ abstract class AnalyticsTest {
         //flush should be called prior to shutdown. and data uploaded
         //we will track few events, less than flush_queue_size,
         // call shutdown and wait for sometime to check the storage count.
-        val newSettings = SettingsState.value?.copy(
+        val newConfiguration = ConfigurationsState.value?.copy(
             flushQueueSize = 20
-        ) ?: Settings(anonymousId = "anon_id", flushQueueSize = 20)
-        analytics.applySettings(newSettings)
+        ) ?: Configuration(anonymousId = "anon_id", flushQueueSize = 20)
+        analytics.applyConfiguration(newConfiguration)
 
         val events = (1..10).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
@@ -463,7 +463,7 @@ abstract class AnalyticsTest {
         val spyControlPlane = spy(ConfigDownloadService::class.java)
         Analytics(
             writeKey,
-            Settings(),
+            Configuration(),
             jsonAdapter,
             false,
             configDownloadService = spyControlPlane
@@ -477,13 +477,13 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test flush after shutdown`() {
-        val newSettings =
-            SettingsState.value?.copy(flushQueueSize = 100, maxFlushInterval = 10000) ?: Settings(
+        val newConfiguration =
+            ConfigurationsState.value?.copy(flushQueueSize = 100, maxFlushInterval = 10000) ?: Configuration(
                 flushQueueSize = 100,
                 maxFlushInterval = 10000,
                 anonymousId = "anon_id"
             )
-        SettingsState.update(newSettings)
+        ConfigurationsState.update(newConfiguration)
         val events = (1..5).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
@@ -518,7 +518,7 @@ abstract class AnalyticsTest {
         }
         val someAnalytics = Analytics(
             writeKey,
-            Settings(anonymousId = "anon_id"),
+            Configuration(anonymousId = "anon_id"),
             jsonAdapter,
             storage = storage,
             initializationListener = { success, message ->
@@ -546,7 +546,7 @@ abstract class AnalyticsTest {
         }
         val someAnalytics = Analytics(
             writeKey,
-            Settings(anonymousId = "anon_id"),
+            Configuration(anonymousId = "anon_id"),
             jsonAdapter,
             storage = storage,
             initializationListener = { success, message ->
@@ -571,11 +571,11 @@ abstract class AnalyticsTest {
     @Test
     fun `test periodic flush`() {
         val isDone = AtomicBoolean(false)
-        val newSettings = SettingsState.value?.copy(
+        val newConfiguration = ConfigurationsState.value?.copy(
             maxFlushInterval = 1000,
             flushQueueSize = 100
-        ) ?: Settings(anonymousId = "anon_id", maxFlushInterval = 1000, flushQueueSize = 100)
-        analytics.applySettings(newSettings)
+        ) ?: Configuration(anonymousId = "anon_id", maxFlushInterval = 1000, flushQueueSize = 100)
+        analytics.applyConfiguration(newConfiguration)
         val events = (1..5).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
@@ -598,7 +598,7 @@ abstract class AnalyticsTest {
             analytics.track(it)
         }
 
-        Awaitility.await().atLeast(newSettings.maxFlushInterval, TimeUnit.MILLISECONDS)
+        Awaitility.await().atLeast(newConfiguration.maxFlushInterval, TimeUnit.MILLISECONDS)
             .untilTrue(isDone)
         analytics.removeAllCallbacks()
     }
@@ -651,10 +651,10 @@ abstract class AnalyticsTest {
         println("analytics shut down")
         val isDone = AtomicBoolean(false)
         //settings to make sure auto dump is off
-        val newSettings = SettingsState.value?.copy(
+        val newConfiguration = ConfigurationsState.value?.copy(
             maxFlushInterval = 15_000,
             flushQueueSize = 100
-        ) ?: Settings(anonymousId = "anon_id", maxFlushInterval = 15_000, flushQueueSize = 100)
+        ) ?: Configuration(anonymousId = "anon_id", maxFlushInterval = 15_000, flushQueueSize = 100)
         //spy upload service to check for throttling
         val counter = AtomicInteger(0) //will check number of times called
         val spyUploadService = mock(DataUploadService::class.java)
@@ -675,7 +675,7 @@ abstract class AnalyticsTest {
         }
         val someAnalytics = Analytics(
             writeKey,
-            newSettings,
+            newConfiguration,
             jsonAdapter,
             storage = spyStorage,
             initializationListener = { success, message ->

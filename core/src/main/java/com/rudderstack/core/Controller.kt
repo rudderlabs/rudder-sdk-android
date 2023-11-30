@@ -25,11 +25,12 @@ import com.rudderstack.models.Message
  */
 interface Controller {
     /**
-     * Apply changed settings to plugins
+     * Update the [Configuration] object to be used for all subsequent calls
      *
-     * @param settings [Settings] object representing global settings
+     * @param configurationScope Update the current configuration with this scope to
+     * return the updated configuration
      */
-    fun applySettings(settings: Settings)
+    fun applyConfiguration(configurationScope: Configuration.() -> Configuration)
 
     /**
      * Applies a closure method to all available Plugins
@@ -39,15 +40,15 @@ interface Controller {
      * @param closure A method to be run on each plugin
      */
     fun applyClosure(closure : Plugin.() -> Unit)
-
     /**
-     * Anonymous id to be used for all consecutive calls.
-     * Anonymous id is mostly used for messages sent prior to user identification or in case of
-     * anonymous usage.
+     * Applies a closure method to all available [InfrastructurePlugin]
+     * Can break the system if not properly constructed.
      *
-     * @param anonymousId String to be used as anonymousId
+     * @param closure A method to be run on each [InfrastructurePlugin]
      */
-    fun setAnonymousId(anonymousId : String)
+    fun applyInfrastructureClosure(closure : InfrastructurePlugin.() -> Unit)
+
+
 
     /**
      * Opt out from analytics and usage monitoring. No further data will be sent once set true
@@ -60,7 +61,10 @@ interface Controller {
      */
     val isOptedOut : Boolean
 
-    val currentSettings : Settings?
+    val currentConfiguration : Configuration?
+
+    val dataUploadService:DataUploadService
+    val configDownloadService:ConfigDownloadService?
 
     fun addPlugin(vararg plugins: Plugin)
     /**
@@ -70,6 +74,15 @@ interface Controller {
      * @return true if successfully removed false otherwise
      */
     fun removePlugin(plugin: Plugin) : Boolean
+
+    fun addInfrastructurePlugin(vararg plugins: InfrastructurePlugin)
+    /**
+     * Infrastructure plugins to be removed.
+     *
+     * @param plugin  [InfrastructurePlugin] object
+     * @return true if successfully removed false otherwise
+     */
+    fun removeInfrastructurePlugin(plugin: InfrastructurePlugin) : Boolean
     /**
      * Submit a [Message] for processing.
      * The message is taken up by the controller and it passes through the set of timelines defined.

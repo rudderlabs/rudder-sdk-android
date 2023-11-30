@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 29/08/22, 12:32 PM Last modified: 29/08/22, 12:32 PM
+ * Creator: Debanjan Chatterjee on 22/03/22, 3:18 PM Last modified: 22/03/22, 3:18 PM
  * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,19 +12,12 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.internal.sync
+package com.rudderstack.core
 
-import com.rudderstack.core.Logger
-import com.rudderstack.rudderjsonadapter.JsonAdapter
-import java.util.concurrent.ExecutorService
-
-internal data class RudderWorkerConfig(
-    val writeKey : String,
-    val useContentProvider: Boolean,
-    val dataPlaneUrl : String?,
-    val controlPlaneUrl : String?,
-    val jsonAdapter: JsonAdapter,
-    val logger : Logger,
-    val processName: String?= null,
-    val networkExecutorService: ExecutorService? = null
-)
+/**
+ * Thrown when an event misses any property
+ *
+ *
+ * @param message String passed to [Throwable]
+ */
+class MissingPropertiesException(message: String) : Throwable(message)

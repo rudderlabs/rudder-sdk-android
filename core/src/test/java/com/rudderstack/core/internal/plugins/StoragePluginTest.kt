@@ -14,12 +14,12 @@
 
 package com.rudderstack.core.internal.plugins
 
-import com.rudderstack.core.Settings
+import com.rudderstack.core.Configuration
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.core.BasicStorageImpl
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.core.internal.StorageDecorator
-import com.rudderstack.core.internal.states.SettingsState
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.TrackMessage
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat
@@ -46,8 +46,8 @@ class StoragePluginTest {
 
     @Test
     fun testStoragePluginWithQueueSize() {
-        val settings = Settings(flushQueueSize = 11)
-        SettingsState.update(settings)
+        val configuration = Configuration(flushQueueSize = 11)
+        ConfigurationsState.update(configuration)
         val storage = BasicStorageImpl(logger = KotlinLogger)
         val eventNames = testMessagesList.map {
             it.eventName
@@ -75,12 +75,12 @@ class StoragePluginTest {
     fun testStoragePluginWithFlushInterval() {
         val isComplete = AtomicBoolean(false)
         val flushInterval = 3 * 1000L
-        val settings = Settings(
+        val configuration = Configuration(
             flushQueueSize = Integer.MAX_VALUE, // setting it to a large value ensures
             // there is no chance of flushing due to queue size
             maxFlushInterval = flushInterval
         )
-        SettingsState.update(settings)
+        ConfigurationsState.update(configuration)
         val storagePluginCreated = System.currentTimeMillis()
         val storagePlugin = StoragePlugin(StorageDecorator(BasicStorageImpl(logger = KotlinLogger)) {
 

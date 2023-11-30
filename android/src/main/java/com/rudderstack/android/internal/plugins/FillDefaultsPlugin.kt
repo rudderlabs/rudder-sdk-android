@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 26/03/22, 12:12 AM Last modified: 26/03/22, 12:12 AM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 29/11/23, 6:07 pm Last modified: 29/11/23, 6:01 pm
+ * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,14 +12,17 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.core.internal.plugins
+package com.rudderstack.android.internal.plugins
 
+import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.internal.states.ContextState
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.Settings
+import com.rudderstack.core.Configuration
 import com.rudderstack.core.State
-import com.rudderstack.core.internal.MissingPropertiesException
-import com.rudderstack.core.internal.minusWrtKeys
+import com.rudderstack.core.MissingPropertiesException
+import com.rudderstack.core.minusWrtKeys
 import com.rudderstack.models.*
 
 /**
@@ -33,16 +36,10 @@ import com.rudderstack.models.*
  * message external ids/traits/custom contexts respectively, the values will be amalgamated with
  * preference given to those belonging to message, in case keys match.
  *
- * @property defaultContext Generally a common context is expected, that remains same for all messages
- * @property settingsState
- * @property contextState
  */
-internal class FillDefaultsPlugin(
-    private val defaultContext: MessageContext, private val settingsState: State<Settings>,
-    private val contextState: State<MessageContext>,
-    private val logger : Logger
-) : Plugin {
+internal class FillDefaultsPlugin : Plugin {
 
+    private var _analytics: Analytics? = null
     /**
      * Fill default details for [Message]
      * If message contains context, this will replace the ones present
@@ -50,44 +47,48 @@ internal class FillDefaultsPlugin(
      */
     @Throws(MissingPropertiesException::class)
     private inline fun <reified T : Message> T.withDefaults(): T {
-        val anonId = this.anonymousId ?: settingsState.value?.anonymousId
-        val userId = this.userId ?: settingsState.value?.userId
+        val anonId = this.anonymousId ?: _analytics?.currentConfigurationAndroid?.anonymousId
+        val userId = this.userId ?: _analytics?.currentConfigurationAndroid?.userId
         if (anonId == null && userId == null) {
             val ex = MissingPropertiesException("Either Anonymous Id or User Id must be present");
-            logger.error(log = "Missing both anonymous Id and user Id. Use settings to update " +
-                    "anonymous id in Analytics constructor", throwable = ex)
+            _analytics?.currentConfigurationAndroid?.logger?.error(
+                log = "Missing both anonymous Id and user Id. Use settings to update " + "anonymous id in Analytics constructor",
+                throwable = ex
+            )
             throw ex
         }
         //copying top level context to message context
-        return (this.copy(
-            context =  (
-                    // in case of alias we purposefully remove traits from context
-                    contextState.value?.let {
-                        if(this is AliasMessage && this.userId != settingsState.value?.userId) it.updateWith(traits = mapOf()) else it
-                    } selectiveReplace
-                    context) optAdd  defaultContext,
-            anonymousId = anonId, userId = userId
-        ) as T)
+        return (this.copy(context = (
+                // in case of alias we purposefully remove traits from context
+                ContextState.value?.let {
+                    if (this is AliasMessage && this.userId != _analytics?.currentConfigurationAndroid?.userId) it.updateWith(
+                        traits = mapOf()
+                    ) else it
+                } selectiveReplace context) optAdd _analytics?.currentConfigurationAndroid?.defaultContextMap,
+            anonymousId = anonId,
+            userId = userId) as T)
     }
-    private infix fun MessageContext?.selectiveReplace(context: MessageContext?) : MessageContext?{
-        if(this == null) return context else if (context == null) return this
+
+    private infix fun MessageContext?.selectiveReplace(context: MessageContext?): MessageContext? {
+        if (this == null) return context else if (context == null) return this
 
 
         return this.updateWith(context)
     }
 
-    private infix fun MessageContext?.optAdd(context: MessageContext?) : MessageContext?{
+    private infix fun MessageContext?.optAdd(context: MessageContext?): MessageContext? {
         //this gets priority
-        if(this == null) return context else if (context == null) return this
-            val newTraits = context.traits?.let {
-                (it - (this.traits?.keys?: setOf()).toSet()) optAdd this.traits
-            }?: traits
-            val newCustomContexts = context.customContexts?.let {
-                (it - (this.customContexts?.keys?: setOf()).toSet()) optAdd this.customContexts
-            }?: customContexts
-            val newExternalIds = context.externalIds?.let {
-                (it minusWrtKeys (this.externalIds?: listOf())) + it
-            }?: externalIds
+        if (this == null) return context
+        else if (context == null) return this
+        val newTraits = context.traits?.let {
+            (it - (this.traits?.keys ?: setOf()).toSet()) optAdd this.traits
+        } ?: traits
+        val newCustomContexts = context.customContexts?.let {
+            (it - (this.customContexts?.keys ?: setOf()).toSet()) optAdd this.customContexts
+        } ?: customContexts
+        val newExternalIds = context.externalIds?.let {
+            (it minusWrtKeys (this.externalIds ?: listOf())) + it
+        } ?: externalIds
 
         createContext(newTraits, newExternalIds, newCustomContexts).let {
             //add the extra info from both contexts

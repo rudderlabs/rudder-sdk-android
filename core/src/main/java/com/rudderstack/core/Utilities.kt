@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 25/03/22, 10:39 PM Last modified: 25/03/22, 10:39 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 29/11/23, 6:09 pm Last modified: 16/11/23, 11:15 am
+ * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.core.internal
+package com.rudderstack.core
 
 /**
  * Operator to optionally add a nullable [Map] to callee
@@ -61,7 +61,7 @@ infix fun <K, V> Map<K, V>?.optAdd(value: Pair<K, V>?): Map<K, V> {
  * @param block A lambda function that takes type T as parameter
  * @return The result of [block] applied to "this"
  */
-internal infix fun <T, R> T?.ifNotNull(block: (T) -> R): R? {
+infix fun <T, R> T?.ifNotNull(block: (T) -> R): R? {
     return this?.let(block)
 }
 
@@ -84,7 +84,7 @@ internal infix fun <T, R> T?.ifNotNull(block: (T) -> R): R? {
  * @return
  */
 
-internal infix fun <K, V> Iterable<Map<K, V>>.minusWrtKeys(
+infix fun <K, V> Iterable<Map<K, V>>.minusWrtKeys(
     operand:
     Iterable<Map<K, V>>
 ): List<Map<K, V>> {
@@ -108,7 +108,7 @@ internal infix fun <K, V> Iterable<Map<K, V>>.minusWrtKeys(
  * @param item The item to be checked
  * @return true if the map with same keys are present, false otherwise
  */
-internal infix fun <K, V> Iterable<Map<K, V>>.inWrtKeys(item: Map<K, V>): Boolean {
+infix fun <K, V> Iterable<Map<K, V>>.inWrtKeys(item: Map<K, V>): Boolean {
     this.toSet().forEach {
         if (it.keys.containsAll(item.keys))
             return true

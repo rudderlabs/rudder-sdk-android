@@ -20,12 +20,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.TestWorkerBuilder
 import com.rudderstack.android.android.utils.TestLogger
 import com.rudderstack.android.internal.AndroidLogger
-import com.rudderstack.android.internal.sync.RudderSyncWorker
-import com.rudderstack.android.internal.sync.RudderWorkerConfig
-import com.rudderstack.android.internal.sync.registerWorkManager
+import com.rudderstack.android.internal.infrastructure.sync.RudderSyncWorker
+import com.rudderstack.android.internal.infrastructure.sync.registerWorkManager
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Base64Generator
-import com.rudderstack.core.Logger
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -57,7 +55,8 @@ class RudderSyncWorkerTest {
         val logger = TestLogger()
         every{analytics.logger} returns logger
         application.registerWorkManager(analytics, RudderWorkerConfig("", false, jsonAdapter = JacksonAdapter(),
-        logger = AndroidLogger, controlPlaneUrl = null, dataPlaneUrl = null))
+        logger = AndroidLogger, controlPlaneUrl = null, dataPlaneUrl = null)
+        )
         executorService = Executors.newSingleThreadExecutor()
 
     }

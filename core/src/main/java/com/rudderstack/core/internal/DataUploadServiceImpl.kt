@@ -15,77 +15,119 @@
 package com.rudderstack.core.internal
 
 import com.rudderstack.core.*
-import com.rudderstack.core.State
-import com.rudderstack.core.internal.states.SettingsState
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.Message
-import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+import com.rudderstack.web.HttpInterceptor
 import com.rudderstack.web.HttpResponse
+import com.rudderstack.web.WebService
 import com.rudderstack.web.WebServiceFactory
+import java.net.HttpURLConnection
+import java.net.http.HttpRequest
 import java.util.*
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicReference
 
 internal class DataUploadServiceImpl(
-    writeKey : String,
-    private val jsonAdapter: JsonAdapter,
-    private val base64Generator: Base64Generator,
-    private val settingsState: State<Settings> = SettingsState,
-    dataPlaneUrl: String,
-    private val networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
-
+    writeKey: String
 ) : DataUploadService {
-    private val encodedWriteKey = base64Generator.generateBase64(writeKey)
-    private val webService = WebServiceFactory.getWebService(
-        dataPlaneUrl,
-        jsonAdapter, executor = networkExecutor
-    )
+    private val encodedWriteKey: AtomicReference<String?> = AtomicReference()
+    private val webService: AtomicReference<WebService?> = AtomicReference()
+    private val currentConfigurationAtomic = AtomicReference<Configuration?>()
+    private var headers = mutableMapOf<String, String>()
 
-    override fun upload(data: List<Message>, extraInfo: Map<String,String>?, callback: (response: HttpResponse<out Any>) -> Unit) {
-        if(networkExecutor.isShutdown || networkExecutor.isTerminated)
-            return
-        val batchBody = mapOf<String, Any>("sentAt" to RudderUtils.timeStamp,
-        "batch" to data).let {
-            if(extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
-        }
-            .let {
-            jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String,Any>>(){})
-        }
-        webService.post(mapOf(
-            "Content-Type" to "application/json",
-            "Authorization" to
-            String.format(Locale.US, "Basic %s", encodedWriteKey),
-        "anonymousId" to (settingsState.value?.anonymousId?.let {  base64Generator.generateBase64(
-            it)
-        }?:encodedWriteKey)),null, batchBody, "v1/batch", String::class.java ){
-            callback.invoke(it)
-        }
-    }
-
-    override fun uploadSync(data: List<Message>, extraInfo: Map<String, String>?): HttpResponse<out Any> {
-        val batchBody = mapOf<String, Any>("sentAt" to RudderUtils.timeStamp,
-            "batch" to data).let {
-            if(extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
-        }
-            .let {
-                jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String,Any>>(){})
+    private val currentConfiguration
+        get() = currentConfigurationAtomic.get()
+    private val configSubscriber: State.Observer<Configuration> =
+        State.Observer<Configuration> { state ->
+            state?.apply {
+                encodedWriteKey.set(base64Generator.generateBase64(writeKey))
+                initializeWebService()
+                currentConfigurationAtomic.set(this)
             }
-        return webService.post(mapOf(
-            "Content-Type" to "application/json",
-            "Authorization" to
-                    String.format(Locale.US, "Basic %s", encodedWriteKey),
-            "anonymousId" to (settingsState.value?.anonymousId?.let {  base64Generator.generateBase64(
-                it)
-            }?:encodedWriteKey)),null, batchBody, "v1/batch", String::class.java ).get()
-
+        }
+    private val interceptor = HttpInterceptor {
+        if(headers.isNotEmpty()) {
+            synchronized(this) {
+                headers.forEach { (key, value) ->
+                    it.setRequestProperty(key, value)
+                }
+            }
+        }
+        it
     }
+    init {
+        ConfigurationsState.subscribe(configSubscriber)
+    }
+
+    private fun Configuration.initializeWebService() {
+        if (webService.get() == null) webService.set(
+            WebServiceFactory.getWebService(
+                dataPlaneUrl, jsonAdapter, executor = networkExecutor
+            ).also {
+                it.setInterceptor(interceptor)
+            }
+        )
+    }
+
+    override fun addHeaders(headers: Map<String, String>) {
+        synchronized(this) {
+            this.headers += headers
+        }
+    }
+
+    //    private val configurationState: State<Configuration> =
+    override fun upload(
+        data: List<Message>,
+        extraInfo: Map<String, String>?,
+        callback: (response: HttpResponse<out Any>) -> Unit
+    ) {
+        currentConfiguration?.apply {
+            if (networkExecutor.isShutdown || networkExecutor.isTerminated) return
+            val batchBody = mapOf<String, Any>(
+                "sentAt" to RudderUtils.timeStamp, "batch" to data
+            ).let {
+                if (extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
+            }.let {
+                jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String, Any>>() {})
+            }
+            webService.get()?.post(mapOf("Content-Type" to "application/json",
+                "Authorization" to String.format(Locale.US, "Basic %s", encodedWriteKey),
+                /**/), null, batchBody, "v1/batch", String::class.java) {
+                callback.invoke(it)
+            }
+        }
+    }
+
+    override fun uploadSync(
+        data: List<Message>, extraInfo: Map<String, String>?
+    ): HttpResponse<out Any>? {
+        return currentConfiguration?.let { config ->
+            val batchBody = mapOf<String, Any>(
+                "sentAt" to RudderUtils.timeStamp, "batch" to data
+            ).let {
+                if (extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
+            }.let {
+                config.jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String, Any>>()
+                {})
+            }
+            webService.get()?.post(mapOf("Content-Type" to "application/json",
+                "Authorization" to String.format(Locale.US, "Basic %s", encodedWriteKey)/*,
+                "anonymousId" to (ConfigurationsState.value?.anonymousId?.let {
+                    base64Generator.generateBase64(
+                        it
+                    )
+                } ?: encodedWriteKey)*/), null, batchBody, "v1/batch", String::class.java)?.get()
+        }
+    }
+
 
     override fun shutdown() {
-        networkExecutor.shutdown()
+        ConfigurationsState.removeObserver(configSubscriber)
+        webService.get()?.shutdown()
+        webService.set(null)
+        currentConfigurationAtomic.set(null)
+        encodedWriteKey.set(null)
     }
-
-    override val isShutdown: Boolean
-        get() = networkExecutor.isShutdown || networkExecutor.isTerminated
 
 
 }

@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 25/03/22, 1:29 PM Last modified: 25/03/22, 1:29 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 29/11/23, 5:37 pm Last modified: 21/11/23, 5:14 pm
+ * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,31 +12,35 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.core.internal.plugins
+package com.rudderstack.android.internal.plugins
 
-import com.rudderstack.core.*
-import com.rudderstack.core.State
-import com.rudderstack.core.internal.KeyConstants
-import com.rudderstack.core.internal.optAdd
-import com.rudderstack.core.internal.states.SettingsState
-import com.rudderstack.models.*
+import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.internal.states.ContextState
+import com.rudderstack.core.Analytics
+import com.rudderstack.core.Plugin
+
+import com.rudderstack.core.optAdd
+import com.rudderstack.models.AliasMessage
+import com.rudderstack.models.IdentifyMessage
+import com.rudderstack.models.Message
+import com.rudderstack.models.MessageContext
+import com.rudderstack.models.createContext
+import com.rudderstack.models.traits
+import com.rudderstack.models.updateWith
 
 /**
  * Mutates the system state, if required, based on the Event.
  * In case of [IdentifyMessage], it is expected to save the traits provided.
  */
-internal class ExtractStatePlugin(
-    private val contextState:
-    State<MessageContext>,
-    private val settingsState: State<Settings>,
-    private val storage: Storage
-) : Plugin {
+internal class ExtractStatePlugin: Plugin {
 
-    private var _analytics : Analytics? = null
+    private var _analytics: Analytics? = null
     override fun setup(analytics: Analytics) {
         super.setup(analytics)
         _analytics = analytics
     }
+
     override fun intercept(chain: Plugin.Chain): Message {
         val message = chain.message()
 //        var newContext: MessageContext?
@@ -59,23 +63,28 @@ internal class ExtractStatePlugin(
                 when (message) {
                     is AliasMessage -> {
                         // in case of alias, we change the user id in traits
-                        val prevId = settingsState.value?.let { it.userId ?: it.anonymousId } ?: ""
+                        val prevId = _analytics?.currentConfigurationAndroid?.let {
+                            it.userId ?: it.anonymousId
+                        } ?: ""
                         message.updateNewAndPrevUserId(
-                            prevId,
-                            newUserId, it
+                            prevId, newUserId, it
                         )
 
                     }
+
                     else -> message
                 }.also {
                     newUserId?.let { id ->
-                        settingsState.update(SettingsState.value?.copy(userId = id))
+                        _analytics?.applyConfiguration {
+                            if (this is ConfigurationAndroid) copy(userId = id)
+                            else this
+                        }
                     }
                 }
             }.also { msg ->
                 msg.context?.let {
-                    storage.cacheContext(it)
-                    contextState.update(it)
+                    _analytics?.currentConfiguration?.storage?.cacheContext(it)
+                    ContextState.update(it)
                 }
 
             }
@@ -83,6 +92,7 @@ internal class ExtractStatePlugin(
 
         return chain.proceed(newMsg)
     }
+
 
     /**
      * Checks in the order
@@ -98,36 +108,40 @@ internal class ExtractStatePlugin(
     private fun getUserId(message: Message): String? {
         return message.userId ?: message.context?.let {
             (it[KeyConstants.CONTEXT_USER_ID_KEY]
-                ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY))
-                ?: (it[KeyConstants.CONTEXT_USER_ID_KEY_ALIAS])
-                ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY_ALIAS))
-                ?: (it[KeyConstants.CONTEXT_ID_KEY])
-                ?: (it.traits?.get(KeyConstants.CONTEXT_ID_KEY))) as? String?
+             ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY))
+             ?: (it[KeyConstants.CONTEXT_USER_ID_KEY_ALIAS])
+             ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY_ALIAS))
+             ?: (it[KeyConstants.CONTEXT_ID_KEY])
+             ?: (it.traits?.get(KeyConstants.CONTEXT_ID_KEY)))?.toString()
         }
     }
 
     private fun AliasMessage.updateNewAndPrevUserId(
-        previousId: String,
-        newUserId: String?,
-        messageContext: MessageContext
+        previousId: String, newUserId: String?, messageContext: MessageContext
     ): AliasMessage {
         val newTraits = newUserId?.let { newId ->
             mapOf(
-                KeyConstants.CONTEXT_ID_KEY to
-                        newId,
-                KeyConstants.CONTEXT_USER_ID_KEY to
-                        newId
+                KeyConstants.CONTEXT_ID_KEY to newId, KeyConstants.CONTEXT_USER_ID_KEY to newId
             ) optAdd messageContext.traits
         }
         //also in case of alias, user id in context should also change, given it's
         // present there
         return messageContext.updateWith(
-            traits =
-            newTraits
+            traits = newTraits
         ).let {
             this.copy(context = it, userId = newUserId, previousId = previousId)
         }
     }
 
+    object KeyConstants {
+        const val CONTEXT_USER_ID_KEY = "user_id"
+        const val CONTEXT_USER_ID_KEY_ALIAS = "userId"
+        const val CONTEXT_ID_KEY = "id"
+        const val CONTEXT_EXTERNAL_ID_KEY = "externalIds"
+    }
 
+    override fun reset() {
+        super.reset()
+        ContextState.update()
+    }
 }

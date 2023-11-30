@@ -16,7 +16,7 @@ package com.rudderstack.core.compat;
 
 import com.rudderstack.core.Analytics;
 import com.rudderstack.core.BaseDestinationPlugin;
-import com.rudderstack.core.Settings;
+import com.rudderstack.core.Configuration;
 import com.rudderstack.models.Message;
 import com.rudderstack.models.RudderServerConfig;
 import com.rudderstack.rudderjsonadapter.JsonAdapter;
@@ -40,8 +40,8 @@ public abstract class BaseDestinationPluginCompat<T> extends BaseDestinationPlug
     }
 
     @Override
-    public void updateSettings(@NotNull Settings settings) {
-        super.updateSettings(settings);
+    public void updateConfiguration(@NotNull Configuration configuration) {
+        super.updateConfiguration(configuration);
     }
 
     @Override
@@ -80,7 +80,7 @@ public abstract class BaseDestinationPluginCompat<T> extends BaseDestinationPlug
         }
 
         @Override
-        public void updateSettings(@NotNull Settings settings) {
+        public void updateConfiguration(@NotNull Configuration configuration) {
         }
 
         @Override

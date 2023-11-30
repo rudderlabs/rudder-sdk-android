@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 23/03/22, 11:54 PM Last modified: 23/03/22, 11:54 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 20/11/23, 9:03 pm Last modified: 20/11/23, 9:03 pm
+ * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,13 +12,9 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.core.internal.states
+package com.rudderstack.android.navigationplugin.internal
 
+import androidx.navigation.NavController
 import com.rudderstack.core.State
-import com.rudderstack.models.MessageContext
 
-internal object ContextState : State<MessageContext>(
-    mapOf()
-) {
-
-}
+class NavControllerState : State<Collection<NavController>>() {}

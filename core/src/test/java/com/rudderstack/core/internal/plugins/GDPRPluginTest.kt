@@ -15,7 +15,7 @@
 package com.rudderstack.core.internal.plugins
 
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.Settings
+import com.rudderstack.core.Configuration
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.models.TrackMessage
@@ -47,7 +47,7 @@ class GDPRPluginTest {
         }
         val optOutTestChain = CentralPluginChain(message, listOf(gdprPlugin, testPluginForOptOut))
         //opted out
-        gdprPlugin.updateSettings(Settings(isOptOut = true))
+        gdprPlugin.updateConfiguration(Configuration(isOptOut = true))
         //check for opt out
         val returnedMsg = optOutTestChain.proceed(message)
         assertThat(returnedMsg, Matchers.`is`(returnedMsg))
@@ -63,7 +63,7 @@ class GDPRPluginTest {
         }
         val optInTestChain = CentralPluginChain(message, listOf(gdprPlugin, testPluginForOptIn))
         //opted out
-        gdprPlugin.updateSettings(Settings(isOptOut = false))
+        gdprPlugin.updateConfiguration(Configuration(isOptOut = false))
         //check for opt out
         val returnedMsg = optInTestChain.proceed(message)
         assertThat(returnedMsg, Matchers.`is`(returnedMsg))

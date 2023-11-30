@@ -21,14 +21,13 @@ import com.rudderstack.android.internal.AndroidLogger;
 import com.rudderstack.core.Analytics;
 import com.rudderstack.core.Logger;
 import com.rudderstack.core.RetryStrategy;
-import com.rudderstack.core.Settings;
+import com.rudderstack.core.Configuration;
 import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import java.util.List;
 import java.util.Map;
 
 import kotlin.Unit;
-import kotlin.jvm.functions.Function2;
 
 /**
  * To be used by java projects
@@ -36,7 +35,7 @@ import kotlin.jvm.functions.Function2;
 public class RudderAnalyticsBuilderCompat {
     private final Application application;
     private final String writeKey;
-    private final Settings settings;
+    private final Configuration configuration;
     private final JsonAdapter jsonAdapter;
     private String dataPlaneUrl = null;
     private boolean shouldVerifySdk = true;
@@ -61,11 +60,11 @@ public class RudderAnalyticsBuilderCompat {
     }
 
     public RudderAnalyticsBuilderCompat(Application application, String writeKey,
-                                        Settings settings,
+                                        Configuration configuration,
                                         JsonAdapter jsonAdapter) {
         this.application = application;
         this.writeKey = writeKey;
-        this.settings = settings;
+        this.configuration = configuration;
         this.jsonAdapter = jsonAdapter;
     }
 
@@ -151,7 +150,7 @@ public class RudderAnalyticsBuilderCompat {
 
         public Analytics build() {
             return AnalyticsFactory.RudderAnalytics(application, writeKey,
-                    settings, jsonAdapter, dataPlaneUrl, shouldVerifySdk, controlPlaneUrl, trackLifecycleEvents,
+                    configuration, jsonAdapter, dataPlaneUrl, shouldVerifySdk, controlPlaneUrl, trackLifecycleEvents,
                     recordScreenViews, isPeriodicFlushEnabled, autoCollectAdvertId, multiProcessEnabled, defaultProcessName,
                     useContentProvider, defaultTraits, defaultExternalIds,
                     defaultContextMap, logger, sdkVerifyRetryStrategy, (success, message) -> {

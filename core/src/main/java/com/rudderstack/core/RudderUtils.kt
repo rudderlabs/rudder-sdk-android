@@ -19,6 +19,14 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object RudderUtils {
+    val defaultBase64Generator: Base64Generator by lazy {
+        Base64Generator {
+            Base64.getEncoder().encodeToString(
+                String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8"))
+            )
+        }
+    }
+
     // range constants
     /*const val MIN_CONFIG_REFRESH_INTERVAL = 1
     const val MAX_CONFIG_REFRESH_INTERVAL = 24

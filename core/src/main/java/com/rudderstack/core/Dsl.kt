@@ -14,7 +14,6 @@
 
 package com.rudderstack.core
 
-import com.rudderstack.core.internal.optAdd
 import com.rudderstack.models.*
 
 class TrackScope internal constructor() : MessageScope<TrackMessage>() {
