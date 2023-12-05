@@ -64,7 +64,7 @@ internal class FillDefaultsPlugin : Plugin {
                     if (this is AliasMessage && this.userId != _analytics?.currentConfigurationAndroid?.userId) it.updateWith(
                         traits = mapOf()
                     ) else it
-                } selectiveReplace context) optAdd _analytics?.currentConfigurationAndroid?.defaultContextMap,
+                } selectiveReplace context),
             anonymousId = anonId,
             userId = userId) as T)
     }

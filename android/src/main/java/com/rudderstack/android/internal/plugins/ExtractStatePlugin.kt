@@ -17,15 +17,15 @@ package com.rudderstack.android.internal.plugins
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.internal.states.ContextState
+import com.rudderstack.android.processNewContext
+import com.rudderstack.android.setUserId
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
-
 import com.rudderstack.core.optAdd
 import com.rudderstack.models.AliasMessage
 import com.rudderstack.models.IdentifyMessage
 import com.rudderstack.models.Message
 import com.rudderstack.models.MessageContext
-import com.rudderstack.models.createContext
 import com.rudderstack.models.traits
 import com.rudderstack.models.updateWith
 
@@ -33,7 +33,7 @@ import com.rudderstack.models.updateWith
  * Mutates the system state, if required, based on the Event.
  * In case of [IdentifyMessage], it is expected to save the traits provided.
  */
-internal class ExtractStatePlugin: Plugin {
+internal class ExtractStatePlugin : Plugin {
 
     private var _analytics: Analytics? = null
     override fun setup(analytics: Analytics) {
@@ -43,55 +43,59 @@ internal class ExtractStatePlugin: Plugin {
 
     override fun intercept(chain: Plugin.Chain): Message {
         val message = chain.message()
-//        var newContext: MessageContext?
 
-        val newMsg = if (message is IdentifyMessage || message is AliasMessage) {
-            // alias message can change user id permanently
-            //save and update traits
-            //update userId
-            //save and update external ids
-            (message.context ?: createContext()).let {
+        if (!(message is IdentifyMessage || message is AliasMessage)) {
+            return chain.proceed(message)
+        }
+        // alias message can change user id permanently
+        //save and update traits
+        //update userId
+        //save and update external ids
+        (message.context ?: return message).let {
 
-                //alias and identify messages are expected to contain user id.
-                //We check in context as well as context.traits with either keys "userId" and "id"
-                //user id can be retrieved if put directly in context or context.traits with the
-                //aforementioned ids
-                val newUserId = getUserId(message)
+            //alias and identify messages are expected to contain user id.
+            //We check in context as well as context.traits with either keys "userId" and "id"
+            //user id can be retrieved if put directly in context or context.traits with the
+            //aforementioned ids
+            val newUserId = getUserId(message)
 
-                _analytics?.logger?.debug(log = "New user id detected: $newUserId")
-                // in case of identify, the stored traits (if any) are replaced by the ones provided
-                when (message) {
-                    is AliasMessage -> {
-                        // in case of alias, we change the user id in traits
-                        val prevId = _analytics?.currentConfigurationAndroid?.let {
-                            it.userId ?: it.anonymousId
-                        } ?: ""
-                        message.updateNewAndPrevUserId(
-                            prevId, newUserId, it
-                        )
-
-                    }
-
-                    else -> message
-                }.also {
-                    newUserId?.let { id ->
-                        _analytics?.applyConfiguration {
-                            if (this is ConfigurationAndroid) copy(userId = id)
-                            else this
-                        }
-                    }
+            _analytics?.logger?.debug(log = "New user id detected: $newUserId")
+            val prevId = _analytics?.currentConfigurationAndroid?.let {
+                it.userId ?: it.anonymousId
+            } ?: ""
+            // in case of identify, the stored traits (if any) are replaced by the ones provided
+            // if user id is different. else traits are added to it
+            when (message) {
+                is AliasMessage -> {
+                    // in case of alias, we change the user id in traits
+                    message.updateNewAndPrevUserId(
+                        prevId, newUserId, it
+                    )
                 }
-            }.also { msg ->
-                msg.context?.let {
-                    _analytics?.currentConfiguration?.storage?.cacheContext(it)
-                    ContextState.update(it)
+                is IdentifyMessage -> {
+                    if(newUserId != prevId) {
+                        replaceContext(it)
+                    } else appendContext(it)
                 }
-
+                else -> {}
             }
-        } else message
-
-        return chain.proceed(newMsg)
+            message.also {
+                newUserId?.let { id ->
+                    _analytics?.setUserId(id)
+                }
+            }
+        }
+        return chain.proceed(message)
     }
+
+    private fun appendContext(messageContext: MessageContext) {
+        _analytics?.processNewContext(  messageContext optAdd ContextState.value)
+    }
+
+    private fun replaceContext(messageContext: MessageContext) {
+        _analytics?.processNewContext(messageContext)
+    }
+
 
 
     /**
@@ -106,14 +110,14 @@ internal class ExtractStatePlugin: Plugin {
      *
      */
     private fun getUserId(message: Message): String? {
-        return message.userId ?: message.context?.let {
+        return  message.context?.let {
             (it[KeyConstants.CONTEXT_USER_ID_KEY]
              ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY))
              ?: (it[KeyConstants.CONTEXT_USER_ID_KEY_ALIAS])
              ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY_ALIAS))
              ?: (it[KeyConstants.CONTEXT_ID_KEY])
              ?: (it.traits?.get(KeyConstants.CONTEXT_ID_KEY)))?.toString()
-        }
+        }?:message.userId
     }
 
     private fun AliasMessage.updateNewAndPrevUserId(
@@ -142,6 +146,6 @@ internal class ExtractStatePlugin: Plugin {
 
     override fun reset() {
         super.reset()
-        ContextState.update()
+        _analytics?.processNewContext(mapOf())
     }
 }

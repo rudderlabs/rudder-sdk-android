@@ -98,7 +98,7 @@ class ExtractStatePluginTest {
     @Test
     fun `test identify with message external ids`(){
         val storage = BasicStorageImpl( logger = KotlinLogger)
-        val options = RudderOptions.default()
+        val options = RudderOptions.defaultOptions()
         val extractStatePlugin = ExtractStatePlugin(
             ContextState, ConfigurationsState,
             /*options,*/ storage

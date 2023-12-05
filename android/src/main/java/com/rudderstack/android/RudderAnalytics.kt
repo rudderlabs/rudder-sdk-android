@@ -11,7 +11,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-@file:JvmName("AnalyticsFactory") @file:Suppress("FunctionName")
+@file:JvmName("RudderAnalytics") @file:Suppress("FunctionName")
 
 package com.rudderstack.android
 
@@ -22,9 +22,10 @@ import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
 import com.rudderstack.android.internal.plugins.AndroidContextPlugin
 import com.rudderstack.android.internal.states.ContextState
-import com.rudderstack.core.*
-import com.rudderstack.models.*
-import java.util.*
+import com.rudderstack.core.Analytics
+import com.rudderstack.core.ConfigDownloadService
+import com.rudderstack.core.DataUploadService
+import com.rudderstack.models.MessageContext
 
 //device info and stuff
 //multi process
@@ -53,7 +54,6 @@ fun RudderAnalytics(
 }
 
 
-
 /**
  * Set the AdvertisingId yourself. If set, SDK will not capture idfa automatically
  *
@@ -62,11 +62,10 @@ fun RudderAnalytics(
 fun Analytics.putAdvertisingId(advertisingId: String) {
 
     applyConfiguration {
-    if (this is ConfigurationAndroid)
-        copy(
+        if (this is ConfigurationAndroid) copy(
             advertisingId = advertisingId
         )
-    else this
+        else this
     }
 }
 
@@ -77,13 +76,13 @@ fun Analytics.putAdvertisingId(advertisingId: String) {
  */
 fun Analytics.putDeviceToken(deviceToken: String) {
     applyConfiguration {
-        if (this is ConfigurationAndroid)
-            copy(
-                deviceToken = deviceToken
-            )
+        if (this is ConfigurationAndroid) copy(
+            deviceToken = deviceToken
+        )
         else this
     }
 }
+
 /**
  * Anonymous id to be used for all consecutive calls.
  * Anonymous id is mostly used for messages sent prior to user identification or in case of
@@ -91,71 +90,64 @@ fun Analytics.putDeviceToken(deviceToken: String) {
  *
  * @param anonymousId String to be used as anonymousId
  */
-fun Analytics.setAnonymousId(anonymousId : String) {
+fun Analytics.setAnonymousId(anonymousId: String) {
     currentConfigurationAndroid?.storage?.setAnonymousId(anonymousId)
     applyConfiguration {
-        if (this is ConfigurationAndroid)
-            copy(
-                anonymousId = anonymousId
-            )
+        if (this is ConfigurationAndroid) copy(
+            anonymousId = anonymousId
+        )
         else this
     }
 }
+
 /**
  * Setting the [ConfigurationAndroid.userId] explicitly.
 
  *
  * @param userId String to be used as userId
  */
-fun Analytics.setUserId(userId : String) {
+fun Analytics.setUserId(userId: String) {
     currentConfigurationAndroid?.storage?.setUserId(userId)
     applyConfiguration {
-        if (this is ConfigurationAndroid)
-            copy(
-                userId = userId
-            )
+        if (this is ConfigurationAndroid) copy(
+            userId = userId
+        )
         else this
     }
 }
+
 private fun initialize(application: Application) {
     RudderPreferenceManager.initialize(application)
 }
+
 private val infrastructurePlugins
-    get() = arrayOf(AnonymousIdHeaderPlugin(),
-        LifecycleObserverPlugin(),
-        ActivityBroadcasterPlugin())
+    get() = arrayOf(
+        AnonymousIdHeaderPlugin(), LifecycleObserverPlugin(), ActivityBroadcasterPlugin()
+    )
 private val messagePlugins
     get() = listOf(
         AndroidContextPlugin(),
     )
+
 private fun Analytics.startup() {
     addInfrastructurePlugin(*infrastructurePlugins)
     addPlugin(*messagePlugins.toTypedArray())
-    generateNewContext(currentConfigurationAndroid ?: return).also {
-        processNewContext(currentConfigurationAndroid ?: return, it)
-    }
+
 }
-private fun generateNewContext(configuration: ConfigurationAndroid): MessageContext {
-    return createContext(
-        configuration.defaultTraits,
-        configuration.defaultExternalIds,
-        configuration.defaultContextMap,
-        configuration.contextAddOns
-    )
-}
-internal fun processNewContext(
-    configuration: ConfigurationAndroid,
+
+internal fun Analytics.processNewContext(
     newContext: MessageContext
 ) {
-    configuration.analyticsExecutor.submit {
-        configuration.storage.cacheContext(newContext)
+    currentConfigurationAndroid?.apply {
+        storage.cacheContext(newContext)
+        ContextState.update(newContext)
     }
-    ContextState.update(newContext)
 }
 
 
-internal val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
+val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
     get() = (currentConfiguration as? ConfigurationAndroid)
+
 private fun shutdown() {
     //no-op
 }

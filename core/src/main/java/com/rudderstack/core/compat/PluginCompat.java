@@ -15,11 +15,10 @@
 package com.rudderstack.core.compat;
 
 import com.rudderstack.core.Analytics;
-import com.rudderstack.core.Plugin;
 import com.rudderstack.core.Configuration;
+import com.rudderstack.core.Plugin;
 import com.rudderstack.models.Message;
 import com.rudderstack.models.RudderServerConfig;
-import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -50,9 +49,4 @@ public abstract class PluginCompat implements Plugin {
     public void reset() {
     }
 
-    @NotNull
-    @Override
-    public JsonAdapter getJsonAdapter(@NotNull Analytics analytics) {
-        return analytics.getJsonAdapter();
-    }
 }

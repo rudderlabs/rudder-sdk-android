@@ -38,10 +38,7 @@ import com.rudderstack.core.internal.plugins.WakeupActionPlugin
 import com.rudderstack.core.internal.states.DestinationConfigState
 import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.Message
-import com.rudderstack.models.MessageContext
 import com.rudderstack.models.RudderServerConfig
-import com.rudderstack.models.createContext
-import com.rudderstack.models.customContexts
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
 import java.util.concurrent.ExecutorService
@@ -301,7 +298,7 @@ internal class AnalyticsDelegate(
         return synchronized(PLUGIN_LOCK) {
             _internalPreMessagePlugins +
             RudderOptionPlugin(
-                options ?: currentConfiguration?.options ?: RudderOptions.default()
+                options ?: currentConfiguration?.options ?: RudderOptions.defaultOptions()
             ).also {
                 it.setup(analytics = _analytics ?: return@also)
             } +

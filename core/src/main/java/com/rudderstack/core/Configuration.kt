@@ -15,9 +15,6 @@
 package com.rudderstack.core
 
 import com.rudderstack.core.internal.KotlinLogger
-import com.rudderstack.models.IdentifyTraits
-import com.rudderstack.models.externalIds
-import com.rudderstack.models.traits
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -59,15 +56,15 @@ interface Configuration {
 
     companion object {
         // default flush queue size for the events to be flushed to server
-        private const val FLUSH_QUEUE_SIZE = 30
+        const val FLUSH_QUEUE_SIZE = 30
 
         // default timeout for event flush
         // if events are registered and flushQueueSize is not reached
         // events will be flushed to server after maxFlushInterval millis
-        private const val MAX_FLUSH_INTERVAL = 10 * 1000L //10 seconds
+        const val MAX_FLUSH_INTERVAL = 10 * 1000L //10 seconds
         operator fun invoke(
             jsonAdapter: JsonAdapter,
-            options: RudderOptions = RudderOptions.default(),
+            options: RudderOptions = RudderOptions.defaultOptions(),
             flushQueueSize: Int = FLUSH_QUEUE_SIZE,
             maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
             isOptOut: Boolean = false,

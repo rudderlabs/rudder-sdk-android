@@ -18,22 +18,21 @@ import android.app.Application
 import android.app.UiModeManager
 import android.content.Context
 import android.content.pm.PackageManager
-import android.content.pm.PackageManager.PackageInfoFlags
 import android.content.res.Configuration
-import android.graphics.Insets
 import android.os.Build
 import android.provider.Settings
+import android.provider.Settings.Secure
 import android.text.TextUtils
 import android.util.Base64
 import android.util.DisplayMetrics
-import android.util.Size
-import android.view.WindowInsets
 import android.view.WindowManager
-import android.view.WindowMetrics
-import com.rudderstack.android.AndroidUtils.screen
 import com.rudderstack.core.Base64Generator
 import com.rudderstack.models.android.RudderApp
 import com.rudderstack.models.android.RudderContext
+import com.rudderstack.models.android.RudderDeviceInfo
+import com.rudderstack.models.android.RudderNetwork
+import com.rudderstack.models.android.RudderOSInfo
+import com.rudderstack.models.android.RudderScreenInfo
 import com.rudderstack.models.android.RudderTraits
 import java.io.UnsupportedEncodingException
 import java.util.*
@@ -44,11 +43,7 @@ internal object AndroidUtils {
 
         val androidId =
             Settings.System.getString(application.contentResolver, Settings.Secure.ANDROID_ID)
-        if (!TextUtils.isEmpty(androidId)
-            && "9774d56d682e549c" != androidId
-            && "unknown" != androidId
-            && "000000000000000" != androidId
-        ) {
+        if (!TextUtils.isEmpty(androidId) && "9774d56d682e549c" != androidId && "unknown" != androidId && "000000000000000" != androidId) {
             return androidId
         }
 
@@ -59,9 +54,7 @@ internal object AndroidUtils {
 
     fun getWriteKeyFromStrings(context: Context): String? {
         val id = context.resources.getIdentifier(
-            context.packageName,
-            "string",
-            "rudder_write_key"
+            context.packageName, "string", "rudder_write_key"
         )
         return if (id != 0) {
             context.resources.getString(id)
@@ -101,37 +94,41 @@ internal object AndroidUtils {
     internal fun Context.isTv(): Boolean {
         val uiModeManager =
             applicationContext.getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
-        return (uiModeManager != null
-                && uiModeManager.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION)
+        return (uiModeManager != null && uiModeManager.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION)
     }
 
     internal fun defaultBase64Generator() = Base64Generator {
         Base64.encodeToString(
-            String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8")),
-            Base64.DEFAULT
+            String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8")), Base64.DEFAULT
         )
     }
 
-    internal fun Application.createAndroidMessageContext(anonymousId: String, userId: String?,
-                                                         externalId: List<Map<String, Any?>>?,
-                                                         advertisingId: String?,
-                                                         deviceToken : String, collectDeviceId: Boolean) = RudderContext().also {
-        it.app = rudderApp
-        it.traits = RudderTraits(anonymousId).also {
-            if(userId != null)
-                it.putUserName(userId)
+    private fun Application.generateDeviceInfo(
+        advertisingId: String?,
+        deviceToken: String,
+        collectDeviceId: Boolean
+    ): RudderDeviceInfo {
+        val deviceId = if (collectDeviceId) getDeviceId(this) else null
+        return RudderDeviceInfo(
+            deviceId = deviceId,
+            manufacturer = Build.MANUFACTURER,
+            model = Build.MODEL,
+            name = Build.DEVICE,
+            token = deviceToken,
+            isAdTrackingEnabled = advertisingId != null
+        ).also {
+            if (advertisingId != null) it.advertisingId = advertisingId
         }
-        it.externalId = externalId?.toMutableSet()
-
     }
-    private val Application.rudderApp : RudderApp?
-        get() =
-        try {
+
+
+    private val Application.rudderApp: RudderApp?
+        get() = try {
             val packageName: String = this.packageName
             val packageManager: PackageManager = packageManager
-            val packageInfo = packageManager.getPackageInfo(packageName, PackageInfoFlags.of(0L))
-            val build = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                packageInfo.longVersionCode.toString() else packageInfo.versionCode.toString()
+            val packageInfo = packageManager.getPackageInfo(packageName, 0)
+            val build =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) packageInfo.longVersionCode.toString() else packageInfo.versionCode.toString()
             val name = packageInfo.applicationInfo.loadLabel(packageManager).toString()
             val version = packageInfo.versionName
             RudderApp(
@@ -142,33 +139,22 @@ internal object AndroidUtils {
 //            RudderLogger.logError(ex.cause)
             null
         }
-    private val Application.screen
+    private val Application.screen : RudderScreenInfo?
         get() = run {
-            val manager = getSystemService(Context.WINDOW_SERVICE)
-                                  as? WindowManager?: return@run null
-            val metrics: WindowMetrics = manager.currentWindowMetrics
-            // Gets all excluding insets
-            // Gets all excluding insets
+            val manager = getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+            return@run if (manager == null) {
+                null
+            }else {
+                val display = manager.defaultDisplay
+                val displayMetrics = DisplayMetrics()
+                display.getMetrics(displayMetrics)
+                RudderScreenInfo(
+                     displayMetrics.densityDpi,
+                    displayMetrics.widthPixels,
+                    displayMetrics.heightPixels
+                )
+            }
 
-            val windowInsets = metrics.windowInsets
-            val insets: Insets = windowInsets.getInsetsIgnoringVisibility(
-                WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout()
-            )
-
-            val insetsWidth: Int = insets.right + insets.left
-            val insetsHeight: Int = insets.top + insets.bottom
-
-            // Legacy size that Display#getSize reports
-
-            // Legacy size that Display#getSize reports
-            val bounds = metrics.bounds
-            val legacySize = Size(
-                bounds.width() - insetsWidth, bounds.height() - insetsHeight
-            )
-
-            this.density = displayMetrics.densityDpi
-            this.height = legacySize.height
-            this.width = legacySize.width
         }
 
 }

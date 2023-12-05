@@ -69,7 +69,7 @@ internal class AndroidContextPlugin : Plugin {
 
     override fun intercept(chain: Plugin.Chain): Message {
         val msg = chain.message()
-        val newMsg = msg.copy(context = msg.context optAdd application?.prepareDefaultAndroidContext())
+        val newMsg = msg.copy(context = msg.context optAdd application?.defaultAndroidContext())
         return chain.proceed(newMsg)
     }
 
@@ -142,9 +142,9 @@ internal class AndroidContextPlugin : Plugin {
             contentResolver, "advertising_id"
         )
     }
-
-    private fun Application.prepareDefaultAndroidContext(): MessageContext {
-        return mapOf<String, Any?>(
+    private var _defaultAndroidContext: MessageContext? = null
+    private fun Application.defaultAndroidContext(): MessageContext {
+        return _defaultAndroidContext?:mapOf<String, Any?>(
             "app" to getAppDetails(),
             "os" to getOsInfo(),
             "screen" to getScreenInfo(),
@@ -153,8 +153,7 @@ internal class AndroidContextPlugin : Plugin {
             "device" to getDeviceInfo(),
             "network" to getRudderNetwork(),
             "timezone" to timeZone
-        )
-
+        ).also { _defaultAndroidContext = it }
     }
 
     private fun Application.getAppDetails(): String? {

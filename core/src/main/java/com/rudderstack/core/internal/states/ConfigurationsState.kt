@@ -17,7 +17,7 @@ package com.rudderstack.core.internal.states
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.State
 
-internal object ConfigurationsState : State<Configuration>() {
+object ConfigurationsState : State<Configuration>() {
 
 
 }

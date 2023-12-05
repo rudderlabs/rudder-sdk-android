@@ -59,7 +59,7 @@ class RudderOptionPluginTest {
             return@Plugin it.proceed(it.message())
         }
         val chain = CentralPluginChain(message, listOf(
-            RudderOptionPlugin(RudderOptions.default()),assertPlugin, dest1, dest2, dest3
+            RudderOptionPlugin(RudderOptions.defaultOptions()),assertPlugin, dest1, dest2, dest3
         ))
         chain.proceed(message)
     }

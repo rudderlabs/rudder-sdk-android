@@ -36,7 +36,8 @@ class RudderOptions private constructor(
          * Default options
          *
          */
-        fun default() = RudderOptions(listOf(), mapOf(), mapOf())
+        @JvmStatic
+        fun defaultOptions(): RudderOptions = RudderOptions(listOf(), mapOf(), mapOf())
     }
 
     /**

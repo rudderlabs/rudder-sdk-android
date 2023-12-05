@@ -25,5 +25,7 @@ import com.rudderstack.core.Analytics
 interface InfrastructurePlugin {
     fun setup(analytics: Analytics)
     fun shutdown()
-    fun updateConfiguration(configuration: Configuration)
+    fun updateConfiguration(configuration: Configuration){
+        //optional method
+    }
 }

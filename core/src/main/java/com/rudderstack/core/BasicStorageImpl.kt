@@ -24,12 +24,12 @@ import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 
 @Suppress("ThrowableNotThrown")
-class BasicStorageImpl(
+class BasicStorageImpl @JvmOverloads constructor(
     /**
      * queue size should be greater than or equals [Storage.MAX_STORAGE_CAPACITY]
      */
+    private val logger: Logger,
     private val queue: Queue<Message> = LinkedBlockingQueue(),
-    private val logger: Logger
 ) : Storage {
 
     companion object{
@@ -44,7 +44,6 @@ class BasicStorageImpl(
     private var _storageCapacity = Storage.MAX_STORAGE_CAPACITY
     private var _maxFetchLimit = Storage.MAX_FETCH_LIMIT
 
-    private var _cachedContext: MessageContext? = null
     private var _dataChangeListeners = listOf<Storage.DataListener>()
     private var _isOptOut = false
     private var _optOutTime = -1L
@@ -183,14 +182,6 @@ class BasicStorageImpl(
             .takeLast(queue.size - offset).take(_maxFetchLimit)
     }
 
-
-    override fun cacheContext(context: MessageContext) {
-        _cachedContext = context
-    }
-
-    override val context: MessageContext?
-        get() = _cachedContext
-
     override fun saveServerConfig(serverConfig: RudderServerConfig) {
         try {
             if (!serverConfigFile.exists()) {
@@ -236,7 +227,6 @@ class BasicStorageImpl(
             startupQ.clear()
             _traits = null
             _serverConfig = null
-            _cachedContext = mapOf()
             serverConfigFile.delete()
         }
     }

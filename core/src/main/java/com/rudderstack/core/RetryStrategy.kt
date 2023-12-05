@@ -35,7 +35,9 @@ fun interface RetryStrategy {
          * @param maxAttempts
          * @return [ExponentialRetryStrategy]
          */
-        @JvmStatic fun exponential(
+        @JvmStatic
+        @JvmOverloads
+        fun exponential(
             maxAttempts: Int = 5
         ) = ExponentialRetryStrategy(maxAttempts)
 

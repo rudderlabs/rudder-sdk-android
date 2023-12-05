@@ -14,15 +14,19 @@
 
 package com.rudderstack.android.storage
 
+import android.app.Application
 import android.content.Context
 import android.os.Build
 import com.rudderstack.android.BuildConfig
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.internal.AndroidLogger
 import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.repository.Dao
 import com.rudderstack.android.repository.RudderDatabase
+import com.rudderstack.core.Configuration
 import com.rudderstack.core.Logger
 import com.rudderstack.core.Storage
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.Message
 import com.rudderstack.models.MessageContext
 import com.rudderstack.models.RudderServerConfig
@@ -37,14 +41,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 internal class AndroidStorageImpl(
-    private val androidContext: Context,
-    private val jsonAdapter: JsonAdapter,
-    useContentProvider: Boolean,
-    private val logger: Logger = AndroidLogger,
-    executor: ExecutorService?= null,
-
 ) : AndroidStorage {
-    private val dbName = "db_${androidContext.packageName}"
+    private val Application.dbName get()= "db_${packageName}"
+    private val androidConfig
+    get() = ConfigurationsState.value as? ConfigurationAndroid
+
+    private val isInitialized = AtomicBoolean(false)
 
     companion object {
         private const val DB_VERSION = 1
@@ -122,7 +124,7 @@ internal class AndroidStorageImpl(
 
     }
 
-    private val messageDao: Dao<MessageEntity>
+    private var messageDao: Dao<MessageEntity>?= null
 
     private var _storageCapacity: Int = Storage.MAX_STORAGE_CAPACITY //default 2_000
     private var _maxFetchLimit: Int = Storage.MAX_FETCH_LIMIT
@@ -167,12 +169,24 @@ internal class AndroidStorageImpl(
     }
 
     init {
+        ConfigurationsState.subscribe(::onConfigChange)
+    }
+
+    private fun onConfigChange(configuration: Configuration?) {
+        if( configuration is ConfigurationAndroid){
+            initDb(configuration)
+        }
+    }
+
+    private fun initDb(configuration: ConfigurationAndroid) {
+        val application = configuration.application
         RudderDatabase.init(
-            androidContext, dbName, RudderEntityFactory(jsonAdapter), useContentProvider,
-            DB_VERSION, executorService = executor
+            application, application.dbName, RudderEntityFactory(), configuration
+                .useContentProvider,
+            DB_VERSION, executorService = configuration.analyticsExecutor
         )
         messageDao = RudderDatabase.getDao(MessageEntity::class.java)
-        messageDao.addDataChangeListener(_messageDataListener)
+        messageDao?.addDataChangeListener(_messageDataListener)
 
     }
 
@@ -196,7 +210,7 @@ internal class AndroidStorageImpl(
                     }
                     Storage.BackPressureStrategy.Latest -> {
 
-                        messageDao.delete(
+                        messageDao?.delete(
                             "${MessageEntity.ColumnNames.messageId} IN (" +
                                     //COMMAND FOR SELECTING FIRST $excessMessages to be removed from DB
                                     "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${MessageEntity.TABLE_NAME} " +
@@ -217,7 +231,7 @@ internal class AndroidStorageImpl(
         if (_dataCount.get() > 0) {
             block.invoke(_dataCount.get())
         } else {
-            messageDao.getCount {
+            messageDao?.getCount {
                 _dataCount.set(it)
                 block.invoke(it)
             }
@@ -225,10 +239,11 @@ internal class AndroidStorageImpl(
     }
 
     private fun List<Message>.saveToDb() {
+        val jsonAdapter = ConfigurationsState.value?.jsonAdapter?:return
         map {
             MessageEntity(it, jsonAdapter)
         }.apply {
-            with(messageDao) {
+            with(messageDao?:return) {
                 insertWithDataCallback { _,_ ->
 //                    println("inserted $it")
                 }
@@ -241,8 +256,8 @@ internal class AndroidStorageImpl(
     }
 
     override fun deleteMessages(messages: List<Message>) {
-        with(messageDao) {
-            messages.entities.delete { }
+        with(messageDao?:return) {
+            messages.entities.filterNotNull().delete { }
         }
     }
 
@@ -255,17 +270,17 @@ internal class AndroidStorageImpl(
     }
 
     override fun getData(offset: Int, callback: (List<Message>) -> Unit) {
-        messageDao.runGetQuery(limit = "$offset,$_maxFetchLimit") {
+        messageDao?.runGetQuery(limit = "$offset,$_maxFetchLimit") {
             callback.invoke(it.map { it.message })
         }
     }
 
     override fun getCount(callback: (Long) -> Unit) {
-        messageDao.getCount(callback = callback)
+        messageDao?.getCount(callback = callback)
     }
 
     override fun getDataSync(offset: Int): List<Message> {
-        return messageDao.runGetQuerySync(
+        return messageDao?.runGetQuerySync(
             null, null, null, null,
             "$offset,$_maxFetchLimit"
         )?.map {
@@ -278,25 +293,33 @@ internal class AndroidStorageImpl(
     }
 
     override val context: MessageContext?
-        get() = (if (_cachedContext == null) {
-            _cachedContext = getObject<HashMap<String, Any?>>(androidContext, CONTEXT_FILE_NAME, logger)
-            _cachedContext
-        } else _cachedContext)
+        get() = androidConfig?.let {
+            (if (_cachedContext == null) {
+                _cachedContext =
+                    getObject<HashMap<String, Any?>>(it.application, CONTEXT_FILE_NAME, it.logger)
+                _cachedContext
+            } else _cachedContext)
+        }
 
     //for local caching
     private var _serverConfig: RudderServerConfig? = null
     override fun saveServerConfig(serverConfig: RudderServerConfig) {
-        synchronized(this) {
-            _serverConfig = serverConfig
-            saveObject(serverConfig, context = androidContext, SERVER_CONFIG_FILE_NAME, logger)
+        androidConfig?.let {
+            synchronized(this) {
+                _serverConfig = serverConfig
+                saveObject(serverConfig, context = it.application, SERVER_CONFIG_FILE_NAME,
+                    it.logger)
+            }
         }
     }
 
     override val serverConfig: RudderServerConfig?
-        get() = synchronized(this) {
-            if (_serverConfig == null) _serverConfig =
-                getObject(androidContext, SERVER_CONFIG_FILE_NAME, logger)
-            _serverConfig
+        get() = androidConfig?.let {
+            synchronized(this) {
+                if (_serverConfig == null) _serverConfig =
+                    getObject(it.application, SERVER_CONFIG_FILE_NAME, it.logger)
+                _serverConfig
+            }
         }
 
     override fun saveOptOut(optOut: Boolean) {
@@ -323,7 +346,7 @@ internal class AndroidStorageImpl(
 
     override fun clearStorage() {
         startupQ.clear()
-        messageDao.delete(null, null)
+        messageDao?.delete(null, null)
     }
 
     override val startupQueue: List<Message>
@@ -373,10 +396,11 @@ internal class AndroidStorageImpl(
             it.entity
         }
     private val Message.entity
-        get() = MessageEntity(this, jsonAdapter)
+        get() = androidConfig?.let {  MessageEntity(this, it.jsonAdapter)}
 
     private fun MessageContext.save() {
-        saveObject(HashMap(this), androidContext, CONTEXT_FILE_NAME, logger)
+        androidConfig?.let {  saveObject(HashMap(this), it.application, CONTEXT_FILE_NAME,
+            it.logger)}
     }
 
 
