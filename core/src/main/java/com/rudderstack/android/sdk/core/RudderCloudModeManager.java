@@ -1,7 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
 import static com.rudderstack.android.sdk.core.ReportManager.incrementCloudModeUploadRetryCounter;
-import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
@@ -14,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class RudderCloudModeManager {
 
@@ -104,8 +104,8 @@ public class RudderCloudModeManager {
     private void deleteEventsWithoutAnonymousId(ArrayList<String> messages, ArrayList<Integer> messageIds) {
         List<Integer> eventsToDelete = new ArrayList();
         for (int i = 0; i < messages.size(); i++) {
-            RudderMessage message = RudderGson.getInstance().fromJson(messages.get(i), RudderMessage.class);
-            if (message.getAnonymousId() == null) {
+            Map<String, Object> message = RudderGson.getInstance().fromJson(messages.get(i), Map.class);
+            if (!message.containsKey("anonymousId") || message.get("anonymousId") == null) {
                 eventsToDelete.add(messageIds.get(i));
             }
         }
