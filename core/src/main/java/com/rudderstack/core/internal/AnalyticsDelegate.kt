@@ -287,14 +287,14 @@ internal class AnalyticsDelegate(
         currentConfiguration?.analyticsExecutor?.submit {
             val lcc = lifecycleController ?: LifecycleControllerImpl(
                 message,
-                generatePluginsForOptions(options)
+                generatePluginsWithOptions(options)
             )
             lcc.process()
 
         }
     }
 
-    private fun generatePluginsForOptions(options: RudderOptions?): List<Plugin> {
+    private fun generatePluginsWithOptions(options: RudderOptions?): List<Plugin> {
         return synchronized(PLUGIN_LOCK) {
             _internalPreMessagePlugins +
             RudderOptionPlugin(

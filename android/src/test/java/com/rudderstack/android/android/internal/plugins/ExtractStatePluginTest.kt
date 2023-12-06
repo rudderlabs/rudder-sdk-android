@@ -12,15 +12,13 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.core.internal.plugins
+package com.rudderstack.android.android.internal.plugins
 
+import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.core.RudderOptions
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.BasicStorageImpl
-import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.core.internal.KotlinLogger
-import com.rudderstack.core.internal.states.ContextState
-import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.IdentifyMessage
 import org.junit.Test
 
@@ -38,15 +36,12 @@ class ExtractStatePluginTest {
         val options = RudderOptions.Builder().withExternalIds(listOf(mapOf(
             "dest-1" to "dest-1-id"
         ))).build()
-        val extractStatePlugin = ExtractStatePlugin(
-            ContextState, ConfigurationsState,
-            /*options,*/ storage
-        )
+        val extractStatePlugin = ExtractStatePlugin()
         val identifyMsg = IdentifyMessage.create(timestamp = RudderUtils.timeStamp,
         traits = mapOf("userId" to "userId"));
-        val centralPluginChain = CentralPluginChain(identifyMsg, listOf(RudderOptionPlugin(options),
-            extractStatePlugin))
-        centralPluginChain.proceed(identifyMsg)
+//        val centralPluginChain = CentralPluginChain(identifyMsg, listOf(RudderOptionPlugin(options),
+//            extractStatePlugin))
+//        centralPluginChain.proceed(identifyMsg)
 
         //TODO(add tests. currently we are not using core)
 //        assertThat(storage.traits, allOf(aMapWithSize(1),
@@ -65,19 +60,16 @@ class ExtractStatePluginTest {
             "dest-2" to "dest-2-id"
         )
         )).build()
-        val extractStatePlugin = ExtractStatePlugin(
-            ContextState, ConfigurationsState,
-            /*options,*/ storage
-        )
+        val extractStatePlugin = ExtractStatePlugin()
         val identifyMsg = IdentifyMessage.create(timestamp = RudderUtils.timeStamp,
         traits = mapOf("userId" to "userId"), externalIds = listOf(mapOf(
                 "dest-3" to "dest-3-id"
             ), mapOf(
                 "dest-2" to "not-dest-2-id"
             ) ))
-        val centralPluginChain = CentralPluginChain(identifyMsg, listOf(RudderOptionPlugin(options),
-            extractStatePlugin))
-        centralPluginChain.proceed(identifyMsg)
+//        val centralPluginChain = CentralPluginChain(identifyMsg, listOf(RudderOptionPlugin(options),
+//            extractStatePlugin))
+//        centralPluginChain.proceed(identifyMsg)
 //        assertThat(storage.traits, allOf(aMapWithSize(1),
 //        hasEntry("userId", "userId")))
 //        assertThat(storage.externalIds, allOf(iterableWithSize(3),
@@ -100,16 +92,14 @@ class ExtractStatePluginTest {
         val storage = BasicStorageImpl( logger = KotlinLogger)
         val options = RudderOptions.defaultOptions()
         val extractStatePlugin = ExtractStatePlugin(
-            ContextState, ConfigurationsState,
-            /*options,*/ storage
         )
         val identifyMsg = IdentifyMessage.create(timestamp = RudderUtils.timeStamp,
         traits = mapOf("userId" to "userId"), externalIds = listOf(mapOf(
                 "dest-1" to "dest-1-id"
             )))
-        val centralPluginChain = CentralPluginChain(identifyMsg, listOf(RudderOptionPlugin(options),
-            extractStatePlugin))
-        centralPluginChain.proceed(identifyMsg)
+//        val centralPluginChain = CentralPluginChain(identifyMsg, listOf(RudderOptionPlugin(options),
+//            extractStatePlugin))
+//        centralPluginChain.proceed(identifyMsg)
 
 //        assertThat(storage.traits, allOf(aMapWithSize(1),
 //        hasEntry("userId", "userId")))
