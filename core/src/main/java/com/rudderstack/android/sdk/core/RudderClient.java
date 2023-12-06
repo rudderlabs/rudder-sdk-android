@@ -20,6 +20,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 /*
  * Primary class to be used in client
@@ -36,6 +37,7 @@ public class RudderClient {
     private static RudderOption defaultOptions;
     private static String deviceToken;
     private static String authToken;
+    private static ReentrantLock reentrantLock = new ReentrantLock();
 
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
@@ -136,20 +138,23 @@ public class RudderClient {
             // get application from provided context
             application = (Application) context.getApplicationContext();
 
-            // initiate RudderClient instance
-            instance = new RudderClient();
-            // initiate EventRepository class
-            if (application != null) {
-                RudderLogger.logVerbose("getInstance: creating EventRepository.");
-                EventRepository.Identifiers identifiers = new EventRepository
-                        .Identifiers(writeKey, deviceToken, anonymousId, advertisingId, authToken);
-                repository = new EventRepository(application, config, identifiers);
+            reentrantLock.lock();
+            try {
+                // initiate RudderClient instance
+                instance = new RudderClient();
+                // initiate EventRepository class
+                if (application != null) {
+                    RudderLogger.logVerbose("getInstance: creating EventRepository.");
+                    EventRepository.Identifiers identifiers = new EventRepository
+                            .Identifiers(writeKey, deviceToken, anonymousId, advertisingId, authToken);
+                    repository = new EventRepository(application, config, identifiers);
+                }
+            } finally {
+                reentrantLock.unlock();
             }
-
         }
         return instance;
     }
-
 
 
     private static void updateConfigWithValidValuesIfNecessary(@NonNull RudderConfig config) {
@@ -168,12 +173,17 @@ public class RudderClient {
         }
     }
 
-    /*
-     * package private api to be used in EventRepository
-     * */
+    /**
+     * API for getting instance of RudderClient, if already initiated. Otherwise returns null.
+     *
+     * @return instance of RudderClient
+     */
     @Nullable
     public static RudderClient getInstance() {
-        return instance;
+        reentrantLock.lock();
+        RudderClient client = instance;
+        reentrantLock.unlock();
+        return client;
     }
 
     /**
@@ -186,12 +196,13 @@ public class RudderClient {
      */
     @NonNull
     public static RudderClient with(@NonNull Context context) {
-        if (instance == null) {
+        RudderClient client = RudderClient.getInstance();
+        if (client == null) {
             String writeKey = null;
             writeKey = Utils.getWriteKeyFromStrings(context);
             return getInstance(context, writeKey);
         }
-        return instance;
+        return client;
     }
 
     /**
@@ -469,11 +480,11 @@ public class RudderClient {
      */
     public void alias(@NonNull String newId, @Nullable RudderOption option) {
         RudderContext context = getRudderContext();
-        Map<String, Object> traits= null;
+        Map<String, Object> traits = null;
         if (context != null) {
             traits = context.getTraits();
         }
-        if(traits == null)
+        if (traits == null)
             return;
         String prevUserId = null;
 
@@ -587,7 +598,9 @@ public class RudderClient {
      * @param _instance RudderClient instance
      */
     public static void setSingletonInstance(@NonNull RudderClient _instance) {
+        reentrantLock.lock();
         instance = _instance;
+        reentrantLock.unlock();
     }
 
     /**
@@ -622,7 +635,7 @@ public class RudderClient {
      * @param advertisingId IDFA for the device
      */
     public static void putAdvertisingId(@NonNull String advertisingId) {
-        if (instance == null) {
+        if (RudderClient.getInstance() == null) {
             // rudder sdk is not initialised yet. let's use the advertisingId from the beginning
             RudderClient.advertisingId = advertisingId;
             return;
@@ -639,7 +652,7 @@ public class RudderClient {
      * @param deviceToken Push Token from FCM
      */
     public static void putDeviceToken(@NonNull String deviceToken) {
-        if (instance == null) {
+        if (RudderClient.getInstance() == null) {
             // rudder sdk is not initialised yet. let's use the deviceToken from the beginning
             RudderClient.deviceToken = deviceToken;
             return;
@@ -666,7 +679,7 @@ public class RudderClient {
      * @param anonymousId AnonymousId you want to use for the application
      */
     public static void putAnonymousId(@NonNull String anonymousId) {
-        if (instance == null) {
+        if (RudderClient.getInstance() == null) {
             // rudder sdk is not initialised yet. let's use the anonymousId from the beginning
             RudderClient.anonymousId = anonymousId;
             return;
@@ -688,7 +701,7 @@ public class RudderClient {
     }
 
     public static void putAuthToken(@NonNull String authToken) {
-        if (instance == null) {
+        if (RudderClient.getInstance() == null) {
             RudderClient.authToken = authToken;
             return;
         }
@@ -702,6 +715,7 @@ public class RudderClient {
 
     /**
      * Reset SDK
+     *
      * @deprecated Use {@link #reset(boolean) reset(false)} instead
      */
     public void reset() {
@@ -841,6 +855,7 @@ public class RudderClient {
 
     /**
      * Public method for getting the current session id.
+     *
      * @return
      */
     @Nullable
