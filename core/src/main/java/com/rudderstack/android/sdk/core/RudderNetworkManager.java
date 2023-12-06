@@ -42,6 +42,7 @@ public class RudderNetworkManager {
         SUCCESS,
         ERROR,
         WRITE_KEY_ERROR,
+        MISSING_ANONYMOUSID_AND_USERID,
         RESOURCE_NOT_FOUND,
         NETWORK_UNAVAILABLE,
         BAD_REQUEST
@@ -150,6 +151,8 @@ public class RudderNetworkManager {
                         httpConnection.getURL(), responseCode, errorPayload));
                 if (errorPayload != null && errorPayload.toLowerCase().contains("invalid write key"))
                     networkResponse = NetworkResponses.WRITE_KEY_ERROR;
+                else if (errorPayload != null && errorPayload.toLowerCase().contains("request neither has anonymousid nor userid"))
+                    networkResponse = NetworkResponses.MISSING_ANONYMOUSID_AND_USERID;
                 else if (responseCode == 404)
                     networkResponse = NetworkResponses.RESOURCE_NOT_FOUND;
                 else if (responseCode == 400)

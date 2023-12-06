@@ -1,6 +1,5 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE;
 import static com.rudderstack.android.sdk.core.ReportManager.incrementCloudModeUploadRetryCounter;
 import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
@@ -8,8 +7,8 @@ import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMetho
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
 
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
-import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -79,6 +78,10 @@ public class RudderCloudModeManager {
                             case WRITE_KEY_ERROR:
                                 RudderLogger.logError("CloudModeManager: cloudModeProcessor: Wrong WriteKey. Terminating the Cloud Mode Processor");
                                 return;
+                            case MISSING_ANONYMOUSID_AND_USERID:
+                                RudderLogger.logError("CloudModeManager: cloudModeProcessor: Request Failed as the batch payload contains events without anonymousId and userId, hence deleting those events from DB");
+                                deleteEventsWithoutAnonymousId(messages, messageIds);
+                                break;
                             case ERROR:
                             case NETWORK_UNAVAILABLE:
                                 RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in " + Math.abs(sleepCount - config.getSleepTimeOut()) + "s");
@@ -96,6 +99,20 @@ public class RudderCloudModeManager {
                 }
             }
         }.start();
+    }
+
+    private void deleteEventsWithoutAnonymousId(ArrayList<String> messages, ArrayList<Integer> messageIds) {
+        List<Integer> eventsToDelete = new ArrayList();
+        for (int i = 0; i < messages.size(); i++) {
+            RudderMessage message = RudderGson.getInstance().fromJson(messages.get(i), RudderMessage.class);
+            if (message.getAnonymousId() == null) {
+                eventsToDelete.add(messageIds.get(i));
+            }
+        }
+        if (!eventsToDelete.isEmpty()) {
+            dbManager.clearEventsFromDB(eventsToDelete);
+            RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: deleteEventsWithoutUserIdAndAnonymousId: Deleted %d events from DB", eventsToDelete.size()));
+        }
     }
 
     /*
