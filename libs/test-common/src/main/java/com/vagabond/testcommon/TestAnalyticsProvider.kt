@@ -18,7 +18,10 @@ package com.vagabond.testcommon
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Plugin
+import com.rudderstack.core.copy
+import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.models.Message
+import com.rudderstack.rudderjsonadapter.JsonAdapter
 
 private const val DUMMY_WRITE_KEY = "DUMMY_WRITE_KEY"
 private var currentTestPlugin : Plugin? = null
@@ -29,9 +32,16 @@ private val inputVerifyPlugin = Plugin { chain ->
         inputs += it.copy()
     }
 }
+
+fun generateTestAnalytics(jsonAdapter: JsonAdapter): Analytics {
+    return generateTestAnalytics(Configuration(jsonAdapter, storage = VerificationStorage(),
+        shouldVerifySdk = false))
+}
 fun generateTestAnalytics(mockConfiguration: Configuration): Analytics {
     return Analytics(
-        DUMMY_WRITE_KEY, mockConfiguration, TestDataUploadService(), MockConfigDownloadService()
+        DUMMY_WRITE_KEY, mockConfiguration.copy(
+            logger = KotlinLogger
+        ), TestDataUploadService(), MockConfigDownloadService()
     ).also {
         it.addPlugin(inputVerifyPlugin)
     }
@@ -40,12 +50,13 @@ fun Analytics.testPlugin(pluginUnderTest : Plugin) {
     currentTestPlugin = pluginUnderTest
     addPlugin(pluginUnderTest)
 }
-fun Analytics.verify(verification : Verification<List<Message>,List<Message>>) {
-
+fun Analytics.assert(verification : Verification<List<Message>,List<Message>>) {
+    verification.assert(inputs.toList(), currentConfiguration?.storage?.startupQueue?.toList() ?:
+    emptyList())
 }
-fun Analytics.verify(verification: Verification<Message, Message>){
-
+fun Analytics.assert(verification: Verification<Message?, Message?>){
+    verification.assert(inputs.lastOrNull(), currentConfiguration?.storage?.startupQueue?.lastOrNull())
 }
 fun interface Verification<IN,OUT> {
-    fun verify(input : IN, output : OUT)
+    fun assert(input : IN, output : OUT)
 }

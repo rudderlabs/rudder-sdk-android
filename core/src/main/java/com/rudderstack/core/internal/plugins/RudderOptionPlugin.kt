@@ -43,8 +43,6 @@ internal class RudderOptionPlugin(private val options: RudderOptions) : Plugin {
         }
         val validIntegrations = validIntegrations()
         msg.integrations = validIntegrations
-//        val destinationPlugins = chain.plugins.filterIsInstance<DestinationPlugin<*>>()
-//        val normalPlugins = chain.plugins - destinationPlugins
         return chain.plugins.takeIf {
             it.isNotEmpty()
         }?.let { plugins ->

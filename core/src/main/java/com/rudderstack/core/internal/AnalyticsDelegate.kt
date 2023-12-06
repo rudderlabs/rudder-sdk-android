@@ -322,10 +322,7 @@ internal class AnalyticsDelegate(
     }
 
     internal fun flush() {
-//        println("flush called thread: ${Thread.currentThread().name}\n st:")
-        /*Exception().stackTrace.forEach {
-            println("${ it.lineNumber }, ${it.methodName}, ${it.className}")
-        }*/
+
         logger.info(log = "Flush called")
         if (isShutdown) return
         currentConfiguration?.let {

@@ -18,6 +18,4 @@ import com.rudderstack.core.Configuration
 import com.rudderstack.core.State
 
 object ConfigurationsState : State<Configuration>() {
-
-
 }
