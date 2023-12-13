@@ -503,10 +503,6 @@ class EventRepository {
     }
 
     private RudderMessage updateMessageWithConsentedDestinations(RudderMessage message) {
-        RudderClient rudderClient = RudderClient.getInstance();
-        if (rudderClient == null)
-            return message;
-
         if (consentFilterHandler == null) {
             return message;
         }
