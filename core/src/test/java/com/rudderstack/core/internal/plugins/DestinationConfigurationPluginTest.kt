@@ -25,8 +25,15 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.*
 import org.junit.After
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import java.util.Date
 
 /**
  * For testing [DestinationConfigurationPlugin] we will create
@@ -141,7 +148,8 @@ class DestinationConfigurationPluginTest {
             }
         )
         destinationConfigurationPlugin!!.intercept(centralPluginChain)
-
-
     }
+
+
+
 }

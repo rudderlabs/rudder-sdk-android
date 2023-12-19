@@ -48,7 +48,7 @@ internal class CentralPluginChain(
             // destination plugins will be getting a copy, so they don't tamper the original
             val msgCopy = message.copy()
             val subPlugins = plugin.subPlugins
-            val subPluginsModifiedCopyMsg = if (!subPlugins.isNullOrEmpty()) {
+            val subPluginsModifiedCopyMsg = if (subPlugins.isNotEmpty()) {
                 val realSubPluginChain = copy(msgCopy, subPlugins, 0)
                 realSubPluginChain.proceed(msgCopy)
             } else msgCopy // message specifically modified for a destination plugin

@@ -34,7 +34,6 @@ import java.util.concurrent.TimeUnit
 
 
 class Analytics private constructor(
-    private val _writeKey: String,
     private val _delegate: AnalyticsDelegate,
 ) : Controller by _delegate {
     /**
@@ -60,7 +59,7 @@ class Analytics private constructor(
         //optional called if shutdown is called
         shutdownHook: (() -> Unit)? = null
     ) : this(
-        _writeKey = writeKey, _delegate = AnalyticsDelegate(
+        _delegate = AnalyticsDelegate(
             configuration, dataUploadService ?: DataUploadServiceImpl(
                 writeKey
             ), configDownloadService ?: ConfigDownloadServiceImpl(
@@ -281,12 +280,10 @@ class Analytics private constructor(
     @JvmOverloads
     fun forceFlush(
         clearDb: Boolean = true,
-        base64Generator: Base64Generator = currentConfiguration?.base64Generator
-                                           ?: RudderUtils.defaultBase64Generator,
         alternateExecutor: ExecutorService? = null,
         alternateDataUploadService: DataUploadService? = null
     ) {
-        val config = currentConfiguration ?: return
+        currentConfiguration ?: return
         val flushExecutor = alternateExecutor ?: ThreadPoolExecutor(
             1,
             1,
@@ -295,9 +292,7 @@ class Analytics private constructor(
             LinkedBlockingQueue<Runnable>(1),
             ThreadPoolExecutor.DiscardOldestPolicy()
         )
-        val dataUploadService = alternateDataUploadService ?: DataUploadServiceImpl(
-            _writeKey
-        )
+        val dataUploadService = alternateDataUploadService ?: dataUploadService
         _delegate.forceFlush(
             dataUploadService, flushExecutor, clearDb
         ) {
@@ -323,9 +318,7 @@ class Analytics private constructor(
         alternateDataUploadService: DataUploadService? = null,
     ): Boolean {
 
-        val dataUploadService = alternateDataUploadService ?: DataUploadServiceImpl(
-            _writeKey
-        )
+        val dataUploadService = alternateDataUploadService ?: dataUploadService
         return _delegate.blockFlush(dataUploadService, clearDb)
     }
 

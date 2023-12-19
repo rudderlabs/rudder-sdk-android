@@ -201,7 +201,7 @@ class StringScope internal constructor(){
     get() = _value
 
     operator fun String.unaryPlus(){
-        _value = value
+        _value = this
     }
 }
 @OptionsScopeDslMarker

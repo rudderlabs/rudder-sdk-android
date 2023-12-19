@@ -14,8 +14,6 @@
 
 package com.rudderstack.core
 
-import com.rudderstack.core.Storage.BackPressureStrategy
-import com.rudderstack.core.Storage.Companion.MAX_FETCH_LIMIT
 import com.rudderstack.models.Message
 
 /**
@@ -39,7 +37,7 @@ interface Controller {
      *
      * @param closure A method to be run on each plugin
      */
-    fun applyClosure(closure : Plugin.() -> Unit)
+    fun applyMessageClosure(closure : Plugin.() -> Unit)
     /**
      * Applies a closure method to all available [InfrastructurePlugin]
      * Can break the system if not properly constructed.
@@ -47,7 +45,6 @@ interface Controller {
      * @param closure A method to be run on each [InfrastructurePlugin]
      */
     fun applyInfrastructureClosure(closure : InfrastructurePlugin.() -> Unit)
-
 
 
     /**
@@ -122,6 +119,9 @@ interface Controller {
     //fun reset()
     /**
      * Shuts down the Analytics. Once shutdown, a new instance needs to be created.
+     * All executors and plugins to be shutdown.
+     * This isn't an instant operation. It might take some time to complete.
+     * Executors will finish executing the jobs they have taken
      *
      */
     fun shutdown()
@@ -147,19 +147,5 @@ interface Controller {
      *
      */
     fun reset()
-    /**
-     * The max number of [Message] that can be fetched and uploaded at one go.
-     * Delegates to [Storage.setMaxFetchLimit]
-     * @param limit The number of messages to be set as limit, defaults to [MAX_FETCH_LIMIT]
-     */
-    fun setMaxFetchLimit(limit : Int)
-
-    /**
-     * The maximum number of [Message] that can be stored. Beyond which, messages will be
-     * discarded based on [BackPressureStrategy] defaults to [BackPressureStrategy.Drop]
-     * Delegates to [Storage.setStorageCapacity] and [Storage.setBackpressureStrategy]
-     * @param limit The max number of [Message] that can be stored
-     */
-    fun setMaxStorageCapacity(limit: Int, backPressureStrategy: BackPressureStrategy = BackPressureStrategy.Drop)
 
 }

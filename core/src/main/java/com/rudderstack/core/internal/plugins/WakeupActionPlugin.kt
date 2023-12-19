@@ -15,6 +15,7 @@
 package com.rudderstack.core.internal.plugins
 
 import com.rudderstack.core.*
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.core.internal.states.DestinationConfigState
 import com.rudderstack.models.Message
 
@@ -24,18 +25,24 @@ import com.rudderstack.models.Message
  * After that reiterate the messages to the plugins
  */
 internal class WakeupActionPlugin(
-    private val storage: Storage,
-    private val destConfigState: State<DestinationConfig> = DestinationConfigState
+//    private val destConfigState: State<DestinationConfig> = DestinationConfigState
 ) : Plugin {
+
+    private val storage
+        get() = ConfigurationsState.value?.storage
     override fun intercept(chain: Plugin.Chain): Message {
-        val destinationConfig = destConfigState.value ?: return chain.proceed(chain.message())
+        val destinationConfig = DestinationConfigState.value
+
         val forwardChain =
-            if (!destinationConfig.allIntegrationsReady || storage.startupQueue.isNotEmpty()) {
-                storage.saveStartupMessageInQueue(chain.message())
+            if (destinationConfig == null || !destinationConfig.allIntegrationsReady ||
+                storage?.startupQueue?.isNotEmpty() ==
+             true   ) {
+                storage?.saveStartupMessageInQueue(chain.message())
                 //remove all destination plugins that are not ready, for others the message flow is normal
                 val validPlugins = chain.plugins.toMutableList().filterNot {
 
-                    it is DestinationPlugin<*> && !destinationConfig.isIntegrationReady(it.name)
+                    it is DestinationPlugin<*> &&
+                    destinationConfig?.isIntegrationReady(it.name) != true
 
                 }
                 chain.with(validPlugins)

@@ -20,21 +20,20 @@ import com.rudderstack.core.RetryStrategy
 import com.rudderstack.core.State
 import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.RudderServerConfig
-import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.web.HttpResponse
 import com.rudderstack.web.WebService
 import com.rudderstack.web.WebServiceFactory
-import java.util.*
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
+import java.util.Locale
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicReference
 
-internal class ConfigDownloadServiceImpl(
-    writeKey : String
+internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
+    writeKey: String,
+    webService: WebService? = null,
 ) : ConfigDownloadService {
+    private val controlPlaneWebService: AtomicReference<WebService?> =
+        AtomicReference<WebService?>(webService)
     private val encodedWriteKey: AtomicReference<String?> = AtomicReference()
-    private val webService: AtomicReference<WebService?> = AtomicReference()
     private val currentConfigurationAtomic = AtomicReference<Configuration?>()
     private val currentConfiguration
         get() = currentConfigurationAtomic.get()
@@ -48,31 +47,32 @@ internal class ConfigDownloadServiceImpl(
         }
 
     private fun Configuration.initializeWebService() {
-        webService.set(WebServiceFactory.getWebService(
-            controlPlaneUrl,
-            jsonAdapter = jsonAdapter, executor = networkExecutor
-        ))
+        if (controlPlaneWebService.get() == null) controlPlaneWebService.set(
+            WebServiceFactory.getWebService(
+                controlPlaneUrl, jsonAdapter = jsonAdapter, executor = networkExecutor
+            )
+        )
     }
 
     init {
         ConfigurationsState.subscribe(configSubscriber)
     }
 
-    private val controlPlaneWebService = AtomicReference<WebService?>()
 
 //                String configUrl = rudderConfig.getControlPlaneUrl() +
 //                "sourceConfig?p=android&v="+Constants.RUDDER_LIBRARY_VERSION+"&bv="+android.os.Build.VERSION.SDK_INT;
 
-    private var ongoingConfigFuture : Future<HttpResponse<RudderServerConfig>>? = null
-    private var lastRudderServerConfig : RudderServerConfig? = null
-    private var lastErrorMsg : String? = null
+    private var ongoingConfigFuture: Future<HttpResponse<RudderServerConfig>>? = null
+    private var lastRudderServerConfig: RudderServerConfig? = null
+    private var lastErrorMsg: String? = null
     override fun download(
         platform: String,
         libraryVersion: String,
         osVersion: String,
         retryStrategy: RetryStrategy,
-        callback: (success : Boolean, RudderServerConfig?,
-                   lastErrorMsg : String?) -> Unit
+        callback: (
+            success: Boolean, RudderServerConfig?, lastErrorMsg: String?
+        ) -> Unit
     ) {
         currentConfiguration?.apply {
             networkExecutor.submit {
@@ -99,15 +99,15 @@ internal class ConfigDownloadServiceImpl(
 
     override fun shutDown() {
         ConfigurationsState.removeObserver(configSubscriber)
-        webService.get()?.shutdown()
-        webService.set(null)
+        controlPlaneWebService.get()?.shutdown()
+        controlPlaneWebService.set(null)
         currentConfigurationAtomic.set(null)
         encodedWriteKey.set(null)
         try {
 
             ongoingConfigFuture?.cancel(true)
 
-        }catch (ex: Exception){
+        } catch (ex: Exception) {
             // Ignore the exception
         }
     }

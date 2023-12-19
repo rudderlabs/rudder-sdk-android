@@ -26,7 +26,6 @@ import java.util.concurrent.Executors
  * val newSettings = settings.copy(options = settings.options.newBuilder().withExternalIds(mapOf()).build(),
  *  trackLifecycleEvents = true)
  * ```
- * [defaultTraits] and [defaultExternalIds] are stored in [ContextState] but not in [Storage]
  *
  * @property options Global [RudderOptions] for all plugins
  * @property flushQueueSize Max elements to be stored before a flush. Once it passes this threshold,
@@ -43,7 +42,10 @@ interface Configuration {
     val flushQueueSize: Int
     val maxFlushInterval: Long
     val isOptOut: Boolean
+    // changing the value post source config download has no effect
     val shouldVerifySdk: Boolean
+    val gzipEnabled: Boolean
+    // changing the value post source config download has no effect
     val sdkVerifyRetryStrategy: RetryStrategy
     val dataPlaneUrl: String
     val controlPlaneUrl: String
@@ -52,8 +54,6 @@ interface Configuration {
     val analyticsExecutor: ExecutorService
     val networkExecutor: ExecutorService
     val base64Generator: Base64Generator
-
-
     companion object {
         // default flush queue size for the events to be flushed to server
         const val FLUSH_QUEUE_SIZE = 30
@@ -69,11 +69,12 @@ interface Configuration {
             maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
             isOptOut: Boolean = false,
             shouldVerifySdk: Boolean = false,
+            gzipEnabled: Boolean = true,
             sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
             dataPlaneUrl: String? = null, //defaults to https://hosted.rudderlabs.com
             controlPlaneUrl: String? = null, //defaults to https://api.rudderlabs.com/
             logger: Logger = KotlinLogger,
-            storage: Storage = BasicStorageImpl(logger = logger),
+            storage: Storage = BasicStorageImpl(),
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             base64Generator: Base64Generator = RudderUtils.defaultBase64Generator,
@@ -84,6 +85,7 @@ interface Configuration {
             override val maxFlushInterval: Long = maxFlushInterval
             override val isOptOut: Boolean = isOptOut
             override val shouldVerifySdk: Boolean = shouldVerifySdk
+            override val gzipEnabled: Boolean = gzipEnabled
             override val sdkVerifyRetryStrategy: RetryStrategy = sdkVerifyRetryStrategy
             override val dataPlaneUrl: String = dataPlaneUrl?:"https://hosted.rudderlabs.com"
             override val controlPlaneUrl: String = controlPlaneUrl?:"https://api.rudderstack.com/"

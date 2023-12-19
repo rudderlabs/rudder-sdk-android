@@ -19,7 +19,8 @@ import com.rudderstack.core.State
 import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.Message
-import java.util.*
+import java.util.Timer
+import java.util.TimerTask
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
@@ -29,26 +30,25 @@ import java.util.concurrent.atomic.AtomicLong
  *
  * @property storage Platform specific implementation of [Storage]
  */
-internal class StorageDecorator(
-    private val storage: Storage,
-    private val configurationState: State<Configuration> = ConfigurationsState,
-    private val dataChangeListener: Listener? = null
-) : Storage by storage {
-    private val thresholdCountDownTimer = Timer("data_listen")
+internal class FlushScheduler @JvmOverloads constructor(
+    private val dataChangeListener: Listener,
+    private val thresholdCountDownTimer: Timer = Timer("data_listen")
+) {
+    private val storage
+        get() = ConfigurationsState.value?.storage
+
     private var periodicTaskScheduler: TimerTask? = null
     private val _isShutDown = AtomicBoolean(false)
     private var _currentFlushIntervalAtomic = AtomicLong(0L)
     private val _currentFlushInterval
         get() = _currentFlushIntervalAtomic.get()
-
+    private val isInitialized = AtomicBoolean(false)
     private val onDataChange = object : Storage.DataListener {
         override fun onDataChange() {
-            if(_isShutDown.get())
-                return
-            getCount {
-                if (it >= (configurationState.value?.flushQueueSize ?: 0)
-                ) {
-                    dataChangeListener?.onDataChange()
+            if (_isShutDown.get()) return
+            storage?.getCount {
+                if (it >= (ConfigurationsState.value?.flushQueueSize ?: 0)) {
+                    dataChangeListener.onDataChange()
                     rescheduleTimer()
                 }
             }
@@ -60,51 +60,60 @@ internal class StorageDecorator(
              */
         }
     }
-    private val _configurationObserver = { configuration : Configuration? ->
-        if(shouldRescheduleTimer(configuration)) {
-            rescheduleTimer()
+    private val _configurationObserver: State.Observer<Configuration> =
+        State.Observer { configuration: Configuration? ->
+            configuration ?: return@Observer
+            if (isInitialized.compareAndSet(false, true)) {
+                configuration.storage.addDataListener(onDataChange)
+                updateMaxFlush(configuration.maxFlushInterval)
+                rescheduleTimer()
+            } else {
+                if (shouldRescheduleTimer(configuration)) {
+                    updateMaxFlush(configuration.maxFlushInterval ?: 0L)
+                    rescheduleTimer()
+                }
+            }
         }
+
+    private fun updateMaxFlush(maxFlushInterval: Long) {
+        _currentFlushIntervalAtomic.set(maxFlushInterval)
     }
 
     private fun shouldRescheduleTimer(configuration: Configuration?): Boolean {
-        return configuration != null &&
-               _currentFlushInterval != _currentFlushIntervalAtomic.getAndSet(configuration
-                   .maxFlushInterval.coerceAtLeast(0L))
+        val newValue = configuration?.maxFlushInterval?.coerceAtLeast(0L) ?: 0L
+        return (configuration != null && _currentFlushInterval != newValue)
     }
 
 
     init {
-        configurationState.subscribe (_configurationObserver)
-        addDataListener(onDataChange)
+        ConfigurationsState.subscribe(_configurationObserver)
+
     }
 
     private fun rescheduleTimer() {
         periodicTaskScheduler?.cancel()
         thresholdCountDownTimer.purge()
 //        if (configuration != null) {
-            periodicTaskScheduler = object : TimerTask() {
-                override fun run() {
-                    dataChangeListener?.onDataChange()
-                }
+        periodicTaskScheduler = object : TimerTask() {
+            override fun run() {
+                dataChangeListener.onDataChange()
             }
-            if (!_isShutDown.get()) {
-                println("rescheduling : $this")
-                thresholdCountDownTimer.schedule(
-                    periodicTaskScheduler,
-                    _currentFlushInterval,
-                    _currentFlushInterval
-                )
-            }
+        }
+        if (!_isShutDown.get()) {
+            println("rescheduling : $this with interval : $_currentFlushInterval")
+            thresholdCountDownTimer.schedule(
+                periodicTaskScheduler, _currentFlushInterval, _currentFlushInterval
+            )
+        }
 //        }
     }
 
-    override fun shutdown() {
-        if(_isShutDown.compareAndSet(false, true)) {
+    fun shutdown() {
+        if (_isShutDown.compareAndSet(false, true)) {
             println("shutting down : $this")
-            storage.shutdown()
-            removeDataListener(onDataChange)
+            storage?.removeDataListener(onDataChange)
             thresholdCountDownTimer.cancel()
-            configurationState.removeObserver(_configurationObserver)
+            ConfigurationsState.removeObserver(_configurationObserver)
         }
     }
 

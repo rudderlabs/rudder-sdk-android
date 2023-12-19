@@ -32,7 +32,7 @@ class ExtractStatePluginTest {
 
     @Test
     fun `test identify with traits userId`(){
-        val storage = BasicStorageImpl( logger = KotlinLogger)
+        val storage = BasicStorageImpl( )
         val options = RudderOptions.Builder().withExternalIds(listOf(mapOf(
             "dest-1" to "dest-1-id"
         ))).build()
@@ -53,7 +53,7 @@ class ExtractStatePluginTest {
     }
     @Test
     fun `test identify with both options and message external ids`(){
-        val storage = BasicStorageImpl( logger = KotlinLogger)
+        val storage = BasicStorageImpl( )
         val options = RudderOptions.Builder().withExternalIds(listOf(mapOf(
             "dest-1" to "dest-1-id"
         ),mapOf(
@@ -89,7 +89,7 @@ class ExtractStatePluginTest {
     }
     @Test
     fun `test identify with message external ids`(){
-        val storage = BasicStorageImpl( logger = KotlinLogger)
+        val storage = BasicStorageImpl( )
         val options = RudderOptions.defaultOptions()
         val extractStatePlugin = ExtractStatePlugin(
         )

@@ -27,11 +27,12 @@ import java.net.http.HttpRequest
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
-internal class DataUploadServiceImpl(
-    writeKey: String
+internal class DataUploadServiceImpl @JvmOverloads constructor(
+    writeKey: String,
+    webService: WebService? = null
 ) : DataUploadService {
     private val encodedWriteKey: AtomicReference<String?> = AtomicReference()
-    private val webService: AtomicReference<WebService?> = AtomicReference()
+    private val webService: AtomicReference<WebService?> = AtomicReference(webService)
     private val currentConfigurationAtomic = AtomicReference<Configuration?>()
     private var headers = mutableMapOf<String, String>()
 
@@ -92,7 +93,7 @@ internal class DataUploadServiceImpl(
             }
             webService.get()?.post(mapOf("Content-Type" to "application/json",
                 "Authorization" to String.format(Locale.US, "Basic %s", encodedWriteKey),
-                /**/), null, batchBody, "v1/batch", String::class.java) {
+                /**/), null, batchBody, "v1/batch", String::class.java, gzipEnabled) {
                 callback.invoke(it)
             }
         }
@@ -116,7 +117,8 @@ internal class DataUploadServiceImpl(
                     base64Generator.generateBase64(
                         it
                     )
-                } ?: encodedWriteKey)*/), null, batchBody, "v1/batch", String::class.java)?.get()
+                } ?: encodedWriteKey)*/), null, batchBody, "v1/batch",
+                String::class.java, isGzipEnabled = config.gzipEnabled )?.get()
         }
     }
 

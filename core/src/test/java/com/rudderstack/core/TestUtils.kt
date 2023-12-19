@@ -55,3 +55,9 @@ val controlPlaneUrl
     get() = properties.getOrDefault(CONTROL_PLANE_URL_KEY, "")
 val writeKey
     get() = properties.getOrDefault(WRITE_KEY_KEY, "")
+fun busyWait(millis: Long) {
+    val start = System.currentTimeMillis()
+    while (System.currentTimeMillis() - start < millis) {
+        // busy wait
+    }
+}

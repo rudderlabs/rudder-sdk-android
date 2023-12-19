@@ -15,7 +15,7 @@
 package com.rudderstack.core.internal.plugins
 
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.Storage
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.Message
 
 /**
@@ -24,10 +24,10 @@ import com.rudderstack.models.Message
  * Saves user related data in case of identify messages and
  *
  */
-internal class StoragePlugin(private val storage: Storage ) : Plugin {
+internal class StoragePlugin : Plugin {
     override fun intercept(chain: Plugin.Chain): Message {
         val message = chain.message()
-        storage.saveMessage(message.copy())
+        ConfigurationsState.value?.storage?.saveMessage(message.copy())
 
         return chain.proceed(message)
     }

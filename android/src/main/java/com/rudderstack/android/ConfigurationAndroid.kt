@@ -24,15 +24,16 @@ import com.rudderstack.core.Logger
 import com.rudderstack.core.RetryStrategy
 import com.rudderstack.core.RudderOptions
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import java.util.UUID
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 
-class ConfigurationAndroid internal constructor(configuration: Configuration, val application: Application,
-                                                var anonymousId: String= AndroidUtils.getDeviceId(
-                                                    application
-                                                ),
-                                                var userId: String? = null,
+class ConfigurationAndroid internal constructor(configuration: Configuration,
+                                                val application: Application,
+                                                val anonymousId: String= UUID.randomUUID()
+                                                    .toString(),
+                                                val userId: String? = null,
                                                 val trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
                                                 val recordScreenViews: Boolean = Defaults.RECORD_SCREEN_VIEWS,
                                                 val isPeriodicFlushEnabled: Boolean = Defaults.IS_PERIODIC_FLUSH_ENABLED,
@@ -40,8 +41,8 @@ class ConfigurationAndroid internal constructor(configuration: Configuration, va
                                                 val multiProcessEnabled: Boolean = Defaults.MULTI_PROCESS_ENABLED,
                                                 val defaultProcessName: String?= Defaults.DEFAULT_PROCESS_NAME,
                                                 val useContentProvider: Boolean = Defaults.USE_CONTENT_PROVIDER,
-                                                var advertisingId: String? = null,
-                                                var deviceToken: String? = null,
+                                                val advertisingId: String? = null,
+                                                val deviceToken: String? = null,
                                                 override val storage: AndroidStorage = AndroidStorageImpl(),
                                                 val advertisingIdFetchExecutor : ExecutorService? = null,
 ) : com.rudderstack.core.Configuration by configuration {
@@ -91,6 +92,7 @@ class ConfigurationAndroid internal constructor(configuration: Configuration, va
     maxFlushInterval: Long = Defaults.DEFAULT_MAX_FLUSH_INTERVAL,
     isOptOut: Boolean = false,
     shouldVerifySdk: Boolean = Defaults.SHOULD_VERIFY_SDK,
+    gzipEnabled: Boolean = Defaults.GZIP_ENABLED,
     sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
     dataPlaneUrl: String? = null, //defaults to https://hosted.rudderlabs.com
     controlPlaneUrl: String? = null, //defaults to https://api.rudderlabs.com/
@@ -121,6 +123,7 @@ class ConfigurationAndroid internal constructor(configuration: Configuration, va
             maxFlushInterval,
             isOptOut,
             shouldVerifySdk,
+            gzipEnabled,
             sdkVerifyRetryStrategy,
             dataPlaneUrl,
             controlPlaneUrl,
@@ -153,6 +156,7 @@ class ConfigurationAndroid internal constructor(configuration: Configuration, va
         flushQueueSize: Int = this.flushQueueSize,
         maxFlushInterval: Long = this.maxFlushInterval,
         isOptOut: Boolean = this.isOptOut,
+        gzipEnabled: Boolean = Defaults.GZIP_ENABLED,
         sdkVerifyRetryStrategy: RetryStrategy = this.sdkVerifyRetryStrategy,
         dataPlaneUrl: String = this.dataPlaneUrl,
         logger: Logger = this.logger,
@@ -173,6 +177,7 @@ class ConfigurationAndroid internal constructor(configuration: Configuration, va
         flushQueueSize,
         maxFlushInterval,
         isOptOut,
+        gzipEnabled,
         shouldVerifySdk,
         sdkVerifyRetryStrategy,
         dataPlaneUrl,
@@ -199,6 +204,7 @@ class ConfigurationAndroid internal constructor(configuration: Configuration, va
     )
 
     internal object Defaults{
+        val GZIP_ENABLED: Boolean = true
         const val SHOULD_VERIFY_SDK: Boolean = true
         const val TRACK_LIFECYCLE_EVENTS = true
         const val RECORD_SCREEN_VIEWS = true

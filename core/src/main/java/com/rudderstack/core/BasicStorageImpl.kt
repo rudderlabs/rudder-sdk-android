@@ -15,6 +15,7 @@
 package com.rudderstack.core
 
 import com.rudderstack.core.internal.AnalyticsDelegate
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.IdentifyTraits
 import com.rudderstack.models.Message
 import com.rudderstack.models.MessageContext
@@ -28,7 +29,6 @@ class BasicStorageImpl @JvmOverloads constructor(
     /**
      * queue size should be greater than or equals [Storage.MAX_STORAGE_CAPACITY]
      */
-    private val logger: Logger,
     private val queue: Queue<Message> = LinkedBlockingQueue(),
 ) : Storage {
 
@@ -39,6 +39,9 @@ class BasicStorageImpl @JvmOverloads constructor(
         private const val LIB_KEY_PLATFORM = "platform"
         private const val LIB_KEY_OS_VERSION = "os_version"
     }
+
+    private val logger
+        get() = ConfigurationsState.value?.logger
     private var backPressureStrategy = Storage.BackPressureStrategy.Drop
 
     private var _storageCapacity = Storage.MAX_STORAGE_CAPACITY
@@ -66,7 +69,7 @@ class BasicStorageImpl @JvmOverloads constructor(
                 )
             }
         } catch (ex: IOException) {
-            logger.error(log = "Config fetch error", throwable = ex)
+            logger?.error(log = "Config fetch error", throwable = ex)
             mapOf()
         }
 
@@ -103,7 +106,7 @@ class BasicStorageImpl @JvmOverloads constructor(
 
                 if (backPressureStrategy == Storage.BackPressureStrategy.Drop) {
 
-                    logger.warn(log = "Max storage capacity reached, dropping last $excessMessages latest events")
+                    logger?.warn(log = "Max storage capacity reached, dropping last$excessMessages latest events")
 
                     (messages.size - excessMessages).takeIf {
                         it > 0
@@ -118,7 +121,7 @@ class BasicStorageImpl @JvmOverloads constructor(
                     } ?: messages.toList().run(dataFailBlock)
 
                 } else {
-                    logger.warn(log = "Max storage capacity reached, dropping first $excessMessages oldest events")
+                    logger?.warn(log = "Max storage capacity reached, dropping first$excessMessages oldest events")
                     val tobeRemovedList = ArrayList<Message>(excessMessages)
                     var counter = excessMessages
                         while (counter > 0) {
@@ -196,7 +199,7 @@ class BasicStorageImpl @JvmOverloads constructor(
             fos.close()
 
         } catch (ex: Exception) {
-            logger.error(log = "Server Config cannot be saved", throwable = ex)
+            logger?.error(log = "Server Config cannot be saved", throwable = ex)
         }
     }
 
@@ -266,7 +269,6 @@ class BasicStorageImpl @JvmOverloads constructor(
 
     private fun onDataChange() {
         synchronized(this) {
-//            val msgs =  queue.take(_maxFetchLimit).toList()
             _dataChangeListeners.forEach {
                 it.onDataChange()
             }

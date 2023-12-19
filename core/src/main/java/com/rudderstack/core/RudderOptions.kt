@@ -77,4 +77,15 @@ class RudderOptions private constructor(
         fun build() = RudderOptions(_externalIds, _integrations, _customContexts)
     }
 
+    override fun equals(other: Any?): Boolean {
+        return other is RudderOptions &&
+                other.externalIds == this.externalIds &&
+                other.integrations == this.integrations &&
+                other.customContexts == this.customContexts
+    }
+
+    override fun hashCode(): Int {
+        return externalIds.hashCode() + integrations.hashCode() + customContexts.hashCode()
+    }
+
 }

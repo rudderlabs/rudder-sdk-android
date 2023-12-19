@@ -38,11 +38,12 @@ public class ConfigurationBuilder {
     private long maxFlushInterval = MAX_FLUSH_INTERVAL;
     private boolean isOptOut = false;
     private boolean shouldVerifySdk = false;
+    private boolean gzipEnabled = true;
     private RetryStrategy sdkVerifyRetryStrategy = RetryStrategy.exponential();
     private String dataPlaneUrl = null; //defaults to https://hosted.rudderlabs.com
     private String controlPlaneUrl = null; //defaults to https://api.rudderlabs.com
     private Logger logger = KotlinLogger.INSTANCE;
-    private Storage storage = new BasicStorageImpl(logger);
+    private Storage storage = new BasicStorageImpl();
     private ExecutorService analyticsExecutor = Executors.newSingleThreadExecutor();
     private ExecutorService networkExecutor = Executors.newCachedThreadPool();
     private Base64Generator base64Generator = RudderUtils.INSTANCE.getDefaultBase64Generator();
@@ -73,6 +74,10 @@ public class ConfigurationBuilder {
 
     public ConfigurationBuilder withShouldVerifySdk(boolean shouldVerifySdk) {
         this.shouldVerifySdk = shouldVerifySdk;
+        return this;
+    }
+    public ConfigurationBuilder withGzipEnabled(boolean gzipEnabled) {
+        this.gzipEnabled = gzipEnabled;
         return this;
     }
 
@@ -118,6 +123,8 @@ public class ConfigurationBuilder {
 
     public Configuration build() {
         return Configuration.Companion.invoke(jsonAdapter, options, flushQueueSize, maxFlushInterval, isOptOut,
-                shouldVerifySdk, sdkVerifyRetryStrategy, dataPlaneUrl, controlPlaneUrl, logger, storage, analyticsExecutor, networkExecutor, base64Generator);
+                shouldVerifySdk, gzipEnabled, sdkVerifyRetryStrategy, dataPlaneUrl,
+                controlPlaneUrl, logger,
+                storage, analyticsExecutor, networkExecutor, base64Generator);
     }
 }

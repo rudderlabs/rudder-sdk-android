@@ -82,6 +82,7 @@ dependencies {
     testImplementation project(path: projects.gson_rudder_adapter)
     testImplementation project(path: projects.moshi_rudder_adapter)
     testImplementation project(path: projects.json_rudder_adapter)
+    testImplementation(project(path: projects.test_common))
     testImplementation deps.androidXTest
     testImplementation deps.androidXTest
     testImplementation deps.hamcrest

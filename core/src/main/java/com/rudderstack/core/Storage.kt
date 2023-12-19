@@ -64,7 +64,7 @@ interface Storage {
      *
      * @param strategy [BackPressureStrategy] for queueing [Message]
      */
-    fun setBackpressureStrategy(strategy: BackPressureStrategy)
+    fun setBackpressureStrategy(strategy: BackPressureStrategy = BackPressureStrategy.Drop)
 
     /**
      * Delete Messages, preferably when no longer required

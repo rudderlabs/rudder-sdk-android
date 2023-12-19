@@ -78,7 +78,7 @@ internal class ActivityBroadcasterPlugin(
                 onActivityStarted(activity.localClassName)
             }
         }
-        analytics?.applyClosure {
+        analytics?.applyMessageClosure {
             if (this is LifecycleListenerPlugin) {
                 onActivityStarted(activity.localClassName)
             }
@@ -108,7 +108,7 @@ internal class ActivityBroadcasterPlugin(
                 this.onAppForegrounded()
             }
         }
-        analytics?.applyClosure {
+        analytics?.applyMessageClosure {
             if (this is LifecycleListenerPlugin) {
                 this.onAppForegrounded()
             }
@@ -121,7 +121,7 @@ internal class ActivityBroadcasterPlugin(
                 this.onAppBackgrounded()
             }
         }
-        analytics?.applyClosure {
+        analytics?.applyMessageClosure {
             if (this is LifecycleListenerPlugin) {
                 this.onAppBackgrounded()
             }

@@ -81,6 +81,7 @@ ext {
             repository            : ':repository',
             web                   : ':web',
             metrics               : ':metrics',
+            test_common           : ':libs:test-common',
     ]
     library = [
             min_sdk     : 19,

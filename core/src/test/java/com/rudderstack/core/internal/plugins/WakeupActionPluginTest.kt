@@ -18,13 +18,17 @@ import com.rudderstack.core.BaseDestinationPlugin
 import com.rudderstack.core.DestinationConfig
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.BasicStorageImpl
+import com.rudderstack.core.Configuration
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.core.internal.KotlinLogger
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.core.internal.states.DestinationConfigState
+import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.TrackMessage
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 /**
@@ -45,8 +49,8 @@ class WakeupActionPluginTest {
     private val dest3 = BaseDestinationPlugin<Any>("dest-3") {
         return@BaseDestinationPlugin it.proceed(it.message())
     }
-    private val storage = BasicStorageImpl(logger = KotlinLogger)
-    private val wakeupActionPlugin = WakeupActionPlugin(storage)
+    private val storage = BasicStorageImpl()
+    private val wakeupActionPlugin = WakeupActionPlugin()
     private val testMessage = TrackMessage.create(
         "ev-1", RudderUtils.timeStamp,
         traits = mapOf(
@@ -59,7 +63,10 @@ class WakeupActionPluginTest {
         ),
         customContextMap = null
     )
-
+    @Before
+    fun setup(){
+        ConfigurationsState.update(Configuration(jsonAdapter = JacksonAdapter(), storage = storage))
+    }
     @After
     fun breakDown() {
         dest1.setReady(false)
