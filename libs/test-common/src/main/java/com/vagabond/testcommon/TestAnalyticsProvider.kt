@@ -26,7 +26,6 @@ import com.rudderstack.rudderjsonadapter.JsonAdapter
 private const val DUMMY_WRITE_KEY = "DUMMY_WRITE_KEY"
 private var currentTestPlugin : Plugin? = null
 private var inputs = listOf<Message>()
-private var outputs = listOf<Message>()
 private val inputVerifyPlugin = Plugin { chain ->
     chain.message().also {
         inputs += it.copy()
@@ -50,11 +49,11 @@ fun Analytics.testPlugin(pluginUnderTest : Plugin) {
     currentTestPlugin = pluginUnderTest
     addPlugin(pluginUnderTest)
 }
-fun Analytics.assert(verification : Verification<List<Message>,List<Message>>) {
+fun Analytics.assertArguments(verification : Verification<List<Message>,List<Message>>) {
     verification.assert(inputs.toList(), currentConfiguration?.storage?.startupQueue?.toList() ?:
     emptyList())
 }
-fun Analytics.assert(verification: Verification<Message?, Message?>){
+fun Analytics.assertArgument(verification: Verification<Message?, Message?>){
     verification.assert(inputs.lastOrNull(), currentConfiguration?.storage?.startupQueue?.lastOrNull())
 }
 fun interface Verification<IN,OUT> {
