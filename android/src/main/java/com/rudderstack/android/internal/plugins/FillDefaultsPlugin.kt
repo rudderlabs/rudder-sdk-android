@@ -40,6 +40,10 @@ import com.rudderstack.models.*
 internal class FillDefaultsPlugin : Plugin {
 
     private var _analytics: Analytics? = null
+    override fun setup(analytics: Analytics) {
+        super.setup(analytics)
+        _analytics = analytics
+    }
     /**
      * Fill default details for [Message]
      * If message contains context, this will replace the ones present

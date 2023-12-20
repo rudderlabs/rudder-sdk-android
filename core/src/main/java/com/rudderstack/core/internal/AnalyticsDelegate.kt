@@ -360,7 +360,8 @@ internal class AnalyticsDelegate(
     }
 
     override fun shutdown() {
-        if (_isShutDown.compareAndSet(false, true)) return
+        println("Shutdown called")
+        if (!_isShutDown.compareAndSet(false, true)) return
         logger.info(log = "shutdown")
         //inform plugins
         shutdownPlugins()

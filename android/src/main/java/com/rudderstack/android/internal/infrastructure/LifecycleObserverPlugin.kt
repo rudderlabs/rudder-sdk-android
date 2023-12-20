@@ -82,9 +82,10 @@ class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
     }
 
     override fun onScreenChange(name: String, arguments: Map<String, Any>?) {
+        val activityName = currentActivityName?:""
         withRecordScreenViews {
             analytics?.screen {
-                screenName(currentActivityName?:return@screen)
+                screenName(activityName)
                 this.category(name)
                 this.screenProperties{
                     add(arguments ?: mapOf())

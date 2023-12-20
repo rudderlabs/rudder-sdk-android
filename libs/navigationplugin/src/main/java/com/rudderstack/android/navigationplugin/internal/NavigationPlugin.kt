@@ -20,15 +20,16 @@ import androidx.navigation.NavDestination
 import com.rudderstack.android.LifecycleListenerPlugin
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.Configuration
 import com.rudderstack.core.InfrastructurePlugin
+import com.rudderstack.core.State
 
-internal class NavigationPlugin(private val navControllerState: NavControllerState) :
+internal class NavigationPlugin(private val navControllerState: State<Collection<NavController>>) :
     InfrastructurePlugin, NavController.OnDestinationChangedListener {
     private var analytics: Analytics? = null
     private var currentNavControllers: Collection<NavController>? = null
     private val currentConfig
     get() = analytics?.currentConfigurationAndroid
+
     override fun setup(analytics: Analytics) {
         this.analytics = analytics
         if (currentConfig?.trackLifecycleEvents == true
@@ -126,7 +127,7 @@ internal class NavigationPlugin(private val navControllerState: NavControllerSta
                 this.onScreenChange(screenName, properties)
             }
         }
-        analytics?.applyClosure {
+        analytics?.applyMessageClosure {
             if (this is LifecycleListenerPlugin) {
                 this.onScreenChange(screenName, properties)
             }

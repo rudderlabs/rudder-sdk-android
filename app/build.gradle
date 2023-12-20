@@ -18,13 +18,13 @@ plugins {
 }
 
 android {
-    compileSdk 31
+    compileSdk 34
     namespace 'com.rudderstack.android.demo'
 
     defaultConfig {
         applicationId "com.rudderstack.android.demo"
         minSdk 21
-        targetSdk 31
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -38,7 +38,7 @@ android {
         }
     }
   kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = '1.8'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

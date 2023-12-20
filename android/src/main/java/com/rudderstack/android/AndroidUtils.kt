@@ -41,11 +41,11 @@ import java.util.*
 internal object AndroidUtils {
     fun getDeviceId(application: Application): String {
 
-        val androidId =
-            Settings.System.getString(application.contentResolver, Settings.Secure.ANDROID_ID)
-        if (!TextUtils.isEmpty(androidId) && "9774d56d682e549c" != androidId && "unknown" != androidId && "000000000000000" != androidId) {
-            return androidId
-        }
+//        val androidId =
+//            Settings.System.getString(application.contentResolver, Settings.Secure.ANDROID_ID)
+//        if (!TextUtils.isEmpty(androidId) && "9774d56d682e549c" != androidId && "unknown" != androidId && "000000000000000" != androidId) {
+//            return androidId
+//        }
 
 
         // If this still fails, generate random identifier that does not persist across installations

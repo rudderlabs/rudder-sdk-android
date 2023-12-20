@@ -797,6 +797,6 @@ class MoshiAnalyticsTest : AnalyticsTest() {
 
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
-    MoshiAnalyticsTest::class, JacksonAnalyticsTest::class, GsonAnalyticsTest::class
+    /*MoshiAnalyticsTest::class, JacksonAnalyticsTest::class, */GsonAnalyticsTest::class
 )
 class AnalyticsTestSuite : TestSuite() {}

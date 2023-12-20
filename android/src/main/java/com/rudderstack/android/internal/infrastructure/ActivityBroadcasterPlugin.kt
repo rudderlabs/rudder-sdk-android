@@ -31,13 +31,17 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 internal class ActivityBroadcasterPlugin(
 ) : InfrastructurePlugin {
-    private var application: Application? = null
+    private val application: Application?
+        get() = analytics?.currentConfigurationAndroid?.application
     private var analytics: Analytics? = null
     private val activityCount = AtomicInteger()
     private val lifecycleCallback by lazy {
         object : Application.ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-                //nothing to implement
+                if(analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true  &&
+                    activityCount.get() == 0) {
+                    broadCastApplicationStart()
+                }
             }
 
             override fun onActivityStarted(activity: Activity) {
@@ -56,8 +60,11 @@ internal class ActivityBroadcasterPlugin(
             }
 
             override fun onActivityStopped(activity: Activity) {
-                if (analytics?.currentConfigurationAndroid?.recordScreenViews == true) {
+                if (analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true) {
                     decrementActivityCount()
+                    if(activityCount.get() == 0) {
+                        broadCastApplicationStop()
+                    }
                 }
             }
 
@@ -86,21 +93,14 @@ internal class ActivityBroadcasterPlugin(
     }
 
     private fun decrementActivityCount() {
-        sideEffect(activityCount.decrementAndGet())
+        activityCount.decrementAndGet()
     }
 
     private fun incrementActivityCount() {
-        sideEffect(activityCount.incrementAndGet())
+        activityCount.incrementAndGet()
     }
 
-    private fun sideEffect(activityCount: Int) {
-        if (activityCount == 1) {
-            //send message activity started
-            broadCastApplicationStart()
-        } else if (activityCount == 0) {
-            broadCastApplicationStop()
-        }
-    }
+
 
     private fun broadCastApplicationStart() {
         analytics?.applyInfrastructureClosure {
@@ -129,7 +129,9 @@ internal class ActivityBroadcasterPlugin(
     }
 
     override fun setup(analytics: Analytics) {
+        this.analytics = analytics
         if (analytics.currentConfigurationAndroid?.trackLifecycleEvents == true) {
+
             application?.registerActivityLifecycleCallbacks(lifecycleCallback)
         }
     }
@@ -139,7 +141,6 @@ internal class ActivityBroadcasterPlugin(
     }
 
     override fun updateConfiguration(configuration: Configuration) {
-        application = (configuration as? ConfigurationAndroid)?.application
     }
 
 }

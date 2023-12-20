@@ -32,7 +32,7 @@ internal class AnonymousIdHeaderPlugin : InfrastructurePlugin{
 
     override fun updateConfiguration(configuration: Configuration) {
         if(configuration is ConfigurationAndroid)
-        dataUploadService?.addHeaders(mapOf("Anonymous-Id" to (configuration
+            dataUploadService?.addHeaders(mapOf("Anonymous-Id" to (configuration
             .anonymousId)))
     }
 }

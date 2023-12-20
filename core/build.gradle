@@ -21,6 +21,14 @@ java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.javaParameters = true
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.javaParameters = true
+}
 
 apply from : "$projectDir/../dependencies.gradle"
 

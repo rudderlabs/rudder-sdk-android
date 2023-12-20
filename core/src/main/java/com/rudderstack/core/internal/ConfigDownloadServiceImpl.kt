@@ -58,10 +58,6 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
         ConfigurationsState.subscribe(configSubscriber)
     }
 
-
-//                String configUrl = rudderConfig.getControlPlaneUrl() +
-//                "sourceConfig?p=android&v="+Constants.RUDDER_LIBRARY_VERSION+"&bv="+android.os.Build.VERSION.SDK_INT;
-
     private var ongoingConfigFuture: Future<HttpResponse<RudderServerConfig>>? = null
     private var lastRudderServerConfig: RudderServerConfig? = null
     private var lastErrorMsg: String? = null
@@ -104,7 +100,6 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
         currentConfigurationAtomic.set(null)
         encodedWriteKey.set(null)
         try {
-
             ongoingConfigFuture?.cancel(true)
 
         } catch (ex: Exception) {

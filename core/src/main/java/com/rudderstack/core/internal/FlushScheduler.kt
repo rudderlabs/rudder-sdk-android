@@ -94,12 +94,13 @@ internal class FlushScheduler @JvmOverloads constructor(
         periodicTaskScheduler?.cancel()
         thresholdCountDownTimer.purge()
 //        if (configuration != null) {
-        periodicTaskScheduler = object : TimerTask() {
-            override fun run() {
-                dataChangeListener.onDataChange()
-            }
-        }
+
         if (!_isShutDown.get()) {
+            periodicTaskScheduler = object : TimerTask() {
+                override fun run() {
+                    dataChangeListener.onDataChange()
+                }
+            }
             println("rescheduling : $this with interval : $_currentFlushInterval")
             thresholdCountDownTimer.schedule(
                 periodicTaskScheduler, _currentFlushInterval, _currentFlushInterval
@@ -112,7 +113,8 @@ internal class FlushScheduler @JvmOverloads constructor(
         if (_isShutDown.compareAndSet(false, true)) {
             println("shutting down : $this")
             storage?.removeDataListener(onDataChange)
-            thresholdCountDownTimer.cancel()
+            periodicTaskScheduler?.cancel()
+            thresholdCountDownTimer.purge()
             ConfigurationsState.removeObserver(_configurationObserver)
         }
     }

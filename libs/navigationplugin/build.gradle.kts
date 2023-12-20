@@ -14,41 +14,43 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.kapt")
 }
 val dependencyPath = "${project.projectDir.parentFile.parent}/dependencies.gradle"
 apply(from = dependencyPath)
-val deps : HashMap<String, Any> by extra
-val library : HashMap<String, String> by extra
-val projects : HashMap<String, String> by extra
+val deps: HashMap<String, Any> by extra
+val library: HashMap<String, String> by extra
+val projects: HashMap<String, String> by extra
 
 android {
     compileSdk = library["target_sdk"] as Int
 
     defaultConfig {
         minSdk = library["min_sdk"] as Int
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+//        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
 
         //for code access
         buildConfigField("String", "LIBRARY_VERSION_NAME", library["version_name"] as String)
     }
-
+    buildFeatures {
+        buildConfig = true
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
         }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        javaParameters = true
     }
     namespace = "com.rudderstack.android.navigationplugin"
 }
@@ -57,6 +59,7 @@ dependencies {
     implementation(deps["kotlinCore"].toString())
     compileOnly(project(projects["android"].toString()))
     compileOnly(deps["navigationRuntime"].toString())
-    testImplementation(deps["androidXTest"].toString())
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+}
+tasks.withType(type = org.jetbrains.kotlin.gradle.tasks.KaptGenerateStubs::class) {
+    kotlinOptions.jvmTarget = "1.8"
 }

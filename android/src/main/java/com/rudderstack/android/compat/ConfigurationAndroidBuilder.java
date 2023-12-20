@@ -100,7 +100,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     }
     @Override
     public ConfigurationAndroid build() {
-        return new ConfigurationAndroid(super.build(),
+        return ConfigurationAndroid.Companion.invoke(super.build(),
                 application,
                 anonymousId,
                 userId,
@@ -115,7 +115,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
                 deviceToken,
                 storage,
                 advertisingIdFetchExecutor
-                );
+        );
     }
 
 }
