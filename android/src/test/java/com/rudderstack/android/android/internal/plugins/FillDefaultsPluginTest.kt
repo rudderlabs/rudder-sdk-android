@@ -38,7 +38,6 @@ class FillDefaultsPluginTest {
         "some_context2" to "some_value_2"
     )
     private val fillDefaultsPlugin = FillDefaultsPlugin(
-
     )
 
     /**

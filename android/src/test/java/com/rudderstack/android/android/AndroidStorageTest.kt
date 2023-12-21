@@ -41,8 +41,7 @@ abstract class AndroidStorageTest {
     protected abstract val jsonAdapter: JsonAdapter
     @Before
     fun setup(){
-        storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(), jsonAdapter, false,
-            executor = TestExecutor()
+        storage = AndroidStorageImpl(
         )
     }
     @After

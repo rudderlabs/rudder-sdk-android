@@ -35,9 +35,14 @@ import com.rudderstack.models.*
  * In case default context contains externalIds/traits/custom contexts that are common with
  * message external ids/traits/custom contexts respectively, the values will be amalgamated with
  * preference given to those belonging to message, in case keys match.
+ * This plugin also adds the userId and anonymousId to the message, if not present.
+ * this plugin also changes the channel for the messages to android
  *
  */
 internal class FillDefaultsPlugin : Plugin {
+    companion object{
+        private const val CHANNEL = "android"
+    }
 
     private var _analytics: Analytics? = null
     override fun setup(analytics: Analytics) {
@@ -62,6 +67,7 @@ internal class FillDefaultsPlugin : Plugin {
             throw ex
         }
         //copying top level context to message context
+
         return (this.copy(context = (
                 // in case of alias we purposefully remove traits from context
                 ContextState.value?.let {
@@ -70,7 +76,7 @@ internal class FillDefaultsPlugin : Plugin {
                     ) else it
                 } selectiveReplace context),
             anonymousId = anonId,
-            userId = userId) as T)
+            userId = userId) as T).also { it.channel = CHANNEL }
     }
 
     private infix fun MessageContext?.selectiveReplace(context: MessageContext?): MessageContext? {
