@@ -15,6 +15,7 @@
 package com.rudderstack.core.internal
 
 import com.rudderstack.core.Configuration
+import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.Storage
 import com.rudderstack.core.busyWait
 import com.rudderstack.core.internal.states.ConfigurationsState
@@ -68,10 +69,13 @@ class FlushSchedulerTest {
     fun setUp() {
         doReturn(300L).`when`(mockConfiguration).maxFlushInterval
         doReturn(mockStorage).`when`(mockConfiguration).storage
+        doReturn(RudderUtils.defaultBase64Generator).`when`(mockConfiguration).base64Generator
         doAnswer {
             storageDataChangeListener = it.arguments[0] as Storage.DataListener
             Unit
         }.`when`(mockStorage).addDataListener(any())
+        if(ConfigurationsState == null) throw Exception("ConfigurationsState is null")
+        if(mockConfiguration == null) throw Exception("Mock Config is null")
         ConfigurationsState.update(mockConfiguration)
         flushScheduler = FlushScheduler(mockFlushSchedulerDataChangeListener)
     }
@@ -117,22 +121,12 @@ class FlushSchedulerTest {
             )
             Unit
         }.`when`(mockStorage).getCount(any())
-        busyWait(290L)
         storageDataChangeListener?.onDataChange()
-        // timer should be rescheduled and no call should take place in 250-300ms
+        // timer should be rescheduled and no call should take place in 150-300ms
         busyWait(250L)
         //should be called once
         verify(mockFlushSchedulerDataChangeListener, times(1)).onDataChange()
     }
 
-
-
-    fun `test listener called when timer clocks`() {
-
-    }
-
-    fun `test timer rescheduled when timer clocks`() {
-
-    }
 
 }

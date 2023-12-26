@@ -38,7 +38,7 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
     private val currentConfiguration
         get() = currentConfigurationAtomic.get()
     private val configSubscriber: State.Observer<Configuration> =
-        State.Observer<Configuration> { state ->
+        State.Observer<Configuration> { state, _ ->
             state?.apply {
                 encodedWriteKey.set(base64Generator.generateBase64(writeKey))
                 initializeWebService()

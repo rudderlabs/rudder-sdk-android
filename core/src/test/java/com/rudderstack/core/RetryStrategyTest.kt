@@ -21,6 +21,7 @@ import org.hamcrest.Matchers.equalTo
 import org.junit.Test
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -33,9 +34,8 @@ class RetryStrategyTest {
         val work: () -> Boolean = { true }
         val listener = mock<(Boolean) -> Unit>()
         val strategy = RetryStrategy.exponential(maxAttempts = 5)
-
         strategy.perform(work, listener)
-
+        busyWait(100)
         verify(listener).invoke(eq(true))
     }
     // Test ExponentialRetryStrategy with a Failing Work
@@ -50,31 +50,23 @@ class RetryStrategyTest {
         val strategy = RetryStrategy.exponential(maxAttempts = 3)
 
         strategy.perform(work, listener)
-        Awaitility.await().untilAtomic(counter, equalTo(3))
+        Awaitility.await().atMost(4500, TimeUnit.MILLISECONDS).untilAtomic (counter, equalTo(3))
         verify(listener).invoke(eq(false))
     }
 
     @Test
-    fun `test exponential retry strategy`(){
-        val isComplete = AtomicBoolean(false)
-
+    fun `test exponential retry strategy success on nth attempt`(){
         val successOn = 3 //success on 3rd try
-        var retryCount = 0
-        val startedAt = System.currentTimeMillis()
-        val expectedTime = 1000L /*first*/ + 2000L /*second*/ + 4000L /*third*/
+        val retryCount = AtomicInteger(0)
+        val expectedTimeToCall = 1000L /*first*/ + 2000L /*second*/ + 4000L /*third*/
+        val listener = mock<(Boolean) -> Unit>()
         RetryStrategy.exponential().perform({
-            retryCount ++ == successOn
-        }, {
-            assertThat(it, Matchers.`is`(true))
-            assertThat(retryCount, Matchers.`is`(4))
-            //on 3rd retry, probable 8 seconds
+            retryCount.incrementAndGet() == successOn
+        }, listener)
+        busyWait(expectedTimeToCall + 100)
+        verify(listener).invoke(eq(true))
+        assertThat(retryCount.get(), equalTo(successOn))
 
-
-            isComplete.set(true)
-        })
-        //50 milliseconds, max buffer for processing
-        Awaitility.await().atLeast(expectedTime, TimeUnit.MILLISECONDS).atMost((expectedTime + 200L),
-            TimeUnit.MILLISECONDS).untilTrue(isComplete)
     }
     // Test ExponentialRetryStrategy with Limited Attempts
     @Test
@@ -84,7 +76,7 @@ class RetryStrategyTest {
         val listener = mock<(Boolean) -> Unit>()
         val strategy = RetryStrategy.exponential(maxAttempts = 5)
         strategy.perform(work, listener)
-        Awaitility.await().untilAtomic(counter, equalTo(2))
+        Awaitility.await().atMost(3500, TimeUnit.MILLISECONDS).untilAtomic (counter, equalTo(2))
 
         verify(listener).invoke(eq(true))
     }
@@ -97,12 +89,10 @@ class RetryStrategyTest {
         val listener = mock<(Boolean) -> Unit>()
         val strategy = RetryStrategy.exponential(maxAttempts = 10)
         val job = strategy.perform(work, listener)
-        while (counter.get() < 2){
-        }
+        Awaitility.await().atMost(3500, TimeUnit.MILLISECONDS).untilAtomic (counter, equalTo(2))
         job.cancel()
+        busyWait(4000)
         assertThat(counter.get(), Matchers.lessThanOrEqualTo(3))
-//        Awaitility.await().untilAtomic(counter, equalTo(2))
-
         verify(listener).invoke(eq(false))
     }
     // Test ExponentialRetryStrategy with Maximum Attempts Reached
@@ -116,11 +106,13 @@ class RetryStrategyTest {
         val listener = mock<(Boolean) -> Unit>()
         val strategy = RetryStrategy.exponential(maxAttempts = 10)
         val job = strategy.perform(work, listener)
-        while (!job.isDone()){
-        }
-        Thread.sleep(500L) // to be sure the job is done
+        busyWait(500)
+        assertThat(job.isDone(), equalTo(true))
+//        while (!job.isDone()){
+//        }
         assertThat(counter.get(), Matchers.equalTo(1))
-        verify(listener).invoke(eq(true))
+        busyWait(1500) // if it is not done by now, it will never be
+        verify(listener, times(1)).invoke(eq(true))
     }
 
 

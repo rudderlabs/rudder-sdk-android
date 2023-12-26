@@ -266,7 +266,7 @@ internal class AnalyticsDelegate(
             logger.warn(log = "Analytics has shut down, ignoring message $message")
             return
         }
-        currentConfiguration?.analyticsExecutor?.submit {
+        currentConfiguration?.analyticsExecutor?.execute {
             val lcc = lifecycleController ?: LifecycleControllerImpl(
                 message,
                 generatePluginsWithOptions(options)
@@ -307,7 +307,6 @@ internal class AnalyticsDelegate(
     }
 
     internal fun flush() {
-
         logger.info(log = "Flush called")
         if (isShutdown) return
         currentConfiguration?.let {
@@ -318,11 +317,11 @@ internal class AnalyticsDelegate(
 
     internal fun forceFlush(
         alternateDataUploadService: DataUploadService,
-        alternateExecutor: ExecutorService,
+        flushExecutor: ExecutorService,
         clearDb: Boolean = true,
         callback: ((Boolean) -> Unit)? = null
     ) {
-        alternateExecutor.submit {
+        flushExecutor.submit {
             blockFlush(alternateDataUploadService, clearDb).let {
                 callback?.invoke(it)
             }
@@ -360,7 +359,6 @@ internal class AnalyticsDelegate(
     }
 
     override fun shutdown() {
-        println("Shutdown called")
         if (!_isShutDown.compareAndSet(false, true)) return
         logger.info(log = "shutdown")
         //inform plugins

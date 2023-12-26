@@ -33,6 +33,7 @@ ext {
             jsonAssert             : "1.5.0",
             mockito_kotlin         : "4.0.0",
             mockito_inline         : "4.7.0",
+            mockito_android        : "5.8.0",
             androidXTestRunner     : "1.4.0",
             navigationRuntime      : "2.7.5",
     ]
@@ -61,6 +62,7 @@ ext {
             jsonAssert             : "org.skyscreamer:jsonassert:${versions.jsonAssert}",
             mockito_kotlin         : "org.mockito.kotlin:mockito-kotlin:${versions.mockito_kotlin}",
             mockito_inline         : "org.mockito:mockito-inline:${versions.mockito_inline}",
+            mockito_android        : "org.mockito:mockito-android:${versions.mockito_android}",
             mockk                  : "io.mockk:mockk:${versions.mockk}",
             mockk_agent_jvm        : "io.mockk:mockk-agent-jvm:${versions.mockk}",
             workTest               : "androidx.work:work-testing:${versions.work}",
@@ -85,7 +87,7 @@ ext {
     ]
     library = [
             min_sdk     : 19,
-            target_sdk  : 33,
+            target_sdk  : 34,
             version_name: '"2.0"',
             version_code: 1
     ]

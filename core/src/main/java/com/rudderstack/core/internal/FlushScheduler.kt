@@ -34,6 +34,7 @@ internal class FlushScheduler @JvmOverloads constructor(
     private val dataChangeListener: Listener,
     private val thresholdCountDownTimer: Timer = Timer("data_listen")
 ) {
+
     private val storage
         get() = ConfigurationsState.value?.storage
 
@@ -47,6 +48,7 @@ internal class FlushScheduler @JvmOverloads constructor(
         override fun onDataChange() {
             if (_isShutDown.get()) return
             storage?.getCount {
+
                 if (it >= (ConfigurationsState.value?.flushQueueSize ?: 0)) {
                     dataChangeListener.onDataChange()
                     rescheduleTimer()
@@ -61,18 +63,17 @@ internal class FlushScheduler @JvmOverloads constructor(
         }
     }
     private val _configurationObserver: State.Observer<Configuration> =
-        State.Observer { configuration: Configuration? ->
+        State.Observer { configuration: Configuration?, prevConfig ->
             configuration ?: return@Observer
-            if (isInitialized.compareAndSet(false, true)) {
-                configuration.storage.addDataListener(onDataChange)
+            if (_isShutDown.get()) return@Observer
+            if(prevConfig == configuration) return@Observer
+            prevConfig?.storage?.removeDataListener(onDataChange)
+            configuration.storage.addDataListener(onDataChange)
+            if (shouldRescheduleTimer(configuration)) {
                 updateMaxFlush(configuration.maxFlushInterval)
                 rescheduleTimer()
-            } else {
-                if (shouldRescheduleTimer(configuration)) {
-                    updateMaxFlush(configuration.maxFlushInterval ?: 0L)
-                    rescheduleTimer()
-                }
             }
+
         }
 
     private fun updateMaxFlush(maxFlushInterval: Long) {
@@ -101,7 +102,6 @@ internal class FlushScheduler @JvmOverloads constructor(
                     dataChangeListener.onDataChange()
                 }
             }
-            println("rescheduling : $this with interval : $_currentFlushInterval")
             thresholdCountDownTimer.schedule(
                 periodicTaskScheduler, _currentFlushInterval, _currentFlushInterval
             )
@@ -111,14 +111,13 @@ internal class FlushScheduler @JvmOverloads constructor(
 
     fun shutdown() {
         if (_isShutDown.compareAndSet(false, true)) {
-            println("shutting down : $this")
             storage?.removeDataListener(onDataChange)
             periodicTaskScheduler?.cancel()
             thresholdCountDownTimer.purge()
             ConfigurationsState.removeObserver(_configurationObserver)
+            isInitialized.set(false)
         }
     }
-
     /**
      * Listener for listening to data change. Should adhere to [Configuration]
      *

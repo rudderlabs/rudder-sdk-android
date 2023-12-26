@@ -21,8 +21,10 @@ import com.rudderstack.models.AliasMessage
 import com.rudderstack.models.GroupMessage
 import com.rudderstack.models.GroupTraits
 import com.rudderstack.models.IdentifyMessage
+import com.rudderstack.models.IdentifyProperties
 import com.rudderstack.models.IdentifyTraits
 import com.rudderstack.models.MessageContext
+import com.rudderstack.models.MessageDestinationProps
 import com.rudderstack.models.ScreenMessage
 import com.rudderstack.models.ScreenProperties
 import com.rudderstack.models.TrackMessage
@@ -98,15 +100,25 @@ class Analytics private constructor(
     fun track(
         eventName: String,
         options: RudderOptions? = null,
+        userId: String? = null,
+        anonymousId: String? = null,
         trackProperties: TrackProperties? = null,
-        userID: String? = null,
+        traits: Map<String, Any?>? = null,
+        externalIds: List<Map<String, String>>? = null,
+        customContextMap: Map<String, Any>? = null,
+        destinationProps: MessageDestinationProps? = null,
     ) {
         track(
             TrackMessage.create(
+                anonymousId = anonymousId,
+                traits = traits,
+                externalIds = externalIds,
+                customContextMap = customContextMap,
+                destinationProps = destinationProps,
                 timestamp = RudderUtils.timeStamp,
                 eventName = eventName,
                 properties = trackProperties,
-                userId = userID
+                userId = userId
             ), options
         )
 
@@ -159,12 +171,22 @@ class Analytics private constructor(
         screenName: String,
         category: String,
         screenProperties: ScreenProperties,
-        userID: String? = null,
-        options: RudderOptions? = null
+        anonymousId: String? = null,
+        userId: String? = null,
+        options: RudderOptions? = null,
+        destinationProps: MessageDestinationProps? = null,
+        traits: Map<String, Any?>? = null,
+        externalIds: List<Map<String, String>>? = null,
+        customContextMap: Map<String, Any>? = null,
     ) {
         screen(
             ScreenMessage.create(
-                userId = userID,
+                userId = userId,
+                anonymousId = anonymousId,
+                destinationProps = destinationProps,
+                externalIds = externalIds,
+                customContextMap = customContextMap,
+                traits = traits,
                 timestamp = RudderUtils.timeStamp,
                 category = category,
                 name = screenName,
@@ -185,15 +207,25 @@ class Analytics private constructor(
 
     @JvmOverloads
     fun identify(
-        userID: String, traits: IdentifyTraits? = null,
+        userId: String, traits: IdentifyTraits? = null,
+        anonymousId: String? = null,
         options: RudderOptions? = null,
+        properties: IdentifyProperties? = null,
+        destinationProps: MessageDestinationProps? = null,
+        externalIds: List<Map<String, String>>? = null,
+        customContextMap: Map<String, Any>? = null,
     ) {
-        val completeTraits = mapOf("userId" to userID) optAdd traits
+        val completeTraits = mapOf("userId" to userId) optAdd traits
         identify(
             IdentifyMessage.create(
-                userId = userID,
+                userId = userId,
+                anonymousId = anonymousId,
+                destinationProps = destinationProps,
                 timestamp = RudderUtils.timeStamp,
                 traits = completeTraits,
+                properties = properties,
+                externalIds = externalIds,
+                customContextMap = customContextMap
             ), options
         )
     }
@@ -210,11 +242,24 @@ class Analytics private constructor(
 
     @JvmOverloads
     fun alias(
-        newId: String, options: RudderOptions? = null
+        newId: String,
+        anonymousId: String? = null,
+        options: RudderOptions? = null,
+        destinationProps: MessageDestinationProps? = null,
+        previousId: String? = null,
+        externalIds: List<Map<String, String>>? = null,
+        customContextMap: Map<String, Any>? = null,
     ) {
         val completeTraits = mapOf("userId" to newId)
         alias(
-            AliasMessage.create(timestamp = RudderUtils.timeStamp, userId = newId, traits = completeTraits),
+            AliasMessage.create(timestamp = RudderUtils.timeStamp,
+                anonymousId = anonymousId,
+                previousId=previousId,
+                destinationProps = destinationProps,
+                externalIds = externalIds,
+                customContextMap = customContextMap,
+
+                userId = newId, traits = completeTraits),
             options
         )
     }
@@ -231,18 +276,28 @@ class Analytics private constructor(
 
     @JvmOverloads
     fun group(
-        groupID: String,
+        groupId: String?,
+        anonymousId: String? = null,
+        userId: String? = null,
         options: RudderOptions? = null,
-        traits: GroupTraits? = null,
-        userID: String? = null
+        groupTraits: GroupTraits?,
+
+        destinationProps: MessageDestinationProps? = null,
+
+        externalIds: List<Map<String, String>>? = null,
+        customContextMap: Map<String, Any>? = null,
 
     ) {
         group(
             GroupMessage.create(
                 timestamp = RudderUtils.timeStamp,
-                userId = userID,
-                groupId = groupID,
-                groupTraits = traits
+                userId = userId,
+                groupId = groupId,
+                groupTraits = groupTraits,
+                anonymousId = anonymousId,
+                destinationProps = destinationProps,
+                externalIds = externalIds,
+                customContextMap = customContextMap
             ), options
         )
     }
@@ -274,17 +329,17 @@ class Analytics private constructor(
      * @param alternateDataUploadService The [DataUploadService] to upload data. Default is null. In
      * case null is sent, Analytics will create a [DataUploadServiceImpl] instance to pass over data.
      *
-     * @param alternateExecutor The flush will be processed on this [ExecutorService]
+     * @param alternateFlushExecutor The flush will be processed on this [ExecutorService]
      * @param clearDb Uploaded data will be cleared from [Storage] if true, else not.
      */
     @JvmOverloads
     fun forceFlush(
         clearDb: Boolean = true,
-        alternateExecutor: ExecutorService? = null,
+        alternateFlushExecutor: ExecutorService? = null,
         alternateDataUploadService: DataUploadService? = null
     ) {
         currentConfiguration ?: return
-        val flushExecutor = alternateExecutor ?: ThreadPoolExecutor(
+        val flushExecutor = alternateFlushExecutor ?: ThreadPoolExecutor(
             1,
             1,
             0L,
@@ -298,7 +353,7 @@ class Analytics private constructor(
         ) {
             //shut down if data uploader/executor is initialized here
             if (alternateDataUploadService == null) dataUploadService.shutdown()
-            if (alternateExecutor == null) flushExecutor.shutdown()
+            if (alternateFlushExecutor == null) flushExecutor.shutdown()
         }
     }
 

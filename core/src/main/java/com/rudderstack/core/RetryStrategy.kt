@@ -81,7 +81,7 @@ fun interface RetryStrategy {
                 }
 
                 override fun isDone(): Boolean {
-                    return impl.get()?.isDone == false
+                    return impl.get()?.isDone == true
                 }
             }
         }
@@ -97,10 +97,11 @@ fun interface RetryStrategy {
             private val isRunning = AtomicBoolean(false)
             private val executorService = ScheduledThreadPoolExecutor(0)
             private var lastFuture: WeakReference<Future<*>>? = null
+            private val _isDone = AtomicBoolean(false)
             val isDone: Boolean
-                get() = executorService.isShutdown
+                get() = _isDone.get()
             fun start() {
-                if (executorService.isShutdown) {
+                if (isDone) {
                     ConfigurationsState.value?.logger?.warn(
                         "ExponentialRetryStrategy:", "RetryStrategyImpl is already shutdown"
                     )
@@ -124,6 +125,7 @@ fun interface RetryStrategy {
             fun cancel() {
                 lastFuture?.get()?.takeIf { !it.isCancelled && !it.isDone }?.cancel(false)
                 executorService.shutdown()
+                _isDone.set(true)
             }
 
             private fun scheduleWork() {
@@ -133,12 +135,12 @@ fun interface RetryStrategy {
                     val workDone = work.invoke()
                     if (workDone) {
                         listener.invoke(true)
-                        executorService.shutdown()
+                        cancel()
                         return@schedule
                     } else {
                         if (retryCount.get() >= maxAttempts) {
                             listener.invoke(false)
-                            executorService.shutdown()
+                            cancel()
                             return@schedule
                         }
                         scheduleWork()

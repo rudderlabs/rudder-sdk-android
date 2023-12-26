@@ -21,6 +21,7 @@ import com.rudderstack.models.Message
 import com.rudderstack.models.MessageContext
 import com.rudderstack.models.RudderServerConfig
 import java.io.*
+import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -47,7 +48,7 @@ class BasicStorageImpl @JvmOverloads constructor(
     private var _storageCapacity = Storage.MAX_STORAGE_CAPACITY
     private var _maxFetchLimit = Storage.MAX_FETCH_LIMIT
 
-    private var _dataChangeListeners = listOf<Storage.DataListener>()
+    private var _dataChangeListeners = setOf<WeakReference<Storage.DataListener>>()
     private var _isOptOut = false
     private var _optOutTime = -1L
     private var _optInTime = -1L
@@ -90,31 +91,25 @@ class BasicStorageImpl @JvmOverloads constructor(
     }
 
     override fun saveMessage(vararg messages: Message) {
+        //a block to call data listener
+        val dataFailBlock: List<Message>.() -> Unit = {
+            _dataChangeListeners.forEach {
+                it.get()?.onDataDropped(
+                    this,
+                    IllegalArgumentException("Storage Capacity Exceeded")
+                )
+            }
+        }
         synchronized(this) {
             val excessMessages = queue.size + messages.size - _storageCapacity
             if (excessMessages > 0) {
-
-                //a block to call data listener
-                val dataFailBlock: List<Message>.() -> Unit = {
-                    _dataChangeListeners.forEach {
-                        it.onDataDropped(
-                            this,
-                            IllegalArgumentException("Storage Capacity Exceeded")
-                        )
-                    }
-                }
-
                 if (backPressureStrategy == Storage.BackPressureStrategy.Drop) {
-
                     logger?.warn(log = "Max storage capacity reached, dropping last$excessMessages latest events")
 
                     (messages.size - excessMessages).takeIf {
                         it > 0
                     }?.apply {
-
                         queue.addAll(messages.take(this))
-
-
                         //callback
                         messages.takeLast(excessMessages).run(dataFailBlock)
 
@@ -137,12 +132,10 @@ class BasicStorageImpl @JvmOverloads constructor(
                     tobeRemovedList.run(dataFailBlock)
                 }
             } else {
-
                     queue.addAll(messages)
             }
-
-            onDataChange()
         }
+        onDataChange()
     }
 
     override fun setBackpressureStrategy(strategy: Storage.BackPressureStrategy) {
@@ -150,8 +143,8 @@ class BasicStorageImpl @JvmOverloads constructor(
     }
 
     override fun deleteMessages(messages: List<Message>) {
+        val messageIdsToRemove = messages.map { it.messageId }
         synchronized(this) {
-            val messageIdsToRemove = messages.map { it.messageId }
             queue.removeAll {
                 it.messageId in messageIdsToRemove
             }
@@ -160,11 +153,15 @@ class BasicStorageImpl @JvmOverloads constructor(
     }
 
     override fun addDataListener(listener: Storage.DataListener) {
-        _dataChangeListeners = _dataChangeListeners + listener
+        _dataChangeListeners = _dataChangeListeners + WeakReference(listener)
     }
 
     override fun removeDataListener(listener: Storage.DataListener) {
-        _dataChangeListeners = _dataChangeListeners - listener
+
+        _dataChangeListeners = _dataChangeListeners.filter {
+            it.get() != null && it.get() != listener
+        }.toSet()
+
     }
 
     override fun getData(offset: Int, callback: (List<Message>) -> Unit) {
@@ -177,12 +174,16 @@ class BasicStorageImpl @JvmOverloads constructor(
     }
 
     override fun getCount(callback: (Long) -> Unit) {
-        queue.size.toLong().apply(callback)
+        synchronized(this) {
+            queue.size.toLong().apply(callback)
+        }
     }
 
     override fun getDataSync(offset: Int): List<Message> {
-        return if (queue.size <= offset) emptyList() else queue.toList()
-            .takeLast(queue.size - offset).take(_maxFetchLimit)
+        return synchronized(this) {
+            if (queue.size <= offset) emptyList() else queue.toList().takeLast(queue.size - offset)
+                .take(_maxFetchLimit)
+        }
     }
 
     override fun saveServerConfig(serverConfig: RudderServerConfig) {
@@ -212,11 +213,15 @@ class BasicStorageImpl @JvmOverloads constructor(
     }
 
     override fun saveStartupMessageInQueue(message: Message) {
-        startupQ.add(message)
+        synchronized(this) {
+            startupQ.add(message)
+        }
     }
 
     override fun clearStartupQueue() {
-        startupQ.clear()
+        synchronized(this) {
+            startupQ.clear()
+        }
     }
 
     override fun shutdown() {
@@ -270,7 +275,7 @@ class BasicStorageImpl @JvmOverloads constructor(
     private fun onDataChange() {
         synchronized(this) {
             _dataChangeListeners.forEach {
-                it.onDataChange()
+                it.get()?.onDataChange()
             }
 
         }

@@ -18,12 +18,12 @@ import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.RetryStrategy
 import com.rudderstack.models.RudderServerConfig
 
-class MockConfigDownloadService : ConfigDownloadService {
-    var mockConfigDownloadSuccess = true
-    var mockLastErrorMsg = null
-    var mockConfig = RudderServerConfig(
-        source = RudderServerConfig.RudderServerConfigSource(),
-    )
+class MockConfigDownloadService(val mockConfigDownloadSuccess: Boolean = true,
+                                val mockLastErrorMsg: String? = null,
+                                val mockConfig: RudderServerConfig = RudderServerConfig(
+                                    source = RudderServerConfig.RudderServerConfigSource(),
+                                )) : ConfigDownloadService {
+
     override fun download(
         platform: String,
         libraryVersion: String,

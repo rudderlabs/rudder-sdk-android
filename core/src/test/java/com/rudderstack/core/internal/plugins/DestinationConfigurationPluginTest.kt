@@ -108,7 +108,6 @@ class DestinationConfigurationPluginTest {
             plugins = defaultPluginChain!!.plugins.toMutableList().also {
                 //after destination config plugin
                 it.add(0, Plugin {
-                    println("intercepted by assertion plugin")
                     //after processing the chain should be devoid of d-2
                     assertThat(
                         it.plugins, allOf(
@@ -135,7 +134,6 @@ class DestinationConfigurationPluginTest {
             plugins = defaultPluginChain!!.plugins.toMutableList().also {
                 //after destination config plugin
                 it.add(0, Plugin {
-                    println("intercepted by assertion plugin")
                     //after processing the chain should be devoid of d-2
                     assertThat(
                         it.plugins, allOf(iterableWithSize(1), //the test plugin

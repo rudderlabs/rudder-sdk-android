@@ -33,10 +33,11 @@ abstract class State<T>(initialValue: T? = null) {
     private var _value: T? = initialValue
     set(value) {
         synchronized(this) {
+            val oldValue = field
             field = value
             // notifies observers as state changes. Initial value won't be notified
             observers.forEach {
-                it.get()?.onStateChange(value)
+                it.get()?.onStateChange(value, oldValue)
             }
         }
     }
@@ -53,8 +54,11 @@ abstract class State<T>(initialValue: T? = null) {
      */
      fun subscribe(observer: Observer<T>) {
         synchronized(this){
+            if (observers.firstOrNull {
+                    it.get()?.equals(observer) == true
+            } != null) return
             observers.add(WeakReference(observer))
-            observer.onStateChange(value)
+            observer.onStateChange(value, null)
         }
     }
 
@@ -83,6 +87,12 @@ abstract class State<T>(initialValue: T? = null) {
      * @param T Type of value State holds
      */
     fun interface Observer<T> {
-        fun onStateChange(state: T?)
+        /**
+         * Called when state changes
+         *
+         * @param state New state
+         * @param previousState Old state - Not available if subscribed for first time
+         */
+        fun onStateChange(state: T?, previousState: T?)
     }
 }

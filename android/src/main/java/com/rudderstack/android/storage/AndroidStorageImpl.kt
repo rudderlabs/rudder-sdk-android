@@ -128,7 +128,7 @@ internal class AndroidStorageImpl(
 
     private var _storageCapacity: Int = Storage.MAX_STORAGE_CAPACITY //default 2_000
     private var _maxFetchLimit: Int = Storage.MAX_FETCH_LIMIT
-    private var _storageListeners = listOf<Storage.DataListener>()
+    private var _storageListeners = setOf<Storage.DataListener>()
 
     private var _backPressureStrategy = Storage.BackPressureStrategy.Drop
 
@@ -172,7 +172,7 @@ internal class AndroidStorageImpl(
         ConfigurationsState.subscribe(::onConfigChange)
     }
 
-    private fun onConfigChange(configuration: Configuration?) {
+    private fun onConfigChange(configuration: Configuration?, prevConfiguration: Configuration?) {
         if( configuration is ConfigurationAndroid){
             initDb(configuration)
         }

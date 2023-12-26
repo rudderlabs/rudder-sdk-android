@@ -36,7 +36,7 @@ interface Callback {
     fun success(message: Message?)
 
     /**
-     * Invoked when the library gives up on sending a message.
+     * Invoked when the library fails sending a message. The message is still stored in DB
      *
      *
      * This could be due to exhausting retries, or other unexpected errors. Use the `throwable` provided to take further action.

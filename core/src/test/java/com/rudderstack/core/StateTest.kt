@@ -44,12 +44,12 @@ class StateTest {
 
 
         //should get only first message
-        val observer1 = State.Observer<String> { state ->
+        val observer1 = State.Observer<String> { state, prevState ->
             assertThat(state, anyOf(equalTo(INITIAL), equalTo(firstMessage)))
             isObserver1Called = true
         }
         //should get only first and second messages
-        val observer2 = State.Observer<String> { state ->
+        val observer2 = State.Observer<String> { state, prevState ->
             assertThat(
                 state,
                 anyOf(equalTo(INITIAL), equalTo(firstMessage), equalTo(secondMessage))
@@ -57,8 +57,7 @@ class StateTest {
             isObserver2Called = true
         }
         //should get first, second and third messages
-        val observer3 = State.Observer<String> { state ->
-            println("obs3: $state")
+        val observer3 = State.Observer<String> { state, prevState ->
             assertThat(
                 state, anyOf(
                     equalTo(INITIAL),

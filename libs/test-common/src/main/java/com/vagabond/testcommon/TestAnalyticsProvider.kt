@@ -15,32 +15,38 @@
 @file:JvmName("TestAnalyticsProvider")
 package com.vagabond.testcommon
 
+import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.copy
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.models.Message
+import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 
 private const val DUMMY_WRITE_KEY = "DUMMY_WRITE_KEY"
 private var currentTestPlugin : Plugin? = null
 private var inputs = listOf<Message>()
 private val inputVerifyPlugin = Plugin { chain ->
-    chain.message().also {
+    chain.proceed(chain.message().also {
         inputs += it.copy()
-    }
+    })
 }
 
 fun generateTestAnalytics(jsonAdapter: JsonAdapter): Analytics {
-    return generateTestAnalytics(Configuration(jsonAdapter, storage = VerificationStorage(),
+    return generateTestAnalytics(Configuration(jsonAdapter,
         shouldVerifySdk = false))
 }
-fun generateTestAnalytics(mockConfiguration: Configuration): Analytics {
+fun generateTestAnalytics(mockConfiguration: Configuration,
+                          configDownloadService: ConfigDownloadService = MockConfigDownloadService()): Analytics {
     return Analytics(
         DUMMY_WRITE_KEY, mockConfiguration.copy(
-            logger = KotlinLogger
-        ), TestDataUploadService(), MockConfigDownloadService()
+            logger = KotlinLogger,
+            storage = VerificationStorage(),
+            analyticsExecutor = TestExecutor()
+        ), TestDataUploadService(), configDownloadService
     ).also {
         it.addPlugin(inputVerifyPlugin)
     }
@@ -50,11 +56,11 @@ fun Analytics.testPlugin(pluginUnderTest : Plugin) {
     addPlugin(pluginUnderTest)
 }
 fun Analytics.assertArguments(verification : Verification<List<Message>,List<Message>>) {
-    verification.assert(inputs.toList(), currentConfiguration?.storage?.startupQueue?.toList() ?:
+    verification.assert(inputs.toList(), currentConfiguration?.storage?.getDataSync() ?:
     emptyList())
 }
 fun Analytics.assertArgument(verification: Verification<Message?, Message?>){
-    verification.assert(inputs.lastOrNull(), currentConfiguration?.storage?.startupQueue?.lastOrNull())
+    verification.assert(inputs.lastOrNull(), currentConfiguration?.storage?.getDataSync()?.lastOrNull())
 }
 fun interface Verification<IN,OUT> {
     fun assert(input : IN, output : OUT)

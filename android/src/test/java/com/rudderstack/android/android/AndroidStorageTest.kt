@@ -65,7 +65,6 @@ abstract class AndroidStorageTest {
         val first10Events = events.take(10).map { it.eventName }
         val last10Events = events.takeLast(10).map { it.eventName }
         val saved = storage.getDataSync()
-        println(saved)
         MatcherAssert.assertThat(
             saved, Matchers.allOf(
                 Matchers.iterableWithSize(10),

@@ -89,7 +89,6 @@ abstract class ConfigDownloadServiceImplTest {
             callback = { success, rudderServerConfig, lastErrorMsg ->
                 assertThat(success, `is`(false))
                 assertThat(lastErrorMsg, notNullValue())
-                println("failure error msg: $lastErrorMsg")
                 assertThat(rudderServerConfig, nullValue())
                 isComplete.set(true)
             })
