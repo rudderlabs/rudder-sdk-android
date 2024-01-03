@@ -24,6 +24,7 @@ import com.rudderstack.core.compat.ConfigurationBuilder;
 import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 //Java compatible Builder for [ConfigurationAndroid]
 public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
@@ -36,15 +37,16 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     private Boolean autoCollectAdvertId  = ConfigurationAndroid.Defaults.AUTO_COLLECT_ADVERT_ID;
     private Boolean multiProcessEnabled  = ConfigurationAndroid.Defaults.MULTI_PROCESS_ENABLED;
     private String defaultProcessName= ConfigurationAndroid.Defaults.INSTANCE.getDEFAULT_PROCESS_NAME();
-    private Boolean useContentProvider  = ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER;
     private String advertisingId = null;
     private String deviceToken = null;
-    private AndroidStorage storage  = new AndroidStorageImpl();
+    private AndroidStorage storage;
     private ExecutorService advertisingIdFetchExecutor = null;
     public ConfigurationAndroidBuilder(Application application, JsonAdapter jsonAdapter) {
         super(jsonAdapter);
         this.application = application;
         anonymousId = AndroidUtils.INSTANCE.getDeviceId(application);
+        storage   = new AndroidStorageImpl(application,
+                ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER, Executors.newSingleThreadExecutor());
     }
     public ConfigurationBuilder withAnonymousId(String anonymousId) {
         this.anonymousId = anonymousId;
@@ -78,10 +80,6 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
         this.defaultProcessName = defaultProcessName;
         return this;
     }
-    public ConfigurationBuilder withUseContentProvider(Boolean useContentProvider) {
-        this.useContentProvider = useContentProvider;
-        return this;
-    }
     public ConfigurationBuilder withAdvertisingId(String advertisingId) {
         this.advertisingId = advertisingId;
         return this;
@@ -110,7 +108,6 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
                 autoCollectAdvertId,
                 multiProcessEnabled,
                 defaultProcessName,
-                useContentProvider,
                 advertisingId,
                 deviceToken,
                 storage,

@@ -29,21 +29,33 @@ internal class DefaultUploadMediator(
     baseUrl: String,
     private val jsonAdapter: JsonAdapter,
     networkExecutor: ExecutorService,
-    private val apiVersion : Int = 1,
-    private val isGzipEnabled : Boolean = true
+    private val apiVersion: Int = 1,
+    private val isGzipEnabled: Boolean = true,
 ) : UploadMediator {
 //    private val deviceDataCollector: DeviceDataCollector
-    private val webService = WebServiceFactory.getWebService(baseUrl, jsonAdapter,
-        executor = networkExecutor)
+    private val webService = WebServiceFactory.getWebService(
+        baseUrl,
+        jsonAdapter,
+        executor = networkExecutor,
+    )
 
-
-    override fun upload(metrics: List<MetricModel<out Number>>, error: ErrorModel,
-                        callback: (success : Boolean) -> Unit) {
+    override fun upload(
+        metrics: List<MetricModel<out Number>>,
+        error: ErrorModel,
+        callback: (success: Boolean) -> Unit,
+    ) {
         val requestMap = createRequestMap(metrics, error)
-        webService.post(null,null, jsonAdapter.writeToJson(requestMap,
-            object: RudderTypeAdapter<Map<String, Any?>>() {}), METRICS_ENDPOINT,
-            object : RudderTypeAdapter<Map<*,*>>(){}, isGzipEnabled){
-
+        webService.post(
+            null,
+            null,
+            jsonAdapter.writeToJson(
+                requestMap,
+                object : RudderTypeAdapter<Map<String, Any?>>() {},
+            ),
+            METRICS_ENDPOINT,
+            object : RudderTypeAdapter<Map<*, *>>() {},
+            isGzipEnabled,
+        ) {
             (it.status in 200..299).apply(callback)
         }
     }
@@ -58,6 +70,7 @@ internal class DefaultUploadMediator(
         requestMap[VERSION_KEY] = apiVersion.toString()
         return requestMap
     }
+
 //    private fun getSourceJsonFromDeviceAndLibrary(deviceJson: String?,
 //                                                  libraryMetadataJson: String?): String? {
 //        return jsonAdapter.writeToJson(
@@ -67,7 +80,7 @@ internal class DefaultUploadMediator(
 //            ), object : RudderTypeAdapter<Map<*,*>>(){}
 //        )
 //    }
-    companion object{
+    companion object {
 //        private const val DEVICE_KEY = "device"
 //        private const val LIBRARY_METADATA_KEY = "libraryMetadata"
         private const val SOURCE_KEY = "source"

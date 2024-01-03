@@ -20,14 +20,15 @@ import org.junit.Test
 
 class RudderTypeAdapterTest {
     @Test
-    fun `test rudder type adapter returns correct type with Map`(){
-        val typeAdapter = RudderTypeAdapter<Map<String, Any>>{}
+    fun `test rudder type adapter returns correct type with Map`() {
+        val typeAdapter = RudderTypeAdapter<Map<String, Any>> {}
         println(typeAdapter.type)
         assertThat(typeAdapter, Matchers.hasToString(Matchers.containsString("Map")))
     }
+
     @Test
-    fun `test rudder type adapter returns correct type with List`(){
-        val typeAdapter = RudderTypeAdapter<Map<String, Any>>{}
+    fun `test rudder type adapter returns correct type with List`() {
+        val typeAdapter = RudderTypeAdapter<Map<String, Any>> {}
         println(typeAdapter.type)
         assertThat(typeAdapter, Matchers.hasToString(Matchers.containsString("List")))
     }

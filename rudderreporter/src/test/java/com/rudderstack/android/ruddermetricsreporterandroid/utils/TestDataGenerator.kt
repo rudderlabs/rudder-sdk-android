@@ -14,29 +14,31 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.utils
 
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricType
 
 object TestDataGenerator {
 
-    fun generateTestMetrics(count : Int) = (1..count).map {
+    fun generateTestMetrics(count: Int) = (1..count).map {
         getTestMetric(it)
     }
 
-    fun getTestMetric(identity: Int) = MetricModel<Long>("test_metric_$identity",
-        MetricType.COUNTER, identity.toLong(), mapOf("type" to "type_$identity"))
+    fun getTestMetric(identity: Int) = MetricModel<Long>(
+        "test_metric_$identity",
+        MetricType.COUNTER,
+        identity.toLong(),
+        mapOf("type" to "type_$identity"),
+    )
 
-
-    fun generateTestErrorEventsJson(count : Int) = (1..count).map {
+    fun generateTestErrorEventsJson(count: Int) = (1..count).map {
         getTestErrorEventJsonWithIdentity(it)
     }
 
     fun generateTestErrorEventsJson(range: Iterable<Int>) =
         range.map {
-        getTestErrorEventJsonWithIdentity(it)
-    }
-    fun getTestErrorEventJsonWithIdentity(identity : Int) = """
+            getTestErrorEventJsonWithIdentity(it)
+        }
+    fun getTestErrorEventJsonWithIdentity(identity: Int) = """
         {
         "exceptions": [
         {

@@ -20,10 +20,10 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.VisibleForTesting
-import com.rudderstack.android.ruddermetricsreporterandroid.error.BreadcrumbType
-import com.rudderstack.android.ruddermetricsreporterandroid.Logger
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
+import com.rudderstack.android.ruddermetricsreporterandroid.Logger
+import com.rudderstack.android.ruddermetricsreporterandroid.error.BreadcrumbType
 import com.rudderstack.android.ruddermetricsreporterandroid.error.CrashFilter
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DebugLogger
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.NoopLogger
@@ -48,8 +48,8 @@ data class ImmutableConfig(
      * based on the automatic data capture settings in [Configuration].
      */
     fun shouldDiscardError(exc: Throwable): Boolean {
-        return shouldDiscardByReleaseStage() || shouldDiscardByErrorClass(exc)
-               || shouldDiscardByCrashFilter(exc)
+        return shouldDiscardByReleaseStage() || shouldDiscardByErrorClass(exc) ||
+            shouldDiscardByCrashFilter(exc)
     }
 
     private fun shouldDiscardByCrashFilter(exc: Throwable): Boolean {
@@ -99,13 +99,13 @@ data class ImmutableConfig(
         }
     }
 }
+
 @JvmOverloads
 internal fun convertToImmutableConfig(
     config: Configuration,
     packageInfo: PackageInfo? = null,
-    appInfo: ApplicationInfo? = null
+    appInfo: ApplicationInfo? = null,
 ): ImmutableConfig {
-
     return ImmutableConfig(
         libraryMetadata = config.libraryMetadata,
         discardClasses = config.discardClasses.toSet(),
@@ -118,12 +118,12 @@ internal fun convertToImmutableConfig(
         enabledBreadcrumbTypes = config.enabledBreadcrumbTypes?.toSet(),
         packageInfo = packageInfo,
         appInfo = appInfo,
-        crashFilter = config.crashFilter
+        crashFilter = config.crashFilter,
     )
 }
 internal fun sanitiseConfiguration(
     appContext: Context,
-    configuration: Configuration
+    configuration: Configuration,
 ): ImmutableConfig {
     val packageName = appContext.packageName
     val packageManager = appContext.packageManager
@@ -153,10 +153,16 @@ internal fun sanitiseConfiguration(
     }
 
     if (configuration.libraryMetadata.versionCode.isEmpty() || configuration.libraryMetadata.versionCode == "0") {
-        configuration.libraryMetadata =  configuration.libraryMetadata.copy(versionCode = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            @Suppress("DEPRECATION")
-            packageInfo?.longVersionCode?.toInt() ?: 0
-        } else packageInfo?.versionCode).toString())
+        configuration.libraryMetadata = configuration.libraryMetadata.copy(
+            versionCode = (
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    @Suppress("DEPRECATION")
+                    packageInfo?.longVersionCode?.toInt() ?: 0
+                } else {
+                    packageInfo?.versionCode
+                }
+                ).toString(),
+        )
     }
 
     // Set sensible defaults if project packages not already set
@@ -167,10 +173,9 @@ internal fun sanitiseConfiguration(
     return convertToImmutableConfig(
         configuration,
         packageInfo,
-        appInfo
+        appInfo,
     )
 }
-
 
 internal const val RELEASE_STAGE_DEVELOPMENT = "development"
 internal const val RELEASE_STAGE_PRODUCTION = "production"

@@ -25,7 +25,6 @@ import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-
 /**
  * Singleton class to act as the Database helper
  */
@@ -33,20 +32,23 @@ import java.util.concurrent.TimeUnit
 object RudderDatabase {
     private var sqliteOpenHelper: SQLiteOpenHelper? = null
     private var database: SQLiteDatabase? = null
-    private var registeredDaoList : MutableMap<Class<out Entity>, Dao<out Entity>> =
+    private var registeredDaoList: MutableMap<Class<out Entity>, Dao<out Entity>> =
         ConcurrentHashMap<Class<out Entity>, Dao<out Entity>>()
-    private var context : Context? = null
+    private var context: Context? = null
     private var useContentProvider = false
-    private var dbDetailsListeners = listOf<(
-        String, Int,
-        databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)?
-    ) -> Unit>()
+    private var dbDetailsListeners = listOf<
+        (
+            String,
+            Int,
+            databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)?,
+        ) -> Unit,
+        >()
     private var databaseName: String? = null
     private var databaseVersion: Int = 1
 
     private var databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)? = null
 
-    private lateinit var commonExecutor : ExecutorService
+    private lateinit var commonExecutor: ExecutorService
 
     private lateinit var entityFactory: EntityFactory
 
@@ -61,30 +63,33 @@ object RudderDatabase {
      * @param databaseUpgradeCallback If db upgrade is necessary, this is to be handled
      */
     fun init(
-        context: Context, databaseName: String,
+        context: Context,
+        databaseName: String,
         entityFactory: EntityFactory,
         useContentProvider: Boolean = this.useContentProvider,
         version: Int = 1,
         executorService: ExecutorService? = null,
         databaseCreatedCallback: ((SQLiteDatabase?) -> Unit)? = null,
-        databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)? = null
+        databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)? = null,
     ) {
-        commonExecutor = executorService ?: ThreadPoolExecutor(
+        commonExecutor = executorService.takeIf { it?.isShutdown == false } ?: ThreadPoolExecutor(
             0,
             Int.MAX_VALUE,
             60L,
             TimeUnit.SECONDS,
-            SynchronousQueue(), ThreadPoolExecutor.DiscardPolicy()
-        );
+            SynchronousQueue(),
+            ThreadPoolExecutor.DiscardPolicy(),
+        )
         this.entityFactory = entityFactory
-        if (sqliteOpenHelper != null)
+        if (sqliteOpenHelper != null) {
             return
+        }
         this.useContentProvider = useContentProvider
         this.context = context
         this.databaseName = databaseName
         this.databaseVersion = version
         this.databaseUpgradeCallback = databaseUpgradeCallback
-        //calling the database name listeners
+        // calling the database name listeners
         synchronized(this) {
             dbDetailsListeners.forEach { it.invoke(databaseName, version, databaseUpgradeCallback) }
 
@@ -96,25 +101,21 @@ object RudderDatabase {
                             initDaoList(it, registeredDaoList.values.toList())
                         }
                     }
-
                 }
 
                 override fun onCreate(database: SQLiteDatabase?) {
-
                     databaseCreatedCallback?.invoke(database)
                 }
 
                 override fun onUpgrade(
                     database: SQLiteDatabase?,
                     oldVersion: Int,
-                    newVersion: Int
+                    newVersion: Int,
                 ) {
                     databaseUpgradeCallback?.invoke(database, oldVersion, newVersion)
                 }
-
             }
         }
-
     }
 
     /**
@@ -127,13 +128,15 @@ object RudderDatabase {
      * @return A [Dao] based on the [entityClass]
      */
     fun <T : Entity> getDao(
-        entityClass: Class<T>, executorService: ExecutorService = commonExecutor
+        entityClass: Class<T>,
+        executorService: ExecutorService = commonExecutor,
 
     ): Dao<T> {
         return registeredDaoList[entityClass]?.let {
             it as Dao<T>
         } ?: createNewDao(entityClass, executorService)
     }
+
     /**
      * Creates a new [Dao] object for an entity.
      * Usage of this method directly, is highly discouraged.
@@ -144,11 +147,17 @@ object RudderDatabase {
      * @return
      */
     internal fun <T : Entity> createNewDao(
-        entityClass: Class<T>, executorService: ExecutorService
+        entityClass: Class<T>,
+        executorService: ExecutorService,
 
-    ): Dao<T> = Dao<T>(entityClass, useContentProvider, context?:
-    throw UninitializedPropertyAccessException("Did you call RudderDatabase.init?"),
-        entityFactory, executorService).also {
+    ): Dao<T> = Dao<T>(
+        entityClass,
+        useContentProvider,
+        context
+            ?: throw UninitializedPropertyAccessException("Did you call RudderDatabase.init?"),
+        entityFactory,
+        executorService,
+    ).also {
         registeredDaoList[entityClass] = it
         database?.apply {
             initDaoList(this, listOf(it))
@@ -164,16 +173,14 @@ object RudderDatabase {
      */
     internal fun getDbDetails(
         callback: (
-            String, Int,
-            databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)?
-        ) -> Unit
+            String,
+            Int,
+            databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)?,
+        ) -> Unit,
     ) {
-
         databaseName?.let {
             callback.invoke(it, databaseVersion, databaseUpgradeCallback)
         } ?: synchronized(this) { dbDetailsListeners = dbDetailsListeners + callback }
-
-
     }
 
     fun <T : Entity> Dao<T>.unregister() {
@@ -189,13 +196,16 @@ object RudderDatabase {
     }
 
     fun shutDown() {
-        if(context == null)return
-        registeredDaoList.clear() //clearing all cached dao
-        database?.apply{
-            //synchronizing on database allows other database users to synchronize on the same
+        if (context == null)return
+        registeredDaoList.iterator().forEach {
+            it.value.setDatabase(null)
+        }
+        registeredDaoList.clear() // clearing all cached dao
+        sqliteOpenHelper?.apply {
+            // synchronizing on database allows other database users to synchronize on the same
             synchronized(this) {
                 sqliteOpenHelper?.close()
-                database?.close()
+                sqliteOpenHelper = null
                 database = null
             }
         }
@@ -205,5 +215,4 @@ object RudderDatabase {
         databaseUpgradeCallback = null
         useContentProvider = false
     }
-
 }

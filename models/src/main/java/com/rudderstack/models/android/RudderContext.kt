@@ -14,10 +14,6 @@
 
 package com.rudderstack.models.android
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.google.gson.annotations.SerializedName
-import com.squareup.moshi.Json
-
 class RudderContext(contextMap: Map<String, Any?>) : HashMap<String, Any?>(contextMap) {
     constructor() : this(mapOf())
 
@@ -43,5 +39,4 @@ class RudderContext(contextMap: Map<String, Any?>) : HashMap<String, Any?>(conte
 
     var externalId: MutableSet<Map<String, Any?>>? by this
     var customContextMap: MutableMap<String, Any>? by this
-
-   }
+}

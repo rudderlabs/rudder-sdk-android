@@ -1,8 +1,7 @@
-package com.rudderstack.models.android;
-
+package com.rudderstack.models.android
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.Json
 
 data class RudderApp(
@@ -21,7 +20,7 @@ data class RudderApp(
     @SerializedName("version")
     @JsonProperty("version")
     @Json(name = "version")
-    private val version: String
+    private val version: String,
 ) {
 
     // internal constructor

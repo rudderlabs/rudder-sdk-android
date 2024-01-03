@@ -18,21 +18,27 @@ import android.content.ContentValues
 import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorEvent
 
 @RudderEntity(
-    tableName = ErrorEntity.TABLE_NAME, [
+    tableName = ErrorEntity.TABLE_NAME,
+    [
         RudderField(
-            RudderField.Type.INTEGER, ErrorEntity.ColumnNames.ID,
-            primaryKey = true, isNullable = false, isAutoInc = true, isIndex = true
+            RudderField.Type.INTEGER,
+            ErrorEntity.ColumnNames.ID,
+            primaryKey = true,
+            isNullable = false,
+            isAutoInc = true,
+            isIndex = true,
         ),
         RudderField(
-            RudderField.Type.TEXT, ErrorEntity.ColumnNames.ERROR_EVENT,
-            primaryKey = false, isNullable = false
-        )
-    ]
+            RudderField.Type.TEXT,
+            ErrorEntity.ColumnNames.ERROR_EVENT,
+            primaryKey = false,
+            isNullable = false,
+        ),
+    ],
 )
-class ErrorEntity(val errorEvent: String): Entity {
+class ErrorEntity(val errorEvent: String) : Entity {
 
     private var _id: Long = UNINITIALIZED_ID
     val id: Long
@@ -51,7 +57,7 @@ class ErrorEntity(val errorEvent: String): Entity {
             val errorEvent = values[ColumnNames.ERROR_EVENT] as String
             val id = values[ColumnNames.ID] as? Long
             return ErrorEntity(errorEvent).also {
-                if(id != null) {
+                if (id != null) {
                     it._id = id
                 }
             }
@@ -69,8 +75,8 @@ class ErrorEntity(val errorEvent: String): Entity {
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is ErrorEntity && other.id == id
-               && other.errorEvent == errorEvent
+        return other is ErrorEntity && other.id == id &&
+            other.errorEvent == errorEvent
     }
 
     override fun hashCode(): Int {

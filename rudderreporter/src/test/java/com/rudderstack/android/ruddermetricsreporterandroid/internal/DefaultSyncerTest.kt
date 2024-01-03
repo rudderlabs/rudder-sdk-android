@@ -66,14 +66,14 @@ class DefaultSyncerTest {
             println("uploaded-m  ${uploadedMetrics.size} cIndex-m $cumulativeIndexMetrics")
             println("uploaded-e  ${uploadedErrorModel.eventsJson.size} cIndex-e $cumulativeIndexMErrors")
             if (cumulativeIndexMetrics > maxMetrics) {
-                assert(false) //should not reach here
+                assert(false) // should not reach here
                 isMetricsDone.set(true)
             } else {
                 val expected = getTestMetricList(
                     cumulativeIndexMetrics,
-                    (maxMetrics - cumulativeIndexMetrics).coerceAtMost(limit)
+                    (maxMetrics - cumulativeIndexMetrics).coerceAtMost(limit),
                 )
-                if (expected.isNotEmpty())
+                if (expected.isNotEmpty()) {
                     assertThat(
                         uploadedMetrics,
                         allOf(
@@ -81,30 +81,33 @@ class DefaultSyncerTest {
                             not(empty()),
                             hasSize((maxMetrics - cumulativeIndexMetrics).coerceAtMost(limit)),
                             Matchers.contains<MetricModel<out Number>>(
-                                *(expected.toTypedArray())
-                            )
-                        )
+                                *(expected.toTypedArray()),
+                            ),
+                        ),
                     )
-                else
+                } else {
                     assertThat(uploadedMetrics, empty())
+                }
                 if (cumulativeIndexMErrors < maxErrors) {
                     val expectedSizeOfErrors = (maxErrors - cumulativeIndexMErrors).coerceAtMost(limit)
                     assertThat(
-                        uploadedErrorModel.eventsJson, allOf(
+                        uploadedErrorModel.eventsJson,
+                        allOf(
                             notNullValue(),
                             not(empty()),
-                            hasSize(expectedSizeOfErrors)
-                        )
+                            hasSize(expectedSizeOfErrors),
+                        ),
                     )
-                }else
+                } else {
                     assertThat(uploadedErrorModel.eventsJson, empty())
+                }
 
                 if (cumulativeIndexMetrics + uploadedMetrics.size == maxMetrics) {
 //                    Thread.sleep(1000)
                     isMetricsDone.set(true)
                 }
                 if (cumulativeIndexMetrics + uploadedMetrics.size > maxMetrics) {
-                    assert(false) //should not reach here
+                    assert(false) // should not reach here
                     isMetricsDone.set(true)
                 }
                 if (cumulativeIndexMErrors + uploadedErrorModel.eventsJson.size == maxErrors) {
@@ -117,19 +120,15 @@ class DefaultSyncerTest {
             }
             cumulativeIndexMetrics += uploadedMetrics.size
             cumulativeIndexMErrors += uploadedErrorModel.eventsJson.size
-
-
         }
         syncer.startScheduledSyncs(interval, true, limit.toLong())
 
-        Awaitility.await().atMost(4, TimeUnit.MINUTES).until{
+        Awaitility.await().atMost(4, TimeUnit.MINUTES).until {
             isMetricsDone.get() && isErrorsDone.get()
         }
         syncer.stopScheduling()
         println("********checkSyncWithSuccess***********")
-
     }
-
 
     @Test
     fun `test sync with failure`() {
@@ -146,24 +145,30 @@ class DefaultSyncerTest {
         val syncer = DefaultSyncer(mockReservoir, mockUploader, mockLibraryMetadata)
         val expectedMetrics = getTestMetricList(
             0,
-            (maxMetrics).coerceAtMost(limit)
+            (maxMetrics).coerceAtMost(limit),
         )
         val expectedSizeOfErrors = (maxErrors).coerceAtMost(limit)
         syncer.setCallback { uploadedMetrics, uploadedErrorModel, success ->
-            println("success: $success, uploaded metrics size: ${uploadedMetrics.size}, " +
-                    "uploaded errors size: ${uploadedErrorModel.eventsJson.size}")
+            println(
+                "success: $success, uploaded metrics size: ${uploadedMetrics.size}, " +
+                    "uploaded errors size: ${uploadedErrorModel.eventsJson.size}",
+            )
             assertThat(success, `is`(false))
-            assertThat(uploadedMetrics,Matchers.contains<MetricModel<out Number>>(
-                *(expectedMetrics.toTypedArray())
-            ) )
             assertThat(
-                uploadedErrorModel.eventsJson, allOf(
+                uploadedMetrics,
+                Matchers.contains<MetricModel<out Number>>(
+                    *(expectedMetrics.toTypedArray()),
+                ),
+            )
+            assertThat(
+                uploadedErrorModel.eventsJson,
+                allOf(
                     notNullValue(),
                     not(empty()),
-                    hasSize(expectedSizeOfErrors)
-                )
+                    hasSize(expectedSizeOfErrors),
+                ),
             )
-            //let's wait for 5 calls
+            // let's wait for 5 calls
             syncCounter.incrementAndGet()
         }
         syncer.startScheduledSyncs(interval, true, limit.toLong())
@@ -171,9 +176,7 @@ class DefaultSyncerTest {
         Awaitility.await().atMost(2, TimeUnit.MINUTES).untilAtomic(syncCounter, equalTo(5))
         syncer.stopScheduling()
         println("********checkSyncWithFailure***********")
-
     }
-
 
     @Test
     fun stopScheduling() {
@@ -186,14 +189,14 @@ class DefaultSyncerTest {
         mockTheUploaderToSucceed()
         val syncer = DefaultSyncer(mockReservoir, mockUploader, mockLibraryMetadata)
         syncer.startScheduledSyncs(interval, true, limit.toLong())
-        Thread.sleep(interval/2) //some time elapse before stopping
+        Thread.sleep(interval / 2) // some time elapse before stopping
         syncer.stopScheduling()
-        //waiting to stop
+        // waiting to stop
         Thread.sleep(interval + 10)
-        syncer.setCallback{ _, _, _ ->
-            assert(false) //call shouldn't reach here
+        syncer.setCallback { _, _, _ ->
+            assert(false) // call shouldn't reach here
         }
-        Thread.sleep(interval*5)
+        Thread.sleep(interval * 5)
     }
 
     @Test
@@ -201,7 +204,6 @@ class DefaultSyncerTest {
         val scheduler = DefaultSyncer.Scheduler()
         var schedulerCalled = 0
         scheduler.scheduleTimer(true, 500L) {
-            println("timer called")
             schedulerCalled++
         }
         Thread.sleep(2100)
@@ -215,7 +217,6 @@ class DefaultSyncerTest {
         val scheduler = DefaultSyncer.Scheduler()
         var schedulerCalled = 0
         scheduler.scheduleTimer(false, 500L) {
-            println("timer called")
             schedulerCalled++
         }
         Thread.sleep(2100)
@@ -234,7 +235,7 @@ class DefaultSyncerTest {
 
             schedulerCalled++
         }
-        //should run at 0. 500, 1000, 1500
+        // should run at 0. 500, 1000, 1500
         Thread.sleep(1100) // stopped during execution.
         scheduler.stop()
         Thread.sleep(1000)
@@ -242,7 +243,6 @@ class DefaultSyncerTest {
     }
 
     private fun getTestMetricList(startPos: Int, limit: Int): List<MetricModelWithId<Number>> {
-
         return (startPos until startPos + limit).map {
             val index = it + 1
             MetricModelWithId(
@@ -250,44 +250,58 @@ class DefaultSyncerTest {
                 "testMetric$it",
                 MetricType.COUNTER,
                 index.toLong(),
-                mapOf("testLabel_$it" to "testValue_$it")
+                mapOf("testLabel_$it" to "testValue_$it"),
             )
         }
     }
     private fun mockTheUploaderToSucceed() {
         Mockito.`when`(
             mockUploader.upload(
-                org.mockito.kotlin.any(), org.mockito.kotlin.any(), org.mockito.kotlin.any()
-            )
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+            ),
         ).then {
             val callback = it.arguments[2] as ((Boolean) -> Unit)
             callback.invoke(true)
         }
     }
-    private var errorBeginIndex:Int = 0
+    private var errorBeginIndex: Int = 0
     private fun mockTheReservoir(maxMetrics: Int, maxErrors: Int) {
         Mockito.`when`(
             mockReservoir.getMetricsAndErrors(
-                Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong(), org.mockito.kotlin.any()
-            )
+                Mockito.anyLong(),
+                Mockito.anyLong(),
+                Mockito.anyLong(),
+                org.mockito.kotlin.any(),
+            ),
         ).then {
-            val callback = it.arguments[3] as ((
-                List<MetricModelWithId<out Number>>, List<ErrorEntity>
-            ) -> Unit)
+            val callback = it.arguments[3] as (
+            (
+                List<MetricModelWithId<out Number>>,
+                List<ErrorEntity>,
+            ) -> Unit
+            )
             val skipMetrics = (it.arguments[0] as Long).toInt().coerceAtLeast(0)
             val skipError = (it.arguments[1] as Long).toInt().coerceAtLeast(0) + errorBeginIndex
             val limit = (it.arguments[2] as Long).toInt()
-            val metrics = if (skipMetrics < maxMetrics) getTestMetricList(
-                skipMetrics,
-                (maxMetrics - skipMetrics).coerceAtMost(limit),
-            ) else emptyList()
+            val metrics = if (skipMetrics < maxMetrics) {
+                getTestMetricList(
+                    skipMetrics,
+                    (maxMetrics - skipMetrics).coerceAtMost(limit),
+                )
+            } else {
+                emptyList()
+            }
             //            lastMetricsIndex += metrics.size
-            println("skipErrorsOffset(mock): $skipError, maxError: $maxErrors, limit: $limit")
-            callback.invoke(metrics, TestDataGenerator.generateTestErrorEventsJson(
-                skipError until (maxErrors).coerceAtMost(skipError + limit)
-            ).map {
-                ErrorEntity(it)
-            })
+            callback.invoke(
+                metrics,
+                TestDataGenerator.generateTestErrorEventsJson(
+                    skipError until (maxErrors).coerceAtMost(skipError + limit),
+                ).map {
+                    ErrorEntity(it)
+                },
+            )
         }
         Mockito.`when`(mockReservoir.clearErrors(org.mockito.kotlin.any())).then {
             val idsToCLear = it.arguments[0] as Array<Long>
@@ -298,16 +312,18 @@ class DefaultSyncerTest {
     private fun mockTheUploaderToFail() {
         Mockito.`when`(
             mockUploader.upload(
-                org.mockito.kotlin.any(), org.mockito.kotlin.any(), org.mockito.kotlin.any()
-            )
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+            ),
         ).then {
             val callback = it.arguments[2] as ((Boolean) -> Unit)
             callback.invoke(false)
         }
     }
+
     @After
     fun tearDown() {
         errorBeginIndex = 0
     }
-
 }

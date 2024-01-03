@@ -16,13 +16,10 @@ package com.rudderstack.android.ruddermetricsreporterandroid.internal.metrics
 
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.AggregatorHandler
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongGauge
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.Meter
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.ShortGauge
 
 class DefaultMeter(private val aggregatorHandler: AggregatorHandler) : Meter {
     override fun longCounter(name: String): LongCounter {
         return LongCounter(name, aggregatorHandler)
     }
-
 }

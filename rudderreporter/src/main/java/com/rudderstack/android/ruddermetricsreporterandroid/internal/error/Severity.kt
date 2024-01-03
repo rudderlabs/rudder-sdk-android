@@ -1,7 +1,5 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal.error
 
-import java.io.IOException
-
 /**
  * The severity of an Event, one of "error", "warning" or "info".
  *
@@ -11,7 +9,7 @@ import java.io.IOException
 enum class Severity(private val str: String) {
     ERROR("error"),
     WARNING("warning"),
-    INFO("info");
+    INFO("info"),
 
 //    internal companion object {
 //        internal fun fromDescriptor(desc: String) = values().find { it.str == desc }

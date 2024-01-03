@@ -18,12 +18,10 @@ import android.app.Application
 import android.content.Context
 import android.os.Build
 import com.rudderstack.android.BuildConfig
-import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.internal.AndroidLogger
 import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.repository.Dao
 import com.rudderstack.android.repository.RudderDatabase
-import com.rudderstack.core.Configuration
 import com.rudderstack.core.Logger
 import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.states.ConfigurationsState
@@ -35,18 +33,22 @@ import java.io.FileOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
-import java.util.*
+import java.util.LinkedList
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
-internal class AndroidStorageImpl(
+class AndroidStorageImpl(
+    private val application: Application,
+    private val useContentProvider: Boolean = false,
+    private val storageExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 ) : AndroidStorage {
-    private val Application.dbName get()= "db_${packageName}"
-    private val androidConfig
-    get() = ConfigurationsState.value as? ConfigurationAndroid
-
-    private val isInitialized = AtomicBoolean(false)
+    private val logger: Logger
+        get() = ConfigurationsState.value?.logger ?: AndroidLogger
+    private val Application.dbName get() = "db_${packageName}"
+    private val jsonAdapter: JsonAdapter?
+        get() = ConfigurationsState.value?.jsonAdapter
 
     companion object {
         private const val DB_VERSION = 1
@@ -65,15 +67,11 @@ internal class AndroidStorageImpl(
          * @return
          */
         private fun <T : Serializable> saveObject(
-            obj: T,
-            context: Context,
-            fileName: String,
-            logger: Logger = AndroidLogger
+            obj: T, context: Context, fileName: String, logger: Logger = AndroidLogger
         ): Boolean {
             try {
                 val fos: FileOutputStream = context.openFileOutput(
-                    fileName,
-                    Context.MODE_PRIVATE
+                    fileName, Context.MODE_PRIVATE
                 )
                 val os = ObjectOutputStream(fos)
                 os.writeObject(obj)
@@ -82,8 +80,7 @@ internal class AndroidStorageImpl(
                 return true
             } catch (e: Exception) {
                 logger.error(
-                    log = "save object: Exception while saving Object to File",
-                    throwable = e
+                    log = "save object: Exception while saving Object to File", throwable = e
                 )
                 e.printStackTrace()
             }
@@ -98,14 +95,13 @@ internal class AndroidStorageImpl(
          * @param fileName
          * @return
          */
-        private fun <T : Serializable> getObject(context: Context, fileName: String,
-        logger: Logger = AndroidLogger): T? {
+        private fun <T : Serializable> getObject(
+            context: Context, fileName: String, logger: Logger = AndroidLogger
+        ): T? {
             try {
                 val file = context.getFileStreamPath(fileName)
-                if (file != null && file.exists()
-                ) {
-                    val fis =
-                        context.openFileInput(fileName)
+                if (file != null && file.exists()) {
+                    val fis = context.openFileInput(fileName)
                     val `is` = ObjectInputStream(fis)
                     val obj = `is`.readObject() as? T?
                     `is`.close()
@@ -114,8 +110,7 @@ internal class AndroidStorageImpl(
                 }
             } catch (e: Exception) {
                 logger.error(
-                    log = "getObject: Failed to read Object from File",
-                    throwable = e
+                    log = "getObject: Failed to read Object from File", throwable = e
                 )
                 e.printStackTrace()
             }
@@ -124,7 +119,7 @@ internal class AndroidStorageImpl(
 
     }
 
-    private var messageDao: Dao<MessageEntity>?= null
+    private var messageDao: Dao<MessageEntity>? = null
 
     private var _storageCapacity: Int = Storage.MAX_STORAGE_CAPACITY //default 2_000
     private var _maxFetchLimit: Int = Storage.MAX_FETCH_LIMIT
@@ -150,6 +145,9 @@ internal class AndroidStorageImpl(
 
     private var _cachedContext: MessageContext? = null
 
+//    private val _configSubscriber =
+//        ::onConfigChange
+
     //message table listener
     private val _messageDataListener = object : Dao.DataChangeListener<MessageEntity> {
         override fun onDataInserted(inserted: List<MessageEntity>, allData: List<MessageEntity>) {
@@ -169,23 +167,19 @@ internal class AndroidStorageImpl(
     }
 
     init {
-        ConfigurationsState.subscribe(::onConfigChange)
+        initDb()
     }
 
-    private fun onConfigChange(configuration: Configuration?, prevConfiguration: Configuration?) {
-        if( configuration is ConfigurationAndroid){
-            initDb(configuration)
-        }
-    }
-
-    private fun initDb(configuration: ConfigurationAndroid) {
-        val application = configuration.application
+    private fun initDb() {
         RudderDatabase.init(
-            application, application.dbName, RudderEntityFactory(), configuration
-                .useContentProvider,
-            DB_VERSION, executorService = configuration.analyticsExecutor
+            application,
+            application.dbName,
+            RudderEntityFactory(),
+            useContentProvider,
+            DB_VERSION,
+            executorService = storageExecutor
         )
-        messageDao = RudderDatabase.getDao(MessageEntity::class.java)
+        messageDao = RudderDatabase.getDao(MessageEntity::class.java, storageExecutor)
         messageDao?.addDataChangeListener(_messageDataListener)
 
     }
@@ -199,8 +193,8 @@ internal class AndroidStorageImpl(
     }
 
     override fun saveMessage(vararg messages: Message) {
-        val block = { count: Long ->
-            val excessMessages = count + messages.size - _storageCapacity
+        val block = { currentCount: Long ->
+            val excessMessages = currentCount + messages.size - _storageCapacity
             if (excessMessages > 0) {
                 when (_backPressureStrategy) {
                     Storage.BackPressureStrategy.Drop -> {
@@ -208,24 +202,23 @@ internal class AndroidStorageImpl(
                             .saveToDb() //count can never exceed storage cap,
                         //hence excess messages cannot be greater than messages.size
                     }
+
                     Storage.BackPressureStrategy.Latest -> {
 
                         messageDao?.delete(
                             "${MessageEntity.ColumnNames.messageId} IN (" +
-                                    //COMMAND FOR SELECTING FIRST $excessMessages to be removed from DB
-                                    "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${MessageEntity.TABLE_NAME} " +
-                                    "ORDER BY ${MessageEntity.ColumnNames.timestamp} LIMIT $excessMessages)",
+                            //COMMAND FOR SELECTING FIRST $excessMessages to be removed from DB
+                            "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${MessageEntity.TABLE_NAME} " + "ORDER BY ${MessageEntity.ColumnNames.timestamp} LIMIT $excessMessages)",
                             null
                         ) {
                             //check messages exceed storage cap
                             (if (messages.size > _storageCapacity) {
                                 messages.drop(messages.size - _storageCapacity)
-                            } else  messages.toList()).saveToDb()
+                            } else messages.toList()).saveToDb()
                         }
                     }
                 }
-            } else
-                messages.toList().saveToDb()
+            } else messages.toList().saveToDb()
 
         }
         if (_dataCount.get() > 0) {
@@ -239,13 +232,12 @@ internal class AndroidStorageImpl(
     }
 
     private fun List<Message>.saveToDb() {
-        val jsonAdapter = ConfigurationsState.value?.jsonAdapter?:return
+        val jsonAdapter = ConfigurationsState.value?.jsonAdapter ?: return
         map {
             MessageEntity(it, jsonAdapter)
         }.apply {
-            with(messageDao?:return) {
-                insertWithDataCallback { _,_ ->
-//                    println("inserted $it")
+            with(messageDao ?: return) {
+                insert(conflictResolutionStrategy = Dao.ConflictResolutionStrategy.CONFLICT_REPLACE) { it ->
                 }
             }
         }
@@ -256,7 +248,7 @@ internal class AndroidStorageImpl(
     }
 
     override fun deleteMessages(messages: List<Message>) {
-        with(messageDao?:return) {
+        with(messageDao ?: return) {
             messages.entities.filterNotNull().delete { }
         }
     }
@@ -281,8 +273,7 @@ internal class AndroidStorageImpl(
 
     override fun getDataSync(offset: Int): List<Message> {
         return messageDao?.runGetQuerySync(
-            null, null, null, null,
-            "$offset,$_maxFetchLimit"
+            null, null, null, null, "$offset,$_maxFetchLimit"
         )?.map {
             it.message
         } ?: listOf()
@@ -293,33 +284,29 @@ internal class AndroidStorageImpl(
     }
 
     override val context: MessageContext?
-        get() = androidConfig?.let {
-            (if (_cachedContext == null) {
-                _cachedContext =
-                    getObject<HashMap<String, Any?>>(it.application, CONTEXT_FILE_NAME, it.logger)
-                _cachedContext
-            } else _cachedContext)
-        }
+        get() = (if (_cachedContext == null) {
+            _cachedContext =
+                getObject<HashMap<String, Any?>>(application, CONTEXT_FILE_NAME, logger)
+            _cachedContext
+        } else _cachedContext)
+
 
     //for local caching
     private var _serverConfig: RudderServerConfig? = null
     override fun saveServerConfig(serverConfig: RudderServerConfig) {
-        androidConfig?.let {
-            synchronized(this) {
-                _serverConfig = serverConfig
-                saveObject(serverConfig, context = it.application, SERVER_CONFIG_FILE_NAME,
-                    it.logger)
-            }
+        synchronized(this) {
+            _serverConfig = serverConfig
+            saveObject(
+                serverConfig, context = application, SERVER_CONFIG_FILE_NAME, logger
+            )
         }
     }
 
     override val serverConfig: RudderServerConfig?
-        get() = androidConfig?.let {
-            synchronized(this) {
-                if (_serverConfig == null) _serverConfig =
-                    getObject(it.application, SERVER_CONFIG_FILE_NAME, it.logger)
-                _serverConfig
-            }
+        get() = synchronized(this) {
+            if (_serverConfig == null) _serverConfig =
+                getObject(application, SERVER_CONFIG_FILE_NAME, logger)
+            _serverConfig
         }
 
     override fun saveOptOut(optOut: Boolean) {
@@ -342,6 +329,7 @@ internal class AndroidStorageImpl(
 
     override fun shutdown() {
         RudderDatabase.shutDown()
+        _dataCount.set(0)
     }
 
     override fun clearStorage() {
@@ -396,11 +384,12 @@ internal class AndroidStorageImpl(
             it.entity
         }
     private val Message.entity
-        get() = androidConfig?.let {  MessageEntity(this, it.jsonAdapter)}
+        get() = jsonAdapter?.let { MessageEntity(this, it) }
 
     private fun MessageContext.save() {
-        androidConfig?.let {  saveObject(HashMap(this), it.application, CONTEXT_FILE_NAME,
-            it.logger)}
+        saveObject(
+            HashMap(this), application, CONTEXT_FILE_NAME, logger
+        )
     }
 
 

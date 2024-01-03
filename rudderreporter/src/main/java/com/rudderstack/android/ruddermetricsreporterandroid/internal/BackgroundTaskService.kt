@@ -42,7 +42,7 @@ enum class TaskType {
      * short-lived operations that take <100ms, such as registering a
      * [android.content.BroadcastReceiver].
      */
-    DEFAULT
+    DEFAULT,
 }
 
 private const val SHUTDOWN_WAIT_MS = 1500L
@@ -73,7 +73,7 @@ internal fun createExecutor(name: String, type: TaskType, keepAlive: Boolean): E
         KEEP_ALIVE_SECS,
         TimeUnit.SECONDS,
         queue,
-        threadFactory
+        threadFactory,
     )
 }
 
@@ -92,29 +92,29 @@ class BackgroundTaskService @JvmOverloads constructor(
     internal val errorExecutor: ExecutorService = createExecutor(
         "Rudder Error thread",
         TaskType.ERROR_REQUEST,
-        true
+        true,
     ),
 
     @get:VisibleForTesting
     internal val databaseExecutor: ExecutorService = createExecutor(
         "Rudder Database thread",
         TaskType.DB_REQUEST,
-        true
+        true,
     ),
 
     @get:VisibleForTesting
     internal val ioExecutor: ExecutorService = createExecutor(
         "Rudder IO thread",
         TaskType.IO,
-        true
+        true,
     ),
 
     @get:VisibleForTesting
     internal val defaultExecutor: ExecutorService = createExecutor(
         "Bugsnag Default thread",
         TaskType.DEFAULT,
-        false
-    )
+        false,
+        ),
 ) {
 
     /**
@@ -180,7 +180,7 @@ class BackgroundTaskService @JvmOverloads constructor(
 
     private class SafeFuture<V>(
         private val delegate: FutureTask<V>,
-        private val taskType: TaskType
+        private val taskType: TaskType,
     ) : Future<V> by delegate {
         override fun get(): V {
             ensureTaskGetSafe()

@@ -19,7 +19,6 @@ import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.emptyString
 import org.hamcrest.Matchers.not
 import org.junit.Test
@@ -37,19 +36,22 @@ class ErrorModelTest {
         """.trimIndent(),
         """
             {"exceptions":[{"errorClass":"java.lang.NullPointerException","stacktrace":[{"method":"com.google.gson.internal.${"\$"}Gson${"\$"}Preconditions.checkNotNull","file":"${"\$"}Gson${"\$"}Preconditions.java","lineNumber":39},{"method":"com.google.gson.reflect.TypeToken.\u003cinit\u003e","file":"TypeToken.java","lineNumber":72},{"method":"com.google.gson.reflect.TypeToken.get","file":"TypeToken.java","lineNumber":296},{"method":"com.google.gson.Gson.fromJson","file":"Gson.java","lineNumber":961},{"method":"com.google.gson.Gson.fromJson","file":"Gson.java","lineNumber":928},{"method":"com.google.gson.Gson.fromJson","file":"Gson.java","lineNumber":877},{"method":"com.rudderstack.gsonrudderadapter.GsonAdapter.readJson","file":"GsonAdapter.kt","lineNumber":31},{"method":"com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorModel.toMap","file":"ErrorModel.kt","lineNumber":33},{"method":"com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultUploadMediator.createRequestMap","file":"DefaultUploadMediator.kt","lineNumber":59},{"method":"com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultUploadMediator.upload","file":"DefaultUploadMediator.kt","lineNumber":44},{"method":"com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultSyncer${"\$"}flush${"\$"}{'${"\$"}'}1.invoke","file":"DefaultSyncer.kt","lineNumber":86},{"method":"com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultSyncer${"\$"}flush${"\$"}{'${"\$"}'}1.invoke","file":"DefaultSyncer.kt","lineNumber":77},{"method":"com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultReservoir${"\$"}getMetricsAndErrors${"\$"}{'${"\$"}'}1${"\$"}{'${"\$"}'}1.invoke","file":"DefaultReservoir.kt","lineNumber":207},{"method":"com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultReservoir${"\$"}getMetricsAndErrors${"\$"}{'${"\$"}'}1${"\$"}{'${"\$"}'}1.invoke","file":"DefaultReservoir.kt","lineNumber":206},{"method":"com.rudderstack.android.repository.Dao${"\$"}runGetQuery${"\$"}{'${"\$"}'}1.invoke","file":"Dao.kt","lineNumber":281},{"method":"com.rudderstack.android.repository.Dao${"\$"}runGetQuery${"\$"}{'${"\$"}'}1.invoke","file":"Dao.kt","lineNumber":280},{"method":"com.rudderstack.android.repository.Dao.runTransactionOrDeferToCreation${"\$"}lambda${"\$"}{'${"\$"}'}26${"\$"}lambda${"\$"}{'${"\$"}'}25","file":"Dao.kt","lineNumber":533},{"method":"com.rudderstack.android.repository.Dao.${"\$"}r8${"\$"}lambda${"\$"}p8FNe_rvlOF8LAj8QetoDZD7f2U","file":"Dao.kt","lineNumber":0},{"method":"com.rudderstack.android.repository.Dao${"\$"}{'${"\$"}'}${"\$"}ExternalSyntheticLambda1.run","file":"R8${"\$"}{'${"\$"}'}${"\$"}SyntheticClass","lineNumber":0},{"method":"java.util.concurrent.ThreadPoolExecutor.runWorker","file":"ThreadPoolExecutor.java","lineNumber":1167},{"method":"java.util.concurrent.ThreadPoolExecutor${"\$"}Worker.run","file":"ThreadPoolExecutor.java","lineNumber":641},{"method":"java.lang.Thread.run","file":"Thread.java","lineNumber":919}],"type":"ANDROID"}],"severity":"ERROR","breadcrumbs":[],"unhandled":true,"projectPackages":["com.example.testapp1mg"],"app":{"id":"com.example.testapp1mg","releaseStage":"development","version":"1.18.0","versionCode":"15"},"device":{"manufacturer":"Google","model":"Android SDK built for x86","osName":"android","osVersion":"10","cpuAbi":"x86","jailbroken":"true","locale":"en_US","totalMemory":"2089177088","runtimeVersions":{"androidApiLevel":"29","osBuild":"sdk_gphone_x86-userdebug 10 QSR1.210802.001 7603624 dev-keys"},"freeDisk":"483729408","freeMemory":"1168625664","orientation":"portrait","time":"2023-09-18T11:58:43.154Z"},"metadata":{"app":{"memoryUsage":5613392,"memoryTrimLevel":"None","totalMemory":5787501,"processName":"com.example.testapp1mg","name":"Sample Kotlin","memoryLimit":536870912,"lowMemory":false,"freeMemory":174109},"device":{"osBuild":"sdk_gphone_x86-userdebug 10 QSR1.210802.001 7603624 dev-keys","manufacturer":"Google","locationStatus":"allowed","networkAccess":"none","osVersion":"10","fingerprint":"google/sdk_gphone_x86/generic_x86:10/QSR1.210802.001/7603624:userdebug/dev-keys","model":"Android SDK built for x86","dpi":480,"screenResolution":"1776x1080","brand":"google","apiLevel":29,"batteryLevel":1.0,"cpuAbis":["x86"],"charging":false,"tags":"dev-keys","emulator":true,"screenDensity":3.0}}}
-        """.trimIndent()
+        """.trimIndent(),
     )
-    private val dummyLibraryMetadata = LibraryMetadata("test_lub", "1.x.x",
-        "2", "dummy_write_key")
+    private val dummyLibraryMetadata = LibraryMetadata(
+        "test_lub",
+        "1.x.x",
+        "2",
+        "dummy_write_key",
+    )
     private val jacksonAdapter = JacksonAdapter()
     private val gsonAdapter = GsonAdapter(GsonBuilder().disableHtmlEscaping().create())
+
     @Test
-    fun `error model serialization test`(){
+    fun `error model serialization test`() {
         val errorModel = ErrorModel(dummyLibraryMetadata, errorEvents)
         val errorModelJackson = errorModel.serialize(jacksonAdapter)
         val errorModelGson = errorModel.serialize(gsonAdapter)
-
-
 
         assertThat(errorModelJackson, not(emptyString()))
         assertThat(errorModelGson, not(emptyString()))

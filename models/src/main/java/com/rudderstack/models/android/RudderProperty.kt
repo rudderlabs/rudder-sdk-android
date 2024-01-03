@@ -1,6 +1,5 @@
 package com.rudderstack.models.android
 
-import com.rudderstack.models.android.RudderProperty
 import java.util.HashMap
 
 abstract class RudderProperty {
@@ -43,7 +42,7 @@ abstract class RudderProperty {
         map["currency"] = currency
     }
 }
-data class ScreenProperty(private val screenName : String, private val isAutomatic : Boolean = false) :
+data class ScreenProperty(private val screenName: String, private val isAutomatic: Boolean = false) :
     RudderProperty() {
     init {
         putValue("name", screenName)

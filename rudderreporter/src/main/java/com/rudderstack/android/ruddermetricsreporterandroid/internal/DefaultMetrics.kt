@@ -20,11 +20,14 @@ import com.rudderstack.android.ruddermetricsreporterandroid.internal.metrics.Def
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.AggregatorHandler
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.Meter
 
-class DefaultMetrics(private val aggregatorHandler: AggregatorHandler,
-private val syncer: Syncer) : Metrics {
+class DefaultMetrics(
+    private val aggregatorHandler: AggregatorHandler,
+    private val syncer: Syncer,
+) : Metrics {
     override fun getMeter(): Meter {
         return DefaultMeter(aggregatorHandler)
     }
+
     @Deprecated("Use [RudderReporter.syncer] instead")
     override fun getSyncer(): Syncer {
         return syncer

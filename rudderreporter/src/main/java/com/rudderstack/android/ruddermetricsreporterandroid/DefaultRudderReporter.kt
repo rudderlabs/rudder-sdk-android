@@ -19,7 +19,6 @@ import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClient
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.BackgroundTaskService
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.Connectivity
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.ConnectivityCompat
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.CustomDateAdapterMoshi
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DataCollectionModule
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultMetrics
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultReservoir
@@ -55,17 +54,17 @@ class DefaultRudderReporter(
         networkExecutor: ExecutorService? = null,
         backgroundTaskService: BackgroundTaskService? = null,
         useContentProvider: Boolean = false,
-        isGzipEnabled: Boolean = true
+        isGzipEnabled: Boolean = true,
     ) : this(
         ContextModule(context),
         baseUrl,
         configuration,
         jsonAdapter,
         isMetricsEnabled, isErrorEnabled,
-        networkExecutor?:Executors.newCachedThreadPool(),
+        networkExecutor ?: Executors.newCachedThreadPool(),
         backgroundTaskService ?: BackgroundTaskService(),
         useContentProvider,
-        isGzipEnabled
+        isGzipEnabled,
     )
 
     internal constructor(
@@ -78,7 +77,7 @@ class DefaultRudderReporter(
         networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
         backgroundTaskService: BackgroundTaskService? = null,
         useContentProvider: Boolean = false,
-        isGzipEnabled: Boolean = true
+        isGzipEnabled: Boolean = true,
     ) : this(
         contextModule,
         MemoryTrimState(),
@@ -91,7 +90,7 @@ class DefaultRudderReporter(
         useContentProvider,
         isMetricsEnabled,
         isErrorEnabled,
-        isGzipEnabled
+        isGzipEnabled,
     )
 
     constructor(
@@ -112,9 +111,8 @@ class DefaultRudderReporter(
         MemoryTrimState(),
         isMetricsEnabled,
         isErrorEnabled,
-        backgroundTaskService
+        backgroundTaskService,
     )
-
 
     internal constructor(
         contextModule: ContextModule,
@@ -128,18 +126,23 @@ class DefaultRudderReporter(
         useContentProvider: Boolean,
         isMetricsAggregatorEnabled: Boolean,
         isErrorEnabled: Boolean,
-        isGzipEnabled: Boolean
+        isGzipEnabled: Boolean,
     ) : this(
         contextModule,
         DefaultReservoir(contextModule.ctx, useContentProvider),
         configuration,
-        DefaultUploadMediator(configModule, baseUrl, jsonAdapter, networkExecutor,
-            isGzipEnabled = isGzipEnabled),
+        DefaultUploadMediator(
+            configModule,
+            baseUrl,
+            jsonAdapter,
+            networkExecutor,
+            isGzipEnabled = isGzipEnabled,
+        ),
         jsonAdapter,
         memoryTrimState,
         isMetricsAggregatorEnabled,
         isErrorEnabled,
-        backgroundTaskService
+        backgroundTaskService,
     )
 
     internal constructor(
@@ -151,7 +154,7 @@ class DefaultRudderReporter(
         memoryTrimState: MemoryTrimState,
         isMetricsEnabled: Boolean = true,
         isErrorEnabled: Boolean = true,
-        backgroundTaskService: BackgroundTaskService? = null
+        backgroundTaskService: BackgroundTaskService? = null,
     ) : this(
         contextModule,
         reservoir,
@@ -162,7 +165,7 @@ class DefaultRudderReporter(
         memoryTrimState,
         isMetricsEnabled,
         isErrorEnabled,
-        backgroundTaskService
+        backgroundTaskService,
     )
 
     private constructor(
@@ -175,11 +178,13 @@ class DefaultRudderReporter(
         memoryTrimState: MemoryTrimState,
         isMetricsEnabled: Boolean = true,
         isErrorEnabled: Boolean = true,
-        backgroundTaskService: BackgroundTaskService? = null
-    ):this(contextModule, reservoir, configuration, configModule, syncer, jsonAdapter,
+        backgroundTaskService: BackgroundTaskService? = null,
+    ) : this(
+        contextModule, reservoir, configuration, configModule, syncer, jsonAdapter,
         memoryTrimState,
         ConnectivityCompat(contextModule.ctx, RudderReporterNetworkChangeCallback(syncer)),
-        isMetricsEnabled, isErrorEnabled, backgroundTaskService)
+        isMetricsEnabled, isErrorEnabled, backgroundTaskService,
+    )
 
     private constructor(
         contextModule: ContextModule,
@@ -192,20 +197,27 @@ class DefaultRudderReporter(
         connectivity: Connectivity,
         isMetricsEnabled: Boolean = true,
         isErrorEnabled: Boolean = true,
-        backgroundTaskService: BackgroundTaskService? = null
-    ): this(
+        backgroundTaskService: BackgroundTaskService? = null,
+    ) : this(
         DefaultMetrics(DefaultAggregatorHandler(reservoir, isMetricsEnabled), syncer),
         DefaultErrorClient(
-            contextModule, configuration, configModule, DataCollectionModule(
+            contextModule,
+            configuration,
+            configModule,
+            DataCollectionModule(
                 contextModule,
                 configModule,
                 SystemServiceModule(contextModule),
                 backgroundTaskService ?: BackgroundTaskService(),
                 connectivity,
-                memoryTrimState
-            ), reservoir, jsonAdapter, memoryTrimState, isErrorEnabled
+                memoryTrimState,
+            ),
+            reservoir,
+            jsonAdapter,
+            memoryTrimState,
+            isErrorEnabled,
         ),
-        syncer
+        syncer,
     ) {
         this.connectivity = connectivity
         this.backgroundTaskService = backgroundTaskService
@@ -216,7 +228,7 @@ class DefaultRudderReporter(
 
     override val errorClient: ErrorClient
         get() = _errorClient ?: throw IllegalStateException(
-            "ErrorClient is not initialized. " + "Using deprecated constructor?"
+            "ErrorClient is not initialized. " + "Using deprecated constructor?",
         )
 
     override fun shutdown() {
@@ -225,12 +237,10 @@ class DefaultRudderReporter(
         connectivity?.unregisterForNetworkChanges()
     }
 
-
-    //call unregister on shutdown
+    // call unregister on shutdown
     internal class RudderReporterNetworkChangeCallback(private val syncer: Syncer) :
         NetworkChangeCallback {
         override fun invoke(hasConnection: Boolean, networkState: String) {
-
             if (hasConnection) {
                 try {
                     syncer.flushAllMetrics()
@@ -250,5 +260,3 @@ class DefaultRudderReporter(
 //        }
 //    }
 }
-
-

@@ -26,5 +26,5 @@ data class ArtDataListResponse(
     val `data`: List<Data>,
     @Json(name = "info")
     @JsonProperty("info")
-    val info: Info
+    val info: Info,
 )

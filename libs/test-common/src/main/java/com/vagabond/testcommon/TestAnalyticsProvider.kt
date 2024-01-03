@@ -20,8 +20,8 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.copy
 import com.rudderstack.core.internal.KotlinLogger
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.Message
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.rudderjsonadapter.JsonAdapter
@@ -41,12 +41,14 @@ fun generateTestAnalytics(jsonAdapter: JsonAdapter): Analytics {
 }
 fun generateTestAnalytics(mockConfiguration: Configuration,
                           configDownloadService: ConfigDownloadService = MockConfigDownloadService()): Analytics {
+    val testingConfig = mockConfiguration.copy(
+        logger = KotlinLogger,
+        shouldVerifySdk = false,
+        storage = VerificationStorage(),
+        analyticsExecutor = TestExecutor()
+    )
     return Analytics(
-        DUMMY_WRITE_KEY, mockConfiguration.copy(
-            logger = KotlinLogger,
-            storage = VerificationStorage(),
-            analyticsExecutor = TestExecutor()
-        ), TestDataUploadService(), configDownloadService
+        DUMMY_WRITE_KEY, testingConfig, TestDataUploadService(), configDownloadService
     ).also {
         it.addPlugin(inputVerifyPlugin)
     }
@@ -56,11 +58,18 @@ fun Analytics.testPlugin(pluginUnderTest : Plugin) {
     addPlugin(pluginUnderTest)
 }
 fun Analytics.assertArguments(verification : Verification<List<Message>,List<Message>>) {
+    busyWait(100)
     verification.assert(inputs.toList(), currentConfiguration?.storage?.getDataSync() ?:
     emptyList())
 }
 fun Analytics.assertArgument(verification: Verification<Message?, Message?>){
     verification.assert(inputs.lastOrNull(), currentConfiguration?.storage?.getDataSync()?.lastOrNull())
+}
+private fun busyWait(millis: Long) {
+    val start = System.currentTimeMillis()
+    while (System.currentTimeMillis() - start < millis) {
+        // busy wait
+    }
 }
 fun interface Verification<IN,OUT> {
     fun assert(input : IN, output : OUT)

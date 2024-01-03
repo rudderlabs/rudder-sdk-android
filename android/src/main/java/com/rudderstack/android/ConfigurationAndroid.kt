@@ -24,8 +24,8 @@ import com.rudderstack.core.Configuration
 import com.rudderstack.core.Logger
 import com.rudderstack.core.RetryStrategy
 import com.rudderstack.core.RudderOptions
+import com.rudderstack.core.Storage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import java.util.UUID
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -74,7 +74,6 @@ interface ConfigurationAndroid : Configuration {
     val autoCollectAdvertId: Boolean
     val multiProcessEnabled: Boolean
     val defaultProcessName: String?
-    val useContentProvider: Boolean
     val advertisingId: String?
     val deviceToken: String?
     override val storage: AndroidStorage
@@ -103,11 +102,11 @@ interface ConfigurationAndroid : Configuration {
             autoCollectAdvertId: Boolean = Defaults.AUTO_COLLECT_ADVERT_ID,
             multiProcessEnabled: Boolean = Defaults.MULTI_PROCESS_ENABLED,
             defaultProcessName: String?= Defaults.DEFAULT_PROCESS_NAME,
-            useContentProvider: Boolean = Defaults.USE_CONTENT_PROVIDER,
             advertisingId: String? = null,
             deviceToken: String? = null,
             logger: Logger = AndroidLogger,
-            storage: AndroidStorage = AndroidStorageImpl(),
+            storage: AndroidStorage = AndroidStorageImpl(application, useContentProvider =
+            Defaults.USE_CONTENT_PROVIDER),
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             advertisingIdFetchExecutor : ExecutorService? = null,
@@ -126,7 +125,6 @@ interface ConfigurationAndroid : Configuration {
             override val autoCollectAdvertId: Boolean = autoCollectAdvertId
             override val multiProcessEnabled: Boolean = multiProcessEnabled
             override val defaultProcessName: String? = defaultProcessName
-            override val useContentProvider: Boolean = useContentProvider
             override val advertisingId: String? = advertisingId
             override val deviceToken: String? = deviceToken
             override val storage: AndroidStorage = storage
@@ -166,13 +164,11 @@ interface ConfigurationAndroid : Configuration {
 
                             defaultProcessName: String?= Defaults.DEFAULT_PROCESS_NAME,
 
-                            useContentProvider: Boolean = Defaults.USE_CONTENT_PROVIDER,
-
                             advertisingId: String? = null,
 
                             deviceToken: String? = null,
 
-                            storage: AndroidStorage = AndroidStorageImpl(),
+                            storage: AndroidStorage = AndroidStorageImpl(application, Defaults.USE_CONTENT_PROVIDER),
 
                             advertisingIdFetchExecutor : ExecutorService? = null,
         ): ConfigurationAndroid=
@@ -196,7 +192,6 @@ interface ConfigurationAndroid : Configuration {
                 autoCollectAdvertId,
                 multiProcessEnabled,
                 defaultProcessName,
-                useContentProvider,
                 advertisingId,
                 deviceToken,
                 configuration.logger,
@@ -207,6 +202,46 @@ interface ConfigurationAndroid : Configuration {
                 configuration.base64Generator)
     }
 
+    override fun copy(
+        jsonAdapter: JsonAdapter,
+        options: RudderOptions,
+        flushQueueSize: Int,
+        maxFlushInterval: Long,
+        isOptOut: Boolean,
+        shouldVerifySdk: Boolean,
+        gzipEnabled: Boolean,
+        sdkVerifyRetryStrategy: RetryStrategy,
+        dataPlaneUrl: String,
+        controlPlaneUrl: String?,
+        logger: Logger,
+        storage: Storage,
+        analyticsExecutor: ExecutorService,
+        networkExecutor: ExecutorService,
+        base64Generator: Base64Generator,
+    ): Configuration {
+        return copy(
+            jsonAdapter,
+            options,
+            flushQueueSize,
+            maxFlushInterval,
+            isOptOut,
+            shouldVerifySdk,
+            gzipEnabled,
+            sdkVerifyRetryStrategy,
+            dataPlaneUrl,
+            controlPlaneUrl,
+            logger,
+            (storage as? AndroidStorage)?: this.storage,
+            analyticsExecutor,
+            networkExecutor,
+            advertisingIdFetchExecutor,
+            base64Generator,
+            anonymousId,
+            userId,
+            advertisingId,
+            deviceToken
+        )
+    }
 
     fun copy(
         jsonAdapter: JsonAdapter = this.jsonAdapter,
@@ -214,10 +249,13 @@ interface ConfigurationAndroid : Configuration {
         flushQueueSize: Int = this.flushQueueSize,
         maxFlushInterval: Long = this.maxFlushInterval,
         isOptOut: Boolean = this.isOptOut,
-        gzipEnabled: Boolean = Defaults.GZIP_ENABLED,
+        shouldVerifySdk: Boolean = this.shouldVerifySdk,
+        gzipEnabled: Boolean = this.gzipEnabled,
         sdkVerifyRetryStrategy: RetryStrategy = this.sdkVerifyRetryStrategy,
         dataPlaneUrl: String = this.dataPlaneUrl,
+        controlPlaneUrl: String? = this.controlPlaneUrl,
         logger: Logger = this.logger,
+        storage: AndroidStorage = this.storage,
         analyticsExecutor: ExecutorService = this.analyticsExecutor,
         networkExecutor: ExecutorService = this.networkExecutor,
         advertisingIdFetchExecutor : ExecutorService? = this.advertisingIdFetchExecutor,
@@ -226,40 +264,41 @@ interface ConfigurationAndroid : Configuration {
         userId: String? = this.userId,
         advertisingId: String? = this.advertisingId,
         deviceToken: String? = this.deviceToken
-    ) = ConfigurationAndroid(
-        application,
-        jsonAdapter,
-        anonymousId,
-        userId,
-        options,
-        flushQueueSize,
-        maxFlushInterval,
-        isOptOut,
-        gzipEnabled,
-        shouldVerifySdk,
-        sdkVerifyRetryStrategy,
-        dataPlaneUrl,
-        controlPlaneUrl,
-        trackLifecycleEvents,
-        recordScreenViews,
-        isPeriodicFlushEnabled,
-        autoCollectAdvertId,
-        multiProcessEnabled,
-        defaultProcessName,
-        useContentProvider,
-        advertisingId,
-        deviceToken,
-        logger,
-        storage,
-        analyticsExecutor,
-        networkExecutor,
-        advertisingIdFetchExecutor,
-        base64Generator,
+    ) : ConfigurationAndroid{
+        return ConfigurationAndroid(
+            application,
+            jsonAdapter,
+            anonymousId,
+            userId,
+            options,
+            flushQueueSize,
+            maxFlushInterval,
+            isOptOut,
+            shouldVerifySdk,
+            gzipEnabled,
+            sdkVerifyRetryStrategy,
+            dataPlaneUrl,
+            controlPlaneUrl,
+            trackLifecycleEvents,
+            recordScreenViews,
+            isPeriodicFlushEnabled,
+            autoCollectAdvertId,
+            multiProcessEnabled,
+            defaultProcessName,
+            advertisingId,
+            deviceToken,
+            logger,
+            storage,
+            analyticsExecutor,
+            networkExecutor,
+            advertisingIdFetchExecutor,
+            base64Generator,
 //        defaultTraits,
 //        defaultExternalIds,
 //        defaultContextMap,
 //        contextAddOns
-    )
+        )
+    }
 
     object Defaults{
         val DEFAULT_ANDROID_DATAPLANE_URL = "https://hosted.rudderlabs.com"

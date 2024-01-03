@@ -43,7 +43,7 @@ internal class Stacktrace {
 
     val trace: List<Stackframe>
 
-    private constructor(){
+    private constructor() {
         trace = emptyList()
     }
     constructor(frames: List<Stackframe>) {
@@ -53,7 +53,7 @@ internal class Stacktrace {
     constructor(
         stacktrace: Array<StackTraceElement>,
         projectPackages: Collection<String>,
-        logger: Logger
+        logger: Logger,
     ) {
         val frames = limitTraceLength(stacktrace)
         trace = frames.mapNotNull { serializeStackframe(it, projectPackages, logger) }
@@ -76,7 +76,7 @@ internal class Stacktrace {
     private fun serializeStackframe(
         el: StackTraceElement,
         projectPackages: Collection<String>,
-        logger: Logger
+        logger: Logger,
     ): Stackframe? {
         try {
             val className = el.className
@@ -89,7 +89,7 @@ internal class Stacktrace {
                 methodName,
                 el.fileName ?: "Unknown",
                 el.lineNumber,
-                inProject(className, projectPackages)
+                inProject(className, projectPackages),
             )
         } catch (lineEx: Exception) {
             logger.w("Failed to serialize stacktrace", lineEx)
@@ -100,5 +100,4 @@ internal class Stacktrace {
     override fun toString(): String {
         return "Stacktrace{trace=$trace}"
     }
-
 }

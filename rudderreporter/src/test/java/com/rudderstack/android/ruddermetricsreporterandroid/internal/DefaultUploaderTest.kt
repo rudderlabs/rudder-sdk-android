@@ -14,7 +14,6 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
-import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
@@ -29,24 +28,27 @@ import com.rudderstack.rudderjsonadapter.JsonAdapter
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
-import org.mockito.Mockito
 import org.robolectric.annotation.Config
-import java.util.Date
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29])
 open class DefaultUploaderTest {
 
     protected var jsonAdapter: JsonAdapter = MoshiAdapter()
     private val defaultUploader = DefaultUploadMediator(
-         ConfigModule(ContextModule(ApplicationProvider.getApplicationContext()), Configuration(
-            LibraryMetadata("test","1.0","4","abcde")
-        )),"https://some-api.com",
-        jsonAdapter, TestExecutor()
+        ConfigModule(
+            ContextModule(ApplicationProvider.getApplicationContext()),
+            Configuration(
+                LibraryMetadata("test", "1.0", "4", "abcde"),
+            ),
+        ),
+        "https://some-api.com",
+        jsonAdapter,
+        TestExecutor(),
     )
 
     @Test
     fun upload() {
-        //TODO: add test for upload
+        // TODO: add test for upload
     }
 
     companion object {
@@ -56,7 +58,6 @@ open class DefaultUploaderTest {
         private const val API_LEVEL = 28
         private const val OS_BUILD = "Android"
         private const val ID = "id"
-
     }
 }
 
@@ -82,7 +83,6 @@ class DefaultUploaderTestMoshi : DefaultUploaderTest() {
 @Suite.SuiteClasses(
     DefaultUploaderTestGson::class,
     DefaultUploaderTestJackson::class,
-    DefaultUploaderTestMoshi::class
+    DefaultUploaderTestMoshi::class,
 )
-class DefaultUploaderTestSuite {
-}
+class DefaultUploaderTestSuite

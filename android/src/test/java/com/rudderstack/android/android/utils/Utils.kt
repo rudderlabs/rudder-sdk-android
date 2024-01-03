@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 07/07/23, 11:29 am Last modified: 07/07/23, 11:29 am
+ * Creator: Debanjan Chatterjee on 27/12/23, 11:41 am Last modified: 27/12/23, 11:41 am
  * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,13 +12,11 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.ruddermetricsreporterandroid
+package com.rudderstack.android.android.utils
 
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClient
-
-interface RudderReporter {
-    val metrics: Metrics
-    val errorClient: ErrorClient
-    val syncer: Syncer
-    fun shutdown()
+fun busyWait(millis: Long) {
+    val start = System.currentTimeMillis()
+    while (System.currentTimeMillis() - start < millis) {
+        // busy wait
+    }
 }

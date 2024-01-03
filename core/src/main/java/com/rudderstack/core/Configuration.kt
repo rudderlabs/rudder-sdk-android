@@ -96,41 +96,44 @@ interface Configuration {
             override val base64Generator: Base64Generator = base64Generator
         }
     }
+    fun copy(
+        jsonAdapter: JsonAdapter = this.jsonAdapter,
+        options: RudderOptions = this.options,
+        flushQueueSize: Int = this.flushQueueSize,
+        maxFlushInterval: Long = this.maxFlushInterval,
+        isOptOut: Boolean = this.isOptOut,
+        shouldVerifySdk: Boolean = this.shouldVerifySdk,
+        gzipEnabled: Boolean = this.gzipEnabled,
+        sdkVerifyRetryStrategy: RetryStrategy = this.sdkVerifyRetryStrategy,
+        dataPlaneUrl: String = this.dataPlaneUrl,
+        controlPlaneUrl: String?= this.controlPlaneUrl,
+        logger: Logger = this.logger,
+        storage: Storage = this.storage,
+        analyticsExecutor: ExecutorService = this.analyticsExecutor,
+        networkExecutor: ExecutorService = this.networkExecutor,
+        base64Generator: Base64Generator = this.base64Generator,
+    ) = Configuration(
+        jsonAdapter = jsonAdapter,
+        options = options,
+        flushQueueSize = flushQueueSize,
+        maxFlushInterval = maxFlushInterval,
+        isOptOut = isOptOut,
+        shouldVerifySdk = shouldVerifySdk,
+        gzipEnabled = gzipEnabled,
+        sdkVerifyRetryStrategy = sdkVerifyRetryStrategy,
+        dataPlaneUrl = dataPlaneUrl,
+        controlPlaneUrl = controlPlaneUrl,
+        logger = logger,
+        storage = storage,
+        analyticsExecutor = analyticsExecutor,
+        networkExecutor = networkExecutor,
+        base64Generator = base64Generator,
+    )
 
 }
 //A copy constructor for Configuration
 
-fun Configuration.copy(
-    jsonAdapter: JsonAdapter = this.jsonAdapter,
-    options: RudderOptions = this.options,
-    flushQueueSize: Int = this.flushQueueSize,
-    maxFlushInterval: Long = this.maxFlushInterval,
-    isOptOut: Boolean = this.isOptOut,
-    shouldVerifySdk: Boolean = this.shouldVerifySdk,
-    sdkVerifyRetryStrategy: RetryStrategy = this.sdkVerifyRetryStrategy,
-    dataPlaneUrl: String = this.dataPlaneUrl,
-    controlPlaneUrl: String?= this.controlPlaneUrl,
-    logger: Logger = this.logger,
-    storage: Storage = this.storage,
-    analyticsExecutor: ExecutorService = this.analyticsExecutor,
-    networkExecutor: ExecutorService = this.networkExecutor,
-    base64Generator: Base64Generator = this.base64Generator,
-) = Configuration(
-    jsonAdapter = jsonAdapter,
-    options = options,
-    flushQueueSize = flushQueueSize,
-    maxFlushInterval = maxFlushInterval,
-    isOptOut = isOptOut,
-    shouldVerifySdk = shouldVerifySdk,
-    sdkVerifyRetryStrategy = sdkVerifyRetryStrategy,
-    dataPlaneUrl = dataPlaneUrl,
-    controlPlaneUrl = controlPlaneUrl,
-    logger = logger,
-    storage = storage,
-    analyticsExecutor = analyticsExecutor,
-    networkExecutor = networkExecutor,
-    base64Generator = base64Generator,
-)
+
 
 //    private val String.formattedUrl
 //        get() = if (this.endsWith('/')) this else "$this/"

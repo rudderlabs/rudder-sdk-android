@@ -16,9 +16,6 @@ package com.rudderstack.web.models
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.annotations.SerializedName
-import com.rudderstack.web.WebApiTestGson
-import com.rudderstack.web.WebApiTestJackson
-import com.rudderstack.web.WebApiTestMoshi
 import com.squareup.moshi.Json
 
 data class Info(
@@ -33,5 +30,5 @@ data class Info(
     @Json(name = "version")
     @JsonProperty("version")
     @SerializedName("version")
-    val version: String
+    val version: String,
 )

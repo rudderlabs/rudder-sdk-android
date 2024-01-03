@@ -51,5 +51,4 @@ class CrashFilterTest {
         val exception = Exception("some_exception", Exception("some_other_exception"))
         assert(!crashFilter.shouldKeep(exception))
     }
-
 }

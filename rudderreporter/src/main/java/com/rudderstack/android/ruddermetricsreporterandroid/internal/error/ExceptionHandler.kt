@@ -14,19 +14,19 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal.error
 
-import com.rudderstack.android.ruddermetricsreporterandroid.error.SeverityReason
-import android.os.StrictMode.ThreadPolicy
 import android.os.StrictMode
-import com.rudderstack.android.ruddermetricsreporterandroid.error.DefaultErrorClient
+import android.os.StrictMode.ThreadPolicy
 import com.rudderstack.android.ruddermetricsreporterandroid.Logger
+import com.rudderstack.android.ruddermetricsreporterandroid.error.DefaultErrorClient
 import com.rudderstack.android.ruddermetricsreporterandroid.error.Metadata
+import com.rudderstack.android.ruddermetricsreporterandroid.error.SeverityReason
 
 /**
  * Provides automatic notification hooks for unhandled exceptions.
  */
 internal class ExceptionHandler internal constructor(
     private val errorClient: DefaultErrorClient,
-    private val logger: Logger
+    private val logger: Logger,
 ) : Thread.UncaughtExceptionHandler {
     private val originalHandler: Thread.UncaughtExceptionHandler? = Thread.getDefaultUncaughtExceptionHandler()
     private val strictModeHandler = StrictModeHandler()
@@ -61,13 +61,17 @@ internal class ExceptionHandler internal constructor(
                 StrictMode.setThreadPolicy(ThreadPolicy.LAX)
                 errorClient.notifyUnhandledException(
                     throwable,
-                    metadata, severityReason, violationDesc
+                    metadata,
+                    severityReason,
+                    violationDesc,
                 )
                 StrictMode.setThreadPolicy(originalThreadPolicy)
             } else {
                 errorClient.notifyUnhandledException(
                     throwable,
-                    metadata, severityReason, null
+                    metadata,
+                    severityReason,
+                    null,
                 )
             }
         } catch (ignored: Throwable) {

@@ -34,7 +34,7 @@ import kotlin.math.pow
 class DefaultReservoir @JvmOverloads constructor(
     androidContext: Context,
     useContentProvider: Boolean,
-    private val dbExecutor: ExecutorService? = null
+    private val dbExecutor: ExecutorService? = null,
 ) : Reservoir {
     private val dbName = "metrics_db_${androidContext.packageName}.db"
     private val metricDao: Dao<MetricEntity>
@@ -50,7 +50,7 @@ class DefaultReservoir @JvmOverloads constructor(
             DefaultEntityFactory(),
             useContentProvider,
             DB_VERSION,
-            dbExecutor
+            dbExecutor,
         )
         metricDao = RudderDatabase.getDao(MetricEntity::class.java)
         labelDao = RudderDatabase.getDao(LabelEntity::class.java)
@@ -58,7 +58,7 @@ class DefaultReservoir @JvmOverloads constructor(
     }
 
     override fun insertOrIncrement(
-        metric: MetricModel<out Number>
+        metric: MetricModel<out Number>,
     ) {
         val labels = metric.labels.map { LabelEntity(it.key, it.value) }
         if (labels.isEmpty()) {
@@ -68,32 +68,32 @@ class DefaultReservoir @JvmOverloads constructor(
 
         with(labelDao) {
             labels.insertWithDataCallback(
-                conflictResolutionStrategy = Dao.ConflictResolutionStrategy.CONFLICT_IGNORE
+                conflictResolutionStrategy = Dao.ConflictResolutionStrategy.CONFLICT_IGNORE,
             ) { rowIds: List<Long>, insertedData: List<LabelEntity?> ->
                 if (insertedData.isEmpty()) {
                     insertCounterWithLabelMask(metric, "")
                     return@insertWithDataCallback
                 }
-                //callback is done inside executor
+                // callback is done inside executor
                 val insertedIds = getInsertedLabelIds(rowIds, insertedData, labels)
 
-                val labelMaskForMetric = if (insertedIds.isEmpty()) "" else run {
-                    val maxIdInserted = insertedIds.max()
-                    val useBigDec = (maxIdInserted >= 63)
-                    if (useBigDec) {
-                        getLabelMaskForMetricWithBigDec(insertedIds)
-                    } else {
-                        getLabelMaskForMetricWithLong(insertedIds)
-//                            .also {
-//                            println("label mask for metric ${metric.name} and labels $insertedIds is $it")
-//                        }
+                val labelMaskForMetric = if (insertedIds.isEmpty()) {
+                    ""
+                } else {
+                    run {
+                        val maxIdInserted = insertedIds.max()
+                        val useBigDec = (maxIdInserted >= 63)
+                        if (useBigDec) {
+                            getLabelMaskForMetricWithBigDec(insertedIds)
+                        } else {
+                            getLabelMaskForMetricWithLong(insertedIds)
+                        }
                     }
                 }
                 insertCounterWithLabelMask(metric, labelMaskForMetric)
                 _storageListeners.forEach { it.onDataChange() }
             }
         }
-
     }
 
     private fun getLabelMaskForMetricWithLong(insertedIds: List<Long>): String {
@@ -113,7 +113,9 @@ class DefaultReservoir @JvmOverloads constructor(
     }
 
     private fun Dao<LabelEntity>.getInsertedLabelIds(
-        rowIds: List<Long>, insertedData: List<LabelEntity?>, queryData: List<LabelEntity>
+        rowIds: List<Long>,
+        insertedData: List<LabelEntity?>,
+        queryData: List<LabelEntity>,
     ): List<Long> {
         var insertedIds = listOf<Long>()
         rowIds.onEachIndexed { index, rowId ->
@@ -123,7 +125,7 @@ class DefaultReservoir @JvmOverloads constructor(
                 val valueOfLabel = queryData[index].value
                 val idOfAlreadyCreatedLabel = runGetQuerySync(
                     selection = "${LabelEntity.Columns.NAME} = ? AND ${LabelEntity.Columns.VALUE} = ?",
-                    selectionArgs = arrayOf(name, valueOfLabel)
+                    selectionArgs = arrayOf(name, valueOfLabel),
                 )?.firstOrNull()?.id
                 if (idOfAlreadyCreatedLabel != null) {
                     insertedIds = insertedIds + idOfAlreadyCreatedLabel
@@ -134,23 +136,24 @@ class DefaultReservoir @JvmOverloads constructor(
     }
 
     private fun insertCounterWithLabelMask(
-        metric: MetricModel<out Number>, labelMaskForMetric: String
+        metric: MetricModel<out Number>,
+        labelMaskForMetric: String,
     ) {
         val metricEntity = MetricEntity(
-            metric.name, metric.value.toLong(), MetricType.COUNTER.value, labelMaskForMetric
+            metric.name,
+            metric.value.toLong(),
+            MetricType.COUNTER.value,
+            labelMaskForMetric,
         )
         with(metricDao) {
             val insertedRowId = listOf(metricEntity).insertSync(
-                conflictResolutionStrategy = Dao.ConflictResolutionStrategy.CONFLICT_IGNORE
+                conflictResolutionStrategy = Dao.ConflictResolutionStrategy.CONFLICT_IGNORE,
             )?.firstOrNull()
             if (insertedRowId == -1L) {
-//                println("updating metric ${metric.name} label mask $labelMaskForMetric")
                 this.execSqlSync(
-                    "UPDATE " + MetricEntity.TABLE_NAME + " SET " + MetricEntity.ColumnNames.VALUE + " = (" + MetricEntity.ColumnNames.VALUE + " + " + metric.value + ") WHERE " + MetricEntity.ColumnNames.NAME + "='" + metric.name + "'" + " AND " + MetricEntity.ColumnNames.LABEL + "='" + labelMaskForMetric + "'" + " AND " + MetricEntity.ColumnNames.TYPE + "='" + MetricType.COUNTER.value + "'" + ";"
+                    "UPDATE " + MetricEntity.TABLE_NAME + " SET " + MetricEntity.ColumnNames.VALUE + " = (" + MetricEntity.ColumnNames.VALUE + " + " + metric.value + ") WHERE " + MetricEntity.ColumnNames.NAME + "='" + metric.name + "'" + " AND " + MetricEntity.ColumnNames.LABEL + "='" + labelMaskForMetric + "'" + " AND " + MetricEntity.ColumnNames.TYPE + "='" + MetricType.COUNTER.value + "'" + ";",
                 )
-            } /*else {
-                println("inserting metric ${metric.name} label mask $labelMaskForMetric")
-            }*/
+            }
         }
     }
 
@@ -160,48 +163,72 @@ class DefaultReservoir @JvmOverloads constructor(
             return metricEntities?.map {
                 val labels = getLabelsForMetric(it)
                 MetricModelWithId(
-                    it.id.toString(), it.name, MetricType.getType(it.type), it.value, labels
+                    it.id.toString(),
+                    it.name,
+                    MetricType.getType(it.type),
+                    it.value,
+                    labels,
                 )
             } ?: listOf()
         }
     }
 
     override fun getMetricsFirst(
-        skip: Long, limit: Long, callback: (List<MetricModelWithId<out Number>>) -> Unit
+        skip: Long,
+        limit: Long,
+        callback: (List<MetricModelWithId<out Number>>) -> Unit,
     ) {
         with(metricDao) {
             runGetQuery(
-                limit = limit.toString(), offset = if (skip > 0) skip.toString() else null
+                limit = limit.toString(),
+                offset = if (skip > 0) skip.toString() else null,
             ) { metricEntities ->
-                callback(metricEntities.map {
-                    val labels = getLabelsForMetric(it)
-                    MetricModelWithId(
-                        it.id.toString(), it.name, MetricType.getType(it.type), it.value, labels
-                    )
-                })
+                callback(
+                    metricEntities.map {
+                        val labels = getLabelsForMetric(it)
+                        MetricModelWithId(
+                            it.id.toString(),
+                            it.name,
+                            MetricType.getType(it.type),
+                            it.value,
+                            labels,
+                        )
+                    },
+                )
             }
         }
     }
 
     override fun getMetricsFirst(
-        limit: Long, callback: (List<MetricModelWithId<out Number>>) -> Unit
+        limit: Long,
+        callback: (List<MetricModelWithId<out Number>>) -> Unit,
     ) {
         with(metricDao) {
             runGetQuery(limit = limit.toString()) { metricEntities ->
-                callback(metricEntities.map {
-                    val labels = getLabelsForMetric(it)
-                    MetricModelWithId(
-                        it.id.toString(), it.name, MetricType.getType(it.type), it.value, labels
-                    )
-                })
+                callback(
+                    metricEntities.map {
+                        val labels = getLabelsForMetric(it)
+                        MetricModelWithId(
+                            it.id.toString(),
+                            it.name,
+                            MetricType.getType(it.type),
+                            it.value,
+                            labels,
+                        )
+                    },
+                )
             }
         }
     }
 
     override fun getMetricsAndErrors(
-        skipForMetrics: Long, skipForErrors: Long, limit: Long, callback: (
-            List<MetricModelWithId<out Number>>, List<ErrorEntity>
-        ) -> Unit
+        skipForMetrics: Long,
+        skipForErrors: Long,
+        limit: Long,
+        callback: (
+            List<MetricModelWithId<out Number>>,
+            List<ErrorEntity>,
+        ) -> Unit,
     ) {
         getMetricsFirst(skipForMetrics, limit) { metrics ->
             getErrors(skipForErrors, limit) { errors ->
@@ -227,7 +254,7 @@ class DefaultReservoir @JvmOverloads constructor(
     override fun resetMetricsFirst(limit: Long) {
         with(metricDao) {
             execSql(
-                "UPDATE ${MetricEntity.TABLE_NAME} SET ${MetricEntity.ColumnNames.VALUE}=0" + " WHERE ${MetricEntity.ColumnNames.ID} IN (SELECT ${MetricEntity.ColumnNames.ID} " + "FROM ${MetricEntity.TABLE_NAME} ORDER BY ${MetricEntity.ColumnNames.ID} ASC LIMIT $limit)"
+                "UPDATE ${MetricEntity.TABLE_NAME} SET ${MetricEntity.ColumnNames.VALUE}=0" + " WHERE ${MetricEntity.ColumnNames.ID} IN (SELECT ${MetricEntity.ColumnNames.ID} " + "FROM ${MetricEntity.TABLE_NAME} ORDER BY ${MetricEntity.ColumnNames.ID} ASC LIMIT $limit)",
             )
         }
     }
@@ -244,15 +271,16 @@ class DefaultReservoir @JvmOverloads constructor(
                 synchronized(maxErrorCount) {
                     if (it >= maxErrorCount.get()) return@getCount
                 }
-                //TODO (add log if exceeded)
+                // TODO (add log if exceeded)
                 listOf(errorEntity).insert {
-                    //TODO (add log if failed)
+                    // TODO (add log if failed)
                     if (it.isNotEmpty() && it.first()
                             .toLong() > -1
-                    ) _storageListeners.forEach { it.onDataChange() }
+                    ) {
+                        _storageListeners.forEach { it.onDataChange() }
+                    }
                 }
             }
-
         }
     }
 
@@ -262,8 +290,7 @@ class DefaultReservoir @JvmOverloads constructor(
 
     override fun getAllErrors(callback: (List<ErrorEntity>) -> Unit) {
         with(errorDao) {
-            runGetQuery(
-            ) { errorEntities ->
+            runGetQuery() { errorEntities ->
                 callback(errorEntities)
             }
         }
@@ -280,7 +307,7 @@ class DefaultReservoir @JvmOverloads constructor(
             runGetQuery(
                 limit = limit.toString(),
                 offset = if (skip > 0) skip.toString() else null,
-                callback = callback
+                callback = callback,
             )
         }
     }
@@ -303,9 +330,9 @@ class DefaultReservoir @JvmOverloads constructor(
         errorDao.delete(
             whereClause = "${
                 ErrorEntity.ColumnNames.ID
-            } IN (${ids.joinToString(",") { it.toString() }})", null
+            } IN (${ids.joinToString(",") { it.toString() }})",
+            null,
         )
-
     }
 
     override fun resetTillSync(dumpedMetrics: List<MetricModelWithId<out Number>>) {
@@ -320,7 +347,7 @@ class DefaultReservoir @JvmOverloads constructor(
                         MetricEntity.ColumnNames.VALUE
                     }-${metric.value.toLong().coerceAtLeast(0L)}) ELSE 0 END " + " WHERE " + "${
                         MetricEntity.ColumnNames.ID
-                    }='${metric.id}'"
+                    }='${metric.id}'",
 
                 )
             }
@@ -340,7 +367,11 @@ class DefaultReservoir @JvmOverloads constructor(
                 metricEntities.map {
                     val labels = getLabelsForMetric(it)
                     MetricModelWithId(
-                        it.id.toString(), it.name, MetricType.getType(it.type), it.value, labels
+                        it.id.toString(),
+                        it.name,
+                        MetricType.getType(it.type),
+                        it.value,
+                        labels,
                     )
                 }.let {
                     callback(it)
@@ -350,13 +381,16 @@ class DefaultReservoir @JvmOverloads constructor(
     }
 
     override fun getAllMetricsSync(): List<MetricModelWithId<out Number>> {
-
         return with(metricDao) {
             val metricEntities = getAllSync()
             metricEntities?.map {
                 val labels = getLabelsForMetric(it)
                 MetricModelWithId(
-                    it.id.toString(), it.name, MetricType.getType(it.type), it.value, labels
+                    it.id.toString(),
+                    it.name,
+                    MetricType.getType(it.type),
+                    it.value,
+                    labels,
                 )
             }
         } ?: listOf()
@@ -379,7 +413,6 @@ class DefaultReservoir @JvmOverloads constructor(
                 ++pos
                 labels = labels shr 1
             }
-
         } catch (ex: Exception) {
             var pos = 0
             var labels = BigInteger(labelMask)
@@ -397,7 +430,7 @@ class DefaultReservoir @JvmOverloads constructor(
         }
         with(labelDao) {
             return runGetQuerySync(
-                selection = "${LabelEntity.Columns.ID} IN (${labelIds.joinToString(",") { "'${it}'" }})"
+                selection = "${LabelEntity.Columns.ID} IN (${labelIds.joinToString(",") { "'$it'" }})",
             )?.associate {
                 it.name to it.value
             } ?: mapOf()

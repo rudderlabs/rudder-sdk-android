@@ -57,43 +57,46 @@ class DefaultReservoirTest {
         const val MAX_COUNTERS = 20
         const val MAX_LABEL_MAP_COUNT = 20
         const val MAX_LABELS = 10
-
     }
 
     private lateinit var defaultStorage: DefaultReservoir
 
-    //create 200 metric
+    // create 200 metric
     private lateinit var testNameCounterMap: Map<String, LongCounter>
 
-    //consider 1000 labels
+    // consider 1000 labels
 //    private val testLabelMaps = (0 until MAX_LABEL_MAP_COUNT).map {
 //        "testLabel_key_$it" to "testLabel_value_$it"
 //    }.toMap()
     private lateinit var testLabels: List<Labels>
     private lateinit var testCounterToLabelMap: Map<String, Labels>
 
-
     @Before
     fun initialize() {
         defaultStorage = DefaultReservoir(
-            ApplicationProvider.getApplicationContext(), false, TestExecutor()
+            ApplicationProvider.getApplicationContext(),
+            false,
+            TestExecutor(),
         )
 
         testNameCounterMap = (0 until MAX_COUNTERS).associate {
             val name = "testCounter_$it"
             name to LongCounter(
-                name, DefaultAggregatorHandler(
-                    defaultStorage
-                )
+                name,
+                DefaultAggregatorHandler(
+                    defaultStorage,
+                ),
             )
         }
         testLabels = (0..MAX_LABELS).map {
             val randomNumberOfPairs = Random.Default.nextInt(
-                0, MAX_LABEL_MAP_COUNT
+                0,
+                MAX_LABEL_MAP_COUNT,
             )
             (0..randomNumberOfPairs).associate {
                 val randomLabelIndex = Random.nextInt(
-                    0, MAX_LABEL_MAP_COUNT
+                    0,
+                    MAX_LABEL_MAP_COUNT,
                 )
                 "testLabel_key_$randomLabelIndex" to "testLabel_value_$randomLabelIndex"
             }.let { it }
@@ -113,20 +116,26 @@ class DefaultReservoirTest {
     @Test
     fun insertOrIncrement() {
         testCounterToLabelMap.forEach { (counterName, labels) ->
-            //insert 1 as default value
+            // insert 1 as default value
             defaultStorage.insertOrIncrement(
                 MetricModel(
-                    counterName, MetricType.COUNTER, 1, labels
-                )
+                    counterName,
+                    MetricType.COUNTER,
+                    1,
+                    labels,
+                ),
             )
         }
         var index = 0
-        //increase counters by index
+        // increase counters by index
         testCounterToLabelMap.forEach { (counterName, labels) ->
             defaultStorage.insertOrIncrement(
                 MetricModel(
-                    counterName, MetricType.COUNTER, index.toLong(), labels
-                )
+                    counterName,
+                    MetricType.COUNTER,
+                    index.toLong(),
+                    labels,
+                ),
             )
 
             index++
@@ -139,7 +148,6 @@ class DefaultReservoirTest {
             assertThat(metric.name, Matchers.equalTo("testCounter_$index"))
             assertThat(metric.labels, Matchers.equalTo(testCounterToLabelMap[metric.name]))
         }
-
     }
 
     @Test
@@ -165,20 +173,26 @@ class DefaultReservoirTest {
     @Test
     fun `test insertion and reset for all`() {
         testCounterToLabelMap.forEach { (counterName, labels) ->
-            //insert 1 as default value
+            // insert 1 as default value
             defaultStorage.insertOrIncrement(
                 MetricModel(
-                    counterName, MetricType.COUNTER, 1, labels
-                )
+                    counterName,
+                    MetricType.COUNTER,
+                    1,
+                    labels,
+                ),
             )
         }
         var index = 0
-        //increase counters by index
+        // increase counters by index
         testCounterToLabelMap.forEach { (counterName, labels) ->
             defaultStorage.insertOrIncrement(
                 MetricModel(
-                    counterName, MetricType.COUNTER, index.toLong(), labels
-                )
+                    counterName,
+                    MetricType.COUNTER,
+                    index.toLong(),
+                    labels,
+                ),
             )
             index++
         }
@@ -195,7 +209,6 @@ class DefaultReservoirTest {
             assertThat(metric.name, Matchers.equalTo("testCounter_$index"))
             assertThat(metric.labels, Matchers.equalTo(testCounterToLabelMap[metric.name]))
         }
-
     }
 
     @Test
@@ -206,16 +219,17 @@ class DefaultReservoirTest {
         defaultStorage.getMetricsAndErrors(0, 0, 10) { metrics, errors ->
             assertThat(metrics, Matchers.empty())
             assertThat(
-                errors, allOf(
-                    hasSize(1), Matchers.contains(
+                errors,
+                allOf(
+                    hasSize(1),
+                    Matchers.contains(
                         allOf(
-                            hasProperty("errorEvent", Matchers.equalTo(TEST_ERROR_EVENTS_JSON))
-                        )
-                    )
-                )
+                            hasProperty("errorEvent", Matchers.equalTo(TEST_ERROR_EVENTS_JSON)),
+                        ),
+                    ),
+                ),
             )
         }
-
     }
 
     @Test
@@ -227,33 +241,44 @@ class DefaultReservoirTest {
         defaultStorage.getMetricsAndErrors(5, 5, 5) { metrics, errors ->
             assertThat(metrics, Matchers.empty())
             assertThat(
-                errors, allOf(
-                    hasSize(5), everyItem(
+                errors,
+                allOf(
+                    hasSize(5),
+                    everyItem(
                         anyOf(
                             hasProperty(
-                                "errorEvent", Matchers.equalTo(
-                                    TestDataGenerator.getTestErrorEventJsonWithIdentity(6)
-                                )
-                            ), hasProperty(
-                                "errorEvent", Matchers.equalTo(
-                                    TestDataGenerator.getTestErrorEventJsonWithIdentity(7)
-                                )
-                            ), hasProperty(
-                                "errorEvent", Matchers.equalTo(
-                                    TestDataGenerator.getTestErrorEventJsonWithIdentity(8)
-                                )
-                            ), hasProperty(
-                                "errorEvent", Matchers.equalTo(
-                                    TestDataGenerator.getTestErrorEventJsonWithIdentity(9)
-                                )
-                            ), hasProperty(
-                                "errorEvent", Matchers.equalTo(
-                                    TestDataGenerator.getTestErrorEventJsonWithIdentity(10)
-                                )
-                            )
-                        )
-                    )
-                )
+                                "errorEvent",
+                                Matchers.equalTo(
+                                    TestDataGenerator.getTestErrorEventJsonWithIdentity(6),
+                                ),
+                            ),
+                            hasProperty(
+                                "errorEvent",
+                                Matchers.equalTo(
+                                    TestDataGenerator.getTestErrorEventJsonWithIdentity(7),
+                                ),
+                            ),
+                            hasProperty(
+                                "errorEvent",
+                                Matchers.equalTo(
+                                    TestDataGenerator.getTestErrorEventJsonWithIdentity(8),
+                                ),
+                            ),
+                            hasProperty(
+                                "errorEvent",
+                                Matchers.equalTo(
+                                    TestDataGenerator.getTestErrorEventJsonWithIdentity(9),
+                                ),
+                            ),
+                            hasProperty(
+                                "errorEvent",
+                                Matchers.equalTo(
+                                    TestDataGenerator.getTestErrorEventJsonWithIdentity(10),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
             )
         }
     }
@@ -262,18 +287,23 @@ class DefaultReservoirTest {
         defaultStorage.clear()
         defaultStorage.insertOrIncrement(
             MetricModel(
-                "testCounter", MetricType.COUNTER, 1, mapOf("label" to "value")
-            )
+                "testCounter",
+                MetricType.COUNTER,
+                1,
+                mapOf("label" to "value"),
+            ),
         )
         defaultStorage.getMetricsAndErrors(0, 0, 10) { metrics, errors ->
             assertThat(
-                metrics, allOf(
-                    hasSize(1), Matchers.contains(
+                metrics,
+                allOf(
+                    hasSize(1),
+                    Matchers.contains(
                         allOf(
-                            hasProperty("name", Matchers.equalTo("testCounter"))
-                        )
-                    )
-                )
+                            hasProperty("name", Matchers.equalTo("testCounter")),
+                        ),
+                    ),
+                ),
             )
             assertThat(errors, Matchers.empty())
         }
@@ -292,54 +322,69 @@ class DefaultReservoirTest {
         }
         defaultStorage.getMetricsAndErrors(0, 0, 30L) { metrics, errors ->
             assertThat(
-                metrics, allOf(
-                    hasSize(20), everyItem(
+                metrics,
+                allOf(
+                    hasSize(20),
+                    everyItem(
                         allOf(
                             hasProperty(
-                                "name", anyOf(
-                                    *(insertMetricModels.map { Matchers.equalTo(it.name) }).toTypedArray()
-                                )
+                                "name",
+                                anyOf(
+                                    *(insertMetricModels.map { Matchers.equalTo(it.name) }).toTypedArray(),
+                                ),
                             ),
                             hasProperty(
-                                "type", anyOf(
-                                    *(insertMetricModels.map { Matchers.equalTo(it.type) }).toTypedArray()
-                                )
+                                "type",
+                                anyOf(
+                                    *(insertMetricModels.map { Matchers.equalTo(it.type) }).toTypedArray(),
+                                ),
                             ),
                             hasProperty(
-                                "labels", hasEntry(
+                                "labels",
+                                hasEntry(
                                     anyOf(
-                                        (insertMetricModels.map {
-                                            equalTo(
-                                                it.labels.keys.toList()[0]
-                                            )
-                                        })
+                                        (
+                                            insertMetricModels.map {
+                                                equalTo(
+                                                    it.labels.keys.toList()[0],
+                                                )
+                                            }
+                                            ),
 
-                                    ), anyOf(
-                                        *(insertMetricModels.map {
-                                            equalTo(
-                                                it.labels.values.toList()[0]
-                                            )
-                                        }).toTypedArray()
-                                    )
-                                )
+                                    ),
+                                    anyOf(
+                                        *(
+                                            insertMetricModels.map {
+                                                equalTo(
+                                                    it.labels.values.toList()[0],
+                                                )
+                                            }
+                                            ).toTypedArray(),
+                                    ),
+                                ),
                             ),
 
-                            )
-                    )
-                )
+                        ),
+                    ),
+                ),
             )
             assertThat(
-                errors, allOf(
-                    hasSize(12), everyItem(
+                errors,
+                allOf(
+                    hasSize(12),
+                    everyItem(
                         hasProperty(
-                            "errorEvent", anyOf(
-                                *(TestDataGenerator.generateTestErrorEventsJson(30).map {
-                                    Matchers.equalTo(it)
-                                }).toTypedArray()
-                            )
-                        )
-                    )
-                )
+                            "errorEvent",
+                            anyOf(
+                                *(
+                                    TestDataGenerator.generateTestErrorEventsJson(30).map {
+                                        Matchers.equalTo(it)
+                                    }
+                                    ).toTypedArray(),
+                            ),
+                        ),
+                    ),
+                ),
             )
         }
     }
@@ -357,52 +402,65 @@ class DefaultReservoirTest {
         }
         defaultStorage.getMetricsAndErrors(0, 0, 30L) { metrics, errors ->
             assertThat(
-                metrics, allOf(
-                    hasSize(12), everyItem(
+                metrics,
+                allOf(
+                    hasSize(12),
+                    everyItem(
                         allOf(
                             hasProperty(
-                                "name", anyOf(
-                                    *(insertMetricModels.map { Matchers.equalTo(it.name) }).toTypedArray()
-                                )
+                                "name",
+                                anyOf(
+                                    *(insertMetricModels.map { Matchers.equalTo(it.name) }).toTypedArray(),
+                                ),
                             ),
                             hasProperty(
-                                "type", anyOf(
-                                    *(insertMetricModels.map { Matchers.equalTo(it.type) }).toTypedArray()
-                                )
+                                "type",
+                                anyOf(
+                                    *(insertMetricModels.map { Matchers.equalTo(it.type) }).toTypedArray(),
+                                ),
                             ),
                             hasProperty(
-                                "labels", hasEntry(
+                                "labels",
+                                hasEntry(
                                     anyOf(
-                                        (insertMetricModels.map {
-                                            equalTo(
-                                                it.labels.keys.toList()[0]
-                                            )
-                                        })
+                                        (
+                                            insertMetricModels.map {
+                                                equalTo(
+                                                    it.labels.keys.toList()[0],
+                                                )
+                                            }
+                                            ),
 
-                                    ), anyOf(
-                                        *(insertMetricModels.map {
-                                            equalTo(
-                                                it.labels.values.toList()[0]
-                                            )
-                                        }).toTypedArray()
-                                    )
-                                )
+                                    ),
+                                    anyOf(
+                                        *(
+                                            insertMetricModels.map {
+                                                equalTo(
+                                                    it.labels.values.toList()[0],
+                                                )
+                                            }
+                                            ).toTypedArray(),
+                                    ),
+                                ),
                             ),
 
-                            )
-                    )
-                )
+                        ),
+                    ),
+                ),
             )
             assertThat(
-                errors, allOf(
-                    hasSize(20), everyItem(
+                errors,
+                allOf(
+                    hasSize(20),
+                    everyItem(
                         hasProperty(
-                            "errorEvent", anyOf(
-                                *(insertedErrors.map { Matchers.equalTo(it) }).toTypedArray()
-                            )
-                        )
-                    )
-                )
+                            "errorEvent",
+                            anyOf(
+                                *(insertedErrors.map { Matchers.equalTo(it) }).toTypedArray(),
+                            ),
+                        ),
+                    ),
+                ),
             )
         }
     }
@@ -439,103 +497,129 @@ class DefaultReservoirTest {
         defaultStorage.resetMetricsFirst(10)
         defaultStorage.getMetricsAndErrors(0, 0, 10L) { metrics, errors ->
             assertThat(
-                metrics, allOf(
-                    hasSize(10), everyItem(
+                metrics,
+                allOf(
+                    hasSize(10),
+                    everyItem(
                         allOf(
                             hasProperty(
-                                "name", anyOf(
-                                    *(insertMetricModels.map { Matchers.equalTo(it.name) }).toTypedArray()
-                                )
+                                "name",
+                                anyOf(
+                                    *(insertMetricModels.map { Matchers.equalTo(it.name) }).toTypedArray(),
+                                ),
                             ),
                             hasProperty(
-                                "value", equalTo(0L)
+                                "value",
+                                equalTo(0L),
                             ),
                             hasProperty(
-                                "type", anyOf(
-                                    *(insertMetricModels.map { Matchers.equalTo(it.type) }).toTypedArray()
-                                )
+                                "type",
+                                anyOf(
+                                    *(insertMetricModels.map { Matchers.equalTo(it.type) }).toTypedArray(),
+                                ),
                             ),
                             hasProperty(
-                                "labels", hasEntry(
+                                "labels",
+                                hasEntry(
                                     anyOf(
-                                        (insertMetricModels.map {
-                                            equalTo(
-                                                it.labels.keys.toList()[0]
-                                            )
-                                        })
+                                        (
+                                            insertMetricModels.map {
+                                                equalTo(
+                                                    it.labels.keys.toList()[0],
+                                                )
+                                            }
+                                            ),
 
-                                    ), anyOf(
-                                        *(insertMetricModels.map {
-                                            equalTo(
-                                                it.labels.values.toList()[0]
-                                            )
-                                        }).toTypedArray()
-                                    )
-                                )
+                                    ),
+                                    anyOf(
+                                        *(
+                                            insertMetricModels.map {
+                                                equalTo(
+                                                    it.labels.values.toList()[0],
+                                                )
+                                            }
+                                            ).toTypedArray(),
+                                    ),
+                                ),
                             ),
 
-                            )
-                    )
-                )
+                        ),
+                    ),
+                ),
             )
             assertThat(
-                errors, allOf(
-                    hasSize(8), everyItem(
+                errors,
+                allOf(
+                    hasSize(8),
+                    everyItem(
                         hasProperty(
-                            "errorEvent", anyOf(
-                                *(insertedErrors.map { Matchers.equalTo(it) }).toTypedArray()
-                            )
-                        )
-                    )
-                )
+                            "errorEvent",
+                            anyOf(
+                                *(insertedErrors.map { Matchers.equalTo(it) }).toTypedArray(),
+                            ),
+                        ),
+                    ),
+                ),
             )
         }
 
         val last2Metrics = listOf(
-            TestDataGenerator.getTestMetric(11), TestDataGenerator.getTestMetric(12)
+            TestDataGenerator.getTestMetric(11),
+            TestDataGenerator.getTestMetric(12),
         )
         defaultStorage.getMetricsFirst(10, 2) {
             assertThat(
-                it, allOf(
-                    hasSize(2), everyItem(
+                it,
+                allOf(
+                    hasSize(2),
+                    everyItem(
                         allOf(
                             hasProperty(
-                                "name", anyOf(
-                                    *(last2Metrics.map { Matchers.equalTo(it.name) }).toTypedArray()
-                                )
+                                "name",
+                                anyOf(
+                                    *(last2Metrics.map { Matchers.equalTo(it.name) }).toTypedArray(),
+                                ),
                             ),
                             hasProperty(
-                                "value", anyOf(
-                                    *last2Metrics.map { Matchers.equalTo(it.value) }.toTypedArray()
-                                )
+                                "value",
+                                anyOf(
+                                    *last2Metrics.map { Matchers.equalTo(it.value) }.toTypedArray(),
+                                ),
                             ),
                             hasProperty(
-                                "type", anyOf(
-                                    *(last2Metrics.map { Matchers.equalTo(it.type) }).toTypedArray()
-                                )
+                                "type",
+                                anyOf(
+                                    *(last2Metrics.map { Matchers.equalTo(it.type) }).toTypedArray(),
+                                ),
                             ),
                             hasProperty(
-                                "labels", hasEntry(
+                                "labels",
+                                hasEntry(
                                     anyOf(
-                                        (last2Metrics.map {
-                                            equalTo(
-                                                it.labels.keys.toList()[0]
-                                            )
-                                        })
+                                        (
+                                            last2Metrics.map {
+                                                equalTo(
+                                                    it.labels.keys.toList()[0],
+                                                )
+                                            }
+                                            ),
 
-                                    ), anyOf(
-                                        *(last2Metrics.map {
-                                            equalTo(
-                                                it.labels.values.toList()[0]
-                                            )
-                                        }).toTypedArray()
-                                    )
-                                )
+                                    ),
+                                    anyOf(
+                                        *(
+                                            last2Metrics.map {
+                                                equalTo(
+                                                    it.labels.values.toList()[0],
+                                                )
+                                            }
+                                            ).toTypedArray(),
+                                    ),
+                                ),
                             ),
 
-                            )
-                    )
-                )
+                        ),
+                    ),
+                ),
             )
         }
     }
@@ -554,62 +638,75 @@ class DefaultReservoirTest {
         defaultStorage.resetMetricsFirst(12)
         defaultStorage.getMetricsAndErrors(0, 0, 12L) { metrics, errors ->
             assertThat(
-                metrics, allOf(
-                    hasSize(10), everyItem(
+                metrics,
+                allOf(
+                    hasSize(10),
+                    everyItem(
                         allOf(
                             hasProperty(
-                                "name", anyOf(
-                                    *(insertMetricModels.map { Matchers.equalTo(it.name) }).toTypedArray()
-                                )
+                                "name",
+                                anyOf(
+                                    *(insertMetricModels.map { Matchers.equalTo(it.name) }).toTypedArray(),
+                                ),
                             ),
                             hasProperty(
-                                "value", equalTo(0L)
+                                "value",
+                                equalTo(0L),
                             ),
                             hasProperty(
-                                "type", anyOf(
-                                    *(insertMetricModels.map { Matchers.equalTo(it.type) }).toTypedArray()
-                                )
+                                "type",
+                                anyOf(
+                                    *(insertMetricModels.map { Matchers.equalTo(it.type) }).toTypedArray(),
+                                ),
                             ),
                             hasProperty(
-                                "labels", hasEntry(
+                                "labels",
+                                hasEntry(
                                     anyOf(
-                                        (insertMetricModels.map {
-                                            equalTo(
-                                                it.labels.keys.toList()[0]
-                                            )
-                                        })
+                                        (
+                                            insertMetricModels.map {
+                                                equalTo(
+                                                    it.labels.keys.toList()[0],
+                                                )
+                                            }
+                                            ),
 
-                                    ), anyOf(
-                                        *(insertMetricModels.map {
-                                            equalTo(
-                                                it.labels.values.toList()[0]
-                                            )
-                                        }).toTypedArray()
-                                    )
-                                )
+                                    ),
+                                    anyOf(
+                                        *(
+                                            insertMetricModels.map {
+                                                equalTo(
+                                                    it.labels.values.toList()[0],
+                                                )
+                                            }
+                                            ).toTypedArray(),
+                                    ),
+                                ),
                             ),
 
-                            )
-                    )
-                )
+                        ),
+                    ),
+                ),
             )
             assertThat(
-                errors, allOf(
-                    hasSize(8), everyItem(
+                errors,
+                allOf(
+                    hasSize(8),
+                    everyItem(
                         hasProperty(
-                            "errorEvent", anyOf(
-                                *(insertedErrors.map { Matchers.equalTo(it) }).toTypedArray()
-                            )
-                        )
-                    )
-                )
+                            "errorEvent",
+                            anyOf(
+                                *(insertedErrors.map { Matchers.equalTo(it) }).toTypedArray(),
+                            ),
+                        ),
+                    ),
+                ),
             )
         }
     }
 
     @Test
-    fun `test resetTillSync when metrics value more than dumped value`(
-    ) {
+    fun `test resetTillSync when metrics value more than dumped value`() {
         defaultStorage.clear()
         val insertMetricModels = TestDataGenerator.generateTestMetrics(10)
         val insertedErrors = TestDataGenerator.generateTestErrorEventsJson(8)
@@ -619,11 +716,17 @@ class DefaultReservoirTest {
         insertedErrors.forEach {
             defaultStorage.saveError(ErrorEntity(it))
         }
-        defaultStorage.resetTillSync(defaultStorage.getAllMetricsSync().map {
-            MetricModelWithId(
-                it.id, it.name, it.type, (it.value.toLong() - 2L), it.labels
-            )
-        })
+        defaultStorage.resetTillSync(
+            defaultStorage.getAllMetricsSync().map {
+                MetricModelWithId(
+                    it.id,
+                    it.name,
+                    it.type,
+                    (it.value.toLong() - 2L),
+                    it.labels,
+                )
+            },
+        )
         defaultStorage.getMetricsAndErrors(0, 0, 12L) { metrics, errors ->
             metrics.forEach { metricUnderTest ->
                 val associatedMetric = insertMetricModels.firstOrNull {
@@ -633,21 +736,23 @@ class DefaultReservoirTest {
                 assertThat(metricUnderTest.value.toInt(), allOf(greaterThan(-1), lessThan(3)))
             }
             assertThat(
-                errors, allOf(
-                    hasSize(8), everyItem(
+                errors,
+                allOf(
+                    hasSize(8),
+                    everyItem(
                         hasProperty(
-                            "errorEvent", anyOf(
-                                *(insertedErrors.map { Matchers.equalTo(it) }).toTypedArray()
-                            )
-                        )
-                    )
-                )
+                            "errorEvent",
+                            anyOf(
+                                *(insertedErrors.map { Matchers.equalTo(it) }).toTypedArray(),
+                            ),
+                        ),
+                    ),
+                ),
             )
         }
     }
 
-    fun `test resetTillSync when metrics value less than dumped value`(
-    ) {
+    fun `test resetTillSync when metrics value less than dumped value`() {
         defaultStorage.clear()
         val insertMetricModels = TestDataGenerator.generateTestMetrics(10)
         val insertedErrors = TestDataGenerator.generateTestErrorEventsJson(8)
@@ -657,11 +762,17 @@ class DefaultReservoirTest {
         insertedErrors.forEach {
             defaultStorage.saveError(ErrorEntity(it))
         }
-        defaultStorage.resetTillSync(defaultStorage.getAllMetricsSync().map {
-            MetricModelWithId(
-                it.id, it.name, it.type, (it.value.toLong() + 2L), it.labels
-            )
-        })
+        defaultStorage.resetTillSync(
+            defaultStorage.getAllMetricsSync().map {
+                MetricModelWithId(
+                    it.id,
+                    it.name,
+                    it.type,
+                    (it.value.toLong() + 2L),
+                    it.labels,
+                )
+            },
+        )
         defaultStorage.getMetricsAndErrors(0, 0, 12L) { metrics, errors ->
             metrics.forEach { metricUnderTest ->
                 val associatedMetric = insertMetricModels.firstOrNull {
@@ -671,15 +782,18 @@ class DefaultReservoirTest {
                 assertThat(metricUnderTest.value, Matchers.equalTo(0L))
             }
             assertThat(
-                errors, allOf(
-                    hasSize(8), everyItem(
+                errors,
+                allOf(
+                    hasSize(8),
+                    everyItem(
                         hasProperty(
-                            "errorEvent", anyOf(
-                                *(insertedErrors.map { Matchers.equalTo(it) }).toTypedArray()
-                            )
-                        )
-                    )
-                )
+                            "errorEvent",
+                            anyOf(
+                                *(insertedErrors.map { Matchers.equalTo(it) }).toTypedArray(),
+                            ),
+                        ),
+                    ),
+                ),
             )
         }
     }
@@ -696,13 +810,15 @@ class DefaultReservoirTest {
         defaultStorage.getMetricsAndErrors(0, 0, 10) { metrics, errors ->
             assertThat(metrics, allOf(not(empty()), hasSize(10)))
             assertThat(
-                errors, allOf(
-                    hasSize(1), Matchers.contains(
+                errors,
+                allOf(
+                    hasSize(1),
+                    Matchers.contains(
                         allOf(
-                            hasProperty("errorEvent", Matchers.equalTo(TEST_ERROR_EVENTS_JSON))
-                        )
-                    )
-                )
+                            hasProperty("errorEvent", Matchers.equalTo(TEST_ERROR_EVENTS_JSON)),
+                        ),
+                    ),
+                ),
             )
         }
     }
@@ -772,9 +888,12 @@ class DefaultReservoirTest {
         defaultStorage.getMetricsAndErrors(0, 0, 10) { metrics, errors ->
             assertThat(metrics, allOf(not(empty()), hasSize(10)))
             assertThat(
-                errors, allOf(
-                    not(empty()), hasSize(5), everyItem(hasProperty("id", not(`in`(ids))))
-                )
+                errors,
+                allOf(
+                    not(empty()),
+                    hasSize(5),
+                    everyItem(hasProperty("id", not(`in`(ids)))),
+                ),
             )
         }
     }
@@ -798,9 +917,12 @@ class DefaultReservoirTest {
         defaultStorage.getMetricsAndErrors(0, 0, 10) { metrics, errors ->
             assertThat(metrics, allOf(not(empty()), hasSize(10)))
             assertThat(
-                errors, allOf(
-                    not(empty()), hasSize(5), everyItem(hasProperty("id", not(`in`(ids))))
-                )
+                errors,
+                allOf(
+                    not(empty()),
+                    hasSize(5),
+                    everyItem(hasProperty("id", not(`in`(ids)))),
+                ),
             )
         }
     }

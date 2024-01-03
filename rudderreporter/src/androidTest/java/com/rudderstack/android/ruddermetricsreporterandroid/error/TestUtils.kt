@@ -4,18 +4,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.App
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.AppWithState
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.DeviceBuildInfo.Companion.defaultInfo
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.DeviceWithState
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.NoopLogger
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ConfigModule
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.ContextModule
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.ImmutableConfig
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import java.io.File
-import java.io.IOException
-import java.util.Date
 
 internal object TestUtils {
     val runtimeVersions = HashMap<String, Any>()
@@ -25,20 +15,24 @@ internal object TestUtils {
         runtimeVersions["androidApiLevel"] = "24"
     }
 
-    fun generateClient(configuration: Configuration,
-                       jsonAdapter: JsonAdapter): DefaultErrorClient {
+    fun generateClient(
+        configuration: Configuration,
+        jsonAdapter: JsonAdapter,
+    ): DefaultErrorClient {
         return DefaultErrorClient(ApplicationProvider.getApplicationContext(), configuration, jsonAdapter)
     }
-    fun generateClient(configuration: Configuration,
-                        reservoir: Reservoir,
-                       jsonAdapter: JsonAdapter): DefaultErrorClient {
-        return DefaultErrorClient(ApplicationProvider.getApplicationContext(), configuration,
+    fun generateClient(
+        configuration: Configuration,
+        reservoir: Reservoir,
+        jsonAdapter: JsonAdapter,
+    ): DefaultErrorClient {
+        return DefaultErrorClient(
+            ApplicationProvider.getApplicationContext(),
+            configuration,
             reservoir,
-            jsonAdapter)
+            jsonAdapter,
+        )
     }
-
-
-
 
     fun generateConfiguration(): Configuration {
         val configuration = Configuration(generateLibraryMetadata())

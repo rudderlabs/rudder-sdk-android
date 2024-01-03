@@ -18,7 +18,8 @@ enum class ErrorType(internal val desc: String) {
     /**
      * An error captured from a Dart / Flutter application
      */
-    DART("dart");
+    DART("dart"),
+    ;
 
     internal companion object {
         @JvmStatic

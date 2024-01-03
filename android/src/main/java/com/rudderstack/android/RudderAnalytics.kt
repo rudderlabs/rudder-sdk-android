@@ -64,7 +64,8 @@ fun RudderAnalytics(
 fun Analytics.putAdvertisingId(advertisingId: String) {
 
     applyConfiguration {
-        if (this is ConfigurationAndroid) copy(
+        if (this is ConfigurationAndroid)
+            copy(
             advertisingId = advertisingId
         )
         else this

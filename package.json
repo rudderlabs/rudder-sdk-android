@@ -21,13 +21,13 @@
     "bump-version:monorepo": "npm version minor --git-tag-version false",
     "build": "./gradlew build",
     "lint": "nx affected --base=origin/master-v2 --target=lint --parallel=4 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
-    "ktformat": "nx affected --base=origin/master-v2 --target=ktformat --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
-    "sync-version-gradle": "nx affected --target=sync-bumped-version-properties --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
-    "test": "nx affected --base=origin/master-v2 --target='test' --parallel=1 --exclude=app,android --skipCommitTypes=docs,ci,chore",
-    "release": "nx affected --base=origin/master-v2 --target=version --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore && npm run sync-version-gradle",
-    "release:github": "nx affected --target=github --parallel=1 --exclude=app,core,android --skipCommitTypes=docs,ci,chore",
-    "release:sonatype": "nx affected --base=origin/master-v2 --target=release-sonatype --parallel=1 --exclude=app,core,android",
-    "release-snapshot:sonatype": "nx affected --base=origin/master-v2 --target=snapshot-release --parallel=1 --exclude=app,core,android"
+    "ktformat": "nx affected --base=origin/master-v2 --target=ktformat --parallel=1 --exclude=app --skipCommitTypes=docs,ci",
+    "sync-version-gradle": "nx affected --target=sync-bumped-version-properties --parallel=1 --exclude=app --skipCommitTypes=docs,ci,chore",
+    "test": "nx affected --base=origin/master-v2 --target='test' --parallel=1 --exclude=app --skipCommitTypes=docs,ci,chore",
+    "release": "nx affected --base=origin/master-v2 --target=version --parallel=1 --exclude=app --skipCommitTypes=docs,ci,chore && npm run sync-version-gradle",
+    "release:github": "nx affected --target=github --parallel=1 --exclude=app --skipCommitTypes=docs,ci,chore",
+    "release:sonatype": "nx affected --base=origin/master-v2 --target=release-sonatype --parallel=1 --exclude=app",
+    "release-snapshot:sonatype": "nx affected --base=origin/master-v2 --target=snapshot-release --parallel=1 --exclude=app"
   },
   "private": true,
   "devDependencies": {

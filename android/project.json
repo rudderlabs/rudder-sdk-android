@@ -9,10 +9,9 @@
       "dependsOn": [
         {
           "projects": [
-            "gsonrudderadapter",
-            "jacksonrudderadapter",
-            "moshirudderadapter",
-            "web"
+            "core",
+            "repository",
+            "rudderreporter"
           ],
           "target": "build"
         }

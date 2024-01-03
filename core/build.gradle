@@ -53,3 +53,6 @@ dependencies {
     testImplementation(project(path: ':gsonrudderadapter'))
     testImplementation(project(path: ':jacksonrudderadapter'))
 }
+apply from: "$projectDir/../gradle/artifacts-jar.gradle"
+apply from: "$projectDir/../gradle/mvn-publish.gradle"
+apply from: "$projectDir/../gradle/codecov.gradle"

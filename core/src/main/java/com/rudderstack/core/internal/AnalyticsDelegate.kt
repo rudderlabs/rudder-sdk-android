@@ -27,7 +27,6 @@ import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
 import com.rudderstack.core.Configuration
-import com.rudderstack.core.copy
 import com.rudderstack.core.internal.plugins.DestinationConfigurationPlugin
 import com.rudderstack.core.internal.plugins.EventFilteringPlugin
 import com.rudderstack.core.internal.plugins.GDPRPlugin
@@ -146,7 +145,6 @@ internal class AnalyticsDelegate(
     private var _serverConfig: RudderServerConfig? = null
 
     init {
-        ConfigurationsState.update(configuration)
         ConfigurationsState.update(configuration)
         DestinationConfigState.update(DestinationConfig())
         initializePlugins()

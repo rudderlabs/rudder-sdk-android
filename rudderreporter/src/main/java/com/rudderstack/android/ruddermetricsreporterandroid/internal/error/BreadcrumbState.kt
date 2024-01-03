@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger
 internal class BreadcrumbState(
     private val maxBreadcrumbs: Int,
 //    private val callbackState: CallbackState,
-    private val logger: Logger
+    private val logger: Logger,
 ) : BaseObservable() {
 
     /*
@@ -61,7 +61,7 @@ internal class BreadcrumbState(
                 breadcrumb.type,
                 // an encoding of milliseconds since the epoch
                 "t${breadcrumb.timestamp.time}",
-                breadcrumb.metadata ?: mutableMapOf()
+                breadcrumb.metadata ?: mutableMapOf(),
             )
         }
     }
@@ -103,6 +103,4 @@ internal class BreadcrumbState(
             index.set(tail)
         }
     }
-
-
 }

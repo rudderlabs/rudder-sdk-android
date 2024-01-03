@@ -26,34 +26,48 @@ import com.rudderstack.android.ruddermetricsreporterandroid.models.MetricEntity.
  *
  */
 @RudderEntity(
-    tableName = TABLE_NAME, [
+    tableName = TABLE_NAME,
+    [
         RudderField(
-            RudderField.Type.INTEGER, MetricEntity.ColumnNames.ID,
-            primaryKey = false, isNullable = false, isAutoInc = true, isIndex = true
+            RudderField.Type.INTEGER,
+            MetricEntity.ColumnNames.ID,
+            primaryKey = false,
+            isNullable = false,
+            isAutoInc = true,
+            isIndex = true,
         ),
         RudderField(
-            RudderField.Type.TEXT, MetricEntity.ColumnNames.NAME,
-            primaryKey = true, isNullable = false
+            RudderField.Type.TEXT,
+            MetricEntity.ColumnNames.NAME,
+            primaryKey = true,
+            isNullable = false,
         ),
         RudderField(
-            RudderField.Type.INTEGER, MetricEntity.ColumnNames.VALUE,
-            primaryKey = false, isNullable = false
+            RudderField.Type.INTEGER,
+            MetricEntity.ColumnNames.VALUE,
+            primaryKey = false,
+            isNullable = false,
         ),
         RudderField(
-            RudderField.Type.TEXT, MetricEntity.ColumnNames.TYPE,
-            primaryKey = true, isNullable = false
+            RudderField.Type.TEXT,
+            MetricEntity.ColumnNames.TYPE,
+            primaryKey = true,
+            isNullable = false,
         ),
         RudderField(
-            RudderField.Type.TEXT, MetricEntity.ColumnNames.LABEL,
-            primaryKey = true, isNullable = false, isIndex = true
-        )
-    ]
+            RudderField.Type.TEXT,
+            MetricEntity.ColumnNames.LABEL,
+            primaryKey = true,
+            isNullable = false,
+            isIndex = true,
+        ),
+    ],
 )
 internal class MetricEntity(
     val name: String,
     val value: Long,
     val type: String,
-    val label: String
+    val label: String,
 ) : Entity {
     object ColumnNames {
         const val ID = "id"
@@ -95,8 +109,6 @@ internal class MetricEntity(
             return MetricEntity(name, value, type, label).also {
                 it._id = id
             }
-
         }
     }
-
 }

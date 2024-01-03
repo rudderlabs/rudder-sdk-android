@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.Json
 
-class RudderDeviceInfo (
+class RudderDeviceInfo(
     /*RudderDeviceInfo(String advertisingId, String token) {
         this.deviceId = Utils.getDeviceId(RudderClient.getApplication());
         if (advertisingId != null && !advertisingId.isEmpty()) {
@@ -17,38 +17,39 @@ class RudderDeviceInfo (
     }*/
     @SerializedName("id")
     @JsonProperty("id")
-    @Json( name = "id")
+    @Json(name = "id")
     val deviceId: String? = null,
 
     @SerializedName("manufacturer")
     @JsonProperty("manufacturer")
-    @Json( name = "manufacturer")
+    @Json(name = "manufacturer")
     private val manufacturer: String /*= Build.MANUFACTURER*/,
 
     @SerializedName("model")
     @JsonProperty("model")
-    @Json( name = "model")
+    @Json(name = "model")
     private val model: String /*= Build.MODEL*/,
 
     @SerializedName("name")
     @JsonProperty("name")
-    @Json( name = "name")
+    @Json(name = "name")
     private val name: String /*= Build.DEVICE*/,
 
     @SerializedName("type")
     @JsonProperty("type")
-    @Json( name = "type")
-    private val type : String = "Android",
+    @Json(name = "type")
+    private val type: String = "Android",
 
     @SerializedName("token")
     @JsonProperty("token")
-    @Json( name = "token")
+    @Json(name = "token")
     private var token: String? = null,
 
     @SerializedName("adTrackingEnabled")
     @JsonProperty("adTrackingEnabled")
-    @Json( name = "adTrackingEnabled")
-    var isAdTrackingEnabled: Boolean? = null){
+    @Json(name = "adTrackingEnabled")
+    var isAdTrackingEnabled: Boolean? = null,
+) {
 
     @SerializedName("advertisingId")
     var advertisingId: String? = null

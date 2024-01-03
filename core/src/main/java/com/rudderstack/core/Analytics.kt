@@ -317,7 +317,7 @@ class Analytics private constructor(
     }
 
     /**
-     * Flushes forcefully, even if analytics has shutdown.
+     * Flushes forcefully, not if analytics has shutdown.
      * One can optionally provide alternate data upload service and alternate executor
      * for force flush, and force flush will act on those.
      *

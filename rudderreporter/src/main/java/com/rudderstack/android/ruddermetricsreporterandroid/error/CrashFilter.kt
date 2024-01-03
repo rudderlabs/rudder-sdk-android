@@ -16,17 +16,17 @@ package com.rudderstack.android.ruddermetricsreporterandroid.error
 
 fun interface CrashFilter {
     fun shouldKeep(exc: Throwable): Boolean
-    companion object{
-       @JvmStatic
-       fun generateWithKeyWords(keyWords: List<String>): CrashFilter {
-           return CrashFilter { exc ->
-               exc.isValid(keyWords)
-           }
-       }
-        private fun Throwable.isValid(keyWords: List<String>) : Boolean{
-            return keyWords.any { message?.contains(it) == true }
-            || keyWords.any { stackTraceToString().contains(it) }
-            || cause?.isValid(keyWords) == true
+    companion object {
+        @JvmStatic
+        fun generateWithKeyWords(keyWords: List<String>): CrashFilter {
+            return CrashFilter { exc ->
+                exc.isValid(keyWords)
+            }
+        }
+        private fun Throwable.isValid(keyWords: List<String>): Boolean {
+            return keyWords.any { message?.contains(it) == true } ||
+                keyWords.any { stackTraceToString().contains(it) } ||
+                cause?.isValid(keyWords) == true
         }
     }
 }

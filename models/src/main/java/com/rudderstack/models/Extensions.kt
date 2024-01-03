@@ -12,22 +12,23 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
 package com.rudderstack.models
 
 /**
  * To be used to extract traits from context of [Message]
  */
-val MessageContext.traits : Map<String, Any?>?
+val MessageContext.traits: Map<String, Any?>?
     get() = get(Constants.TRAITS_ID) as? Map<String, Any?>?
 
 /**
  * To be used to extract external ids from context of [Message]
  */
-val MessageContext.externalIds : List<Map<String, String>>?
+val MessageContext.externalIds: List<Map<String, String>>?
     get() = get(Constants.EXTERNAL_ID) as? List<Map<String, String>>?
+
 /**
  * To be used to extract custom contexts from context of [Message]
  */
-val MessageContext.customContexts : Map<String, Any>?
+val MessageContext.customContexts: Map<String, Any>?
     get() = get(Constants.CUSTOM_CONTEXT_MAP_ID) as? Map<String, Any>?
-

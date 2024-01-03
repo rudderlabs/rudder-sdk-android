@@ -107,7 +107,6 @@ abstract class AnalyticsTest {
             dataUploadService = mockedDataUploadService,
             configDownloadService = mockedControlPlane
         )
-        println("Setup: analytics: $analytics storage: $storage")
     }
 
     @After
@@ -391,7 +390,6 @@ abstract class AnalyticsTest {
         //20 events, flushQSize is 10, so 2 flushes
          verify( mockedDataUploadService, atLeast(2)).uploadSync(listCaptor.capture(), anyOrNull())
         val allMsgsUploaded = listCaptor.allValues.flatten()
-        println("all msgs uploaded: ${allMsgsUploaded.size}")
         assertThat(allMsgsUploaded, allOf(notNullValue(), iterableWithSize(20)))
     }
     @Test
@@ -610,7 +608,7 @@ abstract class AnalyticsTest {
             configDownloadService = mockedControlPlane
         )
         analytics.shutdown()
-        Thread.sleep(500)
+        busyWait(500)
         assertThat(analytics.isShutdown, `is`(true))
         //inserting some data to storage
 
@@ -618,7 +616,7 @@ abstract class AnalyticsTest {
 
         val spyDataUploadService = spy(DataUploadService::class.java)
         analytics.forceFlush(alternateDataUploadService = spyDataUploadService)
-        Thread.sleep(250)
+        busyWait(250)
         verify(spyDataUploadService, times(0)).uploadSync(any(), anyOrNull())
     }
 

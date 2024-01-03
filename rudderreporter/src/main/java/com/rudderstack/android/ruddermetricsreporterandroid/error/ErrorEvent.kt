@@ -30,7 +30,6 @@ import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonReader
-import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.ToJson
 
 class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
@@ -39,12 +38,18 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
         originalError: Throwable? = null,
         config: ImmutableConfig,
         severityReason: SeverityReason,
-        data: Metadata = Metadata()
+        data: Metadata = Metadata(),
     ) : this(
-        mutableListOf(), config.discardClasses.toSet(), when (originalError) {
+        mutableListOf(),
+        config.discardClasses.toSet(),
+        when (originalError) {
             null -> mutableListOf()
             else -> createError(originalError, config.projectPackages, config.logger)
-        }, data.copy(), originalError, config.projectPackages, severityReason
+        },
+        data.copy(),
+        originalError,
+        config.projectPackages,
+        severityReason,
     )
 
     internal constructor(
@@ -55,7 +60,7 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
         originalError: Throwable? = null,
         projectPackages: Collection<String> = setOf(),
         severityReason: SeverityReason = SeverityReason.newInstance(
-            SeverityReason.REASON_HANDLED_EXCEPTION
+            SeverityReason.REASON_HANDLED_EXCEPTION,
         ),
     ) {
         this.breadcrumbs = breadcrumbs
@@ -114,7 +119,6 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
     var groupingHash: String? = null
     var context: String? = null
 
-
     protected fun shouldDiscardClass(): Boolean {
         return when {
             errors.isEmpty() -> true
@@ -160,7 +164,7 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
             severityReason.unhandled,
             severityReason.unhandledOverridden,
             severityReason.attributeValue,
-            severityReason.attributeKey
+            severityReason.attributeKey,
         )
     }
 
@@ -171,12 +175,11 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
             severityReason.unhandled,
             severityReason.unhandledOverridden,
             severityReason.attributeValue,
-            severityReason.attributeKey
+            severityReason.attributeKey,
         )
     }
 
     fun getSeverityReasonType(): String = severityReason.severityReasonType
-
 
     override fun addMetadata(section: String, value: Map<String, Any?>) =
         metadata.addMetadata(section, value)
@@ -192,22 +195,25 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
 
     override fun getMetadata(section: String, key: String) = metadata.getMetadata(section, key)
     override fun serialize(jsonAdapter: JsonAdapter): String? {
-        return jsonAdapter.writeToJson(mapOf(
-            "exceptions" to errors.map { it.toMap() },
-            "severity" to severity,
-            "breadcrumbs" to breadcrumbs,
-            "context" to context,
-            "unhandled" to unhandled,
-            "projectPackages" to projectPackages,
-            "app" to app,
-            "device" to device.toMap(),
-            "metadata" to metadataMap/*.let {
+        return jsonAdapter.writeToJson(
+            mapOf(
+                "exceptions" to errors.map { it.toMap() },
+                "severity" to severity,
+                "breadcrumbs" to breadcrumbs,
+                "context" to context,
+                "unhandled" to unhandled,
+                "projectPackages" to projectPackages,
+                "app" to app,
+                "device" to device.toMap(),
+                "metadata" to metadataMap,/*.let {
                 var map: Map<String, Any> = mutableMapOf<String, Any>()
                 it.forEach { (key, value) ->
                     map = map + (key to value)
                 }
             }*/
-        ).filterValues { it != null }, object : RudderTypeAdapter<Map<String, Any?>>() {})
+            ).filterValues { it != null },
+            object : RudderTypeAdapter<Map<String, Any?>>() {},
+        )
     }
 
     override fun toString(): String {
@@ -218,14 +224,15 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
         @FromJson
         fun fromJson(
             jsonReader: JsonReader,
-            delegate: com.squareup.moshi.JsonAdapter<ErrorEvent>
+            delegate: com.squareup.moshi.JsonAdapter<ErrorEvent>,
         ): ErrorEvent? {
-            //we don't need to serialize this class
+            // we don't need to serialize this class
             return ErrorEvent()
         }
+
         @ToJson
-        fun toJson(errorEvent: ErrorEvent): Map<String, Any?>{
-           return mapOf(
+        fun toJson(errorEvent: ErrorEvent): Map<String, Any?> {
+            return mapOf(
                 "exceptions" to errorEvent.errors.map { it.toMap() },
                 "severity" to errorEvent.severity,
                 "breadcrumbs" to errorEvent.breadcrumbs,
@@ -234,7 +241,7 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
                 "projectPackages" to errorEvent.projectPackages,
                 "app" to errorEvent.app,
                 "device" to errorEvent.device,
-                "metadata" to errorEvent.metadataMap/*.let {
+                "metadata" to errorEvent.metadataMap,/*.let {
                     var map: Map<String, Any> = mutableMapOf<String, Any>()
                     it.forEach { (key, value) ->
                         map = map + (key to value)
@@ -248,6 +255,5 @@ class ErrorEvent : MetadataAware, JSerialize<ErrorEvent> {
 //                writer.setLenient(wasSerializeNulls)
 //            }
         }
-
     }
 }

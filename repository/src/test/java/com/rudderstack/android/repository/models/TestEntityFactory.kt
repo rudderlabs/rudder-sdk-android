@@ -19,13 +19,15 @@ import com.rudderstack.android.repository.EntityFactory
 
 object TestEntityFactory : EntityFactory {
     override fun <T : Entity> getEntity(entity: Class<T>, values: Map<String, Any?>): T? {
-        return when(entity){
-            SampleAutoGenEntity::class.java -> SampleAutoGenEntity( values["name"] as String).also {
+        return when (entity) {
+            SampleAutoGenEntity::class.java -> SampleAutoGenEntity(values["name"] as String).also {
                 it.id = (values["id"] as Long).toInt()
             }
-             SampleEntity::class.java -> SampleEntity(
-                 values["name"] as String,
-             (values["count"]).toString().toInt(), (values["items"] as String).split(','))
+            SampleEntity::class.java -> SampleEntity(
+                values["name"] as String,
+                (values["count"]).toString().toInt(),
+                (values["items"] as String).split(','),
+            )
             else -> null
         } as? T
     }

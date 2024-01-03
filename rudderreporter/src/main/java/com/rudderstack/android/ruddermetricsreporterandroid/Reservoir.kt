@@ -21,16 +21,21 @@ import com.rudderstack.android.ruddermetricsreporterandroid.models.ErrorEntity
 interface Reservoir {
     fun insertOrIncrement(metric: MetricModel<out Number>)
     fun getAllMetricsSync(): List<MetricModelWithId<out Number>>
-    fun getAllMetrics(callback : (List<MetricModelWithId<out Number>>) -> Unit)
+    fun getAllMetrics(callback: (List<MetricModelWithId<out Number>>) -> Unit)
 
-    fun getMetricsFirstSync(limit : Long): List<MetricModelWithId<out Number>>
-    fun getMetricsFirst(skip: Long, limit : Long, callback : (List<MetricModelWithId<out Number>>) -> Unit)
-    fun getMetricsAndErrors(skipForMetrics: Long, skipForErrors: Long, limit : Long, callback :
-        (List<MetricModelWithId<out
-    Number>>, List<ErrorEntity>) -> Unit)
-    fun getMetricsFirst(limit : Long, callback : (List<MetricModelWithId<out Number>>) -> Unit)
+    fun getMetricsFirstSync(limit: Long): List<MetricModelWithId<out Number>>
+    fun getMetricsFirst(skip: Long, limit: Long, callback: (List<MetricModelWithId<out Number>>) -> Unit)
+    fun getMetricsAndErrors(
+        skipForMetrics: Long,
+        skipForErrors: Long,
+        limit: Long,
+        callback:
+        (List<MetricModelWithId<out Number>>, List<ErrorEntity>) -> Unit,
+    )
+    fun getMetricsFirst(limit: Long, callback: (List<MetricModelWithId<out Number>>) -> Unit)
+
 //    fun getMetricsAndErrorFirst(limit : Long, callback : (List<MetricModel<Number>>, List<ErrorModel>) -> Unit)
-    fun getMetricsCount(callback : (Long) -> Unit)
+    fun getMetricsCount(callback: (Long) -> Unit)
     fun clear()
     fun clearMetrics()
     fun resetMetricsFirst(limit: Long)
@@ -38,13 +43,17 @@ interface Reservoir {
     fun setMaxErrorCount(maxErrorCount: Long)
     fun saveError(errorEntity: ErrorEntity)
     fun getAllErrorsSync(): List<ErrorEntity>
-    fun getAllErrors(callback : (List<ErrorEntity>) -> Unit)
+    fun getAllErrors(callback: (List<ErrorEntity>) -> Unit)
 
-    fun getErrorsFirstSync(limit : Long): List<ErrorEntity>
-    fun getErrors(skip: Long, limit : Long, callback : (List<ErrorEntity>) ->
-    Unit)
-    fun getErrorsFirst(limit : Long, callback : (List<ErrorEntity>) -> Unit)
-    fun getErrorsCount(callback : (Long) -> Unit)
+    fun getErrorsFirstSync(limit: Long): List<ErrorEntity>
+    fun getErrors(
+        skip: Long,
+        limit: Long,
+        callback: (List<ErrorEntity>) ->
+        Unit,
+    )
+    fun getErrorsFirst(limit: Long, callback: (List<ErrorEntity>) -> Unit)
+    fun getErrorsCount(callback: (Long) -> Unit)
     fun clearErrors()
     fun clearErrors(ids: Array<Long>)
 
@@ -65,7 +74,6 @@ interface Reservoir {
          *
          */
         fun onDataChange()
-
     }
-    //this is a combined response class
+    // this is a combined response class
 }

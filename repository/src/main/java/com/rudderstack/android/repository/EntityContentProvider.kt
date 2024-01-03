@@ -29,7 +29,6 @@ import java.util.concurrent.Executors
  */
 internal class EntityContentProvider : ContentProvider() {
 
-
     companion object {
 
         internal const val ECP_ENTITY_CODE = "db_entity"
@@ -41,10 +40,9 @@ internal class EntityContentProvider : ContentProvider() {
         private var uriMatcher: UriMatcher = UriMatcher(UriMatcher.NO_MATCH)
         private var authority: String? = null
         internal val AUTHORITY
-        get() = authority ?: throw UninitializedPropertyAccessException("onAttachInfo not called yet")
+            get() = authority ?: throw UninitializedPropertyAccessException("onAttachInfo not called yet")
 
         private var sqLiteOpenHelper: SQLiteOpenHelper? = null
-
 
         internal fun getContentUri(tableName: String, context: Context?): Uri {
             if (context != null && authority == null) {
@@ -52,17 +50,17 @@ internal class EntityContentProvider : ContentProvider() {
             }
             val contentUri = Uri.parse("content://$authority/$tableName")
             try {
-                //https://developer.android.com/guide/topics/providers/content-provider-creating
+                // https://developer.android.com/guide/topics/providers/content-provider-creating
 
                 uriMatcher.addURI(
                     authority,
                     tableName,
-                    ECP_TABLE_URI_MATCHER_CODE
+                    ECP_TABLE_URI_MATCHER_CODE,
                 )
                 uriMatcher.addURI(
                     authority,
                     "$tableName/*", // *: Matches a string of any valid characters of any length.
-                    ECP_TABLE_SUB_QUERY_URI_MATCHER_CODE
+                    ECP_TABLE_SUB_QUERY_URI_MATCHER_CODE,
                 )
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -71,15 +69,15 @@ internal class EntityContentProvider : ContentProvider() {
         }
     }
 
-    //we will be using this just to satisfy new Dao creation, however, the calls we make to Dao
-    //should be synchronous.
+    // we will be using this just to satisfy new Dao creation, however, the calls we make to Dao
+    // should be synchronous.
     private val _commonExecutor = Executors.newSingleThreadExecutor()
 
     override fun onCreate(): Boolean {
         RudderDatabase.getDbDetails { name, version, dbUpgradeCb ->
             sqLiteOpenHelper = object : SQLiteOpenHelper(context, name, null, version) {
                 init {
-                    //listeners won't be fired else
+                    // listeners won't be fired else
                     writableDatabase
                 }
 
@@ -92,20 +90,18 @@ internal class EntityContentProvider : ContentProvider() {
                 override fun onUpgrade(
                     database: SQLiteDatabase?,
                     oldVersion: Int,
-                    newVersion: Int
+                    newVersion: Int,
                 ) {
                     dbUpgradeCb?.invoke(database, oldVersion, newVersion)
                 }
-
             }
         }
         return true
     }
 
     override fun attachInfo(context: Context?, info: ProviderInfo?) {
-        println("on attach info called: $info")
-        authority = info?.authority?:
-            info?.packageName?.let {  it + "." + this@EntityContentProvider::class.java.simpleName}
+        authority = info?.authority
+            ?: info?.packageName?.let { it + "." + this@EntityContentProvider::class.java.simpleName }
 
         /*_uriMatcher?.addURI(
             _authority,
@@ -118,7 +114,6 @@ internal class EntityContentProvider : ContentProvider() {
             com.rudderstack.android.sdk.core.EventContentProvider.EVENT_ID_CODE
         )*/
         super.attachInfo(context, info)
-
     }
 
     override fun query(
@@ -126,20 +121,27 @@ internal class EntityContentProvider : ContentProvider() {
         projection: Array<out String>?,
         selection: String?,
         selectionArgs: Array<out String>?,
-        sortOrder: String?
+        sortOrder: String?,
     ): Cursor? {
         if (uriMatcher.match(uri) == -1) return null
 
         val tableName = uri.tableName ?: return null
 
-        return sqLiteOpenHelper?.writableDatabase?.query(tableName, projection, selection,
-            selectionArgs, null, null, sortOrder, uri.limit)
+        return sqLiteOpenHelper?.writableDatabase?.query(
+            tableName,
+            projection,
+            selection,
+            selectionArgs,
+            null,
+            null,
+            sortOrder,
+            uri.limit,
+        )
     }
 
     override fun getType(uri: Uri): String? {
-        return null //no mime types allowed
+        return null // no mime types allowed
     }
-
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
         if (uriMatcher.match(uri) == -1) return null
@@ -149,8 +151,10 @@ internal class EntityContentProvider : ContentProvider() {
 
         val rowID = dao.insertContentValues(
             sqLiteOpenHelper?.writableDatabase ?: return null,
-            tableName, values ?: return null,
-            null, uri.conflictAlgorithm?:SQLiteDatabase.CONFLICT_REPLACE
+            tableName,
+            values ?: return null,
+            null,
+            uri.conflictAlgorithm ?: SQLiteDatabase.CONFLICT_REPLACE,
         )
         /**
          * If record is added successfully
@@ -158,7 +162,7 @@ internal class EntityContentProvider : ContentProvider() {
         if (rowID > 0) {
             val rowUri = ContentUris.withAppendedId(
                 getContentUri(tableName, context),
-                rowID
+                rowID,
             )
             context?.contentResolver?.notifyChange(rowUri, null)
             return rowUri
@@ -172,22 +176,31 @@ internal class EntityContentProvider : ContentProvider() {
         val dao = uri.initializedDao ?: return -1
         val tableName = uri.tableName ?: return -1
 
-        return dao.deleteFromDb(sqLiteOpenHelper?.writableDatabase?:return -1,
-           tableName, selection, selectionArgs)
+        return dao.deleteFromDb(
+            sqLiteOpenHelper?.writableDatabase ?: return -1,
+            tableName,
+            selection,
+            selectionArgs,
+        )
     }
 
     override fun update(
         uri: Uri,
         values: ContentValues?,
         selection: String?,
-        selectionArgs: Array<out String>?
+        selectionArgs: Array<out String>?,
     ): Int {
         if (uriMatcher.match(uri) == -1) return -1
         val dao = uri.initializedDao ?: return -1
         val tableName = uri.tableName ?: return -1
 
-        return dao.updateSync(sqLiteOpenHelper?.writableDatabase?:return -1,
-            tableName,values, selection, selectionArgs)
+        return dao.updateSync(
+            sqLiteOpenHelper?.writableDatabase ?: return -1,
+            tableName,
+            values,
+            selection,
+            selectionArgs,
+        )
     }
 
     override fun onLowMemory() {
@@ -208,9 +221,9 @@ internal class EntityContentProvider : ContentProvider() {
         }
     private val Uri.tableName: String?
         get() = pathSegments[0]
-    private val Uri.limit : String?
-    get() = getQueryParameter(ECP_LIMIT_CODE)
+    private val Uri.limit: String?
+        get() = getQueryParameter(ECP_LIMIT_CODE)
 
-    private val Uri.conflictAlgorithm : Int?
-    get() = getQueryParameter(ECP_CONFLICT_RESOLUTION_CODE)?.toIntOrNull()
+    private val Uri.conflictAlgorithm: Int?
+        get() = getQueryParameter(ECP_CONFLICT_RESOLUTION_CODE)?.toIntOrNull()
 }

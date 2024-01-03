@@ -32,6 +32,7 @@ class Configuration(var libraryMetadata: LibraryMetadata) {
         set(value) {
             field = value ?: DebugLogger
         }
+
 //    var delivery: Delivery? = null
     var maxBreadcrumbs: Int = DEFAULT_MAX_BREADCRUMBS
     var maxPersistedEvents: Int = DEFAULT_MAX_PERSISTED_EVENTS
@@ -39,8 +40,7 @@ class Configuration(var libraryMetadata: LibraryMetadata) {
     var maxReportedThreads: Int = DEFAULT_MAX_REPORTED_THREADS
     var maxStringValueLength: Int = DEFAULT_MAX_STRING_VALUE_LENGTH
 
-
-    var crashFilter : CrashFilter? = null
+    var crashFilter: CrashFilter? = null
 
     var discardClasses: Set<String> = emptySet()
     var enabledReleaseStages: Set<String>? = null
@@ -63,7 +63,5 @@ class Configuration(var libraryMetadata: LibraryMetadata) {
         private const val DEFAULT_MAX_REPORTED_THREADS = 200
         private const val DEFAULT_LAUNCH_CRASH_THRESHOLD_MS: Long = 5000
         private const val DEFAULT_MAX_STRING_VALUE_LENGTH = 10000
-
-
     }
 }
