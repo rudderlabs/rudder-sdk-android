@@ -305,7 +305,6 @@ public class RudderTraits {
      * @param lastName    String
      * @param name        String
      * @param phone       String
-     * @param title
      * @param userName    String
      */
     public RudderTraits(Address address, String age, String birthday, Company company, String createdAt, String description, String email, String firstName, String gender, String id, String lastName, String name, String phone, String title, String userName) {

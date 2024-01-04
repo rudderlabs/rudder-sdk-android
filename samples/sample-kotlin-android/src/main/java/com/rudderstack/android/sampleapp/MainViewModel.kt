@@ -29,7 +29,7 @@ import com.rudderstack.android.sampleapp.MainViewModel.Event.SCREEN
 import com.rudderstack.android.sampleapp.MainViewModel.Event.SEND_ERROR
 import com.rudderstack.android.sampleapp.MainViewModel.Event.SHUTDOWN
 import com.rudderstack.android.sampleapp.MainViewModel.Event.TRACK
-import com.rudderstack.android.sampleapp.MyApplication.Companion.metricsClient
+import com.rudderstack.android.sampleapp.MyApplication.Companion.reporter
 import com.rudderstack.android.sampleapp.MyApplication.Companion.rudderAnalytics
 import com.rudderstack.android.sampleapp.models.LogData
 import com.rudderstack.core.Plugin
@@ -106,7 +106,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             }
             GROUP -> {
-                rudderAnalytics.group("group_id", traits = GroupTraits("g_t1" to "t-1", "g_t2" to "t-2"), )
+                rudderAnalytics.group("group_id", groupTraits = GroupTraits("g_t1" to "t-1", "g_t2" to
+                    "t-2"), )
                 "Group called"
             }
             SCREEN -> {
@@ -128,9 +129,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 "Forcing a flush"
             }
             SEND_ERROR ->{
-                metricsClient.leaveBreadcrumb("Error BC")
-                metricsClient.addMetadata("Error MD", "md_key", "md_value")
-                metricsClient.notify(Exception("Non Fatal Exception"))
+                reporter.errorClient.leaveBreadcrumb("Error BC")
+                reporter.errorClient.addMetadata("Error MD", "md_key", "md_value")
+                reporter.errorClient.notify(Exception("Non Fatal Exception"))
                 "Sending an error"
             }
             else -> "What's this?"

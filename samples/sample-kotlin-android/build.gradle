@@ -18,12 +18,12 @@ plugins {
 }
 
 android {
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.rudderstack.android.sampleapp"
         minSdk 21
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -40,8 +40,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     kotlinOptions {
         jvmTarget = '1.8'
@@ -61,28 +61,28 @@ android {
 }
 
 dependencies {
-
+    implementation platform('androidx.compose:compose-bom:2023.08.00')
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
     //compose
-    implementation 'androidx.compose.ui:ui:1.4.3'
+    implementation 'androidx.compose.ui:ui:1.4.8'
     // Tooling support (Previews, etc.)
-    implementation 'androidx.compose.ui:ui-tooling:1.4.3'
+    implementation 'androidx.compose.ui:ui-tooling:1.4.8'
     // Foundation (Border, Background, Box, Image, Scroll, shapes, animations, etc.)
-    implementation 'androidx.compose.foundation:foundation:1.4.3'
+    implementation 'androidx.compose.foundation:foundation:1.4.8'
     // Material Design
-    implementation 'androidx.compose.material:material:1.4.3'
+    implementation 'androidx.compose.material:material:1.4.8'
     // Material design icons
-    implementation 'androidx.compose.material:material-icons-core:1.4.3'
-    implementation 'androidx.compose.material:material-icons-extended:1.4.3'
+    implementation 'androidx.compose.material:material-icons-core:1.4.8'
+    implementation 'androidx.compose.material:material-icons-extended:1.4.8'
     // Integration with activities
     implementation 'androidx.activity:activity-compose:1.7.2'
     // Integration with ViewModels
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1'
     // Integration with observables
-    implementation 'androidx.compose.runtime:runtime-livedata:1.4.3'
-    implementation "androidx.compose.ui:ui-tooling-preview:1.4.3"
+    implementation 'androidx.compose.runtime:runtime-livedata:1.4.8'
+    implementation "androidx.compose.ui:ui-tooling-preview:1.4.8"
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     implementation project(path: ':android', configuration: 'default')
     implementation project(path: ':moshirudderadapter', configuration: 'default')
@@ -94,6 +94,8 @@ dependencies {
     implementation project(path: ':web', configuration: 'default')
     implementation project(path: ':rudderjsonadapter', configuration: 'default')
     implementation project(path: ':rudderreporter', configuration: 'default')
+    implementation project(':rudderreporter')
+    implementation project(':android')
 
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'

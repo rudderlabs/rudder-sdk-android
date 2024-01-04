@@ -63,6 +63,7 @@ fun Analytics.assertArguments(verification : Verification<List<Message>,List<Mes
     emptyList())
 }
 fun Analytics.assertArgument(verification: Verification<Message?, Message?>){
+    busyWait(100)
     verification.assert(inputs.lastOrNull(), currentConfiguration?.storage?.getDataSync()?.lastOrNull())
 }
 private fun busyWait(millis: Long) {

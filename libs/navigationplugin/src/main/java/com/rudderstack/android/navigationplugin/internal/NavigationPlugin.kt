@@ -38,8 +38,8 @@ internal class NavigationPlugin(private val navControllerState: State<Collection
     }
 
     private fun subscribeToNavControllerState() {
-        navControllerState.subscribe {
-            updateNavControllers(it)
+        navControllerState.subscribe { newValue, _ ->
+            updateNavControllers(newValue)
         }
     }
 

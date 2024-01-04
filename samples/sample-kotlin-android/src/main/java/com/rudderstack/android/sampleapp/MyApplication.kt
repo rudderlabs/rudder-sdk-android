@@ -17,13 +17,15 @@ package com.rudderstack.android.sampleapp
 import android.app.Application
 import android.content.res.AssetManager
 import android.util.Log
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.RudderAnalytics
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClientDelegate
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
+import com.rudderstack.android.ruddermetricsreporterandroid.DefaultRudderReporter
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
+import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.Settings
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
+//import com.rudderstack.rudd.JacksonAdapter
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
@@ -33,9 +35,9 @@ class MyApplication : Application() {
         private lateinit var _rudderAnalytics: Analytics
         val rudderAnalytics
             get() = _rudderAnalytics
-        private lateinit var _metricsErrorClientDelegate: ErrorClientDelegate
-        val metricsClient
-            get() = _metricsErrorClientDelegate
+        private lateinit var _rudderReporter: RudderReporter
+        val reporter
+            get() = _rudderReporter
     }
 
     var initializationCallback: ((InitializationResponse) -> Unit)? = null
@@ -46,21 +48,25 @@ class MyApplication : Application() {
 
     internal fun initializeRudderAnalytics(application: Application) {
         _rudderAnalytics = RudderAnalytics(
-            application,
             properties.getProperty("writeKey"),
-            Settings(flushQueueSize = 15, maxFlushInterval = 50_000L),
-            JacksonAdapter(),
-            dataPlaneUrl = properties.getProperty("dataPlaneUrl"),
-            controlPlaneUrl = properties.getProperty("controlPlaneUrl"),
-            recordScreenViews = true)
+            ConfigurationAndroid(application, jsonAdapter = JacksonAdapter(), flushQueueSize = 15,
+                maxFlushInterval = 50_000L,dataPlaneUrl = properties.getProperty("dataPlaneUrl"),
+                controlPlaneUrl = properties.getProperty("controlPlaneUrl"),
+                recordScreenViews = true)
+            )
             { success, message ->
                 initializationCallback?.invoke(InitializationResponse(success, message))
             }
-        _metricsErrorClientDelegate =
-            ErrorClientDelegate(
-                application,
-                Configuration(LibraryMetadata("android", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toString(), "write-key"))
-            )
+        _rudderReporter =
+            DefaultRudderReporter(
+                application,"https://hosted.rudderlabs.com",
+                Configuration(
+                    LibraryMetadata("android", BuildConfig.VERSION_NAME, BuildConfig
+                    .VERSION_CODE.toString(), "write-key")
+                ),
+                JacksonAdapter()
+                )
+
     }
 
     private val properties by lazy {

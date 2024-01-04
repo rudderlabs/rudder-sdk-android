@@ -78,7 +78,6 @@ class FillDefaultsPluginTest {
             userId = "user_id",
             storage = AndroidStorageImpl(getApplicationContext(), storageExecutor = TestExecutor()),
         )
-        ConfigurationsState.update(mockConfig)
         ContextState.update(
             createContext(
                 traits = mapOf(
