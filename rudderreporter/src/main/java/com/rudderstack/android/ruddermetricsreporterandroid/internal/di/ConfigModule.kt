@@ -9,7 +9,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.sanit
  */
 internal class ConfigModule(
     contextModule: ContextModule,
-    configuration: Configuration
+    configuration: Configuration,
 ) : DependencyModule() {
 
     val config = sanitiseConfiguration(contextModule.ctx, configuration)

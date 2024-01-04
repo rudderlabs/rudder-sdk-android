@@ -15,6 +15,7 @@
 package com.rudderstack.core
 
 import com.rudderstack.models.Message
+import com.rudderstack.web.HttpInterceptor
 import com.rudderstack.web.HttpResponse
 
 /**
@@ -22,6 +23,8 @@ import com.rudderstack.web.HttpResponse
  *
  */
 interface DataUploadService {
+
+    fun addHeaders(headers: Map<String, String>)
     /**
      * Uploads data to cloud
      *
@@ -38,16 +41,12 @@ interface DataUploadService {
      * @param extraInfo If any data needs to be added to the body
      * @return status of upload, true if success, false otherwise
      */
-    fun uploadSync(data: List<Message>, extraInfo : Map<String,String>? = null) : HttpResponse<out Any>
+    fun uploadSync(data: List<Message>, extraInfo : Map<String,String>? = null) :
+            HttpResponse<out Any>?
 
     /**
      * Service no longer needed, release resources
      *
      */
     fun shutdown()
-
-    /**
-     * true if [shutdown] has been called on this object else false
-     */
-    val isShutdown: Boolean
 }

@@ -14,14 +14,35 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
+import android.os.Build
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.google.gson.annotations.SerializedName
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.squareup.moshi.Json
 
-data class LibraryMetadata(
-    val name: String, val sdkVersion: String,
+data class LibraryMetadata @JvmOverloads constructor(
+    @get:JsonProperty("name")
+    @SerializedName("name")
+    @Json(name = "name")
+    val name: String,
+    @get:JsonProperty("sdk_version")
+    @SerializedName("sdk_version")
+    @Json(name = "sdk_version")
+    val sdkVersion: String,
+    @get:JsonProperty("version_code")
+    @SerializedName("version_code")
+    @Json(name = "version_code")
     val versionCode: String,
-    val writeKey: String
+    @get:JsonProperty("write_key")
+    @SerializedName("write_key")
+    @Json(name = "write_key")
+    val writeKey: String,
+    @get:JsonProperty("os_version")
+    @SerializedName("os_version")
+    @Json(name = "os_version")
+    val osVersion: String = Build.VERSION.SDK_INT.toString(),
 ) : JSerialize<LibraryMetadata> {
     override fun serialize(jsonAdapter: JsonAdapter): String? {
-        return jsonAdapter.writeToJson(jsonAdapter)
+        return jsonAdapter.writeToJson(this)
     }
 }

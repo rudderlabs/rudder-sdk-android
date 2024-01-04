@@ -160,10 +160,6 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
                 jsonAdapter.readJson(it, RudderTypeAdapter {})
             }
 
-                println("creating entity with id $messageId")
-
-
-
             val message = when (type) {
 
                 Message.EventType.ALIAS -> AliasMessage.create(

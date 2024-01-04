@@ -14,8 +14,8 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal.error
 
-import com.rudderstack.android.ruddermetricsreporterandroid.error.Breadcrumb
 import com.rudderstack.android.ruddermetricsreporterandroid.Logger
+import com.rudderstack.android.ruddermetricsreporterandroid.error.Breadcrumb
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.BaseObservable
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.StateEvent
 import java.util.concurrent.atomic.AtomicInteger
@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger
 internal class BreadcrumbState(
     private val maxBreadcrumbs: Int,
 //    private val callbackState: CallbackState,
-    private val logger: Logger
+    private val logger: Logger,
 ) : BaseObservable() {
 
     /*
@@ -57,11 +57,11 @@ internal class BreadcrumbState(
         updateState {
             // use direct field access to avoid overhead of accessor method
             StateEvent.AddBreadcrumb(
-                breadcrumb.message,
+                breadcrumb.name,
                 breadcrumb.type,
                 // an encoding of milliseconds since the epoch
                 "t${breadcrumb.timestamp.time}",
-                breadcrumb.metadata ?: mutableMapOf()
+                breadcrumb.metadata ?: mutableMapOf(),
             )
         }
     }
@@ -103,6 +103,4 @@ internal class BreadcrumbState(
             index.set(tail)
         }
     }
-
-
 }

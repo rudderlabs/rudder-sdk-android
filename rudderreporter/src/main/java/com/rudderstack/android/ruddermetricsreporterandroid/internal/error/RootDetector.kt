@@ -33,7 +33,7 @@ internal class RootDetector @JvmOverloads constructor(
     private val deviceBuildInfo: DeviceBuildInfo = DeviceBuildInfo.defaultInfo(),
     private val rootBinaryLocations: List<String> = ROOT_INDICATORS,
     private val buildProps: File = BUILD_PROP_FILE,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
 
     companion object {
@@ -52,7 +52,7 @@ internal class RootDetector @JvmOverloads constructor(
             // Fallback
             "/system/xbin/daemonsu",
             // Systemless root
-            "/su/bin"
+            "/su/bin",
         )
     }
 

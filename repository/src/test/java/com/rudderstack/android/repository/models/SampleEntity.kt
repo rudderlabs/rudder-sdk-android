@@ -18,13 +18,17 @@ import android.content.ContentValues
 import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
+import com.rudderstack.android.repository.models.SampleEntity.Companion.FIELD_COUNT
+import com.rudderstack.android.repository.models.SampleEntity.Companion.FIELD_ITEMS
+import com.rudderstack.android.repository.models.SampleEntity.Companion.FIELD_NAME
+import com.rudderstack.android.repository.models.SampleEntity.Companion.TABLE_NAME
 
 @RudderEntity(
-    "sample",
+    TABLE_NAME,
     [
-        RudderField(RudderField.Type.TEXT, "name", true),
-        RudderField(RudderField.Type.INTEGER, "count", false),
-        RudderField(RudderField.Type.TEXT, "items", false),
+        RudderField(RudderField.Type.TEXT, FIELD_NAME, true),
+        RudderField(RudderField.Type.INTEGER, FIELD_COUNT, false),
+        RudderField(RudderField.Type.TEXT, FIELD_ITEMS, false),
     ],
 )
 data class SampleEntity(
@@ -32,6 +36,12 @@ data class SampleEntity(
     val count: Int,
     val items: List<String>,
 ) : Entity {
+    companion object {
+        const val TABLE_NAME = "sample"
+        const val FIELD_NAME = "name"
+        const val FIELD_COUNT = "count"
+        const val FIELD_ITEMS = "items"
+    }
     override fun generateContentValues(): ContentValues {
         return ContentValues(3).also {
             it.put("name", name)

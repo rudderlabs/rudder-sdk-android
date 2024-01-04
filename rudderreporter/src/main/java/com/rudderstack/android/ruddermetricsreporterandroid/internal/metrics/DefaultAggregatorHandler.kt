@@ -22,29 +22,43 @@ import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricModel
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricType
 import java.util.concurrent.atomic.AtomicBoolean
 
-class DefaultAggregatorHandler(private val reservoir: Reservoir,
-isEnabled: Boolean = true) : AggregatorHandler {
+class DefaultAggregatorHandler(
+    private val reservoir: Reservoir,
+    isEnabled: Boolean = true,
+) : AggregatorHandler {
     private val _isEnabled = AtomicBoolean(isEnabled)
     override fun LongCounter.recordMetric(value: Long) {
-        if(!_isEnabled.get()) return
+        if (!_isEnabled.get()) return
         recordMetric(value, mapOf())
     }
 
-    override fun LongCounter.recordMetric(value: Long, attributes: Map<String,String>) {
-        if(!_isEnabled.get()) return
-        reservoir.insertOrIncrement(MetricModel(name, MetricType.COUNTER,
-            value, attributes))
+    override fun LongCounter.recordMetric(value: Long, attributes: Map<String, String>) {
+        if (!_isEnabled.get()) return
+        reservoir.insertOrIncrement(
+            MetricModel(
+                name,
+                MetricType.COUNTER,
+                value,
+                attributes,
+            ),
+        )
     }
 
     override fun LongGauge.recordMetric(value: Long) {
-        if(!_isEnabled.get()) return
+        if (!_isEnabled.get()) return
         recordMetric(value, mapOf())
     }
 
-    override fun LongGauge.recordMetric(value: Long, attributes: Map<String,String>) {
-        if(!_isEnabled.get()) return
-        reservoir.insertOrIncrement(MetricModel(name, MetricType.GAUGE,
-            value, attributes))
+    override fun LongGauge.recordMetric(value: Long, attributes: Map<String, String>) {
+        if (!_isEnabled.get()) return
+        reservoir.insertOrIncrement(
+            MetricModel(
+                name,
+                MetricType.GAUGE,
+                value,
+                attributes,
+            ),
+        )
     }
 
     override fun enable(enable: Boolean) {

@@ -55,7 +55,7 @@ internal class DestinationConfig(private val integrationMap: Map<String, Boolean
      * @return true if ready else false
      */
     fun isIntegrationReady(integration: String): Boolean {
-        return integrationMap.getOrDefault(integration, false)
+        return integrationMap[integration]?: false
     }
 
     /**

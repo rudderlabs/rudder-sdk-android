@@ -14,65 +14,29 @@
 
 package com.rudderstack.models.android
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.google.gson.annotations.SerializedName
-import com.squareup.moshi.Json
+class RudderContext(contextMap: Map<String, Any?>) : HashMap<String, Any?>(contextMap) {
+    constructor() : this(mapOf())
 
-class RudderContext {
-    @SerializedName("app")
-    @JsonProperty("app")
-    @Json(name = "app")
-    private var app: RudderApp? = null
+    var app: RudderApp? by this
 
-    @SerializedName("traits")
-    @JsonProperty("traits")
-    @Json(name = "traits")
-    private var traits: MutableMap<String, Any?>? = null
+    var traits: RudderTraits? by this
 
-    @SerializedName("library")
-    @JsonProperty("library")
-    @Json(name = "library")
-    private var libraryInfo: RudderLibraryInfo? = null
+    var library: RudderLibraryInfo? by this
 
-    @SerializedName("os")
-    @JsonProperty("os")
-    @Json(name = "os")
-    private var osInfo: RudderOSInfo? = null
+    var os: RudderOSInfo? by this
 
-    @SerializedName("screen")
-    @JsonProperty("screen")
-    @Json(name = "screen")
-    private var screenInfo: RudderScreenInfo? = null
+    var screen: RudderScreenInfo? by this
 
-    @SerializedName("userAgent")
-    @JsonProperty("userAgent")
-    @Json(name = "userAgent")
-    private var userAgent: String? = null
+    var userAgent: String? by this
 
-    @SerializedName("locale")
-    @JsonProperty("locale")
-    @Json(name = "locale")
-    private var locale: String? = null
+    var locale: String? by this
 
-    @SerializedName("device")
-    @JsonProperty("device")
-    @Json(name = "device")
-    private var deviceInfo: RudderDeviceInfo? = null
+    var device: RudderDeviceInfo? by this
 
-    @SerializedName("network")
-    @JsonProperty("network")
-    @Json(name = "network")
-    private var networkInfo: RudderNetwork? = null
+    var network: RudderNetwork? by this
 
-    @SerializedName("timezone")
-    @JsonProperty("timezone")
-    @Json(name = "timezone")
-    private var timezone: String? = null
+    var timezone: String? by this
 
-    @SerializedName("externalId")
-    @JsonProperty("externalId")
-    @Json(name = "externalId")
-    private var externalIds: MutableList<MutableMap<String, Any?>>? = null
-    var customContextMap: MutableMap<String, Any>? = null
-
-   }
+    var externalId: MutableSet<Map<String, Any?>>? by this
+    var customContextMap: MutableMap<String, Any>? by this
+}

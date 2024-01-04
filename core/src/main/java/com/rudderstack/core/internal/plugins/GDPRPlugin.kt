@@ -16,7 +16,7 @@ package com.rudderstack.core.internal.plugins
 
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.Settings
+import com.rudderstack.core.Configuration
 import com.rudderstack.models.Message
 
 /**
@@ -40,7 +40,7 @@ internal class GDPRPlugin : Plugin {
         _analytics = analytics
     }
 
-    override fun updateSettings(settings: Settings) {
-        isOptOut = settings.isOptOut
+    override fun updateConfiguration(configuration: Configuration) {
+        isOptOut = configuration.isOptOut
     }
 }

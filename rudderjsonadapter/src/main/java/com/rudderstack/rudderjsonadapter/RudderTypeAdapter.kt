@@ -22,10 +22,10 @@ import java.lang.reflect.ParameterizedType
  *
  * @param T The generic type to be determined
  */
-abstract class RudderTypeAdapter<T>  {
+abstract class RudderTypeAdapter<T> {
     val type
-    get() = (this::class.java.genericSuperclass as? ParameterizedType)?.actualTypeArguments?.get(0)
-    companion object{
+        get() = (this::class.java.genericSuperclass as? ParameterizedType)?.actualTypeArguments?.get(0)
+    companion object {
         /**
          * For ease of instantiation
          * ```
@@ -36,9 +36,7 @@ abstract class RudderTypeAdapter<T>  {
          * @param body Empty body to facilitate. Not used
          * @return [RudderTypeAdapter]
          */
-        inline operator fun<T> invoke( crossinline body : ()-> Unit) : RudderTypeAdapter<T> =
-            object : RudderTypeAdapter<T>(){}
-
+        inline operator fun<T> invoke(crossinline body: () -> Unit): RudderTypeAdapter<T> =
+            object : RudderTypeAdapter<T>() {}
     }
-
 }

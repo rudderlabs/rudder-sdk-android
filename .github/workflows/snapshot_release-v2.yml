@@ -1,4 +1,4 @@
-name: Snapshot
+name: Snapshot-v2
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   snapshot-v2:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     environment: deployment
     steps:
       - uses: actions/checkout@v3
@@ -29,8 +29,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: 'temurin'
+          java-version: '11'
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -46,7 +46,6 @@ jobs:
 
       - name: Publish snapshot to sonatype
         run: |
-          git fetch --no-tags --prune --depth=100 origin master-v2
           npm run release-snapshot:sonatype
         env:
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}

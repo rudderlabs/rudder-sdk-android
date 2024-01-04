@@ -106,9 +106,9 @@ fun interface Plugin {
     /**
      * Called when settings is updated
      *
-     * @param settings [Settings] globally set for the sdk
+     * @param configuration [Configuration] globally set for the sdk
      */
-    fun updateSettings(settings: Settings) {}
+    fun updateConfiguration(configuration: Configuration) {}
 
     fun updateRudderServerConfig(config: RudderServerConfig) {}
 
@@ -124,8 +124,5 @@ fun interface Plugin {
      */
     fun reset(){}
 
-
-    val Analytics.jsonAdapter
-       @get:JvmName("getJsonAdapter") get() = jsonAdapter
 
 }

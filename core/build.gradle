@@ -18,8 +18,16 @@ plugins {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.javaParameters = true
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.javaParameters = true
 }
 
 apply from : "$projectDir/../dependencies.gradle"
@@ -41,6 +49,10 @@ dependencies {
     testImplementation deps.awaitility
 
     testImplementation(project(path: ':moshirudderadapter'))
+    testImplementation(project(path: projects.test_common))
     testImplementation(project(path: ':gsonrudderadapter'))
     testImplementation(project(path: ':jacksonrudderadapter'))
 }
+apply from: "$projectDir/../gradle/artifacts-jar.gradle"
+apply from: "$projectDir/../gradle/mvn-publish.gradle"
+apply from: "$projectDir/../gradle/codecov.gradle"

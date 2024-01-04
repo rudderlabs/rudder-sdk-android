@@ -1,6 +1,5 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.Device
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import java.util.Date
 
@@ -33,9 +32,19 @@ class DeviceWithState internal constructor(
     /**
      * The timestamp on the device when the event occurred
      */
-    var time: Date?
-) : Device(buildInfo, buildInfo.cpuAbis, jailbroken,locale, totalMemory, runtimeVersions){
+    var time: Date? = null,
+// private final String timestampString;
+) : Device(buildInfo, buildInfo.cpuAbis, jailbroken, locale, totalMemory, runtimeVersions) {
     override fun serialize(jsonAdapter: JsonAdapter): String? {
         return jsonAdapter.writeToJson(this)
+    }
+
+    internal override fun toMap(): Map<String, Any?> {
+        return super.toMap() + mapOf(
+            "freeDisk" to freeDisk.toString(),
+            "freeMemory" to freeMemory.toString(),
+            "orientation" to orientation.toString(),
+            "time" to time?.let { DateUtils.toIso8601(it) },
+        )
     }
 }

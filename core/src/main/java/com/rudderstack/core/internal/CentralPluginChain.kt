@@ -17,6 +17,7 @@ package com.rudderstack.core.internal
 import com.rudderstack.core.DestinationPlugin
 import com.rudderstack.core.Plugin
 import com.rudderstack.models.Message
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * A concrete plugin chain that carries the entire plugin chain: all application
@@ -29,7 +30,7 @@ internal class CentralPluginChain(
     override val index: Int = 0,
     override val originalMessage: Message = message
 ) : Plugin.Chain {
-    private var numberOfCalls = 1
+    private val numberOfCalls = AtomicInteger(0)
     override fun message(): Message {
         return message
     }
@@ -38,7 +39,7 @@ internal class CentralPluginChain(
         if (plugins.size <= index)
             return message
         // a chain can be proceeded just once
-        check(numberOfCalls++ < 2) {
+        check(numberOfCalls.incrementAndGet() < 2) {
             "proceed cannot be called on same chain twice"
         }
         // Call the next interceptor in the chain.
@@ -47,7 +48,7 @@ internal class CentralPluginChain(
             // destination plugins will be getting a copy, so they don't tamper the original
             val msgCopy = message.copy()
             val subPlugins = plugin.subPlugins
-            val subPluginsModifiedCopyMsg = if (!subPlugins.isNullOrEmpty()) {
+            val subPluginsModifiedCopyMsg = if (subPlugins.isNotEmpty()) {
                 val realSubPluginChain = copy(msgCopy, subPlugins, 0)
                 realSubPluginChain.proceed(msgCopy)
             } else msgCopy // message specifically modified for a destination plugin

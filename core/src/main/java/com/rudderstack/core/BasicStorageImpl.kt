@@ -15,21 +15,22 @@
 package com.rudderstack.core
 
 import com.rudderstack.core.internal.AnalyticsDelegate
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.IdentifyTraits
 import com.rudderstack.models.Message
 import com.rudderstack.models.MessageContext
 import com.rudderstack.models.RudderServerConfig
 import java.io.*
+import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 
 @Suppress("ThrowableNotThrown")
-class BasicStorageImpl(
+class BasicStorageImpl @JvmOverloads constructor(
     /**
      * queue size should be greater than or equals [Storage.MAX_STORAGE_CAPACITY]
      */
     private val queue: Queue<Message> = LinkedBlockingQueue(),
-    private val logger: Logger
 ) : Storage {
 
     companion object{
@@ -39,13 +40,15 @@ class BasicStorageImpl(
         private const val LIB_KEY_PLATFORM = "platform"
         private const val LIB_KEY_OS_VERSION = "os_version"
     }
+
+    private val logger
+        get() = ConfigurationsState.value?.logger
     private var backPressureStrategy = Storage.BackPressureStrategy.Drop
 
     private var _storageCapacity = Storage.MAX_STORAGE_CAPACITY
     private var _maxFetchLimit = Storage.MAX_FETCH_LIMIT
 
-    private var _cachedContext: MessageContext? = null
-    private var _dataChangeListeners = listOf<Storage.DataListener>()
+    private var _dataChangeListeners = setOf<WeakReference<Storage.DataListener>>()
     private var _isOptOut = false
     private var _optOutTime = -1L
     private var _optInTime = -1L
@@ -53,7 +56,6 @@ class BasicStorageImpl(
     private var _serverConfig: RudderServerConfig? = null
     private var _traits: IdentifyTraits? = null
 //    private var _externalIds: List<Map<String, String>>? = null
-    private var _anonymousId: String? = null
 
     //library details
     private val libDetails: Map<String, String> by lazy {
@@ -68,7 +70,7 @@ class BasicStorageImpl(
                 )
             }
         } catch (ex: IOException) {
-            logger.error(log = "Config fetch error", throwable = ex)
+            logger?.error(log = "Config fetch error", throwable = ex)
             mapOf()
         }
 
@@ -89,38 +91,32 @@ class BasicStorageImpl(
     }
 
     override fun saveMessage(vararg messages: Message) {
+        //a block to call data listener
+        val dataFailBlock: List<Message>.() -> Unit = {
+            _dataChangeListeners.forEach {
+                it.get()?.onDataDropped(
+                    this,
+                    IllegalArgumentException("Storage Capacity Exceeded")
+                )
+            }
+        }
         synchronized(this) {
             val excessMessages = queue.size + messages.size - _storageCapacity
             if (excessMessages > 0) {
-
-                //a block to call data listener
-                val dataFailBlock: List<Message>.() -> Unit = {
-                    _dataChangeListeners.forEach {
-                        it.onDataDropped(
-                            this,
-                            IllegalArgumentException("Storage Capacity Exceeded")
-                        )
-                    }
-                }
-
                 if (backPressureStrategy == Storage.BackPressureStrategy.Drop) {
-
-                    logger.warn(log = "Max storage capacity reached, dropping last $excessMessages latest events")
+                    logger?.warn(log = "Max storage capacity reached, dropping last$excessMessages latest events")
 
                     (messages.size - excessMessages).takeIf {
                         it > 0
                     }?.apply {
-
                         queue.addAll(messages.take(this))
-
-
                         //callback
                         messages.takeLast(excessMessages).run(dataFailBlock)
 
                     } ?: messages.toList().run(dataFailBlock)
 
                 } else {
-                    logger.warn(log = "Max storage capacity reached, dropping first $excessMessages oldest events")
+                    logger?.warn(log = "Max storage capacity reached, dropping first$excessMessages oldest events")
                     val tobeRemovedList = ArrayList<Message>(excessMessages)
                     var counter = excessMessages
                         while (counter > 0) {
@@ -136,12 +132,10 @@ class BasicStorageImpl(
                     tobeRemovedList.run(dataFailBlock)
                 }
             } else {
-
                     queue.addAll(messages)
             }
-
-            onDataChange()
         }
+        onDataChange()
     }
 
     override fun setBackpressureStrategy(strategy: Storage.BackPressureStrategy) {
@@ -149,8 +143,8 @@ class BasicStorageImpl(
     }
 
     override fun deleteMessages(messages: List<Message>) {
+        val messageIdsToRemove = messages.map { it.messageId }
         synchronized(this) {
-            val messageIdsToRemove = messages.map { it.messageId }
             queue.removeAll {
                 it.messageId in messageIdsToRemove
             }
@@ -159,11 +153,15 @@ class BasicStorageImpl(
     }
 
     override fun addDataListener(listener: Storage.DataListener) {
-        _dataChangeListeners = _dataChangeListeners + listener
+        _dataChangeListeners = _dataChangeListeners + WeakReference(listener)
     }
 
     override fun removeDataListener(listener: Storage.DataListener) {
-        _dataChangeListeners = _dataChangeListeners - listener
+
+        _dataChangeListeners = _dataChangeListeners.filter {
+            it.get() != null && it.get() != listener
+        }.toSet()
+
     }
 
     override fun getData(offset: Int, callback: (List<Message>) -> Unit) {
@@ -176,21 +174,17 @@ class BasicStorageImpl(
     }
 
     override fun getCount(callback: (Long) -> Unit) {
-        queue.size.toLong().apply(callback)
+        synchronized(this) {
+            queue.size.toLong().apply(callback)
+        }
     }
 
     override fun getDataSync(offset: Int): List<Message> {
-        return if (queue.size <= offset) emptyList() else queue.toList()
-            .takeLast(queue.size - offset).take(_maxFetchLimit)
+        return synchronized(this) {
+            if (queue.size <= offset) emptyList() else queue.toList().takeLast(queue.size - offset)
+                .take(_maxFetchLimit)
+        }
     }
-
-
-    override fun cacheContext(context: MessageContext) {
-        _cachedContext = context
-    }
-
-    override val context: MessageContext?
-        get() = _cachedContext
 
     override fun saveServerConfig(serverConfig: RudderServerConfig) {
         try {
@@ -206,7 +200,7 @@ class BasicStorageImpl(
             fos.close()
 
         } catch (ex: Exception) {
-            logger.error(log = "Server Config cannot be saved", throwable = ex)
+            logger?.error(log = "Server Config cannot be saved", throwable = ex)
         }
     }
 
@@ -218,28 +212,16 @@ class BasicStorageImpl(
             _optInTime = System.currentTimeMillis()
     }
 
-    /*override fun saveTraits(traits: IdentifyTraits) {
-        this._traits = traits
-    }*/
-
-    /*override fun saveExternalIds(externalIds: List<Map<String, String>>) {
-        _externalIds = externalIds
-    }*/
-
-    /*override fun clearExternalIds() {
-        _externalIds = listOf()
-    }*/
-
-    override fun saveAnonymousId(anonymousId: String) {
-        _anonymousId = anonymousId
-    }
-
     override fun saveStartupMessageInQueue(message: Message) {
-        startupQ.add(message)
+        synchronized(this) {
+            startupQ.add(message)
+        }
     }
 
     override fun clearStartupQueue() {
-        startupQ.clear()
+        synchronized(this) {
+            startupQ.clear()
+        }
     }
 
     override fun shutdown() {
@@ -251,11 +233,8 @@ class BasicStorageImpl(
         synchronized(this) {
             queue.clear()
             startupQ.clear()
-            _anonymousId = null
-//            _externalIds = null
             _traits = null
             _serverConfig = null
-            _cachedContext = mapOf()
             serverConfigFile.delete()
         }
     }
@@ -280,12 +259,6 @@ class BasicStorageImpl(
         get() = _optOutTime
     override val optInTime: Long
         get() = _optInTime
-    /*override val traits: IdentifyTraits?
-        get() = _traits
-    override val externalIds: List<Map<String, String>>?
-        get() = _externalIds*/
-    override val anonymousId: String?
-        get() = _anonymousId
 
     override val libraryName: String
         get() = libDetails[LIB_KEY_NAME] ?: ""
@@ -301,9 +274,8 @@ class BasicStorageImpl(
 
     private fun onDataChange() {
         synchronized(this) {
-//            val msgs =  queue.take(_maxFetchLimit).toList()
             _dataChangeListeners.forEach {
-                it.onDataChange()
+                it.get()?.onDataChange()
             }
 
         }

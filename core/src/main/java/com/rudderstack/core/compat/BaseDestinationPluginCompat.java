@@ -16,10 +16,9 @@ package com.rudderstack.core.compat;
 
 import com.rudderstack.core.Analytics;
 import com.rudderstack.core.BaseDestinationPlugin;
-import com.rudderstack.core.Settings;
+import com.rudderstack.core.Configuration;
 import com.rudderstack.models.Message;
 import com.rudderstack.models.RudderServerConfig;
-import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -40,8 +39,8 @@ public abstract class BaseDestinationPluginCompat<T> extends BaseDestinationPlug
     }
 
     @Override
-    public void updateSettings(@NotNull Settings settings) {
-        super.updateSettings(settings);
+    public void updateConfiguration(@NotNull Configuration configuration) {
+        super.updateConfiguration(configuration);
     }
 
     @Override
@@ -59,12 +58,6 @@ public abstract class BaseDestinationPluginCompat<T> extends BaseDestinationPlug
         super.reset();
     }
 
-    @NotNull
-    @Override
-    public JsonAdapter getJsonAdapter(@NotNull Analytics analytics) {
-        return super.getJsonAdapter(analytics);
-
-    }
 
 
     public static class DestinationInterceptorCompat implements DestinationInterceptor {
@@ -80,7 +73,7 @@ public abstract class BaseDestinationPluginCompat<T> extends BaseDestinationPlug
         }
 
         @Override
-        public void updateSettings(@NotNull Settings settings) {
+        public void updateConfiguration(@NotNull Configuration configuration) {
         }
 
         @Override
@@ -95,10 +88,5 @@ public abstract class BaseDestinationPluginCompat<T> extends BaseDestinationPlug
         public void reset() {
         }
 
-        @NotNull
-        @Override
-        public JsonAdapter getJsonAdapter(@NotNull Analytics analytics) {
-            return analytics.getJsonAdapter();
-        }
     }
 }

@@ -20,6 +20,7 @@ package com.rudderstack.android.ruddermetricsreporterandroid.metrics
 enum class AggregatorTemporality {
     /** Measurements are aggregated since the previous collection. */
     DELTA,
+
     /** Measurements are aggregated over the lifetime of the instrument. */
-    CUMULATIVE
+    CUMULATIVE,
 }

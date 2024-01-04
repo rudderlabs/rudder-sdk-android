@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
+import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
 import com.rudderstack.android.ruddermetricsreporterandroid.Syncer
 import com.rudderstack.android.ruddermetricsreporterandroid.UploadMediator
@@ -26,10 +27,21 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class DefaultSyncer internal constructor(
     private val reservoir: Reservoir,
-    private val uploader: UploadMediator
+    private val uploader: UploadMediator,
+    private val libraryMetadata: LibraryMetadata,
 ) : Syncer {
-    private var callback: ((uploaded: List<MetricModel<out Number>>, success: Boolean) -> Unit)? =
-        null
+    private var _callback: (
+        (
+            uploadedMetrics: List<MetricModel<out Number>>,
+            uploadedErrorModel: ErrorModel,
+            success: Boolean,
+        ) -> Unit
+    )? = null
+        set(value) {
+            synchronized(this) {
+                field = value
+            }
+        }
 
     private val _isShutDown = AtomicBoolean(false)
     private val _atomicRunning = AtomicBoolean(false)
@@ -37,8 +49,9 @@ class DefaultSyncer internal constructor(
     private var flushCount = DEFAULT_FLUSH_SIZE
     private val scheduler = Scheduler()
     override fun startScheduledSyncs(
-        interval: Long, flushOnStart: Boolean,
-        flushCount: Long
+        interval: Long,
+        flushOnStart: Boolean,
+        flushCount: Long,
     ) {
         this.flushCount = flushCount
         _isShutDown.set(false)
@@ -47,39 +60,58 @@ class DefaultSyncer internal constructor(
         }
     }
 
-
-    override fun setCallback(callback: ((uploaded: List<MetricModel<out Number>>, success: Boolean) -> Unit)?) {
-        this.callback = callback
+    /**
+     * Set a callback for the syncer to invoke after every flush
+     *
+     * @param callback A higher order function that calls back with the metrics and error model
+     * that were uploaded and a boolean indicating if the upload was successful.
+     * Even in case of the upload being unsuccessful, the metrics and error model params contains
+     * the metrics and errors that were attempted to be uploaded.
+     *
+     */
+    override fun setCallback(
+        callback: (
+            (
+                uploadedMetrics: List<MetricModel<out Number>>,
+                uploadedErrorModel: ErrorModel,
+                success:
+                Boolean,
+            ) -> Unit
+        )?,
+    ) {
+        this._callback = callback
     }
 
-    private fun flushMetrics(flushCount: Long) {
-        flushMetrics(0L, flushCount)
+    private fun flush(flushCount: Long) {
+        flush(0L, flushCount)
     }
-    private fun flushMetrics(startIndex: Long, flushCount: Long) {
-        //TODO: add error handling getMetricsAndErrorFirst
-        reservoir.getMetricsFirst(startIndex, flushCount) {
-            val validMetrics = it.filterWithValidValues()
-            if (validMetrics.isEmpty()) {
+    private fun flush(startIndex: Long, flushCount: Long) {
+        reservoir.getMetricsAndErrors(startIndex, 0, flushCount) { metrics, errors ->
+            val validMetrics = metrics.filterWithValidValues()
+            if (validMetrics.isEmpty() && errors.isEmpty()) {
                 _atomicRunning.set(false)
-                if (_isShutDown.get())
+                if (_isShutDown.get()) {
                     stopScheduling()
-                return@getMetricsFirst
+                }
+                return@getMetricsAndErrors
             }
-
-            uploader.upload(validMetrics, ErrorModel()) { success ->
+            val errorModel = ErrorModel(libraryMetadata, errors.map { it.errorEvent })
+            uploader.upload(validMetrics, errorModel) { success ->
                 if (success) {
                     reservoir.resetTillSync(validMetrics)
+                    reservoir.clearErrors(errors.map { it.id }.toTypedArray())
                 }
-
-                callback?.invoke(validMetrics, success)
+                synchronized(this) {
+                    _callback?.invoke(validMetrics, errorModel, success)
+                }
                 if (_isShutDown.get()) {
                     _atomicRunning.set(false)
                     stopScheduling()
                     return@upload
                 }
-                if(success)
-                    flushMetrics(startIndex + validMetrics.size.toLong(), flushCount)
-                else
+                if (success) {
+                    flush(startIndex + flushCount, flushCount)
+                } else
                     _atomicRunning.set(false)
             }
         }
@@ -87,16 +119,18 @@ class DefaultSyncer internal constructor(
 
     override fun stopScheduling() {
         _isShutDown.set(true)
-        if (_atomicRunning.get())
+        if (_atomicRunning.get()) {
             return
+        }
         scheduler.stop()
     }
 
     override fun flushAllMetrics() {
-        if (_isShutDown.get())
+        if (_isShutDown.get()) {
             return
+        }
         if (_atomicRunning.compareAndSet(false, true)) {
-            flushMetrics(flushCount)
+            flush(flushCount)
         }
     }
 
@@ -104,7 +138,7 @@ class DefaultSyncer internal constructor(
         private const val DEFAULT_FLUSH_SIZE = 20L
     }
 
-    class Scheduler internal constructor(){
+    class Scheduler internal constructor() {
         private val thresholdCountDownTimer = Timer("metrics_scheduler")
         private var periodicTaskScheduler: TimerTask? = null
 
@@ -116,15 +150,13 @@ class DefaultSyncer internal constructor(
                     callback.invoke()
                 }
             }
-            println("rescheduling : $this")
             thresholdCountDownTimer.scheduleAtFixedRate(
                 periodicTaskScheduler,
                 if (callbackOnStart) 0 else flushInterval,
-                flushInterval
+                flushInterval,
             )
-
         }
-        fun stop(){
+        fun stop() {
             periodicTaskScheduler?.cancel()
             thresholdCountDownTimer.cancel()
         }

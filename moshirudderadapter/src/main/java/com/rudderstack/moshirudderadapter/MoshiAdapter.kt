@@ -25,9 +25,11 @@ import java.lang.reflect.Type
  *
  * A Moshi based implementation of JsonAdapter
  */
-class MoshiAdapter(private var moshi : Moshi = Moshi.Builder()
-    .addLast(KotlinJsonAdapterFactory())
-    .build()) : JsonAdapter {
+class MoshiAdapter(
+    private var moshi: Moshi = Moshi.Builder()
+        .addLast(KotlinJsonAdapterFactory())
+        .build(),
+) : JsonAdapter {
 
     override fun <T> readJson(json: String, typeAdapter: RudderTypeAdapter<T>): T? {
         val jsonAdapter = typeAdapter.type?.let {
@@ -55,7 +57,7 @@ class MoshiAdapter(private var moshi : Moshi = Moshi.Builder()
     }
 
     override fun <T : Any> readJson(json: String, resultClass: Class<T>): T? {
-        //in case T is primitive, json needs to be returned as primitive
+        // in case T is primitive, json needs to be returned as primitive
         return when (resultClass) {
             String::class.java, CharSequence::class.java ->
                 json as T
@@ -68,22 +70,23 @@ class MoshiAdapter(private var moshi : Moshi = Moshi.Builder()
                     moshi.adapter<T>(resultClass) as com.squareup.moshi.JsonAdapter<T>
                 return adapter.fromJson(json)
             }
-
         }
-
     }
-    fun add(factory: com.squareup.moshi.JsonAdapter.Factory){
-       moshi = moshi.newBuilder().add(factory).build()
+    fun add(factory: com.squareup.moshi.JsonAdapter.Factory) {
+        moshi = moshi.newBuilder().add(factory).build()
     }
     fun <T> add(type: Type, jsonAdapter: com.squareup.moshi.JsonAdapter<T>) {
         moshi = moshi.newBuilder().add(type, jsonAdapter).build()
+    }
+    fun <T> add(jsonAdapter: com.squareup.moshi.JsonAdapter<T>) {
+        moshi = moshi.newBuilder().add(jsonAdapter).build()
     }
 
     fun <T> add(
         type: Type,
         annotation: Class<out Annotation?>,
-        jsonAdapter: com.squareup.moshi.JsonAdapter<T>
-    ){
+        jsonAdapter: com.squareup.moshi.JsonAdapter<T>,
+    ) {
         moshi = moshi.newBuilder().add(type, annotation, jsonAdapter).build()
     }
 

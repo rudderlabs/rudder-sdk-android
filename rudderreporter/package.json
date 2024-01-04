@@ -1,6 +1,6 @@
 {
-  "name": "repository",
-  "version": "1.0.0",
+  "name": "rudderreporter",
+  "version": "0.4.0",
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

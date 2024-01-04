@@ -14,42 +14,47 @@
 
 package com.rudderstack.core.internal
 
-import com.rudderstack.core.*
-import com.rudderstack.core.internal.plugins.*
-import com.rudderstack.core.internal.states.ContextState
+import com.rudderstack.core.Analytics
+import com.rudderstack.core.Callback
+import com.rudderstack.core.ConfigDownloadService
+import com.rudderstack.core.Controller
+import com.rudderstack.core.DataUploadService
+import com.rudderstack.core.DestinationConfig
+import com.rudderstack.core.DestinationPlugin
+import com.rudderstack.core.InfrastructurePlugin
+import com.rudderstack.core.LifecycleController
+import com.rudderstack.core.Logger
+import com.rudderstack.core.Plugin
+import com.rudderstack.core.RudderOptions
+import com.rudderstack.core.Configuration
+import com.rudderstack.core.internal.plugins.DestinationConfigurationPlugin
+import com.rudderstack.core.internal.plugins.EventFilteringPlugin
+import com.rudderstack.core.internal.plugins.GDPRPlugin
+import com.rudderstack.core.internal.plugins.RudderOptionPlugin
+import com.rudderstack.core.internal.plugins.StoragePlugin
+import com.rudderstack.core.internal.plugins.WakeupActionPlugin
 import com.rudderstack.core.internal.states.DestinationConfigState
-import com.rudderstack.core.internal.states.SettingsState
-import com.rudderstack.models.*
-import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.core.internal.states.ConfigurationsState
+import com.rudderstack.models.Message
+import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
-import java.util.concurrent.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.RejectedExecutionHandler
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.log
 
 internal class AnalyticsDelegate(
-//    private val _writeKey : String,
-    settings: Settings,
-    storage: Storage,
-//    private val defaultOptions: RudderOptions,
-//    controlPlaneUrl: String,
-    jsonAdapter: JsonAdapter,
-    // implies if source config be downloaded. must for using device mode
-    shouldVerifySdk: Boolean,
-    //retry strategy to verify sdk in case shouldVerifySdk is true
-    private val sdkVerifyRetryStrategy: RetryStrategy,
-    private val dataUploadService: DataUploadService,
-    //can be null only if shouldVerifySdk is false
-    private val configDownloadService: ConfigDownloadService?,
-    private val analyticsExecutor: ExecutorService,
-    override val logger: Logger,
-    context: MessageContext,
+    configuration: Configuration,
+    override val dataUploadService: DataUploadService,
+    override val configDownloadService: ConfigDownloadService?,
     //optional
     private val initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
     //optional called if shutdown is called
     private val shutdownHook: (() -> Unit)? = null
 ) : Controller {
-
 
     companion object {
 
@@ -73,133 +78,127 @@ internal class AnalyticsDelegate(
     //used for flushing
     // a single threaded executor by default for sequentially calling flush one after other
     private val _flushExecutor = ThreadPoolExecutor(
-        1, 1,
-        0L, TimeUnit.MILLISECONDS,
+        1,
+        1,
+        0L,
+        TimeUnit.MILLISECONDS,
         LinkedBlockingQueue<Runnable>(NUMBER_OF_FLUSH_CALLS_IN_QUEUE),
         handler
     )
 
 
     private val _commonContext = mapOf<String, String>(
-        "library" to (jsonAdapter.writeToJson(
-            mapOf("name" to storage.libraryName, "version" to storage.libraryVersion),
+        "library" to (configuration.jsonAdapter.writeToJson(mapOf(
+            "name" to configuration.storage.libraryName,
+            "version" to configuration.storage.libraryVersion
+        ),
             object : RudderTypeAdapter<Map<String, String>>() {}) ?: "")
 
     )
 
     override val isShutdown
-        get() = /*synchronized(this) {
-            println("isShutdown called: ${analyticsExecutor.isShutdown}")
-            analyticsExecutor.isShutdown || analyticsExecutor.isTerminated
-        }*/ _isShutDown.get()
+        get() = _isShutDown.get()
+    override val logger: Logger
+        get() = currentConfiguration?.logger?: Logger.Noob
 
     override fun clearStorage() {
-        _storageDecorator.clearStorage()
+        currentConfiguration?.storage?.clearStorage()
     }
 
     override fun reset() {
-        ContextState.update(createContext(customContextMap = ContextState.value?.customContexts))
-        applyClosure {
+        applyMessageClosure {
             this.reset()
         }
     }
 
-    override fun setMaxFetchLimit(limit: Int) {
-        _storageDecorator.setMaxFetchLimit(limit)
-    }
-
-    override fun setMaxStorageCapacity(
-        limit: Int,
-        backPressureStrategy: Storage.BackPressureStrategy
-    ) {
-        _storageDecorator.setStorageCapacity(limit)
-        _storageDecorator.setBackpressureStrategy(backPressureStrategy)
-    }
-
     //message callbacks
     private var _callbacks = setOf<Callback>()
-    private val _storageDecorator =
-        StorageDecorator(storage, SettingsState, this::flush)
+    private val flushScheduler = FlushScheduler(
+        this::flush)
 
-    private var _customPlugins: List<Plugin> = listOf()
     private var _destinationPlugins: List<DestinationPlugin<*>> = listOf()
 
-    // added prior to custom plugins
-    private var _internalPrePlugins: List<Plugin> = listOf()
+    //added before local message plugins
+    private var _internalPreMessagePlugins: List<Plugin> = listOf()
+
+
+    private var _customPlugins: List<Plugin> = listOf()
+
+    private var _infrastructurePlugins: List<InfrastructurePlugin> = mutableListOf()
 
     //added after custom plugins
-    private var _internalPostPlugins: List<Plugin> = listOf()
+    private var _internalPostCustomPlugins: List<Plugin> = listOf()
 
-    private val _allPlugins
-        get() = _internalPrePlugins + _customPlugins + _internalPostPlugins + _destinationPlugins
+    //Timeline plugins are associated throughout the lifecycle of SDK.
+    private val _allTimelinePlugins
+        get() = _internalPreMessagePlugins + _customPlugins + _internalPostCustomPlugins + _destinationPlugins
 
 
     //plugins
     private val gdprPlugin = GDPRPlugin()
-    private val storagePlugin = StoragePlugin(_storageDecorator)
-    private val fillDefaultsPlugin: FillDefaultsPlugin
+    private val storagePlugin = StoragePlugin()
     private val wakeupActionPlugin = WakeupActionPlugin(
-        _storageDecorator,
-        destConfigState = DestinationConfigState
+//        destConfigState = DestinationConfigState
     )
     private val destinationConfigurationPlugin = DestinationConfigurationPlugin()
 
     private var _serverConfig: RudderServerConfig? = null
 
     init {
-        SettingsState.update(settings)
+        ConfigurationsState.update(configuration)
         DestinationConfigState.update(DestinationConfig())
-        ContextState.update(context)
-        fillDefaultsPlugin = FillDefaultsPlugin(
-            _commonContext,
-            SettingsState, ContextState,
-            logger
-        )
         initializePlugins()
-        if (shouldVerifySdk) {
+        if (configuration.shouldVerifySdk) {
             updateSourceConfig()
-        }else{
+        } else {
             initializationListener?.invoke(true, null)
         }
-
-
     }
 
 
-    override fun applySettings(settings: Settings) {
-        logger.debug(log = "Settings updated: $settings")
-        SettingsState.update(settings)
-        applyClosure {
-            applySettingsClosure(this)
+
+    override fun applyConfiguration(configurationScope: Configuration.() -> Configuration) {
+        currentConfiguration?.let{
+            val newConfiguration = configurationScope(it)
+            ConfigurationsState.update(newConfiguration)
+            logger.debug(log = "Configuration updated: $newConfiguration")
+            applyInfrastructureClosure {
+                applyConfigurationClosure(this)
+            }
+            applyMessageClosure {
+                applyConfigurationClosure(this)
+            }
         }
+
     }
 
-    override fun applyClosure(closure: Plugin.() -> Unit) {
+    override fun applyMessageClosure(closure: Plugin.() -> Unit) {
         synchronized(PLUGIN_LOCK) {
-            _allPlugins.forEach {
+            _allTimelinePlugins.forEach {
                 it.closure()
             }
         }
     }
 
-    override fun setAnonymousId(anonymousId: String) {
-
-        applySettings(
-            SettingsState.value?.copy(anonymousId = anonymousId)
-                ?: Settings(anonymousId = anonymousId)
-        )
-
+    override fun applyInfrastructureClosure(closure: InfrastructurePlugin.() -> Unit) {
+        synchronized(PLUGIN_LOCK){
+            _infrastructurePlugins.forEach {
+                it.closure()
+            }
+        }
     }
 
     override fun optOut(optOut: Boolean) {
-        _storageDecorator.saveOptOut(optOut)
-        applySettings(SettingsState.value?.copy(isOptOut = optOut) ?: Settings(isOptOut = optOut))
+        currentConfiguration?.storage?.saveOptOut(optOut)
+        applyConfiguration {
+            copy(isOptOut = optOut)
+        }
     }
 
     override val isOptedOut: Boolean
-        get() = SettingsState.value?.isOptOut ?: _storageDecorator.isOptedOut
-    override val currentSettings: Settings?
-        get() = SettingsState.value
+        get() = currentConfiguration?.isOptOut ?: currentConfiguration?.storage?.isOptedOut?:false
+    override val currentConfiguration: Configuration?
+        get() = ConfigurationsState.value
 
 
     override fun addPlugin(vararg plugins: Plugin) {
@@ -210,11 +209,10 @@ internal class AnalyticsDelegate(
                     _destinationPlugins = _destinationPlugins + it
                     val newDestinationConfig =
                         DestinationConfigState.value?.withIntegration(it.name, it.isReady)
-                            ?: DestinationConfig(mapOf(it.name to it.isReady))
+                        ?: DestinationConfig(mapOf(it.name to it.isReady))
                     DestinationConfigState.update(newDestinationConfig)
                     initDestinationPlugin(it)
-                } else
-                    _customPlugins = _customPlugins + it
+                } else _customPlugins = _customPlugins + it
                 //startup
                 _analytics?.apply {
                     it.setup(this)
@@ -226,12 +224,11 @@ internal class AnalyticsDelegate(
     }
 
     override fun removePlugin(plugin: Plugin): Boolean {
-        if (plugin is DestinationPlugin<*>)
-            synchronized(PLUGIN_LOCK) {
-                val destinationPluginPrevSize = _destinationPlugins.size
-                _destinationPlugins = _destinationPlugins - plugin
-                return _destinationPlugins.size < destinationPluginPrevSize
-            }
+        if (plugin is DestinationPlugin<*>) synchronized(PLUGIN_LOCK) {
+            val destinationPluginPrevSize = _destinationPlugins.size
+            _destinationPlugins = _destinationPlugins - plugin
+            return _destinationPlugins.size < destinationPluginPrevSize
+        }
         synchronized(PLUGIN_LOCK) {
             val customPluginPrevSize = _customPlugins.size
             _customPlugins = _customPlugins - plugin
@@ -240,37 +237,58 @@ internal class AnalyticsDelegate(
 
     }
 
+    override fun addInfrastructurePlugin(vararg plugins: InfrastructurePlugin) {
+        synchronized(PLUGIN_LOCK) {
+            _infrastructurePlugins += plugins
+        }
+        applyInfrastructureClosure {
+            _analytics?.let {
+                setup(it)
+            }
+        }
+    }
+
+    override fun removeInfrastructurePlugin(plugin: InfrastructurePlugin): Boolean {
+        val prevSize = _infrastructurePlugins.size
+        synchronized(PLUGIN_LOCK) {
+            _infrastructurePlugins -= plugin
+        }
+        return _infrastructurePlugins.size < prevSize
+    }
+
 
     override fun processMessage(
-        message: Message,
-        options: RudderOptions?,
-        lifecycleController: LifecycleController?
+        message: Message, options: RudderOptions?, lifecycleController: LifecycleController?
     ) {
         if (isShutdown) {
             logger.warn(log = "Analytics has shut down, ignoring message $message")
             return
         }
-        analyticsExecutor.submit {
-            val lcc = lifecycleController ?: LifecycleControllerImpl(message,
-                synchronized(PLUGIN_LOCK) { _allPlugins.toMutableList() }.also {
-                    //after gdpr plugin
-                    it.add(
-                        1, RudderOptionPlugin(
-                            options ?: SettingsState.value?.options ?: RudderOptions.default()
-                        )
-                    )
-                    //after fill defaults plugin
-                    it.add(
-                        3, ExtractStatePlugin(
-                            ContextState,
-                            SettingsState,
-//                            options ?: SettingsState.value?.options ?: RudderOptions.default(),
-                            _storageDecorator
-                        )
-                    )
-                })
+        currentConfiguration?.analyticsExecutor?.execute {
+            val lcc = lifecycleController ?: LifecycleControllerImpl(
+                message,
+                generatePluginsWithOptions(options)
+            )
             lcc.process()
 
+        }
+    }
+
+    private fun generatePluginsWithOptions(options: RudderOptions?): List<Plugin> {
+        return synchronized(PLUGIN_LOCK) {
+            _internalPreMessagePlugins + (options?:currentConfiguration?.options ?: RudderOptions
+                .defaultOptions()).createPlugin() +
+            _customPlugins +
+            _internalPostCustomPlugins +
+            _destinationPlugins
+        }.toList()
+    }
+
+    private fun RudderOptions.createPlugin(): Plugin {
+        return RudderOptionPlugin(
+            this
+        ).also {
+            it.setup(analytics = _analytics ?: return@also)
         }
     }
 
@@ -287,22 +305,21 @@ internal class AnalyticsDelegate(
     }
 
     internal fun flush() {
-//        println("flush called thread: ${Thread.currentThread().name}\n st:")
-        /*Exception().stackTrace.forEach {
-            println("${ it.lineNumber }, ${it.methodName}, ${it.className}")
-        }*/
         logger.info(log = "Flush called")
         if (isShutdown) return
-        forceFlush(dataUploadService, _flushExecutor)
+        currentConfiguration?.let {
+            forceFlush(dataUploadService, _flushExecutor)
+        }
     }
     // works even after shutdown
 
     internal fun forceFlush(
         alternateDataUploadService: DataUploadService,
-        alternateExecutor: ExecutorService,
-        clearDb: Boolean = true, callback: ((Boolean) -> Unit)? = null
+        flushExecutor: ExecutorService,
+        clearDb: Boolean = true,
+        callback: ((Boolean) -> Unit)? = null
     ) {
-        alternateExecutor.submit {
+        flushExecutor.submit {
             blockFlush(alternateDataUploadService, clearDb).let {
                 callback?.invoke(it)
             }
@@ -310,32 +327,26 @@ internal class AnalyticsDelegate(
     }
 
     internal fun blockFlush(
-        alternateDataUploadService: DataUploadService,
-        clearDb: Boolean
+        alternateDataUploadService: DataUploadService, clearDb: Boolean
     ): Boolean {
-        if (_isShutDown.get())
-            return false
+        if (_isShutDown.get()) return false
         //inform plugins
-        applyClosure {
-            if (this is DestinationPlugin<*>)
-                this.flush()
+        applyMessageClosure {
+            if (this is DestinationPlugin<*>) this.flush()
         }
-        var latestData = _storageDecorator.getDataSync()
         var offset = 0
-//        println("block flush called thread: ${Thread.currentThread().name}\n${latestData}")
+        var latestData = currentConfiguration?.storage?.getDataSync()
 
-        while (latestData.isNotEmpty()) {
-//            println("sending data: $latestData")
-            val response = alternateDataUploadService.uploadSync(latestData, null)
+        while (latestData?.isNotEmpty() == true) {
+            val response = alternateDataUploadService.uploadSync(latestData, null)?:return false
             if (response.success) {
                 latestData.successCallback()
                 if (clearDb) {
-                    _storageDecorator.deleteMessages(latestData)
+                    currentConfiguration?.storage?.deleteMessages(latestData)
                 } else {
                     offset += latestData.size
                 }
-                latestData = _storageDecorator.getDataSync(offset)
-//                println("offset: $offset, latest data: $latestData")
+                latestData = currentConfiguration?.storage?.getDataSync(offset)
 
             } else {
                 latestData.failureCallback(response.errorThrowable)
@@ -346,19 +357,27 @@ internal class AnalyticsDelegate(
     }
 
     override fun shutdown() {
-        flush()
-        if (_isShutDown.compareAndSet(false, true)) return
+        if (!_isShutDown.compareAndSet(false, true)) return
         logger.info(log = "shutdown")
         //inform plugins
-        applyClosure {
-            onShutDown()
-        }
+        shutdownPlugins()
+
         //release memory
-        _storageDecorator.shutdown()
+        flushScheduler.shutdown()
+        currentConfiguration?.storage?.shutdown()
         dataUploadService.shutdown()
-        analyticsExecutor.shutdown()
+        currentConfiguration?.analyticsExecutor?.shutdown()
         _flushExecutor.shutdown()
         shutdownHook?.invoke()
+    }
+
+    private fun shutdownPlugins() {
+        applyMessageClosure {
+            onShutDown()
+        }
+        applyInfrastructureClosure {
+            shutdown()
+        }
     }
 
 
@@ -367,30 +386,32 @@ internal class AnalyticsDelegate(
         val destConfig = DestinationConfigState.value ?: DestinationConfig()
         fun onDestinationReady(isReady: Boolean) {
             if (isReady) {
-                _storageDecorator.startupQueue.forEach {
+                currentConfiguration?.storage?.startupQueue?.forEach {
                     // will be sent only for the individual destination.
                     //options need not be considered, since RudderOptionPlugin has
                     //already done it's job.
                     processMessage(
-                        message = it, null, lifecycleController =
-                        LifecycleControllerImpl(it, listOf(plugin))
+                        message = it,
+                        null,
+                        lifecycleController = LifecycleControllerImpl(it, listOf(plugin))
                     )
                 }
-                val newDestinationConfig =
-                    (DestinationConfigState.value ?: DestinationConfig())
-                        .withIntegration(plugin.name, isReady)
+                val newDestinationConfig = (DestinationConfigState.value
+                                            ?: DestinationConfig()).withIntegration(
+                        plugin.name,
+                        isReady
+                    )
                 DestinationConfigState.update(newDestinationConfig)
                 if (newDestinationConfig.allIntegrationsReady) {
                     //all integrations are ready, time to clear startup queue
-                    _storageDecorator.clearStartupQueue()
+                    currentConfiguration?.storage?.clearStartupQueue()
                 }
             } else {
                 logger.warn(log = "plugin ${plugin.name} activation failed")
                 //remove from destination config, else all integrations ready won't be true anytime
 
-                val newDestinationConfig =
-                    (DestinationConfigState.value ?: DestinationConfig())
-                        .removeIntegration(plugin.name)
+                val newDestinationConfig = (DestinationConfigState.value
+                                            ?: DestinationConfig()).removeIntegration(plugin.name)
                 DestinationConfigState.update(newDestinationConfig)
 
             }
@@ -408,41 +429,40 @@ internal class AnalyticsDelegate(
     }
 
     private fun updateSourceConfig() {
-        /*check(configDownloadService != null) {
-            "Config Download Service Not Set"
-        }*/
-        if(configDownloadService == null){
+        if (configDownloadService == null) {
+            initializationListener?.invoke(false, "Config download service not set")
             logger.error(log = "Config Download Service Not Set")
+            shutdown()
             return
         }
-        //configDownloadService is non-null
-        configDownloadService.download(
-            _storageDecorator.libraryName,
-            _storageDecorator.libraryVersion,
-            _storageDecorator.libraryOsVersion,
-            sdkVerifyRetryStrategy
-        ) { success, rudderServerConfig, lastErrorMsg ->
-            analyticsExecutor.submit {
-                if (success && rudderServerConfig != null && rudderServerConfig.source?.isSourceEnabled != false) {
-                    initializationListener?.invoke(true, null)
-                    handleConfigData(rudderServerConfig)
-                } else {
-                    val cachedConfig = _storageDecorator.serverConfig
-                    if (cachedConfig != null) {
-                        handleConfigData(cachedConfig)
-                        initializationListener?.invoke(
-                            true,
-                            "Downloading failed, using cached context"
-                        )
-                        logger.warn(log = "Downloading failed, using cached context")
+        currentConfiguration?.let { configuration ->
+            //configDownloadService is non-null
+            configDownloadService.download(
+                currentConfiguration?.storage?.libraryName?:"",
+                currentConfiguration?.storage?.libraryVersion?:"",
+                currentConfiguration?.storage?.libraryOsVersion?:"",
+                configuration.sdkVerifyRetryStrategy
+            ) { success, rudderServerConfig, lastErrorMsg ->
+                configuration.analyticsExecutor.submit {
+                    if (success && rudderServerConfig != null && rudderServerConfig.source?.isSourceEnabled != false) {
+                        initializationListener?.invoke(true, null)
+                        handleConfigData(rudderServerConfig)
                     } else {
-                        logger.error(log = "SDK Initialization failed due to $lastErrorMsg")
-                        initializationListener?.invoke(
-                            false,
-                            "Downloading failed, Shutting down $lastErrorMsg"
-                        )
-                        //log lastErrorMsg or isSourceEnabled
-                        shutdown()
+                        val cachedConfig = currentConfiguration?.storage?.serverConfig
+                        if (cachedConfig != null) {
+                            initializationListener?.invoke(
+                                true, "Downloading failed, using cached context"
+                            )
+                            logger.warn(log = "Downloading failed, using cached context")
+                            handleConfigData(cachedConfig)
+                        } else {
+                            logger.error(log = "SDK Initialization failed due to $lastErrorMsg")
+                            initializationListener?.invoke(
+                                false, "Downloading failed, Shutting down $lastErrorMsg"
+                            )
+                            //log lastErrorMsg or isSourceEnabled
+                            shutdown()
+                        }
                     }
                 }
             }
@@ -450,9 +470,9 @@ internal class AnalyticsDelegate(
     }
 
     private fun handleConfigData(serverConfig: RudderServerConfig) {
-        _storageDecorator.saveServerConfig(serverConfig)
+        currentConfiguration?.storage?.saveServerConfig(serverConfig)
         _serverConfig = serverConfig
-        applyClosure {
+        applyMessageClosure {
             applyServerConfigClosure(this)
         }
 
@@ -464,18 +484,19 @@ internal class AnalyticsDelegate(
      */
     private fun initializePlugins() {
         // check if opted out
-        _internalPrePlugins = _internalPrePlugins + gdprPlugin
+        _internalPreMessagePlugins = _internalPreMessagePlugins + gdprPlugin
         // rudder option plugin followed by extract state plugin should be added by lifecycle
-
         // add defaults to message
 //        _internalPrePlugins = _internalPrePlugins + anonymousIdPlugin
-        // store for cloud destinations
-        _internalPrePlugins = _internalPrePlugins + EventFilteringPlugin
-        _internalPrePlugins = _internalPrePlugins + fillDefaultsPlugin
-        _internalPrePlugins = _internalPrePlugins + storagePlugin
 
-        _internalPostPlugins + _internalPostPlugins + destinationConfigurationPlugin
-        _internalPostPlugins = _internalPostPlugins + wakeupActionPlugin
+        // store for cloud destinations
+//        _internalPostMessagePlugins = _internalPostMessagePlugins + fillDefaultsPlugin
+//        _internalPostMessagePlugins = _internalPostMessagePlugins + extractStatePlugin
+
+        _internalPostCustomPlugins = _internalPostCustomPlugins + destinationConfigurationPlugin
+        _internalPostCustomPlugins = _internalPostCustomPlugins + wakeupActionPlugin
+        _internalPostCustomPlugins = _internalPostCustomPlugins + EventFilteringPlugin
+        _internalPostCustomPlugins = _internalPostCustomPlugins + storagePlugin
 
     }
 
@@ -486,11 +507,11 @@ internal class AnalyticsDelegate(
      */
     internal fun startup(analytics: Analytics) {
         //apply startup closure
-        applyClosure {
+        applyMessageClosure {
             setup(analytics)
         }
         //if plugin update related configs are ready
-        applyClosure {
+        applyMessageClosure {
             applyUpdateClosures(this)
         }
         _analytics = analytics
@@ -502,19 +523,23 @@ internal class AnalyticsDelegate(
         //server config closure, if available
         applyServerConfigClosure(plugin)
         //settings closure
-        applySettingsClosure(plugin)
+        applyConfigurationClosure(plugin)
     }
 
-    private fun applySettingsClosure(plugin: Plugin) {
-        SettingsState.value?.apply {
-            logger.debug(log = "Settings update: $this")
-            plugin.updateSettings(this)
+    private fun applyConfigurationClosure(plugin: Plugin) {
+        currentConfiguration?.apply {
+            plugin.updateConfiguration(this)
+        }
+    }
+    private fun applyConfigurationClosure(plugin: InfrastructurePlugin) {
+        currentConfiguration?.apply {
+            plugin.updateConfiguration(this)
         }
     }
 
     private fun applyServerConfigClosure(plugin: Plugin) {
         _serverConfig?.apply {
-            plugin.updateRudderServerConfig(this@apply)
+            plugin. updateRudderServerConfig(this@apply)
         }
     }
 

@@ -19,6 +19,7 @@ import com.rudderstack.core.Plugin
 import com.rudderstack.models.Message
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.models.TrackMessage
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Event filtering for device mode destinations. Filters out blacklisted or whitelisted events in
@@ -33,7 +34,7 @@ object EventFilteringPlugin : Plugin {
     private const val EVENT_NAME = "eventName"
 
     //map of (destination definition name, DestinationEventFilteringConfig)
-    private var filteredEventsMap = mapOf<String, DestinationEventFilteringConfig>()
+    private var filteredEventsMap = ConcurrentHashMap<String, DestinationEventFilteringConfig>()
 
     override fun intercept(chain: Plugin.Chain): Message {
         val msg = chain.message()
@@ -70,15 +71,19 @@ object EventFilteringPlugin : Plugin {
                     destination.destinationConfig[EVENT_FILTERING_OPTION] as? String ?: DISABLE
                 val destinationFilterConfig = DestinationEventFilteringConfig(eventFilteringStatus,
                     eventFilteringStatus.takeIf { it != DISABLE }
-                        ?.let { destination.destinationConfig[it] as? List<Map<String, String>>? }
+                        ?.let { destination.destinationConfig[it] as? Collection<Map<String, String>>? }
                         ?.mapNotNull {
                             it[EVENT_NAME]
                         }?.toHashSet() ?: setOf()
                 )
-                filteredEventsMap =
-                    filteredEventsMap + (destinationDefinitionName to destinationFilterConfig)
+                filteredEventsMap[destinationDefinitionName] = destinationFilterConfig
             }
         }
+    }
+
+    override fun onShutDown() {
+        super.onShutDown()
+        filteredEventsMap.clear()
     }
 
     private data class DestinationEventFilteringConfig(

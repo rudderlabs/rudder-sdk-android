@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
+    id 'org.jetbrains.kotlin.android'
 }
 apply from : "$projectDir/../dependencies.gradle"
 android {
@@ -10,7 +11,7 @@ android {
     defaultConfig {
         minSdk library.min_sdk
         targetSdk library.target_sdk
-
+        consumerProguardFiles 'proguard-rules.pro'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -22,15 +23,15 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     java {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = '1.8'
     }
     testOptions {
         unitTests {
@@ -44,9 +45,10 @@ dependencies {
 //    implementation deps.kotlinCore
     implementation deps.androidXAnnotations
 
-    implementation(project(path: projects.json_rudder_adapter))
-    implementation(project(path: projects.repository))
-    implementation(project(path: projects.web))
+    api(project(path: projects.json_rudder_adapter))
+    api(project(projects.repository))
+    api(project(path: projects.web))
+    api(project(path: projects.moshi_rudder_adapter))
 
     compileOnly deps.gson
     compileOnly deps.jackson
@@ -69,10 +71,27 @@ dependencies {
     testImplementation deps.mockito_kotlin
     testImplementation deps.awaitility
     testImplementation deps.robolectric
-    androidTestImplementation deps.androidXTestExtJunitKtx
     testImplementation project(path: projects.repository)
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-}
 
+
+//    androidTestImplementation(project(path: projects.moshi_rudder_adapter))
+//    androidTestImplementation(project(path: projects.gson_rudder_adapter))
+    androidTestImplementation(project(path: projects.jackson_rudder_adapter))
+    androidTestImplementation deps.moshi.kotlin
+    androidTestImplementation deps.moshi.core
+//    androidTestImplementation deps.gson
+//    androidTestImplementation deps.jackson
+    androidTestImplementation deps.androidXTestExtJunitKtx
+    androidTestImplementation deps.androidXTestRules
+    androidTestImplementation deps.androidXTest
+//    androidTestImplementation deps.hamcrest
+//    androidTestImplementation deps.mockito
+//    androidTestImplementation deps.mockito_kotlin
+    androidTestImplementation deps.androidXTestRunner
+//    androidTestImplementation('androidx.test.espresso:espresso-contrib:3.5.1') {
+//        exclude module: "protobuf-lite"
+//    }
+}
+apply from: rootProject.file('gradle/artifacts-aar.gradle')
 apply from: rootProject.file('gradle/mvn-publish.gradle')
 apply from: rootProject.file('gradle/codecov.gradle')

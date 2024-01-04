@@ -32,7 +32,10 @@ ext {
             robolectric            : "4.10.3",
             jsonAssert             : "1.5.0",
             mockito_kotlin         : "4.0.0",
-            mockito_inline         : "4.7.0"
+            mockito_inline         : "4.7.0",
+            mockito_android        : "5.8.0",
+            androidXTestRunner     : "1.4.0",
+            navigationRuntime      : "2.7.5",
     ]
 
     deps = [
@@ -59,14 +62,19 @@ ext {
             jsonAssert             : "org.skyscreamer:jsonassert:${versions.jsonAssert}",
             mockito_kotlin         : "org.mockito.kotlin:mockito-kotlin:${versions.mockito_kotlin}",
             mockito_inline         : "org.mockito:mockito-inline:${versions.mockito_inline}",
+            mockito_android        : "org.mockito:mockito-android:${versions.mockito_android}",
             mockk                  : "io.mockk:mockk:${versions.mockk}",
             mockk_agent_jvm        : "io.mockk:mockk-agent-jvm:${versions.mockk}",
             workTest               : "androidx.work:work-testing:${versions.work}",
+            androidXTestRunner     : "androidx.test:runner:${versions.androidXTestRunner}",
+            navigationFragment     : "androidx.navigation:navigation-fragment-ktx:${versions.navigationFragment}",
+            navigationRuntime      : "androidx.navigation:navigation-runtime:${versions.navigationRuntime}",
 
     ]
 
     projects = [
             core                  : ':core',
+            android               : ':android',
             models                : ':models',
             json_rudder_adapter   : ':rudderjsonadapter',
             jackson_rudder_adapter: ':jacksonrudderadapter',
@@ -75,10 +83,11 @@ ext {
             repository            : ':repository',
             web                   : ':web',
             metrics               : ':metrics',
+            test_common           : ':libs:test-common',
     ]
     library = [
             min_sdk     : 19,
-            target_sdk  : 33,
+            target_sdk  : 34,
             version_name: '"2.0"',
             version_code: 1
     ]

@@ -23,7 +23,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.internal.di.Dependen
  */
 internal class RudderErrorStateModule(
     cfg: ImmutableConfig,
-    configuration: Configuration
+    configuration: Configuration,
 ) : DependencyModule() {
 
     val breadcrumbState = BreadcrumbState(cfg.maxBreadcrumbs, cfg.logger)

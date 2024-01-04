@@ -1,6 +1,6 @@
 /*
  * Creator: Debanjan Chatterjee on 09/06/23, 5:31 pm Last modified: 06/06/23, 1:04 pm
- * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
+ * Copyright: All rights reserved 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -17,9 +17,12 @@ package com.rudderstack.android.ruddermetricsreporterandroid.error;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import com.rudderstack.android.ruddermetricsreporterandroid.Logger;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DateUtils;
+import com.squareup.moshi.Json;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -29,16 +32,26 @@ import java.util.Map;
 public class Breadcrumb {
 
     // non-private to allow direct field access optimizations
-    private String message;
+    private String name;
     private BreadcrumbType type = BreadcrumbType.MANUAL;
     private Map<String, Object> metadata = new HashMap<>();
-    private Date timestamp = new Date();
-    private final Logger logger;
+    @JsonIgnore
+    @Json(ignore = true)
+    private final transient Date timestamp;
+    @JsonProperty("timestamp")
+    @SerializedName("timestamp")
+    @Json(name = "timestamp")
+    private final String timestampString;
+    @JsonIgnore
+    @Json(ignore = true)
+    private final transient Logger logger;
 
 
     Breadcrumb(@NonNull String message, @NonNull Logger logger) {
-        this.message = message;
+        this.name = message;
         this.logger = logger;
+        this.timestamp = new Date();
+        timestampString = DateUtils.toIso8601(timestamp);
     }
 
     Breadcrumb(@NonNull String message,
@@ -47,10 +60,11 @@ public class Breadcrumb {
                @NonNull Date timestamp,
                @NonNull Logger logger) {
         this.logger = logger;
-        this.message = message;
+        this.name = message;
         this.type = type;
         this.metadata = metadata;
         this.timestamp = timestamp;
+        timestampString = DateUtils.toIso8601(timestamp);
     }
 
     private void logNull(String property) {
@@ -59,10 +73,11 @@ public class Breadcrumb {
 
     /**
      * Sets the description of the breadcrumb
+     * @param name name for the breadcrumb
      */
-    public void setMessage(@NonNull String message) {
-        if (message != null) {
-            this.message = message;
+    public void setName(@NonNull String name) {
+        if (name != null) {
+            this.name = name;
         } else {
             logNull("message");
         }
@@ -72,8 +87,8 @@ public class Breadcrumb {
      * Gets the description of the breadcrumb
      */
     @NonNull
-    public String getMessage() {
-        return message;
+    public String getName() {
+        return name;
     }
 
 
@@ -109,21 +124,21 @@ public class Breadcrumb {
     /**
      * The timestamp that the breadcrumb was left
      */
-    @NonNull
+    @Json(ignore = true)
     public Date getTimestamp() {
         return this.timestamp;
     }
 
     @NonNull
     String getStringTimestamp() {
-        return DateUtils.toIso8601(this.timestamp);
+        return timestampString;
     }
 
     @NonNull
     @Override
     public String toString() {
         return "Breadcrumb{" +
-                "message='" + message + '\'' +
+                "message='" + name + '\'' +
                 ", type=" + type +
                 ", metadata=" + metadata +
                 ", timestamp=" + timestamp +

@@ -15,70 +15,94 @@
 package com.rudderstack.core.internal
 
 import com.rudderstack.core.ConfigDownloadService
+import com.rudderstack.core.Configuration
 import com.rudderstack.core.RetryStrategy
+import com.rudderstack.core.State
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.RudderServerConfig
-import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.web.HttpResponse
+import com.rudderstack.web.WebService
 import com.rudderstack.web.WebServiceFactory
-import java.util.*
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
+import java.util.Locale
 import java.util.concurrent.Future
+import java.util.concurrent.atomic.AtomicReference
 
-internal class ConfigDownloadServiceImpl(
-    private val encodedWriteKey : String,
-    controlPlaneUrl: String,
-    jsonAdapter: JsonAdapter,
-    private val executorService: ExecutorService = Executors.newCachedThreadPool()
+internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
+    writeKey: String,
+    webService: WebService? = null,
 ) : ConfigDownloadService {
+    private val controlPlaneWebService: AtomicReference<WebService?> =
+        AtomicReference<WebService?>(webService)
+    private val encodedWriteKey: AtomicReference<String?> = AtomicReference()
+    private val currentConfigurationAtomic = AtomicReference<Configuration?>()
+    private val currentConfiguration
+        get() = currentConfigurationAtomic.get()
+    private val configSubscriber: State.Observer<Configuration> =
+        State.Observer<Configuration> { state, _ ->
+            state?.apply {
+                encodedWriteKey.set(base64Generator.generateBase64(writeKey))
+                initializeWebService()
+                currentConfigurationAtomic.set(this)
+            }
+        }
 
+    private fun Configuration.initializeWebService() {
+        if (controlPlaneWebService.get() == null) controlPlaneWebService.set(
+            WebServiceFactory.getWebService(
+                controlPlaneUrl, jsonAdapter = jsonAdapter, executor = networkExecutor
+            )
+        )
+    }
 
-    private val controlPlaneWebService = WebServiceFactory.getWebService(
-        controlPlaneUrl,
-        jsonAdapter = jsonAdapter, executor = executorService
-    )
-//                String configUrl = rudderConfig.getControlPlaneUrl() +
-//                "sourceConfig?p=android&v="+Constants.RUDDER_LIBRARY_VERSION+"&bv="+android.os.Build.VERSION.SDK_INT;
+    init {
+        ConfigurationsState.subscribe(configSubscriber)
+    }
 
-    private var ongoingConfigFuture : Future<HttpResponse<RudderServerConfig>>? = null
-    private var lastRudderServerConfig : RudderServerConfig? = null
-    private var lastErrorMsg : String? = null
+    private var ongoingConfigFuture: Future<HttpResponse<RudderServerConfig>>? = null
+    private var lastRudderServerConfig: RudderServerConfig? = null
+    private var lastErrorMsg: String? = null
     override fun download(
         platform: String,
         libraryVersion: String,
         osVersion: String,
         retryStrategy: RetryStrategy,
-        callback: (success : Boolean, RudderServerConfig?,
-                   lastErrorMsg : String?) -> Unit
+        callback: (
+            success: Boolean, RudderServerConfig?, lastErrorMsg: String?
+        ) -> Unit
     ) {
-        executorService.submit {
-            retryStrategy.perform({
-                ongoingConfigFuture = controlPlaneWebService.get(mapOf(
-                    "Content-Type" to "application/json",
-                    "Authorization" to
-                            String.format(Locale.US, "Basic %s", encodedWriteKey)),
-                    mapOf(
-                        "p" to platform,
-                        "v" to libraryVersion,
-                        "bv" to osVersion
-                    ), "sourceConfig", RudderServerConfig::class.java)
-                val response = ongoingConfigFuture?.get()
-                lastRudderServerConfig =  response?.body
-                lastErrorMsg = response?.errorBody?: response?.error?.message
-                return@perform (ongoingConfigFuture?.get()?.status ?: -1) == 200
-            }){
-                callback.invoke(it, lastRudderServerConfig, lastErrorMsg)
+        currentConfiguration?.apply {
+            networkExecutor.submit {
+                retryStrategy.perform({
+                    ongoingConfigFuture = controlPlaneWebService.get()?.get(
+                        mapOf(
+                            "Content-Type" to "application/json",
+                            "Authorization" to String.format(Locale.US, "Basic %s", encodedWriteKey)
+                        ), mapOf(
+                            "p" to platform, "v" to libraryVersion, "bv" to osVersion
+                        ), "sourceConfig", RudderServerConfig::class.java
+                    )
+                    val response = ongoingConfigFuture?.get()
+                    lastRudderServerConfig = response?.body
+                    lastErrorMsg = response?.errorBody ?: response?.error?.message
+                    return@perform (ongoingConfigFuture?.get()?.status ?: -1) == 200
+                }) {
+                    callback.invoke(it, lastRudderServerConfig, lastErrorMsg)
+                }
             }
         }
 
     }
 
     override fun shutDown() {
+        ConfigurationsState.removeObserver(configSubscriber)
+        controlPlaneWebService.get()?.shutdown()
+        controlPlaneWebService.set(null)
+        currentConfigurationAtomic.set(null)
+        encodedWriteKey.set(null)
         try {
-
             ongoingConfigFuture?.cancel(true)
-            executorService.shutdown()
-        }catch (ex: Exception){
+
+        } catch (ex: Exception) {
             // Ignore the exception
         }
     }

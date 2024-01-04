@@ -14,7 +14,11 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
+import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClient
+
 interface RudderReporter {
     val metrics: Metrics
+    val errorClient: ErrorClient
+    val syncer: Syncer
     fun shutdown()
 }

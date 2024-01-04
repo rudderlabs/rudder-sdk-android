@@ -285,7 +285,7 @@ public class RudderTraits {
      *
      * @param anonymousId String
      */
-    RudderTraits(String anonymousId) {
+    public RudderTraits(String anonymousId) {
         this.anonymousId = anonymousId;
     }
 

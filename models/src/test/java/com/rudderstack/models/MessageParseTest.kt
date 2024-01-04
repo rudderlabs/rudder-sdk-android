@@ -32,23 +32,7 @@ abstract class MessageParseTest {
     companion object {
         private const val TRACK_JSON =
             "{\n" +
-                    "  \"type\": \"Track\",\n" +
-                    "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-                    "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
-                    "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
-                    "  \"userId\": \"debanjanchatterjee\",\n" +
-                    "  \"context\": null,\n" +
-
-                    "  \"integrations\": {\n" +
-                    "    \n" +
-                    "  },\n" +
-                    "  \"event\": \"Java Test\",\n" +
-                    "  \"properties\": {\n" +
-                    "    \"count\": \"1\"\n" +
-                    "  }\n" +
-                    "}"
-        private const val ALIAS_JSON = "{\n" +
-                "  \"type\": \"Alias\",\n" +
+                "  \"type\": \"Track\",\n" +
                 "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
                 "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
                 "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
@@ -58,75 +42,91 @@ abstract class MessageParseTest {
                 "  \"integrations\": {\n" +
                 "    \n" +
                 "  },\n" +
-                "  \"previousId\": \"172d84b9-a684-4249-8646-0994173555cd\"\n" +
+                "  \"event\": \"Java Test\",\n" +
+                "  \"properties\": {\n" +
+                "    \"count\": \"1\"\n" +
+                "  }\n" +
                 "}"
+        private const val ALIAS_JSON = "{\n" +
+            "  \"type\": \"Alias\",\n" +
+            "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
+            "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+            "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
+            "  \"userId\": \"debanjanchatterjee\",\n" +
+            "  \"context\": null,\n" +
+
+            "  \"integrations\": {\n" +
+            "    \n" +
+            "  },\n" +
+            "  \"previousId\": \"172d84b9-a684-4249-8646-0994173555cd\"\n" +
+            "}"
 
         private const val GROUP_JSON = "{\n" +
-                "  \"type\": \"Group\",\n" +
-                "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-                "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
-                "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
-                "  \"userId\": \"debanjanchatterjee\",\n" +
-                "  \"context\": null,\n" +
+            "  \"type\": \"Group\",\n" +
+            "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
+            "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+            "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
+            "  \"userId\": \"debanjanchatterjee\",\n" +
+            "  \"context\": null,\n" +
 
-                "  \"integrations\": {\n" +
-                "    \n" +
-                "  },\n" +
-                "  \"groupId\": \"193d84b9-a684-4249-8646-0994173555cd\",\n" +
-                "  \"traits\": {\n" +
-                "    \"group\": \"some_name\",\n" +
-                "    \"journey\": \"Australia\"\n" +
-                "  }\n" +
-                "}"
+            "  \"integrations\": {\n" +
+            "    \n" +
+            "  },\n" +
+            "  \"groupId\": \"193d84b9-a684-4249-8646-0994173555cd\",\n" +
+            "  \"traits\": {\n" +
+            "    \"group\": \"some_name\",\n" +
+            "    \"journey\": \"Australia\"\n" +
+            "  }\n" +
+            "}"
         private const val SCREEN_JSON = "{\n" +
-                "  \"type\": \"Screen\",\n" +
-                "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-                "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
-                "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
-                "  \"userId\": \"debanjanchatterjee\",\n" +
-                "  \"category\": \"login\",\n" +
-                "  \"context\": null,\n" +
+            "  \"type\": \"Screen\",\n" +
+            "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
+            "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+            "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
+            "  \"userId\": \"debanjanchatterjee\",\n" +
+            "  \"category\": \"login\",\n" +
+            "  \"context\": null,\n" +
 
-                "  \"integrations\": {\n" +
-                "    \n" +
-                "  },\n" +
-                "  \"event\": \"Java Test\",\n" +
-                "  \"properties\": {\n" +
-                "    \"count\": \"1\"\n" +
-                "  }\n" +
-                "}"
+            "  \"integrations\": {\n" +
+            "    \n" +
+            "  },\n" +
+            "  \"event\": \"Java Test\",\n" +
+            "  \"properties\": {\n" +
+            "    \"count\": \"1\"\n" +
+            "  }\n" +
+            "}"
 
         private const val PAGE_JSON = "{\n" +
-                "  \"type\": \"Page\",\n" +
-                "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-                "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
-                "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
-                "  \"userId\": \"debanjanchatterjee\",\n" +
-                "  \"context\": null,\n" +
+            "  \"type\": \"Page\",\n" +
+            "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
+            "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+            "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
+            "  \"userId\": \"debanjanchatterjee\",\n" +
+            "  \"context\": null,\n" +
 
-                "  \"integrations\": {\n" +
-                "    \n" +
-                "  },\n" +
-                "  \"event\": \"Java Test\",\n" +
-                "  \"properties\": {\n" +
-                "    \"count\": \"1\"\n" +
-                "  },\n" +
-                "  \"category\": \"some_category\"\n" +
-                "}"
+            "  \"integrations\": {\n" +
+            "    \n" +
+            "  },\n" +
+            "  \"event\": \"Java Test\",\n" +
+            "  \"properties\": {\n" +
+            "    \"count\": \"1\"\n" +
+            "  },\n" +
+            "  \"category\": \"some_category\"\n" +
+            "}"
         private const val IDENTIFY_JSON = "{\n" +
-                "  \"type\": \"Identify\",\n" +
-                "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-                "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
-                "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
-                "  \"userId\": \"debanjanchatterjee\",\n" +
-                "  \"context\": null,\n" +
+            "  \"type\": \"Identify\",\n" +
+            "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
+            "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+            "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
+            "  \"userId\": \"debanjanchatterjee\",\n" +
+            "  \"context\": null,\n" +
 
-                "  \"integrations\": {\n" +
-                "    \"firebase\": true,\n" +
-                "    \"amplitude\": false\n" +
-                "  },\n" +
-                "\"properties\": {}\n" +
-                "}"
+            "  \"integrations\": {\n" +
+            "    \"firebase\": true,\n" +
+            "    \"amplitude\": false\n" +
+            "  },\n" +
+            "\"properties\": {}\n" +
+            "}"
     }
 
     @Test
@@ -135,31 +135,34 @@ abstract class MessageParseTest {
         println("channel : ${track?.channel}")
 
         MatcherAssert.assertThat(
-            track, allOf(
+            track,
+            allOf(
                 notNullValue(),
                 hasProperty("type", `is`(Message.EventType.TRACK)),
                 hasProperty("channel", `is`("server")),
                 hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
                 hasProperty("properties", allOf(aMapWithSize<String, String>(1))),
-                hasProperty("eventName", `is`("Java Test"))
-            )
+                hasProperty("eventName", `is`("Java Test")),
+            ),
         )
         assertThat(track!!.properties!!["count"], `is`("1"))
-        //serialization
+        // serialization
         val trackJson = jsonAdapter.writeToJson(track)
         JSONAssert.assertEquals(
-            trackJson, JSONObject(TRACK_JSON).also {
+            trackJson,
+            JSONObject(TRACK_JSON).also {
                 it.put("channel", "server")
             },
-            JSONCompareMode.LENIENT
+            JSONCompareMode.LENIENT,
         )
 
         track.channel = "web"
         JSONAssert.assertEquals(
-            jsonAdapter.writeToJson(track), JSONObject(TRACK_JSON).also {
+            jsonAdapter.writeToJson(track),
+            JSONObject(TRACK_JSON).also {
                 it.put("channel", "web")
             },
-            JSONCompareMode.LENIENT
+            JSONCompareMode.LENIENT,
         )
     }
 
@@ -168,20 +171,22 @@ abstract class MessageParseTest {
         val alias = jsonAdapter.readJson(ALIAS_JSON, AliasMessage::class.java)
         assertThat(alias, notNullValue())
         MatcherAssert.assertThat(
-            alias, allOf(
+            alias,
+            allOf(
                 notNullValue(),
                 hasProperty("type", `is`(Message.EventType.ALIAS)),
                 hasProperty("channel", `is`("server")),
-                hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z"))
-            )
+                hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
+            ),
         )
         val aliasJson = jsonAdapter.writeToJson(alias!!)
 
         JSONAssert.assertEquals(
-            aliasJson, JSONObject(ALIAS_JSON).also {
+            aliasJson,
+            JSONObject(ALIAS_JSON).also {
                 it.put("channel", "server")
             },
-            JSONCompareMode.LENIENT
+            JSONCompareMode.LENIENT,
         )
     }
 
@@ -189,24 +194,26 @@ abstract class MessageParseTest {
     fun testGroupParsing() {
         val group = jsonAdapter.readJson(GROUP_JSON, GroupMessage::class.java)
         assertThat(
-            group, allOf(
+            group,
+            allOf(
                 notNullValue(),
                 hasProperty("type", `is`(Message.EventType.GROUP)),
                 hasProperty("channel", `is`("server")),
                 hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
                 hasProperty("traits", allOf(aMapWithSize<String, String>(2))),
 //            hasProperty("eventName", `is`("Java Test"))
-            )
+            ),
         )
         assertThat(group!!.traits!!["group"], `is`("some_name"))
         assertThat(group.traits!!["journey"], `is`("Australia"))
         val groupJson = jsonAdapter.writeToJson(group)
 
         JSONAssert.assertEquals(
-            groupJson, JSONObject(GROUP_JSON).also {
+            groupJson,
+            JSONObject(GROUP_JSON).also {
                 it.put("channel", "server")
             },
-            JSONCompareMode.LENIENT
+            JSONCompareMode.LENIENT,
         )
     }
 
@@ -214,24 +221,26 @@ abstract class MessageParseTest {
     fun testScreenParsing() {
         val screen = jsonAdapter.readJson(SCREEN_JSON, ScreenMessage::class.java)
         assertThat(
-            screen, allOf(
+            screen,
+            allOf(
                 notNullValue(),
                 hasProperty("type", `is`(Message.EventType.SCREEN)),
                 hasProperty("channel", `is`("server")),
                 hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
                 hasProperty("properties", allOf(aMapWithSize<String, String>(1))),
                 hasProperty("userId", `is`("debanjanchatterjee")),
-                hasProperty("category", `is`("login"))
-            )
+                hasProperty("category", `is`("login")),
+            ),
         )
         assertThat(screen!!.properties!!["count"], `is`("1"))
         val screenJson = jsonAdapter.writeToJson(screen)
 
         JSONAssert.assertEquals(
-            screenJson, JSONObject(SCREEN_JSON).also {
+            screenJson,
+            JSONObject(SCREEN_JSON).also {
                 it.put("channel", "server")
             },
-            JSONCompareMode.LENIENT
+            JSONCompareMode.LENIENT,
         )
     }
 
@@ -239,23 +248,25 @@ abstract class MessageParseTest {
     fun testPageParsing() {
         val page = jsonAdapter.readJson(PAGE_JSON, PageMessage::class.java)
         assertThat(
-            page, allOf(
+            page,
+            allOf(
                 notNullValue(),
                 hasProperty("type", `is`(Message.EventType.PAGE)),
                 hasProperty("channel", `is`("server")),
                 hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
                 hasProperty("properties", allOf(aMapWithSize<String, String>(1))),
                 hasProperty("userId", `is`("debanjanchatterjee")),
-                hasProperty("category", `is`("some_category"))
-            )
+                hasProperty("category", `is`("some_category")),
+            ),
         )
         assertThat(page!!.properties!!["count"], `is`("1"))
         val pageJson = jsonAdapter.writeToJson(page)
         JSONAssert.assertEquals(
-            pageJson, JSONObject(PAGE_JSON).also {
+            pageJson,
+            JSONObject(PAGE_JSON).also {
                 it.put("channel", "server")
             },
-            JSONCompareMode.LENIENT
+            JSONCompareMode.LENIENT,
         )
     }
 
@@ -263,26 +274,27 @@ abstract class MessageParseTest {
     fun testIdentifyParsing() {
         val identify = jsonAdapter.readJson(IDENTIFY_JSON, IdentifyMessage::class.java)
         assertThat(
-            identify, allOf(
+            identify,
+            allOf(
                 notNullValue(),
                 hasProperty("type", `is`(Message.EventType.IDENTIFY)),
                 hasProperty("channel", `is`("server")),
                 hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
                 hasProperty("integrations", allOf(aMapWithSize<String, String>(2))),
-            )
+            ),
         )
         assertThat(identify!!.integrations!!["firebase"], `is`(true))
         assertThat(identify.integrations!!["amplitude"], `is`(false))
 
         val identifyJson = jsonAdapter.writeToJson(identify)
         JSONAssert.assertEquals(
-            identifyJson, JSONObject(IDENTIFY_JSON).also {
+            identifyJson,
+            JSONObject(IDENTIFY_JSON).also {
                 it.put("channel", "server")
             },
-            JSONCompareMode.LENIENT
+            JSONCompareMode.LENIENT,
         )
     }
-
 }
 
 class MessageParseGsonTest : MessageParseTest() {

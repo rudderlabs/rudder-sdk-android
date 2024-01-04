@@ -18,23 +18,27 @@ import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.TestWorkerBuilder
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.android.utils.TestLogger
+import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.internal.AndroidLogger
-import com.rudderstack.android.internal.sync.RudderSyncWorker
-import com.rudderstack.android.internal.sync.RudderWorkerConfig
-import com.rudderstack.android.internal.sync.registerWorkManager
+import com.rudderstack.android.internal.infrastructure.sync.RudderSyncWorker
+import com.rudderstack.android.internal.infrastructure.sync.WorkManagerAnalyticsFactory
+import com.rudderstack.android.internal.infrastructure.sync.registerWorkManager
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Base64Generator
-import com.rudderstack.core.Logger
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
+import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
+import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.anyOrNull
 
 import org.robolectric.annotation.Config
 import java.util.concurrent.ExecutorService
@@ -47,29 +51,42 @@ class RudderSyncWorkerTest {
     val mockkRule = MockKRule(this)
     @MockK
     lateinit var analytics: Analytics
+    @MockK
+    lateinit var configuration: ConfigurationAndroid
 
     private lateinit var application: Application
     private lateinit var executorService: ExecutorService
     @Before
     fun setup(){
+        MockKAnnotations.init()
 //        MockitoAnnotations.openMocks(this)
         application = ApplicationProvider.getApplicationContext()
         val logger = TestLogger()
+        every{configuration.defaultProcessName} returns null
+        every{configuration.multiProcessEnabled} returns false
+        every{configuration.networkExecutor} returns mockk()
         every{analytics.logger} returns logger
-        application.registerWorkManager(analytics, RudderWorkerConfig("", false, jsonAdapter = JacksonAdapter(),
-        logger = AndroidLogger, controlPlaneUrl = null, dataPlaneUrl = null))
+        every{analytics.currentConfigurationAndroid} returns configuration
+        every{analytics.currentConfiguration} returns configuration
+        application.registerWorkManager(analytics, DummyAnalyticsFactory::class.java)
         executorService = Executors.newSingleThreadExecutor()
 
     }
 
     @Test
     fun testRudderSyncWorker(){
-        every{analytics.blockingFlush( true, any(), null)} returns true
+        every{analytics.blockingFlush()} returns true
         every { analytics.isShutdown } returns false
         val worker = TestWorkerBuilder.from(application, RudderSyncWorker::class.java, executorService).build()
         val result = worker.doWork()
         verify(exactly = 1){
-            analytics.blockingFlush(true,  org.mockito.kotlin.any<Base64Generator>(), any())
+            analytics.blockingFlush()
         }
+    }
+    inner class DummyAnalyticsFactory: WorkManagerAnalyticsFactory {
+        override fun createAnalytics(application: Application): Analytics {
+            return analytics
+        }
+
     }
 }

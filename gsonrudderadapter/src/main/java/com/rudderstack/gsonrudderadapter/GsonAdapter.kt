@@ -14,10 +14,11 @@
 
 package com.rudderstack.gsonrudderadapter
 
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
-
 
 /**
  * @see JsonAdapter
@@ -25,10 +26,10 @@ import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
  * A Gson based implementation of JsonAdapter
  */
 
-class GsonAdapter : JsonAdapter {
-    private val gson = GsonBuilder().create()
+class GsonAdapter(private val gson: Gson = GsonBuilder().create()) : JsonAdapter {
+
     override fun <T> readJson(json: String, typeAdapter: RudderTypeAdapter<T>): T? {
-        return gson.fromJson(json, typeAdapter.type)
+        return gson.fromJson(json, typeAdapter.type ?: object : TypeToken<T>() {}.type)
     }
 
     override fun <T : Any> writeToJson(obj: T): String? {
@@ -42,11 +43,10 @@ class GsonAdapter : JsonAdapter {
     override fun <T : Any> readMap(map: Map<String, Any>, resultClass: Class<T>): T? {
         val jsonElement = gson.toJsonTree(map)
         return gson.fromJson(jsonElement, resultClass)
-
     }
 
     override fun <T : Any> readJson(json: String, resultClass: Class<T>): T {
-        //gson is comfortable in parsing just strings/primitives
+        // gson is comfortable in parsing just strings/primitives
         return gson.fromJson(json, resultClass)
     }
 }

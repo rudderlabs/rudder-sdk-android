@@ -20,30 +20,31 @@ import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
 
 @RudderEntity(
-    LabelEntity.TABLE_NAME, [
+    LabelEntity.TABLE_NAME,
+    [
         RudderField(
             RudderField.Type.INTEGER,
             LabelEntity.Columns.ID,
             primaryKey = false,
             isNullable = false,
             isAutoInc = true,
-            isIndex = true
+            isIndex = true,
         ),
         RudderField(
             RudderField.Type.TEXT,
             LabelEntity.Columns.NAME,
             primaryKey = true,
             isNullable = false,
-            isUnique = true
+            isUnique = true,
         ),
         RudderField(
             RudderField.Type.TEXT,
             LabelEntity.Columns.VALUE,
             primaryKey = true,
             isNullable = false,
-            isUnique = true
-        )
-    ]
+            isUnique = true,
+        ),
+    ],
 )
 internal class LabelEntity(val name: String, val value: String) : Entity {
     private var _id: Long = UNINITIALIZED_ID
@@ -80,5 +81,4 @@ internal class LabelEntity(val name: String, val value: String) : Entity {
             }
         }
     }
-
 }

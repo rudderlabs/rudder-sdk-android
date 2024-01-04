@@ -52,4 +52,29 @@ interface Logger {
         None(4),
     }
     val level: LogLevel
+
+    object Noob : Logger{
+        override fun activate(level: LogLevel) {
+            // do nothing
+        }
+
+        override fun info(tag: String, log: String) {
+            // do nothing
+        }
+
+        override fun debug(tag: String, log: String) {
+            // do nothing
+        }
+
+        override fun warn(tag: String, log: String) {
+            // do nothing
+        }
+
+        override fun error(tag: String, log: String, throwable: Throwable?) {
+            // do nothing
+        }
+
+        override val level: LogLevel
+            get() = LogLevel.None
+    }
 }

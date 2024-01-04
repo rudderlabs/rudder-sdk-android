@@ -19,7 +19,7 @@ import java.lang.RuntimeException
 internal fun Context.registerReceiverSafe(
     receiver: BroadcastReceiver?,
     filter: IntentFilter?,
-    logger: Logger? = null
+    logger: Logger? = null,
 ): Intent? {
     try {
         return registerReceiver(receiver, filter)
@@ -39,7 +39,7 @@ internal fun Context.registerReceiverSafe(
  */
 internal fun Context.unregisterReceiverSafe(
     receiver: BroadcastReceiver?,
-    logger: Logger? = null
+    logger: Logger? = null,
 ) {
     try {
         unregisterReceiver(receiver)

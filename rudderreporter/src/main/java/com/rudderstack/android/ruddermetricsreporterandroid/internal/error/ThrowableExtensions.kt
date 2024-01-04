@@ -1,4 +1,5 @@
 @file:JvmName("ThrowableUtils")
+
 package com.rudderstack.android.ruddermetricsreporterandroid.internal.error
 
 /**

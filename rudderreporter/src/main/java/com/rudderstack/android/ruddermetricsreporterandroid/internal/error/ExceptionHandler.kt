@@ -14,19 +14,19 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal.error
 
-import com.rudderstack.android.ruddermetricsreporterandroid.error.SeverityReason
-import android.os.StrictMode.ThreadPolicy
 import android.os.StrictMode
-import com.rudderstack.android.ruddermetricsreporterandroid.error.ErrorClientDelegate
+import android.os.StrictMode.ThreadPolicy
 import com.rudderstack.android.ruddermetricsreporterandroid.Logger
+import com.rudderstack.android.ruddermetricsreporterandroid.error.DefaultErrorClient
 import com.rudderstack.android.ruddermetricsreporterandroid.error.Metadata
+import com.rudderstack.android.ruddermetricsreporterandroid.error.SeverityReason
 
 /**
  * Provides automatic notification hooks for unhandled exceptions.
  */
 internal class ExceptionHandler internal constructor(
-    private val errorClientDelegate: ErrorClientDelegate,
-    private val logger: Logger
+    private val errorClient: DefaultErrorClient,
+    private val logger: Logger,
 ) : Thread.UncaughtExceptionHandler {
     private val originalHandler: Thread.UncaughtExceptionHandler? = Thread.getDefaultUncaughtExceptionHandler()
     private val strictModeHandler = StrictModeHandler()
@@ -41,7 +41,7 @@ internal class ExceptionHandler internal constructor(
 
     override fun uncaughtException(thread: Thread, throwable: Throwable) {
         try {
-            if (errorClientDelegate.config.shouldDiscardError(throwable)) {
+            if (errorClient.config.shouldDiscardError(throwable)) {
                 return
             }
             val strictModeThrowable = strictModeHandler.isStrictModeThrowable(throwable)
@@ -59,15 +59,19 @@ internal class ExceptionHandler internal constructor(
             if (strictModeThrowable) { // writes to disk on main thread
                 val originalThreadPolicy = StrictMode.getThreadPolicy()
                 StrictMode.setThreadPolicy(ThreadPolicy.LAX)
-                errorClientDelegate.notifyUnhandledException(
+                errorClient.notifyUnhandledException(
                     throwable,
-                    metadata, severityReason, violationDesc
+                    metadata,
+                    severityReason,
+                    violationDesc,
                 )
                 StrictMode.setThreadPolicy(originalThreadPolicy)
             } else {
-                errorClientDelegate.notifyUnhandledException(
+                errorClient.notifyUnhandledException(
                     throwable,
-                    metadata, severityReason, null
+                    metadata,
+                    severityReason,
+                    null,
                 )
             }
         } catch (ignored: Throwable) {

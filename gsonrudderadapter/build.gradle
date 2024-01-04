@@ -17,15 +17,15 @@ plugins {
     id 'kotlin'
 }
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 compileKotlin {
-    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.javaParameters = true
 }
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.javaParameters = true
 }
 
@@ -35,12 +35,12 @@ apply from : "$projectDir/../dependencies.gradle"
 
 dependencies {
 
-    implementation(project(path: ":rudderjsonadapter", configuration: 'default'))
+    implementation(project(path: ":rudderjsonadapter"))
     api deps.gson
 
     testImplementation deps.hamcrest
     testImplementation 'junit:junit:4.+'
 }
-
-apply from: rootProject.file('gradle/mvn-publish.gradle')
-apply from: rootProject.file('gradle/codecov.gradle')
+apply from: "$projectDir/../gradle/artifacts-jar.gradle"
+apply from: "$projectDir/../gradle/mvn-publish.gradle"
+apply from: "$projectDir/../gradle/codecov.gradle"

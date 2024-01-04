@@ -18,9 +18,8 @@ internal class AppDataCollector(
     private val packageManager: PackageManager?,
     private val config: ImmutableConfig,
     private val activityManager: ActivityManager?,
-    private val memoryTrimState: MemoryTrimState
+    private val memoryTrimState: MemoryTrimState,
 ) {
-
 
     var codeBundleId: String? = null
 
@@ -40,7 +39,12 @@ internal class AppDataCollector(
 
     fun generateAppWithState(): AppWithState {
         return AppWithState(
-            config, binaryArch, packageName, releaseStage, versionName, codeBundleId
+            config,
+            binaryArch,
+            packageName,
+            releaseStage,
+            versionName,
+            codeBundleId,
         )
     }
 
@@ -111,8 +115,9 @@ internal class AppDataCollector(
      */
     fun getInstallerPackageName(): String? {
         try {
-            if (VERSION.SDK_INT >= VERSION_CODES.R)
+            if (VERSION.SDK_INT >= VERSION_CODES.R) {
                 return packageManager?.getInstallSourceInfo(packageName)?.installingPackageName
+            }
             @Suppress("DEPRECATION")
             return packageManager?.getInstallerPackageName(packageName)
         } catch (e: Exception) {

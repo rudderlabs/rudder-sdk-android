@@ -6,17 +6,33 @@
   "targets": {
     "build": {
       "executor": "@jnxplus/nx-gradle:build",
-      "outputs": ["./android/build"]
+      "dependsOn": [
+        {
+          "projects": [
+            "core",
+            "repository",
+            "rudderreporter"
+          ],
+          "target": "build"
+        }
+      ],
+      "outputs": [
+        "{projectRoot}/android/build"
+      ]
     },
     "lint": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:lint",
       "options": {
         "linter": "ktlint"
       }
     },
     "test": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "@jnxplus/nx-gradle:test"
     },
     "ktformat": {
@@ -44,14 +60,18 @@
       }
     },
     "release-sonatype": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'android-release' && ./gradlew :android:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "command": "echo 'android-snapshot' && ./gradlew :android:publishToSonatype"

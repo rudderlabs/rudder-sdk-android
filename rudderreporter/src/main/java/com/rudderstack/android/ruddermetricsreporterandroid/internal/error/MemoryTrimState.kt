@@ -38,7 +38,7 @@ internal class MemoryTrimState : BaseObservable() {
             StateEvent.UpdateMemoryTrimEvent(
                 isLowMemory,
                 memoryTrimLevel,
-                trimLevelDescription
+                trimLevelDescription,
             )
         }
     }

@@ -14,17 +14,41 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.metrics
 
+import androidx.annotation.Keep
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.rudderstack.android.ruddermetricsreporterandroid.JSerialize
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.squareup.moshi.Json
 
-open class MetricModel<T : Any>(val name: String, val type: MetricType,
-                                val value: T, val labels: Map<String,String>) : JSerialize<MetricModel<T>> {
+open class MetricModel<T : Any>(
+    val name: String,
+    val type: MetricType,
+    val value: T,
+    val labels: Map<String, String>,
+) : JSerialize<MetricModel<T>> {
+
+    companion object {
+        @Keep
+        private const val NAME_TAG = "name"
+
+        @Keep
+        private const val TYPE_TAG = "type"
+
+        @Keep
+        private const val VALUE_TAG = "value"
+
+        @Keep
+        private const val LABELS_TAG = "labels"
+    }
+
     override fun serialize(jsonAdapter: JsonAdapter): String? {
-        mapOf<String, Any>("name" to name, "type" to type, "value" to value, "labels" to labels).let {
+        toMap().let {
             return jsonAdapter.writeToJson(it)
         }
+    }
+
+    protected open fun toMap(): Map<String, Any> {
+        return mapOf(NAME_TAG to name, TYPE_TAG to type, VALUE_TAG to value, LABELS_TAG to labels)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -48,21 +72,23 @@ open class MetricModel<T : Any>(val name: String, val type: MetricType,
     }
 
     override fun toString(): String {
-        return "MetricModel(name='$name', type=$type, value=$value, labels=$labels)"
+        return "MetricModel($NAME_TAG ='$name', $TYPE_TAG = $type, $VALUE_TAG = $value, $LABELS_TAG = $labels)"
     }
-
-
 }
 
-class MetricModelWithId<T : Any>(@Transient
-                                 @JsonIgnore
-                                 @field:Json(ignore = true)
-                                 val id: String, name: String, type: MetricType,
-                                      value: T, labels: Map<String,String>) : MetricModel<T>(name, type, value, labels) {
-    override fun serialize(jsonAdapter: JsonAdapter): String? {
-        mapOf<String, Any>("id" to id, "name" to name, "type" to type, "value" to value, "labels" to labels).let {
-            return jsonAdapter.writeToJson(it)
-        }
+class MetricModelWithId<T : Any>(
+    @Transient @JsonIgnore @field:Json(ignore = true) val id: String,
+    name: String,
+    type: MetricType,
+    value: T,
+    labels: Map<String, String>,
+) : MetricModel<T>(name, type, value, labels) {
+    companion object {
+        @Keep private const val ID_TAG = "id"
+    }
+
+    override fun toMap(): Map<String, Any> {
+        return super.toMap() + mapOf(ID_TAG to id)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -74,7 +100,6 @@ class MetricModelWithId<T : Any>(@Transient
     }
 
     override fun toString(): String {
-        return "MetricModelWithId(id='$id'), parent = ${super.toString()})"
+        return "MetricModelWithId(i$ID_TAG='$id'), parent = ${super.toString()})"
     }
-
 }

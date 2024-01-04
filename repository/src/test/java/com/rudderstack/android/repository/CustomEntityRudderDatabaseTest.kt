@@ -19,8 +19,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
-import com.rudderstack.android.repository.models.SampleEntity
-import com.rudderstack.android.repository.models.TestEntityFactory
 import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert
@@ -36,7 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Config(sdk = [29])
 class CustomEntityRudderDatabaseTest {
 
-    //lets have a model class
+    // lets have a model class
     data class Model(val name: String, val values: Array<String>) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -56,14 +54,15 @@ class CustomEntityRudderDatabaseTest {
             return result
         }
     }
-    //let's create an entity for the same
+    // let's create an entity for the same
 
     @RudderEntity(
-        "model_table", fields = [
+        "model_table",
+        fields = [
             RudderField(RudderField.Type.TEXT, "model_name", primaryKey = true),
             RudderField(RudderField.Type.TEXT, "model_values"),
 
-        ]
+        ],
     )
     class ModelEntity(val model: Model) : Entity {
         companion object {
@@ -71,15 +70,14 @@ class CustomEntityRudderDatabaseTest {
                 return ModelEntity(
                     Model(
                         values["model_name"] as String,
-                        (values["model_values"] as String).split(',').toTypedArray()
-                    )
+                        (values["model_values"] as String).split(',').toTypedArray(),
+                    ),
                 )
             }
         }
 
         override fun generateContentValues(): ContentValues {
-            return ContentValues(
-            ).also {
+            return ContentValues().also {
                 it.put("model_name", model.name)
                 it.put("model_values", model.values.reduce { acc, s -> "$acc,$s" })
             }
@@ -98,44 +96,45 @@ class CustomEntityRudderDatabaseTest {
         }
     }
 
-    //entity factory
+    // entity factory
     class ModelEntityFactory : EntityFactory {
         override fun <T : Entity> getEntity(entity: Class<T>, values: Map<String, Any?>): T? {
             return when (entity) {
                 ModelEntity::class.java -> ModelEntity.create(values)
                 else -> null
             } as T?
-
         }
-
     }
+
     @Before
     fun initialize() {
         RudderDatabase.init(
             ApplicationProvider.getApplicationContext(),
 //            RuntimeEnvironment.application,
-            "testDb", ModelEntityFactory(), false,
-            executorService = TestExecutor()
+            "testDb",
+            ModelEntityFactory(),
+            false,
+            executorService = TestExecutor(),
         )
-
     }
 
     @After
     fun tearDown() {
         RudderDatabase.shutDown()
     }
+
     @Test
-    fun `test custom Entity`(){
+    fun `test custom Entity`() {
         val sampleModelEntitiesToSave = listOf(
-            Model("name-1", arrayOf("a","b", "c")),
-            Model("name-2", arrayOf("d","e", "f")),
-            Model("name-3", arrayOf("g","h", "i")),
-            Model("name-4", arrayOf("j","k", "l")),
+            Model("name-1", arrayOf("a", "b", "c")),
+            Model("name-2", arrayOf("d", "e", "f")),
+            Model("name-3", arrayOf("g", "h", "i")),
+            Model("name-4", arrayOf("j", "k", "l")),
         ).map {
             ModelEntity(it)
         }
         val entityModelDao = RudderDatabase.getDao(ModelEntity::class.java)
-        //save data
+        // save data
         val isCompleted = AtomicBoolean(false)
         with(entityModelDao) {
             val rowIds = sampleModelEntitiesToSave.insertSync()
@@ -148,28 +147,29 @@ class CustomEntityRudderDatabaseTest {
                 it.model.name
             }
             MatcherAssert.assertThat(
-                savedItems, Matchers.allOf(
+                savedItems,
+                Matchers.allOf(
                     Matchers.iterableWithSize(4),
-                    Matchers.contains(*namesToBePresent.toTypedArray())
-                )
+                    Matchers.contains(*namesToBePresent.toTypedArray()),
+                ),
             )
 
             sampleModelEntitiesToSave.subList(0, 2).delete() {
-                //number of deleted rows is 2
+                // number of deleted rows is 2
                 MatcherAssert.assertThat(it, Matchers.equalTo(2))
                 val items = getAllSync()?.map {
                     it.model.name
                 }
                 MatcherAssert.assertThat(
-                    items, Matchers.allOf(
+                    items,
+                    Matchers.allOf(
                         Matchers.iterableWithSize(2),
-                        Matchers.contains(*namesToBePresent.subList(2,4).toTypedArray())
-                    )
+                        Matchers.contains(*namesToBePresent.subList(2, 4).toTypedArray()),
+                    ),
                 )
                 isCompleted.set(true)
             }
         }
         Awaitility.await().atMost(500, TimeUnit.SECONDS).untilTrue(isCompleted)
-
     }
 }

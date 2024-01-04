@@ -14,23 +14,29 @@
 
 package com.rudderstack.core
 
-import com.rudderstack.core.internal.*
-import com.rudderstack.core.internal.states.ContextState
-import com.rudderstack.core.internal.states.SettingsState
-import com.rudderstack.models.*
-import com.rudderstack.rudderjsonadapter.JsonAdapter
-import java.util.*
-import java.util.concurrent.*
+import com.rudderstack.core.internal.AnalyticsDelegate
+import com.rudderstack.core.internal.ConfigDownloadServiceImpl
+import com.rudderstack.core.internal.DataUploadServiceImpl
+import com.rudderstack.models.AliasMessage
+import com.rudderstack.models.GroupMessage
+import com.rudderstack.models.GroupTraits
+import com.rudderstack.models.IdentifyMessage
+import com.rudderstack.models.IdentifyProperties
+import com.rudderstack.models.IdentifyTraits
+import com.rudderstack.models.MessageContext
+import com.rudderstack.models.MessageDestinationProps
+import com.rudderstack.models.ScreenMessage
+import com.rudderstack.models.ScreenProperties
+import com.rudderstack.models.TrackMessage
+import com.rudderstack.models.TrackProperties
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 
 class Analytics private constructor(
-    private val _writeKey: String,
-    @get:JvmName("getJsonAdapter")
-    internal val jsonAdapter: JsonAdapter,
-    private val _dataPlaneUrl: String,
     private val _delegate: AnalyticsDelegate,
-    val analyticsExecutor: ExecutorService,
-    private val base64Generator: Base64Generator
 ) : Controller by _delegate {
     /**
      * Contains methods for sending messages over to device mode and cloud mode destinations.
@@ -40,81 +46,29 @@ class Analytics private constructor(
      * If this SDK is intended to be used in Android, refrain from using this class directly.
      * Also in case of using this class directly, developer has to add their own context plugin,
      * to add context to messages.
-     *  [analyticsExecutor] is by default [Executors.newSingleThreadExecutor] to maintain
-     *  synchronicity of events. Other executors are practically usable iff the difference between two events
-     *  is guaranteed to be at least a few ms.
-     * [defaultTraits] and [defaultExternalIds] are stored in [ContextState] but not in [Storage]
+     * synchronicity of events. Other executors are practically usable iff the difference between two events
+     * is guaranteed to be at least a few ms.
+     *
      * Only [MessageContext] passed in [IdentifyMessage] are stored in [Storage]
      */
     constructor(
         writeKey: String,
-        settings: Settings,
-        jsonAdapter: JsonAdapter,
-        shouldVerifySdk: Boolean = true,
-        sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
-        dataPlaneUrl: String? = null, //defaults to https://hosted.rudderlabs.com
-        controlPlaneUrl: String? = null, //defaults to https://api.rudderlabs.com/
-        logger: Logger = KotlinLogger,
-        storage: Storage = BasicStorageImpl(logger = logger),
-        analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
-        networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
-        base64Generator: Base64Generator = Base64Generator {
-            Base64.getEncoder().encodeToString(
-                String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8"))
-            )
-        },
-        dataUploadService: DataUploadService = DataUploadServiceImpl(
-            writeKey,
-            jsonAdapter,
-            base64Generator,
-            SettingsState,
-            dataPlaneUrl ?: DATA_PLANE_URL,
-            networkExecutor
-        ),
-        configDownloadService: ConfigDownloadService = ConfigDownloadServiceImpl(
-            base64Generator.generateBase64(writeKey),
-            controlPlaneUrl ?: CONTROL_PLANE_URL,
-            jsonAdapter,
-            networkExecutor
-        ),
-        defaultTraits: IdentifyTraits? = storage.context?.traits,
-        defaultExternalIds: List<Map<String, String>>? = storage.context?.externalIds,
-        defaultContextMap: Map<String, Any>? = null,
-        contextAddOns: Map<String, Any>? = null,
+        configuration: Configuration,
+        dataUploadService: DataUploadService? = null,
+        configDownloadService: ConfigDownloadService? = null,
         //optional
         initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
         //optional called if shutdown is called
         shutdownHook: (() -> Unit)? = null
     ) : this(
-        _writeKey = writeKey,
-        jsonAdapter = jsonAdapter,
-        _dataPlaneUrl = dataPlaneUrl ?: DATA_PLANE_URL,
         _delegate = AnalyticsDelegate(
-            settings,
-            storage,
-            jsonAdapter,
-            shouldVerifySdk,
-            sdkVerifyRetryStrategy,
-            dataUploadService,
-            configDownloadService,
-            analyticsExecutor,
-            logger,
-            storage.context ?: createContext(
-                defaultTraits,
-                defaultExternalIds,
-                defaultContextMap,
-                contextAddOns
-            ).also {
-                analyticsExecutor.submit {
-                    storage.cacheContext(it)
-                }
-            },
-            initializationListener,
-            shutdownHook
+            configuration, dataUploadService ?: DataUploadServiceImpl(
+                writeKey
+            ), configDownloadService ?: ConfigDownloadServiceImpl(
+                writeKey
+            ), initializationListener, shutdownHook
 
-        ),
-        analyticsExecutor = analyticsExecutor,
-        base64Generator = base64Generator
+        )
     )
 
 
@@ -126,9 +80,11 @@ class Analytics private constructor(
         internal const val CONTROL_PLANE_URL = "https://api.rudderlabs.com/"
 
     }
+
     init {
         _delegate.startup(this)
     }
+
     /**
      * Track with a built [TrackMessage]
      * Date format should be yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
@@ -140,18 +96,29 @@ class Analytics private constructor(
         processMessage(message, options)
     }
 
-    @JvmOverloads fun track(
+    @JvmOverloads
+    fun track(
         eventName: String,
         options: RudderOptions? = null,
+        userId: String? = null,
+        anonymousId: String? = null,
         trackProperties: TrackProperties? = null,
-        userID: String? = null,
+        traits: Map<String, Any?>? = null,
+        externalIds: List<Map<String, String>>? = null,
+        customContextMap: Map<String, Any>? = null,
+        destinationProps: MessageDestinationProps? = null,
     ) {
         track(
             TrackMessage.create(
+                anonymousId = anonymousId,
+                traits = traits,
+                externalIds = externalIds,
+                customContextMap = customContextMap,
+                destinationProps = destinationProps,
                 timestamp = RudderUtils.timeStamp,
                 eventName = eventName,
                 properties = trackProperties,
-                userId = userID
+                userId = userId
             ), options
         )
 
@@ -189,7 +156,7 @@ class Analytics private constructor(
      * }
      * @param scope
      */
-    fun track(scope: TrackScope.() -> Unit){
+    fun track(scope: TrackScope.() -> Unit) {
         val trackScope = TrackScope()
         trackScope.scope()
         track(trackScope.message, trackScope.options)
@@ -198,22 +165,37 @@ class Analytics private constructor(
     fun screen(message: ScreenMessage, options: RudderOptions? = null) {
         processMessage(message, options)
     }
+
     @JvmOverloads
     fun screen(
         screenName: String,
         category: String,
         screenProperties: ScreenProperties,
-        userID: String? = null,
-        options: RudderOptions? = null
+        anonymousId: String? = null,
+        userId: String? = null,
+        options: RudderOptions? = null,
+        destinationProps: MessageDestinationProps? = null,
+        traits: Map<String, Any?>? = null,
+        externalIds: List<Map<String, String>>? = null,
+        customContextMap: Map<String, Any>? = null,
     ) {
         screen(
             ScreenMessage.create(
-                userId = userID, timestamp = RudderUtils.timeStamp, category = category,
-                name = screenName, properties = screenProperties
+                userId = userId,
+                anonymousId = anonymousId,
+                destinationProps = destinationProps,
+                externalIds = externalIds,
+                customContextMap = customContextMap,
+                traits = traits,
+                timestamp = RudderUtils.timeStamp,
+                category = category,
+                name = screenName,
+                properties = screenProperties
             ), options
         )
     }
-    fun screen(scope: ScreenScope.() -> Unit){
+
+    fun screen(scope: ScreenScope.() -> Unit) {
         val screenScope = ScreenScope()
         screenScope.scope()
         screen(screenScope.message, screenScope.options)
@@ -222,21 +204,33 @@ class Analytics private constructor(
     fun identify(message: IdentifyMessage, options: RudderOptions? = null) {
         processMessage(message, options)
     }
+
     @JvmOverloads
     fun identify(
-        userID: String, traits: IdentifyTraits? = null,
+        userId: String, traits: IdentifyTraits? = null,
+        anonymousId: String? = null,
         options: RudderOptions? = null,
+        properties: IdentifyProperties? = null,
+        destinationProps: MessageDestinationProps? = null,
+        externalIds: List<Map<String, String>>? = null,
+        customContextMap: Map<String, Any>? = null,
     ) {
-        val completeTraits = mapOf("userId" to userID) optAdd traits
+        val completeTraits = mapOf("userId" to userId) optAdd traits
         identify(
             IdentifyMessage.create(
-                userId = userID,
+                userId = userId,
+                anonymousId = anonymousId,
+                destinationProps = destinationProps,
                 timestamp = RudderUtils.timeStamp,
                 traits = completeTraits,
+                properties = properties,
+                externalIds = externalIds,
+                customContextMap = customContextMap
             ), options
         )
     }
-    fun identify(scope: IdentifyScope.() -> Unit){
+
+    fun identify(scope: IdentifyScope.() -> Unit) {
         val identifyScope = IdentifyScope()
         identifyScope.scope()
         identify(identifyScope.message, identifyScope.options)
@@ -245,45 +239,75 @@ class Analytics private constructor(
     fun alias(message: AliasMessage, options: RudderOptions? = null) {
         processMessage(message, options)
     }
+
     @JvmOverloads
     fun alias(
         newId: String,
-        options: RudderOptions? = null
+        anonymousId: String? = null,
+        options: RudderOptions? = null,
+        destinationProps: MessageDestinationProps? = null,
+        previousId: String? = null,
+        externalIds: List<Map<String, String>>? = null,
+        customContextMap: Map<String, Any>? = null,
     ) {
+        val completeTraits = mapOf("userId" to newId)
         alias(
-            AliasMessage.create(timestamp = RudderUtils.timeStamp, userId = newId), options
+            AliasMessage.create(timestamp = RudderUtils.timeStamp,
+                anonymousId = anonymousId,
+                previousId=previousId,
+                destinationProps = destinationProps,
+                externalIds = externalIds,
+                customContextMap = customContextMap,
+
+                userId = newId, traits = completeTraits),
+            options
         )
     }
 
-    fun alias(scope: AliasScope.() -> Unit){
+    fun alias(scope: AliasScope.() -> Unit) {
         val aliasScope = AliasScope()
         aliasScope.scope()
         alias(aliasScope.message, aliasScope.options)
     }
+
     fun group(message: GroupMessage, options: RudderOptions? = null) {
         processMessage(message, options)
     }
+
     @JvmOverloads
     fun group(
-        groupID: String,
+        groupId: String?,
+        anonymousId: String? = null,
+        userId: String? = null,
         options: RudderOptions? = null,
-        traits: GroupTraits? = null,
-        userID: String? = null
+        groupTraits: GroupTraits?,
+
+        destinationProps: MessageDestinationProps? = null,
+
+        externalIds: List<Map<String, String>>? = null,
+        customContextMap: Map<String, Any>? = null,
 
     ) {
         group(
             GroupMessage.create(
-                timestamp = RudderUtils.timeStamp, userId = userID,
-                groupId = groupID, groupTraits = traits
+                timestamp = RudderUtils.timeStamp,
+                userId = userId,
+                groupId = groupId,
+                groupTraits = groupTraits,
+                anonymousId = anonymousId,
+                destinationProps = destinationProps,
+                externalIds = externalIds,
+                customContextMap = customContextMap
             ), options
         )
     }
 
-    fun group(scope: GroupScope.() -> Unit){
+    fun group(scope: GroupScope.() -> Unit) {
         val groupScope = GroupScope()
         groupScope.scope()
         group(groupScope.message, groupScope.options)
     }
+
     /**
      * Flush the remaining data from storage.
      * However flush returns immediately if  analytics is shutdown
@@ -293,7 +317,7 @@ class Analytics private constructor(
     }
 
     /**
-     * Flushes forcefully, even if analytics has shutdown.
+     * Flushes forcefully, not if analytics has shutdown.
      * One can optionally provide alternate data upload service and alternate executor
      * for force flush, and force flush will act on those.
      *
@@ -305,34 +329,31 @@ class Analytics private constructor(
      * @param alternateDataUploadService The [DataUploadService] to upload data. Default is null. In
      * case null is sent, Analytics will create a [DataUploadServiceImpl] instance to pass over data.
      *
-     * @param alternateExecutor The flush will be processed on this [ExecutorService]
+     * @param alternateFlushExecutor The flush will be processed on this [ExecutorService]
      * @param clearDb Uploaded data will be cleared from [Storage] if true, else not.
      */
     @JvmOverloads
     fun forceFlush(
-        clearDb: Boolean = true, base64Generator: Base64Generator = this.base64Generator,
-        alternateExecutor: ExecutorService? = null,
+        clearDb: Boolean = true,
+        alternateFlushExecutor: ExecutorService? = null,
         alternateDataUploadService: DataUploadService? = null
     ) {
-        val flushExecutor = alternateExecutor ?: ThreadPoolExecutor(
-            1, 1,
-            0L, TimeUnit.MILLISECONDS,
+        currentConfiguration ?: return
+        val flushExecutor = alternateFlushExecutor ?: ThreadPoolExecutor(
+            1,
+            1,
+            0L,
+            TimeUnit.MILLISECONDS,
             LinkedBlockingQueue<Runnable>(1),
             ThreadPoolExecutor.DiscardOldestPolicy()
         )
-        val dataUploadService = alternateDataUploadService ?: DataUploadServiceImpl(
-            _writeKey,
-            jsonAdapter, dataPlaneUrl = _dataPlaneUrl,
-            base64Generator = base64Generator
-        )
+        val dataUploadService = alternateDataUploadService ?: dataUploadService
         _delegate.forceFlush(
             dataUploadService, flushExecutor, clearDb
         ) {
             //shut down if data uploader/executor is initialized here
-            if (alternateDataUploadService == null)
-                dataUploadService.shutdown()
-            if (alternateExecutor == null)
-                flushExecutor.shutdown()
+            if (alternateDataUploadService == null) dataUploadService.shutdown()
+            if (alternateFlushExecutor == null) flushExecutor.shutdown()
         }
     }
 
@@ -347,13 +368,12 @@ class Analytics private constructor(
      *
      */
     @JvmOverloads
-    fun blockingFlush(clearDb: Boolean = true, base64Generator: Base64Generator?= null,
-                      alternateDataUploadService: DataUploadService? = null,) : Boolean{
-        val dataUploadService = alternateDataUploadService ?: DataUploadServiceImpl(
-            _writeKey,
-            jsonAdapter, dataPlaneUrl = _dataPlaneUrl,
-            base64Generator = base64Generator?:this.base64Generator
-        )
+    fun blockingFlush(
+        clearDb: Boolean = true,
+        alternateDataUploadService: DataUploadService? = null,
+    ): Boolean {
+
+        val dataUploadService = alternateDataUploadService ?: dataUploadService
         return _delegate.blockFlush(dataUploadService, clearDb)
     }
 

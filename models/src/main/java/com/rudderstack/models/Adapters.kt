@@ -14,7 +14,6 @@
 
 package com.rudderstack.models
 
-
 /*
 val coreMoshi : Moshi
     get() = Moshi.Builder()
@@ -31,7 +30,7 @@ val coreMoshi : Moshi
         .build()
 */
 
-//val coreGson = RuntimeTypeAdapterFactory.of(Message::class.java)
+// val coreGson = RuntimeTypeAdapterFactory.of(Message::class.java)
 //    .withSubtype(TrackMessage::class.java, Message.EventType.TRACK.value)
 //    .withSubtype(AliasMessage::class.java, Message.EventType.ALIAS.value)
 //    .withSubtype(GroupMessage::class.java, Message.EventType.GROUP.value)

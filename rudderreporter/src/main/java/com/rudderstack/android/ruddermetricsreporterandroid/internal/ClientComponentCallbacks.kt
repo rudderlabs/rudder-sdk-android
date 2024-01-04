@@ -6,7 +6,7 @@ import android.content.res.Configuration
 internal class ClientComponentCallbacks(
     private val deviceDataCollector: DeviceDataCollector,
     private val cb: (oldOrientation: String?, newOrientation: String?) -> Unit,
-    val memoryCallback: (Boolean, Int?) -> Unit
+    val memoryCallback: (Boolean, Int?) -> Unit,
 ) : ComponentCallbacks2 {
 
     override fun onConfigurationChanged(newConfig: Configuration) {

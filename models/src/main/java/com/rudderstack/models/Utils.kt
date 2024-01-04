@@ -28,44 +28,51 @@ fun createContext(
     traits: Map<String, Any?>? = null,
     externalIds: List<Map<String, String>>? = null,
     customContextMap: Map<String, Any?>? = null,
-    contextAddOns : Map<String, Any?> ?= null
-) : MessageContext =
+    contextAddOns: Map<String, Any?>? = null,
+): MessageContext =
     mapOf(
         Constants.TRAITS_ID to traits,
         Constants.EXTERNAL_ID to externalIds,
-        Constants.CUSTOM_CONTEXT_MAP_ID to customContextMap
+        Constants.CUSTOM_CONTEXT_MAP_ID to customContextMap,
     ).let {
-        if(contextAddOns == null) it else it + contextAddOns
+        if (contextAddOns == null) it else it + contextAddOns
     }
+
 /**
  * Updates the values of this context with non null values from new context
  *
  * @param newContext
  * @return updated context
  */
-fun MessageContext.updateWith(newContext: MessageContext) : MessageContext{
-   return this + newContext
+fun MessageContext.updateWith(newContext: MessageContext): MessageContext {
+    return createContext(newContext.traits.takeIf { !it.isNullOrEmpty() }?: this.traits,
+        newContext.externalIds.takeIf { !it.isNullOrEmpty() }?: this.externalIds,
+        newContext.customContexts.takeIf { !it.isNullOrEmpty() }?: this.customContexts,
+        (newContext.keys - keys).associateWith{
+            newContext[it]
+        }.filterValues { it != null })
 }
 
-fun MessageContext.updateWith(traits: Map<String, Any?>? = null,
-                              externalIds: List<Map<String, String>>? = null,
-                              customContextMap: Map<String, Any?>? = null,
-                              contextAddOns : Map<String, Any?> ?= null) : MessageContext{
+fun MessageContext.updateWith(
+    traits: Map<String, Any?>? = null,
+    externalIds: List<Map<String, String>>? = null,
+    customContextMap: Map<String, Any?>? = null,
+    contextAddOns: Map<String, Any?>? = null,
+): MessageContext {
     return this optAdd
-            traits?.let {  (Constants.TRAITS_ID to it)} optAdd
-            externalIds?.let {  (Constants.EXTERNAL_ID to it)} optAdd
-            customContextMap?.let { (Constants.CUSTOM_CONTEXT_MAP_ID to it) } optAdd
-            contextAddOns
-
+        traits?.let { (Constants.TRAITS_ID to it) } optAdd
+        externalIds?.let { (Constants.EXTERNAL_ID to it) } optAdd
+        customContextMap?.let { (Constants.CUSTOM_CONTEXT_MAP_ID to it) } optAdd
+        contextAddOns
 }
 
-private infix fun<K,V> Map<K,V>.optAdd(pair: Pair<K, V>?) : Map<K,V>{
+private infix fun<K, V> Map<K, V>.optAdd(pair: Pair<K, V>?): Map<K, V> {
     return pair?.let {
         this + it
-    }?: this
+    } ?: this
 }
-private infix fun<K,V> Map<K,V>.optAdd(map: Map<K, V>?) : Map<K,V>{
+private infix fun<K, V> Map<K, V>.optAdd(map: Map<K, V>?): Map<K, V> {
     return map?.let {
         this + it
-    }?: this
+    } ?: this
 }

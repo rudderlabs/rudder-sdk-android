@@ -14,13 +14,22 @@
 
 package com.rudderstack.core.internal
 
+import com.rudderstack.core.Configuration
+import com.rudderstack.core.DummyExecutor
+import com.rudderstack.core.DummyWebService
 import com.rudderstack.core.RetryStrategy
 import com.rudderstack.core.controlPlaneUrl
+import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.core.writeKey
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
+import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.moshirudderadapter.MoshiAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+import com.rudderstack.web.HttpInterceptor
+import com.rudderstack.web.HttpResponse
+import com.rudderstack.web.WebService
 import junit.framework.TestSuite
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat
@@ -32,20 +41,23 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
 import java.util.*
+import java.util.concurrent.Callable
+import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class ConfigDownloadServiceImplTest {
     protected abstract val jsonAdapter: JsonAdapter
     private lateinit var configDownloadServiceImpl: ConfigDownloadServiceImpl
-
+    private val dummyWebService: DummyWebService = DummyWebService()
     @Before
     fun setup() {
+        dummyWebService.nextBody = RudderServerConfig(source = RudderServerConfig.RudderServerConfigSource())
+        ConfigurationsState.update(ConfigurationsState.value ?: Configuration.invoke(jsonAdapter))
         configDownloadServiceImpl = ConfigDownloadServiceImpl(
           Base64.getEncoder().encodeToString(
             String.format(Locale.US, "%s:", writeKey).toByteArray(charset("UTF-8"))
-        ), controlPlaneUrl, jsonAdapter
-        )
+        ), dummyWebService)
     }
 
     @Test
@@ -62,28 +74,26 @@ abstract class ConfigDownloadServiceImplTest {
                 isComplete.set(true)
             })
 
-        Awaitility.await().atMost(1, TimeUnit.MINUTES).untilTrue(isComplete)
+        Awaitility.await().atMost(2, TimeUnit.SECONDS).untilTrue(isComplete)
     }
 
     @Test
     fun `test failure config download`() {
         val isComplete = AtomicBoolean(false)
-        ConfigDownloadServiceImpl(
-            "bad-write_key",
-            controlPlaneUrl, jsonAdapter
-        ).download("java",
+        dummyWebService.nextStatusCode = 400
+        dummyWebService.nextBody = null
+        dummyWebService.nextErrorBody = "Bad Request"
+        configDownloadServiceImpl.download("java",
             "test_version", "junit_test",
             retryStrategy = RetryStrategy.exponential(1),
             callback = { success, rudderServerConfig, lastErrorMsg ->
                 assertThat(success, `is`(false))
                 assertThat(lastErrorMsg, notNullValue())
-                println("failure error msg: $lastErrorMsg")
                 assertThat(rudderServerConfig, nullValue())
                 isComplete.set(true)
-
             })
 
-        Awaitility.await().atMost(1, TimeUnit.MINUTES).untilTrue(isComplete)
+        Awaitility.await().atMost(10, TimeUnit.SECONDS).untilTrue(isComplete)
     }
 
     @After

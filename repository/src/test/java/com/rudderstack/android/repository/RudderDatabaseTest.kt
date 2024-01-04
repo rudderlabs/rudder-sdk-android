@@ -33,24 +33,39 @@ import org.robolectric.annotation.Config
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-//@RunWith(RobolectricTestRunner::class)
+// @RunWith(RobolectricTestRunner::class)
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29])
 class RudderDatabaseTest {
     //    private lateinit var
+//    private val delayedExecutor = Executors.newSingleThreadExecutor()
     @Before
     fun initialize() {
         RudderDatabase.init(
             ApplicationProvider.getApplicationContext(),
-//            RuntimeEnvironment.application,
-            "testDb", TestEntityFactory, executorService = TestExecutor()
+            "testDb",
+            TestEntityFactory,
+            false,
+            executorService = TestExecutor(),
         )
-
     }
 
     @After
     fun tearDown() {
         RudderDatabase.shutDown()
+    }
+
+    @Test
+    fun `test race condition in dao list initialisation`() {
+        val sampleDao = RudderDatabase.createNewDao(SampleEntity::class.java, TestExecutor())
+        val sampleAutoGenDao = RudderDatabase.createNewDao(
+            SampleAutoGenEntity::class.java,
+            TestExecutor(),
+        )
+        val sampleDaoCheck = RudderDatabase.getDao(SampleEntity::class.java)
+        MatcherAssert.assertThat(sampleDao, Matchers.equalTo(sampleDaoCheck))
+        MatcherAssert.assertThat(sampleAutoGenDao, Matchers.equalTo(sampleAutoGenDao))
+//        Thread.sleep(5000)
     }
 
     @Test
@@ -64,64 +79,87 @@ class RudderDatabaseTest {
     fun testInsertionAndGetSync() {
         val sampleEntitiesToSave = listOf(
             SampleEntity("abc", 10, listOf("12", "34", "56")),
-            SampleEntity("def", 20, listOf("78", "90", "12"))
+            SampleEntity("def", 20, listOf("78", "90", "12")),
         )
         val sampleDao = RudderDatabase.getDao(SampleEntity::class.java)
-        //save data
+        // save data
         val isInserted = AtomicBoolean(false)
         with(sampleDao) {
             sampleEntitiesToSave.insert() { rowIds ->
                 assertThat(rowIds, iterableWithSize(2))
-                println("inserted: ${rowIds.size}")
                 isInserted.set(true)
             }
         }
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(isInserted)
-        //getting the data
+        // getting the data
         val savedData = with(sampleDao) { getAllSync() }
 
         MatcherAssert.assertThat(
-            savedData, allOf(
+            savedData,
+            allOf(
                 Matchers.iterableWithSize(2),
-                contains(*sampleEntitiesToSave.toTypedArray())
-            )
+                contains(*sampleEntitiesToSave.toTypedArray()),
+            ),
         )
+    }
 
+    @Test
+    fun testSyncInsertionAndGetSync() {
+        val sampleEntitiesToSave = listOf(
+            SampleEntity("abc", 10, listOf("12", "34", "56")),
+            SampleEntity("def", 20, listOf("78", "90", "12")),
+        )
+        val sampleDao = RudderDatabase.getDao(SampleEntity::class.java)
+        // save data
+//        val isInserted = AtomicBoolean(false)
+        with(sampleDao) {
+            val rowIds = sampleEntitiesToSave.insertSync()
+            assertThat(rowIds, iterableWithSize(2))
+//            isInserted.set(true)
+        }
+//        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(isInserted)
+        // getting the data
+        val savedData = with(sampleDao) { getAllSync() }
+
+        MatcherAssert.assertThat(
+            savedData,
+            allOf(
+                Matchers.iterableWithSize(2),
+                contains(*sampleEntitiesToSave.toTypedArray()),
+            ),
+        )
     }
 
     @Test
     fun testGetAsync() {
         val sampleEntitiesToSave = listOf(
             SampleEntity("abc", 10, listOf("12", "34", "56")),
-            SampleEntity("def", 20, listOf("78", "90", "12"))
+            SampleEntity("def", 20, listOf("78", "90", "12")),
         )
         val sampleDao = RudderDatabase.getDao(SampleEntity::class.java)
-        //save data
+        // save data
         val isInserted = AtomicBoolean(false)
         with(sampleDao) {
             val rowIds = sampleEntitiesToSave.insertSync()
             assertThat(rowIds, iterableWithSize(2))
-            println("inserted: ${rowIds?.size}")
             isInserted.set(true)
-
         }
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(isInserted)
         val isGetComplete = AtomicBoolean(false)
-        //getting the data
+        // getting the data
         with(sampleDao) {
             getAll() {
                 assertThat(
-                    it, allOf(
+                    it,
+                    allOf(
                         Matchers.iterableWithSize(2),
-                        contains(*sampleEntitiesToSave.toTypedArray())
-                    )
+                        contains(*sampleEntitiesToSave.toTypedArray()),
+                    ),
                 )
                 isGetComplete.set(true)
             }
         }
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(isGetComplete)
-
-
     }
 
     @Test
@@ -129,66 +167,64 @@ class RudderDatabaseTest {
         val sampleEntitiesToSave = listOf(
             SampleEntity("abc", 10, listOf("12", "34", "56")),
             SampleEntity("fgh", 10, listOf("34", "56", "78")),
-            SampleEntity("def", 20, listOf("78", "90", "12"))
+            SampleEntity("def", 20, listOf("78", "90", "12")),
         )
         val sampleDao = RudderDatabase.getDao(SampleEntity::class.java)
-        //save data
+        // save data
         val isCompleted = AtomicBoolean(false)
         with(sampleDao) {
             val rowIds = sampleEntitiesToSave.insertSync()
             assertThat(rowIds, iterableWithSize(3))
-            println("inserted: ${rowIds?.size}")
 
             sampleEntitiesToSave.subList(0, 2).delete() {
-                //number of deleted rows is 2
+                // number of deleted rows is 2
                 assertThat(it, equalTo(2))
                 val items = getAllSync()
                 assertThat(
-                    items, allOf(
+                    items,
+                    allOf(
                         iterableWithSize(1),
-                        contains(sampleEntitiesToSave[2])
-                    )
+                        contains(sampleEntitiesToSave[2]),
+                    ),
                 )
                 isCompleted.set(true)
             }
         }
         Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(isCompleted)
-
     }
+
     @Test
     fun testAutoGenEntities() {
         val entitiesToSave = listOf(
             SampleAutoGenEntity("abc"),
             SampleAutoGenEntity("fgh"),
-            SampleAutoGenEntity("def")
+            SampleAutoGenEntity("def"),
         )
         val sampleDao = RudderDatabase.getDao(SampleAutoGenEntity::class.java)
-        //save data
+        // save data
         val isCompleted = AtomicBoolean(false)
         with(sampleDao) {
             val rowIds = entitiesToSave.insertSync()
             assertThat(rowIds, iterableWithSize(3))
-            println("inserted: ${rowIds?.size}")
             assertThat(rowIds, iterableWithSize(3))
-            //entities in db should have autogenerated ids
+            // entities in db should have autogenerated ids
             val savedEntities = getAllSync()
             assertThat(savedEntities, allOf(notNullValue(), iterableWithSize(3)))
             assertThat(savedEntities?.get(0), allOf(notNullValue(), hasProperty("id", not(0))))
             savedEntities?.subList(0, 2)?.delete() {
-                //number of deleted rows is 2
+                // number of deleted rows is 2
                 assertThat(it, equalTo(2))
                 val items = getAllSync()
                 assertThat(
-                    items, allOf(
+                    items,
+                    allOf(
                         iterableWithSize(1),
-                        contains(savedEntities[2])
-                    )
+                        contains(savedEntities[2]),
+                    ),
                 )
                 isCompleted.set(true)
             }
         }
         Awaitility.await().atMost(10, TimeUnit.SECONDS).untilTrue(isCompleted)
-
     }
-
 }
