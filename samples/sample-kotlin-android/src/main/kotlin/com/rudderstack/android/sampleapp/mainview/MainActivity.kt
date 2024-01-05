@@ -48,99 +48,99 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
-@Composable
-fun CreateRowData(logData: LogData) {
-    Text(color = Color.Blue, text = "${logData.time} - ${logData.log}")
-}
-
-@Composable
-fun ColumnScope.CreateLogcat(logCatList: List<LogData>) {
-    LazyColumn(
-        userScrollEnabled = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp)
-            .weight(1f)
-    ) {
-        items(logCatList.size, null) { index ->
-            CreateRowData(logData = logCatList[index])
-        }
+    @Composable
+    fun CreateRowData(logData: LogData) {
+        Text(color = Color.Blue, text = "${logData.time} - ${logData.log}")
     }
-}
 
-//state hoisting?
-@Composable
-fun CreateRowOfApis(
-    vararg names: AnalyticsState,
-    weight: Float,
-    viewModel: MainViewModel
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        names.forEach {
-            Button(modifier = Modifier.weight(weight = weight, fill = true), onClick = {
-                viewModel.onEventClicked(it)
-            }) {
-                Text(text = it.eventName)
+    @Composable
+    fun ColumnScope.CreateLogcat(logCatList: List<LogData>) {
+        LazyColumn(
+            userScrollEnabled = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp)
+                .weight(1f)
+        ) {
+            items(logCatList.size, null) { index ->
+                CreateRowData(logData = logCatList[index])
             }
         }
     }
-}
 
-@Composable
-fun CreateButtonsTemplate(viewModel: MainViewModel) {
-    val state by viewModel.state.collectAsState()
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    //state hoisting?
+    @Composable
+    fun CreateRowOfApis(
+        vararg names: AnalyticsState,
+        weight: Float,
+        viewModel: MainViewModel
     ) {
-        CreateRowOfApis(
-            names = arrayOf(
-                AnalyticsState.InitializeAnalytics,
-                AnalyticsState.ShutDownAnalytics,
-                AnalyticsState.ClearAnalytics,
-            ), weight = .3f, viewModel = viewModel
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        CreateRowOfApis(
-            names = arrayOf(AnalyticsState.AliasEvent, AnalyticsState.TrackEvent, AnalyticsState.ScreenEvent),
-            weight = .3f,
-            viewModel = viewModel
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        CreateRowOfApis(
-            names = arrayOf(AnalyticsState.IdentifyEvent, AnalyticsState.GroupEvent),
-            weight = .5f,
-            viewModel = viewModel
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        CreateRowOfApis(
-            names = arrayOf(AnalyticsState.OptInAnalytics, AnalyticsState.ForceFlush),
-            weight = .5f,
-            viewModel = viewModel
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        CreateRowOfApis(
-            names = arrayOf(AnalyticsState.SendError),
-            weight = .5f,
-            viewModel = viewModel
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        CreateLogcat(state.logDataList)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            names.forEach {
+                Button(modifier = Modifier.weight(weight = weight, fill = true), onClick = {
+                    viewModel.onEventClicked(it)
+                }) {
+                    Text(text = it.eventName)
+                }
+            }
+        }
     }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    CreateButtonsTemplate(MainViewModel(LocalContext.current.applicationContext as Application))
+    @Composable
+    fun CreateButtonsTemplate(viewModel: MainViewModel) {
+        val state by viewModel.state.collectAsState()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CreateRowOfApis(
+                names = arrayOf(
+                    AnalyticsState.InitializeAnalytics,
+                    AnalyticsState.ShutDownAnalytics,
+                    AnalyticsState.ClearAnalytics,
+                ), weight = .3f, viewModel = viewModel
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            CreateRowOfApis(
+                names = arrayOf(AnalyticsState.AliasEvent, AnalyticsState.TrackEvent, AnalyticsState.ScreenEvent),
+                weight = .3f,
+                viewModel = viewModel
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            CreateRowOfApis(
+                names = arrayOf(AnalyticsState.IdentifyEvent, AnalyticsState.GroupEvent),
+                weight = .5f,
+                viewModel = viewModel
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            CreateRowOfApis(
+                names = arrayOf(AnalyticsState.OptInAnalytics, AnalyticsState.ForceFlush),
+                weight = .5f,
+                viewModel = viewModel
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            CreateRowOfApis(
+                names = arrayOf(AnalyticsState.SendError),
+                weight = .5f,
+                viewModel = viewModel
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            CreateLogcat(state.logDataList)
+        }
+    }
+
+    @Preview(showBackground = true)
+    @Composable
+    fun DefaultPreview() {
+        CreateButtonsTemplate(MainViewModel(LocalContext.current.applicationContext as Application))
+    }
 }
