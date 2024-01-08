@@ -20,6 +20,7 @@ import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
 import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
+import com.rudderstack.android.internal.infrastructure.ResetImplementationPlugin
 import com.rudderstack.android.internal.plugins.AndroidContextPlugin
 import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
@@ -64,8 +65,7 @@ fun RudderAnalytics(
 fun Analytics.putAdvertisingId(advertisingId: String) {
 
     applyConfiguration {
-        if (this is ConfigurationAndroid)
-            copy(
+        if (this is ConfigurationAndroid) copy(
             advertisingId = advertisingId
         )
         else this
@@ -125,19 +125,22 @@ private fun initialize(application: Application) {
 
 private val infrastructurePlugins
     get() = arrayOf(
-        AnonymousIdHeaderPlugin(), LifecycleObserverPlugin(), ActivityBroadcasterPlugin()
+        AnonymousIdHeaderPlugin(),
+        LifecycleObserverPlugin(),
+        ActivityBroadcasterPlugin(),
+        ResetImplementationPlugin()
     )
 private val messagePlugins
     get() = listOf(
-        AndroidContextPlugin(),
-        ExtractStatePlugin(),
-        FillDefaultsPlugin()
+        AndroidContextPlugin(), ExtractStatePlugin(), FillDefaultsPlugin()
     )
 
 private fun Analytics.startup() {
     addInfrastructurePlugin(*infrastructurePlugins)
     addPlugin(*messagePlugins.toTypedArray())
-
+    currentConfigurationAndroid?.storage?.let {
+        ContextState.update(it.context)
+    }
 }
 
 internal fun Analytics.processNewContext(
@@ -145,8 +148,8 @@ internal fun Analytics.processNewContext(
 ) {
     currentConfigurationAndroid?.apply {
         storage.cacheContext(newContext)
-        ContextState.update(newContext)
     }
+    ContextState.update(newContext)
 }
 
 
