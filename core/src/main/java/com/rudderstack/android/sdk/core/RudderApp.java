@@ -9,30 +9,39 @@ import com.google.gson.annotations.SerializedName;
 
 class RudderApp {
     @SerializedName("build")
-    private String build;
+    private final String build;
     @SerializedName("name")
-    private String name;
+    private final String name;
     @SerializedName("namespace")
-    private String nameSpace;
+    private final String nameSpace;
     @SerializedName("version")
-    private String version;
+    private final String version;
 
     // internal constructor
     // to be used while creating a cache of context
     RudderApp(Application application) {
+        String buildValue = null;
+        String nameValue = null;
+        String nameSpaceValue = null;
+        String versionValue = null;
         try {
             String packageName = application.getPackageName();
             PackageManager packageManager = application.getPackageManager();
             PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                this.build = Long.toString(packageInfo.getLongVersionCode());
-            else this.build = Integer.toString(packageInfo.versionCode);
-            this.name = packageInfo.applicationInfo.loadLabel(packageManager).toString();
-            this.nameSpace = packageName;
-            this.version = packageInfo.versionName;
+            buildValue = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)?
+                Long.toString(packageInfo.getLongVersionCode()): Integer.toString(packageInfo.versionCode);
+            nameValue = packageInfo.applicationInfo.loadLabel(packageManager).toString();
+            nameSpaceValue = packageName;
+            versionValue = packageInfo.versionName;
         } catch (PackageManager.NameNotFoundException ex) {
             ReportManager.reportError(ex);
             RudderLogger.logError(ex.getCause());
+        }
+        finally {
+            this.build = buildValue;
+            this.name = nameValue;
+            this.nameSpace = nameSpaceValue;
+            this.version = versionValue;
         }
     }
 }
