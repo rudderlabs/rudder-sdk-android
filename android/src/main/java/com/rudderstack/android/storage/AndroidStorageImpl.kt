@@ -359,6 +359,10 @@ class AndroidStorageImpl(
             }
             return _userId
         }
+    override val sessionId: Long?
+        get() = RudderPreferenceManager.sessionId.takeIf { it > -1L }
+    override val lastActiveTimestamp: Long?
+        get() = RudderPreferenceManager.lastActiveTimestamp.takeIf { it > -1L }
 
     override fun setAnonymousId(anonymousId: String) {
         _anonymousId = anonymousId
@@ -368,6 +372,22 @@ class AndroidStorageImpl(
     override fun setUserId(userId: String) {
         _userId = userId
         RudderPreferenceManager.saveAnonymousId(anonymousId)
+    }
+
+    override fun setSessionId(sessionId: Long) {
+        RudderPreferenceManager.saveSessionId(sessionId)
+    }
+
+    override fun saveLastActiveTimestamp(timestamp: Long) {
+        RudderPreferenceManager.saveLastActiveTimestamp(timestamp)
+    }
+
+    override fun clearSessionId() {
+        RudderPreferenceManager.clearSessionId()
+    }
+
+    override fun clearLastActiveTimestamp() {
+        RudderPreferenceManager.clearLastActiveTimestamp()
     }
 
     override val libraryName: String

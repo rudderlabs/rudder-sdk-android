@@ -23,7 +23,10 @@ import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
 import com.rudderstack.android.internal.plugins.AndroidContextPlugin
 import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
+import com.rudderstack.android.internal.plugins.SessionPlugin
 import com.rudderstack.android.internal.states.ContextState
+import com.rudderstack.android.utilities.initializeSessionManagement
+import com.rudderstack.android.utilities.shutdownSessionManagement
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.DataUploadService
@@ -48,13 +51,13 @@ fun RudderAnalytics(
         dataUploadService,
         configDownloadService,
         initializationListener = initializationListener,
-        shutdownHook = ::shutdown
+        shutdownHook = {
+            onShutdown()
+        }
     ).apply {
         startup()
     }
-
 }
-
 
 /**
  * Set the AdvertisingId yourself. If set, SDK will not capture idfa automatically
@@ -131,13 +134,18 @@ private val messagePlugins
     get() = listOf(
         AndroidContextPlugin(),
         ExtractStatePlugin(),
-        FillDefaultsPlugin()
+        FillDefaultsPlugin(),
+        SessionPlugin()
     )
 
 private fun Analytics.startup() {
+    addPlugins()
+    initializeSessionManagement()
+}
+
+private fun Analytics.addPlugins() {
     addInfrastructurePlugin(*infrastructurePlugins)
     addPlugin(*messagePlugins.toTypedArray())
-
 }
 
 internal fun Analytics.processNewContext(
@@ -145,16 +153,16 @@ internal fun Analytics.processNewContext(
 ) {
     currentConfigurationAndroid?.apply {
         storage.cacheContext(newContext)
-        ContextState.update(newContext)
     }
+    ContextState.update(newContext)
 }
 
 
 val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
     get() = (currentConfiguration as? ConfigurationAndroid)
 
-private fun shutdown() {
-    //no-op
+private fun Analytics.onShutdown() {
+    shutdownSessionManagement()
 }
 
 

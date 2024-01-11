@@ -78,6 +78,10 @@ interface ConfigurationAndroid : Configuration {
     val deviceToken: String?
     override val storage: AndroidStorage
     val advertisingIdFetchExecutor : ExecutorService?
+    //session
+    val trackAutoSession: Boolean
+    val sessionTimeoutMillis: Long
+
 
     companion object {
         operator fun invoke(
@@ -111,6 +115,8 @@ interface ConfigurationAndroid : Configuration {
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             advertisingIdFetchExecutor : ExecutorService? = null,
             base64Generator: Base64Generator = AndroidUtils.defaultBase64Generator(),
+            trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
+            sessionTimeoutMillis: Long = Defaults.SESSION_TIMEOUT
 //    val defaultTraits: IdentifyTraits? = null, // will be added by default to each message
 //    val defaultExternalIds: List<Map<String, String>>? = null, // will be added by default to each message
 //    val defaultContextMap: Map<String, Any>? = null, // will be added by default to each message
@@ -129,6 +135,8 @@ interface ConfigurationAndroid : Configuration {
             override val deviceToken: String? = deviceToken
             override val storage: AndroidStorage = storage
             override val advertisingIdFetchExecutor : ExecutorService? = advertisingIdFetchExecutor
+            override val trackAutoSession: Boolean = trackAutoSession
+            override val sessionTimeoutMillis: Long = sessionTimeoutMillis
             override val jsonAdapter: JsonAdapter = jsonAdapter
             override val options: RudderOptions = options
             override val flushQueueSize: Int = flushQueueSize
@@ -146,31 +154,37 @@ interface ConfigurationAndroid : Configuration {
 
         }
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        operator fun invoke(configuration: Configuration,
-                            application: Application,
-                            anonymousId: String= AndroidUtils.getDeviceId(
-                                application
-                            ),
-                            userId: String? = null,
-                            trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
+        operator fun invoke(
+            configuration: Configuration,
+            application: Application,
+            anonymousId: String = AndroidUtils.getDeviceId(
+                application
+            ),
+            userId: String? = null,
+            trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
 
-                            recordScreenViews: Boolean = Defaults.RECORD_SCREEN_VIEWS,
+            recordScreenViews: Boolean = Defaults.RECORD_SCREEN_VIEWS,
 
-                            isPeriodicFlushEnabled: Boolean = Defaults.IS_PERIODIC_FLUSH_ENABLED,
+            isPeriodicFlushEnabled: Boolean = Defaults.IS_PERIODIC_FLUSH_ENABLED,
 
-                            autoCollectAdvertId: Boolean = Defaults.AUTO_COLLECT_ADVERT_ID,
+            autoCollectAdvertId: Boolean = Defaults.AUTO_COLLECT_ADVERT_ID,
 
-                            multiProcessEnabled: Boolean = Defaults.MULTI_PROCESS_ENABLED,
+            multiProcessEnabled: Boolean = Defaults.MULTI_PROCESS_ENABLED,
 
-                            defaultProcessName: String?= Defaults.DEFAULT_PROCESS_NAME,
+            defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
 
-                            advertisingId: String? = null,
+            advertisingId: String? = null,
 
-                            deviceToken: String? = null,
+            deviceToken: String? = null,
 
-                            storage: AndroidStorage = AndroidStorageImpl(application, Defaults.USE_CONTENT_PROVIDER),
+            storage: AndroidStorage = AndroidStorageImpl(
+                application,
+                Defaults.USE_CONTENT_PROVIDER
+            ),
 
-                            advertisingIdFetchExecutor : ExecutorService? = null,
+            advertisingIdFetchExecutor: ExecutorService? = null,
+            trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
+            sessionTimeoutMillis: Long = Defaults.SESSION_TIMEOUT
         ): ConfigurationAndroid=
             invoke(
                 application,
@@ -199,7 +213,9 @@ interface ConfigurationAndroid : Configuration {
                 configuration.analyticsExecutor,
                 configuration.networkExecutor,
                 advertisingIdFetchExecutor,
-                configuration.base64Generator)
+                configuration.base64Generator,
+                trackAutoSession,
+                sessionTimeoutMillis)
     }
 
     override fun copy(
@@ -236,10 +252,6 @@ interface ConfigurationAndroid : Configuration {
             networkExecutor,
             advertisingIdFetchExecutor,
             base64Generator,
-            anonymousId,
-            userId,
-            advertisingId,
-            deviceToken
         )
     }
 
@@ -263,7 +275,9 @@ interface ConfigurationAndroid : Configuration {
         anonymousId: String = this.anonymousId,
         userId: String? = this.userId,
         advertisingId: String? = this.advertisingId,
-        deviceToken: String? = this.deviceToken
+        deviceToken: String? = this.deviceToken,
+        trackAutoSession: Boolean = this.trackAutoSession,
+        sessionTimeoutMillis: Long = this.sessionTimeoutMillis
     ) : ConfigurationAndroid{
         return ConfigurationAndroid(
             application,
@@ -293,6 +307,8 @@ interface ConfigurationAndroid : Configuration {
             networkExecutor,
             advertisingIdFetchExecutor,
             base64Generator,
+            trackAutoSession,
+            sessionTimeoutMillis
 //        defaultTraits,
 //        defaultExternalIds,
 //        defaultContextMap,
@@ -314,5 +330,9 @@ interface ConfigurationAndroid : Configuration {
         const val USE_CONTENT_PROVIDER = false
         const val DEFAULT_FLUSH_QUEUE_SIZE = 30
         const val DEFAULT_MAX_FLUSH_INTERVAL = 10 * 1000L
+        const val SESSION_TIMEOUT: Long = 300000
+
+        // default for automatic session tracking
+        const val AUTO_SESSION_TRACKING = true
     }
 }
