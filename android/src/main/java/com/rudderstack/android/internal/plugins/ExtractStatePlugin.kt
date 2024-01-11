@@ -144,8 +144,4 @@ internal class ExtractStatePlugin : Plugin {
         const val CONTEXT_EXTERNAL_ID_KEY = "externalIds"
     }
 
-    override fun reset() {
-        super.reset()
-        _analytics?.processNewContext(mapOf())
-    }
 }

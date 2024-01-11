@@ -28,4 +28,7 @@ interface InfrastructurePlugin {
     fun updateConfiguration(configuration: Configuration){
         //optional method
     }
+    fun reset() {
+        //optional method
+    }
 }
