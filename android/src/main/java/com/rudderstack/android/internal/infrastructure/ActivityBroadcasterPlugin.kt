@@ -140,7 +140,4 @@ internal class ActivityBroadcasterPlugin(
         application?.unregisterActivityLifecycleCallbacks(lifecycleCallback)
     }
 
-    override fun updateConfiguration(configuration: Configuration) {
-    }
-
 }

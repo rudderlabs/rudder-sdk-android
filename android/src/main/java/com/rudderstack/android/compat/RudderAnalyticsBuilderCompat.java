@@ -14,15 +14,59 @@
 
 package com.rudderstack.android.compat;
 
+import androidx.annotation.NonNull;
+
 import com.rudderstack.android.ConfigurationAndroid;
-import com.rudderstack.core.compat.AnalyticsBuilderCompat;
+import com.rudderstack.android.RudderAnalytics;
+import com.rudderstack.core.Analytics;
+import com.rudderstack.core.ConfigDownloadService;
+import com.rudderstack.core.DataUploadService;
+
+import kotlin.Unit;
 
 /**
  * To be used by java projects
  */
-public final class RudderAnalyticsBuilderCompat extends AnalyticsBuilderCompat {
+public final class RudderAnalyticsBuilderCompat  {
 
-    public RudderAnalyticsBuilderCompat(String writeKey, ConfigurationAndroid configuration) {
-        super(writeKey, configuration);
+    private @NonNull String writeKey;
+    private @NonNull ConfigurationAndroid configuration;
+    private DataUploadService dataUploadService = null;
+    private ConfigDownloadService configDownloadService = null;
+    private InitializationListener initializationListener = null;
+
+    public RudderAnalyticsBuilderCompat(@NonNull String writeKey, @NonNull ConfigurationAndroid configuration) {
+        this.writeKey = writeKey;
+        this.configuration = configuration;
+    }
+    public RudderAnalyticsBuilderCompat withDataUploadService(DataUploadService dataUploadService) {
+        this.dataUploadService = dataUploadService;
+        return this;
+    }
+    public RudderAnalyticsBuilderCompat withConfigDownloadService(ConfigDownloadService configDownloadService) {
+        this.configDownloadService = configDownloadService;
+        return this;
+    }
+    public RudderAnalyticsBuilderCompat withInitializationListener(InitializationListener initializationListener) {
+        this.initializationListener = initializationListener;
+        return this;
+    }
+    public Analytics build() {
+
+        return RudderAnalytics.RudderAnalytics(
+                writeKey,
+                configuration,
+                dataUploadService,
+                configDownloadService,
+                (success, message) -> {
+                    if(initializationListener != null) {
+                        initializationListener.onInitialized(success, message);
+                    }
+                    return Unit.INSTANCE;
+                }
+        );
+    }
+    public interface InitializationListener {
+        void onInitialized(boolean success, String message);
     }
 }
