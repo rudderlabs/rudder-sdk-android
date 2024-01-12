@@ -30,16 +30,19 @@ private val defaultSessionId
 private const val SESSION_ID_MIN_LENGTH = 10
 internal val defaultLastActiveTimestamp
     get() = System.currentTimeMillis()
+
 @JvmOverloads
 fun Analytics.startSession(
     sessionId: Long = defaultSessionId
 ) {
-    if(!isSessionIdValid(sessionId)){
-        currentConfiguration?.logger?.warn("Rudderstack User Session",
-            "Invalid session id $sessionId. Must be at least 10 digits")
+    endSession()
+    if (!isSessionIdValid(sessionId)) {
+        currentConfiguration?.logger?.warn(
+            "Rudderstack User Session", "Invalid session id $sessionId. Must be at least 10 digits"
+        )
+        return
     }
     if (currentConfigurationAndroid?.trackAutoSession == true) {
-        endSession()
         applyConfiguration {
             if (this is ConfigurationAndroid) copy(
                 trackAutoSession = false
@@ -50,8 +53,8 @@ fun Analytics.startSession(
     updateSessionStart(sessionId)
 }
 
-fun isSessionIdValid(sessionId: Long): Boolean {
-    return sessionId/10.0.pow(SESSION_ID_MIN_LENGTH - 1) >= 1
+private fun isSessionIdValid(sessionId: Long): Boolean {
+    return sessionId / 10.0.pow(SESSION_ID_MIN_LENGTH - 1) >= 1
 }
 
 fun Analytics.endSession() {
@@ -63,7 +66,6 @@ fun Analytics.endSession() {
     }
     updateSessionEnd()
 }
-
 
 
 internal fun Analytics.startSessionIfNeeded() {
@@ -81,10 +83,13 @@ internal fun Analytics.startSessionIfNeeded() {
     val timeDifference: Long = synchronized(this) {
         abs(System.currentTimeMillis() - currentSession.lastActiveTimestamp)
     }
-    if (timeDifference > (currentConfigurationAndroid?.sessionTimeoutMillis ?: 0)) {
+    if (timeDifference >= (currentConfigurationAndroid?.sessionTimeoutMillis?.coerceAtLeast(0L)
+                           ?: 0)
+    ) {
         refreshSessionUpdate()
     }
 }
+
 internal fun Analytics.initializeSessionManagement() {
     val savedSessionId = currentConfigurationAndroid?.storage?.sessionId
     val lastActiveTimestamp = currentConfigurationAndroid?.storage?.lastActiveTimestamp
@@ -106,7 +111,7 @@ internal fun Analytics.initializeSessionManagement() {
     listenToSessionChanges()
 }
 
-fun Analytics.discardAnyPreviousSession(savedSessionId: Long?, lastActiveTimestamp: Long?) {
+private fun Analytics.discardAnyPreviousSession(savedSessionId: Long?, lastActiveTimestamp: Long?) {
     if (savedSessionId != null && lastActiveTimestamp != null) {
         applySessionToStorage(UserSession())
     }
@@ -114,9 +119,9 @@ fun Analytics.discardAnyPreviousSession(savedSessionId: Long?, lastActiveTimesta
 }
 
 private fun Analytics.listenToSessionChanges() {
-    UserSessionState.subscribe{ newState, _ ->
+    UserSessionState.subscribe { newState, _ ->
         newState?.apply {
-            applySessionToStorage( this)
+            applySessionToStorage(this)
         }
     }
 }
@@ -124,10 +129,10 @@ private fun Analytics.listenToSessionChanges() {
 private fun Analytics.applySessionToStorage(
     userSession: UserSession
 ) {
-    if(userSession.isActive) {
+    if (userSession.isActive) {
         currentConfigurationAndroid?.storage?.setSessionId(userSession.sessionId)
         currentConfigurationAndroid?.storage?.saveLastActiveTimestamp(userSession.lastActiveTimestamp)
-    }else{
+    } else {
         currentConfigurationAndroid?.storage?.clearSessionId()
         currentConfigurationAndroid?.storage?.clearLastActiveTimestamp()
     }
@@ -136,6 +141,7 @@ private fun Analytics.applySessionToStorage(
 internal fun Analytics.shutdownSessionManagement() {
     UserSessionState.removeAllObservers()
 }
+
 internal fun Analytics.updateSessionStart(sessionId: Long) {
     UserSessionState.update(
         UserSession(
@@ -146,10 +152,12 @@ internal fun Analytics.updateSessionStart(sessionId: Long) {
         )
     )
 }
-internal fun Analytics.resetSession(){
+
+internal fun Analytics.resetSession() {
     updateSessionEnd()
     startSessionIfNeeded()
 }
+
 internal fun Analytics.updateSessionEnd() {
     UserSessionState.update(
         UserSession(sessionId = -1L, isActive = false, lastActiveTimestamp = -1L)

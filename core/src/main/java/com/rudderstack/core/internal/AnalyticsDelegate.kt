@@ -168,7 +168,7 @@ internal class AnalyticsDelegate(
             applyMessageClosure {
                 applyConfigurationClosure(this)
             }
-        }
+        }?: logger.error(log = "Configuration not updated, since current configuration is null")
 
     }
 
