@@ -36,6 +36,7 @@ import org.mockito.Mockito.*
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import java.util.concurrent.TimeUnit
@@ -746,6 +747,13 @@ abstract class AnalyticsTest {
             }
         }
         Awaitility.await().atMost(100, TimeUnit.SECONDS).untilTrue(isDone)
+    }
+    @Test
+    fun `assert reset called on infrastructure plugins`(){
+        val infraPlugin = mock<InfrastructurePlugin>()
+        analytics.addInfrastructurePlugin(infraPlugin)
+        analytics.reset()
+        verify(infraPlugin, times(1)).reset()
     }
 
 }

@@ -106,6 +106,9 @@ internal class AnalyticsDelegate(
     }
 
     override fun reset() {
+        applyInfrastructureClosure {
+            this.reset()
+        }
         applyMessageClosure {
             this.reset()
         }
