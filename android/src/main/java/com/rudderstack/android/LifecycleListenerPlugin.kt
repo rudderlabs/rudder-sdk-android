@@ -14,9 +14,9 @@
 
 package com.rudderstack.android
 
+import android.app.Activity
 import com.rudderstack.core.InfrastructurePlugin
 import com.rudderstack.core.Plugin
-import com.rudderstack.android.ConfigurationAndroid
 
 /**
  * Any [InfrastructurePlugin] or [Plugin] that wants to listen to lifecycle events should implement
@@ -39,26 +39,36 @@ interface LifecycleListenerPlugin {
      * Called when at least one activity is started
      *
      */
-    fun onAppForegrounded()
+    fun onAppForegrounded(){}
     /**
      * Called when all activities are stopped
      *
      */
-    fun onAppBackgrounded()
+    fun onAppBackgrounded(){}
 
     /**
      * Called when an activity is started
      *
      * @param activityName The name of the activity that is started
      */
-    fun onActivityStarted(activityName: String)
+    fun onActivityStarted(activityName: String){}
+    /**
+     * Called when the current activity is changed
+     * Will be null if the app is backgrounded
+     * If using this method, make sure to make it thread safe.
+     * Storing the activity as a strong reference might lead to memory leaks.
+     * If you're only interested in the name of the activity, use [onActivityStarted] instead.
+     *
+     * @param activity The activity that is started
+     */
+    fun setCurrentActivity(activity: Activity?){}
 
     /**
      * Called when an activity is stopped
      *
      * @param activityName The name of the activity that is stopped
      */
-    fun onActivityStopped(activityName: String)
+    fun onActivityStopped(activityName: String){}
 
     /**
      * Called when the screen changes.
@@ -68,5 +78,5 @@ interface LifecycleListenerPlugin {
      * @param name Name of the compose route or fragment label
      * @param arguments The arguments passed to the to the composable or fragment in question.
      */
-    fun onScreenChange(name: String, arguments: Map<String, Any>?)
+    fun onScreenChange(name: String, arguments: Map<String, Any>?){}
 }

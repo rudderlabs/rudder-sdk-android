@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.internal.plugins
 
+import android.app.Activity
 import android.app.Application
 import android.bluetooth.BluetoothAdapter
 import android.content.ContentResolver
@@ -23,10 +24,9 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.provider.Settings
 import android.telephony.TelephonyManager
-import android.util.DisplayMetrics
-import android.view.WindowManager
 import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.AndroidUtils.isTv
+import com.rudderstack.android.LifecycleListenerPlugin
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
@@ -35,6 +35,7 @@ import com.rudderstack.models.Message
 import com.rudderstack.models.MessageContext
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import java.util.*
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Sets the context specific to Android
@@ -44,7 +45,7 @@ import java.util.*
  * Initiates the values
  *
  */
-internal class AndroidContextPlugin : Plugin {
+internal class AndroidContextPlugin : Plugin, LifecycleListenerPlugin {
     //if true collects advertising id automatically
     private val jsonAdapter
         get() = _analytics?.currentConfiguration?.jsonAdapter
@@ -66,6 +67,9 @@ internal class AndroidContextPlugin : Plugin {
     private var _deviceToken: String? = null
 
     private var _analytics: Analytics? = null
+    private val _currentActivity : AtomicReference<Activity?> = AtomicReference()
+    private val currentActivity: Activity?
+        get() = _currentActivity.get()
 
     override fun intercept(chain: Plugin.Chain): Message {
         val msg = chain.message()
@@ -122,7 +126,6 @@ internal class AndroidContextPlugin : Plugin {
                 .invoke(advertisingInfo) as? Boolean
         if (isLimitAdTrackingEnabled == true) {
             _analytics?.logger?.debug(log = "Not collecting advertising ID because isLimitAdTrackingEnabled (Google Play Services) is true.")
-//            this.deviceInfo.setAdTrackingEnabled(false)
             return null
         }
         return advertisingInfo.javaClass.getMethod("getId").invoke(advertisingInfo) as? String
@@ -135,7 +138,6 @@ internal class AndroidContextPlugin : Plugin {
         val limitAdTracking = Settings.Secure.getInt(contentResolver, "limit_ad_tracking") != 0
         if (limitAdTracking) {
             _analytics?.logger?.debug(log = "Not collecting advertising ID because limit_ad_tracking (Amazon Fire OS) is true.")
-//            this.deviceInfo.setAdTrackingEnabled(false)
             return null
         }
         return Settings.Secure.getString(
@@ -144,16 +146,22 @@ internal class AndroidContextPlugin : Plugin {
     }
     private var _defaultAndroidContext: MessageContext? = null
     private fun Application.defaultAndroidContext(): MessageContext {
-        return _defaultAndroidContext?:mapOf<String, Any?>(
-            "app" to getAppDetails(),
-            "os" to getOsInfo(),
-            "screen" to getScreenInfo(),
-            "userAgent" to userAgent,
-            "locale" to locale,
-            "device" to getDeviceInfo(),
-            "network" to getRudderNetwork(),
-            "timezone" to timeZone
-        ).also { _defaultAndroidContext = it }
+        return synchronized(this) { _defaultAndroidContext }?: generateDefaultAndroidContext ()
+    }
+
+    private fun Application.generateDefaultAndroidContext() = mapOf<String, Any?>(
+        "app" to getAppDetails(),
+        "os" to getOsInfo(),
+        "screen" to getScreenInfo(),
+        "userAgent" to userAgent,
+        "locale" to locale,
+        "device" to getDeviceInfo(),
+        "network" to getRudderNetwork(),
+        "timezone" to timeZone
+    ).also {
+        synchronized(this) {
+            _defaultAndroidContext = it
+        }
     }
 
     private fun Application.getAppDetails(): String? {
@@ -172,8 +180,7 @@ internal class AndroidContextPlugin : Plugin {
                 jsonAdapter?.writeToJson(it, RudderTypeAdapter {})
             }
         } catch (ex: PackageManager.NameNotFoundException) {
-//            RudderLogger.logError(ex.cause)
-            //TODO(add logging)
+            _analytics?.currentConfiguration?.logger?.error(log = "Package Name Not Found", throwable = ex)
         }
         return null
     }
@@ -185,25 +192,18 @@ internal class AndroidContextPlugin : Plugin {
     }
 
     private fun Application.getScreenInfo(): String? {
-        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            display
-        } else {
-            val manager = getSystemService(Context.WINDOW_SERVICE) as? WindowManager
-            manager?.defaultDisplay
-        }
-        return if (display != null) {
-            val displayMetrics = DisplayMetrics()
-            display.getMetrics(displayMetrics)
+        return currentActivity?.resources?.displayMetrics?.let {
             mapOf(
-                "density" to displayMetrics.densityDpi,
-                "height" to displayMetrics.heightPixels,
-                "width" to displayMetrics.widthPixels
+                "density" to it.densityDpi,
+                "height" to it.heightPixels,
+                "width" to it.widthPixels
             ).let {
                 jsonAdapter?.writeToJson(it, RudderTypeAdapter {})
             }
-        } else null
+        }
 
     }
+
 
     private fun Application.getDeviceInfo(): String? {
         return ((mapOf(
@@ -254,7 +254,8 @@ internal class AndroidContextPlugin : Plugin {
             networkMap["cellular"] = isCellularEnabled.toString()
             return jsonAdapter?.writeToJson(networkMap, RudderTypeAdapter {})
         } catch (ex: java.lang.Exception) {
-//            RudderLogger.logError(ex)
+            _analytics?.currentConfiguration?.logger?.error(
+                log = "Error getting network info", throwable = ex)
         }
         return null
     }
@@ -265,5 +266,20 @@ internal class AndroidContextPlugin : Plugin {
         get() = Locale.getDefault().language + "-" + Locale.getDefault().country
     private val timeZone
         get() = TimeZone.getDefault().id
+    override fun onAppBackgrounded() {
+        _currentActivity.set(null)
+    }
+
+    override fun setCurrentActivity(activity: Activity?) {
+        super.setCurrentActivity(activity)
+        _currentActivity.set(activity)
+        //we generate the default context here because we need the activity to get the screen info
+        application?.generateDefaultAndroidContext()
+    }
+
+    override fun onShutDown() {
+        super.onShutDown()
+        _analytics = null
+    }
 
 }
