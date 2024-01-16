@@ -160,7 +160,9 @@ public class RudderContext {
         try {
             if (RudderClient.getApplication() != null) {
                 RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getApplication());
-                preferenceManger.saveTraits(RudderGson.getInstance().toJson(this.traits));
+                synchronized (this) {
+                    preferenceManger.saveTraits(RudderGson.getInstance().toJson(this.traits));
+                }
             }
         } catch (NullPointerException ex) {
             ReportManager.reportError(ex);
