@@ -84,7 +84,6 @@ internal class SessionPlugin : Plugin {
 
 
     override fun reset() {
-        super.reset()
         _analytics?.resetSession()
     }
 

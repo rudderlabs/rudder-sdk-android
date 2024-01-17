@@ -317,9 +317,9 @@ interface ConfigurationAndroid : Configuration {
     }
 
     object Defaults{
-        val DEFAULT_ANDROID_DATAPLANE_URL = "https://hosted.rudderlabs.com"
-        val DEFAULT_ANDROID_CONTROLPLANE_URL = "https://api.rudderlabs.com"
-        val GZIP_ENABLED: Boolean = true
+        const val DEFAULT_ANDROID_DATAPLANE_URL = "https://hosted.rudderlabs.com"
+        const val DEFAULT_ANDROID_CONTROLPLANE_URL = "https://api.rudderlabs.com"
+        const val GZIP_ENABLED: Boolean = true
         const val SHOULD_VERIFY_SDK: Boolean = true
         const val TRACK_LIFECYCLE_EVENTS = true
         const val RECORD_SCREEN_VIEWS = true
@@ -331,8 +331,6 @@ interface ConfigurationAndroid : Configuration {
         const val DEFAULT_FLUSH_QUEUE_SIZE = 30
         const val DEFAULT_MAX_FLUSH_INTERVAL = 10 * 1000L
         const val SESSION_TIMEOUT: Long = 300000
-
-        // default for automatic session tracking
         const val AUTO_SESSION_TRACKING = true
     }
 }
