@@ -94,12 +94,7 @@ sealed class Message(
     @SerializedName("messageId")
     @JsonProperty("messageId")
     @Json(name = "messageId")
-    val messageId: String = _messageId ?: String.format(
-        Locale.US,
-        "%d-%s",
-        System.currentTimeMillis(),
-        UUID.randomUUID().toString(),
-    )
+    val messageId: String = _messageId ?: UUID.randomUUID().toString()
 
     // ugly hack for moshi
     // https://github.com/square/moshi/issues/609#issuecomment-798805367
@@ -107,7 +102,7 @@ sealed class Message(
     @JsonProperty("channel")
     @SerializedName("channel")
     var channel: String = _channel ?: "server"
-        get() = field ?: "server"
+        get() = field
 
     @JsonIgnore
     fun getType() = type
