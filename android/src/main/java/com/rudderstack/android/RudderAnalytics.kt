@@ -21,7 +21,7 @@ import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
 import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
 import com.rudderstack.android.internal.infrastructure.ResetImplementationPlugin
-import com.rudderstack.android.internal.plugins.AndroidContextPlugin
+import com.rudderstack.android.internal.plugins.PlatformInputsPlugin
 import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.states.ContextState
@@ -132,7 +132,7 @@ private val infrastructurePlugins
     )
 private val messagePlugins
     get() = listOf(
-        AndroidContextPlugin(), ExtractStatePlugin(), FillDefaultsPlugin()
+        PlatformInputsPlugin(), ExtractStatePlugin(), FillDefaultsPlugin()
     )
 
 private fun Analytics.startup() {

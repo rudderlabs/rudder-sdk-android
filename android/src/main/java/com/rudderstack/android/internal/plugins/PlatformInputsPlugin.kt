@@ -45,7 +45,8 @@ import java.util.concurrent.atomic.AtomicReference
  * Initiates the values
  *
  */
-internal class AndroidContextPlugin : Plugin, LifecycleListenerPlugin {
+private const val CHANNEL = "mobile"
+internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     //if true collects advertising id automatically
     private val jsonAdapter
         get() = _analytics?.currentConfiguration?.jsonAdapter
@@ -73,7 +74,9 @@ internal class AndroidContextPlugin : Plugin, LifecycleListenerPlugin {
 
     override fun intercept(chain: Plugin.Chain): Message {
         val msg = chain.message()
-        val newMsg = msg.copy(context = msg.context optAdd application?.defaultAndroidContext())
+        val newMsg = msg.copy(context = msg.context optAdd application?.defaultAndroidContext()).also {
+            it.channel = CHANNEL
+        }
         return chain.proceed(newMsg)
     }
 
