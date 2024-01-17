@@ -17,7 +17,6 @@ package com.rudderstack.android.internal.infrastructure
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
-import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.LifecycleListenerPlugin
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
@@ -82,11 +81,13 @@ internal class ActivityBroadcasterPlugin(
     private fun broadcastActivityStart(activity: Activity) {
         analytics?.applyInfrastructureClosure {
             if (this is LifecycleListenerPlugin) {
+                setCurrentActivity(activity)
                 onActivityStarted(activity.localClassName)
             }
         }
         analytics?.applyMessageClosure {
             if (this is LifecycleListenerPlugin) {
+                setCurrentActivity(activity)
                 onActivityStarted(activity.localClassName)
             }
         }
@@ -118,11 +119,14 @@ internal class ActivityBroadcasterPlugin(
     private fun broadCastApplicationStop() {
         analytics?.applyInfrastructureClosure {
             if (this is LifecycleListenerPlugin) {
+                setCurrentActivity(null)
                 this.onAppBackgrounded()
             }
         }
         analytics?.applyMessageClosure {
+
             if (this is LifecycleListenerPlugin) {
+                setCurrentActivity(null)
                 this.onAppBackgrounded()
             }
         }
