@@ -15,6 +15,7 @@ import android.text.TextUtils;
 import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderLogger;
+import com.rudderstack.android.sdk.core.RudderMessage;
 import com.rudderstack.android.sdk.core.gson.RudderGson;
 
 import java.io.File;
@@ -259,7 +260,13 @@ public class Utils {
         return false;
     }
 
-    public static void removeInvalidElements(Object obj) {
+    public static void removeInvalidElementsFromMessage(RudderMessage message) {
+        removeInvalidElements(message.getTraits());
+        removeInvalidElements(message.getProperties());
+        removeInvalidElements(message.getContext().customContextMap);
+    }
+
+    private static void removeInvalidElements(Object obj) {
         if (obj instanceof Map) {
             removeInvalidElementsFromMap((Map<?, ?>) obj);
         } else if (obj instanceof List) {

@@ -365,9 +365,7 @@ class EventRepository {
 
     String serializeByRemovingInvalidElements(RudderMessage message) {
         try {
-            Utils.removeInvalidElements(message.getTraits());
-            Utils.removeInvalidElements(message.getProperties());
-            Utils.removeInvalidElements(message.getContext().customContextMap);
+            Utils.removeInvalidElementsFromMessage(message);
             return RudderGson.getInstance().toJson(message);
         } catch (Exception e) {
             RudderLogger.logError("EventRepository: serializeByRemovingInvalidElements: Exception: " + e.getMessage());
