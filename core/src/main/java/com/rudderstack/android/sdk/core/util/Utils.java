@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -256,6 +257,43 @@ public class Utils {
             return (Boolean) value;
         }
         return false;
+    }
+
+    public static void removeInvalidElements(Object obj) {
+        if (obj instanceof Map) {
+            removeInvalidElementsFromMap((Map<?, ?>) obj);
+        } else if (obj instanceof List) {
+            removeInvalidElementsFromList((List<?>) obj);
+        }
+    }
+
+    private static void removeInvalidElementsFromMap(Map<?, ?> map) {
+        Iterator<?> iterator = map.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) iterator.next();
+            Object value = entry.getValue();
+            if (isInvalid(value)) {
+                iterator.remove();
+            } else {
+                removeInvalidElements(value);
+            }
+        }
+    }
+
+    private static void removeInvalidElementsFromList(List<?> list) {
+        Iterator<?> iterator = list.iterator();
+        while (iterator.hasNext()) {
+            Object value = iterator.next();
+            if (value instanceof Map || value instanceof List) {
+                removeInvalidElements(value);
+            } else if (isInvalid(value)) {
+                iterator.remove();
+            }
+        }
+    }
+
+    private static boolean isInvalid(Object obj) {
+        return obj instanceof Double && (Double.isNaN((Double) obj) || Double.isInfinite((Double) obj));
     }
 
     @NonNull
