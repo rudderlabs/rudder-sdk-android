@@ -15,6 +15,8 @@
 package com.rudderstack.android.repository
 
 import android.content.ContentValues
+import android.content.UriMatcher
+import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.provider.ProviderTestRule
@@ -33,16 +35,18 @@ class ContentProviderTest {
     companion object {
         private const val DB_NAME = "test_db"
         private const val TABLE_NAME = "test_table"
+        private const val FIELD_NAME_1 = "model_name"
+        private const val FIELD_NAME_2 = "model_values"
 //        private const val DB_INSERT_COMMAND_1 = "INSERT INTO $TABLE_NAME ('COL1', 'COL2') VALUES ('col1_val', 'col') "
     }
 
+    private lateinit var database: RudderDatabase
+
     @get:Rule
-    var mProviderRule: ProviderTestRule =
-        ProviderTestRule.Builder(
-            EntityContentProvider::class.java,
-            "com.rudderstack.android.repository.test.EntityContentProvider",
-        )
-            .build()
+    var mProviderRule: ProviderTestRule = ProviderTestRule.Builder(
+        EntityContentProvider::class.java,
+        "com.rudderstack.android.repository.test.EntityContentProvider",
+    ).setDatabaseCommands(DB_NAME).build()
 
     // lets have a model class
     data class Model(val name: String, val values: Array<String>) {
@@ -69,8 +73,8 @@ class ContentProviderTest {
     @RudderEntity(
         TABLE_NAME,
         fields = [
-            RudderField(RudderField.Type.TEXT, "model_name", primaryKey = true),
-            RudderField(RudderField.Type.TEXT, "model_values"),
+            RudderField(RudderField.Type.TEXT, FIELD_NAME_1, primaryKey = true),
+            RudderField(RudderField.Type.TEXT, FIELD_NAME_2),
 
         ],
     )
@@ -79,8 +83,8 @@ class ContentProviderTest {
             fun create(values: Map<String, Any?>): ModelEntity {
                 return ModelEntity(
                     Model(
-                        values["model_name"] as String,
-                        (values["model_values"] as String).split(',').toTypedArray(),
+                        values[FIELD_NAME_1] as String,
+                        (values[FIELD_NAME_2] as String).split(',').toTypedArray(),
                     ),
                 )
             }
@@ -88,8 +92,8 @@ class ContentProviderTest {
 
         override fun generateContentValues(): ContentValues {
             return ContentValues().also {
-                it.put("model_name", model.name)
-                it.put("model_values", model.values.reduce { acc, s -> "$acc,$s" })
+                it.put(FIELD_NAME_1, model.name)
+                it.put(FIELD_NAME_2, model.values.reduce { acc, s -> "$acc,$s" })
             }
         }
 
@@ -116,38 +120,71 @@ class ContentProviderTest {
         }
     }
 
-    private val testUri by lazy {
-        EntityContentProvider.getContentUri(TABLE_NAME, ApplicationProvider.getApplicationContext())
-    }
+    private val testUri
+        get() = EntityContentProvider.getContentUri(
+            TABLE_NAME,
+            ApplicationProvider.getApplicationContext()
+        )
+
 
     @Before
     fun initialize() {
-        RudderDatabase.init(
+        database = RudderDatabase(
             ApplicationProvider.getApplicationContext(),
 //            RuntimeEnvironment.application,
-            DB_NAME,
-            ModelEntityFactory(),
+            DB_NAME, ModelEntityFactory(), true
         )
+        //create table for ModelEntity
+        EntityContentProvider.registerTableCommands(
+            DB_NAME,
+            "CREATE TABLE IF NOT EXISTS $TABLE_NAME ($FIELD_NAME_1 TEXT PRIMARY KEY, $FIELD_NAME_2 TEXT)",
+            null
+
+        )
+
     }
 
     @After
     fun tearDown() {
-        RudderDatabase.shutDown()
+        database.shutDown()
     }
 
     @Test
-    fun testContentProvider() {
+    fun testUriMatcherSuccess() {
+        val uriMatcher: UriMatcher = UriMatcher(UriMatcher.NO_MATCH)
+        val authority = "com.rudderstack.android.repository.test.EntityContentProvider"
+        val tableName = "test_table"
+//        val contentUri = Uri.parse("content://$authority/$tableName")
+        uriMatcher.addURI(authority, tableName, 1)
+        uriMatcher.addURI(authority, "$tableName/*", 2)
+        val testUri = Uri.parse(
+            "content://com.rudderstack.android.repository.test.EntityContentProvider" + "/test_table?db_entity=com.rudderstack.android.repository.ContentProviderTest%24ModelEntity&db_name=test_db"
+        )
+        assertThat(uriMatcher.match(testUri), org.hamcrest.Matchers.`is`(1))
+
+    }
+
+    @Test
+    fun testContentProviderWithTwoEntities() {
         // let's start with insertion
         val modelEntity1 = ModelEntity(Model("event-1", arrayOf("1", "2")))
         val modelEntity2 = ModelEntity(Model("event-2", arrayOf("2", "3")))
 
-        val contentResolver = mProviderRule.resolver
         val modelTestUriBuilder = testUri.buildUpon().appendQueryParameter(
             EntityContentProvider.ECP_ENTITY_CODE,
             ModelEntity::class.java.name,
+        ).appendQueryParameter(
+            EntityContentProvider.ECP_DATABASE_CODE, DB_NAME
         )
+        val contentResolver = mProviderRule.resolver
+
+        println("modelTestUriBuilder: $modelTestUriBuilder")
         // insert
-        val uri1 = contentResolver.insert(modelTestUriBuilder.build(), modelEntity1.generateContentValues())
+        val uri1 = contentResolver.insert(
+            modelTestUriBuilder.build(),
+            modelEntity1.generateContentValues()
+        )
+        println("uri1: $uri1")
         assertThat(
             uri1,
             allOf(
@@ -161,7 +198,7 @@ class ContentProviderTest {
                 notNullValue(),
             ),
         )
-        // Two elements present
+//        // Two elements present
         val cursor = contentResolver.query(modelTestUriBuilder.build(), null, null, null, null)
         assertThat(
             cursor?.count,

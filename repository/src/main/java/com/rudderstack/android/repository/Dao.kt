@@ -19,7 +19,6 @@ import android.content.Context
 import android.database.Cursor
 import android.database.DatabaseUtils
 import android.database.sqlite.SQLiteDatabase
-import android.util.Log
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
 import com.rudderstack.android.repository.utils.getInsertedRowIdForConflictIgnore
@@ -44,6 +43,7 @@ class Dao<T : Entity>(
     private val context: Context,
     private val entityFactory: EntityFactory,
     private val executorService: ExecutorService,
+    private val databaseName : String
 ) {
 
     companion object {
@@ -56,13 +56,12 @@ class Dao<T : Entity>(
     private // create fields statement
     val fields =
         entityClass.getAnnotation(RudderEntity::class.java)?.fields?.takeIf { it.isNotEmpty() }
-            ?: throw IllegalArgumentException("There should be at least one field in @Entity")
+        ?: throw IllegalArgumentException("There should be at least one field in @Entity")
 
     private val tableName: String = entityClass.getAnnotation(RudderEntity::class.java)?.tableName
-        ?: throw IllegalArgumentException(
-            "${entityClass.simpleName} is being used to generate Dao, " +
-                "but missing @RudderEntity annotation",
-        )
+                                    ?: throw IllegalArgumentException(
+                                        "${entityClass.simpleName} is being used to generate Dao, " + "but missing @RudderEntity annotation",
+                                    )
 
     private var _db: SQLiteDatabase? = null
         get() = if (field?.isOpen == true) field else null
@@ -73,9 +72,13 @@ class Dao<T : Entity>(
         EntityContentProvider.getContentUri(tableName, context).buildUpon().appendQueryParameter(
             EntityContentProvider.ECP_ENTITY_CODE,
             entityClass.name,
-        )
+        ).appendQueryParameter(EntityContentProvider.ECP_DATABASE_CODE, databaseName)
     }
-
+    init {
+        if(useContentProvider)
+            EntityContentProvider.registerTableCommands(databaseName, createTableStmt(tableName,
+                fields), createIndexStmt(tableName, fields))
+    }
     /**
      * usage
      * with(dao){
@@ -119,11 +122,9 @@ class Dao<T : Entity>(
         conflictResolutionStrategy: ConflictResolutionStrategy = ConflictResolutionStrategy.CONFLICT_NONE,
     ): List<Long>? {
         awaitDbInitialization()
-        return (
-            _db?.let { db ->
-                insertData(db, this, conflictResolutionStrategy).first
-            }
-            )
+        return (_db?.let { db ->
+            insertData(db, this, conflictResolutionStrategy).first
+        })
     }
 
     fun List<T>.delete(deleteCallback: ((numberOfRows: Int) -> Unit)? = null) {
@@ -164,22 +165,22 @@ class Dao<T : Entity>(
     // delete
     /**
      * val args = map {
-     it.getPrimaryKeyValues()
-     }
-     val whereClause = fields?.takeIf {
-     it.isNotEmpty()
-     }?.filter {
-     it.primaryKey
-     }?.mapIndexed { index, it ->
-     "${it.fieldName} IN (${args[index]})"
-     }?.reduce { acc, s -> "$acc AND $s" }
-     val numberOfRowsDel = db.delete(tableName,whereClause, null)
-     deleteCallback?.invoke(numberOfRowsDel)
+    it.getPrimaryKeyValues()
+    }
+    val whereClause = fields?.takeIf {
+    it.isNotEmpty()
+    }?.filter {
+    it.primaryKey
+    }?.mapIndexed { index, it ->
+    "${it.fieldName} IN (${args[index]})"
+    }?.reduce { acc, s -> "$acc AND $s" }
+    val numberOfRowsDel = db.delete(tableName,whereClause, null)
+    deleteCallback?.invoke(numberOfRowsDel)
 
-     val allData = getAllSync() ?: listOf()
-     _dataChangeListeners.forEach {
-     it.onDataDeleted(this.subList(0,numberOfRowsDel), allData)
-     }
+    val allData = getAllSync() ?: listOf()
+    _dataChangeListeners.forEach {
+    it.onDataDeleted(this.subList(0,numberOfRowsDel), allData)
+    }
      */
     /**
      * Delete based on where clause
@@ -297,7 +298,8 @@ class Dao<T : Entity>(
     ) {
         runTransactionOrDeferToCreation { _: SQLiteDatabase ->
             callback.invoke(
-                runGetQuerySync(columns, selection, selectionArgs, orderBy, limit, offset) ?: listOf(),
+                runGetQuerySync(columns, selection, selectionArgs, orderBy, limit, offset)
+                ?: listOf(),
             )
         }
     }
@@ -344,19 +346,16 @@ class Dao<T : Entity>(
     ): Long {
         awaitDbInitialization()
         return if (useContentProvider) {
-            (
-                context.contentResolver.query(
-                    entityContentProviderUri.build(),
-                    arrayOf("count(*)"),
-                    selection,
-                    selectionArgs,
-                    null,
-                )
-                    ?.use { cursor ->
-                        cursor.moveToFirst()
-                        cursor.getLong(0)
-                    } ?: -1L
-                )
+            (context.contentResolver.query(
+                entityContentProviderUri.build(),
+                arrayOf("count(*)"),
+                selection,
+                selectionArgs,
+                null,
+            )?.use { cursor ->
+                    cursor.moveToFirst()
+                    cursor.getLong(0)
+                } ?: -1L)
         } else {
             synchronized(DB_LOCK) {
                 DatabaseUtils.queryNumEntries(
@@ -401,42 +400,37 @@ class Dao<T : Entity>(
             }
         var rowIds = listOf<Long>()
         var returnedItems = listOf<T?>()
-        if (!useContentProvider) {
-            synchronized(DB_LOCK) {
-                items.forEach {
-                    val contentValues = it.generateContentValues()
-                    if (autoIncrementFieldName != null) {
-                        contentValues.put(autoIncrementFieldName, nextValue)
-                    }
-
-                    val insertedRowId = insertContentValues(
-                        db,
-                        tableName,
-                        contentValues,
-                        null,
-                        conflictResolutionStrategy.type,
-                    ).let {
-                        if (conflictResolutionStrategy == ConflictResolutionStrategy.CONFLICT_IGNORE) {
-                            getInsertedRowIdForConflictIgnore(dbCount, it)
-                        } else {
-                            it
-                        }
-                    }.also {
-                        if (it >= 0) {
-                            nextValue++
-                            dbCount++
-                        }
-                    }
-                    rowIds = rowIds + insertedRowId
-                    returnedItems =
-                        returnedItems + (
-                            if (insertedRowId < 0) {
-                                it
-                            } else contentValues.toEntity(
-                                entityClass,
-                            )
-                            )
+        synchronized(DB_LOCK) {
+            items.forEach {
+                val contentValues = it.generateContentValues()
+                if (autoIncrementFieldName != null) {
+                    contentValues.put(autoIncrementFieldName, nextValue)
                 }
+
+                val insertedRowId = insertContentValues(
+                    db,
+                    tableName,
+                    contentValues,
+                    null,
+                    conflictResolutionStrategy.type,
+                ).let {
+                    if (conflictResolutionStrategy == ConflictResolutionStrategy.CONFLICT_IGNORE) {
+                        getInsertedRowIdForConflictIgnore(dbCount, it)
+                    } else {
+                        it
+                    }
+                }.also {
+                    if (it >= 0) {
+                        nextValue++
+                        dbCount++
+                    }
+                }
+                rowIds = rowIds + insertedRowId
+                returnedItems = returnedItems + (if (insertedRowId < 0) {
+                    it
+                } else contentValues.toEntity(
+                    entityClass,
+                ))
             }
         }
 
@@ -452,8 +446,7 @@ class Dao<T : Entity>(
     // we consider one key which is auto increment.
     // consider only one auto increment key
     private fun getAutoIncrementFieldToNextValue(db: SQLiteDatabase) = fields.firstOrNull {
-        it.type == RudderField.Type.INTEGER &&
-            it.isAutoInc /*&& !it.primaryKey*/
+        it.type == RudderField.Type.INTEGER && it.isAutoInc /*&& !it.primaryKey*/
     }?.let { autoIncField ->
         autoIncField.fieldName to getMaxIntValueForColumn(
             db,
@@ -477,7 +470,15 @@ class Dao<T : Entity>(
         tableName: String,
         column: String,
     ): Long {
-        return synchronized(DB_LOCK) {
+        return (if (useContentProvider) {
+            context.contentResolver.query(
+                entityContentProviderUri.build(),
+                arrayOf("IFNULL(MAX($column), 0)"),
+                null,
+                null,
+                null
+            )
+        } else synchronized(DB_LOCK) {
             db.query(
                 tableName,
                 arrayOf("IFNULL(MAX($column), 0)"),
@@ -487,17 +488,15 @@ class Dao<T : Entity>(
                 null,
                 null,
             )
-        }.let { cursor ->
-            (
-                if (cursor.moveToFirst()) {
-                    cursor.getLong(0)
-                } else {
-                    -1
+        })?.let { cursor ->
+            (if (cursor.moveToFirst()) {
+                cursor.getLong(0)
+            } else {
+                -1
+            }).also {
+                    cursor.close()
                 }
-                ).also {
-                cursor.close()
-            }
-        }
+        }?:-1
     }
 
     internal fun insertContentValues(
@@ -508,28 +507,25 @@ class Dao<T : Entity>(
         conflictAlgorithm: Int,
     ): Long {
         return if (useContentProvider) {
-            (
-                context.contentResolver.insert(
-                    entityContentProviderUri
-                        .appendQueryParameter(
-                            EntityContentProvider.ECP_CONFLICT_RESOLUTION_CODE,
-                            conflictAlgorithm.toString(),
-                        )
-                        .build(),
-                    contentValues,
-                )?.let {
-                    it.lastPathSegment?.toLongOrNull()
-                } ?: -1
-                )
+            (context.contentResolver.insert(
+                entityContentProviderUri.appendQueryParameter(
+                        EntityContentProvider.ECP_CONFLICT_RESOLUTION_CODE,
+                        conflictAlgorithm.toString(),
+                    ).appendQueryParameter(
+                        EntityContentProvider.ECP_NULL_HACK_COLUMN_CODE,
+                        conflictAlgorithm.toString(),
+                    ).build(),
+                contentValues,
+            )?.let {
+                it.lastPathSegment?.toLongOrNull()
+            } ?: -1)
         } else {
-            (
-                database.openDatabase?.insertWithOnConflict(
-                    tableName,
-                    nullHackColumn,
-                    contentValues,
-                    conflictAlgorithm,
-                ) ?: -1
-                )
+            (database.openDatabase?.insertWithOnConflict(
+                tableName,
+                nullHackColumn,
+                contentValues,
+                conflictAlgorithm,
+            ) ?: -1)
         }
     }
 
@@ -545,32 +541,32 @@ class Dao<T : Entity>(
     ): List<T> {
         // have to use factory
         val fields = entityClass.getAnnotation(RudderEntity::class.java)?.fields
-            ?: throw IllegalArgumentException("RudderEntity must have at least one field")
-        val cursor = (
-            if (useContentProvider) {
-                context.contentResolver.query(
-                    entityContentProviderUri
-                        .appendQueryParameter(EntityContentProvider.ECP_LIMIT_CODE, limit).build(),
+                     ?: throw IllegalArgumentException("RudderEntity must have at least one field")
+        val cursor = (if (useContentProvider) {
+            context.contentResolver.query(
+                entityContentProviderUri.appendQueryParameter(
+                        EntityContentProvider.ECP_LIMIT_CODE,
+                        limit
+                    ).build(),
+                columns,
+                selection,
+                selectionArgs,
+                orderBy,
+            )
+        } else {
+            synchronized(DB_LOCK) {
+                db.openDatabase?.query(
+                    tableName,
                     columns,
                     selection,
                     selectionArgs,
+                    null,
+                    null,
                     orderBy,
+                    if (offset != null) "$offset,$limit" else limit,
                 )
-            } else {
-                synchronized(DB_LOCK) {
-                    db.openDatabase?.query(
-                        tableName,
-                        columns,
-                        selection,
-                        selectionArgs,
-                        null,
-                        null,
-                        orderBy,
-                        if (offset != null) "$offset,$limit" else limit,
-                    )
-                }
             }
-            ) ?: return listOf()
+        }) ?: return listOf()
 
         val items = ArrayList<T>(cursor.count)
 
@@ -666,6 +662,7 @@ class Dao<T : Entity>(
             endTransaction()
         }
     }
+
     fun execSql(command: String, callback: (() -> Unit)? = null) {
         runTransactionOrDeferToCreation { db: SQLiteDatabase ->
             synchronized(DB_LOCK) {
@@ -678,9 +675,9 @@ class Dao<T : Entity>(
     private fun createTableStmt(tableName: String, fields: Array<RudderField>): String? {
         val fieldsStmt = fields.map {
             "'${it.fieldName}' ${it.type.notation}" + // field name and type
-                // if primary and auto increment
-                /*if (it.primaryKey && it.isAutoInc && it.type == RudderField.Type.INTEGER) " PRIMARY KEY AUTOINCREMENT" else "" +*/
-                if (!it.isNullable || it.primaryKey) " NOT NULL" else "" // specifying nullability, primary key cannot be null
+            // if primary and auto increment
+            /*if (it.primaryKey && it.isAutoInc && it.type == RudderField.Type.INTEGER) " PRIMARY KEY AUTOINCREMENT" else "" +*/
+            if (!it.isNullable || it.primaryKey) " NOT NULL" else "" // specifying nullability, primary key cannot be null
         }.reduce { acc, s -> "$acc, $s" }
         val primaryKeyStmt =
             // auto increment is only available for one primary key
@@ -696,10 +693,7 @@ class Dao<T : Entity>(
                 "UNIQUE($it)"
             }
 
-        return (
-            "CREATE TABLE IF NOT EXISTS '$tableName' ($fieldsStmt ${if (primaryKeyStmt.isNotEmpty()) ", $primaryKeyStmt" else ""}" +
-                "${if (!uniqueKeyStmt.isNullOrEmpty()) ", $uniqueKeyStmt" else ""})"
-            )
+        return ("CREATE TABLE IF NOT EXISTS '$tableName' ($fieldsStmt ${if (primaryKeyStmt.isNotEmpty()) ", $primaryKeyStmt" else ""}" + "${if (!uniqueKeyStmt.isNullOrEmpty()) ", $uniqueKeyStmt" else ""})")
     }
 
     private fun createIndexStmt(tableName: String, fields: Array<RudderField>): String? {
@@ -727,21 +721,21 @@ class Dao<T : Entity>(
         RudderField.Type.INTEGER -> if (isNullable) {
             cursor.getLongOrNull(
                 cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
-                    ?: throw IllegalArgumentException("No such column $fieldName"),
+                ?: throw IllegalArgumentException("No such column $fieldName"),
             )
         } else cursor.getLong(
             cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
-                ?: throw IllegalArgumentException("No such column $fieldName"),
+            ?: throw IllegalArgumentException("No such column $fieldName"),
         )
 
         RudderField.Type.TEXT -> if (isNullable) {
             cursor.getStringOrNull(
                 cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
-                    ?: throw IllegalArgumentException("No such column $fieldName"),
+                ?: throw IllegalArgumentException("No such column $fieldName"),
             )
         } else cursor.getString(
             cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
-                ?: throw IllegalArgumentException("No such column $fieldName"),
+            ?: throw IllegalArgumentException("No such column $fieldName"),
         )
     }
 

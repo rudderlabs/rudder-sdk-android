@@ -37,11 +37,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29])
 class RudderDatabaseTest {
-    //    private lateinit var
+        private lateinit var database: RudderDatabase
 //    private val delayedExecutor = Executors.newSingleThreadExecutor()
     @Before
     fun initialize() {
-        RudderDatabase.init(
+        database = RudderDatabase(
             ApplicationProvider.getApplicationContext(),
             "testDb",
             TestEntityFactory,
@@ -52,17 +52,17 @@ class RudderDatabaseTest {
 
     @After
     fun tearDown() {
-        RudderDatabase.shutDown()
+        database.shutDown()
     }
 
     @Test
     fun `test race condition in dao list initialisation`() {
-        val sampleDao = RudderDatabase.createNewDao(SampleEntity::class.java, TestExecutor())
-        val sampleAutoGenDao = RudderDatabase.createNewDao(
+        val sampleDao = database.createNewDao(SampleEntity::class.java, TestExecutor())
+        val sampleAutoGenDao = database.createNewDao(
             SampleAutoGenEntity::class.java,
             TestExecutor(),
         )
-        val sampleDaoCheck = RudderDatabase.getDao(SampleEntity::class.java)
+        val sampleDaoCheck = database.getDao(SampleEntity::class.java)
         MatcherAssert.assertThat(sampleDao, Matchers.equalTo(sampleDaoCheck))
         MatcherAssert.assertThat(sampleAutoGenDao, Matchers.equalTo(sampleAutoGenDao))
 //        Thread.sleep(5000)
@@ -70,8 +70,8 @@ class RudderDatabaseTest {
 
     @Test
     fun multipleDaoCallsToReturnSameDaoObject() {
-        val sampleDaoCheck = RudderDatabase.getDao(SampleEntity::class.java)
-        val sampleDao = RudderDatabase.getDao(SampleEntity::class.java)
+        val sampleDaoCheck = database.getDao(SampleEntity::class.java)
+        val sampleDao = database.getDao(SampleEntity::class.java)
         MatcherAssert.assertThat(sampleDao, Matchers.equalTo(sampleDaoCheck))
     }
 
@@ -81,7 +81,7 @@ class RudderDatabaseTest {
             SampleEntity("abc", 10, listOf("12", "34", "56")),
             SampleEntity("def", 20, listOf("78", "90", "12")),
         )
-        val sampleDao = RudderDatabase.getDao(SampleEntity::class.java)
+        val sampleDao = database.getDao(SampleEntity::class.java)
         // save data
         val isInserted = AtomicBoolean(false)
         with(sampleDao) {
@@ -109,7 +109,7 @@ class RudderDatabaseTest {
             SampleEntity("abc", 10, listOf("12", "34", "56")),
             SampleEntity("def", 20, listOf("78", "90", "12")),
         )
-        val sampleDao = RudderDatabase.getDao(SampleEntity::class.java)
+        val sampleDao = database.getDao(SampleEntity::class.java)
         // save data
 //        val isInserted = AtomicBoolean(false)
         with(sampleDao) {
@@ -136,7 +136,7 @@ class RudderDatabaseTest {
             SampleEntity("abc", 10, listOf("12", "34", "56")),
             SampleEntity("def", 20, listOf("78", "90", "12")),
         )
-        val sampleDao = RudderDatabase.getDao(SampleEntity::class.java)
+        val sampleDao = database.getDao(SampleEntity::class.java)
         // save data
         val isInserted = AtomicBoolean(false)
         with(sampleDao) {
@@ -169,7 +169,7 @@ class RudderDatabaseTest {
             SampleEntity("fgh", 10, listOf("34", "56", "78")),
             SampleEntity("def", 20, listOf("78", "90", "12")),
         )
-        val sampleDao = RudderDatabase.getDao(SampleEntity::class.java)
+        val sampleDao = database.getDao(SampleEntity::class.java)
         // save data
         val isCompleted = AtomicBoolean(false)
         with(sampleDao) {
@@ -200,7 +200,7 @@ class RudderDatabaseTest {
             SampleAutoGenEntity("fgh"),
             SampleAutoGenEntity("def"),
         )
-        val sampleDao = RudderDatabase.getDao(SampleAutoGenEntity::class.java)
+        val sampleDao = database.getDao(SampleAutoGenEntity::class.java)
         // save data
         val isCompleted = AtomicBoolean(false)
         with(sampleDao) {
@@ -226,5 +226,47 @@ class RudderDatabaseTest {
             }
         }
         Awaitility.await().atMost(10, TimeUnit.SECONDS).untilTrue(isCompleted)
+    }
+    @Test
+    fun `test multiple database instances`(){
+        val database1 = RudderDatabase(
+            ApplicationProvider.getApplicationContext(),
+            "testDb1",
+            TestEntityFactory,
+            false,
+            executorService = TestExecutor(),
+        )
+        val database2 = RudderDatabase(
+            ApplicationProvider.getApplicationContext(),
+            "testDb2",
+            TestEntityFactory,
+            false,
+            executorService = TestExecutor(),
+        )
+        val sampleDao1 = database1.getDao(SampleEntity::class.java)
+        val sampleDao2 = database2.getDao(SampleEntity::class.java)
+        val sampleEntitiesToSave = listOf(
+            SampleEntity("abc", 10, listOf("12", "34", "56")),
+            SampleEntity("def", 20, listOf("78", "90", "12")),
+        )
+        // save data
+        val isInserted = AtomicBoolean(false)
+        with(sampleDao1) {
+            val rowIds = sampleEntitiesToSave.insertSync()
+            assertThat(rowIds, iterableWithSize(2))
+            isInserted.set(true)
+        }
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilTrue(isInserted)
+        // getting the data
+        val savedData = with(sampleDao2) { getAllSync() }
+
+        MatcherAssert.assertThat(
+            savedData,
+            allOf(
+                Matchers.iterableWithSize(0),
+            ),
+        )
+        database1.shutDown()
+        database2.shutDown()
     }
 }

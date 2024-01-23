@@ -105,10 +105,10 @@ class CustomEntityRudderDatabaseTest {
             } as T?
         }
     }
-
+    lateinit var database: RudderDatabase
     @Before
     fun initialize() {
-        RudderDatabase.init(
+        database = RudderDatabase(
             ApplicationProvider.getApplicationContext(),
 //            RuntimeEnvironment.application,
             "testDb",
@@ -120,7 +120,7 @@ class CustomEntityRudderDatabaseTest {
 
     @After
     fun tearDown() {
-        RudderDatabase.shutDown()
+        database.shutDown()
     }
 
     @Test
@@ -133,7 +133,7 @@ class CustomEntityRudderDatabaseTest {
         ).map {
             ModelEntity(it)
         }
-        val entityModelDao = RudderDatabase.getDao(ModelEntity::class.java)
+        val entityModelDao = database.getDao(ModelEntity::class.java)
         // save data
         val isCompleted = AtomicBoolean(false)
         with(entityModelDao) {
