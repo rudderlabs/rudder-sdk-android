@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 
 class RudderOSInfo {
     @SerializedName("name")
-    private String name = "Android";
+    private final String name = "Android";
     @SerializedName("version")
-    private String version = Build.VERSION.RELEASE;
+    private final String version = Build.VERSION.RELEASE;
 }
