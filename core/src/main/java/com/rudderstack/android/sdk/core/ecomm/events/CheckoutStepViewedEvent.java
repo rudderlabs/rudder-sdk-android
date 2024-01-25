@@ -29,7 +29,7 @@ public class CheckoutStepViewedEvent extends ECommercePropertyBuilder {
     public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.checkout != null) {
-            property.putValue(Utils.convertToMap(RudderGson.getInstance().toJson(this.checkout)));
+            property.putValue(Utils.convertToMap(this.checkout));
         }
         return property;
     }

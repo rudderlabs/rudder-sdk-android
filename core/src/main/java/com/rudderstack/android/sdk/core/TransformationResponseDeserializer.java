@@ -1,5 +1,6 @@
 package com.rudderstack.android.sdk.core;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonObject;
@@ -34,16 +35,13 @@ public class TransformationResponseDeserializer implements JsonDeserializer<Tran
                 if (payloadObject.has("event") && !payloadObject.get("event").isJsonNull()) {
                     JsonObject eventObject = payloadObject.getAsJsonObject("event");
                     if (eventObject.size() > 0) {
-                        try {
-                            message = RudderGson.getInstance().fromJson(eventObject, RudderMessage.class);
-                        } catch (Exception e) {
-                            ReportManager.reportError(e);
-                            RudderLogger.logError(String.format("TransformationResponseDeserializer: Error while parsing event object for the destinationId: %s, and error: %s", id, e));
+                        message = RudderGson.deserialize(eventObject, RudderMessage.class);
+                        if (message == null) {
+                            RudderLogger.logError(String.format("TransformationResponseDeserializer: Error while parsing event object for the destinationId: %s", id));
                             continue;
                         }
                     }
                 }
-
                 TransformationResponse.TransformedEvent payload = new TransformationResponse.TransformedEvent(orderNo, status, message);
                 payloadList.add(payload);
             }

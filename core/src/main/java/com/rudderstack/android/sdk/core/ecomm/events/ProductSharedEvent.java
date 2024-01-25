@@ -53,7 +53,7 @@ public class ProductSharedEvent extends ECommercePropertyBuilder {
     public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.product != null) {
-            property.putValue(Utils.convertToMap(RudderGson.getInstance().toJson(this.product)));
+            property.putValue(Utils.convertToMap(this.product));
         }
         if (!TextUtils.isEmpty(this.socialChannel)) {
             property.put(ECommerceParamNames.SHARE_VIA, this.socialChannel);

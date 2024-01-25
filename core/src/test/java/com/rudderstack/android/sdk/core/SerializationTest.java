@@ -74,11 +74,7 @@ public class SerializationTest {
             "}";
     @Test
     public void testObjectOutputStream() throws IOException, ClassNotFoundException {
-        System.out.println(INCOMING_JSON);
-
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//        baos.write(INCOMING_JSON.getBytes(StandardCharsets.UTF_8));
-//
         RudderServerConfig rudderServerConfig = new Gson().fromJson(INCOMING_JSON, RudderServerConfig.class);
         ObjectOutputStream os = new ObjectOutputStream(baos);
         os.writeObject(rudderServerConfig);
@@ -95,7 +91,6 @@ public class SerializationTest {
         dummyoos.flush();
 
         ByteArrayInputStream dummyBios = new ByteArrayInputStream(dummyos.toByteArray());
-//        dummyBios.close();
         ObjectInputStream dummyois = new ObjectInputStream(dummyBios);
 
         MatcherAssert.assertThat("abcd", Matchers.is((String) dummyois.readObject()));

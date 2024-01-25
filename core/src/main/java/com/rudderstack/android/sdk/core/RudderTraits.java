@@ -84,7 +84,7 @@ public class RudderTraits {
      */
     public static String getAddress(Map<String, Object> traitsMap) {
         if (traitsMap != null & traitsMap.containsKey(ADDRESS_KEY))
-            return RudderGson.getInstance().toJson(traitsMap.get(ADDRESS_KEY));
+            return RudderGson.serialize(traitsMap.get(ADDRESS_KEY));
         return null;
     }
 
@@ -672,7 +672,7 @@ public class RudderTraits {
          * @return address Address
          */
         public static Address fromString(String address) {
-            return RudderGson.getInstance().fromJson(address, Address.class);
+            return RudderGson.deserialize(address, Address.class);
         }
     }
 

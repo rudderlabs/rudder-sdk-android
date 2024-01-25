@@ -354,24 +354,7 @@ class EventRepository {
     }
 
     String getEventJsonString(RudderMessage message) {
-        try {
-            return RudderGson.getInstance().toJson(message);
-        } catch (Exception e) {
-            RudderLogger.logError("EventRepository: getEventJsonString: Exception: " + e.getMessage());
-            ReportManager.reportError(e);
-            return serializeByRemovingInvalidElements(message);
-        }
-    }
-
-    String serializeByRemovingInvalidElements(RudderMessage message) {
-        try {
-            Utils.removeInvalidElementsFromMessage(message);
-            return RudderGson.getInstance().toJson(message);
-        } catch (Exception e) {
-            RudderLogger.logError("EventRepository: serializeByRemovingInvalidElements: Exception: " + e.getMessage());
-            ReportManager.reportError(e);
-        }
-        return null;
+        return RudderGson.serialize(message);
     }
 
     private boolean isMessageJsonExceedingMaxSize(String eventJson) {

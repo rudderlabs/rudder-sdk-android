@@ -29,7 +29,7 @@ public class PromotionClickedEvent extends ECommercePropertyBuilder {
     public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.promotion != null) {
-            property.putValue(Utils.convertToMap(RudderGson.getInstance().toJson(this.promotion)));
+            property.putValue(Utils.convertToMap(this.promotion));
         }
         return property;
     }

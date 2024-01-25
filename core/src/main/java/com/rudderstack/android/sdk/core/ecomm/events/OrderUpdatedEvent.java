@@ -29,7 +29,7 @@ public class OrderUpdatedEvent extends ECommercePropertyBuilder {
     public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.order != null) {
-            property.putValue(Utils.convertToMap(RudderGson.getInstance().toJson(this.order)));
+            property.putValue(Utils.convertToMap(this.order));
         }
         return property;
     }

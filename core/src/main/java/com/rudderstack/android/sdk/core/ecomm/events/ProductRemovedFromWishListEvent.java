@@ -42,7 +42,7 @@ public class ProductRemovedFromWishListEvent extends ECommercePropertyBuilder {
             property.put(ECommerceParamNames.WISHLIST_NAME, this.wishList.getWishListName());
         }
         if (this.product != null) {
-            property.putValue(Utils.convertToMap(RudderGson.getInstance().toJson(this.product)));
+            property.putValue(Utils.convertToMap(this.product));
         }
         return property;
     }

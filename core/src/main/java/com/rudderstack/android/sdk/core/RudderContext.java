@@ -86,7 +86,7 @@ public class RudderContext {
         RudderLogger.logDebug(String.format(Locale.US, "Traits from persistence storage%s", traitsJson));
         if (traitsJson == null) {
             RudderTraits traits = new RudderTraits(anonymousId);
-            this.traits = Utils.convertToMap(RudderGson.getInstance().toJson(traits));
+            this.traits = Utils.convertToMap(traits);
             this.persistTraits();
             RudderLogger.logDebug("New traits has been saved");
         } else {
@@ -118,7 +118,7 @@ public class RudderContext {
     void resetTraits() {
         RudderTraits traits = new RudderTraits();
         // convert the whole traits to map and take care of the extras
-        this.traits = Utils.convertToMap(RudderGson.getInstance().toJson(traits));
+        this.traits = Utils.convertToMap(traits);
     }
 
     void updateTraits(RudderTraits traits) {
@@ -128,7 +128,7 @@ public class RudderContext {
         }
 
         // convert the whole traits to map and take care of the extras
-        Map<String, Object> traitsMap = Utils.convertToMap(RudderGson.getInstance().toJson(traits));
+        Map<String, Object> traitsMap = Utils.convertToMap(traits);
 
         String existingId = (String) this.traits.get("id");
         String newId = (String) traitsMap.get("id");
@@ -154,7 +154,7 @@ public class RudderContext {
         try {
             if (RudderClient.getApplication() != null) {
                 RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getApplication());
-                preferenceManger.saveTraits(RudderGson.getInstance().toJson(this.traits));
+                preferenceManger.saveTraits(RudderGson.serialize(this.traits));
             }
         } catch (NullPointerException ex) {
             ReportManager.reportError(ex);
@@ -335,7 +335,7 @@ public class RudderContext {
         try {
             if (RudderClient.getApplication() != null) {
                 RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getApplication());
-                preferenceManger.saveExternalIds(RudderGson.getInstance().toJson(this.externalIds));
+                preferenceManger.saveExternalIds(RudderGson.serialize(this.externalIds));
             }
         } catch (NullPointerException ex) {
             ReportManager.reportError(ex);

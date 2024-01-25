@@ -76,7 +76,6 @@ public class ConsentFilterHandlerTest {
                 .setRudderOption(option)
                 .build();
         ConsentFilterHandler consentFilterHandler = createConsentFilterHandler(Collections.emptyList(), Collections.emptySet());
-//        consentFilterHandler.filterDestinationList()
         RudderMessage updatedMessage = consentFilterHandler.applyConsent( rudderMessage);
 
         assertThat(updatedMessage, Matchers.is(rudderMessage));

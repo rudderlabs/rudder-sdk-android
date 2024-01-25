@@ -8,11 +8,28 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static java.lang.Double.POSITIVE_INFINITY;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.text.TextUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.TypeAdapter;
+import com.google.gson.TypeAdapterFactory;
+import com.google.gson.internal.bind.TypeAdapters;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import org.hamcrest.Matchers;
@@ -33,6 +50,8 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -352,63 +371,6 @@ public class EventRepositoryTest {
                 "}";
         String outputJsonString = repo.getEventJsonString(message);
         assertThat("JSONObjects and JSONArray are serialized perfectly", outputJsonString, is(expectedJsonString.replace("\n", "").replace(" ", "")));
-    }
-
-    @Test
-    public void testGetEventGsonWithInvalidNumbers() {
-        RudderContext context = new RudderContext();
-        // insert traits in the context which contains invalid numbers
-        context.updateTraitsMap(getInvalidNumbersMap());
-        // set custom context with invalid numbers
-        context.setCustomContexts(getInvalidNumbersMap());
-
-        Map<String, Object> eventProperties = getInvalidNumbersMap();
-        eventProperties.put("list", new ArrayList<>(Arrays.asList(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.MAX_VALUE, Double.MIN_VALUE, Double.NaN)));
-        eventProperties.put("map", getInvalidNumbersMap());
-
-        RudderMessage message = new RudderMessageBuilder().setEventName("TestEvent").setProperty(eventProperties).build();
-        message.setContext(context);
-
-        EventRepository repo = new EventRepository();
-        String outputJsonString = repo.getEventJsonString(message);
-        String expectedJsonString = "{\n" +
-                "  \"messageId\": \"" + message.getMessageId() + "\",\n" +
-                "  \"channel\": \"mobile\",\n" +
-                "  \"context\": {\n" +
-                "    \"traits\": {\n" +
-                "      \"minValue\": 4.9E-324,\n" +
-                "      \"maxValue\": 1.7976931348623157E308\n" +
-                "    },\n" +
-                "    \"minValue\": 4.9E-324,\n" +
-                "    \"maxValue\": 1.7976931348623157E308\n" +
-                "  },\n" +
-                "  \"originalTimestamp\": \"2022-03-14T06:46:41.365Z\",\n" +
-                "  \"event\": \"TestEvent\",\n" +
-                "  \"properties\": {\n" +
-                "    \"minValue\": 4.9E-324,\n" +
-                "    \"maxValue\": 1.7976931348623157E308,\n" +
-                "    \"list\": [\n" +
-                "      1.7976931348623157E308,\n" +
-                "      4.9E-324\n" +
-                "    ],\n" +
-                "    \"map\": {\n" +
-                "      \"minValue\": 4.9E-324,\n" +
-                "      \"maxValue\": 1.7976931348623157E308\n" +
-                "    }\n" +
-                "  },\n" +
-                "  \"integrations\": {}\n" +
-                "}";
-        assertThat("Invalid Numbers are removed and the message is serialized perfectly", outputJsonString, is(expectedJsonString.replace("\n", "").replace(" ", "")));
-    }
-
-    Map<String, Object> getInvalidNumbersMap() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("positiveInfinity", Double.POSITIVE_INFINITY);
-        map.put("negativeInfinity", Double.NEGATIVE_INFINITY);
-        map.put("maxValue", Double.MAX_VALUE);
-        map.put("minValue", Double.MIN_VALUE);
-        map.put("nan", Double.NaN);
-        return map;
     }
 }
 
