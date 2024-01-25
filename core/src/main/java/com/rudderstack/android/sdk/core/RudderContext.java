@@ -118,7 +118,9 @@ public class RudderContext {
     void resetTraits() {
         RudderTraits traits = new RudderTraits();
         // convert the whole traits to map and take care of the extras
-        this.traits = Utils.convertToMap(traits);
+        synchronized (this) {
+            this.traits = Utils.convertToMap(traits);
+        }
     }
 
     void updateTraits(RudderTraits traits) {
@@ -135,13 +137,17 @@ public class RudderContext {
 
         // If a user is already loggedIn and then a new user tries to login
         if (existingId != null && newId != null && !existingId.equals(newId)) {
-            this.traits = traitsMap;
+            synchronized (this) {
+                this.traits = traitsMap;
+            }
             resetExternalIds();
             return;
         }
 
         // update traits object here
-        this.traits.putAll(traitsMap);
+        synchronized (this) {
+            this.traits.putAll(traitsMap);
+        }
 
     }
 
@@ -154,7 +160,9 @@ public class RudderContext {
         try {
             if (RudderClient.getApplication() != null) {
                 RudderPreferenceManager preferenceManger = RudderPreferenceManager.getInstance(RudderClient.getApplication());
-                preferenceManger.saveTraits(RudderGson.serialize(this.traits));
+                synchronized (this) {
+                    preferenceManger.saveTraits(RudderGson.serialize(this.traits));
+                }
             }
         } catch (NullPointerException ex) {
             ReportManager.reportError(ex);
@@ -386,7 +394,9 @@ public class RudderContext {
 
         copy.app = this.app;
         if (this.traits != null) {
-            copy.traits = new HashMap<>(this.traits);
+            synchronized (this) {
+                copy.traits = new HashMap<>(this.traits);
+            }
         }
         copy.libraryInfo = this.libraryInfo;
         copy.osInfo = this.osInfo;

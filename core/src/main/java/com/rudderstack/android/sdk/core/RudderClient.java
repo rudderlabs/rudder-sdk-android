@@ -37,7 +37,7 @@ public class RudderClient {
     private static RudderOption defaultOptions;
     private static String deviceToken;
     private static String authToken;
-    private static ReentrantLock reentrantLock = new ReentrantLock();
+    private static final ReentrantLock reentrantLock = new ReentrantLock();
 
 
     private static final int NUMBER_OF_FLUSH_CALLS_IN_QUEUE = 1;
