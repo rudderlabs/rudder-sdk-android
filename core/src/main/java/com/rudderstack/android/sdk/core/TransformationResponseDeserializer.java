@@ -1,6 +1,5 @@
 package com.rudderstack.android.sdk.core;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonObject;
@@ -14,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransformationResponseDeserializer implements JsonDeserializer<TransformationResponse> {
+    public static final String EVENT = "event";
+
     @Override
     public TransformationResponse deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = json.getAsJsonObject();
@@ -32,8 +33,8 @@ public class TransformationResponseDeserializer implements JsonDeserializer<Tran
                 String status = payloadObject.get("status").getAsString();
                 RudderMessage message = null;
 
-                if (payloadObject.has("event") && !payloadObject.get("event").isJsonNull()) {
-                    JsonObject eventObject = payloadObject.getAsJsonObject("event");
+                if (payloadObject.has(EVENT) && !payloadObject.get(EVENT).isJsonNull()) {
+                    JsonObject eventObject = payloadObject.getAsJsonObject(EVENT);
                     if (eventObject.size() > 0) {
                         message = RudderGson.deserialize(eventObject, RudderMessage.class);
                         if (message == null) {

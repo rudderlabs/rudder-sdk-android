@@ -5,13 +5,10 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonSyntaxException;
-import com.google.gson.internal.bind.JsonTreeReader;
 import com.google.gson.internal.bind.TypeAdapters;
 import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderContext;
 import com.rudderstack.android.sdk.core.RudderLogger;
-import com.rudderstack.android.sdk.core.RudderMessage;
 import com.rudderstack.android.sdk.core.RudderTraits;
 import com.rudderstack.android.sdk.core.gson.gsonadapters.DoubleTypeAdapter;
 import com.rudderstack.android.sdk.core.gson.gsonadapters.FloatTypeAdapter;
@@ -19,7 +16,6 @@ import com.rudderstack.android.sdk.core.gson.gsonadapters.RudderContextTypeAdapt
 import com.rudderstack.android.sdk.core.gson.gsonadapters.RudderJSONArrayTypeAdapter;
 import com.rudderstack.android.sdk.core.gson.gsonadapters.RudderJSONObjectTypeAdapter;
 import com.rudderstack.android.sdk.core.gson.gsonadapters.RudderTraitsTypeAdapter;
-import com.rudderstack.android.sdk.core.util.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,6 +23,7 @@ import org.json.JSONObject;
 import java.lang.reflect.Type;
 
 public class RudderGson {
+    public static final String RUDDER_GSON_DESERIALIZE_EXCEPTION = "RudderGson: deserialize: Exception: ";
     private static Gson gson = buildGsonInstance();
 
     private RudderGson() {
@@ -60,7 +57,7 @@ public class RudderGson {
         try {
             return gson.fromJson(json, classOfT);
         } catch (Exception e) {
-            RudderLogger.logError("RudderGson: deserialize: Exception: " + e.getMessage());
+            RudderLogger.logError(RUDDER_GSON_DESERIALIZE_EXCEPTION + e.getMessage());
             ReportManager.reportError(e);
         }
         return null;
@@ -71,7 +68,7 @@ public class RudderGson {
         try {
             return gson.fromJson(json, typeOfT);
         } catch (Exception e) {
-            RudderLogger.logError("RudderGson: deserialize: Exception: " + e.getMessage());
+            RudderLogger.logError(RUDDER_GSON_DESERIALIZE_EXCEPTION + e.getMessage());
             ReportManager.reportError(e);
         }
         return null;
@@ -82,7 +79,7 @@ public class RudderGson {
         try {
             return gson.fromJson(element, classOfT);
         } catch (Exception e) {
-            RudderLogger.logError("RudderGson: deserialize: Exception: " + e.getMessage());
+            RudderLogger.logError(RUDDER_GSON_DESERIALIZE_EXCEPTION + e.getMessage());
             ReportManager.reportError(e);
         }
         return null;
@@ -93,7 +90,7 @@ public class RudderGson {
         try {
             return gson.fromJson(element, typeOfT);
         } catch (Exception e) {
-            RudderLogger.logError("RudderGson: deserialize: Exception: " + e.getMessage());
+            RudderLogger.logError(RUDDER_GSON_DESERIALIZE_EXCEPTION + e.getMessage());
             ReportManager.reportError(e);
         }
         return null;

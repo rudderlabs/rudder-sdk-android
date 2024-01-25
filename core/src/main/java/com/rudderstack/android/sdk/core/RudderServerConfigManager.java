@@ -78,7 +78,7 @@ class RudderServerConfigManager {
                 try {
                     RudderServerConfig rudderServerConfig = RudderGson.deserialize(result.response, RudderServerConfig.class);
                     if (rudderServerConfig == null) {
-                        throw new Exception("RudderServerConfig is null");
+                        throw new NullPointerException("RudderServerConfig is null");
                     }
                     RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configJson: %s", result.response));
                     // save config for future use
@@ -135,7 +135,6 @@ class RudderServerConfigManager {
             rudderServerConfig = (RudderServerConfig) is.readObject();
         } catch (Exception e) {
             //will cause too many exceptions
-//                ReportManager.reportError(e);
             RudderLogger.logError("RudderServerConfigManager: getRudderServerConfig: Failed to read RudderServerConfig Object from File");
             e.printStackTrace();
         }
@@ -161,6 +160,7 @@ class RudderServerConfigManager {
         } catch (InterruptedException ex) {
             ReportManager.reportError(ex);
             RudderLogger.logError(String.format(Locale.US, "RudderServerConfigManager: Sleep: Exception while the thread is in sleep %s", ex.getLocalizedMessage()));
+            Thread.currentThread().interrupt();
         }
     }
 

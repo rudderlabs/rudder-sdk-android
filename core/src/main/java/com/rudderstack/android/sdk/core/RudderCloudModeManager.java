@@ -105,7 +105,7 @@ public class RudderCloudModeManager {
         List<Integer> eventsToDelete = new ArrayList<>();
         for (int i = 0; i < messages.size(); i++) {
             Map<String, Object> message = RudderGson.deserialize(messages.get(i), Map.class);
-            if (message != null && !message.containsKey("anonymousId") || message.get("anonymousId") == null) {
+            if (message != null && (!message.containsKey("anonymousId") || message.get("anonymousId") == null)) {
                 eventsToDelete.add(messageIds.get(i));
             }
         }
