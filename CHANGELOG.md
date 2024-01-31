@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.21.2](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.21.1...v1.21.2) (2024-01-25)
+
+
+### Bug Fixes
+
+* added synchronization to RudderContext ([#372](https://github.com/rudderlabs/rudder-sdk-android/issues/372)) ([ad9baa0](https://github.com/rudderlabs/rudder-sdk-android/commit/ad9baa07ab5685a82c9b6822e01824db227642a3))
+
 ### [1.21.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.21.0...v1.21.1) (2023-12-13)
 
 
