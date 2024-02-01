@@ -326,7 +326,7 @@ class EventRepository {
 
 
     /*
-     * generic method for dumping all the events
+     * generic method for processing all the events
      * */
     void processMessage(@NonNull RudderMessage message) {
         if (!isSDKEnabled) {

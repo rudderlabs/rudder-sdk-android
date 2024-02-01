@@ -231,7 +231,7 @@ public class RudderClient {
      */
     public void track(@NonNull RudderMessage message) {
         message.setType(MessageType.TRACK);
-        dumpMessage(message);
+        processMessage(message);
 
     }
 
@@ -293,7 +293,7 @@ public class RudderClient {
      */
     public void screen(@NonNull RudderMessage message) {
         message.setType(MessageType.SCREEN);
-        dumpMessage(message);
+        processMessage(message);
 
     }
 
@@ -364,7 +364,7 @@ public class RudderClient {
      */
     public void identify(@NonNull RudderMessage message) {
         message.setType(MessageType.IDENTIFY);
-        dumpMessage(message);
+        processMessage(message);
 
     }
 
@@ -455,7 +455,7 @@ public class RudderClient {
      */
     void alias(@NonNull RudderMessage message) {
         message.setType(MessageType.ALIAS);
-        dumpMessage(message);
+        processMessage(message);
 
     }
 
@@ -531,11 +531,11 @@ public class RudderClient {
     @Deprecated
     public void group(@NonNull RudderMessage message) {
         message.setType(MessageType.GROUP);
-        dumpMessage(message);
+        processMessage(message);
     }
 
 
-    private void dumpMessage(@NonNull RudderMessage message) {
+    private void processMessage(@NonNull RudderMessage message) {
         if (getOptOutStatus()) {
             incrementDiscardedCounter(1, Collections.singletonMap(ReportManager.LABEL_TYPE,
                     ReportManager.LABEL_TYPE_OPT_OUT));

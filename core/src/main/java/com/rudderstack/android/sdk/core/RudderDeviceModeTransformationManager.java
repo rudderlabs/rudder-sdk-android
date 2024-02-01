@@ -120,11 +120,11 @@ public class RudderDeviceModeTransformationManager {
             return true;
         } else if (result.status == NetworkResponses.BAD_REQUEST) {
             reportBadRequestMetric();
-            RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Bad request, dumping back the original events to the factories");
-            dumpOriginalEvents(transformationRequest);
+            RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Bad request, sending back the original events to the factories");
+            sendOriginalEvents(transformationRequest);
         } else if (result.status == NetworkResponses.ERROR) {
             handleError(transformationRequest);
-        } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
+        } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // sending back the original messages itself to the factories as transformation feature is not enabled
             reportResourceNotFoundMetric();
             handleResourceNotFound(transformationRequest);
         } else {
@@ -153,7 +153,7 @@ public class RudderDeviceModeTransformationManager {
         if (retryCount++ == MAX_RETRIES) {
             retryCount = 0;
             reportMaxRetryExceededMetric();
-            dumpOriginalEvents(transformationRequest);
+            sendOriginalEvents(transformationRequest);
         } else {
             incrementRetryCountMetric();
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Retrying in " + delay + "s");
@@ -176,15 +176,15 @@ public class RudderDeviceModeTransformationManager {
         ReportManager.incrementDMTRetryCounter(1);
     }
 
-    private void dumpOriginalEvents(TransformationRequest transformationRequest) {
+    private void sendOriginalEvents(TransformationRequest transformationRequest) {
         deviceModeSleepCount = 0;
-        rudderDeviceModeManager.dumpOriginalEvents(transformationRequest, true);
+        rudderDeviceModeManager.sendOriginalEvents(transformationRequest, true);
         completeDeviceModeEventProcessing();
     }
 
     private void handleResourceNotFound(TransformationRequest transformationRequest) {
         deviceModeSleepCount = 0;
-        rudderDeviceModeManager.dumpOriginalEvents(transformationRequest, false);
+        rudderDeviceModeManager.sendOriginalEvents(transformationRequest, false);
         completeDeviceModeEventProcessing();
     }
 
@@ -197,7 +197,7 @@ public class RudderDeviceModeTransformationManager {
                 return;
             }
             incrementDmtSuccessMetric(transformationResponse);
-            rudderDeviceModeManager.dumpTransformedEvents(transformationResponse);
+            rudderDeviceModeManager.sendTransformedEvents(transformationResponse);
             completeDeviceModeEventProcessing();
         } catch (Exception e) {
             ReportManager.reportError(e);
