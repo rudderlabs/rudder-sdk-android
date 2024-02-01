@@ -1,10 +1,12 @@
 package com.rudderstack.android.sdk.core.gson.gsonadapters;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import com.google.gson.internal.bind.TypeAdapters;
 import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderTraits;
 
@@ -18,7 +20,10 @@ public class RudderTraitsTypeAdapter implements JsonSerializer<RudderTraits> {
                                  JsonSerializationContext context) {
         try {
             JsonObject outputTraits = new JsonObject();
-            Gson gson = new Gson();
+            Gson gson = new GsonBuilder()
+                    .registerTypeAdapterFactory(TypeAdapters.newFactory(double.class, Double.class, new DoubleTypeAdapter()))
+                    .registerTypeAdapterFactory(TypeAdapters.newFactory(float.class, Float.class, new FloatTypeAdapter()))
+                    .create();
             JsonObject inputTraits = (JsonObject) gson.toJsonTree(traits);
             for (Map.Entry<String, JsonElement> entry : inputTraits.entrySet()) {
                 if (entry.getKey().equals("extras")) {
