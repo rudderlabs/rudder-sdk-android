@@ -6,7 +6,6 @@ import android.app.Application;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
-import android.icu.text.Collator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -508,19 +507,21 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
     void checkForMigrations() {
         Runnable runnable = () -> {
             try {
-                boolean isNewColumnAdded = false;
-                if (!checkIfColumnExists(STATUS_COL)) {
-                    RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column doesn't exist in the events table, hence performing the migration now");
-                    performMigration(STATUS_COL);
-                    isNewColumnAdded = true;
-                }
-                if (!checkIfColumnExists(DM_PROCESSED_COL)) {
-                    RudderLogger.logDebug("DBPersistentManager: checkForMigrations: dm_processed column doesn't exist in the events table, hence performing the migration now");
-                    performMigration(DM_PROCESSED_COL);
-                    isNewColumnAdded = true;
-                }
-                if (!isNewColumnAdded) {
-                    RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status and dm_processed column exists in the table already, hence no migration required");
+                synchronized (DB_LOCK) {
+                    boolean isNewColumnAdded = false;
+                    if (!checkIfColumnExists(STATUS_COL)) {
+                        RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column doesn't exist in the events table, hence performing the migration now");
+                        performMigration(STATUS_COL);
+                        isNewColumnAdded = true;
+                    }
+                    if (!checkIfColumnExists(DM_PROCESSED_COL)) {
+                        RudderLogger.logDebug("DBPersistentManager: checkForMigrations: dm_processed column doesn't exist in the events table, hence performing the migration now");
+                        performMigration(DM_PROCESSED_COL);
+                        isNewColumnAdded = true;
+                    }
+                    if (!isNewColumnAdded) {
+                        RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status and dm_processed column exists in the table already, hence no migration required");
+                    }
                 }
             } catch (SQLiteDatabaseCorruptException | ConcurrentModificationException |
                      NullPointerException ex) {
