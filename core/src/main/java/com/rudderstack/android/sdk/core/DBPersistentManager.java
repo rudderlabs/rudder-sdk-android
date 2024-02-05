@@ -6,7 +6,6 @@ import android.app.Application;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
-import android.icu.text.Collator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -33,6 +32,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 
 /*
  * Helper class for SQLite operations
@@ -316,6 +316,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             }
             Cursor cursor;
             synchronized (DB_LOCK) {
+                semaphore.acquire();
                 cursor = persistence.rawQuery(selectSQL, null);
             }
             if (!cursor.moveToFirst()) {
@@ -341,6 +342,8 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
             ReportManager.reportError(ex);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -505,7 +508,14 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         return false;
     }
 
+    Semaphore semaphore = new Semaphore(1);
+
     void checkForMigrations() {
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException e) {
+            //no-op
+        }
         Runnable runnable = () -> {
             try {
                 boolean isNewColumnAdded = false;
@@ -525,6 +535,8 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             } catch (SQLiteDatabaseCorruptException | ConcurrentModificationException |
                      NullPointerException ex) {
                 RudderLogger.logError(DBPERSISTENT_MANAGER_CHECK_FOR_MIGRATIONS_TAG + ex.getLocalizedMessage());
+            } finally {
+                semaphore.release();
             }
         };
         // Need to perform db operations on a separate thread to support strict mode.
