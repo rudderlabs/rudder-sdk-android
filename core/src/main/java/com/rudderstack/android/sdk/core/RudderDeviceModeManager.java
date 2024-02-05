@@ -326,7 +326,7 @@ public class RudderDeviceModeManager {
 
     void sendOriginalEvents(TransformationRequest transformationRequest, boolean onTransformationError) {
         if (transformationRequest.batch != null) {
-            RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: sendOriginalEvents: sending back the original events to the transformations enabled destinations as there is transformation error."));
+            RudderLogger.logDebug("RudderDeviceModeManager: sendOriginalEvents: sending back the original events to the transformations enabled destinations as there is transformation error.");
             for (TransformationRequestEvent transformationRequestEvent : transformationRequest.batch) {
                 if (transformationRequestEvent != null && transformationRequestEvent.event != null) {
                     List<String> destinationsWithTransformationsEnabled = getDestinationNameForIds(transformationRequestEvent.destinationIds);

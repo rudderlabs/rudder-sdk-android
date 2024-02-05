@@ -9,7 +9,6 @@ import com.google.gson.JsonSerializer;
 import com.google.gson.internal.bind.TypeAdapters;
 import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderContext;
-import com.rudderstack.android.sdk.core.gson.RudderGson;
 
 import java.lang.reflect.Type;
 import java.util.Map;
