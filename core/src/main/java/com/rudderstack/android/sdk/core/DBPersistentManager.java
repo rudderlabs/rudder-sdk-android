@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /*
  * Helper class for SQLite operations
@@ -101,6 +103,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
     final Queue<Message> queue = new LinkedList<>();
     DBInsertionHandlerThread dbInsertionHandlerThread;
     private Persistence persistence;
+    private final Lock lock = new ReentrantLock();
 
     private DBPersistentManager(Application application,
                                 PersistenceProvider.Factory persistenceProviderFactory) {
@@ -315,7 +318,12 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             }
             Cursor cursor;
             synchronized (DB_LOCK) {
-                cursor = persistence.rawQuery(selectSQL, null);
+                lock.lock();
+                try {
+                    cursor = persistence.rawQuery(selectSQL, null);
+                } finally {
+                    lock.unlock();
+                }
             }
             if (!cursor.moveToFirst()) {
                 RudderLogger.logInfo("DBPersistentManager: fetchEventsFromDB: DB is empty");
@@ -506,26 +514,27 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
 
     void checkForMigrations() {
         Runnable runnable = () -> {
+            lock.lock();
             try {
-                synchronized (DB_LOCK) {
-                    boolean isNewColumnAdded = false;
-                    if (!checkIfColumnExists(STATUS_COL)) {
-                        RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column doesn't exist in the events table, hence performing the migration now");
-                        performMigration(STATUS_COL);
-                        isNewColumnAdded = true;
-                    }
-                    if (!checkIfColumnExists(DM_PROCESSED_COL)) {
-                        RudderLogger.logDebug("DBPersistentManager: checkForMigrations: dm_processed column doesn't exist in the events table, hence performing the migration now");
-                        performMigration(DM_PROCESSED_COL);
-                        isNewColumnAdded = true;
-                    }
-                    if (!isNewColumnAdded) {
-                        RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status and dm_processed column exists in the table already, hence no migration required");
-                    }
+                boolean isNewColumnAdded = false;
+                if (!checkIfColumnExists(STATUS_COL)) {
+                    RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status column doesn't exist in the events table, hence performing the migration now");
+                    performMigration(STATUS_COL);
+                    isNewColumnAdded = true;
+                }
+                if (!checkIfColumnExists(DM_PROCESSED_COL)) {
+                    RudderLogger.logDebug("DBPersistentManager: checkForMigrations: dm_processed column doesn't exist in the events table, hence performing the migration now");
+                    performMigration(DM_PROCESSED_COL);
+                    isNewColumnAdded = true;
+                }
+                if (!isNewColumnAdded) {
+                    RudderLogger.logDebug("DBPersistentManager: checkForMigrations: Status and dm_processed column exists in the table already, hence no migration required");
                 }
             } catch (SQLiteDatabaseCorruptException | ConcurrentModificationException |
                      NullPointerException ex) {
                 RudderLogger.logError(DBPERSISTENT_MANAGER_CHECK_FOR_MIGRATIONS_TAG + ex.getLocalizedMessage());
+            } finally {
+                lock.unlock();
             }
         };
         // Need to perform db operations on a separate thread to support strict mode.
