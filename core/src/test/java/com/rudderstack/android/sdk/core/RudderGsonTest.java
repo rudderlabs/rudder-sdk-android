@@ -48,6 +48,7 @@ public class RudderGsonTest {
                 )
                 .thenAnswer((Answer<String>) invocation -> "2022-03-14T06:46:41.365Z");
     }
+
     @Test
     public void testRudderContextSerializationSynchronicity() {
         AtomicInteger contextsSerialized = new AtomicInteger(0);
@@ -121,6 +122,7 @@ public class RudderGsonTest {
         ReflectionUtils.setPrivateField(context, "customContextMap", customContextMap);
         return context;
     }
+
     private RudderContext getDefaultRudderContext() throws NoSuchFieldException, IllegalAccessException {
         RudderContext context = Mockito.mock(RudderContext.class);
         RudderApp app = Mockito.mock(RudderApp.class);
@@ -312,61 +314,121 @@ public class RudderGsonTest {
 
 
         String outputJsonString = RudderGson.serialize(message);
-        String expectedJsonString = "{\n" +
-                "  \"messageId\": \"" + message.getMessageId() + "\",\n" +
-                "  \"channel\": \"mobile\",\n" +
-                "  \"originalTimestamp\": \"2022-03-14T06:46:41.365Z\",\n" +
-                "  \"event\": \"TestEvent\",\n" +
-                "  \"properties\": {\n" +
-                "    \"maxValue\": 1.7976931348623157E308,\n" +
-                "    \"double\": 45.0,\n" +
-                "    \"positiveInfinity\": \"Infinity\",\n" +
-                "    \"float\": 45.0,\n" +
-                "    \"list\": [\n" +
-                "      \"Infinity\",\n" +
-                "      \"-Infinity\",\n" +
-                "      1.7976931348623157E308,\n" +
-                "      4.9E-324,\n" +
-                "      \"NaN\"\n" +
-                "    ],\n" +
-                "    \"long\": 45,\n" +
-                "    \"int\": 45,\n" +
-                "    \"negativeInfinity\": \"-Infinity\",\n" +
-                "    \"general\": 45,\n" +
-                "    \"minValue\": 4.9E-324,\n" +
-                "    \"nan\": \"NaN\",\n" +
-                "    \"map\": {\n" +
-                "      \"general\": 45,\n" +
-                "      \"minValue\": 4.9E-324,\n" +
-                "      \"maxValue\": 1.7976931348623157E308,\n" +
-                "      \"double\": 45.0,\n" +
-                "      \"positiveInfinity\": \"Infinity\",\n" +
-                "      \"nan\": \"NaN\",\n" +
-                "      \"float\": 45.0,\n" +
-                "      \"list\": [\n" +
-                "        \"Infinity\",\n" +
-                "        \"-Infinity\",\n" +
-                "        1.7976931348623157E308,\n" +
-                "        4.9E-324,\n" +
-                "        \"NaN\",\n" +
-                "        45,\n" +
-                "        45.0\n" +
-                "      ],\n" +
-                "      \"map\": {\n" +
-                "        \"general\": 45,\n" +
-                "        \"minValue\": 4.9E-324,\n" +
-                "        \"maxValue\": 1.7976931348623157E308,\n" +
-                "        \"double\": 45.0,\n" +
-                "        \"positiveInfinity\": \"Infinity\",\n" +
-                "        \"nan\": \"NaN\",\n" +
-                "        \"negativeInfinity\": \"-Infinity\"\n" +
-                "      },\n" +
-                "      \"long\": 45,\n" +
-                "      \"int\": 45,\n" +
-                "      \"negativeInfinity\": \"-Infinity\"\n" +
-                "    }\n" +
-                "  },\n" +
-                "  \"integrations\": {}\n" +
+        String expectedJsonString = "{" +
+                "\"messageId\": \"" + message.getMessageId() + "\"," +
+                "\"channel\": \"mobile\"," +
+                "\"context\": {" +
+                "\"traits\": {" +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"nan\": \"NaN\"," +
+                "\"float\": 45.0," +
+                "\"list\": [" +
+                "\"Infinity\"," +
+                "\"-Infinity\"," +
+                "1.7976931348623157E308," +
+                "4.9E-324," +
+                "\"NaN\"," +
+                "45," +
+                "45.0" +
+                "]," +
+                "\"map\": {" +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"nan\": \"NaN\"," +
+                "\"negativeInfinity\": \"-Infinity\"" +
+                "}," +
+                "\"long\": 45," +
+                "\"int\": 45," +
+                "\"negativeInfinity\": \"-Infinity\"" +
+                "}," +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"float\": 45.0," +
+                "\"list\": [" +
+                "\"Infinity\"," +
+                "\"-Infinity\"," +
+                "1.7976931348623157E308," +
+                "4.9E-324," +
+                "\"NaN\"," +
+                "45," +
+                "45.0" +
+                "]," +
+                "\"long\": 45," +
+                "\"int\": 45," +
+                "\"negativeInfinity\": \"-Infinity\"," +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"nan\": \"NaN\"," +
+                "\"map\": {" +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"nan\": \"NaN\"," +
+                "\"negativeInfinity\": \"-Infinity\"" +
+                "}" +
+                "}," +
+                "\"originalTimestamp\": \"2022-03-14T06:46:41.365Z\"," +
+                "\"event\": \"TestEvent\"," +
+                "\"properties\": {" +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"float\": 45.0," +
+                "\"list\": [" +
+                "\"Infinity\"," +
+                "\"-Infinity\"," +
+                "1.7976931348623157E308," +
+                "4.9E-324," +
+                "\"NaN\"" +
+                "]," +
+                "\"long\": 45," +
+                "\"int\": 45," +
+                "\"negativeInfinity\": \"-Infinity\"," +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"nan\": \"NaN\"," +
+                "\"map\": {" +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"nan\": \"NaN\"," +
+                "\"float\": 45.0," +
+                "\"list\": [" +
+                "\"Infinity\"," +
+                "\"-Infinity\"," +
+                "1.7976931348623157E308," +
+                "4.9E-324," +
+                "\"NaN\"," +
+                "45," +
+                "45.0" +
+                "]," +
+                "\"map\": {" +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"nan\": \"NaN\"," +
+                "\"negativeInfinity\": \"-Infinity\"" +
+                "}," +
+                "\"long\": 45," +
+                "\"int\": 45," +
+                "\"negativeInfinity\": \"-Infinity\"" +
+                "}" +
+                "}," +
+                "\"integrations\": {}" +
                 "}";
         assertThat("Invalid Numbers are removed and the message is serialized perfectly", outputJsonString, is(expectedJsonString.replace("\n", "").replace(" ", "")));
     }
