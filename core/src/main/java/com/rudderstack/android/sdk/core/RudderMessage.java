@@ -264,6 +264,10 @@ public class RudderMessage {
         this.context.setSession(userSession);
     }
 
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    void setContext(RudderContext context) {
+        this.context = context;
+    }
     @VisibleForTesting
     String getMessageId () {
         return this.messageId;

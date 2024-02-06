@@ -12,9 +12,11 @@ import android.os.BadParcelableException;
 import android.os.Build;
 import android.text.TextUtils;
 
+import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderLogger;
+import com.rudderstack.android.sdk.core.RudderMessage;
 import com.rudderstack.android.sdk.core.gson.RudderGson;
 
 import java.io.File;
@@ -23,6 +25,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -90,15 +94,27 @@ public class Utils {
         return null;
     }
 
-    public static Map<String, Object> convertToMap(String json) {
-        return RudderGson.getInstance().fromJson(json, new TypeToken<Map<String, Object>>() {
-        }.getType()
+    public static Map<String, Object> convertToMap(Object obj) {
+        String json = RudderGson.serialize(obj);
+        if (json == null) {
+            return new HashMap<>();
+        }
+        Map<String, Object> map = RudderGson.deserialize(json, new TypeToken<Map<String, Object>>() {
+                }.getType()
         );
+
+        return map == null ? new HashMap<>() : map;
     }
 
-    public static List<Map<String, Object>> convertToList(String json) {
-        return RudderGson.getInstance().fromJson(json, new TypeToken<List<Map<String, Object>>>() {
+
+    public static List<Map<String, Object>> convertToList(Object obj) {
+        String json = RudderGson.serialize(obj);
+        if (json == null) {
+            return new ArrayList<>();
+        }
+        List<Map<String, Object>> list = RudderGson.deserialize(json, new TypeToken<List<Map<String, Object>>>() {
         }.getType());
+        return list == null ? new ArrayList<>() : list;
     }
 
     public static String getWriteKeyFromStrings(Context context) {

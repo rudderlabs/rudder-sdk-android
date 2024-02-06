@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransformationResponseDeserializer implements JsonDeserializer<TransformationResponse> {
+    public static final String EVENT = "event";
+
     @Override
     public TransformationResponse deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = json.getAsJsonObject();
@@ -31,19 +33,16 @@ public class TransformationResponseDeserializer implements JsonDeserializer<Tran
                 String status = payloadObject.get("status").getAsString();
                 RudderMessage message = null;
 
-                if (payloadObject.has("event") && !payloadObject.get("event").isJsonNull()) {
-                    JsonObject eventObject = payloadObject.getAsJsonObject("event");
+                if (payloadObject.has(EVENT) && !payloadObject.get(EVENT).isJsonNull()) {
+                    JsonObject eventObject = payloadObject.getAsJsonObject(EVENT);
                     if (eventObject.size() > 0) {
-                        try {
-                            message = RudderGson.getInstance().fromJson(eventObject, RudderMessage.class);
-                        } catch (Exception e) {
-                            ReportManager.reportError(e);
-                            RudderLogger.logError(String.format("TransformationResponseDeserializer: Error while parsing event object for the destinationId: %s, and error: %s", id, e));
+                        message = RudderGson.deserialize(eventObject, RudderMessage.class);
+                        if (message == null) {
+                            RudderLogger.logError(String.format("TransformationResponseDeserializer: Error while parsing event object for the destinationId: %s", id));
                             continue;
                         }
                     }
                 }
-
                 TransformationResponse.TransformedEvent payload = new TransformationResponse.TransformedEvent(orderNo, status, message);
                 payloadList.add(payload);
             }

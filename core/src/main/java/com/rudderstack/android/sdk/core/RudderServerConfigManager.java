@@ -56,6 +56,7 @@ class RudderServerConfigManager {
             lock.unlock();
         });
     }
+
     void getFetchedConfig(FetchedConfigCallback callback) {
         executorService.submit(() -> {
             lock.lock();
@@ -75,7 +76,10 @@ class RudderServerConfigManager {
             Result result = networkManager.sendNetworkRequest(null, requestUrl, RequestMethod.GET, false);
             if (result.status == NetworkResponses.SUCCESS) {
                 try {
-                    RudderServerConfig rudderServerConfig = RudderGson.getInstance().fromJson(result.response, RudderServerConfig.class);
+                    RudderServerConfig rudderServerConfig = RudderGson.deserialize(result.response, RudderServerConfig.class);
+                    if (rudderServerConfig == null) {
+                        throw new NullPointerException("RudderServerConfig is null");
+                    }
                     RudderLogger.logDebug(String.format(Locale.US, "RudderServerConfigManager: downloadConfig: configJson: %s", result.response));
                     // save config for future use
                     preferenceManger.updateLastUpdatedTime();
@@ -109,8 +113,8 @@ class RudderServerConfigManager {
     }
 
     void saveRudderServerConfig(RudderServerConfig rudderServerConfig) {
-        try(FileOutputStream fos = context.openFileOutput(RUDDER_SERVER_CONFIG_FILE_NAME, Context.MODE_PRIVATE);
-            ObjectOutputStream os = new ObjectOutputStream(fos)) {
+        try (FileOutputStream fos = context.openFileOutput(RUDDER_SERVER_CONFIG_FILE_NAME, Context.MODE_PRIVATE);
+             ObjectOutputStream os = new ObjectOutputStream(fos)) {
 
             os.writeObject(rudderServerConfig);
         } catch (Exception e) {
@@ -125,16 +129,15 @@ class RudderServerConfigManager {
         if (!Utils.fileExists(context, RUDDER_SERVER_CONFIG_FILE_NAME)) {
             return null;
         }
-            try(FileInputStream fis = context.openFileInput(RUDDER_SERVER_CONFIG_FILE_NAME);
-                ObjectInputStream is = new ObjectInputStream(fis)) {
+        try (FileInputStream fis = context.openFileInput(RUDDER_SERVER_CONFIG_FILE_NAME);
+             ObjectInputStream is = new ObjectInputStream(fis)) {
 
-                rudderServerConfig = (RudderServerConfig) is.readObject();
-            } catch (Exception e) {
-                //will cause too many exceptions
-//                ReportManager.reportError(e);
-                RudderLogger.logError("RudderServerConfigManager: getRudderServerConfig: Failed to read RudderServerConfig Object from File");
-                e.printStackTrace();
-            }
+            rudderServerConfig = (RudderServerConfig) is.readObject();
+        } catch (Exception e) {
+            //will cause too many exceptions
+            RudderLogger.logError("RudderServerConfigManager: getRudderServerConfig: Failed to read RudderServerConfig Object from File");
+            e.printStackTrace();
+        }
         return rudderServerConfig;
 
     }
@@ -157,8 +160,10 @@ class RudderServerConfigManager {
         } catch (InterruptedException ex) {
             ReportManager.reportError(ex);
             RudderLogger.logError(String.format(Locale.US, "RudderServerConfigManager: Sleep: Exception while the thread is in sleep %s", ex.getLocalizedMessage()));
+            Thread.currentThread().interrupt();
         }
     }
+
     interface FetchedConfigCallback {
         void onConfigFetched(RudderServerConfig config);
     }

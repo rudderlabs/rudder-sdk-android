@@ -9,7 +9,6 @@ import com.rudderstack.android.sdk.core.ecomm.ECommerceParamNames;
 import com.rudderstack.android.sdk.core.ecomm.ECommerceProduct;
 import com.rudderstack.android.sdk.core.ecomm.ECommercePropertyBuilder;
 import com.rudderstack.android.sdk.core.ecomm.ECommerceSort;
-import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
@@ -172,13 +171,13 @@ public class ProductListFilteredEvent extends ECommercePropertyBuilder {
             property.put(ECommerceParamNames.CATEGORY, this.category);
         }
         if (this.products != null && !this.products.isEmpty()) {
-            property.put(ECommerceParamNames.PRODUCTS, Utils.convertToList(RudderGson.getInstance().toJson(this.products)));
+            property.put(ECommerceParamNames.PRODUCTS, Utils.convertToList(this.products));
         }
         if (this.sorts != null && !this.sorts.isEmpty()) {
-            property.put(ECommerceParamNames.SORTS, Utils.convertToList(RudderGson.getInstance().toJson(this.sorts)));
+            property.put(ECommerceParamNames.SORTS, Utils.convertToList(this.sorts));
         }
         if (this.filters != null && !this.filters.isEmpty()) {
-            property.put(ECommerceParamNames.FILTERS, Utils.convertToList(RudderGson.getInstance().toJson(this.filters)));
+            property.put(ECommerceParamNames.FILTERS, Utils.convertToList(this.filters));
         }
 
         return property;

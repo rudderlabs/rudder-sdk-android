@@ -62,7 +62,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
     private static final int STATUS_DEVICE_MODE_DONE = 0b01;
     private static final int STATUS_ALL_DONE = 0b11;
     private static final int STATUS_NEW = 0b00;
-    // This column purpose is to identify if an event is dumped to device mode destinations without transformations or not.
+    // This column purpose is to identify if an event is sent to device mode destinations without transformations or not.
     private static final String DM_PROCESSED_COL = "dm_processed";
     // status value for DM_PROCESSED column
     private static final int DM_PROCESSED_PENDING = 0;

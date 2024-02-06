@@ -81,9 +81,6 @@ public class DBPersistentManagerTest {
     private RudderDeviceModeManager deviceModeManager ;
     @Before
     public void setUp() throws Exception {
-//        final DBPersistentManager finalDbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider
-//                .<Application>getApplicationContext());
-//        dbPersistentManager = PowerMockito.spy(finalDbPersistentManager);
         dbPersistentManager = PowerMockito.mock(DBPersistentManager.class);
         PowerMockito.when(dbPersistentManager, "saveEventSync", anyString()).thenCallRealMethod();
         PowerMockito.when(dbPersistentManager, "saveEvent", anyString(), any()).thenCallRealMethod();
@@ -215,7 +212,7 @@ public class DBPersistentManagerTest {
         List<RudderMessage> messages = new ArrayList<>();
         for (String mJson :
                 messageJsons) {
-            messages.add(RudderGson.getInstance().fromJson(mJson, RudderMessage.class));
+            messages.add(RudderGson.deserialize(mJson, RudderMessage.class));
         }
         return messages;
     }
