@@ -245,7 +245,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         try {
 
             if (persistence.isAccessible()) {
-                acquireSemaphore();
+                waitTillMigrationsAreDone();
                 String deleteSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
                 RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: flushEvents: deleteSQL: %s", deleteSQL));
                 synchronized (DB_LOCK) {
@@ -268,7 +268,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         try {
             // get writable database
             if (persistence.isAccessible()) {
-                acquireSemaphore();
+                waitTillMigrationsAreDone();
                 RudderLogger.logInfo(String.format(Locale.US, "DBPersistentManager: clearEventsFromDB: Clearing %d messages from DB", messageIds.size()));
                 // format CSV string from messageIds list
                 StringBuilder builder = new StringBuilder();
@@ -319,7 +319,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             }
             Cursor cursor;
             synchronized (DB_LOCK) {
-                acquireSemaphore();
+                waitTillMigrationsAreDone();
                 cursor = persistence.rawQuery(selectSQL, null);
             }
             if (!cursor.moveToFirst()) {
@@ -548,6 +548,13 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             Thread.currentThread().interrupt();
         }
     }
+    private void waitTillMigrationsAreDone() {
+        if(migrationSemaphore.availablePermits() == 1 ){
+            return;
+        }
+        acquireSemaphore();
+        migrationSemaphore.release();
+    }
 
     private void performMigration(String columnName) {
         try {
@@ -614,7 +621,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
                 " WHERE " + MESSAGE_ID_COL + " IN "
                 + rowIdsCSVString + ";";
         synchronized (DB_LOCK) {
-            acquireSemaphore();
+            waitTillMigrationsAreDone();
             persistence.execSQL(sql);
         }
     }
@@ -624,7 +631,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
                 DBPersistentManager.DM_PROCESSED_COL + " = " + DBPersistentManager.DM_PROCESSED_DONE +
                 " WHERE " + MESSAGE_ID_COL + " = " + rowId + ";";
         synchronized (DB_LOCK) {
-            acquireSemaphore();
+            waitTillMigrationsAreDone();
             persistence.execSQL(sql);
         }
     }
@@ -636,7 +643,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
                 ") WHERE " + MESSAGE_ID_COL + " IN "
                 + rowIdsCSVString + ";";
         synchronized (DB_LOCK) {
-            acquireSemaphore();
+            waitTillMigrationsAreDone();
             persistence.execSQL(sql);
         }
     }
@@ -648,7 +655,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
 
     private void deleteDoneEvents() {
         synchronized (DB_LOCK) {
-            acquireSemaphore();
+            waitTillMigrationsAreDone();
             persistence.delete(EVENTS_TABLE_NAME,
                     DBPersistentManager.STATUS_COL + " = " + DBPersistentManager.STATUS_ALL_DONE,
                     null);
