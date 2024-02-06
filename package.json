@@ -1,5 +1,5 @@
 {
-  "version": "1.21.2",
+  "version": "1.21.3",
   "dependencies": {
     "properties-reader": "^2.2.0"
   }

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.21.3](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.21.2...v1.21.3) (2024-02-06)
+
+
+### Bug Fixes
+
+* handling the serialization of special floating point values while serializing any object ([#382](https://github.com/rudderlabs/rudder-sdk-android/issues/382)) ([55521b6](https://github.com/rudderlabs/rudder-sdk-android/commit/55521b675de289c3c1ba5f80d40d338a61c9aac5))
+* race condition fix using semaphore ([#388](https://github.com/rudderlabs/rudder-sdk-android/issues/388)) ([a792ce2](https://github.com/rudderlabs/rudder-sdk-android/commit/a792ce26514b31d82317eb59f16a97979ddfc13c))
+
 ### [1.21.2](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.21.1...v1.21.2) (2024-01-25)
 
 
