@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter;
 import com.rudderstack.android.sdk.core.persistence.DefaultPersistenceProviderFactory;
 import com.rudderstack.android.sdk.core.persistence.Persistence;
 import com.rudderstack.android.sdk.core.persistence.PersistenceProvider;
@@ -244,6 +245,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         try {
 
             if (persistence.isAccessible()) {
+                acquireSemaphore();
                 String deleteSQL = String.format(Locale.US, "DELETE FROM %s", EVENTS_TABLE_NAME);
                 RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: flushEvents: deleteSQL: %s", deleteSQL));
                 synchronized (DB_LOCK) {
@@ -266,6 +268,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         try {
             // get writable database
             if (persistence.isAccessible()) {
+                acquireSemaphore();
                 RudderLogger.logInfo(String.format(Locale.US, "DBPersistentManager: clearEventsFromDB: Clearing %d messages from DB", messageIds.size()));
                 // format CSV string from messageIds list
                 StringBuilder builder = new StringBuilder();
@@ -316,7 +319,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             }
             Cursor cursor;
             synchronized (DB_LOCK) {
-                semaphore.acquire();
+                acquireSemaphore();
                 cursor = persistence.rawQuery(selectSQL, null);
             }
             if (!cursor.moveToFirst()) {
@@ -342,8 +345,6 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
             ReportManager.reportError(ex);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -508,14 +509,10 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         return false;
     }
 
-    Semaphore semaphore = new Semaphore(1);
+    private final Semaphore migrationSemaphore = new Semaphore(1);
 
     void checkForMigrations() {
-        try {
-            semaphore.acquire();
-        } catch (InterruptedException e) {
-            //no-op
-        }
+        acquireSemaphore();
         Runnable runnable = () -> {
             try {
                 boolean isNewColumnAdded = false;
@@ -536,11 +533,20 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
                      NullPointerException ex) {
                 RudderLogger.logError(DBPERSISTENT_MANAGER_CHECK_FOR_MIGRATIONS_TAG + ex.getLocalizedMessage());
             } finally {
-                semaphore.release();
+                migrationSemaphore.release();
             }
         };
         // Need to perform db operations on a separate thread to support strict mode.
         executor.execute(runnable);
+    }
+
+    private void acquireSemaphore() {
+        try {
+            migrationSemaphore.acquire();
+        } catch (InterruptedException e) {
+            ReportManager.reportError(e);
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void performMigration(String columnName) {
@@ -608,6 +614,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
                 " WHERE " + MESSAGE_ID_COL + " IN "
                 + rowIdsCSVString + ";";
         synchronized (DB_LOCK) {
+            acquireSemaphore();
             persistence.execSQL(sql);
         }
     }
@@ -617,6 +624,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
                 DBPersistentManager.DM_PROCESSED_COL + " = " + DBPersistentManager.DM_PROCESSED_DONE +
                 " WHERE " + MESSAGE_ID_COL + " = " + rowId + ";";
         synchronized (DB_LOCK) {
+            acquireSemaphore();
             persistence.execSQL(sql);
         }
     }
@@ -628,6 +636,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
                 ") WHERE " + MESSAGE_ID_COL + " IN "
                 + rowIdsCSVString + ";";
         synchronized (DB_LOCK) {
+            acquireSemaphore();
             persistence.execSQL(sql);
         }
     }
@@ -639,6 +648,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
 
     private void deleteDoneEvents() {
         synchronized (DB_LOCK) {
+            acquireSemaphore();
             persistence.delete(EVENTS_TABLE_NAME,
                     DBPersistentManager.STATUS_COL + " = " + DBPersistentManager.STATUS_ALL_DONE,
                     null);
