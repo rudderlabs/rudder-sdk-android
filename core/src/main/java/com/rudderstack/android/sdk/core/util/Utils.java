@@ -109,6 +109,7 @@ public class Utils {
      * Convert an object to a map
      * <p> Serialize the object to a json string and then convert it to a map </p>
      * <p> If the object is a string, it is directly converted to a map </p>
+     * <p> If the object results in an invalid json string after serialization, an empty map is returned </p>
      *
      * @param obj the object to convert
      * @return the map representation of the object
@@ -129,6 +130,7 @@ public class Utils {
      * Convert an object to a list
      * <p> Serialize the object to a json string and then convert it to a list </p>
      * <p> If the object is a string, it is directly converted to a list </p>
+     * <p> If the object results in an invalid json string after serialization, an empty list is returned </p>
      *
      * @param obj the object to convert
      * @return the list representation of the object
