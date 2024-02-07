@@ -94,8 +94,28 @@ public class Utils {
         return null;
     }
 
+    @Nullable
+    private static String serializeObject(Object obj) {
+        String json;
+        if (obj instanceof String) {
+            json = (String) obj;
+        } else {
+            json = RudderGson.serialize(obj);
+        }
+        return json;
+    }
+
+    /**
+     * Convert an object to a map
+     * <p> Serialize the object to a json string and then convert it to a map </p>
+     * <p> If the object is a string, it is directly converted to a map </p>
+     * <p> If the object results in an invalid json string after serialization, an empty map is returned </p>
+     *
+     * @param obj the object to convert
+     * @return the map representation of the object
+     */
     public static Map<String, Object> convertToMap(Object obj) {
-        String json = RudderGson.serialize(obj);
+        String json = serializeObject(obj);
         if (json == null) {
             return new HashMap<>();
         }
@@ -106,9 +126,18 @@ public class Utils {
         return map == null ? new HashMap<>() : map;
     }
 
-
+    /**
+     * Convert an object to a list
+     * <p> Serialize the object to a json string and then convert it to a list </p>
+     * <p> If the object is a string, it is directly converted to a list </p>
+     * <p> If the object results in an invalid json string after serialization, an empty list is returned </p>
+     *
+     * @param obj the object to convert
+     * @return the list representation of the object
+     */
     public static List<Map<String, Object>> convertToList(Object obj) {
-        String json = RudderGson.serialize(obj);
+        String json = serializeObject(obj);
+
         if (json == null) {
             return new ArrayList<>();
         }
