@@ -105,6 +105,14 @@ public class Utils {
         return json;
     }
 
+    /**
+     * Convert an object to a map
+     * <p> Serialize the object to a json string and then convert it to a map </p>
+     * <p> If the object is a string, it is directly converted to a map </p>
+     *
+     * @param obj the object to convert
+     * @return the map representation of the object
+     */
     public static Map<String, Object> convertToMap(Object obj) {
         String json = serializeObject(obj);
         if (json == null) {
@@ -117,6 +125,14 @@ public class Utils {
         return map == null ? new HashMap<>() : map;
     }
 
+    /**
+     * Convert an object to a list
+     * <p> Serialize the object to a json string and then convert it to a list </p>
+     * <p> If the object is a string, it is directly converted to a list </p>
+     *
+     * @param obj the object to convert
+     * @return the list representation of the object
+     */
     public static List<Map<String, Object>> convertToList(Object obj) {
         String json = serializeObject(obj);
 
