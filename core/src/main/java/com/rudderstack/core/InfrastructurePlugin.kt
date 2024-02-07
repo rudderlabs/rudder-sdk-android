@@ -14,7 +14,7 @@
 
 package com.rudderstack.core
 
-import com.rudderstack.core.Analytics
+import com.rudderstack.models.RudderServerConfig
 
 /**
  * While [Plugin] is mostly used for message processing, [InfrastructurePlugin] is used for
@@ -26,6 +26,9 @@ interface InfrastructurePlugin {
     fun setup(analytics: Analytics)
     fun shutdown()
     fun updateConfiguration(configuration: Configuration){
+        //optional method
+    }
+    fun updateRudderServerConfig(serverConfig: RudderServerConfig){
         //optional method
     }
     fun reset() {

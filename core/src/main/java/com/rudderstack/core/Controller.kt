@@ -59,10 +59,16 @@ interface Controller {
     val isOptedOut : Boolean
 
     val currentConfiguration : Configuration?
+    val storage:Storage
 
     val dataUploadService:DataUploadService
     val configDownloadService:ConfigDownloadService?
 
+    /**
+     * The name of the instance
+     * In case of multiple instances, this name is used to differentiate between them
+     */
+    val instanceName: String
     fun addPlugin(vararg plugins: Plugin)
     /**
      * Custom plugins to be removed.

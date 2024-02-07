@@ -19,10 +19,13 @@ import com.rudderstack.web.HttpInterceptor
 import com.rudderstack.web.HttpResponse
 
 /**
- * Class to handle data upload to server
+ * Class to handle data upload to server.
+ * Pass this instance to [Analytics] constructor to enable data upload.
+ * If added again using [Analytics.addInfrastructurePlugin] method,
+ * data will be sent through all instances implementing this interface.
  *
  */
-interface DataUploadService {
+interface DataUploadService : InfrastructurePlugin {
 
     fun addHeaders(headers: Map<String, String>)
     /**
@@ -44,9 +47,4 @@ interface DataUploadService {
     fun uploadSync(data: List<Message>, extraInfo : Map<String,String>? = null) :
             HttpResponse<out Any>?
 
-    /**
-     * Service no longer needed, release resources
-     *
-     */
-    fun shutdown()
 }

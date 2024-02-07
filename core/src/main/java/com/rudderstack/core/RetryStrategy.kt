@@ -46,7 +46,8 @@ fun interface RetryStrategy {
 
     }
 
-    fun perform(work: () -> Boolean, listener: (success: Boolean) -> Unit): CancellableJob
+    fun Analytics.perform(work: Analytics.() -> Boolean, listener: (success: Boolean) -> Unit):
+            CancellableJob
     interface CancellableJob {
         /**
          * Cancels the job
@@ -69,10 +70,10 @@ fun interface RetryStrategy {
         private val maxAttempts: Int,
     ) : RetryStrategy {
 
-        override fun perform(
-            work: () -> Boolean, listener: (success: Boolean) -> Unit
+        override fun Analytics.perform(
+            work: Analytics.() -> Boolean, listener: (success: Boolean) -> Unit
         ): CancellableJob {
-            val impl = WeakReference(ExponentialRetryImpl(maxAttempts, work, listener))
+            val impl = WeakReference(ExponentialRetryImpl(this, maxAttempts,work, listener))
             impl.get()?.start()
             return object : CancellableJob {
                 override fun cancel() {
@@ -87,8 +88,9 @@ fun interface RetryStrategy {
         }
 
 
-        inner class ExponentialRetryImpl internal constructor(
-            private val maxAttempts: Int, private val work: () -> Boolean, private val listener: (
+        inner class ExponentialRetryImpl internal constructor(private val analytics: Analytics,
+            private val maxAttempts: Int, private val work: Analytics.() -> Boolean, private val
+                listener: (
                 success: Boolean
             ) -> Unit
         ) {
@@ -98,17 +100,19 @@ fun interface RetryStrategy {
             private val executorService = ScheduledThreadPoolExecutor(0)
             private var lastFuture: WeakReference<Future<*>>? = null
             private val _isDone = AtomicBoolean(false)
+            private val logger
+                get() = analytics.currentConfiguration?.logger
             val isDone: Boolean
                 get() = _isDone.get()
             fun start() {
                 if (isDone) {
-                    ConfigurationsState.value?.logger?.warn(
+                    logger?.warn(
                         "ExponentialRetryStrategy:", "RetryStrategyImpl is already shutdown"
                     )
                     return
                 }
                 if (!isRunning.compareAndSet(false, true)) {
-                    ConfigurationsState.value?.logger?.warn(
+                    logger?.warn(
                         "ExponentialRetryStrategy:", "RetryStrategyImpl is already running"
                     )
                     return
@@ -132,7 +136,7 @@ fun interface RetryStrategy {
                 executorService.schedule({
                     lastWaitTime.set((1 shl retryCount.getAndIncrement()) * 1000L) // 2 to the power of retry count
 
-                    val workDone = work.invoke()
+                    val workDone = work.invoke(analytics)
                     if (workDone) {
                         listener.invoke(true)
                         cancel()

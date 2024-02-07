@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 13/01/22, 6:01 PM Last modified: 13/01/22, 6:01 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 31/01/24, 12:09 pm Last modified: 31/01/24, 9:49 am
+ * Copyright: All rights reserved Ⓒ 2024 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,12 +12,11 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.core.internal.states
+package com.rudderstack.core.flushpolicy
 
-import com.rudderstack.core.Analytics
-import com.rudderstack.core.DestinationConfig
-import com.rudderstack.core.State
-import com.rudderstack.core.holder.retrieveState
+import com.rudderstack.core.InfrastructurePlugin
 
-internal class DestinationConfigState(destinationConfig: DestinationConfig? = null) :
-    State<DestinationConfig>(destinationConfig?:DestinationConfig())
+interface FlushPolicy : InfrastructurePlugin {
+    fun reschedule()
+    fun onRemoved()
+}

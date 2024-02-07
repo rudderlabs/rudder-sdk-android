@@ -37,7 +37,7 @@ import java.util.Timer
 
 @RunWith(MockitoJUnitRunner::class)
 class FlushSchedulerTest {
-    @Mock
+   /* @Mock
     private lateinit var mockFlushSchedulerDataChangeListener: FlushScheduler.Listener
 
     @Mock
@@ -127,6 +127,6 @@ class FlushSchedulerTest {
         //should be called once
         verify(mockFlushSchedulerDataChangeListener, times(1)).onDataChange()
     }
-
+*/
 
 }

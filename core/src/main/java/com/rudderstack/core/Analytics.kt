@@ -34,7 +34,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-
+internal const val DEFAULTS_ANALYTICS_INSTANCE_NAME = "default"
 class Analytics private constructor(
     private val _delegate: AnalyticsDelegate,
 ) : Controller by _delegate {
@@ -54,15 +54,18 @@ class Analytics private constructor(
     constructor(
         writeKey: String,
         configuration: Configuration,
+        instanceName: String = DEFAULTS_ANALYTICS_INSTANCE_NAME,
         dataUploadService: DataUploadService? = null,
         configDownloadService: ConfigDownloadService? = null,
+        storage: Storage? = null,
         //optional
         initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
         //optional called if shutdown is called
         shutdownHook: (() -> Unit)? = null
     ) : this(
         _delegate = AnalyticsDelegate(
-            configuration, dataUploadService ?: DataUploadServiceImpl(
+            configuration, storage?:BasicStorageImpl(), instanceName, dataUploadService ?:
+            DataUploadServiceImpl(
                 writeKey
             ), configDownloadService ?: ConfigDownloadServiceImpl(
                 writeKey
@@ -317,65 +320,12 @@ class Analytics private constructor(
     }
 
     /**
-     * Flushes forcefully, not if analytics has shutdown.
-     * One can optionally provide alternate data upload service and alternate executor
-     * for force flush, and force flush will act on those.
-     *
-     * N.B - Can be used to flush to a different destination.
-     * In case this is used as an alternate to sync data to different upload service,
-     * it will be noteworthy to set [clearDb] to false, otherwise uploaded data will be
-     * cleared from database
-     *
-     * @param alternateDataUploadService The [DataUploadService] to upload data. Default is null. In
-     * case null is sent, Analytics will create a [DataUploadServiceImpl] instance to pass over data.
-     *
-     * @param alternateFlushExecutor The flush will be processed on this [ExecutorService]
-     * @param clearDb Uploaded data will be cleared from [Storage] if true, else not.
-     */
-    @JvmOverloads
-    fun forceFlush(
-        clearDb: Boolean = true,
-        alternateFlushExecutor: ExecutorService? = null,
-        alternateDataUploadService: DataUploadService? = null
-    ) {
-        currentConfiguration ?: return
-        val flushExecutor = alternateFlushExecutor ?: ThreadPoolExecutor(
-            1,
-            1,
-            0L,
-            TimeUnit.MILLISECONDS,
-            LinkedBlockingQueue<Runnable>(1),
-            ThreadPoolExecutor.DiscardOldestPolicy()
-        )
-        val dataUploadService = alternateDataUploadService ?: dataUploadService
-        _delegate.forceFlush(
-            dataUploadService, flushExecutor, clearDb
-        ) {
-            //shut down if data uploader/executor is initialized here
-            if (alternateDataUploadService == null) dataUploadService.shutdown()
-            if (alternateFlushExecutor == null) flushExecutor.shutdown()
-        }
-    }
-
-    /**
      * This blocks the thread till events are flushed.
-     * Users should prefer [forceFlush]
-     *
-     * @param alternateDataUploadService Should be sent as null unless separate implementation is provided
-     * @param clearDb true to clear database after a successful flush, false otherwise
-     * @param base64Generator To be provided in case any separate implementation is required other than the one used to
-     * initialize the class.
+     * Users should prefer [flush]
      *
      */
-    @JvmOverloads
     fun blockingFlush(
-        clearDb: Boolean = true,
-        alternateDataUploadService: DataUploadService? = null,
     ): Boolean {
-
-        val dataUploadService = alternateDataUploadService ?: dataUploadService
-        return _delegate.blockFlush(dataUploadService, clearDb)
+        return _delegate.blockFlush()
     }
-
-
 }

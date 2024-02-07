@@ -28,7 +28,7 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
 internal class DataUploadServiceImpl @JvmOverloads constructor(
-    writeKey: String,
+    private val writeKey: String,
     webService: WebService? = null
 ) : DataUploadService {
     private val encodedWriteKey: AtomicReference<String?> = AtomicReference()
@@ -38,14 +38,7 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
 
     private val currentConfiguration
         get() = currentConfigurationAtomic.get()
-    private val configSubscriber: State.Observer<Configuration> =
-        State.Observer<Configuration> { state,_ ->
-            state?.apply {
-                encodedWriteKey.set(base64Generator.generateBase64(writeKey))
-                initializeWebService()
-                currentConfigurationAtomic.set(this)
-            }
-        }
+
     private val interceptor = HttpInterceptor {
         if(headers.isNotEmpty()) {
             synchronized(this) {
@@ -55,9 +48,6 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
             }
         }
         it
-    }
-    init {
-        ConfigurationsState.subscribe(configSubscriber)
     }
 
     private fun Configuration.initializeWebService() {
@@ -122,14 +112,20 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
         }
     }
 
+    override fun setup(analytics: Analytics) {
+        // No-op
+    }
+
+    override fun updateConfiguration(configuration: Configuration) {
+        encodedWriteKey.set(configuration.base64Generator.generateBase64(writeKey))
+        configuration.initializeWebService()
+        currentConfigurationAtomic.set(configuration)
+    }
 
     override fun shutdown() {
-        ConfigurationsState.removeObserver(configSubscriber)
         webService.get()?.shutdown()
         webService.set(null)
         currentConfigurationAtomic.set(null)
         encodedWriteKey.set(null)
     }
-
-
 }

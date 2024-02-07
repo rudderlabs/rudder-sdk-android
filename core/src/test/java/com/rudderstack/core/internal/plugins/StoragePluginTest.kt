@@ -14,23 +14,22 @@
 
 package com.rudderstack.core.internal.plugins
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
-import com.rudderstack.core.internal.CentralPluginChain
-import com.rudderstack.core.BasicStorageImpl
 import com.rudderstack.core.Storage
-import com.rudderstack.core.internal.KotlinLogger
-import com.rudderstack.core.internal.FlushScheduler
-import com.rudderstack.core.internal.states.ConfigurationsState
+import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
-import com.rudderstack.models.Message
 import com.rudderstack.models.TrackMessage
 import com.vagabond.testcommon.VerificationStorage
-import org.awaitility.Awaitility
+import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.contains
+import org.hamcrest.Matchers.iterableWithSize
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
+import org.mockito.kotlin.mock
 
 class StoragePluginTest {
 
@@ -47,17 +46,29 @@ class StoragePluginTest {
         TrackMessage.create("m-10", anonymousId = "anon-10", timestamp = "09-01-2022"),
         TrackMessage.create("m-11", anonymousId = "anon-11", timestamp = "09-01-2022"),
     )
+    private lateinit var analytics: Analytics
+    private lateinit var storage: Storage
+    @Before
+    fun setup() {
+        storage = VerificationStorage()
+        analytics = generateTestAnalytics(
+            mockConfiguration = Configuration(mock(), shouldVerifySdk = false), storage = storage
+        )
+    }
+    @After
+    fun tearDown() {
+        analytics.shutdown()
+    }
 
     @Test
     fun testStoragePluginWithQueueSize() {
-        val storage = VerificationStorage()
-        val configuration = Configuration( jsonAdapter = JacksonAdapter(),
-            flushQueueSize = 11, storage = storage)
-        ConfigurationsState.update(configuration)
+
         val eventNames = testMessagesList.map {
             it.eventName
         }
         val storagePlugin = StoragePlugin()
+        storagePlugin.setup(analytics)
+//        storagePlugin.updateConfiguration()
         testMessagesList.forEach { msg ->
             CentralPluginChain(msg, listOf(storagePlugin)).proceed(msg)
         }
@@ -65,10 +76,8 @@ class StoragePluginTest {
             (it as TrackMessage).eventName
         }
         assertThat(
-            dataOfNames,
-            allOf(
-                iterableWithSize(testMessagesList.size),
-                contains(*eventNames.toTypedArray())
+            dataOfNames, allOf(
+                iterableWithSize(testMessagesList.size), contains(*eventNames.toTypedArray())
             )
         )
     }

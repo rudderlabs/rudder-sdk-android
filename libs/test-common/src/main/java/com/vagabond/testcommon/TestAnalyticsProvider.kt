@@ -20,8 +20,8 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Plugin
+import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.KotlinLogger
-import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.Message
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.rudderjsonadapter.JsonAdapter
@@ -40,15 +40,15 @@ fun generateTestAnalytics(jsonAdapter: JsonAdapter): Analytics {
         shouldVerifySdk = false))
 }
 fun generateTestAnalytics(mockConfiguration: Configuration,
-                          configDownloadService: ConfigDownloadService = MockConfigDownloadService()): Analytics {
+                          configDownloadService: ConfigDownloadService =
+                              MockConfigDownloadService(), storage: Storage = VerificationStorage()): Analytics {
     val testingConfig = mockConfiguration.copy(
         logger = KotlinLogger,
-        shouldVerifySdk = false,
-        storage = VerificationStorage(),
         analyticsExecutor = TestExecutor()
     )
     return Analytics(
-        DUMMY_WRITE_KEY, testingConfig, TestDataUploadService(), configDownloadService
+        DUMMY_WRITE_KEY, testingConfig, dataUploadService = TestDataUploadService(),
+        configDownloadService = configDownloadService, storage = storage
     ).also {
         it.addPlugin(inputVerifyPlugin)
     }
@@ -59,12 +59,12 @@ fun Analytics.testPlugin(pluginUnderTest : Plugin) {
 }
 fun Analytics.assertArguments(verification : Verification<List<Message>,List<Message>>) {
     busyWait(100)
-    verification.assert(inputs.toList(), currentConfiguration?.storage?.getDataSync() ?:
+    verification.assert(inputs.toList(), storage.getDataSync() ?:
     emptyList())
 }
 fun Analytics.assertArgument(verification: Verification<Message?, Message?>){
     busyWait(100)
-    verification.assert(inputs.lastOrNull(), currentConfiguration?.storage?.getDataSync()?.lastOrNull())
+    verification.assert(inputs.lastOrNull(), storage.getDataSync().lastOrNull())
 }
 private fun busyWait(millis: Long) {
     val start = System.currentTimeMillis()

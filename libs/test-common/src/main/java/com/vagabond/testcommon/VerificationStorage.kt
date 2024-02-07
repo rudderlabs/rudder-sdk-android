@@ -14,6 +14,7 @@
 
 package com.vagabond.testcommon
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Storage
 import com.rudderstack.models.Message
 import com.rudderstack.models.RudderServerConfig
@@ -43,11 +44,11 @@ class VerificationStorage : Storage {
         storageQ -= messages.toSet()
     }
 
-    override fun addDataListener(listener: Storage.DataListener) {
+    override fun addMessageDataListener(listener: Storage.DataListener) {
         /* No-op . */
     }
 
-    override fun removeDataListener(listener: Storage.DataListener) {
+    override fun removeMessageDataListener(listener: Storage.DataListener) {
         /* No-op . */
     }
 
@@ -106,5 +107,9 @@ class VerificationStorage : Storage {
         get() = "Android"
     override val libraryOsVersion: String
         get() = "13"
+
+    override fun setup(analytics: Analytics) {
+        /* No-op . */
+    }
 
 }

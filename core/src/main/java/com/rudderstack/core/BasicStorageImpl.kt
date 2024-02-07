@@ -24,7 +24,13 @@ import java.io.*
 import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicReference
 
+private const val PROPERTIES_FILE_NAME = "config.properties"
+private const val LIB_KEY_NAME = "libraryName"
+private const val LIB_KEY_VERSION = "rudderCoreSdkVersion"
+private const val LIB_KEY_PLATFORM = "platform"
+private const val LIB_KEY_OS_VERSION = "os_version"
 @Suppress("ThrowableNotThrown")
 class BasicStorageImpl @JvmOverloads constructor(
     /**
@@ -32,17 +38,10 @@ class BasicStorageImpl @JvmOverloads constructor(
      */
     private val queue: Queue<Message> = LinkedBlockingQueue(),
 ) : Storage {
-
-    companion object{
-        private const val PROPERTIES_FILE_NAME = "config.properties"
-        private const val LIB_KEY_NAME = "libraryName"
-        private const val LIB_KEY_VERSION = "rudderCoreSdkVersion"
-        private const val LIB_KEY_PLATFORM = "platform"
-        private const val LIB_KEY_OS_VERSION = "os_version"
-    }
+    private var configurationRef = AtomicReference<Configuration>(null)
 
     private val logger
-        get() = ConfigurationsState.value?.logger
+        get() = configurationRef.get()?.logger
     private var backPressureStrategy = Storage.BackPressureStrategy.Drop
 
     private var _storageCapacity = Storage.MAX_STORAGE_CAPACITY
@@ -152,11 +151,11 @@ class BasicStorageImpl @JvmOverloads constructor(
         onDataChange()
     }
 
-    override fun addDataListener(listener: Storage.DataListener) {
+    override fun addMessageDataListener(listener: Storage.DataListener) {
         _dataChangeListeners = _dataChangeListeners + WeakReference(listener)
     }
 
-    override fun removeDataListener(listener: Storage.DataListener) {
+    override fun removeMessageDataListener(listener: Storage.DataListener) {
 
         _dataChangeListeners = _dataChangeListeners.filter {
             it.get() != null && it.get() != listener
@@ -272,6 +271,17 @@ class BasicStorageImpl @JvmOverloads constructor(
     override val libraryOsVersion: String
         get() = libDetails[LIB_KEY_OS_VERSION] ?: ""
 
+    override fun setup(analytics: Analytics) {
+        //no-op
+    }
+
+    override fun updateConfiguration(configuration: Configuration) {
+        configurationRef.set(configuration)
+    }
+
+    override fun toString(): String {
+        return "BasicStorageImpl(queue=$queue, _storageCapacity=$_storageCapacity, _maxFetchLimit=$_maxFetchLimit, _dataChangeListeners=$_dataChangeListeners, _isOptOut=$_isOptOut, _optOutTime=$_optOutTime, _optInTime=$_optInTime, _serverConfig=$_serverConfig, _traits=$_traits, libDetails=$libDetails, serverConfigFile=$serverConfigFile)"
+    }
     private fun onDataChange() {
         synchronized(this) {
             _dataChangeListeners.forEach {

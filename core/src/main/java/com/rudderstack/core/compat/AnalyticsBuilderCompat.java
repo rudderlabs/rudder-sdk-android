@@ -14,10 +14,14 @@
 
 package com.rudderstack.core.compat;
 
+import static com.rudderstack.core.AnalyticsKt.DEFAULTS_ANALYTICS_INSTANCE_NAME;
+
 import com.rudderstack.core.Analytics;
+import com.rudderstack.core.BasicStorageImpl;
 import com.rudderstack.core.ConfigDownloadService;
 import com.rudderstack.core.Configuration;
 import com.rudderstack.core.DataUploadService;
+import com.rudderstack.core.Storage;
 import com.rudderstack.core.internal.ConfigDownloadServiceImpl;
 import com.rudderstack.core.internal.DataUploadServiceImpl;
 
@@ -29,7 +33,9 @@ public class AnalyticsBuilderCompat {
     private final String writeKey;
 
     private final Configuration configuration;
+    private Storage storage = new BasicStorageImpl();
 
+    private String instanceName = DEFAULTS_ANALYTICS_INSTANCE_NAME;
     private DataUploadService dataUploadService = null;
     private ConfigDownloadService configDownloadService = null;
 
@@ -40,6 +46,12 @@ public class AnalyticsBuilderCompat {
         this.writeKey = writeKey;
         this.configuration = configuration;
     }
+
+    public AnalyticsBuilderCompat withInstanceName(String instanceName) {
+        this.instanceName = instanceName;
+        return this;
+    }
+
     public AnalyticsBuilderCompat withDataUploadService(DataUploadService dataUploadService) {
         this.dataUploadService = dataUploadService;
         return this;
@@ -66,12 +78,17 @@ public class AnalyticsBuilderCompat {
         };
         return this;
     }
+    public AnalyticsBuilderCompat withStorage(Storage storage) {
+        this.storage = storage;
+        return this;
+    }
 
     public Analytics build() {
-        return new Analytics(writeKey, configuration,
+        return new Analytics(writeKey, configuration, instanceName,
                 dataUploadService == null ? new DataUploadServiceImpl(
                         writeKey) : dataUploadService, configDownloadService == null ?
                 new ConfigDownloadServiceImpl(writeKey) : configDownloadService,
+                storage,
                 initializationListener, shutdownHook
         );
     }
