@@ -94,13 +94,19 @@ public class Utils {
         return null;
     }
 
-    public static Map<String, Object> convertToMap(Object obj) {
+    @Nullable
+    private static String serializeObject(Object obj) {
         String json;
         if (obj instanceof String) {
             json = (String) obj;
         } else {
             json = RudderGson.serialize(obj);
         }
+        return json;
+    }
+
+    public static Map<String, Object> convertToMap(Object obj) {
+        String json = serializeObject(obj);
         if (json == null) {
             return new HashMap<>();
         }
@@ -111,14 +117,8 @@ public class Utils {
         return map == null ? new HashMap<>() : map;
     }
 
-
     public static List<Map<String, Object>> convertToList(Object obj) {
-        String json;
-        if (obj instanceof String) {
-            json = (String) obj;
-        } else {
-            json = RudderGson.serialize(obj);
-        }
+        String json = serializeObject(obj);
 
         if (json == null) {
             return new ArrayList<>();
