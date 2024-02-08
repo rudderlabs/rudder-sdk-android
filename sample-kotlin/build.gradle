@@ -63,7 +63,6 @@ dependencies {
 
     // Rudder Android Core SDK
     implementation project(':core')
-//    implementation 'com.rudderstack.android.sdk:core:1.19.1'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation "androidx.work:work-runtime:2.7.1"
 

@@ -5,17 +5,29 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
+import static java.lang.Double.POSITIVE_INFINITY;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+
+import android.text.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,7 +36,19 @@ import com.google.gson.JsonParser;
 import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({Utils.class})
 public class RudderGsonTest {
+
+    @Before
+    public void setup() throws Exception {
+        //mocking timestamp
+        PowerMockito.spy(Utils.class);
+        PowerMockito.when(Utils.class, "getTimeStamp"
+                )
+                .thenAnswer((Answer<String>) invocation -> "2022-03-14T06:46:41.365Z");
+    }
+
     @Test
     public void testRudderContextSerializationSynchronicity() {
         AtomicInteger contextsSerialized = new AtomicInteger(0);
@@ -41,7 +65,7 @@ public class RudderGsonTest {
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
-                    assertThat("contexts got serialized perfectly " + i, areJsonStringsEqual(RudderGson.getInstance().toJson(context), getRudderContextJsonString(i)), is(true));
+                    assertThat("contexts got serialized perfectly " + i, areJsonStringsEqual(RudderGson.serialize(context), getRudderContextJsonString(i)), is(true));
                     contextsSerialized.addAndGet(1);
                 }
             }
@@ -59,7 +83,7 @@ public class RudderGsonTest {
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
-                    assertThat("contexts got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(context), getRudderContextJsonString(i)), is(true));
+                    assertThat("contexts got serialized perfectly", areJsonStringsEqual(RudderGson.serialize(context), getRudderContextJsonString(i)), is(true));
                     contextsSerialized.addAndGet(1);
                 }
             }
@@ -77,7 +101,7 @@ public class RudderGsonTest {
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
-                    assertThat("contexts got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(context), getRudderContextJsonString(i)), is(true));
+                    assertThat("contexts got serialized perfectly", areJsonStringsEqual(RudderGson.serialize(context), getRudderContextJsonString(i)), is(true));
                     contextsSerialized.addAndGet(1);
                 }
             }
@@ -98,6 +122,7 @@ public class RudderGsonTest {
         ReflectionUtils.setPrivateField(context, "customContextMap", customContextMap);
         return context;
     }
+
     private RudderContext getDefaultRudderContext() throws NoSuchFieldException, IllegalAccessException {
         RudderContext context = Mockito.mock(RudderContext.class);
         RudderApp app = Mockito.mock(RudderApp.class);
@@ -152,7 +177,7 @@ public class RudderGsonTest {
                 super.run();
                 for (int i = 1; i <= 3000; i++) {
                     RudderTraits traits = getTraits(i);
-                    assertThat("traits got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(traits), getTraitsJsonString(i)), is(true));
+                    assertThat("traits got serialized perfectly", areJsonStringsEqual(RudderGson.serialize(traits), getTraitsJsonString(i)), is(true));
                     traitsSerialized.addAndGet(1);
                 }
             }
@@ -163,7 +188,7 @@ public class RudderGsonTest {
                 super.run();
                 for (int i = 3001; i <= 6000; i++) {
                     RudderTraits traits = getTraits(i);
-                    assertThat("traits got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(traits), getTraitsJsonString(i)), is(true));
+                    assertThat("traits got serialized perfectly", areJsonStringsEqual(RudderGson.serialize(traits), getTraitsJsonString(i)), is(true));
                     traitsSerialized.addAndGet(1);
                 }
             }
@@ -174,7 +199,7 @@ public class RudderGsonTest {
                 super.run();
                 for (int i = 6001; i <= 9000; i++) {
                     RudderTraits traits = getTraits(i);
-                    assertThat("traits got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(traits), getTraitsJsonString(i)), is(true));
+                    assertThat("traits got serialized perfectly", areJsonStringsEqual(RudderGson.serialize(traits), getTraitsJsonString(i)), is(true));
                     traitsSerialized.addAndGet(1);
                 }
             }
@@ -205,9 +230,9 @@ public class RudderGsonTest {
                 utilities.when(Utils::getTimeStamp).thenReturn("2022-03-14T06:46:41.365Z");
                 for (int i = 1; i <= 1000; i++) {
                     RudderMessage trackMessage = getTrackMessage(i);
-                    assertThat("track message got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(trackMessage), getTrackJsonString(i, trackMessage)), is(true));
+                    assertThat("track message got serialized perfectly", areJsonStringsEqual(RudderGson.serialize(trackMessage), getTrackJsonString(i, trackMessage)), is(true));
                     RudderMessage identifyMessage = getIdentifyMessage(i);
-                    assertThat("identify message got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(identifyMessage), getIdentifyJsonString(i, identifyMessage)), is(true));
+                    assertThat("identify message got serialized perfectly", areJsonStringsEqual(RudderGson.serialize(identifyMessage), getIdentifyJsonString(i, identifyMessage)), is(true));
                     messagesSerialized.addAndGet(2);
                 }
             }
@@ -219,9 +244,9 @@ public class RudderGsonTest {
                 utilities.when(Utils::getTimeStamp).thenReturn("2022-03-14T06:46:41.365Z");
                 for (int i = 1001; i <= 2000; i++) {
                     RudderMessage trackMessage = getTrackMessage(i);
-                    assertThat("track message got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(trackMessage), getTrackJsonString(i, trackMessage)), is(true));
+                    assertThat("track message got serialized perfectly", areJsonStringsEqual(RudderGson.serialize(trackMessage), getTrackJsonString(i, trackMessage)), is(true));
                     RudderMessage identifyMessage = getIdentifyMessage(i);
-                    assertThat("identify message got serialized perfectly", areJsonStringsEqual(RudderGson.getInstance().toJson(identifyMessage), getIdentifyJsonString(i, identifyMessage)), is(true));
+                    assertThat("identify message got serialized perfectly", areJsonStringsEqual(RudderGson.serialize(identifyMessage), getIdentifyJsonString(i, identifyMessage)), is(true));
                     messagesSerialized.addAndGet(2);
                 }
             }
@@ -270,5 +295,176 @@ public class RudderGsonTest {
         JsonObject obj2 = JsonParser.parseString(json2).getAsJsonObject();
         boolean result = obj1.equals(obj2);
         return result;
+    }
+
+    @Test
+    public void testGsonWithInvalidNumbers() {
+        RudderContext context = new RudderContext();
+        // insert traits in the context which contains invalid numbers
+        context.updateTraitsMap(getInvalidNumbersMap());
+        // set custom context with invalid numbers
+        context.setCustomContexts(getInvalidNumbersMap());
+
+        Map<String, Object> eventProperties = getInvalidNumbersMap();
+        eventProperties.put("list", new ArrayList<>(Arrays.asList(POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.MAX_VALUE, Double.MIN_VALUE, Double.NaN)));
+        eventProperties.put("map", getInvalidNumbersMap());
+
+        RudderMessage message = new RudderMessageBuilder().setEventName("TestEvent").setProperty(eventProperties).build();
+        message.setContext(context);
+
+
+        String outputJsonString = RudderGson.serialize(message);
+        String expectedJsonString = "{" +
+                "\"messageId\": \"" + message.getMessageId() + "\"," +
+                "\"channel\": \"mobile\"," +
+                "\"context\": {" +
+                "\"traits\": {" +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"nan\": \"NaN\"," +
+                "\"float\": 45.0," +
+                "\"list\": [" +
+                "\"Infinity\"," +
+                "\"-Infinity\"," +
+                "1.7976931348623157E308," +
+                "4.9E-324," +
+                "\"NaN\"," +
+                "45," +
+                "45.0" +
+                "]," +
+                "\"map\": {" +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"nan\": \"NaN\"," +
+                "\"negativeInfinity\": \"-Infinity\"" +
+                "}," +
+                "\"long\": 45," +
+                "\"int\": 45," +
+                "\"negativeInfinity\": \"-Infinity\"" +
+                "}," +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"float\": 45.0," +
+                "\"list\": [" +
+                "\"Infinity\"," +
+                "\"-Infinity\"," +
+                "1.7976931348623157E308," +
+                "4.9E-324," +
+                "\"NaN\"," +
+                "45," +
+                "45.0" +
+                "]," +
+                "\"long\": 45," +
+                "\"int\": 45," +
+                "\"negativeInfinity\": \"-Infinity\"," +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"nan\": \"NaN\"," +
+                "\"map\": {" +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"nan\": \"NaN\"," +
+                "\"negativeInfinity\": \"-Infinity\"" +
+                "}" +
+                "}," +
+                "\"originalTimestamp\": \"2022-03-14T06:46:41.365Z\"," +
+                "\"event\": \"TestEvent\"," +
+                "\"properties\": {" +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"float\": 45.0," +
+                "\"list\": [" +
+                "\"Infinity\"," +
+                "\"-Infinity\"," +
+                "1.7976931348623157E308," +
+                "4.9E-324," +
+                "\"NaN\"" +
+                "]," +
+                "\"long\": 45," +
+                "\"int\": 45," +
+                "\"negativeInfinity\": \"-Infinity\"," +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"nan\": \"NaN\"," +
+                "\"map\": {" +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"nan\": \"NaN\"," +
+                "\"float\": 45.0," +
+                "\"list\": [" +
+                "\"Infinity\"," +
+                "\"-Infinity\"," +
+                "1.7976931348623157E308," +
+                "4.9E-324," +
+                "\"NaN\"," +
+                "45," +
+                "45.0" +
+                "]," +
+                "\"map\": {" +
+                "\"general\": 45," +
+                "\"minValue\": 4.9E-324," +
+                "\"maxValue\": 1.7976931348623157E308," +
+                "\"double\": 45.0," +
+                "\"positiveInfinity\": \"Infinity\"," +
+                "\"nan\": \"NaN\"," +
+                "\"negativeInfinity\": \"-Infinity\"" +
+                "}," +
+                "\"long\": 45," +
+                "\"int\": 45," +
+                "\"negativeInfinity\": \"-Infinity\"" +
+                "}" +
+                "}," +
+                "\"integrations\": {}" +
+                "}";
+        assertThat("Invalid Numbers are removed and the message is serialized perfectly", outputJsonString, is(expectedJsonString.replace("\n", "").replace(" ", "")));
+    }
+
+    Map<String, Object> getInvalidNumbersMap() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("positiveInfinity", POSITIVE_INFINITY);
+        map.put("negativeInfinity", Double.NEGATIVE_INFINITY);
+        map.put("maxValue", Double.MAX_VALUE);
+        map.put("minValue", Double.MIN_VALUE);
+        map.put("nan", Double.NaN);
+        map.put("general", 45);
+        map.put("double", 45.0);
+        map.put("float", 45.0f);
+        map.put("long", 45L);
+        map.put("int", 45);
+        // add a nested map with invalid numbers
+        Map<String, Object> nestedMap = new HashMap<>();
+        nestedMap.put("positiveInfinity", POSITIVE_INFINITY);
+        nestedMap.put("negativeInfinity", Double.NEGATIVE_INFINITY);
+        nestedMap.put("maxValue", Double.MAX_VALUE);
+        nestedMap.put("minValue", Double.MIN_VALUE);
+        nestedMap.put("nan", Double.NaN);
+        nestedMap.put("general", 45);
+        nestedMap.put("double", 45.0);
+        map.put("map", nestedMap);
+        // add a nested array with invalid numbers
+        List<Object> nestedList = new ArrayList<>();
+        nestedList.add(POSITIVE_INFINITY);
+        nestedList.add(Double.NEGATIVE_INFINITY);
+        nestedList.add(Double.MAX_VALUE);
+        nestedList.add(Double.MIN_VALUE);
+        nestedList.add(Double.NaN);
+        nestedList.add(45);
+        nestedList.add(45.0);
+        map.put("list", nestedList);
+        return map;
     }
 }

@@ -43,17 +43,12 @@ public class RudderUserSessionManagerTest {
     @Test
     public void applySessionTracking() throws Exception {
         long testSessionId = 123L;
-
-
         userSessionManager.startSession(testSessionId);
-//        applicationLifeCycleManager.applySessionTracking(spyMessage);
-//        Mockito.verify(spyMessage).setSession(userSession);
         Mockito.verify(userSession).startSession(testSessionId);
 
         PowerMockito.doReturn(testSessionId).when(userSession).getSessionId();
         RudderMessage message = new RudderMessageBuilder().setUserId("u-1").build();
         RudderMessage spyMessage = PowerMockito.spy(message);
-//        PowerMockito.doAnswer((Answer<Void>) invocation -> null).when(spyMessage).setSession(Mockito.any());
         PowerMockito.doNothing().when(spyMessage).setSession(userSession);
         userSessionManager.applySessionTracking(spyMessage);
         Mockito.verify(spyMessage).setSession(userSession);

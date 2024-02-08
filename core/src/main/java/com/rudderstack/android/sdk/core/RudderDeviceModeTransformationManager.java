@@ -69,8 +69,11 @@ public class RudderDeviceModeTransformationManager {
                                 }
                                 createMessageIdTransformationRequestMap();
                                 TransformationRequest transformationRequest = createTransformationRequestPayload();
-                                String requestJson = RudderGson.getInstance().toJson(transformationRequest);
-
+                                String requestJson = RudderGson.serialize(transformationRequest);
+                                if (requestJson == null) {
+                                    RudderLogger.logError("DeviceModeTransformationManager: TransformationProcessor: Error in creating transformation request payload");
+                                    break;
+                                }
                                 RudderLogger.logDebug(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: Payload: %s", requestJson));
                                 RudderLogger.logInfo(String.format(Locale.US, "DeviceModeTransformationManager: TransformationProcessor: EventCount: %d", messageIds.size()));
 
@@ -92,8 +95,11 @@ public class RudderDeviceModeTransformationManager {
 
     private void createMessageIdTransformationRequestMap() {
         for (int i = 0; i < messageIds.size(); i++) {
-
-            RudderMessage message = RudderGson.getInstance().fromJson(messages.get(i), RudderMessage.class);
+            RudderMessage message = RudderGson.deserialize(messages.get(i), RudderMessage.class);
+            if (message == null) {
+                RudderLogger.logError("DeviceModeTransformationManager: createMessageIdTransformationRequestMap: Error in deserializing message");
+                continue;
+            }
             reportMessageSubmittedMetric(message);
             messageIdTransformationRequestMap.put(messageIds.get(i), message);
         }
@@ -114,11 +120,11 @@ public class RudderDeviceModeTransformationManager {
             return true;
         } else if (result.status == NetworkResponses.BAD_REQUEST) {
             reportBadRequestMetric();
-            RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Bad request, dumping back the original events to the factories");
-            dumpOriginalEvents(transformationRequest);
+            RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Bad request, sending back the original events to the factories");
+            sendOriginalEvents(transformationRequest);
         } else if (result.status == NetworkResponses.ERROR) {
             handleError(transformationRequest);
-        } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // dumping back the original messages itself to the factories as transformation feature is not enabled
+        } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // sending back the original messages itself to the factories as transformation feature is not enabled
             reportResourceNotFoundMetric();
             handleResourceNotFound(transformationRequest);
         } else {
@@ -147,7 +153,7 @@ public class RudderDeviceModeTransformationManager {
         if (retryCount++ == MAX_RETRIES) {
             retryCount = 0;
             reportMaxRetryExceededMetric();
-            dumpOriginalEvents(transformationRequest);
+            sendOriginalEvents(transformationRequest);
         } else {
             incrementRetryCountMetric();
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Retrying in " + delay + "s");
@@ -170,24 +176,28 @@ public class RudderDeviceModeTransformationManager {
         ReportManager.incrementDMTRetryCounter(1);
     }
 
-    private void dumpOriginalEvents(TransformationRequest transformationRequest) {
+    private void sendOriginalEvents(TransformationRequest transformationRequest) {
         deviceModeSleepCount = 0;
-        rudderDeviceModeManager.dumpOriginalEvents(transformationRequest, true);
+        rudderDeviceModeManager.sendOriginalEvents(transformationRequest, true);
         completeDeviceModeEventProcessing();
     }
 
     private void handleResourceNotFound(TransformationRequest transformationRequest) {
         deviceModeSleepCount = 0;
-        rudderDeviceModeManager.dumpOriginalEvents(transformationRequest, false);
+        rudderDeviceModeManager.sendOriginalEvents(transformationRequest, false);
         completeDeviceModeEventProcessing();
     }
 
     private void handleSuccess(Result result) {
         deviceModeSleepCount = 0;
         try {
-            TransformationResponse transformationResponse = RudderGson.getInstance().fromJson(result.response, TransformationResponse.class);
+            TransformationResponse transformationResponse = RudderGson.deserialize(result.response, TransformationResponse.class);
+            if (transformationResponse == null) {
+                RudderLogger.logError("DeviceModeTransformationManager: handleSuccess: Error in deserializing transformation response");
+                return;
+            }
             incrementDmtSuccessMetric(transformationResponse);
-            rudderDeviceModeManager.dumpTransformedEvents(transformationResponse);
+            rudderDeviceModeManager.sendTransformedEvents(transformationResponse);
             completeDeviceModeEventProcessing();
         } catch (Exception e) {
             ReportManager.reportError(e);
@@ -196,16 +206,16 @@ public class RudderDeviceModeTransformationManager {
     }
 
     private void incrementDmtSuccessMetric(TransformationResponse transformationResponse) {
-        if(transformationResponse == null || transformationResponse.transformedBatch == null) {
+        if (transformationResponse == null || transformationResponse.transformedBatch == null) {
             return;
         }
         for (TransformationResponse.TransformedDestination transformedDestination : transformationResponse.transformedBatch) {
-             if(transformedDestination.payload == null) {
-                 continue;
-             }
-            for (TransformationResponse.TransformedEvent transformedEvent:
-            transformedDestination.payload) {
-                if(transformedEvent.event == null) {
+            if (transformedDestination.payload == null) {
+                continue;
+            }
+            for (TransformationResponse.TransformedEvent transformedEvent :
+                    transformedDestination.payload) {
+                if (transformedEvent.event == null) {
                     continue;
                 }
                 ReportManager.incrementDMTEventSuccessResponseCounter(1,

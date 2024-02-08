@@ -5,7 +5,6 @@ import com.rudderstack.android.sdk.core.ecomm.ECommerceEvents;
 import com.rudderstack.android.sdk.core.ecomm.ECommerceParamNames;
 import com.rudderstack.android.sdk.core.ecomm.ECommerceProduct;
 import com.rudderstack.android.sdk.core.ecomm.ECommercePropertyBuilder;
-import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 public class ProductAddedToCartEvent extends ECommercePropertyBuilder {
@@ -37,7 +36,7 @@ public class ProductAddedToCartEvent extends ECommercePropertyBuilder {
     public RudderProperty properties() {
         RudderProperty property = new RudderProperty();
         if (this.product != null) {
-            property.putValue(Utils.convertToMap(RudderGson.getInstance().toJson(this.product)));
+            property.putValue(Utils.convertToMap(this.product));
         }
         if (this.cartId != null) {
             property.put(ECommerceParamNames.CART_ID, this.cartId);

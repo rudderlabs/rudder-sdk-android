@@ -119,7 +119,7 @@ class RudderPreferenceManager {
         if (traits != null) {
             Map<String, Object> traitsMap = Utils.convertToMap(traits);
             traitsMap.remove("anonymousId");
-            saveTraits(RudderGson.getInstance().toJson(traitsMap));
+            saveTraits(RudderGson.serialize(traitsMap));
         }
     }
 

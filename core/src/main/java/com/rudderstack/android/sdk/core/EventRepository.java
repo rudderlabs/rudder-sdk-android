@@ -326,31 +326,35 @@ class EventRepository {
 
 
     /*
-     * generic method for dumping all the events
+     * generic method for processing all the events
      * */
     void processMessage(@NonNull RudderMessage message) {
         if (!isSDKEnabled) {
             incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_SDK_DISABLED));
             return;
         }
-        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: dump: eventName: %s", message.getEventName()));
+        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processMessage: eventName: %s", message.getEventName()));
 
         applyRudderOptionsToMessageIntegrations(message);
         RudderMessage updatedMessage = updateMessageWithConsentedDestinations(message);
         userSessionManager.applySessionTracking(updatedMessage);
 
         String eventJson = getEventJsonString(updatedMessage);
-        RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: dump: message: %s", eventJson));
-        if (isMessageJsonExceedingMaxSize(eventJson)) {
-            incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_SIZE_INVALID));
-            RudderLogger.logError(String.format(Locale.US, "EventRepository: dump: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
+        if (eventJson == null) {
+            RudderLogger.logError("EventRepository: processMessage: eventJson is null after serialization");
             return;
         }
+        if (isMessageJsonExceedingMaxSize(eventJson)) {
+            incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_SIZE_INVALID));
+            RudderLogger.logError(String.format(Locale.US, "EventRepository: processMessage: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
+            return;
+        }
+        RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: processMessage: message: %s", eventJson));
         dbManager.saveEvent(eventJson, new EventInsertionCallback(message, deviceModeManager));
     }
 
-    String getEventJsonString(RudderMessage updatedMessage) {
-        return RudderGson.getInstance().toJson(updatedMessage);
+    String getEventJsonString(RudderMessage message) {
+        return RudderGson.serialize(message);
     }
 
     private boolean isMessageJsonExceedingMaxSize(String eventJson) {

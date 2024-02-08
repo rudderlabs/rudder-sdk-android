@@ -15,6 +15,6 @@ class EventInsertionCallback implements Callback {
 
     @Override
     public void onInsertion(Integer rowId) {
-        deviceModeManager.makeFactoryDump(message, rowId, false);
+        deviceModeManager.processMessage(message, rowId, false);
     }
 }

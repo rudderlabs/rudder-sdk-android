@@ -8,11 +8,28 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static java.lang.Double.POSITIVE_INFINITY;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.text.TextUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.TypeAdapter;
+import com.google.gson.TypeAdapterFactory;
+import com.google.gson.internal.bind.TypeAdapters;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import org.hamcrest.Matchers;
@@ -33,9 +50,13 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -80,7 +101,6 @@ public class EventRepositoryTest {
 
         final RudderNetworkManager.Result mockResult = new RudderNetworkManager.Result(RudderNetworkManager.NetworkResponses.SUCCESS,
                 200, "", null);
-//        Mockito.doNothing().when(dbPersistentManager.fetchAllEventsFromDB(anyList(), anyList()));
         Mockito.doAnswer((Answer<Void>) invocation -> {
             ((ArrayList) invocation.getArgument(0)).addAll(messageIds);
             ((ArrayList) invocation.getArgument(1)).addAll(messages);
@@ -146,18 +166,10 @@ public class EventRepositoryTest {
                 anyBoolean()
         );
 
-//        networkManager.sendNetworkRequest(
-//                arg1.capture(),
-//                arg2.capture(),
-//                arg3.capture()
-//        );
         assertThat(result, is(true));
-        System.out.println(arg1.getValue());
         assertThat(arg1.getValue().replace(" ", ""),
                 is(expectedPayload.replace("\n", "").replace(" ", "")));
-        System.out.println(arg2.getValue());
         assertThat(arg2.getValue().replace(" ", ""), is("api.rudderstack.com/v1/batch"));
-        System.out.println(arg3.getValue());
         assertThat(arg3.getValue(), is(RudderNetworkManager.RequestMethod.POST));
     }
 
@@ -286,7 +298,7 @@ public class EventRepositoryTest {
         jsonData.put("coDriverVersion", -1.0);
         RudderMessage message = new RudderMessageBuilder().setEventName("TestEvent").setProperty(jsonData).build();
         String expectedJsonString = "{\n" +
-                "  \"messageId\": \""+message.getMessageId()+"\",\n" +
+                "  \"messageId\": \"" + message.getMessageId() + "\",\n" +
                 "  \"channel\": \"mobile\",\n" +
                 "  \"context\": {},\n" +
                 "  \"originalTimestamp\": \"2022-03-14T06:46:41.365Z\",\n" +
@@ -357,8 +369,8 @@ public class EventRepositoryTest {
                 "  },\n" +
                 "  \"integrations\": {}\n" +
                 "}";
-          String outputJsonString = repo.getEventJsonString(message);
-        assertThat("JSONObjects and JSONArray are serialized perfectly", outputJsonString , is(expectedJsonString.replace("\n", "").replace(" ", "")));
+        String outputJsonString = repo.getEventJsonString(message);
+        assertThat("JSONObjects and JSONArray are serialized perfectly", outputJsonString, is(expectedJsonString.replace("\n", "").replace(" ", "")));
     }
 }
 

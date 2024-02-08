@@ -12,9 +12,11 @@ import android.os.BadParcelableException;
 import android.os.Build;
 import android.text.TextUtils;
 
+import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderLogger;
+import com.rudderstack.android.sdk.core.RudderMessage;
 import com.rudderstack.android.sdk.core.gson.RudderGson;
 
 import java.io.File;
@@ -23,6 +25,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -90,15 +94,56 @@ public class Utils {
         return null;
     }
 
-    public static Map<String, Object> convertToMap(String json) {
-        return RudderGson.getInstance().fromJson(json, new TypeToken<Map<String, Object>>() {
-        }.getType()
-        );
+    @Nullable
+    private static String serializeObject(Object obj) {
+        String json;
+        if (obj instanceof String) {
+            json = (String) obj;
+        } else {
+            json = RudderGson.serialize(obj);
+        }
+        return json;
     }
 
-    public static List<Map<String, Object>> convertToList(String json) {
-        return RudderGson.getInstance().fromJson(json, new TypeToken<List<Map<String, Object>>>() {
+    /**
+     * Convert an object to a map
+     * <p> Serialize the object to a json string and then convert it to a map </p>
+     * <p> If the object is a string, it is directly converted to a map </p>
+     * <p> If the object results in an invalid json string after serialization, an empty map is returned </p>
+     *
+     * @param obj the object to convert
+     * @return the map representation of the object
+     */
+    public static Map<String, Object> convertToMap(Object obj) {
+        String json = serializeObject(obj);
+        if (json == null) {
+            return new HashMap<>();
+        }
+        Map<String, Object> map = RudderGson.deserialize(json, new TypeToken<Map<String, Object>>() {
+                }.getType()
+        );
+
+        return map == null ? new HashMap<>() : map;
+    }
+
+    /**
+     * Convert an object to a list
+     * <p> Serialize the object to a json string and then convert it to a list </p>
+     * <p> If the object is a string, it is directly converted to a list </p>
+     * <p> If the object results in an invalid json string after serialization, an empty list is returned </p>
+     *
+     * @param obj the object to convert
+     * @return the list representation of the object
+     */
+    public static List<Map<String, Object>> convertToList(Object obj) {
+        String json = serializeObject(obj);
+
+        if (json == null) {
+            return new ArrayList<>();
+        }
+        List<Map<String, Object>> list = RudderGson.deserialize(json, new TypeToken<List<Map<String, Object>>>() {
         }.getType());
+        return list == null ? new ArrayList<>() : list;
     }
 
     public static String getWriteKeyFromStrings(Context context) {
