@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 23/03/22, 11:54 PM Last modified: 23/03/22, 11:54 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 08/02/24, 12:04 pm Last modified: 08/02/24, 12:04 pm
+ * Copyright: All rights reserved Ⓒ 2024 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,11 +12,16 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.internal.states
+package com.rudderstack.core.flushpolicy
 
-import com.rudderstack.core.State
-import com.rudderstack.models.MessageContext
+import org.junit.Test
 
-internal class ContextState : State<MessageContext>(
-    mapOf()
-)
+class FlushPolicyTest {
+/*    @Test
+    fun testRescheduleCalledOnFlush() {
+        analytics.addFlushPolicies(flushPolicy)
+        analytics.blockingFlush()
+        flushPolicy.reschedule()
+        //test do not crash
+    }*/
+}

@@ -46,7 +46,6 @@ interface ConfigurationAndroid : Configuration {
      * @property useContentProvider
      * @property advertisingId
      * @property deviceToken
-     * @property storage
      * @property advertisingIdFetchExecutor
      * @constructor
      * TODO
@@ -76,7 +75,6 @@ interface ConfigurationAndroid : Configuration {
     val defaultProcessName: String?
     val advertisingId: String?
     val deviceToken: String?
-    override val storage: AndroidStorage
     val advertisingIdFetchExecutor : ExecutorService?
 
     companion object {
@@ -105,8 +103,6 @@ interface ConfigurationAndroid : Configuration {
             advertisingId: String? = null,
             deviceToken: String? = null,
             logger: Logger = AndroidLogger,
-            storage: AndroidStorage = AndroidStorageImpl(application, useContentProvider =
-            Defaults.USE_CONTENT_PROVIDER),
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             advertisingIdFetchExecutor : ExecutorService? = null,
@@ -127,7 +123,6 @@ interface ConfigurationAndroid : Configuration {
             override val defaultProcessName: String? = defaultProcessName
             override val advertisingId: String? = advertisingId
             override val deviceToken: String? = deviceToken
-            override val storage: AndroidStorage = storage
             override val advertisingIdFetchExecutor : ExecutorService? = advertisingIdFetchExecutor
             override val jsonAdapter: JsonAdapter = jsonAdapter
             override val options: RudderOptions = options
@@ -168,7 +163,6 @@ interface ConfigurationAndroid : Configuration {
 
                             deviceToken: String? = null,
 
-                            storage: AndroidStorage = AndroidStorageImpl(application, Defaults.USE_CONTENT_PROVIDER),
 
                             advertisingIdFetchExecutor : ExecutorService? = null,
         ): ConfigurationAndroid=
@@ -195,7 +189,6 @@ interface ConfigurationAndroid : Configuration {
                 advertisingId,
                 deviceToken,
                 configuration.logger,
-                storage,
                 configuration.analyticsExecutor,
                 configuration.networkExecutor,
                 advertisingIdFetchExecutor,
@@ -214,7 +207,6 @@ interface ConfigurationAndroid : Configuration {
         dataPlaneUrl: String,
         controlPlaneUrl: String?,
         logger: Logger,
-        storage: Storage,
         analyticsExecutor: ExecutorService,
         networkExecutor: ExecutorService,
         base64Generator: Base64Generator,
@@ -231,7 +223,6 @@ interface ConfigurationAndroid : Configuration {
             dataPlaneUrl,
             controlPlaneUrl,
             logger,
-            (storage as? AndroidStorage)?: this.storage,
             analyticsExecutor,
             networkExecutor,
             advertisingIdFetchExecutor,
@@ -255,7 +246,6 @@ interface ConfigurationAndroid : Configuration {
         dataPlaneUrl: String = this.dataPlaneUrl,
         controlPlaneUrl: String? = this.controlPlaneUrl,
         logger: Logger = this.logger,
-        storage: AndroidStorage = this.storage,
         analyticsExecutor: ExecutorService = this.analyticsExecutor,
         networkExecutor: ExecutorService = this.networkExecutor,
         advertisingIdFetchExecutor : ExecutorService? = this.advertisingIdFetchExecutor,
@@ -288,7 +278,6 @@ interface ConfigurationAndroid : Configuration {
             advertisingId,
             deviceToken,
             logger,
-            storage,
             analyticsExecutor,
             networkExecutor,
             advertisingIdFetchExecutor,

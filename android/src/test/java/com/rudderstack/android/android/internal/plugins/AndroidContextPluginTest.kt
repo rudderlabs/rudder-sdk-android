@@ -64,7 +64,7 @@ class AndroidContextPluginTest {
         val app = getApplicationContext<AndroidContextPluginTestApplication>()
         androidContextPlugin = AndroidContextPlugin()
         analytics = generateTestAnalytics(ConfigurationAndroid(app,
-            jsonAdapter))
+            jsonAdapter, shouldVerifySdk = false))
         androidContextPlugin.setup(analytics)
     }
     @After

@@ -29,12 +29,8 @@ import com.rudderstack.models.ScreenMessage
 import com.rudderstack.models.ScreenProperties
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.models.TrackProperties
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 
-internal const val DEFAULTS_ANALYTICS_INSTANCE_NAME = "default"
+const val DEFAULTS_ANALYTICS_INSTANCE_NAME = "default"
 class Analytics private constructor(
     private val _delegate: AnalyticsDelegate,
 ) : Controller by _delegate {
@@ -311,21 +307,4 @@ class Analytics private constructor(
         group(groupScope.message, groupScope.options)
     }
 
-    /**
-     * Flush the remaining data from storage.
-     * However flush returns immediately if  analytics is shutdown
-     */
-    fun flush() {
-        _delegate.flush()
-    }
-
-    /**
-     * This blocks the thread till events are flushed.
-     * Users should prefer [flush]
-     *
-     */
-    fun blockingFlush(
-    ): Boolean {
-        return _delegate.blockFlush()
-    }
 }

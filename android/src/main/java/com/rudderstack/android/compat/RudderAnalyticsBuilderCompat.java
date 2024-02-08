@@ -15,14 +15,36 @@
 package com.rudderstack.android.compat;
 
 import com.rudderstack.android.ConfigurationAndroid;
+import com.rudderstack.android.storage.AndroidStorage;
+import com.rudderstack.android.storage.AndroidStorageImpl;
+import com.rudderstack.core.Logger;
+import com.rudderstack.core.Storage;
 import com.rudderstack.core.compat.AnalyticsBuilderCompat;
+
+import java.util.concurrent.Executors;
 
 /**
  * To be used by java projects
  */
 public final class RudderAnalyticsBuilderCompat extends AnalyticsBuilderCompat {
-
+    private Logger logger;
     public RudderAnalyticsBuilderCompat(String writeKey, ConfigurationAndroid configuration) {
         super(writeKey, configuration);
+        configuration.getLogger();
+        logger = configuration.getLogger();
+        withStorage( new AndroidStorageImpl(configuration.getApplication(),
+                ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER, Executors.newSingleThreadExecutor()));
     }
+
+    @Override
+    public AnalyticsBuilderCompat withStorage(Storage storage) {
+        if (storage instanceof AndroidStorage) {
+            return super.withStorage(storage);
+        }else {
+            logger.error(Logger.DEFAULT_TAG, "Storage should be of type AndroidStorage. Using " +
+                    "default storage", null);
+        }
+        return this;
+    }
+
 }

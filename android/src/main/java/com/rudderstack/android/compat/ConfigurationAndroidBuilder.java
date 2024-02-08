@@ -18,13 +18,10 @@ import android.app.Application;
 
 import com.rudderstack.android.AndroidUtils;
 import com.rudderstack.android.ConfigurationAndroid;
-import com.rudderstack.android.storage.AndroidStorage;
-import com.rudderstack.android.storage.AndroidStorageImpl;
 import com.rudderstack.core.compat.ConfigurationBuilder;
 import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 //Java compatible Builder for [ConfigurationAndroid]
 public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
@@ -39,14 +36,11 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     private String defaultProcessName= ConfigurationAndroid.Defaults.INSTANCE.getDEFAULT_PROCESS_NAME();
     private String advertisingId = null;
     private String deviceToken = null;
-    private AndroidStorage storage;
     private ExecutorService advertisingIdFetchExecutor = null;
     public ConfigurationAndroidBuilder(Application application, JsonAdapter jsonAdapter) {
         super(jsonAdapter);
         this.application = application;
         anonymousId = AndroidUtils.INSTANCE.getDeviceId(application);
-        storage   = new AndroidStorageImpl(application,
-                ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER, Executors.newSingleThreadExecutor());
     }
     public ConfigurationBuilder withAnonymousId(String anonymousId) {
         this.anonymousId = anonymousId;
@@ -88,10 +82,6 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
         this.deviceToken = deviceToken;
         return this;
     }
-    public ConfigurationBuilder withStorage(AndroidStorage storage) {
-        this.storage = storage;
-        return this;
-    }
     public ConfigurationBuilder withAdvertisingIdFetchExecutor(ExecutorService advertisingIdFetchExecutor) {
         this.advertisingIdFetchExecutor = advertisingIdFetchExecutor;
         return this;
@@ -110,7 +100,6 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
                 defaultProcessName,
                 advertisingId,
                 deviceToken,
-                storage,
                 advertisingIdFetchExecutor
         );
     }

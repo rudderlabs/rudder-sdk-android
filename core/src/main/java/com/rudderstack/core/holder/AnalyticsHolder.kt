@@ -37,3 +37,7 @@ fun <T> Controller.retrieve(identifier: String) : T?{
     val analyticsStorageMap = store[this.instanceName] ?: return null
     return analyticsStorageMap[identifier] as? T
 }
+
+fun Controller.clearAll(){
+    store.remove(this.instanceName)
+}

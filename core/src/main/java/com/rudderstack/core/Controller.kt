@@ -121,7 +121,17 @@ interface Controller {
      *
      */
     fun removeAllCallbacks()
-
+    /**
+     * Flush the remaining data from storage.
+     * However flush returns immediately if  analytics is shutdown
+     */
+    fun flush()
+    /**
+     * This blocks the thread till events are flushed.
+     * Users should prefer [flush]
+     *
+     */
+    fun blockingFlush() : Boolean
     //fun reset()
     /**
      * Shuts down the Analytics. Once shutdown, a new instance needs to be created.

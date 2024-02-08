@@ -23,7 +23,6 @@ import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.RudderUtils
-import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.*
 import com.vagabond.testcommon.Verification

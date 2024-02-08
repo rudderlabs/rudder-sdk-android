@@ -355,7 +355,7 @@ internal class AnalyticsDelegate(
         _callbacks = setOf()
     }
 
-    internal fun flush() {
+    override fun flush() {
         logger.info(log = "Flush called ${Exception()
             .stackTraceToString()}")
         if (isShutdown) return
@@ -369,13 +369,13 @@ internal class AnalyticsDelegate(
         flushExecutor: ExecutorService, callback: ((Boolean) -> Unit)? = null
     ) {
         flushExecutor.submit {
-            blockFlush().let {
+            blockingFlush().let {
                 callback?.invoke(it)
             }
         }
     }
     private val _isFlushing = AtomicBoolean(false)
-    internal fun blockFlush(
+    override fun blockingFlush(
     ): Boolean {
         if (_isShutDown.get()) return false
         if(!_isFlushing.compareAndSet(false, true)) return false

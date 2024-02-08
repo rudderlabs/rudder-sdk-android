@@ -15,8 +15,6 @@
 
 package com.rudderstack.android
 
-import android.app.Application
-import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
 import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
@@ -25,9 +23,14 @@ import com.rudderstack.android.internal.plugins.AndroidContextPlugin
 import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.states.ContextState
+import com.rudderstack.android.storage.AndroidStorage
+import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
+import com.rudderstack.core.DEFAULTS_ANALYTICS_INSTANCE_NAME
 import com.rudderstack.core.DataUploadService
+import com.rudderstack.core.holder.associateState
+import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.models.MessageContext
 
 //device info and stuff
@@ -38,16 +41,22 @@ import com.rudderstack.models.MessageContext
 fun RudderAnalytics(
     writeKey: String,
     configuration: ConfigurationAndroid,
+    instanceName: String = DEFAULTS_ANALYTICS_INSTANCE_NAME,
     dataUploadService: DataUploadService? = null,
     configDownloadService: ConfigDownloadService? = null,
+    storage: AndroidStorage = AndroidStorageImpl(
+        configuration.application,
+        useContentProvider = ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER
+    ),
     initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
 ): Analytics {
-    initialize(configuration.application)
     return Analytics(
         writeKey,
         configuration,
+        instanceName,
         dataUploadService,
         configDownloadService,
+        storage,
         initializationListener = initializationListener,
         shutdownHook = ::shutdown
     ).apply {
@@ -56,6 +65,10 @@ fun RudderAnalytics(
 
 }
 
+internal val Analytics.contextState: ContextState?
+    get() = retrieveState<ContextState>()
+val Analytics.androidStorage: AndroidStorage
+    get() = (storage as AndroidStorage)
 
 /**
  * Set the AdvertisingId yourself. If set, SDK will not capture idfa automatically
@@ -94,7 +107,7 @@ fun Analytics.putDeviceToken(deviceToken: String) {
  * @param anonymousId String to be used as anonymousId
  */
 fun Analytics.setAnonymousId(anonymousId: String) {
-    currentConfigurationAndroid?.storage?.setAnonymousId(anonymousId)
+    androidStorage.setAnonymousId(anonymousId)
     applyConfiguration {
         if (this is ConfigurationAndroid) copy(
             anonymousId = anonymousId
@@ -110,17 +123,13 @@ fun Analytics.setAnonymousId(anonymousId: String) {
  * @param userId String to be used as userId
  */
 fun Analytics.setUserId(userId: String) {
-    currentConfigurationAndroid?.storage?.setUserId(userId)
+    androidStorage.setUserId(userId)
     applyConfiguration {
         if (this is ConfigurationAndroid) copy(
             userId = userId
         )
         else this
     }
-}
-
-private fun initialize(application: Application) {
-    RudderPreferenceManager.initialize(application)
 }
 
 private val infrastructurePlugins
@@ -138,18 +147,17 @@ private val messagePlugins
 private fun Analytics.startup() {
     addInfrastructurePlugin(*infrastructurePlugins)
     addPlugin(*messagePlugins.toTypedArray())
-    currentConfigurationAndroid?.storage?.let {
-        ContextState.update(it.context)
+    associateState(ContextState())
+    androidStorage.let {
+        contextState?.update(it.context)
     }
 }
 
 internal fun Analytics.processNewContext(
     newContext: MessageContext
 ) {
-    currentConfigurationAndroid?.apply {
-        storage.cacheContext(newContext)
-    }
-    ContextState.update(newContext)
+    androidStorage.cacheContext(newContext)
+    contextState?.update(newContext)
 }
 
 
