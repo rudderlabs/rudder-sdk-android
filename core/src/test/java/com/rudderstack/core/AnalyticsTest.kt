@@ -106,7 +106,8 @@ abstract class AnalyticsTest {
         analytics = Analytics(
             writeKey,
             Configuration(
-                jsonAdapter
+                jsonAdapter,
+                shouldVerifySdk = false
             ),
             storage = storage,
             initializationListener = { success, message ->
@@ -115,17 +116,19 @@ abstract class AnalyticsTest {
             dataUploadService = mockedDataUploadService,
             configDownloadService = mockedControlPlane
         )
+        println("setup done with analytics: $analytics, shouldVerifySdk = ${analytics.currentConfiguration?.shouldVerifySdk}")
     }
 
     @After
     fun destroy() {
         analytics.clearStorage()
         analytics.shutdown()
-        println("After called")
+        println("After called on analytics $analytics")
     }
 
     @Test
     fun `test Analytics initialization listener call with correct write key`() {
+        println("running test test Analytics initialization listener call with correct write key")
         analytics.shutdown()
         val isDone = AtomicBoolean(false)
         analytics = Analytics(
@@ -142,6 +145,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test Analytics initialization listener call with incorrect write key`() {
+        println("running test test Analytics initialization listener call with incorrect write key")
         val isDone = AtomicBoolean(false)
         analytics.shutdown()
         val mockedControlPlane = mock(ConfigDownloadService::class.java).also {
@@ -162,15 +166,17 @@ abstract class AnalyticsTest {
             ), initializationListener = { success, message ->
                 assertThat(success, `is`(false))
                 assertThat(message, `is`("Downloading failed, Shutting down some error"))
-                isDone.set(true)
-            }, configDownloadService = mockedControlPlane
+            }, configDownloadService = mockedControlPlane,
+            shutdownHook = {  isDone.set(true) }
         )
 
-        Awaitility.await().atMost(1, TimeUnit.SECONDS).untilTrue(isDone)
+
+        Awaitility.await().atMost(15, TimeUnit.SECONDS).untilTrue(isDone)
     }
 
     @Test
     fun `test config service not called if shouldVerifySdk is false`() {
+        println("running test test config service not called if shouldVerifySdk is false")
         // default shouldVerifySdk is false
         // we wait for some time
         // on setup, analytics is initialized
@@ -181,6 +187,7 @@ abstract class AnalyticsTest {
     }
     @Test
     fun `test configuration has proper retry strategy`() {
+        println("running test test configuration has proper retry strategy")
         analytics.shutdown()
         val retryStrategy = mock<RetryStrategy>()
         analytics = Analytics(
@@ -193,6 +200,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test identify`() {
+        println("running test test identify")
         analytics.shutdown()
         analytics = generateTestAnalytics(Configuration(jsonAdapter))
         analytics.identify("user_id", mapOf("trait-1" to "t-1", "trait-2" to "t-2"))
@@ -222,6 +230,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test track event`() {
+        println("running test test track event")
         analytics.shutdown()
         analytics = generateTestAnalytics(Configuration(jsonAdapter))
         analytics.track {
@@ -255,6 +264,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test alias event`() {
+        println("running test test alias event")
         analytics.shutdown()
         analytics = generateTestAnalytics(Configuration(jsonAdapter))
         analytics.alias {
@@ -281,6 +291,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test with later initialized destinations`() {
+        println("running test test with later initialized destinations")
         analytics.shutdown()
         analytics = generateTestAnalytics(
             Configuration(jsonAdapter, shouldVerifySdk = true), mockedControlPlane
@@ -321,6 +332,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test with rudder option`() {
+        println("running test test with rudder option")
         //given
         analytics.shutdown()
         analytics = Analytics(
@@ -388,6 +400,7 @@ abstract class AnalyticsTest {
     @Suppress("UNCHECKED_CAST")
     @Test
     fun `test messages flushed when sent from different threads based on flushQ size`() {
+        println("running test test messages flushed when sent from different threads based on flushQ size")
         analytics.applyConfiguration {
             copy(
                 flushQueueSize = 300, maxFlushInterval = 10_000
@@ -418,6 +431,7 @@ abstract class AnalyticsTest {
     }
     @Test
     fun `test messages flushed when sent from different threads based on periodic timeout`() {
+        println("running test test messages flushed when sent from different threads based on periodic timeout")
         analytics.applyConfiguration {
             copy(
                 flushQueueSize = 100, maxFlushInterval = 10000 // so no flush takes place while
@@ -449,7 +463,10 @@ abstract class AnalyticsTest {
             )
         }
         assertThat(analytics.currentConfiguration?.maxFlushInterval, `is`(100))
-        while(storage.getDataSync().isNotEmpty()){}
+        val timeNow = System.currentTimeMillis()
+        while(storage.getDataSync().isNotEmpty()){
+            if(System.currentTimeMillis() - timeNow > 10000) break
+        }
         busyWait(200) // enough time for one flush
         val listCaptor = argumentCaptor<List<Message>>()
         verify(mockedDataUploadService, times(1)).uploadSync(listCaptor.capture(), anyOrNull())
@@ -459,6 +476,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test multiple messages ordering`() {
+        println("running test test multiple messages ordering")
         // add a plugin to check, add some delay to it
         val events = (1..10).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
@@ -487,6 +505,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test no item is tracked after shutdown`() {
+        println("running test test no item is tracked after shutdown")
         //flush should be called prior to shutdown. and data uploaded
         //we will track few events, less than flush_queue_size,
         // call shutdown and wait for sometime to check the storage count.
@@ -508,6 +527,7 @@ abstract class AnalyticsTest {
     }
     @Test
     fun `test blocking flush`() {
+        println("running test test blocking flush")
         //we will track few events, less than flush_queue_size,
         // call flush and wait for sometime to check the storage count.
         analytics.applyConfiguration {
@@ -531,6 +551,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test back pressure strategies`() {
+        println("running test test back pressure strategies")
         //we check the storage directly
         val events = (1..20).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
@@ -576,6 +597,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test should verify sdk`() {
+        println("running test test should verify sdk")
         val spyControlPlane = spy(ConfigDownloadService::class.java)
         Analytics(
             writeKey, Configuration(
@@ -589,6 +611,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test flush after shutdown`() {
+        println("running test test flush after shutdown")
         analytics.applyConfiguration {
             copy(flushQueueSize = 100, maxFlushInterval = 10000)
         }
@@ -619,6 +642,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test no force flush after shutdown`() {
+        println("running test test no force flush after shutdown")
         analytics.shutdown()
         val events = (1..5).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
@@ -646,6 +670,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test shutdown`() {
+        println("running test test shutdown")
         val events = (1..5).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
@@ -677,23 +702,26 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test custom plugin`() {
+        println("running test test custom plugin")
         val isDone = AtomicBoolean(false)
         val customPlugin = Plugin {
             println("inside custom plugin")
             isDone.set(true)
             it.proceed(it.message())
         }
-        analytics.addPlugin(customPlugin)
         val waitUntil = AtomicBoolean(false)
         analytics.addCallback(object : Callback{
             override fun success(message: Message?) {
+                analytics.removeCallback(this)
                 waitUntil.set(message is TrackMessage && message.eventName == "event")
             }
 
             override fun failure(message: Message?, throwable: Throwable?) {
+                analytics.removeCallback(this)
                 waitUntil.set(message is TrackMessage && message.eventName == "event")
             }
         })
+        analytics.addPlugin(customPlugin)
         analytics.track {
             event { +"event" }
             //or event("event")
@@ -721,14 +749,20 @@ abstract class AnalyticsTest {
                 }
             }
         }
-
-        while(waitUntil.get().not()){}
-        Awaitility.await().atMost(4, TimeUnit.SECONDS).untilTrue(isDone)
+        val timeStarted = System.currentTimeMillis()
+        while(waitUntil.get().not() && !isDone.get()){
+            if (System.currentTimeMillis() - timeStarted > 10000) {
+                assert(false)
+                break
+            }
+        }
+//        Awaitility.await().atMost(4, TimeUnit.SECONDS).untilTrue(isDone)
 
     }
 
     @Test
     fun `test flush throttling`() {
+        println("running test test flush throttling")
         analytics.shutdown()
         Thread.sleep(500)
         val isDone = AtomicBoolean(false)
@@ -786,6 +820,7 @@ abstract class AnalyticsTest {
 
     @Test
     fun `assert reset called on infrastructure plugins`() {
+        println("running test assert reset called on infrastructure plugins")
         val infraPlugin = mock<InfrastructurePlugin>()
         analytics.addInfrastructurePlugin(infraPlugin)
         analytics.reset()

@@ -29,6 +29,7 @@ import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
 import com.rudderstack.core.Storage
 import com.rudderstack.core.flushpolicy.CountBasedFlushPolicy
+import com.rudderstack.core.flushpolicy.FlushPolicy
 import com.rudderstack.core.flushpolicy.IntervalBasedFlushPolicy
 import com.rudderstack.core.flushpolicy.addFlushPolicies
 import com.rudderstack.core.flushpolicy.applyFlushPoliciesClosure
@@ -160,11 +161,6 @@ internal class AnalyticsDelegate(
         associateState(DestinationConfigState())
         initializePlugins()
         initializeFlush()
-        if (configuration.shouldVerifySdk) {
-            updateSourceConfig()
-        } else {
-            initializationListener?.invoke(true, null)
-        }
     }
 
     private fun initializeFlush() {
@@ -356,8 +352,6 @@ internal class AnalyticsDelegate(
     }
 
     override fun flush() {
-        logger.info(log = "Flush called ${Exception()
-            .stackTraceToString()}")
         if (isShutdown) return
         currentConfiguration?.let {
             forceFlush(_flushExecutor)
@@ -425,10 +419,12 @@ internal class AnalyticsDelegate(
         shutdownPlugins()
 
         storage.shutdown()
-        currentConfiguration?.analyticsExecutor?.shutdown()
+        currentConfiguration?.analyticsExecutor?.shutdownNow()
+
+        _flushExecutor.shutdownNow()
         removeState<ConfigurationsState>()
         removeState<DestinationConfigState>()
-        _flushExecutor.shutdown()
+        println("shutting down analytics $_analytics")
         shutdownHook?.invoke()
     }
 
@@ -505,6 +501,7 @@ internal class AnalyticsDelegate(
                 false, "Config download service not set or " + "configuration not available"
             )
             logger.error(log = "Config Download Service Not Set or Configuration not available")
+            println("shutdown called from $this")
             shutdown()
             return
         }
@@ -531,6 +528,7 @@ internal class AnalyticsDelegate(
                         initializationListener?.invoke(
                             false, "Downloading failed, Shutting down $lastErrorMsg"
                         )
+                        println("shutdown called from $this")
                         //log lastErrorMsg or isSourceEnabled
                         shutdown()
                     }
@@ -582,6 +580,12 @@ internal class AnalyticsDelegate(
         messagePluginStartupClosure(analytics)
         infraPluginStartupClosure(analytics)
         _analytics = analytics
+        println("init analytics $_analytics ${currentConfiguration?.shouldVerifySdk}")
+        if (currentConfiguration?.shouldVerifySdk == true) {
+            updateSourceConfig()
+        } else {
+            initializationListener?.invoke(true, null)
+        }
     }
 
     private fun infraPluginStartupClosure(analytics: Analytics) {

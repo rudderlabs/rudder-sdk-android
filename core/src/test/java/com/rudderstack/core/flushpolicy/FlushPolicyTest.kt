@@ -14,14 +14,32 @@
 
 package com.rudderstack.core.flushpolicy
 
+import com.rudderstack.core.Analytics
+import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.vagabond.testcommon.generateTestAnalytics
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 
 class FlushPolicyTest {
-/*    @Test
+    private lateinit var analytics : Analytics
+    private lateinit var flushPolicy : FlushPolicy
+    @Before
+    fun setup() {
+        analytics = generateTestAnalytics(mock<JsonAdapter>())
+        flushPolicy = mock()
+    }
+    @After
+    fun destroy() {
+        analytics.shutdown()
+    }
+    @Test
     fun testRescheduleCalledOnFlush() {
         analytics.addFlushPolicies(flushPolicy)
         analytics.blockingFlush()
-        flushPolicy.reschedule()
+        verify(flushPolicy).reschedule()
         //test do not crash
-    }*/
+    }
 }

@@ -18,6 +18,9 @@ import com.rudderstack.core.Controller
 
 fun Controller.addFlushPolicies(vararg flushPolicies: FlushPolicy) {
     addInfrastructurePlugin(*flushPolicies)
+    flushPolicies.forEach {
+        it.setFlush { flush() }
+    }
 }
 fun Controller.setFlushPolicies(vararg flushPolicies: FlushPolicy) {
     synchronized(this) {
@@ -26,14 +29,17 @@ fun Controller.setFlushPolicies(vararg flushPolicies: FlushPolicy) {
     }
 }
 fun Controller.removeAllFlushPolicies() {
+    val toBeRemoved = mutableListOf<FlushPolicy>()
     applyInfrastructureClosure{
         if(this is FlushPolicy) {
-            onRemoved()
-            removeInfrastructurePlugin(this)
+            toBeRemoved += this
         }
     }
+    toBeRemoved.forEach { removeFlushPolicy(it)  }
 }
 fun Controller.removeFlushPolicy(flushPolicy: FlushPolicy) {
+    flushPolicy.setFlush { }
+    flushPolicy.onRemoved()
     removeInfrastructurePlugin(flushPolicy)
 }
 

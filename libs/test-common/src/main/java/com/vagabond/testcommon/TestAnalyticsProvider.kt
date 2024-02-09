@@ -19,6 +19,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
+import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.KotlinLogger
@@ -41,13 +42,16 @@ fun generateTestAnalytics(jsonAdapter: JsonAdapter): Analytics {
 }
 fun generateTestAnalytics(mockConfiguration: Configuration,
                           configDownloadService: ConfigDownloadService =
-                              MockConfigDownloadService(), storage: Storage = VerificationStorage()): Analytics {
+                              MockConfigDownloadService(),
+                          storage: Storage = VerificationStorage(),
+                          dataUploadService: DataUploadService = TestDataUploadService(),
+                          ): Analytics {
     val testingConfig = mockConfiguration.copy(
         logger = KotlinLogger,
         analyticsExecutor = TestExecutor()
     )
     return Analytics(
-        DUMMY_WRITE_KEY, testingConfig, dataUploadService = TestDataUploadService(),
+        DUMMY_WRITE_KEY, testingConfig, dataUploadService = dataUploadService,
         configDownloadService = configDownloadService, storage = storage
     ).also {
         it.addPlugin(inputVerifyPlugin)

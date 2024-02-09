@@ -16,6 +16,7 @@ package com.rudderstack.core.flushpolicy
 
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
+import java.lang.ref.WeakReference
 import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.atomic.AtomicBoolean
@@ -25,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference
 class IntervalBasedFlushPolicy : FlushPolicy {
     private var thresholdCountDownTimer: Timer? = null
     private var _analyticsRef = AtomicReference<Analytics>(null)
+    private var flushCall : AtomicReference<Analytics.() -> Unit> = AtomicReference({})
 
     private val _isShutDown = AtomicBoolean(false)
     private var _currentFlushIntervalAtomic = AtomicLong(0L)
@@ -42,6 +44,10 @@ class IntervalBasedFlushPolicy : FlushPolicy {
         thresholdCountDownTimer?.purge()
         periodicTaskScheduler = null
         thresholdCountDownTimer = null
+    }
+
+    override fun setFlush(flush: Analytics.() -> Unit) {
+        flushCall.set(flush)
     }
 
     override fun updateConfiguration(configuration: Configuration) {
@@ -85,7 +91,9 @@ class IntervalBasedFlushPolicy : FlushPolicy {
         override fun run() {
             synchronized(this@IntervalBasedFlushPolicy) {
                 if(!_isShutDown.get())
-                    _analyticsRef.get()?.flush()
+                    _analyticsRef.get()?.let {
+                        flushCall.get()(it)
+                    }
             }
         }
     }

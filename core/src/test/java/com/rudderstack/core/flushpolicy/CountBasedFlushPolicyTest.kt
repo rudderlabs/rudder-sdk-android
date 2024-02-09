@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 08/02/24, 11:20 am Last modified: 08/02/24, 11:20 am
+ * Creator: Debanjan Chatterjee on 09/02/24, 12:35 pm Last modified: 09/02/24, 12:35 pm
  * Copyright: All rights reserved Ⓒ 2024 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -17,11 +17,12 @@ package com.rudderstack.core.flushpolicy
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.DataUploadService
+import com.rudderstack.core.Storage
 import com.rudderstack.core.busyWait
 import com.rudderstack.models.Message
 import com.rudderstack.web.HttpResponse
 import com.vagabond.testcommon.generateTestAnalytics
-import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.junit.After
 import org.junit.Before
@@ -31,12 +32,11 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-class IntervalBasedFlushPolicyTest {
+class CountBasedFlushPolicyTest {
     private lateinit var analytics: Analytics
-    private lateinit var flushPolicy: IntervalBasedFlushPolicy
+    private lateinit var flushPolicy: CountBasedFlushPolicy
     private lateinit var mockUploadService: DataUploadService
 
     @Before
@@ -56,7 +56,7 @@ class IntervalBasedFlushPolicyTest {
             Configuration(mock(), shouldVerifySdk = false),
             dataUploadService = mockUploadService
         )
-        flushPolicy = IntervalBasedFlushPolicy()
+        flushPolicy = CountBasedFlushPolicy()
         analytics.removeAllFlushPolicies()
         analytics.addFlushPolicies(flushPolicy)
     }
@@ -77,28 +77,16 @@ class IntervalBasedFlushPolicyTest {
     fun testUpdateConfiguration() {
         val config = mock<Configuration>()
         val flushCalledCount = AtomicInteger(0)
-        whenever(config.maxFlushInterval).thenReturn(100)
+        whenever(config.maxFlushInterval).thenReturn(100000)
+        whenever(config.flushQueueSize).thenReturn(1)
+        analytics.track { event("event") }
         flushPolicy.setFlush {
             flushCalledCount.incrementAndGet()
         }
         flushPolicy.updateConfiguration(config)
-        busyWait(150L)
-        assertThat(flushCalledCount.get(), Matchers.equalTo(1))
-    }
-    @Test
-    fun testReschedule() {
-        val config = mock<Configuration>()
-        val flushCalledCount = AtomicInteger(0)
-        whenever(config.maxFlushInterval).thenReturn(300)
-        flushPolicy.setFlush {
-            flushCalledCount.incrementAndGet()
-        }
 
-        flushPolicy.updateConfiguration(config)// a long duration
-        busyWait(250) // just before the flush
-        flushPolicy.reschedule()
-
-        busyWait(150L)
-        assertThat(flushCalledCount.get(), Matchers.equalTo(0))
+        busyWait(250L)
+        MatcherAssert.assertThat(flushCalledCount.get(), Matchers.equalTo(1))
     }
+
 }

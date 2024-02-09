@@ -32,6 +32,8 @@ class CountBasedFlushPolicy : FlushPolicy {
         get() = synchronized(this) {
             field
         }
+    private var flushCall : AtomicReference<Analytics.() -> Unit> = AtomicReference({})
+
     private var _analyticsRef = AtomicReference<Analytics>(null)
     private val flushQSizeThreshold = AtomicInteger(-1)
     private val _isShutDown = AtomicBoolean(false)
@@ -51,8 +53,10 @@ class CountBasedFlushPolicy : FlushPolicy {
     private fun flushIfNeeded() {
         storage?.getCount {
             val threshold = flushQSizeThreshold.get()
-            if (threshold in 1..it) {
-                if (!_isShutDown.get()) _analyticsRef.get()?.flush()
+            if (!_isShutDown.get() && threshold in 1..it) {
+                _analyticsRef.get()?.let {
+                    flushCall.get()(it)
+                }
             }
         }
     }
@@ -60,7 +64,9 @@ class CountBasedFlushPolicy : FlushPolicy {
     override fun reschedule() {
         //-no-op
     }
-
+    override fun setFlush(flush: Analytics.() -> Unit) {
+        flushCall.set(flush)
+    }
     override fun onRemoved() {
         _analyticsRef.set(null)
         storage?.removeMessageDataListener(onDataChange)

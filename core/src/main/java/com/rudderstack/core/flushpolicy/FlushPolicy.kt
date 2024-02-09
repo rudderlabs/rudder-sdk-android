@@ -14,9 +14,12 @@
 
 package com.rudderstack.core.flushpolicy
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.InfrastructurePlugin
 
 interface FlushPolicy : InfrastructurePlugin {
     fun reschedule()
     fun onRemoved()
+
+    fun setFlush(flush: Analytics.() -> Unit)
 }

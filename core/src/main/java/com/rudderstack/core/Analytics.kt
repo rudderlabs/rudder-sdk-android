@@ -67,8 +67,11 @@ class Analytics private constructor(
                 writeKey
             ), initializationListener, shutdownHook
 
-        )
-    )
+        ).also {
+            print("delegate created $it")
+        }
+    ){
+        println(" for analytics $this")}
 
 
     companion object {

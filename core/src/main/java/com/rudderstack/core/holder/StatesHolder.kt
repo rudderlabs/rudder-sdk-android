@@ -29,15 +29,15 @@ import com.rudderstack.core.Controller
  * @param state
  */
 fun Controller.associateState(state: State<*>){
-    println("associateState: ${state.javaClass.name}")
+    println("associateState: ${state.javaClass.name} $this")
     store(state.javaClass.name, state)
 }
 inline fun <reified T : State<*>> Controller.removeState(){
-    println("removeState: ${T::class.java.name}")
+    println("removeState: ${T::class.java.name} ${this} ${Exception().stackTraceToString()} ")
     remove(T::class.java.name)
 }
 
 inline fun <reified T : State<*>> Controller.retrieveState() : T?{
-    println("retrieveState: ${T::class.java.name}")
+    println("retrieveState: ${T::class.java.name} $this")
     return retrieve(T::class.java.name)
 }
