@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.internal.infrastructure
 
+import com.rudderstack.android.contextState
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.processNewContext
 import com.rudderstack.core.Analytics
@@ -30,10 +31,11 @@ class ResetImplementationPlugin : InfrastructurePlugin {
     override fun setup(analytics: Analytics) {
         _analytics = analytics
     }
-
+    private val contextState
+    get() =_analytics?.contextState
     override fun reset() {
 
-        _analytics?.processNewContext(ContextState.value?.updateWith(traits = mapOf(),
+        _analytics?.processNewContext(contextState?.value?.updateWith(traits = mapOf(),
             externalIds = listOf()
         ) ?: createContext())
     }

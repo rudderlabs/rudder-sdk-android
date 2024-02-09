@@ -15,6 +15,7 @@
 package com.rudderstack.android.internal.plugins
 
 import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.contextState
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.processNewContext
@@ -89,7 +90,7 @@ internal class ExtractStatePlugin : Plugin {
     }
 
     private fun appendContext(messageContext: MessageContext) {
-        _analytics?.processNewContext(  messageContext optAdd ContextState.value)
+        _analytics?.processNewContext(  messageContext optAdd _analytics?.contextState?.value)
     }
 
     private fun replaceContext(messageContext: MessageContext) {

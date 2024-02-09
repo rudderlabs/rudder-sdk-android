@@ -50,6 +50,7 @@ class AndroidStorageImpl(
     private val Application.dbName get() = "db_${packageName}"
     private var jsonAdapter: JsonAdapter? = null
 
+
     private var preferenceManager : RudderPreferenceManager? = null
     companion object {
         private const val DB_VERSION = 1
@@ -146,9 +147,6 @@ class AndroidStorageImpl(
 
     private var _cachedContext: MessageContext? = null
 
-//    private val _configSubscriber =
-//        ::onConfigChange
-
     //message table listener
     private val _messageDataListener = object : Dao.DataChangeListener<MessageEntity> {
         override fun onDataInserted(inserted: List<MessageEntity>, allData: List<MessageEntity>) {
@@ -168,11 +166,11 @@ class AndroidStorageImpl(
     }
 
 
-    private fun initDb() {
+    private fun initDb(analytics: Analytics) {
         RudderDatabase.init(
             application,
             application.dbName,
-            RudderEntityFactory(),
+            RudderEntityFactory(analytics),
             useContentProvider,
             DB_VERSION,
             executorService = storageExecutor
@@ -384,7 +382,7 @@ class AndroidStorageImpl(
         get() = Build.VERSION.SDK_INT.toString()
 
     override fun setup(analytics: Analytics) {
-        initDb()
+        initDb(analytics)
         preferenceManager =
             RudderPreferenceManager(application, analytics.instanceName)
     }
