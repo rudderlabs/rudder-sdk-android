@@ -61,7 +61,8 @@ abstract class AndroidStorageTest {
     @Before
     fun setup(){
         MockitoAnnotations.openMocks(this)
-        val storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(), false
+        val storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(), false,
+            instanceName = "test_instance"
         )
         mockConfig = mock()
         whenever(mockConfig.storage).thenReturn(storage)

@@ -76,7 +76,9 @@ class FillDefaultsPluginTest {
             JacksonAdapter(),
             anonymousId = "anon_id",
             userId = "user_id",
-            storage = AndroidStorageImpl(getApplicationContext(), storageExecutor = TestExecutor()),
+            storage = AndroidStorageImpl(getApplicationContext(),
+                instanceName = "test_instance",
+                storageExecutor = TestExecutor()),
         )
         ContextState.update(
             createContext(

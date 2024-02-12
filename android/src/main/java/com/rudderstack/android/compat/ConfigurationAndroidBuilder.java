@@ -46,7 +46,9 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
         this.application = application;
         anonymousId = AndroidUtils.INSTANCE.getDeviceId(application);
         storage   = new AndroidStorageImpl(application,
-                ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER, Executors.newSingleThreadExecutor());
+                ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER,
+                "some_name", //TODO()
+                Executors.newSingleThreadExecutor());
     }
     public ConfigurationBuilder withAnonymousId(String anonymousId) {
         this.anonymousId = anonymousId;

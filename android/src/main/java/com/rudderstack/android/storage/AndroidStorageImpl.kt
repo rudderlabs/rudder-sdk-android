@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicLong
 class AndroidStorageImpl(
     private val application: Application,
     private val useContentProvider: Boolean = false,
+    private val instanceName: String,
     private val storageExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 ) : AndroidStorage {
     private val logger: Logger
@@ -119,6 +120,11 @@ class AndroidStorageImpl(
 
     }
 
+    private val serverConfigFileName
+        get() = "$SERVER_CONFIG_FILE_NAME-{instanceName}"
+    private val contextFileName
+        get() = "$CONTEXT_FILE_NAME-{instanceName}"
+
     private var messageDao: Dao<MessageEntity>? = null
 
     private var _storageCapacity: Int = Storage.MAX_STORAGE_CAPACITY //default 2_000
@@ -145,7 +151,7 @@ class AndroidStorageImpl(
 
     private var _cachedContext: MessageContext? = null
 
-    private var rudderDatabase : RudderDatabase? = null
+    private var rudderDatabase: RudderDatabase? = null
 
 //    private val _configSubscriber =
 //        ::onConfigChange
@@ -174,12 +180,8 @@ class AndroidStorageImpl(
 
     private fun initDb() {
         rudderDatabase = RudderDatabase(
-            application,
-            application.dbName,//TODO: change this to instance name
-            RudderEntityFactory(),
-            useContentProvider,
-            DB_VERSION,
-            executorService = storageExecutor
+            application, application.dbName,//TODO: change this to instance name
+            RudderEntityFactory(), useContentProvider, DB_VERSION, executorService = storageExecutor
         )
         messageDao = rudderDatabase?.getDao(MessageEntity::class.java, storageExecutor)
         messageDao?.addDataChangeListener(_messageDataListener)
@@ -288,7 +290,7 @@ class AndroidStorageImpl(
     override val context: MessageContext?
         get() = (if (_cachedContext == null) {
             _cachedContext =
-                getObject<HashMap<String, Any?>>(application, CONTEXT_FILE_NAME, logger)
+                getObject<HashMap<String, Any?>>(application, contextFileName, logger)
             _cachedContext
         } else _cachedContext)
 
@@ -299,7 +301,7 @@ class AndroidStorageImpl(
         synchronized(this) {
             _serverConfig = serverConfig
             saveObject(
-                serverConfig, context = application, SERVER_CONFIG_FILE_NAME, logger
+                serverConfig, context = application, serverConfigFileName, logger
             )
         }
     }
@@ -307,7 +309,7 @@ class AndroidStorageImpl(
     override val serverConfig: RudderServerConfig?
         get() = synchronized(this) {
             if (_serverConfig == null) _serverConfig =
-                getObject(application, SERVER_CONFIG_FILE_NAME, logger)
+                getObject(application, serverConfigFileName, logger)
             _serverConfig
         }
 
@@ -390,9 +392,7 @@ class AndroidStorageImpl(
 
     private fun MessageContext.save() {
         saveObject(
-            HashMap(this), application, CONTEXT_FILE_NAME, logger
+            HashMap(this), application, contextFileName, logger
         )
     }
-
-
 }

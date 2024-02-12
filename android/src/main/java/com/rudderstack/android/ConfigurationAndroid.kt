@@ -105,8 +105,10 @@ interface ConfigurationAndroid : Configuration {
             advertisingId: String? = null,
             deviceToken: String? = null,
             logger: Logger = AndroidLogger,
-            storage: AndroidStorage = AndroidStorageImpl(application, useContentProvider =
-            Defaults.USE_CONTENT_PROVIDER),
+            storage: AndroidStorage = AndroidStorageImpl(application,
+                useContentProvider = Defaults.USE_CONTENT_PROVIDER,
+                instanceName = "some_def"//TODO()
+                         ),
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             advertisingIdFetchExecutor : ExecutorService? = null,
@@ -168,7 +170,10 @@ interface ConfigurationAndroid : Configuration {
 
                             deviceToken: String? = null,
 
-                            storage: AndroidStorage = AndroidStorageImpl(application, Defaults.USE_CONTENT_PROVIDER),
+                            storage: AndroidStorage = AndroidStorageImpl(application,
+                                Defaults.USE_CONTENT_PROVIDER,
+                                instanceName = "todo" // TODO()
+                            ),
 
                             advertisingIdFetchExecutor : ExecutorService? = null,
         ): ConfigurationAndroid=
