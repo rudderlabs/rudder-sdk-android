@@ -71,7 +71,7 @@ class ErrorClientTest {
     fun testMaxErrors() {
         val config: Configuration = generateConfiguration()
         config.maxPersistedEvents = 2
-        val reservoir = DefaultReservoir(context!!, false)
+        val reservoir = DefaultReservoir(context!!, false, "test_db")
         reservoir.clearErrors()
         client = TestUtils.generateClient(config, reservoir, jsonAdapter)
         reservoir.assertErrorSize(0)

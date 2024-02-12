@@ -145,6 +145,8 @@ class AndroidStorageImpl(
 
     private var _cachedContext: MessageContext? = null
 
+    private var rudderDatabase : RudderDatabase? = null
+
 //    private val _configSubscriber =
 //        ::onConfigChange
 
@@ -171,15 +173,15 @@ class AndroidStorageImpl(
     }
 
     private fun initDb() {
-        RudderDatabase.init(
+        rudderDatabase = RudderDatabase(
             application,
-            application.dbName,
+            application.dbName,//TODO: change this to instance name
             RudderEntityFactory(),
             useContentProvider,
             DB_VERSION,
             executorService = storageExecutor
         )
-        messageDao = RudderDatabase.getDao(MessageEntity::class.java, storageExecutor)
+        messageDao = rudderDatabase?.getDao(MessageEntity::class.java, storageExecutor)
         messageDao?.addDataChangeListener(_messageDataListener)
 
     }
@@ -328,7 +330,7 @@ class AndroidStorageImpl(
     }
 
     override fun shutdown() {
-        RudderDatabase.shutDown()
+        rudderDatabase?.shutDown()
         _dataCount.set(0)
     }
 

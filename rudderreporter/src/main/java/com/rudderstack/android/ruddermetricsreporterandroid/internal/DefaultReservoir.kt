@@ -34,17 +34,19 @@ import kotlin.math.pow
 class DefaultReservoir @JvmOverloads constructor(
     androidContext: Context,
     useContentProvider: Boolean,
+    private val instanceName: String,
     private val dbExecutor: ExecutorService? = null,
 ) : Reservoir {
-    private val dbName = "metrics_db_${androidContext.packageName}.db"
+    private val dbName = "metrics_db_${instanceName}_${androidContext.packageName}.db"
     private val metricDao: Dao<MetricEntity>
     private val labelDao: Dao<LabelEntity>
     private val errorDao: Dao<ErrorEntity>
     private var _storageListeners = listOf<Reservoir.DataListener>()
-
+    private val rudderDatabase: RudderDatabase
     private val maxErrorCount = AtomicLong(MAX_ERROR_COUNT)
+
     init {
-        RudderDatabase.init(
+       rudderDatabase= RudderDatabase(
             androidContext,
             dbName,
             DefaultEntityFactory(),
@@ -52,9 +54,9 @@ class DefaultReservoir @JvmOverloads constructor(
             DB_VERSION,
             dbExecutor,
         )
-        metricDao = RudderDatabase.getDao(MetricEntity::class.java)
-        labelDao = RudderDatabase.getDao(LabelEntity::class.java)
-        errorDao = RudderDatabase.getDao(ErrorEntity::class.java)
+        metricDao = rudderDatabase.getDao(MetricEntity::class.java)
+        labelDao = rudderDatabase.getDao(LabelEntity::class.java)
+        errorDao = rudderDatabase.getDao(ErrorEntity::class.java)
     }
 
     override fun insertOrIncrement(
@@ -439,7 +441,7 @@ class DefaultReservoir @JvmOverloads constructor(
 
     @VisibleForTesting
     fun shutDownDatabase() {
-        RudderDatabase.shutDown()
+        rudderDatabase.shutDown()
     }
 
     companion object {
