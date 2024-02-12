@@ -18,12 +18,10 @@ import android.app.Application
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.rudderstack.android.BuildConfig
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.internal.plugins.AndroidContextPlugin
+import com.rudderstack.android.internal.plugins.PlatformInputsPlugin
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
@@ -38,6 +36,7 @@ import org.hamcrest.Matchers.aMapWithSize
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.hasEntry
 import org.hamcrest.Matchers.hasKey
+import org.hamcrest.Matchers.hasProperty
 import org.hamcrest.Matchers.`is`
 import org.junit.After
 import org.junit.Before
@@ -55,21 +54,21 @@ import java.util.TimeZone
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29], application = AndroidContextPluginTestApplication::class)
-class AndroidContextPluginTest {
-    private lateinit var androidContextPlugin: AndroidContextPlugin
+class PlatformInputsPluginTest {
+    private lateinit var platformInputsPlugin: PlatformInputsPlugin
     protected var jsonAdapter: JsonAdapter = JacksonAdapter()
     private lateinit var analytics: Analytics
     @Before
     fun setUp() {
         val app = getApplicationContext<AndroidContextPluginTestApplication>()
-        androidContextPlugin = AndroidContextPlugin()
+        platformInputsPlugin = PlatformInputsPlugin()
         analytics = generateTestAnalytics(ConfigurationAndroid(app,
             jsonAdapter))
-        androidContextPlugin.setup(analytics)
+        platformInputsPlugin.setup(analytics)
     }
     @After
     fun destroy() {
-        androidContextPlugin.reset()
+        platformInputsPlugin.reset()
         analytics.shutdown()
     }
     @Test
@@ -85,7 +84,7 @@ class AndroidContextPluginTest {
         whenever(mockChain.proceed(any())).thenAnswer {
             it.arguments[0] as TrackMessage
         }
-        val verifyMsg = androidContextPlugin.intercept(mockChain)
+        val verifyMsg = platformInputsPlugin.intercept(mockChain)
         assertThat(verifyMsg.context, allOf(Matchers.aMapWithSize(11),
             hasEntry("traits", mapOf("traitKey" to "traitValue")),//yo
             hasKey("screen"),
@@ -124,7 +123,7 @@ class AndroidContextPluginTest {
 
     @Test
     fun testSetAdvertisingId() {
-        androidContextPlugin.setAdvertisingId("testAdvertisingId")
+        platformInputsPlugin.setAdvertisingId("testAdvertisingId")
         val message = TrackMessage.create(
             "testEvent",
             timestamp = RudderUtils.timeStamp
@@ -134,16 +133,33 @@ class AndroidContextPluginTest {
         whenever(mockChain.proceed(any())).thenAnswer {
             it.arguments[0] as TrackMessage
         }
-        val verifyMsg = androidContextPlugin.intercept(mockChain)
+        val verifyMsg = platformInputsPlugin.intercept(mockChain)
         assertThat(
-            jsonAdapter.readJson(verifyMsg!!.context!!["device"] as String, object :
+            jsonAdapter.readJson(verifyMsg.context!!["device"] as String, object :
                 RudderTypeAdapter<Map<String, Any>>(){}), hasEntry("advertisingId", "testAdvertisingId")
+        )
+    }
+    @Test
+    fun testChannelIsSetToMessages() {
+        platformInputsPlugin.setAdvertisingId("testAdvertisingId")
+        val message = TrackMessage.create(
+            "testEvent",
+            timestamp = RudderUtils.timeStamp
+        )
+        val mockChain = mock<Plugin.Chain>()
+        whenever(mockChain.message()).thenReturn(message)
+        whenever(mockChain.proceed(any())).thenAnswer {
+            it.arguments[0] as TrackMessage
+        }
+        val verifyMsg = platformInputsPlugin.intercept(mockChain)
+        assertThat(
+            verifyMsg, hasProperty("channel", `is`("mobile"))
         )
     }
 
     @Test
     fun testPutDeviceToken() {
-        androidContextPlugin.putDeviceToken("testDeviceToken")
+        platformInputsPlugin.putDeviceToken("testDeviceToken")
         val message = TrackMessage.create(
             "testEvent",
             timestamp = RudderUtils.timeStamp
@@ -153,7 +169,7 @@ class AndroidContextPluginTest {
         whenever(mockChain.proceed(any())).thenAnswer {
             it.arguments[0] as TrackMessage
         }
-        val verifyMsg = androidContextPlugin.intercept(mockChain)
+        val verifyMsg = platformInputsPlugin.intercept(mockChain)
         assertThat(
             jsonAdapter.readJson(verifyMsg!!.context!!["device"] as String, object :
                 RudderTypeAdapter<Map<String, Any>>(){}), hasEntry("token", "testDeviceToken")
