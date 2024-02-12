@@ -80,6 +80,11 @@ abstract class State<T>(initialValue: T? = null) {
             }.toSet())
         }
     }
+    fun removeAllObservers(){
+        synchronized(this) {
+            observers.clear()
+        }
+    }
 
     /**
      * Observer interface for State

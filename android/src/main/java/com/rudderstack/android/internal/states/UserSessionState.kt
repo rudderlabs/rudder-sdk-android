@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
- * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 09/01/24, 12:49 pm Last modified: 09/01/24, 12:49 pm
+ * Copyright: All rights reserved Ⓒ 2024 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,20 +12,11 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.libs
+package com.rudderstack.android.internal.states
 
-import org.junit.Test
+import com.rudderstack.core.State
+import com.rudderstack.models.android.UserSession
 
-import org.junit.Assert.*
-
-/**
- * Example local unit test, which will execute on the development machine (host).
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
-class ExampleUnitTest {
-    @Test
-    fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
-    }
-}
+internal object UserSessionState : State<UserSession>(
+    UserSession()
+)

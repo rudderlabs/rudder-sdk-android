@@ -53,7 +53,7 @@ internal class AnalyticsDelegate(
     //optional
     private val initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
     //optional called if shutdown is called
-    private val shutdownHook: (() -> Unit)? = null
+    private val shutdownHook: (Analytics.() -> Unit)? = null
 ) : Controller {
 
     companion object {
@@ -171,7 +171,7 @@ internal class AnalyticsDelegate(
             applyMessageClosure {
                 applyConfigurationClosure(this)
             }
-        }
+        }?: logger.error(log = "Configuration not updated, since current configuration is null")
 
     }
 
@@ -371,7 +371,7 @@ internal class AnalyticsDelegate(
         dataUploadService.shutdown()
         currentConfiguration?.analyticsExecutor?.shutdown()
         _flushExecutor.shutdown()
-        shutdownHook?.invoke()
+        shutdownHook?.invoke(_analytics ?: return)
     }
 
     private fun shutdownPlugins() {
