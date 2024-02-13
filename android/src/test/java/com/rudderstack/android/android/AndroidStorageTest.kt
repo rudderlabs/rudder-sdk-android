@@ -155,7 +155,6 @@ abstract class AndroidStorageTest {
     }
     @Test
     fun `test save and retrieve LastActiveTimestamp`() {
-        RudderPreferenceManager.initialize(ApplicationProvider.getApplicationContext())
         val storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(), storageExecutor = TestExecutor())
         storage.clearStorage()
         MatcherAssert.assertThat(storage.lastActiveTimestamp, Matchers.nullValue())
@@ -168,7 +167,6 @@ abstract class AndroidStorageTest {
     }
     @Test
     fun `test save and retrieve sessionId`() {
-        RudderPreferenceManager.initialize(ApplicationProvider.getApplicationContext())
         val storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(), storageExecutor = TestExecutor())
         storage.clearStorage()
         MatcherAssert.assertThat(storage.sessionId, Matchers.nullValue())

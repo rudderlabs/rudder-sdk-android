@@ -24,6 +24,7 @@ import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.plugins.SessionPlugin
 import com.rudderstack.android.internal.states.ContextState
+import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.android.utilities.initializeSessionManagement
@@ -153,12 +154,17 @@ private val messagePlugins
 
 private fun Analytics.startup() {
     addPlugins()
-    associateState(ContextState())
+    associateStates()
     androidStorage.let {
         contextState?.update(it.context)
     }
 
     initializeSessionManagement()
+}
+
+private fun Analytics.associateStates() {
+    associateState(ContextState())
+    associateState(UserSessionState())
 }
 
 private fun Analytics.addPlugins() {
@@ -176,7 +182,6 @@ internal fun Analytics.processNewContext(
 
 val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
     get() = (currentConfiguration as? ConfigurationAndroid)
-
 private fun Analytics.onShutdown() {
     shutdownSessionManagement()
 }

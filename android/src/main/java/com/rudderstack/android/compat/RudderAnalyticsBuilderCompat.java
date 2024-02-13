@@ -14,22 +14,21 @@
 
 package com.rudderstack.android.compat;
 
+import static com.rudderstack.core.AnalyticsKt.DEFAULTS_ANALYTICS_INSTANCE_NAME;
+
 import androidx.annotation.NonNull;
 
 import com.rudderstack.android.ConfigurationAndroid;
+import com.rudderstack.android.RudderAnalytics;
 import com.rudderstack.android.storage.AndroidStorage;
 import com.rudderstack.android.storage.AndroidStorageImpl;
-import com.rudderstack.core.Logger;
-import com.rudderstack.core.Storage;
-import com.rudderstack.core.compat.AnalyticsBuilderCompat;
-import com.rudderstack.android.RudderAnalytics;
 import com.rudderstack.core.Analytics;
 import com.rudderstack.core.ConfigDownloadService;
 import com.rudderstack.core.DataUploadService;
 
-import kotlin.Unit;
-
 import java.util.concurrent.Executors;
+
+import kotlin.Unit;
 
 /**
  * To be used by java projects
@@ -41,6 +40,7 @@ public final class RudderAnalyticsBuilderCompat  {
     private DataUploadService dataUploadService = null;
     private ConfigDownloadService configDownloadService = null;
     private InitializationListener initializationListener = null;
+    private String instanceName = DEFAULTS_ANALYTICS_INSTANCE_NAME;
     private AndroidStorage storage = new AndroidStorageImpl(configuration.getApplication(),
             ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER,
             Executors.newSingleThreadExecutor());
@@ -66,16 +66,19 @@ public final class RudderAnalyticsBuilderCompat  {
         return RudderAnalytics.RudderAnalytics(
                 writeKey,
                 configuration,
+                instanceName,
                 dataUploadService,
                 configDownloadService,
+                storage,
                 (success, message) -> {
-                    if(initializationListener != null) {
+                    if (initializationListener != null) {
                         initializationListener.onInitialized(success, message);
                     }
                     return Unit.INSTANCE;
                 }
         );
     }
+
     public interface InitializationListener {
         void onInitialized(boolean success, String message);
     }

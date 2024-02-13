@@ -15,9 +15,11 @@
 package com.rudderstack.android.utilities
 
 import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.androidStorage
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.models.android.UserSession
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
@@ -30,7 +32,8 @@ private val defaultSessionId
 private const val SESSION_ID_MIN_LENGTH = 10
 internal val defaultLastActiveTimestamp
     get() = System.currentTimeMillis()
-
+internal val Analytics.userSessionState : UserSessionState?
+    get() = retrieveState()
 @JvmOverloads
 fun Analytics.startSession(
     sessionId: Long = defaultSessionId
@@ -71,7 +74,7 @@ fun Analytics.endSession() {
 internal fun Analytics.startSessionIfNeeded() {
     if (currentConfigurationAndroid?.trackAutoSession != true || currentConfigurationAndroid?.trackLifecycleEvents != true) return
 
-    val currentSession = UserSessionState.value
+    val currentSession = userSessionState?.value
     if (currentSession == null) {
         updateSessionStart(defaultSessionId)
         return
@@ -91,15 +94,15 @@ internal fun Analytics.startSessionIfNeeded() {
 }
 
 internal fun Analytics.initializeSessionManagement() {
-    val savedSessionId = currentConfigurationAndroid?.storage?.sessionId
-    val lastActiveTimestamp = currentConfigurationAndroid?.storage?.lastActiveTimestamp
+    val savedSessionId = androidStorage.sessionId
+    val lastActiveTimestamp = androidStorage.lastActiveTimestamp
     if (currentConfigurationAndroid?.trackAutoSession != true || currentConfigurationAndroid?.trackLifecycleEvents != true) {
         discardAnyPreviousSession(savedSessionId, lastActiveTimestamp)
         return
     }
 
     if (savedSessionId != null && lastActiveTimestamp != null) {
-        UserSessionState.update(
+        userSessionState?.update(
             UserSession(
                 sessionId = savedSessionId,
                 isActive = true,
@@ -119,7 +122,7 @@ private fun Analytics.discardAnyPreviousSession(savedSessionId: Long?, lastActiv
 }
 
 private fun Analytics.listenToSessionChanges() {
-    UserSessionState.subscribe { newState, _ ->
+    userSessionState?.subscribe { newState, _ ->
         newState?.apply {
             applySessionToStorage(this)
         }
@@ -130,20 +133,20 @@ private fun Analytics.applySessionToStorage(
     userSession: UserSession
 ) {
     if (userSession.isActive) {
-        currentConfigurationAndroid?.storage?.setSessionId(userSession.sessionId)
-        currentConfigurationAndroid?.storage?.saveLastActiveTimestamp(userSession.lastActiveTimestamp)
+        androidStorage.setSessionId(userSession.sessionId)
+        androidStorage.saveLastActiveTimestamp(userSession.lastActiveTimestamp)
     } else {
-        currentConfigurationAndroid?.storage?.clearSessionId()
-        currentConfigurationAndroid?.storage?.clearLastActiveTimestamp()
+        androidStorage.clearSessionId()
+        androidStorage.clearLastActiveTimestamp()
     }
 }
 
 internal fun Analytics.shutdownSessionManagement() {
-    UserSessionState.removeAllObservers()
+    userSessionState?.removeAllObservers()
 }
 
 internal fun Analytics.updateSessionStart(sessionId: Long) {
-    UserSessionState.update(
+    userSessionState?.update(
         UserSession(
             sessionId = sessionId,
             isActive = true,
@@ -159,7 +162,7 @@ internal fun Analytics.resetSession() {
 }
 
 internal fun Analytics.updateSessionEnd() {
-    UserSessionState.update(
+    userSessionState?.update(
         UserSession(sessionId = -1L, isActive = false, lastActiveTimestamp = -1L)
     )
 }

@@ -20,6 +20,7 @@ import com.rudderstack.core.Controller
 /**
  * This data is not persisted and is mainly intended to maintain transient State objects
  * associated to each analytics instance
+ * Do not associate anonymous objects, as they will not be retrievable
  */
 
 /**

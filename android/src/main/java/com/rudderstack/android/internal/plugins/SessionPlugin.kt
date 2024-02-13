@@ -22,32 +22,31 @@ import com.rudderstack.android.utilities.defaultLastActiveTimestamp
 import com.rudderstack.android.utilities.resetSession
 import com.rudderstack.android.utilities.startSessionIfNeeded
 import com.rudderstack.android.utilities.updateSessionEnd
+import com.rudderstack.android.utilities.userSessionState
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.Message
 import com.rudderstack.models.android.UserSession
 
 internal class SessionPlugin : Plugin {
 
     private var _analytics: Analytics? = null
+    private var currentConfiguration: ConfigurationAndroid? = null
     override fun setup(analytics: Analytics) {
         super.setup(analytics)
         _analytics = analytics
-        ConfigurationsState.subscribe(::configurationSubscriber)
     }
 
-    private fun configurationSubscriber(
-        newConfiguration: Configuration?,
-        oldConfiguration: Configuration?
-    ) {
-        if (newConfiguration !is ConfigurationAndroid || oldConfiguration !is ConfigurationAndroid) return
-        if (newConfiguration.trackLifecycleEvents != oldConfiguration.trackLifecycleEvents
-            || newConfiguration.trackAutoSession != oldConfiguration.trackAutoSession) {
-            if(newConfiguration.trackAutoSession && newConfiguration.trackLifecycleEvents) _analytics?.startSessionIfNeeded()
-            else _analytics?.updateSessionEnd()
+    override fun updateConfiguration(configuration: Configuration) {
+        if (configuration !is ConfigurationAndroid) return
+        if (currentConfiguration?.trackAutoSession == configuration.trackAutoSession
+            && currentConfiguration?.trackLifecycleEvents == configuration.trackLifecycleEvents) return
+        if( !configuration.trackAutoSession || !configuration.trackLifecycleEvents) {
+            _analytics?.updateSessionEnd()
+            return
         }
+        _analytics?.startSessionIfNeeded()
     }
 
     override fun intercept(chain: Plugin.Chain): Message {
@@ -56,7 +55,7 @@ internal class SessionPlugin : Plugin {
         // if difference between two events is more than session timeout, refresh session
         val message = chain.message()
         _analytics?.startSessionIfNeeded()
-        val newMsg = UserSessionState.value?.takeIf { it.isActive }?.let {
+        val newMsg = _analytics?.userSessionState?.value?.takeIf { it.isActive }?.let {
             updateWithSession(message, it)
         } ?: message
 
@@ -78,9 +77,8 @@ internal class SessionPlugin : Plugin {
         val updatedSession = it.copy(
             lastActiveTimestamp = defaultLastActiveTimestamp, sessionStart = false
         )
-        UserSessionState.update(updatedSession)
+        _analytics?.userSessionState?.update(updatedSession)
     }
-
 
 
     override fun reset() {
