@@ -37,6 +37,9 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     private String advertisingId = null;
     private String deviceToken = null;
     private ExecutorService advertisingIdFetchExecutor = null;
+    private boolean trackAutoSession = ConfigurationAndroid.Defaults.AUTO_SESSION_TRACKING;
+    private long sessionTimeoutMillis = ConfigurationAndroid.Defaults.SESSION_TIMEOUT;
+
     public ConfigurationAndroidBuilder(Application application, JsonAdapter jsonAdapter) {
         super(jsonAdapter);
         this.application = application;
@@ -86,6 +89,14 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
         this.advertisingIdFetchExecutor = advertisingIdFetchExecutor;
         return this;
     }
+    public ConfigurationBuilder withTrackAutoSession(boolean trackAutoSession) {
+        this.trackAutoSession = trackAutoSession;
+        return this;
+    }
+    public ConfigurationBuilder withSessionTimeoutMillis(long sessionTimeoutMillis) {
+        this.sessionTimeoutMillis = sessionTimeoutMillis;
+        return this;
+    }
     @Override
     public ConfigurationAndroid build() {
         return ConfigurationAndroid.Companion.invoke(super.build(),
@@ -100,7 +111,9 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
                 defaultProcessName,
                 advertisingId,
                 deviceToken,
-                advertisingIdFetchExecutor
+                advertisingIdFetchExecutor,
+                trackAutoSession,
+                sessionTimeoutMillis
         );
     }
 

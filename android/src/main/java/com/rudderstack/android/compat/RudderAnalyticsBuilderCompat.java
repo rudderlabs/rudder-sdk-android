@@ -14,36 +14,74 @@
 
 package com.rudderstack.android.compat;
 
+import androidx.annotation.NonNull;
+
 import com.rudderstack.android.ConfigurationAndroid;
 import com.rudderstack.android.storage.AndroidStorage;
 import com.rudderstack.android.storage.AndroidStorageImpl;
 import com.rudderstack.core.Logger;
 import com.rudderstack.core.Storage;
 import com.rudderstack.core.compat.AnalyticsBuilderCompat;
+import com.rudderstack.android.RudderAnalytics;
+import com.rudderstack.core.Analytics;
+import com.rudderstack.core.ConfigDownloadService;
+import com.rudderstack.core.DataUploadService;
+
+import kotlin.Unit;
 
 import java.util.concurrent.Executors;
 
 /**
  * To be used by java projects
  */
-public final class RudderAnalyticsBuilderCompat extends AnalyticsBuilderCompat {
-    private Logger logger;
-    public RudderAnalyticsBuilderCompat(String writeKey, ConfigurationAndroid configuration) {
-        super(writeKey, configuration);
-        configuration.getLogger();
-        logger = configuration.getLogger();
-        withStorage( new AndroidStorageImpl(configuration.getApplication(),
-                ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER, Executors.newSingleThreadExecutor()));
+public final class RudderAnalyticsBuilderCompat  {
+
+    private @NonNull String writeKey;
+    private @NonNull ConfigurationAndroid configuration;
+    private DataUploadService dataUploadService = null;
+    private ConfigDownloadService configDownloadService = null;
+    private InitializationListener initializationListener = null;
+    private AndroidStorage storage = new AndroidStorageImpl(configuration.getApplication(),
+            ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER,
+            Executors.newSingleThreadExecutor());
+
+    public RudderAnalyticsBuilderCompat(@NonNull String writeKey, @NonNull ConfigurationAndroid configuration) {
+        this.writeKey = writeKey;
+        this.configuration = configuration;
+    }
+    public RudderAnalyticsBuilderCompat withDataUploadService(DataUploadService dataUploadService) {
+        this.dataUploadService = dataUploadService;
+        return this;
+    }
+    public RudderAnalyticsBuilderCompat withConfigDownloadService(ConfigDownloadService configDownloadService) {
+        this.configDownloadService = configDownloadService;
+        return this;
+    }
+    public RudderAnalyticsBuilderCompat withInitializationListener(InitializationListener initializationListener) {
+        this.initializationListener = initializationListener;
+        return this;
+    }
+    public Analytics build() {
+
+        return RudderAnalytics.RudderAnalytics(
+                writeKey,
+                configuration,
+                dataUploadService,
+                configDownloadService,
+                (success, message) -> {
+                    if(initializationListener != null) {
+                        initializationListener.onInitialized(success, message);
+                    }
+                    return Unit.INSTANCE;
+                }
+        );
+    }
+    public interface InitializationListener {
+        void onInitialized(boolean success, String message);
     }
 
-    @Override
-    public AnalyticsBuilderCompat withStorage(Storage storage) {
-        if (storage instanceof AndroidStorage) {
-            return super.withStorage(storage);
-        }else {
-            logger.error(Logger.DEFAULT_TAG, "Storage should be of type AndroidStorage. Using " +
-                    "default storage", null);
-        }
+    public RudderAnalyticsBuilderCompat withStorage(AndroidStorage storage) {
+        this.storage = storage;
         return this;
     }
 

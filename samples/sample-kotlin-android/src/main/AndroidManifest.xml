@@ -12,7 +12,7 @@
         android:theme="@style/Theme.RudderAndroidSample"
         tools:replace="android:theme">
         <activity
-            android:name=".MainActivity"
+            android:name=".mainview.MainActivity"
             android:exported="true"
             android:label="@string/title_activity_main"
             android:theme="@style/Theme.RudderAndroidSample">

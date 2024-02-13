@@ -26,7 +26,7 @@ import com.rudderstack.core.internal.ConfigDownloadServiceImpl;
 import com.rudderstack.core.internal.DataUploadServiceImpl;
 
 import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
+import kotlin.jvm.functions.Function1;
 import kotlin.jvm.functions.Function2;
 
 public class AnalyticsBuilderCompat {
@@ -39,7 +39,7 @@ public class AnalyticsBuilderCompat {
     private DataUploadService dataUploadService = null;
     private ConfigDownloadService configDownloadService = null;
 
-    private Function0<Unit> shutdownHook = null;
+    private Function1<Analytics, Unit> shutdownHook = null;
     private Function2<Boolean, String, Unit> initializationListener;
 
     public AnalyticsBuilderCompat(String writeKey, Configuration configuration) {
@@ -64,8 +64,8 @@ public class AnalyticsBuilderCompat {
 
 
     public AnalyticsBuilderCompat withShutdownHook(ShutdownHook shutdownHook) {
-        this.shutdownHook = () -> {
-            shutdownHook.onShutdown();
+        this.shutdownHook = (analytics) -> {
+            shutdownHook.onShutdown(analytics);
             return Unit.INSTANCE;
         };
         return this;
@@ -95,11 +95,11 @@ public class AnalyticsBuilderCompat {
 
     @FunctionalInterface
     public interface ShutdownHook {
-        void onShutdown();
+        void onShutdown(Analytics analytics);
     }
 
     @FunctionalInterface
-    interface InitializationListener {
+    public interface InitializationListener {
         void onInitialized(boolean success, String message);
     }
 }
