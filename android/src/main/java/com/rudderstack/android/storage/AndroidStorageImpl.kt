@@ -48,7 +48,7 @@ class AndroidStorageImpl(
     private val storageExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 ) : AndroidStorage {
     private var logger: Logger? = null
-    private val Application.dbName get() = "db_${packageName}"
+    private val Application.dbName get() = "db_${packageName}_$instanceName"
     private var jsonAdapter: JsonAdapter? = null
 
 
