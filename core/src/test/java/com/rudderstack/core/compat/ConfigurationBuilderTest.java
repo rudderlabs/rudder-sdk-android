@@ -55,7 +55,6 @@ public class ConfigurationBuilderTest {
                 Matchers.isA(RetryStrategy.ExponentialRetryStrategy.class));
         assertThat(configuration.getDataPlaneUrl(), equalTo("https://hosted.rudderlabs.com"));
         assertNotNull(configuration.getLogger());
-        assertNotNull(configuration.getStorage());
         assertNotNull(configuration.getAnalyticsExecutor());
         assertNotNull(configuration.getNetworkExecutor());
         assertNotNull(configuration.getBase64Generator());
@@ -88,7 +87,6 @@ public class ConfigurationBuilderTest {
                 .withDataPlaneUrl(customDataPlaneUrl)
                 .withControlPlaneUrl(customControlPlaneUrl)
                 .withLogger(customLogger)
-                .withStorage(customStorage)
                 .withAnalyticsExecutor(customAnalyticsExecutor)
                 .withNetworkExecutor(customNetworkExecutor)
                 .withBase64Generator(customBase64Generator);
@@ -106,7 +104,6 @@ public class ConfigurationBuilderTest {
         assertEquals(customDataPlaneUrl, configuration.getDataPlaneUrl());
         assertEquals(customControlPlaneUrl, configuration.getControlPlaneUrl());
         assertEquals(customLogger, configuration.getLogger());
-        assertEquals(customStorage, configuration.getStorage());
         assertEquals(customAnalyticsExecutor, configuration.getAnalyticsExecutor());
         assertEquals(customNetworkExecutor, configuration.getNetworkExecutor());
         assertEquals(customBase64Generator, configuration.getBase64Generator());

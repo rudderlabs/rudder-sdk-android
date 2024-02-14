@@ -14,6 +14,7 @@
 
 package com.vagabond.testcommon
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.models.Message
 import com.rudderstack.web.HttpResponse
@@ -42,6 +43,8 @@ class TestDataUploadService : DataUploadService {
     ): HttpResponse<out Any>? {
         return HttpResponse(mockUploadStatus, mockUploadBody, errorBody, error)
     }
+
+    override fun setup(analytics: Analytics) {}
 
     override fun shutdown() {
         headers = mutableMapOf()

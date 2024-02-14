@@ -17,21 +17,23 @@ package com.rudderstack.android.android
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.RudderAnalytics
 import com.rudderstack.android.android.utils.TestExecutor
 import com.rudderstack.android.android.utils.busyWait
 import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.Storage
-import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.moshirudderadapter.MoshiAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import io.mockk.every
+import com.vagabond.testcommon.generateTestAnalytics
 import junit.framework.TestSuite
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
@@ -40,12 +42,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
-import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.annotation.Config
 import java.util.*
@@ -57,29 +56,37 @@ import java.util.*
 @RunWith(MockitoJUnitRunner::class)
 @Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])
 abstract class AndroidStorageTest {
+    private lateinit var analytics: Analytics
     lateinit var mockConfig: ConfigurationAndroid
     protected abstract val jsonAdapter: JsonAdapter
+
     @Before
-    fun setup(){
+    fun setup() {
         MockitoAnnotations.openMocks(this)
-        val storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(), false
+        val storage = AndroidStorageImpl(
+            ApplicationProvider.getApplicationContext(), false
         )
         mockConfig = mock()
-        whenever(mockConfig.storage).thenReturn(storage)
         whenever(mockConfig.jsonAdapter).thenReturn(jsonAdapter)
         whenever(mockConfig.analyticsExecutor).thenReturn(TestExecutor())
         whenever(mockConfig.application).thenReturn(ApplicationProvider.getApplicationContext())
-        ConfigurationsState.update(mockConfig)
+        whenever(mockConfig.base64Generator).thenReturn(AndroidUtils.defaultBase64Generator())
+        whenever(mockConfig.controlPlaneUrl).thenReturn("https://api.rudderstack.com/")
+        whenever(mockConfig.dataPlaneUrl).thenReturn(ConfigurationAndroid.Defaults.DEFAULT_ANDROID_DATAPLANE_URL)
+        whenever(mockConfig.networkExecutor).thenReturn(TestExecutor())
+        analytics = RudderAnalytics("write_key", mockConfig, storage = storage)
     }
+
     @After
-    fun destroy(){
-        val storage = ConfigurationsState.value?.storage as AndroidStorageImpl
+    fun destroy() {
+        val storage = analytics.storage as AndroidStorageImpl
         storage.clearStorage()
-        storage.shutdown()
+        analytics.shutdown()
     }
+
     @Test
     fun `test drop back pressure strategies`() {
-        val storage = ConfigurationsState.value?.storage as AndroidStorageImpl
+        val storage = analytics.storage as AndroidStorageImpl
 
         storage.clearStorage()
         //we check the storage directly
@@ -115,7 +122,7 @@ abstract class AndroidStorageTest {
 
     @Test
     fun `test latest back pressure strategies`() {
-        val storage = ConfigurationsState.value?.storage as AndroidStorageImpl
+        val storage = analytics.storage as AndroidStorageImpl
 
         storage.clearStorage()
         val events = (1..20).map {
@@ -132,11 +139,9 @@ abstract class AndroidStorageTest {
         val last10Events = events.takeLast(10).map { it.eventName }
         MatcherAssert.assertThat(
             storage.getDataSync(), Matchers.allOf(
-                Matchers.iterableWithSize(10),
-                Matchers.everyItem(
+                Matchers.iterableWithSize(10), Matchers.everyItem(
                     Matchers.allOf(
-                        Matchers.isA(TrackMessage::class.java),
-                        Matchers.hasProperty(
+                        Matchers.isA(TrackMessage::class.java), Matchers.hasProperty(
                             "eventName", Matchers.allOf(
                                 Matchers.`in`(last10Events),
                                 Matchers.not(Matchers.`in`(first10Events))
@@ -150,7 +155,6 @@ abstract class AndroidStorageTest {
     }
     @Test
     fun `test save and retrieve LastActiveTimestamp`() {
-        RudderPreferenceManager.initialize(ApplicationProvider.getApplicationContext())
         val storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(), storageExecutor = TestExecutor())
         storage.clearStorage()
         MatcherAssert.assertThat(storage.lastActiveTimestamp, Matchers.nullValue())
@@ -163,7 +167,6 @@ abstract class AndroidStorageTest {
     }
     @Test
     fun `test save and retrieve sessionId`() {
-        RudderPreferenceManager.initialize(ApplicationProvider.getApplicationContext())
         val storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(), storageExecutor = TestExecutor())
         storage.clearStorage()
         MatcherAssert.assertThat(storage.sessionId, Matchers.nullValue())
@@ -176,28 +179,30 @@ abstract class AndroidStorageTest {
     }
 
 }
+
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29])
-class GsonStorageTest : AndroidStorageTest(){
+class GsonStorageTest : AndroidStorageTest() {
     override val jsonAdapter: JsonAdapter
         get() = GsonAdapter()
 }
+
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29])
-class JacksonStorageTest : AndroidStorageTest(){
+class JacksonStorageTest : AndroidStorageTest() {
     override val jsonAdapter: JsonAdapter
         get() = JacksonAdapter()
 }
+
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29])
-class MoshiStorageTest : AndroidStorageTest(){
+class MoshiStorageTest : AndroidStorageTest() {
     override val jsonAdapter: JsonAdapter
         get() = MoshiAdapter()
 }
+
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
-    GsonStorageTest::class,
-    JacksonStorageTest::class,
-    MoshiStorageTest::class
+    GsonStorageTest::class, JacksonStorageTest::class, MoshiStorageTest::class
 )
-class AndroidStorageTestSuite : TestSuite(){}
+class AndroidStorageTestSuite : TestSuite() {}

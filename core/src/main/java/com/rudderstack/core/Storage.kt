@@ -14,9 +14,7 @@
 
 package com.rudderstack.core
 
-import com.rudderstack.models.IdentifyTraits
 import com.rudderstack.models.Message
-import com.rudderstack.models.MessageContext
 import com.rudderstack.models.RudderServerConfig
 
 /**
@@ -29,7 +27,7 @@ import com.rudderstack.models.RudderServerConfig
  * is pretty low.
  * That is the reason are avoiding any selection arguments.
  */
-interface Storage {
+interface Storage : InfrastructurePlugin{
     companion object {
         const val MAX_STORAGE_CAPACITY = 2_000
         const val MAX_FETCH_LIMIT = 5_00
@@ -79,9 +77,9 @@ interface Storage {
      *
      * @param listener callback for the changed data
      */
-    fun addDataListener(listener: DataListener)
+    fun addMessageDataListener(listener: DataListener)
 
-    fun removeDataListener(listener: DataListener)
+    fun removeMessageDataListener(listener: DataListener)
 
     /**
      * Asynchronous method to get the entire data present to a maximum of fetch limit
@@ -145,12 +143,6 @@ interface Storage {
      *
      */
     fun clearStartupQueue()
-
-    /**
-     * Shutdown the process
-     *
-     */
-    fun shutdown()
 
     /**
      * Clears any and every persistent storage.

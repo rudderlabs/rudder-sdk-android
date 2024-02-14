@@ -123,7 +123,7 @@ class DefaultSyncerTest {
         }
         syncer.startScheduledSyncs(interval, true, limit.toLong())
 
-        Awaitility.await().atMost(4, TimeUnit.MINUTES).until {
+        Awaitility.await().atMost(4, TimeUnit.SECONDS).until {
             isMetricsDone.get() && isErrorsDone.get()
         }
         syncer.stopScheduling()
@@ -173,7 +173,7 @@ class DefaultSyncerTest {
         }
         syncer.startScheduledSyncs(interval, true, limit.toLong())
 
-        Awaitility.await().atMost(2, TimeUnit.MINUTES).untilAtomic(syncCounter, equalTo(5))
+        Awaitility.await().atMost(2, TimeUnit.SECONDS).untilAtomic(syncCounter, equalTo(5))
         syncer.stopScheduling()
         println("********checkSyncWithFailure***********")
     }

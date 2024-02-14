@@ -14,17 +14,18 @@
 
 package com.rudderstack.core.internal.plugins
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.BaseDestinationPlugin
-import com.rudderstack.core.DestinationConfig
-import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.BasicStorageImpl
 import com.rudderstack.core.Configuration
+import com.rudderstack.core.DestinationConfig
+import com.rudderstack.core.RudderUtils
+import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.core.internal.CentralPluginChain
-import com.rudderstack.core.internal.KotlinLogger
-import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.core.internal.states.DestinationConfigState
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.TrackMessage
+import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.After
@@ -52,36 +53,45 @@ class WakeupActionPluginTest {
     private val storage = BasicStorageImpl()
     private val wakeupActionPlugin = WakeupActionPlugin()
     private val testMessage = TrackMessage.create(
-        "ev-1", RudderUtils.timeStamp,
-        traits = mapOf(
-            "age" to 31,
-            "office" to "Rudderstack"
-        ),
-        externalIds = listOf(
+        "ev-1", RudderUtils.timeStamp, traits = mapOf(
+            "age" to 31, "office" to "Rudderstack"
+        ), externalIds = listOf(
             mapOf("some_id" to "s_id"),
             mapOf("amp_id" to "amp_id"),
-        ),
-        customContextMap = null
+        ), customContextMap = null
     )
+
+    private lateinit var analytics: Analytics
+
     @Before
-    fun setup(){
-        ConfigurationsState.update(Configuration(jsonAdapter = JacksonAdapter(), storage = storage))
+    fun setup() {
+        analytics = generateTestAnalytics(
+            Configuration(jsonAdapter = JacksonAdapter(),
+                shouldVerifySdk = false), storage = storage
+        )
+        wakeupActionPlugin.setup(analytics)
     }
+    private val destinationConfigState
+        get() = analytics.retrieveState<DestinationConfigState>()
+
     @After
     fun breakDown() {
+        analytics.shutdown()
         dest1.setReady(false)
         dest2.setReady(false)
         dest3.setReady(false)
 
         storage.clearStartupQueue()
         //clear destination config
-        DestinationConfigState.update(DestinationConfig())
+        destinationConfigState?.update(DestinationConfig())
     }
 
     @Test
     fun `check startup queue for uninitialized destinations`() {
         dest1.setReady(false)
-        DestinationConfigState.update(
+        dest2.setReady(true)
+        dest3.setReady(true)
+        destinationConfigState?.update(
             DestinationConfig(
                 mapOf(
                     "dest-1" to dest1.isReady,
@@ -96,8 +106,7 @@ class WakeupActionPluginTest {
         //dest1 is not ready, hence message should be stored
         assertThat(
             storage.startupQueue, allOf(
-                iterableWithSize(1),
-                hasItem(testMessage)
+                iterableWithSize(1), hasItem(testMessage)
             )
         )
     }
@@ -108,7 +117,7 @@ class WakeupActionPluginTest {
         dest2.setReady(true)
         dest3.setReady(true)
 
-        DestinationConfigState.update(
+        destinationConfigState?.update(
             DestinationConfig(
                 mapOf(
                     "dest-1" to dest1.isReady,

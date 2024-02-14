@@ -34,7 +34,7 @@ class EventFilteringPluginTest{
     private lateinit var eventFilteringPlugin: EventFilteringPlugin
     @Before
     fun setUp() {
-        eventFilteringPlugin = EventFilteringPlugin
+        eventFilteringPlugin = EventFilteringPlugin()
         eventFilteringPlugin.onShutDown()
         eventFilteringPlugin.setup(generateTestAnalytics(JacksonAdapter()))
     }

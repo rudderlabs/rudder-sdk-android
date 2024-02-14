@@ -2,11 +2,17 @@ package com.rudderstack.android.internal.plugins
 
 import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.android.utilities.defaultLastActiveTimestamp
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
+import com.rudderstack.core.holder.associateState
+import com.rudderstack.core.holder.removeState
+import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.models.Message
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.models.android.UserSession
+import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
@@ -16,6 +22,7 @@ import org.hamcrest.Matchers.hasProperty
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.argumentCaptor
@@ -27,14 +34,23 @@ class SessionPluginTest {
     //    protected abstract val jsonAdapter: JsonAdapter
 //    private lateinit var analytics: Analytics
     private lateinit var sessionPlugin: SessionPlugin
+    private lateinit var analytics: Analytics
 
     @Before
     fun setUp() {
-//        analytics = generateTestAnalytics(jsonAdapter)
+        analytics = generateTestAnalytics(mock<JsonAdapter>())
         sessionPlugin = SessionPlugin()
-//        sessionPlugin.setup(analytics)
+        sessionPlugin.setup(analytics)
+        analytics.associateState(UserSessionState())
     }
-
+    @After
+    fun tearDown() {
+        sessionPlugin.onShutDown()
+        analytics.removeState<UserSessionState>()
+        analytics.shutdown()
+    }
+    private val userSessionState
+        get() = analytics.retrieveState<UserSessionState>()
     @Test
     fun `test intercept with valid session and null context sessionStart true`() {
         val timestamp = RudderUtils.timeStamp
@@ -43,7 +59,7 @@ class SessionPluginTest {
         whenever(mockChain.message()).thenReturn(message)
         val sessionTimestamp = defaultLastActiveTimestamp
         val sessionId = 1234567890L
-        UserSessionState.update(
+        userSessionState?.update(
             UserSession(
                 sessionId = sessionId,
                 sessionStart = true,
@@ -69,7 +85,7 @@ class SessionPluginTest {
             )
         )
         MatcherAssert.assertThat(
-            UserSessionState.value, allOf(
+            userSessionState?.value, allOf(
                 notNullValue(), hasProperty(
                     "sessionStart", `is`(false)
                 ), hasProperty("sessionId", `is`(sessionId))
@@ -85,7 +101,7 @@ class SessionPluginTest {
         whenever(mockChain.message()).thenReturn(message)
         val sessionTimestamp = defaultLastActiveTimestamp
         val sessionId = 1234567890L
-        UserSessionState.update(
+        userSessionState?.update(
             UserSession(
                 sessionId = sessionId,
                 sessionStart = false,
@@ -111,7 +127,7 @@ class SessionPluginTest {
             )
         )
         MatcherAssert.assertThat(
-            UserSessionState.value, allOf(
+            userSessionState?.value, allOf(
                 notNullValue(), hasProperty(
                     "sessionStart", `is`(false)
                 ), hasProperty("sessionId", `is`(sessionId))
@@ -128,7 +144,7 @@ class SessionPluginTest {
         whenever(mockChain.message()).thenReturn(message)
         val sessionTimestamp = defaultLastActiveTimestamp
         val sessionId = 1234567890L
-        UserSessionState.update(
+        userSessionState?.update(
             UserSession(
                 sessionId = sessionId,
                 sessionStart = false,
@@ -158,7 +174,7 @@ class SessionPluginTest {
             )
         )
         MatcherAssert.assertThat(
-            UserSessionState.value, allOf(
+            userSessionState?.value, allOf(
                 notNullValue(), hasProperty(
                     "sessionStart", `is`(false)
                 ), hasProperty("sessionId", `is`(sessionId))
@@ -175,7 +191,7 @@ class SessionPluginTest {
         whenever(mockChain.message()).thenReturn(message)
         val sessionTimestamp = defaultLastActiveTimestamp
         val sessionId = 1234567890L
-        UserSessionState.update(
+        userSessionState?.update(
             UserSession(
                 sessionId = sessionId,
                 sessionStart = true,
@@ -205,7 +221,7 @@ class SessionPluginTest {
             )
         )
         MatcherAssert.assertThat(
-            UserSessionState.value, allOf(
+            userSessionState?.value, allOf(
                 notNullValue(), hasProperty(
                     "sessionStart", `is`(false)
                 ), hasProperty("sessionId", `is`(sessionId))
@@ -220,7 +236,7 @@ class SessionPluginTest {
         whenever(mockChain.message()).thenReturn(message)
         val sessionTimestamp = defaultLastActiveTimestamp
         val sessionId = 1234567890L
-        UserSessionState.update(
+        userSessionState?.update(
             UserSession(
                 sessionId = sessionId,
                 sessionStart = true,
@@ -246,7 +262,7 @@ class SessionPluginTest {
             )
         )
         MatcherAssert.assertThat(
-            UserSessionState.value, allOf(
+            userSessionState?.value, allOf(
                 notNullValue(), hasProperty(
                     "sessionStart", `is`(true)
                 ), hasProperty("sessionId", `is`(sessionId)),
@@ -262,7 +278,7 @@ class SessionPluginTest {
                     "value1")), customContextMap = mapOf("customContext1" to "value1"))
         val mockChain = mock<Plugin.Chain>()
         whenever(mockChain.message()).thenReturn(message)
-        UserSessionState.update(
+        userSessionState?.update(
             UserSession(
                 sessionId = -1L,
                 sessionStart = false,
@@ -292,7 +308,7 @@ class SessionPluginTest {
             )
         )
         MatcherAssert.assertThat(
-            UserSessionState.value, allOf(
+            userSessionState?.value, allOf(
                 notNullValue(), hasProperty(
                     "sessionStart", `is`(false)
                 ), hasProperty("sessionId", `is`(-1L))

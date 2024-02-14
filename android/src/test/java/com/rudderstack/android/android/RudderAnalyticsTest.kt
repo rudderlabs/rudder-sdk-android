@@ -18,9 +18,9 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.RudderAnalytics
+import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.setAnonymousId
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
@@ -48,7 +48,7 @@ import org.robolectric.annotation.Config
     fun `test put anonymous id`() {
         analytics.setAnonymousId("anon_id")
         MatcherAssert.assertThat(
-            ConfigurationsState.value, allOf(Matchers.isA(ConfigurationAndroid::class.java),
+            analytics.currentConfigurationAndroid, allOf(Matchers.isA(ConfigurationAndroid::class.java),
                 Matchers.hasProperty("anonymousId", Matchers.equalTo("anon_id"))
         ))
     }

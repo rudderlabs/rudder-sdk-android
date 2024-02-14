@@ -19,22 +19,15 @@ import com.rudderstack.models.RudderServerConfig
 /**
  * Download config for SDK.
  * Config aids in usage of device mode plugins.
+ * Do not add this plugin to Analytics using [Analytics.addInfrastructurePlugin] method.
+ * This [InfrastructurePlugin] should be sent as constructor params to [Analytics] instance.
  *
  */
-interface ConfigDownloadService {
+interface ConfigDownloadService : InfrastructurePlugin {
     /**
-     * Fetches the config from
-     *
-     * @param platform
-     * @param libraryVersion
-     * @param osVersion
+     * Fetches the config from the server
      */
-    fun download(platform : String, libraryVersion : String, osVersion : String, retryStrategy: RetryStrategy,
-                 callback: (success : Boolean, RudderServerConfig?, lastErrorMsg : String?) -> Unit)
-
-    /**
-     * Release resources if any
-     *
-     */
-    fun shutDown()
+    fun download(
+        callback: (success: Boolean, RudderServerConfig?, lastErrorMsg: String?) -> Unit
+    )
 }

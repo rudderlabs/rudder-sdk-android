@@ -50,7 +50,6 @@ interface Configuration {
     val dataPlaneUrl: String
     val controlPlaneUrl: String
     val logger: Logger
-    val storage: Storage
     val analyticsExecutor: ExecutorService
     val networkExecutor: ExecutorService
     val base64Generator: Base64Generator
@@ -74,7 +73,6 @@ interface Configuration {
             dataPlaneUrl: String? = null, //defaults to https://hosted.rudderlabs.com
             controlPlaneUrl: String? = null, //defaults to https://api.rudderlabs.com/
             logger: Logger = KotlinLogger,
-            storage: Storage = BasicStorageImpl(),
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             base64Generator: Base64Generator = RudderUtils.defaultBase64Generator,
@@ -90,7 +88,6 @@ interface Configuration {
             override val dataPlaneUrl: String = dataPlaneUrl?:"https://hosted.rudderlabs.com"
             override val controlPlaneUrl: String = controlPlaneUrl?:"https://api.rudderstack.com/"
             override val logger: Logger = logger
-            override val storage: Storage = storage
             override val analyticsExecutor: ExecutorService = analyticsExecutor
             override val networkExecutor: ExecutorService = networkExecutor
             override val base64Generator: Base64Generator = base64Generator
@@ -108,7 +105,6 @@ interface Configuration {
         dataPlaneUrl: String = this.dataPlaneUrl,
         controlPlaneUrl: String?= this.controlPlaneUrl,
         logger: Logger = this.logger,
-        storage: Storage = this.storage,
         analyticsExecutor: ExecutorService = this.analyticsExecutor,
         networkExecutor: ExecutorService = this.networkExecutor,
         base64Generator: Base64Generator = this.base64Generator,
@@ -124,7 +120,6 @@ interface Configuration {
         dataPlaneUrl = dataPlaneUrl,
         controlPlaneUrl = controlPlaneUrl,
         logger = logger,
-        storage = storage,
         analyticsExecutor = analyticsExecutor,
         networkExecutor = networkExecutor,
         base64Generator = base64Generator,

@@ -47,7 +47,6 @@ internal class DestinationConfigurationPlugin : Plugin {
     }
 
     override fun updateRudderServerConfig(config: RudderServerConfig) {
-        super.updateRudderServerConfig(config)
         _isConfigUpdated = true
         _notAllowedDestinations = config.source?.destinations?.filter {
             !it.isDestinationEnabled
