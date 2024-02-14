@@ -59,10 +59,16 @@ interface Controller {
     val isOptedOut : Boolean
 
     val currentConfiguration : Configuration?
+    val storage:Storage
 
     val dataUploadService:DataUploadService
     val configDownloadService:ConfigDownloadService?
 
+    /**
+     * The name of the instance
+     * In case of multiple instances, this name is used to differentiate between them
+     */
+    val instanceName: String
     fun addPlugin(vararg plugins: Plugin)
     /**
      * Custom plugins to be removed.
@@ -115,7 +121,17 @@ interface Controller {
      *
      */
     fun removeAllCallbacks()
-
+    /**
+     * Flush the remaining data from storage.
+     * However flush returns immediately if  analytics is shutdown
+     */
+    fun flush()
+    /**
+     * This blocks the thread till events are flushed.
+     * Users should prefer [flush]
+     *
+     */
+    fun blockingFlush() : Boolean
     //fun reset()
     /**
      * Shuts down the Analytics. Once shutdown, a new instance needs to be created.

@@ -14,19 +14,17 @@
 
 package com.rudderstack.android.storage
 
+import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.EntityFactory
-import com.rudderstack.core.internal.states.ConfigurationsState
-import com.rudderstack.models.Message
-import com.rudderstack.models.TrackMessage
-import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.core.Analytics
 
-internal class RudderEntityFactory : EntityFactory {
+internal class RudderEntityFactory(private val analytics: Analytics) : EntityFactory {
     override fun <T : Entity> getEntity(entity: Class<T>, values: Map<String, Any?>): T? {
 
         //we will check the class for conversion
         return when(entity){
-            MessageEntity::class.java -> ConfigurationsState.value?.jsonAdapter?.let {  MessageEntity.create(values, it) as? T?}
+            MessageEntity::class.java -> analytics.currentConfiguration?.jsonAdapter?.let {  MessageEntity.create(values, it) as? T?}
             else -> null
         }
     }

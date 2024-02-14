@@ -18,13 +18,11 @@ import static com.rudderstack.core.Configuration.FLUSH_QUEUE_SIZE;
 import static com.rudderstack.core.Configuration.MAX_FLUSH_INTERVAL;
 
 import com.rudderstack.core.Base64Generator;
-import com.rudderstack.core.BasicStorageImpl;
 import com.rudderstack.core.Configuration;
 import com.rudderstack.core.Logger;
 import com.rudderstack.core.RetryStrategy;
 import com.rudderstack.core.RudderOptions;
 import com.rudderstack.core.RudderUtils;
-import com.rudderstack.core.Storage;
 import com.rudderstack.core.internal.KotlinLogger;
 import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
@@ -43,7 +41,6 @@ public class ConfigurationBuilder {
     private String dataPlaneUrl = null; //defaults to https://hosted.rudderlabs.com
     private String controlPlaneUrl = null; //defaults to https://api.rudderlabs.com
     private Logger logger = KotlinLogger.INSTANCE;
-    private Storage storage = new BasicStorageImpl();
     private ExecutorService analyticsExecutor = Executors.newSingleThreadExecutor();
     private ExecutorService networkExecutor = Executors.newCachedThreadPool();
     private Base64Generator base64Generator = RudderUtils.INSTANCE.getDefaultBase64Generator();
@@ -101,10 +98,6 @@ public class ConfigurationBuilder {
         return this;
     }
 
-    public ConfigurationBuilder withStorage(Storage storage) {
-        this.storage = storage;
-        return this;
-    }
 
     public ConfigurationBuilder withAnalyticsExecutor(ExecutorService analyticsExecutor) {
         this.analyticsExecutor = analyticsExecutor;
@@ -125,6 +118,6 @@ public class ConfigurationBuilder {
         return Configuration.Companion.invoke(jsonAdapter, options, flushQueueSize, maxFlushInterval, isOptOut,
                 shouldVerifySdk, gzipEnabled, sdkVerifyRetryStrategy, dataPlaneUrl,
                 controlPlaneUrl, logger,
-                storage, analyticsExecutor, networkExecutor, base64Generator);
+                analyticsExecutor, networkExecutor, base64Generator);
     }
 }

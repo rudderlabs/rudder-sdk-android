@@ -22,8 +22,10 @@ import com.rudderstack.android.android.utils.TestExecutor
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.storage.AndroidStorageImpl
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.RudderUtils
-import com.rudderstack.core.internal.states.ConfigurationsState
+import com.rudderstack.core.holder.associateState
+import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.*
 import com.vagabond.testcommon.Verification
@@ -32,6 +34,7 @@ import com.vagabond.testcommon.generateTestAnalytics
 import com.vagabond.testcommon.testPlugin
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -52,6 +55,7 @@ class FillDefaultsPluginTest {
 //        "some_context1" to "some_value",
 //        "some_context2" to "some_value_2"
 //    )
+    private lateinit var analytics: Analytics
     lateinit var mockConfig: ConfigurationAndroid
 
     private val fillDefaultsPlugin = FillDefaultsPlugin(
@@ -59,10 +63,22 @@ class FillDefaultsPluginTest {
 
     @Before
     fun setup() {
-        MockitoAnnotations.openMocks(this)
-        mockConfig = mock()
-        whenever(mockConfig.storage).thenReturn(mock())
-
+        mockConfig = ConfigurationAndroid(
+            application = getApplicationContext(),
+            mock(),
+            anonymousId = "anon_id",
+            userId = "user_id",
+            shouldVerifySdk = false,
+            analyticsExecutor = TestExecutor(),
+        )
+        analytics = generateTestAnalytics(mockConfig)
+        analytics.associateState(ContextState())
+        fillDefaultsPlugin.setup(analytics)
+        fillDefaultsPlugin.updateConfiguration(mockConfig)
+    }
+    @After
+    fun destroy() {
+        analytics.shutdown()
     }
 
     /**
@@ -71,16 +87,7 @@ class FillDefaultsPluginTest {
      */
     @Test
     fun `test insertion of defaults`() {
-        val mockConfig = ConfigurationAndroid(
-            getApplicationContext(),
-            JacksonAdapter(),
-            anonymousId = "anon_id",
-            userId = "user_id",
-            storage = AndroidStorageImpl(getApplicationContext(),
-                instanceName = "test_instance",
-                storageExecutor = TestExecutor()),
-        )
-        ContextState.update(
+        analytics.retrieveState<ContextState>()?.update(
             createContext(
                 traits = mapOf(
                     "name" to "some_name", "age" to 24
@@ -102,7 +109,6 @@ class FillDefaultsPluginTest {
         )
 
 //        val chain = CentralPluginChain(message, listOf(fillDefaultsPlugin))
-        val analytics = generateTestAnalytics(mockConfig)
         analytics.testPlugin(fillDefaultsPlugin)
         analytics.track(message)
         analytics.assertArgument(Verification<Message?, Message?> { input, output ->
@@ -139,16 +145,7 @@ class FillDefaultsPluginTest {
                     )
                 )
             )
-            /*assertThat(
-                output?.context, allOf(
-                    notNullValue(), hasEntry("some_context1", "some_value"), hasEntry(
-                        "some_context2", "some_value_2"
-                    )
-                )
-            )*/
         })
-//        val updatedMsg =
-
 
     }
 }

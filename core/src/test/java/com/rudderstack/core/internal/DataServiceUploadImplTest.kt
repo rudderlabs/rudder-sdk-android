@@ -75,16 +75,6 @@ abstract class DataServiceUploadImplTest {
 
     @Before
     fun setup() {
-        ConfigurationsState.update(
-            Configuration(jsonAdapter, dataPlaneUrl = dataPlaneUrl, base64Generator = {
-                Base64.getEncoder().encodeToString(
-                    String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8"))
-                )
-            })
-        )
-//        dataServiceImpl = DataUploadServiceImpl(
-//            writeKey, dummyWebService
-//        )
 
     }
 
@@ -112,6 +102,13 @@ abstract class DataServiceUploadImplTest {
         dataServiceImpl = DataUploadServiceImpl(
             writeKey, dummyWebService
         )
+        val configuration =
+            Configuration(jsonAdapter, dataPlaneUrl = dataPlaneUrl, base64Generator = {
+                Base64.getEncoder().encodeToString(
+                    String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8"))
+                )
+            })
+        dataServiceImpl.updateConfiguration(configuration)
 //        val isComplete = AtomicBoolean(false)
         val argCaptors = argumentCaptor<Map<String,String>, String, String, Class<String>, Boolean>(
 //            Map::class, //headers
@@ -123,7 +120,6 @@ abstract class DataServiceUploadImplTest {
         dataServiceImpl.upload(testMessagesList) {
             assertThat(it.status, allOf(greaterThanOrEqualTo(200), lessThan(209)))
         }
-
         verify(dummyWebService).post(
             argCaptors.component1().capture(),
             anyOrNull(),
@@ -133,13 +129,13 @@ abstract class DataServiceUploadImplTest {
             argCaptors.component5().capture(),
             anyOrNull()
         )
-        val encodedWriteKey = ConfigurationsState.value?.base64Generator?.generateBase64(writeKey)
+        val encodedWriteKey = configuration.base64Generator?.generateBase64(writeKey)
         assertThat(argCaptors.component1().lastValue, allOf(hasEntry("Content-Type", "application/json"),
             hasEntry("Authorization", String.format(Locale.US, "Basic %s", encodedWriteKey))))
         assertThat(argCaptors.component2().lastValue, not(emptyString()))
         assertThat(argCaptors.component3().lastValue, equalTo("v1/batch"))
         assertThat(argCaptors.component4().lastValue, equalTo(String::class.java))
-        assertThat(argCaptors.component5().lastValue, equalTo(ConfigurationsState.value?.gzipEnabled))
+        assertThat(argCaptors.component5().lastValue, equalTo(configuration.gzipEnabled))
     }
 
     @Test

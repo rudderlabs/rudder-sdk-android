@@ -27,6 +27,7 @@ class DummyWebService : WebService {
     var nextErrorBody: String? = null
     var nextError: Throwable? = null
     private val dummyExecutor = DummyExecutor()
+
     override fun <T : Any> get(
         headers: Map<String, String>?,
         query: Map<String, String>?,

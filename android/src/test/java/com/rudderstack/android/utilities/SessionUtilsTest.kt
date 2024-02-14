@@ -3,14 +3,18 @@ package com.rudderstack.android.utilities
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.androidStorage
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Logger
-import com.rudderstack.core.internal.states.ConfigurationsState
+import com.rudderstack.core.holder.associateState
+import com.rudderstack.core.holder.removeState
+import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.android.UserSession
+import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers.allOf
@@ -35,30 +39,36 @@ import org.robolectric.annotation.Config
 @Config(sdk = [29])
 class SessionUtilsTest {
     private lateinit var analytics: Analytics
-
+    private lateinit var mockStorage: AndroidStorage
+    private val userSessionState: UserSessionState?
+        get() = analytics.retrieveState()
     @Before
     fun setup() {
+        mockStorage = mock<AndroidStorage>()
         analytics = generateTestAnalytics(
             mockConfiguration = ConfigurationAndroid(
                 ApplicationProvider.getApplicationContext(),
-                JacksonAdapter(),
+                mock(),
+                shouldVerifySdk = false,
                 trackLifecycleEvents = true,
                 trackAutoSession = true
-            )
+            ),
+            storage = mockStorage
         )
+        analytics.associateState(UserSessionState())
     }
 
     @After
     fun teardown() {
-        UserSessionState.update(UserSession())
-        analytics.currentConfigurationAndroid?.storage?.clearStorage()
+        analytics.removeState<UserSessionState>()
+        analytics.storage.clearStorage()
         analytics.shutdown()
     }
 
     @Test
     fun `test start session`() {
         analytics.startSession()
-        val session = UserSessionState.value
+        val session = userSessionState?.value
         assertNotNull(session)
         assertTrue(session?.isActive == true)
         assertTrue(session?.sessionId != null)
@@ -71,10 +81,10 @@ class SessionUtilsTest {
         val sessionId = 1234567890L
         analytics.startSession(sessionId)
         MatcherAssert.assertThat(
-            (ConfigurationsState.value as ConfigurationAndroid).trackAutoSession,
+            (analytics.currentConfigurationAndroid)?.trackAutoSession,
             `is`(false)
         )
-        val session = UserSessionState.value
+        val session = userSessionState?.value
         assertNotNull(session)
         assertTrue(session?.isActive == true)
         MatcherAssert.assertThat(session?.sessionId, `is`(sessionId))
@@ -105,12 +115,12 @@ class SessionUtilsTest {
         val logger = mock<Logger>()
 
         val mockConfig = ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
-            JacksonAdapter(),
+            application = ApplicationProvider.getApplicationContext(),
+            mock<JsonAdapter>(),
+            shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
             logger = logger,
-            storage = mock<AndroidStorage>()
         )
         analytics.applyConfiguration {
             mockConfig
@@ -125,7 +135,7 @@ class SessionUtilsTest {
             "Invalid session id $invalidSessionId. Must be at least 10 digits"
         )
         //verify SessionState is not updated
-        val session = UserSessionState.value
+        val session = userSessionState?.value
         MatcherAssert.assertThat(session?.sessionId, `is`(-1L))
         MatcherAssert.assertThat(session?.lastActiveTimestamp, `is`(-1L))
         MatcherAssert.assertThat(session?.isActive, `is`(false))
@@ -136,7 +146,7 @@ class SessionUtilsTest {
     fun `test endSession`() {
         analytics.startSession()
 
-        val session = UserSessionState.value
+        val session = userSessionState?.value
         //check session is started
         MatcherAssert.assertThat(session?.sessionId, `is`(not(-1L)))
         MatcherAssert.assertThat(session?.lastActiveTimestamp, `is`(not(-1L)))
@@ -145,14 +155,14 @@ class SessionUtilsTest {
         // When
         analytics.endSession()
         // verify
-        val sessionAfterEnd = UserSessionState.value
+        val sessionAfterEnd = userSessionState?.value
         MatcherAssert.assertThat(sessionAfterEnd?.sessionId, `is`(-1L))
         MatcherAssert.assertThat(sessionAfterEnd?.lastActiveTimestamp, `is`(-1L))
         MatcherAssert.assertThat(sessionAfterEnd?.isActive, `is`(false))
         MatcherAssert.assertThat(sessionAfterEnd?.sessionStart, `is`(false))
         //should update trackAutoSession to false
         MatcherAssert.assertThat(
-            (ConfigurationsState.value as ConfigurationAndroid).trackAutoSession,
+            analytics.currentConfigurationAndroid?.trackAutoSession,
             `is`(false)
         )
 
@@ -164,10 +174,11 @@ class SessionUtilsTest {
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
             JacksonAdapter(),
+            shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true
         )
-        UserSessionState.update(UserSession())
+        userSessionState?.update(UserSession())
         analytics.applyConfiguration {
             mockConfig
         }
@@ -176,7 +187,7 @@ class SessionUtilsTest {
 
         // Then
         // Verify that SessionState is updated
-        val session = UserSessionState.value
+        val session = userSessionState?.value
         MatcherAssert.assertThat(session?.sessionId, `is`(not(-1L)))
         MatcherAssert.assertThat(session?.lastActiveTimestamp, `is`(not(-1L)))
         MatcherAssert.assertThat(session?.isActive, `is`(true))
@@ -188,14 +199,15 @@ class SessionUtilsTest {
         // Given
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            JacksonAdapter(),
+            mock<JsonAdapter>(),
+            shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
             sessionTimeoutMillis = 10000L
         )
         val sessionId = 1234567890L
         val lastActiveTimestamp = defaultLastActiveTimestamp
-        UserSessionState.update(
+        userSessionState?.update(
             UserSession(
                 sessionId = sessionId, isActive = true, lastActiveTimestamp = lastActiveTimestamp
             )
@@ -208,7 +220,7 @@ class SessionUtilsTest {
 
         // Then
         // Verify that SessionState is not updated
-        val session = UserSessionState.value
+        val session = userSessionState?.value
         MatcherAssert.assertThat(session?.sessionId, `is`(sessionId))
         MatcherAssert.assertThat(session?.lastActiveTimestamp, `is`(lastActiveTimestamp))
         MatcherAssert.assertThat(session?.isActive, `is`(true))
@@ -219,13 +231,14 @@ class SessionUtilsTest {
 // Given
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            JacksonAdapter(),
+            mock<JsonAdapter>(),
+            shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true
         )
         val sessionId = 1234567890L
         val lastActiveTimestamp = System.currentTimeMillis() - mockConfig.sessionTimeoutMillis
-        UserSessionState.update(
+        userSessionState?.update(
             UserSession(
                 sessionId = sessionId, isActive = true, lastActiveTimestamp = lastActiveTimestamp
             )
@@ -238,7 +251,7 @@ class SessionUtilsTest {
 
         // Then
         // Verify that SessionState is updated
-        val session = UserSessionState.value
+        val session = userSessionState?.value
         MatcherAssert.assertThat(session?.sessionId, `is`(not(sessionId)))
         MatcherAssert.assertThat(session?.lastActiveTimestamp, `is`(not(lastActiveTimestamp)))
         MatcherAssert.assertThat(session?.isActive, `is`(true))
@@ -250,14 +263,16 @@ class SessionUtilsTest {
         // Given
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            JacksonAdapter(),
+            mock<JsonAdapter>(),
+            shouldVerifySdk = false,
+
             trackLifecycleEvents = true,
             trackAutoSession = true,
             sessionTimeoutMillis = 0L
         )
         val sessionId = 1234567890L
         val lastActiveTimestamp = System.currentTimeMillis() - mockConfig.sessionTimeoutMillis
-        UserSessionState.update(
+        userSessionState?.update(
             UserSession(
                 sessionId = sessionId, isActive = true, lastActiveTimestamp = lastActiveTimestamp
             )
@@ -270,7 +285,7 @@ class SessionUtilsTest {
 
         // Then
         // Verify that SessionState is updated
-        val session = UserSessionState.value
+        val session = userSessionState?.value
         MatcherAssert.assertThat(session?.sessionId, `is`(not(sessionId)))
         MatcherAssert.assertThat(session?.lastActiveTimestamp, `is`(not(lastActiveTimestamp)))
         MatcherAssert.assertThat(session?.isActive, `is`(true))
@@ -280,17 +295,16 @@ class SessionUtilsTest {
     @Test
     fun `test initializeSessionManagement with a saved ongoing session`() {
         // Given
-        val mockStorage = mock<AndroidStorage>()
         val sessionId = 1234567890L
         val lastActiveTimestamp = defaultLastActiveTimestamp
         whenever(mockStorage.sessionId).thenReturn(sessionId)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(lastActiveTimestamp)
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            JacksonAdapter(),
+            mock<JsonAdapter>(),
+            shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
-            storage = mockStorage
         )
         analytics.applyConfiguration {
             mockConfig
@@ -300,7 +314,7 @@ class SessionUtilsTest {
 
         // Then
         // Verify that SessionState is not updated
-        val session = UserSessionState.value
+        val session = userSessionState?.value
         MatcherAssert.assertThat(session?.sessionId, `is`(sessionId))
         MatcherAssert.assertThat(session?.lastActiveTimestamp, `is`(lastActiveTimestamp))
         MatcherAssert.assertThat(session?.isActive, `is`(true))
@@ -309,7 +323,6 @@ class SessionUtilsTest {
     @Test
     fun `test initializeSessionManagement with a saved but expired session`() {
         // Given
-        val mockStorage = mock<AndroidStorage>()
         val sessionId = 1234567890L
         val lastActiveTimestamp =
             defaultLastActiveTimestamp - ConfigurationAndroid.Defaults.SESSION_TIMEOUT - 1L //expired session
@@ -317,10 +330,10 @@ class SessionUtilsTest {
         whenever(mockStorage.lastActiveTimestamp).thenReturn(lastActiveTimestamp)
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            JacksonAdapter(),
+            mock<JsonAdapter>(),
+            shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
-            storage = mockStorage
         )
         analytics.applyConfiguration {
             mockConfig
@@ -330,7 +343,7 @@ class SessionUtilsTest {
 
         // Then
         // Verify that SessionState is updated
-        val session = UserSessionState.value
+        val session = userSessionState?.value
         MatcherAssert.assertThat(session?.sessionId, allOf(not(sessionId), not(-1L)))
         MatcherAssert.assertThat(
             session?.lastActiveTimestamp, allOf(
@@ -343,15 +356,14 @@ class SessionUtilsTest {
     @Test
     fun `test initializeSessionManagement without saved session`() {
         // Given
-        val mockStorage = mock<AndroidStorage>()
         whenever(mockStorage.sessionId).thenReturn(null)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(null)
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            JacksonAdapter(),
+            mock<JsonAdapter>(),
+            shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
-            storage = mockStorage
         )
         analytics.applyConfiguration {
             mockConfig
@@ -359,7 +371,7 @@ class SessionUtilsTest {
         // When
         analytics.initializeSessionManagement()
         // Verify that SessionState is updated
-        val session = UserSessionState.value
+        val session = userSessionState?.value
         MatcherAssert.assertThat(session?.sessionId, not(-1L))
         MatcherAssert.assertThat(session?.lastActiveTimestamp, not(-1L))
         MatcherAssert.assertThat(session?.isActive, `is`(true))
@@ -368,24 +380,25 @@ class SessionUtilsTest {
     @Test
     fun `test listenToSessionChanges with active session`() {
 // Given
-        val mockStorage = mock<AndroidStorage>()
         whenever(mockStorage.sessionId).thenReturn(null)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(null)
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            JacksonAdapter(),
+            mock<JsonAdapter>(),
+            shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
+        )
+        analytics.shutdown()
+        analytics = generateTestAnalytics(
+            mockConfiguration = mockConfig,
             storage = mockStorage
         )
-        analytics.applyConfiguration {
-            mockConfig
-        }
         // When
         analytics.initializeSessionManagement()
         val sessionId = 1234567890L
         val lastActiveTimestamp = defaultLastActiveTimestamp
-        UserSessionState.update(
+        userSessionState?.update(
             UserSession(
                 lastActiveTimestamp, sessionId, isActive = true, false
             )

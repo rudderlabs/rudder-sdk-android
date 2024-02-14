@@ -26,12 +26,13 @@ import java.util.concurrent.ConcurrentHashMap
  * source config
  *
  */
-object EventFilteringPlugin : Plugin {
-    private const val DISABLE = "disable"
-    private const val WHITELISTED_EVENTS = "whitelistedEvents"
-    private const val BLACKLISTED_EVENTS = "blacklistedEvents"
-    private const val EVENT_FILTERING_OPTION = "eventFilteringOption"
-    private const val EVENT_NAME = "eventName"
+private const val DISABLE = "disable"
+private const val WHITELISTED_EVENTS = "whitelistedEvents"
+private const val BLACKLISTED_EVENTS = "blacklistedEvents"
+private const val EVENT_FILTERING_OPTION = "eventFilteringOption"
+private const val EVENT_NAME = "eventName"
+class EventFilteringPlugin : Plugin {
+
 
     //map of (destination definition name, DestinationEventFilteringConfig)
     private var filteredEventsMap = ConcurrentHashMap<String, DestinationEventFilteringConfig>()
