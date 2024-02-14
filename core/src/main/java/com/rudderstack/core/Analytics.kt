@@ -59,7 +59,7 @@ class Analytics private constructor(
         //optional
         initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
         //optional called if shutdown is called
-        shutdownHook: (() -> Unit)? = null
+        shutdownHook: (Analytics.() -> Unit)? = null
     ) : this(
         _delegate = AnalyticsDelegate(
             configuration, dataUploadService ?: DataUploadServiceImpl(

@@ -31,6 +31,9 @@ internal object RudderPreferenceManager  {
     private const val RUDDER_OPT_IN_TIME_KEY = "rl_opt_in_time"
     private const val RUDDER_OPT_OUT_TIME_KEY = "rl_opt_out_time"
     private const val RUDDER_ANONYMOUS_ID_KEY = "rl_anonymous_id_key"
+    private const val RUDDER_SESSION_ID_KEY = "rl_session_id_key"
+    private const val RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY =
+        "rl_last_event_timestamp_key"
     private const val RUDDER_USER_ID_KEY = "rl_user_id_key"
     private const val RUDDER_PERIODIC_WORK_REQUEST_ID_KEY = "rl_periodic_work_request_key"
 
@@ -75,6 +78,22 @@ internal object RudderPreferenceManager  {
     fun saveAnonymousId(anonymousId: String?) {
         preferences.edit().putString(RUDDER_ANONYMOUS_ID_KEY, anonymousId).apply()
     }
+    fun saveSessionId(sessionId: Long?) {
+        preferences.edit().putLong(RUDDER_SESSION_ID_KEY, sessionId?:-1L).apply()
+    }
+    fun clearSessionId() {
+        preferences.edit().remove(RUDDER_SESSION_ID_KEY).apply()
+    }
+    val sessionId: Long
+        get() = preferences.getLong(RUDDER_SESSION_ID_KEY, -1L)
+    fun saveLastActiveTimestamp(lastActiveTimestamp: Long?) {
+        preferences.edit().putLong(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY, lastActiveTimestamp ?: -1L).apply()
+    }
+    fun clearLastActiveTimestamp() {
+        preferences.edit().remove(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY).apply()
+    }
+    val lastActiveTimestamp: Long
+        get() = preferences.getLong(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY, -1L)
 
     val anonymousId: String?
         get() = preferences.getString(RUDDER_ANONYMOUS_ID_KEY, null)

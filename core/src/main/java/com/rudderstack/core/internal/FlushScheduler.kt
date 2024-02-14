@@ -102,6 +102,13 @@ internal class FlushScheduler @JvmOverloads constructor(
                     dataChangeListener.onDataChange()
                 }
             }
+            if(_currentFlushInterval <= 0){
+                ConfigurationsState.value?.logger?.warn(
+                    "RudderSDK",
+                    "Invalid flush interval $_currentFlushInterval. Must be at least greater than 0"
+                )
+                return
+            }
             thresholdCountDownTimer.schedule(
                 periodicTaskScheduler, _currentFlushInterval, _currentFlushInterval
             )

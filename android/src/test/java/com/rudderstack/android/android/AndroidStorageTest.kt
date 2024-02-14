@@ -20,6 +20,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.android.utils.TestExecutor
 import com.rudderstack.android.android.utils.busyWait
+import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.RudderUtils
@@ -147,6 +148,32 @@ abstract class AndroidStorageTest {
 //            contains(last10Events)
             )
         )
+    }
+    @Test
+    fun `test save and retrieve LastActiveTimestamp`() {
+        RudderPreferenceManager.initialize(ApplicationProvider.getApplicationContext())
+        val storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(), storageExecutor = TestExecutor())
+        storage.clearStorage()
+        MatcherAssert.assertThat(storage.lastActiveTimestamp, Matchers.nullValue())
+        val timestamp = Date().time
+        storage.saveLastActiveTimestamp(timestamp)
+        MatcherAssert.assertThat(storage.lastActiveTimestamp, Matchers.`is`(timestamp))
+        storage.clearLastActiveTimestamp()
+        MatcherAssert.assertThat(storage.lastActiveTimestamp, Matchers.nullValue())
+        storage.shutdown()
+    }
+    @Test
+    fun `test save and retrieve sessionId`() {
+        RudderPreferenceManager.initialize(ApplicationProvider.getApplicationContext())
+        val storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(), storageExecutor = TestExecutor())
+        storage.clearStorage()
+        MatcherAssert.assertThat(storage.sessionId, Matchers.nullValue())
+        val sessionId = 123456L
+        storage.setSessionId(123456L)
+        MatcherAssert.assertThat(storage.sessionId, Matchers.`is`(sessionId))
+        storage.clearSessionId()
+        MatcherAssert.assertThat(storage.sessionId, Matchers.nullValue())
+        storage.shutdown()
     }
 
 }
