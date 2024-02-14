@@ -44,10 +44,11 @@ import java.util.concurrent.atomic.AtomicLong
 class AndroidStorageImpl(
     private val application: Application,
     private val useContentProvider: Boolean = false,
+    private val instanceName: String,
     private val storageExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 ) : AndroidStorage {
     private var logger: Logger? = null
-    private val Application.dbName get() = "db_${packageName}"
+    private val Application.dbName get() = "db_${packageName}_$instanceName"
     private var jsonAdapter: JsonAdapter? = null
 
 
@@ -121,6 +122,11 @@ class AndroidStorageImpl(
 
     }
 
+    private val serverConfigFileName
+        get() = "$SERVER_CONFIG_FILE_NAME-{instanceName}"
+    private val contextFileName
+        get() = "$CONTEXT_FILE_NAME-{instanceName}"
+
     private var messageDao: Dao<MessageEntity>? = null
 
     private var _storageCapacity: Int = Storage.MAX_STORAGE_CAPACITY //default 2_000
@@ -147,6 +153,11 @@ class AndroidStorageImpl(
 
     private var _cachedContext: MessageContext? = null
 
+    private var rudderDatabase: RudderDatabase? = null
+
+//    private val _configSubscriber =
+//        ::onConfigChange
+
     //message table listener
     private val _messageDataListener = object : Dao.DataChangeListener<MessageEntity> {
         override fun onDataInserted(inserted: List<MessageEntity>, allData: List<MessageEntity>) {
@@ -167,15 +178,12 @@ class AndroidStorageImpl(
 
 
     private fun initDb(analytics: Analytics) {
-        RudderDatabase.init(
-            application,
-            application.dbName,
-            RudderEntityFactory(analytics),
-            useContentProvider,
-            DB_VERSION,
-            executorService = storageExecutor
+        rudderDatabase = RudderDatabase(
+            application, application.dbName,//TODO: change this to instance name
+            RudderEntityFactory(analytics), useContentProvider, DB_VERSION, executorService =
+            storageExecutor
         )
-        messageDao = RudderDatabase.getDao(MessageEntity::class.java, storageExecutor)
+        messageDao = rudderDatabase?.getDao(MessageEntity::class.java, storageExecutor)
         messageDao?.addDataChangeListener(_messageDataListener)
 
     }
@@ -288,7 +296,7 @@ class AndroidStorageImpl(
     override val context: MessageContext?
         get() = (if (_cachedContext == null) {
             _cachedContext =
-                getObject<HashMap<String, Any?>>(application, CONTEXT_FILE_NAME, logger)
+                getObject<HashMap<String, Any?>>(application, contextFileName, logger)
             _cachedContext
         } else _cachedContext)
 
@@ -299,7 +307,7 @@ class AndroidStorageImpl(
         synchronized(this) {
             _serverConfig = serverConfig
             saveObject(
-                serverConfig, context = application, SERVER_CONFIG_FILE_NAME, logger
+                serverConfig, context = application, serverConfigFileName, logger
             )
         }
     }
@@ -307,7 +315,7 @@ class AndroidStorageImpl(
     override val serverConfig: RudderServerConfig?
         get() = synchronized(this) {
             if (_serverConfig == null) _serverConfig =
-                getObject(application, SERVER_CONFIG_FILE_NAME, logger)
+                getObject(application, serverConfigFileName, logger)
             _serverConfig
         }
 
@@ -330,7 +338,7 @@ class AndroidStorageImpl(
     }
 
     override fun shutdown() {
-        RudderDatabase.shutDown()
+        rudderDatabase?.shutDown()
         _dataCount.set(0)
     }
 
@@ -403,8 +411,7 @@ class AndroidStorageImpl(
 
     override fun setup(analytics: Analytics) {
         initDb(analytics)
-        preferenceManager =
-            RudderPreferenceManager(application, analytics.instanceName)
+        preferenceManager = RudderPreferenceManager(application, analytics.instanceName)
     }
 
     private val Iterable<Message>.entities
@@ -416,9 +423,7 @@ class AndroidStorageImpl(
 
     private fun MessageContext.save() {
         saveObject(
-            HashMap(this), application, CONTEXT_FILE_NAME, logger
+            HashMap(this), application, contextFileName, logger
         )
     }
-
-
 }

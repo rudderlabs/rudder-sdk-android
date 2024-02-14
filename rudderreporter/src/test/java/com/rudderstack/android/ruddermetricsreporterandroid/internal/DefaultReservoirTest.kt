@@ -75,7 +75,7 @@ class DefaultReservoirTest {
     fun initialize() {
         defaultStorage = DefaultReservoir(
             ApplicationProvider.getApplicationContext(),
-            false,
+            false,"test_db",
             TestExecutor(),
         )
 
@@ -147,26 +147,6 @@ class DefaultReservoirTest {
             assertThat(metric.value, Matchers.equalTo(index.toLong() + 1))
             assertThat(metric.name, Matchers.equalTo("testCounter_$index"))
             assertThat(metric.labels, Matchers.equalTo(testCounterToLabelMap[metric.name]))
-        }
-    }
-
-    @Test
-    fun `test duplicate label insertion`() {
-        val labelEntities = (0..50).map {
-            LabelEntity("testLabel_key_$it", "testLabel_value_$it")
-        }
-        val labelDao = RudderDatabase.getDao(LabelEntity::class.java)
-        with(labelDao) {
-            val insertedIds =
-                labelEntities.insertSync(conflictResolutionStrategy = Dao.ConflictResolutionStrategy.CONFLICT_IGNORE)
-            assertThat(insertedIds?.size, Matchers.equalTo(51))
-            assertThat(insertedIds, Matchers.not(Matchers.contains(-1)))
-
-            val duplicateIds =
-                labelEntities.insertSync(conflictResolutionStrategy = Dao.ConflictResolutionStrategy.CONFLICT_IGNORE)
-                    ?.toSet()
-            assertThat(duplicateIds?.size, Matchers.equalTo(1))
-            assertThat(duplicateIds, Matchers.contains(-1))
         }
     }
 

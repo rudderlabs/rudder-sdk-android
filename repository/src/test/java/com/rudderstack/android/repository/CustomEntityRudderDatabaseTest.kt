@@ -22,6 +22,7 @@ import com.rudderstack.android.repository.annotation.RudderField
 import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert
+import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.junit.After
 import org.junit.Before
@@ -43,9 +44,7 @@ class CustomEntityRudderDatabaseTest {
             other as Model
 
             if (name != other.name) return false
-            if (!values.contentEquals(other.values)) return false
-
-            return true
+            return values.contentEquals(other.values)
         }
 
         override fun hashCode(): Int {
@@ -105,10 +104,10 @@ class CustomEntityRudderDatabaseTest {
             } as T?
         }
     }
-
+    lateinit var database: RudderDatabase
     @Before
     fun initialize() {
-        RudderDatabase.init(
+        database = RudderDatabase(
             ApplicationProvider.getApplicationContext(),
 //            RuntimeEnvironment.application,
             "testDb",
@@ -120,7 +119,7 @@ class CustomEntityRudderDatabaseTest {
 
     @After
     fun tearDown() {
-        RudderDatabase.shutDown()
+        database.shutDown()
     }
 
     @Test
@@ -133,7 +132,7 @@ class CustomEntityRudderDatabaseTest {
         ).map {
             ModelEntity(it)
         }
-        val entityModelDao = RudderDatabase.getDao(ModelEntity::class.java)
+        val entityModelDao = database.getDao(ModelEntity::class.java)
         // save data
         val isCompleted = AtomicBoolean(false)
         with(entityModelDao) {
@@ -171,5 +170,29 @@ class CustomEntityRudderDatabaseTest {
             }
         }
         Awaitility.await().atMost(500, TimeUnit.SECONDS).untilTrue(isCompleted)
+    }
+
+    //behaviour verification of insertOrIncrement
+
+    @Test
+    fun `test duplicate entity insertion`() {
+        val labelEntities = (0..50).map {
+            ModelEntity(Model("testLabel_key_$it", arrayOf("testLabel_value_$it"))) // unique
+        // elements
+        }
+        val modelDao = database.getDao(ModelEntity::class.java)
+        // we insert unique elements, so the size of the inserted ids should be 51
+        with(modelDao) {
+            val insertedIds =
+                labelEntities.insertSync(conflictResolutionStrategy = Dao.ConflictResolutionStrategy.CONFLICT_IGNORE)
+            assertThat(insertedIds?.size, Matchers.equalTo(51))
+            assertThat(insertedIds, Matchers.not(Matchers.contains(-1)))
+            // we try inserting the elements again. IGNORE strategy should ignore the insertions
+            val duplicateIds =
+                labelEntities.insertSync(conflictResolutionStrategy = Dao.ConflictResolutionStrategy.CONFLICT_IGNORE)
+                    ?.toSet()
+            assertThat(duplicateIds?.size, Matchers.equalTo(1))
+            assertThat(duplicateIds, Matchers.contains(-1))
+        }
     }
 }

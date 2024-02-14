@@ -64,9 +64,12 @@ abstract class AndroidStorageTest {
     fun setup() {
         MockitoAnnotations.openMocks(this)
         val storage = AndroidStorageImpl(
-            ApplicationProvider.getApplicationContext(), false
+            ApplicationProvider.getApplicationContext(),
+            false, instanceName = "test_instance",
+            storageExecutor = TestExecutor()
         )
         mockConfig = mock()
+        whenever(mockConfig.shouldVerifySdk).thenReturn(false)
         whenever(mockConfig.jsonAdapter).thenReturn(jsonAdapter)
         whenever(mockConfig.analyticsExecutor).thenReturn(TestExecutor())
         whenever(mockConfig.application).thenReturn(ApplicationProvider.getApplicationContext())
@@ -153,9 +156,10 @@ abstract class AndroidStorageTest {
             )
         )
     }
+
     @Test
     fun `test save and retrieve LastActiveTimestamp`() {
-        val storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(), storageExecutor = TestExecutor())
+        val storage = analytics.storage as AndroidStorage
         storage.clearStorage()
         MatcherAssert.assertThat(storage.lastActiveTimestamp, Matchers.nullValue())
         val timestamp = Date().time
@@ -165,9 +169,10 @@ abstract class AndroidStorageTest {
         MatcherAssert.assertThat(storage.lastActiveTimestamp, Matchers.nullValue())
         storage.shutdown()
     }
+
     @Test
     fun `test save and retrieve sessionId`() {
-        val storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(), storageExecutor = TestExecutor())
+       val storage = analytics.storage as AndroidStorage
         storage.clearStorage()
         MatcherAssert.assertThat(storage.sessionId, Matchers.nullValue())
         val sessionId = 123456L
@@ -175,7 +180,6 @@ abstract class AndroidStorageTest {
         MatcherAssert.assertThat(storage.sessionId, Matchers.`is`(sessionId))
         storage.clearSessionId()
         MatcherAssert.assertThat(storage.sessionId, Matchers.nullValue())
-        storage.shutdown()
     }
 
 }

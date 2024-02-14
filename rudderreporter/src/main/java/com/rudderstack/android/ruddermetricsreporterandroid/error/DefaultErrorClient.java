@@ -34,7 +34,6 @@ import com.rudderstack.android.ruddermetricsreporterandroid.internal.BackgroundT
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.ClientComponentCallbacks;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.ConnectivityCompat;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DataCollectionModule;
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultReservoir;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.DeviceDataCollector;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.NoopLogger;
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.StateObserver;
@@ -164,12 +163,6 @@ public class DefaultErrorClient implements MetadataAware, ErrorClient {
     @NonNull
     MemoryTrimState getMemoryTrimState() {
         return memoryTrimState;
-    }
-
-    public DefaultErrorClient(@NonNull Context context,
-                              @NonNull Configuration configuration,
-                              @NonNull JsonAdapter jsonAdapter) {
-        this(context, configuration, new DefaultReservoir(context, false), jsonAdapter);
     }
 
     public DefaultErrorClient(@NonNull Context context,

@@ -65,6 +65,11 @@ dependencies {
     testImplementation deps.mockito
     testImplementation deps.awaitility
     testImplementation deps.robolectric
+
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
+    androidTestImplementation deps.androidXTestExtJunitKtx
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
 apply from: rootProject.file('gradle/artifacts-aar.gradle')
 apply from: rootProject.file('gradle/mvn-publish.gradle')

@@ -4,6 +4,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
+import com.rudderstack.android.ruddermetricsreporterandroid.internal.DefaultReservoir
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.NoopLogger
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 
@@ -19,7 +20,10 @@ internal object TestUtils {
         configuration: Configuration,
         jsonAdapter: JsonAdapter,
     ): DefaultErrorClient {
-        return DefaultErrorClient(ApplicationProvider.getApplicationContext(), configuration, jsonAdapter)
+        return DefaultErrorClient(ApplicationProvider.getApplicationContext(), configuration,
+            DefaultReservoir(ApplicationProvider.getApplicationContext(), false,
+                "test_db"),
+            jsonAdapter)
     }
     fun generateClient(
         configuration: Configuration,
