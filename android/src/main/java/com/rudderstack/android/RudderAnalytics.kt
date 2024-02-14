@@ -50,6 +50,7 @@ fun RudderAnalytics(
     configDownloadService: ConfigDownloadService? = null,
     storage: AndroidStorage = AndroidStorageImpl(
         configuration.application,
+        instanceName = instanceName,
         useContentProvider = ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER
     ),
     initializationListener: ((success: Boolean, message: String?) -> Unit)? = null

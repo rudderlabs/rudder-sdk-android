@@ -411,8 +411,7 @@ class AndroidStorageImpl(
 
     override fun setup(analytics: Analytics) {
         initDb(analytics)
-        preferenceManager =
-            RudderPreferenceManager(application, analytics.instanceName)
+        preferenceManager = RudderPreferenceManager(application, analytics.instanceName)
     }
 
     private val Iterable<Message>.entities

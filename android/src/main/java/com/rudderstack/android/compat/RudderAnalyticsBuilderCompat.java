@@ -43,6 +43,7 @@ public final class RudderAnalyticsBuilderCompat  {
     private String instanceName = DEFAULTS_ANALYTICS_INSTANCE_NAME;
     private AndroidStorage storage = new AndroidStorageImpl(configuration.getApplication(),
             ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER,
+            instanceName = "test_instance",
             Executors.newSingleThreadExecutor());
 
     public RudderAnalyticsBuilderCompat(@NonNull String writeKey, @NonNull ConfigurationAndroid configuration) {

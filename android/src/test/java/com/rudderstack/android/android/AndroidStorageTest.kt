@@ -23,6 +23,7 @@ import com.rudderstack.android.RudderAnalytics
 import com.rudderstack.android.android.utils.TestExecutor
 import com.rudderstack.android.android.utils.busyWait
 import com.rudderstack.android.internal.RudderPreferenceManager
+import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.RudderUtils
@@ -63,9 +64,12 @@ abstract class AndroidStorageTest {
     fun setup() {
         MockitoAnnotations.openMocks(this)
         val storage = AndroidStorageImpl(
-            ApplicationProvider.getApplicationContext(), false, instanceName = "test_instance"
+            ApplicationProvider.getApplicationContext(),
+            false, instanceName = "test_instance",
+            storageExecutor = TestExecutor()
         )
         mockConfig = mock()
+        whenever(mockConfig.shouldVerifySdk).thenReturn(false)
         whenever(mockConfig.jsonAdapter).thenReturn(jsonAdapter)
         whenever(mockConfig.analyticsExecutor).thenReturn(TestExecutor())
         whenever(mockConfig.application).thenReturn(ApplicationProvider.getApplicationContext())
@@ -155,9 +159,7 @@ abstract class AndroidStorageTest {
 
     @Test
     fun `test save and retrieve LastActiveTimestamp`() {
-        val storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(),
-            instanceName = "test_instance",
-            storageExecutor = TestExecutor())
+        val storage = analytics.storage as AndroidStorage
         storage.clearStorage()
         MatcherAssert.assertThat(storage.lastActiveTimestamp, Matchers.nullValue())
         val timestamp = Date().time
@@ -170,9 +172,7 @@ abstract class AndroidStorageTest {
 
     @Test
     fun `test save and retrieve sessionId`() {
-        val storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(),
-            instanceName = "test_instance",
-            storageExecutor = TestExecutor())
+       val storage = analytics.storage as AndroidStorage
         storage.clearStorage()
         MatcherAssert.assertThat(storage.sessionId, Matchers.nullValue())
         val sessionId = 123456L
@@ -180,7 +180,6 @@ abstract class AndroidStorageTest {
         MatcherAssert.assertThat(storage.sessionId, Matchers.`is`(sessionId))
         storage.clearSessionId()
         MatcherAssert.assertThat(storage.sessionId, Matchers.nullValue())
-        storage.shutdown()
     }
 
 }
