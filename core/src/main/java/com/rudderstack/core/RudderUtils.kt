@@ -54,4 +54,12 @@ object RudderUtils {
         }
     }
 
+    internal fun getUTF8Length(message: String): Int {
+        return try {
+            message.toByteArray(Charsets.UTF_8).size
+        } catch (ex: UnsupportedEncodingException) {
+            -1
+        }
+    }
+
 }
