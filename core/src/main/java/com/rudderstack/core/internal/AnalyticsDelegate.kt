@@ -29,7 +29,6 @@ import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
 import com.rudderstack.core.Storage
 import com.rudderstack.core.flushpolicy.CountBasedFlushPolicy
-import com.rudderstack.core.flushpolicy.FlushPolicy
 import com.rudderstack.core.flushpolicy.IntervalBasedFlushPolicy
 import com.rudderstack.core.flushpolicy.addFlushPolicies
 import com.rudderstack.core.flushpolicy.applyFlushPoliciesClosure
@@ -39,6 +38,7 @@ import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.core.internal.plugins.DestinationConfigurationPlugin
 import com.rudderstack.core.internal.plugins.EventFilteringPlugin
 import com.rudderstack.core.internal.plugins.GDPRPlugin
+import com.rudderstack.core.internal.plugins.EventSizeFilterPlugin
 import com.rudderstack.core.internal.plugins.RudderOptionPlugin
 import com.rudderstack.core.internal.plugins.StoragePlugin
 import com.rudderstack.core.internal.plugins.WakeupActionPlugin
@@ -147,6 +147,7 @@ internal class AnalyticsDelegate(
 
     //plugins
     private val gdprPlugin = GDPRPlugin()
+    private val eventSizeFilterPlugin = EventSizeFilterPlugin()
     private val storagePlugin = StoragePlugin()
     private val wakeupActionPlugin = WakeupActionPlugin()
     private val eventFilteringPlugin = EventFilteringPlugin()
@@ -556,6 +557,7 @@ internal class AnalyticsDelegate(
     private fun initializeMessagePlugins() {
         // check if opted out
         _internalPreMessagePlugins = _internalPreMessagePlugins + gdprPlugin
+        _internalPostCustomPlugins = _internalPostCustomPlugins + eventSizeFilterPlugin
         // rudder option plugin followed by extract state plugin should be added by lifecycle
         // add defaults to message
 //        _internalPrePlugins = _internalPrePlugins + anonymousIdPlugin
