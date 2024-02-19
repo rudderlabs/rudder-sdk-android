@@ -15,11 +15,8 @@
 package com.rudderstack.android.storage
 
 import android.app.Application
-import android.content.Context
 import android.os.Build
 import com.rudderstack.android.BuildConfig
-import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.internal.AndroidLogger
 import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.repository.Dao
 import com.rudderstack.android.repository.RudderDatabase
@@ -31,10 +28,7 @@ import com.rudderstack.models.Message
 import com.rudderstack.models.MessageContext
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import java.io.FileOutputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
-import java.io.Serializable
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import java.util.LinkedList
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -48,77 +42,19 @@ class AndroidStorageImpl(
     private val storageExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 ) : AndroidStorage {
     private var logger: Logger? = null
-    private val Application.dbName get() = "db_${packageName}_$instanceName"
+    private val dbName get() = "rs_persistence_$instanceName"
     private var jsonAdapter: JsonAdapter? = null
 
 
-    private var preferenceManager : RudderPreferenceManager? = null
+    private var preferenceManager: RudderPreferenceManager? = null
+
     companion object {
         private const val DB_VERSION = 1
-        private const val SERVER_CONFIG_FILE_NAME = "server_config"
+        private const val SERVER_CONFIG_FILE_NAME = "RudderServerConfig"
+
 
         private const val CONTEXT_FILE_NAME = "pref_context"
 
-        //file access
-        /**
-         * Saves a serializable object in file
-         *
-         * @param T
-         * @param obj
-         * @param context
-         * @param fileName
-         * @return
-         */
-        private fun <T : Serializable> saveObject(
-            obj: T, context: Context, fileName: String, logger: Logger? = AndroidLogger
-        ): Boolean {
-            try {
-                val fos: FileOutputStream = context.openFileOutput(
-                    fileName, Context.MODE_PRIVATE
-                )
-                val os = ObjectOutputStream(fos)
-                os.writeObject(obj)
-                os.close()
-                fos.close()
-                return true
-            } catch (e: Exception) {
-                logger?.error(
-                    log = "save object: Exception while saving Object to File", throwable = e
-                )
-                e.printStackTrace()
-            }
-            return false
-        }
-
-        /**
-         *
-         *
-         * @param T
-         * @param context
-         * @param fileName
-         * @return
-         */
-        private fun <T : Serializable> getObject(
-            context: Context, fileName: String, logger: Logger? = AndroidLogger
-        ): T? {
-            try {
-                val file = context.getFileStreamPath(fileName)
-                if (file != null && file.exists()) {
-                    val fis = context.openFileInput(fileName)
-                    val `is` = ObjectInputStream(fis)
-                    val obj = `is`.readObject() as? T?
-                    `is`.close()
-                    fis.close()
-                    return obj
-                }
-            } catch (e: Exception) {
-                logger?.error(
-                    log = "getObject: Failed to read Object from File", throwable = e
-                )
-                e.printStackTrace()
-            }
-            return null
-        }
 
     }
 
@@ -155,8 +91,6 @@ class AndroidStorageImpl(
 
     private var rudderDatabase: RudderDatabase? = null
 
-//    private val _configSubscriber =
-//        ::onConfigChange
 
     //message table listener
     private val _messageDataListener = object : Dao.DataChangeListener<MessageEntity> {
@@ -179,9 +113,12 @@ class AndroidStorageImpl(
 
     private fun initDb(analytics: Analytics) {
         rudderDatabase = RudderDatabase(
-            application, application.dbName,//TODO: change this to instance name
-            RudderEntityFactory(analytics), useContentProvider, DB_VERSION, executorService =
-            storageExecutor
+            application,
+            dbName,
+            RudderEntityFactory(analytics),
+            useContentProvider,
+            DB_VERSION,
+            executorService = storageExecutor
         )
         messageDao = rudderDatabase?.getDao(MessageEntity::class.java, storageExecutor)
         messageDao?.addDataChangeListener(_messageDataListener)
@@ -295,8 +232,7 @@ class AndroidStorageImpl(
 
     override val context: MessageContext?
         get() = (if (_cachedContext == null) {
-            _cachedContext =
-                getObject<HashMap<String, Any?>>(application, contextFileName, logger)
+            _cachedContext = getObject<HashMap<String, Any?>>(application, contextFileName, logger)
             _cachedContext
         } else _cachedContext)
 
@@ -355,6 +291,8 @@ class AndroidStorageImpl(
         get() = _optOutTime.get()
     override val optInTime: Long
         get() = _optInTime.get()
+    override val v1OptOut: Boolean
+        get() = preferenceManager?.v1optOutStatus ?: false
     override val anonymousId: String?
         get() {
             if (_anonymousId == null) {
@@ -373,6 +311,22 @@ class AndroidStorageImpl(
         get() = preferenceManager?.sessionId?.takeIf { it > -1L }
     override val lastActiveTimestamp: Long?
         get() = preferenceManager?.lastActiveTimestamp?.takeIf { it > -1L }
+    override val v1AnonymousId: String?
+        get() = preferenceManager?.v1AnonymousId
+    override val v1UserId: String?
+        get() = preferenceManager?.v1UserId
+    override val v1SessionId: Long?
+        get() = preferenceManager?.v1SessionId?.takeIf { it > -1L }
+    override val v1LastActiveTimestamp: Long?
+        get() = preferenceManager?.v1LastActiveTimestamp?.takeIf { it > -1L }
+    override val v1Traits: Map<String, Any?>?
+        get() = preferenceManager?.v1Traits?.let {
+            jsonAdapter?.readJson(it, object : RudderTypeAdapter<Map<String, Any?>>() {})
+        }
+    override val v1ExternalIds: List<Map<String, String>>?
+        get() = preferenceManager?.v1ExternalIdsJson?.let {
+            jsonAdapter?.readJson(it, object : RudderTypeAdapter<List<Map<String, String>>>() {})
+        }
 
     override fun setAnonymousId(anonymousId: String) {
         _anonymousId = anonymousId
@@ -381,7 +335,7 @@ class AndroidStorageImpl(
 
     override fun setUserId(userId: String) {
         _userId = userId
-        preferenceManager?.saveAnonymousId(anonymousId)
+        preferenceManager?.saveUserId(userId)
     }
 
     override fun setSessionId(sessionId: Long) {
@@ -398,6 +352,26 @@ class AndroidStorageImpl(
 
     override fun clearLastActiveTimestamp() {
         preferenceManager?.clearLastActiveTimestamp()
+    }
+
+    override fun resetV1UserId() {
+        preferenceManager?.resetV1UserId()
+    }
+
+    override fun resetV1AnonymousId() {
+        preferenceManager?.resetV1AnonymousId()
+    }
+
+    override fun resetV1OptOut() {
+        preferenceManager?.resetV1OptOut()
+    }
+
+    override fun resetV1Traits() {
+        preferenceManager?.resetV1Traits()
+    }
+
+    override fun resetV1ExternalIds() {
+        preferenceManager?.resetV1ExternalIds()
     }
 
     override val libraryName: String
@@ -426,4 +400,11 @@ class AndroidStorageImpl(
             HashMap(this), application, contextFileName, logger
         )
     }
+
+    private fun importV1Data() {
+        val oldDbName = "events.db"
+        val oldDb = application.getDatabasePath(oldDbName)
+
+    }
+
 }

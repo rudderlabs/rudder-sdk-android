@@ -109,12 +109,12 @@ internal class RudderPreferenceManager(application: Application,
     val userId: String?
         get() = preferences.getString(RUDDER_USER_ID_KEY.key, null)
 
-    fun saveOptStatus(optStatus: Boolean) {
-        preferences.edit().putBoolean(RUDDER_OPT_STATUS_KEY.key, optStatus).apply()
-    }
-
-    val optStatus: Boolean
-        get() = preferences.getBoolean(RUDDER_OPT_STATUS_KEY.key, false)
+//    fun saveOptStatus(optStatus: Boolean) {
+//        preferences.edit().putBoolean(RUDDER_OPT_STATUS_KEY.key, optStatus).apply()
+//    }
+//
+//    val optStatus: Boolean
+//        get() = preferences.getBoolean(RUDDER_OPT_STATUS_KEY.key, false)
 
     fun updateOptInTime() {
         preferences.edit().putLong(RUDDER_OPT_IN_TIME_KEY.key, System.currentTimeMillis()).apply()
@@ -134,7 +134,43 @@ internal class RudderPreferenceManager(application: Application,
             .apply()
     }
 
+    fun resetV1UserId() {
+        preferences.edit().remove(RUDDER_USER_ID_KEY).apply()
+    }
+    fun resetV1AnonymousId() {
+        preferences.edit().remove(RUDDER_ANONYMOUS_ID_KEY).apply()
+    }
+    fun resetV1Traits() {
+        preferences.edit().remove(RUDDER_TRAITS_KEY).apply()
+    }
+    fun resetV1ExternalIds() {
+        preferences.edit().remove(RUDDER_EXTERNAL_ID_KEY).apply()
+    }
+    fun resetV1OptOut() {
+        preferences.edit().remove(RUDDER_OPT_STATUS_KEY).apply()
+    }
+
     val periodicWorkRequestId: String?
         get() = preferences.getString(RUDDER_PERIODIC_WORK_REQUEST_ID_KEY.key, null)
+    val v1AnonymousId
+        get() = preferences.getString(RUDDER_ANONYMOUS_ID_KEY, null)
 
+    internal val v1ExternalIdsJson: String?
+        get() =  preferences.getString(RUDDER_EXTERNAL_ID_KEY, null)
+
+    internal val v1Traits
+        get() = preferences.getString(RUDDER_TRAITS_KEY, null)
+
+    internal val v1optOutStatus: Boolean
+        get() = preferences.getBoolean(RUDDER_OPT_STATUS_KEY, false)
+
+    internal val v1LastActiveTimestamp: Long?
+        get() = preferences.getLong(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY, -1L).takeIf {
+            it > 0
+        }
+
+    internal val v1SessionId : Long
+        get() =  preferences.getLong(RUDDER_SESSION_ID_KEY, -1)
+    val v1UserId: String?
+        get() = preferences.getString(RUDDER_USER_ID_KEY, null)
 }

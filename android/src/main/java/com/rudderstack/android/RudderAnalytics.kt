@@ -15,13 +15,15 @@
 
 package com.rudderstack.android
 
+import com.rudderstack.android.internal.AndroidLogger
 import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
 import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
 import com.rudderstack.android.internal.infrastructure.ResetImplementationPlugin
-import com.rudderstack.android.internal.plugins.PlatformInputsPlugin
+import com.rudderstack.android.internal.plugins.CacheReinstatePlugin
 import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
+import com.rudderstack.android.internal.plugins.PlatformInputsPlugin
 import com.rudderstack.android.internal.plugins.SessionPlugin
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.internal.states.UserSessionState
@@ -31,6 +33,7 @@ import com.rudderstack.android.utilities.initializeSessionManagement
 import com.rudderstack.android.utilities.shutdownSessionManagement
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
+import com.rudderstack.core.Configuration
 import com.rudderstack.core.DEFAULTS_ANALYTICS_INSTANCE_NAME
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.holder.associateState
@@ -55,8 +58,7 @@ fun RudderAnalytics(
     ),
     initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
 ): Analytics {
-    return Analytics(
-        writeKey,
+    return Analytics(writeKey,
         configuration,
         instanceName,
         dataUploadService,
@@ -65,8 +67,7 @@ fun RudderAnalytics(
         initializationListener = initializationListener,
         shutdownHook = {
             onShutdown()
-        }
-    ).apply {
+        }).apply {
         startup()
     }
 }
@@ -147,21 +148,44 @@ private val infrastructurePlugins
     )
 private val messagePlugins
     get() = listOf(
-        PlatformInputsPlugin(),
-        ExtractStatePlugin(),
-        FillDefaultsPlugin(),
+        CacheReinstatePlugin(), PlatformInputsPlugin(), ExtractStatePlugin(), FillDefaultsPlugin(),
         SessionPlugin()
     )
 
 private fun Analytics.startup() {
     addPlugins()
     associateStates()
-    androidStorage.let {
-        contextState?.update(it.context)
-    }
-
-    initializeSessionManagement()
+//    initializeSessionManagement()
 }
+
+/*private fun Analytics.reinstate() {
+    val context = androidStorage.context
+    contextState?.update(context)
+//    reinstateAnonymousAndUserId()
+    //TODO fill optout
+}*/
+
+/*
+private fun Analytics.reinstateAnonymousAndUserId() {
+    if (currentConfigurationAndroid?.anonymousId == null || currentConfigurationAndroid?.userId == null) {
+        val newAnonId = currentConfigurationAndroid?.anonymousId ?: androidStorage.anonymousId
+                        ?: androidStorage.v1AnonymousId
+                        ?: currentConfigurationAndroid?.application?.let {
+            AndroidUtils.getDeviceId(
+                it
+            )
+        }
+        val newUserId =
+            currentConfigurationAndroid?.userId ?: androidStorage.userId ?: androidStorage.v1UserId
+        applyConfiguration {
+            if (this is ConfigurationAndroid) copy(
+                anonymousId = newAnonId, userId = newUserId
+            )
+            else this
+        }
+    }
+}
+*/
 
 private fun Analytics.associateStates() {
     associateState(ContextState())
@@ -180,9 +204,16 @@ internal fun Analytics.processNewContext(
     contextState?.update(newContext)
 }
 
-
+fun Analytics.applyConfigurationAndroid(androidConfigurationScope: ConfigurationAndroid.() ->
+ConfigurationAndroid){
+    applyConfiguration {
+        if (this is ConfigurationAndroid) androidConfigurationScope()
+        else this
+    }
+}
 val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
     get() = (currentConfiguration as? ConfigurationAndroid)
+
 private fun Analytics.onShutdown() {
     shutdownSessionManagement()
 }

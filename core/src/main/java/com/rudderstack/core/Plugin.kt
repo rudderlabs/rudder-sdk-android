@@ -36,10 +36,11 @@ fun interface Plugin {
         fun message(): Message
 
         /**
-         * Available only for DestinationPlugins
-         * For other plugins, this is same as [message]
-         * Destination chain contains the original message, that is prior to being copied and
-         * intercepted by Sub Plugins.
+         * This behaves differently for destination plugins. For message
+         * plugins, this is the original message that was passed to the chain.
+         * For, Destination plugins this is prior to being copied and
+         * intercepted by Sub Plugins, but will reflect the changes
+         * made by other plugins.
          * [Chain.proceed] should be called with this message so as to discard any
          * alteration to the message by [DestinationPlugin]
          */
