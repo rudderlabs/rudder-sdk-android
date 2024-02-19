@@ -27,6 +27,7 @@ import com.rudderstack.core.LifecycleController
 import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
+import com.rudderstack.core.RudderUtils.MAX_BATCH_SIZE
 import com.rudderstack.core.Storage
 import com.rudderstack.core.flushpolicy.CountBasedFlushPolicy
 import com.rudderstack.core.flushpolicy.IntervalBasedFlushPolicy
@@ -376,7 +377,7 @@ internal class AnalyticsDelegate(
         if(!_isFlushing.compareAndSet(false, true)) return false
         //inform plugins
         broadcastFlush()
-        var latestData = storage.getDataSync()
+        var latestData = getMessagesTrimmedToMaxSize()
 
         var isFlushSuccess = true
 
@@ -390,8 +391,8 @@ internal class AnalyticsDelegate(
                     }
                     if (response.success) {
                         latestData.successCallback()
-                        storage.deleteMessages(latestData)
-                        latestData = storage.getDataSync()
+                        storage.deleteMessages(latestData) //TODO  add deleteSync function in dao
+                        latestData = getMessagesTrimmedToMaxSize()
 
                     } else {
                         latestData.failureCallback(response.errorThrowable)
@@ -402,6 +403,21 @@ internal class AnalyticsDelegate(
         }
         _isFlushing.set(false)
         return isFlushSuccess
+    }
+
+    private fun getMessagesTrimmedToMaxSize() : List<Message> {
+        val  data = storage.getDataSync()
+        var count = 0
+        var size = 0
+        while (count < data.size){
+            //size += data[count].size TODO: implement size, serialize to determine size
+            // Let's keep some buffer for the size
+            if(size > MAX_BATCH_SIZE /* subtract buffer let's say 1KB */ ){
+                break
+            }
+            count++
+        }
+        return data.subList(0, count)
     }
 
     private fun broadcastFlush() {
