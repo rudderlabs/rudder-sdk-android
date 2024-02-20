@@ -27,6 +27,7 @@ import com.rudderstack.core.LifecycleController
 import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
+import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.RudderUtils.MAX_BATCH_SIZE
 import com.rudderstack.core.Storage
 import com.rudderstack.core.flushpolicy.CountBasedFlushPolicy
@@ -47,6 +48,7 @@ import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.core.internal.states.DestinationConfigState
 import com.rudderstack.models.Message
 import com.rudderstack.models.RudderServerConfig
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.LinkedBlockingQueue
@@ -377,6 +379,8 @@ internal class AnalyticsDelegate(
         if(!_isFlushing.compareAndSet(false, true)) return false
         //inform plugins
         broadcastFlush()
+
+        // Add `extraInfo` size if sent. Default batch size is 2KB.
         var latestData = getMessagesTrimmedToMaxSize()
 
         var isFlushSuccess = true
@@ -392,8 +396,8 @@ internal class AnalyticsDelegate(
                     if (response.success) {
                         latestData.successCallback()
                         storage.deleteMessagesSync(latestData)
+                        // Add `extraInfo` size if sent. Default batch size is 2KB.
                         latestData = getMessagesTrimmedToMaxSize()
-
                     } else {
                         latestData.failureCallback(response.errorThrowable)
                         isFlushSuccess = false
@@ -405,19 +409,29 @@ internal class AnalyticsDelegate(
         return isFlushSuccess
     }
 
-    private fun getMessagesTrimmedToMaxSize() : List<Message> {
-        val  data = storage.getDataSync()
-        var count = 0
-        var size = 0
-        while (count < data.size){
-            //size += data[count].size TODO: implement size, serialize to determine size
-            // Let's keep some buffer for the size
-            if(size > MAX_BATCH_SIZE /* subtract buffer let's say 1KB */ ){
+    private fun getMessagesTrimmedToMaxSize(defaultBufferSize: Int = 2 * 1024): List<Message> {
+        val data = storage.getDataSync()
+        val config = currentConfiguration ?: return data
+
+        var totalMessageSize = defaultBufferSize
+        var index = 0
+
+        for (message in data) {
+            val messageJSON: String? = config.jsonAdapter.writeToJson(message, object : RudderTypeAdapter<Message>() {})
+            val messageSize = RudderUtils.getUTF8Length(messageJSON.toString())
+
+            totalMessageSize += messageSize
+
+            if (totalMessageSize > MAX_BATCH_SIZE) {
+                config.logger.debug(log = "Maximum batch size reached at $index")
                 break
             }
-            count++
+            index++
         }
-        return data.subList(0, count)
+        // 512000
+        println("$totalMessageSize $MAX_BATCH_SIZE")
+
+        return data.subList(0, index)
     }
 
     private fun broadcastFlush() {
