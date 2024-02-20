@@ -841,11 +841,12 @@ class JacksonAnalyticsTest : AnalyticsTest() {
 
 }
 
-class MoshiAnalyticsTest : AnalyticsTest() {
-    override val jsonAdapter: JsonAdapter
-        get() = MoshiAdapter()
-
-}
+// Currently, we are not supporting Moshi adapter.
+//class MoshiAnalyticsTest : AnalyticsTest() {
+//    override val jsonAdapter: JsonAdapter
+//        get() = MoshiAdapter()
+//
+//}
 
 @RunWith(Suite::class)
 @Suite.SuiteClasses(/*MoshiAnalyticsTest::class, JacksonAnalyticsTest::class, */GsonAnalyticsTest::class
