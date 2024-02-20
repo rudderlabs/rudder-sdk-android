@@ -181,7 +181,20 @@ abstract class AndroidStorageTest {
         storage.clearSessionId()
         MatcherAssert.assertThat(storage.sessionId, Matchers.nullValue())
     }
+    @Test
+    fun `test delete sync`(){
+        val storage = analytics.storage as AndroidStorage
+        storage.clearStorage()
+        val events = (1..20).map {
+            TrackMessage.create("event:$it", RudderUtils.timeStamp)
+        }
+        storage.saveMessage(*events.toTypedArray())
+        while (storage.getDataSync().size != 20) {
+        }
+        storage.deleteMessagesSync(events.take(10))
+        MatcherAssert.assertThat(storage.getDataSync(), Matchers.iterableWithSize(10))
 
+    }
 }
 
 @RunWith(AndroidJUnit4::class)

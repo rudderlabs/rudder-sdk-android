@@ -43,7 +43,7 @@ class Dao<T : Entity>(
     private val context: Context,
     private val entityFactory: EntityFactory,
     private val executorService: ExecutorService,
-    private val databaseName : String
+    private val databaseName: String
 ) {
 
     companion object {
@@ -74,11 +74,15 @@ class Dao<T : Entity>(
             entityClass.name,
         ).appendQueryParameter(EntityContentProvider.ECP_DATABASE_CODE, databaseName)
     }
+
     init {
-        if(useContentProvider)
-            EntityContentProvider.registerTableCommands(databaseName, createTableStmt(tableName,
-                fields), createIndexStmt(tableName, fields))
+        if (useContentProvider) EntityContentProvider.registerTableCommands(
+            databaseName, createTableStmt(
+                tableName, fields
+            ), createIndexStmt(tableName, fields)
+        )
     }
+
     /**
      * usage
      * with(dao){
@@ -127,42 +131,78 @@ class Dao<T : Entity>(
         })
     }
 
+    fun List<T>.deleteSync(): Int {
+        val fields = entityClass.getAnnotation(RudderEntity::class.java)?.fields
+
+        val args = findArgumentsFromEntities()
+        val whereClause = deleteClauseFromFields(fields, args)
+
+        return deleteSync(whereClause, null).also {
+            notifyDelete(it)
+        }
+    }
+
     fun List<T>.delete(deleteCallback: ((numberOfRows: Int) -> Unit)? = null) {
         runTransactionOrDeferToCreation { _ ->
             val fields = entityClass.getAnnotation(RudderEntity::class.java)?.fields
 
-            val args = map {
-                it.getPrimaryKeyValues().map {
-                    "\"${it}\""
-                }
-            }.reduce { acc, strings ->
-                acc.mapIndexed { index, s ->
-
-                    "$s, ${strings[index]}"
-                }
-            }
-            val whereClause = fields?.takeIf {
-                it.isNotEmpty()
-            }?.filter {
-                it.primaryKey
-            }?.mapIndexed { index, it ->
-                "${it.fieldName} IN (${args[index]})"
-            }?.reduce { acc, s -> "$acc AND $s" }
+            val args = findArgumentsFromEntities()
+            val whereClause = deleteClauseFromFields(fields, args)
 
             // receives the number of deleted rows and fires callback
             val extendedDeleteCb = { numberOfRows: Int ->
                 deleteCallback?.invoke(numberOfRows)
-                if (_dataChangeListeners.isNotEmpty()) {
-                    val allData = getAllSync() ?: listOf()
-                    _dataChangeListeners.forEach {
-                        it.onDataDeleted(this.subList(0, numberOfRows), allData)
-                    }
-                }
+                notifyDelete(numberOfRows)
             }
             delete(whereClause, null, extendedDeleteCb)
         }
     }
+
+    private fun List<T>.notifyDelete(numberOfRows: Int) {
+        if (_dataChangeListeners.isNotEmpty()) {
+            val allData = getAllSync() ?: listOf()
+            _dataChangeListeners.forEach {
+                it.onDataDeleted(this.subList(0, numberOfRows), allData)
+            }
+        }
+    }
+
+    private fun deleteClauseFromFields(
+        fields: Array<RudderField>?, args: List<String>
+    ) = fields?.takeIf {
+        it.isNotEmpty()
+    }?.filter {
+        it.primaryKey
+    }?.mapIndexed { index, it ->
+        "${it.fieldName} IN (${args[index]})"
+    }?.reduce { acc, s -> "$acc AND $s" }
+
+    private fun List<T>.findArgumentsFromEntities() = map {
+        it.getPrimaryKeyValues().map {
+            "\"${it}\""
+        }
+    }.reduce { acc, strings ->
+        acc.mapIndexed { index, s ->
+
+            "$s, ${strings[index]}"
+        }
+    }
     // delete
+    /**
+     * Delete based on where clause
+     *
+     * @param whereClause Used for selecting items for deletion
+     * @param args Substituting arguments if any, else null
+     * @return number of rows deleted
+     */
+    fun deleteSync(
+        whereClause: String?, args: Array<out String>?
+    ): Int {
+        awaitDbInitialization()
+        return _db?.let { db ->
+            deleteFromDb(db, tableName, whereClause, args)
+        } ?: -1
+    }
     /**
      * val args = map {
     it.getPrimaryKeyValues()
@@ -353,9 +393,9 @@ class Dao<T : Entity>(
                 selectionArgs,
                 null,
             )?.use { cursor ->
-                    cursor.moveToFirst()
-                    cursor.getLong(0)
-                } ?: -1L)
+                cursor.moveToFirst()
+                cursor.getLong(0)
+            } ?: -1L)
         } else {
             synchronized(DB_LOCK) {
                 DatabaseUtils.queryNumEntries(
@@ -494,9 +534,9 @@ class Dao<T : Entity>(
             } else {
                 -1
             }).also {
-                    cursor.close()
-                }
-        }?:-1
+                cursor.close()
+            }
+        } ?: -1
     }
 
     internal fun insertContentValues(
@@ -509,12 +549,12 @@ class Dao<T : Entity>(
         return if (useContentProvider) {
             (context.contentResolver.insert(
                 entityContentProviderUri.appendQueryParameter(
-                        EntityContentProvider.ECP_CONFLICT_RESOLUTION_CODE,
-                        conflictAlgorithm.toString(),
-                    ).appendQueryParameter(
-                        EntityContentProvider.ECP_NULL_HACK_COLUMN_CODE,
-                        conflictAlgorithm.toString(),
-                    ).build(),
+                    EntityContentProvider.ECP_CONFLICT_RESOLUTION_CODE,
+                    conflictAlgorithm.toString(),
+                ).appendQueryParameter(
+                    EntityContentProvider.ECP_NULL_HACK_COLUMN_CODE,
+                    conflictAlgorithm.toString(),
+                ).build(),
                 contentValues,
             )?.let {
                 it.lastPathSegment?.toLongOrNull()
@@ -545,9 +585,8 @@ class Dao<T : Entity>(
         val cursor = (if (useContentProvider) {
             context.contentResolver.query(
                 entityContentProviderUri.appendQueryParameter(
-                        EntityContentProvider.ECP_LIMIT_CODE,
-                        limit
-                    ).build(),
+                    EntityContentProvider.ECP_LIMIT_CODE, limit
+                ).build(),
                 columns,
                 selection,
                 selectionArgs,
