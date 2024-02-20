@@ -142,13 +142,8 @@ class BasicStorageImpl @JvmOverloads constructor(
     }
 
     override fun deleteMessages(messages: List<Message>) {
-        val messageIdsToRemove = messages.map { it.messageId }
-        synchronized(this) {
-            queue.removeAll {
-                it.messageId in messageIdsToRemove
-            }
-        }
-        onDataChange()
+        //basic storage does not support async delete
+        deleteMessagesSync(messages)
     }
 
     override fun addMessageDataListener(listener: Storage.DataListener) {
@@ -236,6 +231,16 @@ class BasicStorageImpl @JvmOverloads constructor(
             _serverConfig = null
             serverConfigFile.delete()
         }
+    }
+
+    override fun deleteMessagesSync(messages: List<Message>) {
+        val messageIdsToRemove = messages.map { it.messageId }
+        synchronized(this) {
+            queue.removeAll {
+                it.messageId in messageIdsToRemove
+            }
+        }
+        onDataChange()
     }
 
 

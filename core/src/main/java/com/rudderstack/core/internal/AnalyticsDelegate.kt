@@ -390,7 +390,7 @@ internal class AnalyticsDelegate(
                     }
                     if (response.success) {
                         latestData.successCallback()
-                        storage.deleteMessages(latestData) //TODO  add deleteSync function in dao
+                        storage.deleteMessagesSync(latestData)
                         latestData = getMessagesTrimmedToMaxSize()
 
                     } else {

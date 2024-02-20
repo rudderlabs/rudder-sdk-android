@@ -347,6 +347,12 @@ class AndroidStorageImpl(
         messageDao?.delete(null, null)
     }
 
+    override fun deleteMessagesSync(messages: List<Message>) {
+        with(messageDao ?: return) {
+            messages.entities.filterNotNull().deleteSync()
+        }
+    }
+
     override val startupQueue: List<Message>
         get() = startupQ
     override val isOptedOut: Boolean
