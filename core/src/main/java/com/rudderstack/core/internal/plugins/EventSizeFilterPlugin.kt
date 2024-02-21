@@ -8,6 +8,9 @@ import com.rudderstack.models.Message
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import java.util.concurrent.atomic.AtomicReference
 
+/**
+ * A plugin to filter out events that exceed the maximum size limit.
+ */
 class EventSizeFilterPlugin : Plugin {
 
     private val currentConfigurationAtomic = AtomicReference<Configuration?>()
