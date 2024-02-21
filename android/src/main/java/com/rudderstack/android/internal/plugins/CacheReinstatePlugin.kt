@@ -36,7 +36,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 
-private const val RUDDER_SERVER_CONFIG_KEY = "rl_server_config"
+private const val RUDDER_SERVER_FILE_NAME_V1 = "RudderServerConfig"
 
 /**
  * This plugin is used to reinstate the cache data in V2 SDK.
@@ -47,7 +47,6 @@ private const val RUDDER_SERVER_CONFIG_KEY = "rl_server_config"
  * Reinstate user id
  * Initialise session management for the user
  * Reinstate traits and external ids
- * TODO check if opted out and save the same
  */
 class CacheReinstatePlugin : Plugin {
     private var _analytics: Analytics? = null
@@ -129,7 +128,8 @@ class CacheReinstatePlugin : Plugin {
     }
 
     private fun isV2DataAvailable(): Boolean {
-        return !_analytics?.androidStorage?.anonymousId.isNullOrEmpty() || !_analytics?.androidStorage?.userId.isNullOrEmpty() || !_analytics?.contextState?.value?.isEmpty()!!
+        return !_analytics?.androidStorage?.anonymousId.isNullOrEmpty() || !_analytics?.androidStorage?.userId.isNullOrEmpty() ||
+               !_analytics?.contextState?.value.isNullOrEmpty()
     }
 
     override fun onShutDown() {
@@ -141,25 +141,27 @@ class CacheReinstatePlugin : Plugin {
     ) {
         configurationAndroid.analyticsExecutor.execute {
             val isV1DataAvailable =
-                context.isV1SavedServerConfigContainsSourceId(RUDDER_SERVER_CONFIG_KEY, sourceId)
-            if (isV1DataAvailable && shouldMigrateContext()) {
-                _analytics?.migrateContextFromV1()
-            }
+                context.isV1SavedServerConfigContainsSourceId(RUDDER_SERVER_FILE_NAME_V1, sourceId)
+            if(!isV1DataAvailable) return@execute
             // migrate user id/ anon id
-            _analytics?.migrateUserIdFromV1()
+            _analytics?.setUserIdFromV1()
             _analytics?.migrateAnonymousIdFromV1()
             _analytics?.migrateOptOutFromV1()
+            if (shouldMigrateContext()) {
+                _analytics?.migrateContextFromV1()
+            }
+
             _analytics?.initializeSessionManagement(
                 _analytics?.androidStorage?.v1SessionId, _analytics?.androidStorage?.v1LastActiveTimestamp
             )
         }
     }
 
-    private fun Analytics.migrateUserIdFromV1() {
-        val userId = androidStorage.v1UserId
+    private fun Analytics.setUserIdFromV1() {
+        val traits = androidStorage.v1Traits
+        val userId = traits?.get("userId") as? String ?: traits?.get("id") as? String
         if (userId.isNullOrEmpty() || !this.androidStorage.userId.isNullOrEmpty()) return
         _analytics?.identify(userId)
-        androidStorage.resetV1UserId()
     }
 
     private fun Analytics.migrateAnonymousIdFromV1() {

@@ -20,7 +20,6 @@ import android.content.SharedPreferences
 
 // keys
 private const val RUDDER_PREFS = "rl_prefs"
-private const val RUDDER_SERVER_CONFIG_KEY = "rl_server_config"
 private const val RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY = "rl_server_last_updated"
 private const val RUDDER_TRAITS_KEY = "rl_traits"
 private const val RUDDER_APPLICATION_INFO_KEY = "rl_application_info_key"
@@ -38,11 +37,13 @@ internal class RudderPreferenceManager(application: Application,
     private val instanceName: String) {
 
     private val String.key: String
-        get() = "$this-$instanceName:"
+        get() = "$this-$instanceName"
 
     private lateinit var preferences: SharedPreferences
+    private lateinit var preferencesV1: SharedPreferences
     init {
         preferences = application.getSharedPreferences(RUDDER_PREFS.key, Context.MODE_PRIVATE)
+        preferencesV1 = application.getSharedPreferences(RUDDER_PREFS, Context.MODE_PRIVATE)
     }
     val lastUpdatedTime: Long
         get() = preferences.getLong(RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY.key,
@@ -134,43 +135,38 @@ internal class RudderPreferenceManager(application: Application,
             .apply()
     }
 
-    fun resetV1UserId() {
-        preferences.edit().remove(RUDDER_USER_ID_KEY).apply()
-    }
     fun resetV1AnonymousId() {
-        preferences.edit().remove(RUDDER_ANONYMOUS_ID_KEY).apply()
+        preferencesV1.edit().remove(RUDDER_ANONYMOUS_ID_KEY).apply()
     }
     fun resetV1Traits() {
-        preferences.edit().remove(RUDDER_TRAITS_KEY).apply()
+        preferencesV1.edit().remove(RUDDER_TRAITS_KEY).apply()
     }
     fun resetV1ExternalIds() {
-        preferences.edit().remove(RUDDER_EXTERNAL_ID_KEY).apply()
+        preferencesV1.edit().remove(RUDDER_EXTERNAL_ID_KEY).apply()
     }
     fun resetV1OptOut() {
-        preferences.edit().remove(RUDDER_OPT_STATUS_KEY).apply()
+        preferencesV1.edit().remove(RUDDER_OPT_STATUS_KEY).apply()
     }
 
     val periodicWorkRequestId: String?
         get() = preferences.getString(RUDDER_PERIODIC_WORK_REQUEST_ID_KEY.key, null)
     val v1AnonymousId
-        get() = preferences.getString(RUDDER_ANONYMOUS_ID_KEY, null)
+        get() = preferencesV1.getString(RUDDER_ANONYMOUS_ID_KEY, null)
 
     internal val v1ExternalIdsJson: String?
-        get() =  preferences.getString(RUDDER_EXTERNAL_ID_KEY, null)
+        get() =  preferencesV1.getString(RUDDER_EXTERNAL_ID_KEY, null)
 
     internal val v1Traits
-        get() = preferences.getString(RUDDER_TRAITS_KEY, null)
+        get() = preferencesV1.getString(RUDDER_TRAITS_KEY, null)
 
     internal val v1optOutStatus: Boolean
-        get() = preferences.getBoolean(RUDDER_OPT_STATUS_KEY, false)
+        get() = preferencesV1.getBoolean(RUDDER_OPT_STATUS_KEY, false)
 
     internal val v1LastActiveTimestamp: Long?
-        get() = preferences.getLong(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY, -1L).takeIf {
+        get() = preferencesV1.getLong(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY, -1L).takeIf {
             it > 0
         }
 
     internal val v1SessionId : Long
-        get() =  preferences.getLong(RUDDER_SESSION_ID_KEY, -1)
-    val v1UserId: String?
-        get() = preferences.getString(RUDDER_USER_ID_KEY, null)
+        get() =  preferencesV1.getLong(RUDDER_SESSION_ID_KEY, -1)
 }

@@ -171,11 +171,11 @@ class Analytics private constructor(
     @JvmOverloads
     fun screen(
         screenName: String,
-        category: String,
+        category: String? = null,
+        options: RudderOptions? = null,
         screenProperties: ScreenProperties,
         anonymousId: String? = null,
         userId: String? = null,
-        options: RudderOptions? = null,
         destinationProps: MessageDestinationProps? = null,
         traits: Map<String, Any?>? = null,
         externalIds: List<Map<String, String>>? = null,
@@ -279,9 +279,9 @@ class Analytics private constructor(
     @JvmOverloads
     fun group(
         groupId: String?,
-        anonymousId: String? = null,
-        userId: String? = null,
         options: RudderOptions? = null,
+        userId: String? = null,
+        anonymousId: String? = null,
         groupTraits: GroupTraits?,
 
         destinationProps: MessageDestinationProps? = null,

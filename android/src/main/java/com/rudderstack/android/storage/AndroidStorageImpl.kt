@@ -313,8 +313,6 @@ class AndroidStorageImpl(
         get() = preferenceManager?.lastActiveTimestamp?.takeIf { it > -1L }
     override val v1AnonymousId: String?
         get() = preferenceManager?.v1AnonymousId
-    override val v1UserId: String?
-        get() = preferenceManager?.v1UserId
     override val v1SessionId: Long?
         get() = preferenceManager?.v1SessionId?.takeIf { it > -1L }
     override val v1LastActiveTimestamp: Long?
@@ -352,10 +350,6 @@ class AndroidStorageImpl(
 
     override fun clearLastActiveTimestamp() {
         preferenceManager?.clearLastActiveTimestamp()
-    }
-
-    override fun resetV1UserId() {
-        preferenceManager?.resetV1UserId()
     }
 
     override fun resetV1AnonymousId() {

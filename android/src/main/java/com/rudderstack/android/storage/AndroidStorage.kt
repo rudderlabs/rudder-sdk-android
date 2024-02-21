@@ -25,7 +25,6 @@ interface AndroidStorage : Storage {
     val sessionId: Long?
     val lastActiveTimestamp: Long?
     val v1AnonymousId: String?
-    val v1UserId: String?
     val v1SessionId: Long?
     val v1LastActiveTimestamp: Long?
     val v1Traits: Map<String, Any?>?
@@ -50,7 +49,6 @@ interface AndroidStorage : Storage {
 
     fun clearSessionId()
     fun clearLastActiveTimestamp()
-    fun resetV1UserId()
     fun resetV1AnonymousId()
     fun resetV1OptOut()
     fun resetV1Traits()

@@ -33,45 +33,6 @@ import java.io.Serializable
  * @return
  */
 internal fun <T : Serializable> saveObject(
-    obj: T, context: Context, fileName: String, logger: Logger = AndroidLogger
-): Boolean {
-    try {
-        val fos: FileOutputStream = context.openFileOutput(
-            fileName, Context.MODE_PRIVATE
-        )
-        val os = ObjectOutputStream(fos)
-        os.writeObject(obj)
-        os.close()
-        fos.close()
-        return true
-    } catch (e: Exception) {
-        logger.error(
-            log = "save object: Exception while saving Object to File", throwable = e
-        )
-        e.printStackTrace()
-    }
-    return false
-}
-
-/**
- *
- *
- * @param T
- * @param context
- * @param fileName
- * @return
- */
-//file access
-/**
- * Saves a serializable object in file
- *
- * @param T
- * @param obj
- * @param context
- * @param fileName
- * @return
- */
-internal fun <T : Serializable> saveObject(
     obj: T, context: Context, fileName: String, logger: Logger? = AndroidLogger
 ): Boolean {
     try {
