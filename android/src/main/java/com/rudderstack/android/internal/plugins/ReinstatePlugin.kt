@@ -48,14 +48,14 @@ private const val RUDDER_SERVER_FILE_NAME_V1 = "RudderServerConfig"
  * Initialise session management for the user
  * Reinstate traits and external ids
  */
-class CacheReinstatePlugin : Plugin {
+class ReinstatePlugin : Plugin {
     private var _analytics: Analytics? = null
     private var sourceId: String? = null
     private val isReinstated = AtomicBoolean(false)
-    private val stackedMessagesTillReinstate = LinkedBlockingQueue<Message>()
+    private val stackedChainsTillReinstate = LinkedBlockingQueue<Plugin.Chain>()
     override fun intercept(chain: Plugin.Chain): Message {
         if(!isReinstated.get()){
-            stackedMessagesTillReinstate.add(chain.originalMessage)
+            stackedChainsTillReinstate.add(chain)
             return chain.message()
         }
         processStackedMessages()
@@ -63,10 +63,11 @@ class CacheReinstatePlugin : Plugin {
     }
 
     private fun processStackedMessages() {
+        if(!isReinstated.get()) return
         synchronized(this) {
-            while (stackedMessagesTillReinstate.isNotEmpty()) {
-                val stackedMessage = stackedMessagesTillReinstate.poll() ?: continue
-                _analytics?.processMessage(stackedMessage, null)
+            while (stackedChainsTillReinstate.isNotEmpty()) {
+                val stackedChain = stackedChainsTillReinstate.poll() ?: continue
+                stackedChain.proceed(stackedChain.message())
             }
         }
     }
@@ -90,6 +91,7 @@ class CacheReinstatePlugin : Plugin {
         if (isReinstated.get()) return
         val config = _analytics?.currentConfigurationAndroid ?: return
         if (isV2DataAvailable()) {
+            isReinstated.set(true)
             reinstateV2FromCache(config)
             return
         }
@@ -128,7 +130,8 @@ class CacheReinstatePlugin : Plugin {
     }
 
     private fun isV2DataAvailable(): Boolean {
-        return !_analytics?.androidStorage?.anonymousId.isNullOrEmpty() || !_analytics?.androidStorage?.userId.isNullOrEmpty() ||
+        return !_analytics?.androidStorage?.anonymousId.isNullOrEmpty() ||
+               !_analytics?.androidStorage?.userId.isNullOrEmpty() ||
                !_analytics?.contextState?.value.isNullOrEmpty()
     }
 

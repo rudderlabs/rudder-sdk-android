@@ -15,12 +15,11 @@
 
 package com.rudderstack.android
 
-import com.rudderstack.android.internal.AndroidLogger
 import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
 import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
 import com.rudderstack.android.internal.infrastructure.ResetImplementationPlugin
-import com.rudderstack.android.internal.plugins.CacheReinstatePlugin
+import com.rudderstack.android.internal.plugins.ReinstatePlugin
 import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.plugins.PlatformInputsPlugin
@@ -29,11 +28,9 @@ import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
-import com.rudderstack.android.utilities.initializeSessionManagement
 import com.rudderstack.android.utilities.shutdownSessionManagement
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
-import com.rudderstack.core.Configuration
 import com.rudderstack.core.DEFAULTS_ANALYTICS_INSTANCE_NAME
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.holder.associateState
@@ -148,7 +145,7 @@ private val infrastructurePlugins
     )
 private val messagePlugins
     get() = listOf(
-        CacheReinstatePlugin(), PlatformInputsPlugin(), ExtractStatePlugin(), FillDefaultsPlugin(),
+        ReinstatePlugin(), PlatformInputsPlugin(), ExtractStatePlugin(), FillDefaultsPlugin(),
         SessionPlugin()
     )
 

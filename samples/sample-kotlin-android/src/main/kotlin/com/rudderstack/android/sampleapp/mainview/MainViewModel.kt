@@ -116,7 +116,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             AnalyticsState.ForceFlush -> {
-                _rudderAnalytics?.forceFlush()
+                _rudderAnalytics?.flush()
                 "Forcing a flush"
             }
 

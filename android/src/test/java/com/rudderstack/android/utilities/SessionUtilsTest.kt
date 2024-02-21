@@ -310,7 +310,7 @@ class SessionUtilsTest {
             mockConfig
         }
         // When
-        analytics.initializeSessionManagement()
+        analytics.initializeSessionManagement(null, null)
 
         // Then
         // Verify that SessionState is not updated
@@ -339,7 +339,7 @@ class SessionUtilsTest {
             mockConfig
         }
         // When
-        analytics.initializeSessionManagement()
+        analytics.initializeSessionManagement(null, null)
 
         // Then
         // Verify that SessionState is updated
@@ -369,7 +369,7 @@ class SessionUtilsTest {
             mockConfig
         }
         // When
-        analytics.initializeSessionManagement()
+        analytics.initializeSessionManagement(null, null)
         // Verify that SessionState is updated
         val session = userSessionState?.value
         MatcherAssert.assertThat(session?.sessionId, not(-1L))
