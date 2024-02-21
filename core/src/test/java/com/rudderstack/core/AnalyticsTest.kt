@@ -566,7 +566,7 @@ abstract class AnalyticsTest {
         val events = (1..totalMessages).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp, properties = properties)
         }
-        val numberOfBatches = getNumberOfBatches(events.first(), totalMessages)
+        val numberOfBatches = calculateNumberOfBatches(events.first(), totalMessages)
 
         for (i in events) {
             analytics.track(i)
@@ -858,11 +858,27 @@ abstract class AnalyticsTest {
         verify(infraPlugin, times(1)).reset()
     }
 
-    private fun generateDataOfSize(msgSize: Int): String {
-        return CharArray(msgSize).apply { fill('a') }.joinToString("")
+    /**
+     * This method is used to generate the data of the given size.
+     * This method could be used to generate the message of required size (e.g., 32 KB).
+     * @param msgSizeInBytes The size of the message in bytes.
+     */
+    private fun generateDataOfSize(msgSizeInBytes: Int): String {
+        return CharArray(msgSizeInBytes).apply { fill('a') }.joinToString("")
     }
 
-    private fun getNumberOfBatches(message: Message?, totalMessages: Int): Int {
+    /**
+     * This method is used to calculate the number of batches required to processes all the messages.
+     *
+     * Given that MAX_BATCH_SIZE is 500KB.
+     * Suppose we are sending 100 messages and each message is of around 31 KB,
+     * then we need to have 6 batches where each batch will have 16 messages and the last batch will have 4 messages.
+     * So this method will return 7 as the number of batches.
+     *
+     * @param message This is required to calculate the size of the message.
+     * @param totalNumberOfMessages This is the total number of messages that are to be sent.
+     */
+    private fun calculateNumberOfBatches(message: Message?, totalNumberOfMessages: Int): Int {
         val messageJSON = message?.let {
             analytics.currentConfiguration?.jsonAdapter?.writeToJson(it, object : RudderTypeAdapter<Message>() {})
         } ?: return 0
@@ -873,7 +889,7 @@ abstract class AnalyticsTest {
         }
 
         val messagesPerBatch = RudderUtils.MAX_BATCH_SIZE / individualMessageSize
-        return ceil(totalMessages.toDouble() / messagesPerBatch).toInt()
+        return ceil(totalNumberOfMessages.toDouble() / messagesPerBatch).toInt()
     }
 }
 
