@@ -14,6 +14,7 @@
 
 package com.rudderstack.core
 
+import com.rudderstack.core.RudderUtils.getUTF8Length
 import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.core.internal.states.DestinationConfigState
 import com.rudderstack.gsonrudderadapter.GsonAdapter
@@ -866,7 +867,7 @@ abstract class AnalyticsTest {
             analytics.currentConfiguration?.jsonAdapter?.writeToJson(it, object : RudderTypeAdapter<Message>() {})
         } ?: return 0
 
-        val individualMessageSize = RudderUtils.getUTF8Length(messageJSON)
+        val individualMessageSize = messageJSON.getUTF8Length()
         if (individualMessageSize == 0) {
             return 0
         }

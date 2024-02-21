@@ -62,7 +62,7 @@ class EventSizeFilterPluginTest {
             customContextMap = null
         ).also { message ->
             val messageJSON = currentConfiguration.jsonAdapter.writeToJson(message)
-            val messageSize = getUTF8Length(messageJSON.toString())
+            val messageSize = messageJSON.toString().getUTF8Length()
             assert(messageSize < MAX_EVENT_SIZE)
         }
     }
@@ -81,7 +81,7 @@ class EventSizeFilterPluginTest {
             properties = properties
         ).also { message ->
             val messageJSON = currentConfiguration.jsonAdapter.writeToJson(message)
-            val messageSize = getUTF8Length(messageJSON.toString())
+            val messageSize = messageJSON.toString().getUTF8Length()
             assert(messageSize > MAX_EVENT_SIZE)
         }
     }

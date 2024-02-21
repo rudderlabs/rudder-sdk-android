@@ -27,7 +27,7 @@ import com.rudderstack.core.LifecycleController
 import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
-import com.rudderstack.core.RudderUtils
+import com.rudderstack.core.RudderUtils.getUTF8Length
 import com.rudderstack.core.RudderUtils.MAX_BATCH_SIZE
 import com.rudderstack.core.Storage
 import com.rudderstack.core.flushpolicy.CountBasedFlushPolicy
@@ -418,7 +418,7 @@ internal class AnalyticsDelegate(
 
         for (message in data) {
             val messageJSON: String? = config.jsonAdapter.writeToJson(message, object : RudderTypeAdapter<Message>() {})
-            val messageSize = RudderUtils.getUTF8Length(messageJSON.toString())
+            val messageSize = messageJSON.toString().getUTF8Length()
 
             totalMessageSize += messageSize
 
