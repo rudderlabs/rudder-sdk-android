@@ -41,9 +41,6 @@ import com.rudderstack.models.*
  *
  */
 internal class FillDefaultsPlugin : Plugin {
-    companion object{
-        private const val CHANNEL = "android"
-    }
 
     private var _analytics: Analytics? = null
     override fun setup(analytics: Analytics) {
@@ -78,7 +75,7 @@ internal class FillDefaultsPlugin : Plugin {
                     ) else it
                 } selectiveReplace context),
             anonymousId = anonId,
-            userId = userId) as T).also { it.channel = CHANNEL }
+            userId = userId) as T)
     }
 
     private infix fun MessageContext?.selectiveReplace(context: MessageContext?): MessageContext? {

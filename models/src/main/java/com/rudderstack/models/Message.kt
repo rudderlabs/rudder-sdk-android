@@ -285,6 +285,8 @@ class AliasMessage internal constructor(
     @JsonProperty("previousId")
     @Json(name = "previousId")
     var previousId: String? = null,
+    @JsonProperty("not_applicable", required = false) // work-around to ignore value param
+    // jackson serialisation
     _messageId: String? = null,
 ) : Message(
     EventType.ALIAS,
@@ -386,6 +388,8 @@ class GroupMessage internal constructor(
     @JsonProperty("traits")
     @Json(name = "traits")
     val traits: GroupTraits? = null,
+    @JsonProperty("not_applicable", required = false) // work-around to ignore value param
+    // jackson serialisation
     _messageId: String? = null,
 
 ) : Message(
@@ -507,6 +511,8 @@ class PageMessage internal constructor(
     @JsonProperty("category")
     @Json(name = "category")
     val category: String? = null,
+    @JsonProperty("not_applicable", required = false) // work-around to ignore value param
+    // jackson serialisation
     _messageId: String? = null,
 ) : Message(
     EventType.PAGE,
@@ -617,6 +623,8 @@ class ScreenMessage internal constructor(
     @JsonProperty("properties")
     @Json(name = "properties")
     val properties: ScreenProperties? = null,
+    @JsonProperty("not_applicable", required = false) // work-around to ignore value param
+    // jackson serialisation
     _messageId: String? = null,
 
 ) : Message(
@@ -724,10 +732,14 @@ class TrackMessage internal constructor(
      */
 
     @SerializedName("properties")
-    @JsonProperty("properties")
+    @field:JsonProperty("properties")
+    @param:JsonProperty("properties")
+    @get:JsonProperty("properties")
     @Json(name = "properties")
     val properties: TrackProperties? = null,
-    _messageId: String? = null,
+    @JsonProperty("not_applicable", required = false) // work-around to ignore value param
+    // jackson serialisation
+     _messageId: String? = null,
 ) : Message(
     EventType.TRACK,
     context,
@@ -777,7 +789,7 @@ class TrackMessage internal constructor(
         destinationProps,
         eventName,
         properties,
-        _messageId = this.messageId,
+//        _messageId = this.messageId,
     )
 
     override fun toString(): String {
@@ -827,6 +839,8 @@ class IdentifyMessage internal constructor(
     @JsonProperty("properties")
     @Json(name = "properties")
     val properties: IdentifyProperties? = null,
+    @JsonProperty("not_applicable", required = false) // work-around to ignore value param
+    // jackson serialisation
     _messageId: String? = null,
 ) : Message(
     EventType.IDENTIFY,

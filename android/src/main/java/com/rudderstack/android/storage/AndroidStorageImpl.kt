@@ -218,7 +218,8 @@ class AndroidStorageImpl(
                         messageDao?.delete(
                             "${MessageEntity.ColumnNames.messageId} IN (" +
                             //COMMAND FOR SELECTING FIRST $excessMessages to be removed from DB
-                            "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${MessageEntity.TABLE_NAME} " + "ORDER BY ${MessageEntity.ColumnNames.timestamp} LIMIT $excessMessages)",
+                            "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${MessageEntity
+                                .TABLE_NAME} " + "ORDER BY ${MessageEntity.ColumnNames.updatedAt} LIMIT $excessMessages)",
                             null
                         ) {
                             //check messages exceed storage cap
