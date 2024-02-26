@@ -428,8 +428,6 @@ internal class AnalyticsDelegate(
             }
             index++
         }
-        // 512000
-        println("$totalMessageSize $MAX_BATCH_SIZE")
 
         return data.subList(0, index)
     }
