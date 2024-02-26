@@ -27,9 +27,10 @@ import com.rudderstack.core.LifecycleController
 import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
+import com.rudderstack.core.RudderUtils.getUTF8Length
+import com.rudderstack.core.RudderUtils.MAX_BATCH_SIZE
 import com.rudderstack.core.Storage
 import com.rudderstack.core.flushpolicy.CountBasedFlushPolicy
-import com.rudderstack.core.flushpolicy.FlushPolicy
 import com.rudderstack.core.flushpolicy.IntervalBasedFlushPolicy
 import com.rudderstack.core.flushpolicy.addFlushPolicies
 import com.rudderstack.core.flushpolicy.applyFlushPoliciesClosure
@@ -39,6 +40,7 @@ import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.core.internal.plugins.DestinationConfigurationPlugin
 import com.rudderstack.core.internal.plugins.EventFilteringPlugin
 import com.rudderstack.core.internal.plugins.GDPRPlugin
+import com.rudderstack.core.internal.plugins.EventSizeFilterPlugin
 import com.rudderstack.core.internal.plugins.RudderOptionPlugin
 import com.rudderstack.core.internal.plugins.StoragePlugin
 import com.rudderstack.core.internal.plugins.WakeupActionPlugin
@@ -46,6 +48,7 @@ import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.core.internal.states.DestinationConfigState
 import com.rudderstack.models.Message
 import com.rudderstack.models.RudderServerConfig
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.LinkedBlockingQueue
@@ -147,6 +150,7 @@ internal class AnalyticsDelegate(
 
     //plugins
     private val gdprPlugin = GDPRPlugin()
+    private val eventSizeFilterPlugin = EventSizeFilterPlugin()
     private val storagePlugin = StoragePlugin()
     private val wakeupActionPlugin = WakeupActionPlugin()
     private val eventFilteringPlugin = EventFilteringPlugin()
@@ -375,7 +379,9 @@ internal class AnalyticsDelegate(
         if(!_isFlushing.compareAndSet(false, true)) return false
         //inform plugins
         broadcastFlush()
-        var latestData = storage.getDataSync()
+
+        // Add `extraInfo` size if sent. Default batch size is 2KB.
+        var latestData = getMessagesTrimmedToMaxSize()
 
         var isFlushSuccess = true
 
@@ -389,9 +395,9 @@ internal class AnalyticsDelegate(
                     }
                     if (response.success) {
                         latestData.successCallback()
-                        storage.deleteMessages(latestData)
-                        latestData = storage.getDataSync()
-
+                        storage.deleteMessagesSync(latestData)
+                        // Add `extraInfo` size if sent. Default batch size is 2KB.
+                        latestData = getMessagesTrimmedToMaxSize()
                     } else {
                         latestData.failureCallback(response.errorThrowable)
                         isFlushSuccess = false
@@ -401,6 +407,29 @@ internal class AnalyticsDelegate(
         }
         _isFlushing.set(false)
         return isFlushSuccess
+    }
+
+    private fun getMessagesTrimmedToMaxSize(defaultBufferSize: Int = 2 * 1024): List<Message> {
+        val data = storage.getDataSync()
+        val config = currentConfiguration ?: return data
+
+        var totalMessageSize = defaultBufferSize
+        var index = 0
+
+        for (message in data) {
+            val messageJSON: String? = config.jsonAdapter.writeToJson(message, object : RudderTypeAdapter<Message>() {})
+            val messageSize = messageJSON.toString().getUTF8Length()
+
+            totalMessageSize += messageSize
+
+            if (totalMessageSize > MAX_BATCH_SIZE) {
+                config.logger.debug(log = "Maximum batch size reached at $index")
+                break
+            }
+            index++
+        }
+
+        return data.subList(0, index)
     }
 
     private fun broadcastFlush() {
@@ -556,6 +585,7 @@ internal class AnalyticsDelegate(
     private fun initializeMessagePlugins() {
         // check if opted out
         _internalPreMessagePlugins = _internalPreMessagePlugins + gdprPlugin
+        _internalPostCustomPlugins = _internalPostCustomPlugins + eventSizeFilterPlugin
         // rudder option plugin followed by extract state plugin should be added by lifecycle
         // add defaults to message
 //        _internalPrePlugins = _internalPrePlugins + anonymousIdPlugin

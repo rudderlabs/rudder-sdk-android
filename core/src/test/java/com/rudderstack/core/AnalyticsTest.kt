@@ -14,14 +14,14 @@
 
 package com.rudderstack.core
 
+import com.rudderstack.core.RudderUtils.getUTF8Length
 import com.rudderstack.core.holder.retrieveState
-import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.core.internal.states.DestinationConfigState
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.*
-import com.rudderstack.moshirudderadapter.MoshiAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
 import com.vagabond.testcommon.assertArgument
 import com.vagabond.testcommon.generateTestAnalytics
@@ -45,8 +45,8 @@ import org.mockito.kotlin.whenever
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicLong
 import kotlin.concurrent.thread
+import kotlin.math.ceil
 
 abstract class AnalyticsTest {
     //test track, alias, identify, group
@@ -550,6 +550,37 @@ abstract class AnalyticsTest {
     }
 
     @Test
+    fun `given collective batch size is more than MAX_BATCH_SIZE, when blockingFlush is called, then messages are flushed in multiple batches`() {
+        println("running test given collective batch size is more than MAX_BATCH_SIZE, when blockingFlush is called, then messages are flushed in multiple batches")
+
+        val totalMessages = 100
+        val properties = mutableMapOf<String, Any>()
+        properties["property"] = generateDataOfSize(1024 * 30)
+
+        analytics.applyConfiguration {
+            copy(
+                flushQueueSize = 500, maxFlushInterval = 10_000_00
+            )
+        }
+
+        val events = (1..totalMessages).map {
+            TrackMessage.create("event:$it", RudderUtils.timeStamp, properties = properties)
+        }
+        val numberOfBatches = calculateNumberOfBatches(events.first(), totalMessages)
+
+        for (i in events) {
+            analytics.track(i)
+        }
+        while ((analytics.storage.getDataSync().size) < totalMessages) {}
+
+        analytics.blockingFlush()
+
+        assertThat(storage.getDataSync(), anyOf(nullValue(), iterableWithSize(0)))
+        verify(mockedDataUploadService, times(numberOfBatches)).uploadSync(anyList(), anyOrNull())
+    }
+
+
+    @Test
     fun `test back pressure strategies`() {
         println("running test test back pressure strategies")
         //we check the storage directly
@@ -827,6 +858,39 @@ abstract class AnalyticsTest {
         verify(infraPlugin, times(1)).reset()
     }
 
+    /**
+     * This method is used to generate the data of the given size.
+     * This method could be used to generate the message of required size (e.g., 32 KB).
+     * @param msgSizeInBytes The size of the message in bytes.
+     */
+    private fun generateDataOfSize(msgSizeInBytes: Int): String {
+        return CharArray(msgSizeInBytes).apply { fill('a') }.joinToString("")
+    }
+
+    /**
+     * This method is used to calculate the number of batches required to processes all the messages.
+     *
+     * Given that MAX_BATCH_SIZE is 500KB.
+     * Suppose we are sending 100 messages and each message is of around 31 KB,
+     * then we need to have 6 batches where each batch will have 16 messages and the last batch will have 4 messages.
+     * So this method will return 7 as the number of batches.
+     *
+     * @param message This is required to calculate the size of the message.
+     * @param totalNumberOfMessages This is the total number of messages that are to be sent.
+     */
+    private fun calculateNumberOfBatches(message: Message?, totalNumberOfMessages: Int): Int {
+        val messageJSON = message?.let {
+            analytics.currentConfiguration?.jsonAdapter?.writeToJson(it, object : RudderTypeAdapter<Message>() {})
+        } ?: return 0
+
+        val individualMessageSize = messageJSON.getUTF8Length()
+        if (individualMessageSize == 0) {
+            return 0
+        }
+
+        val messagesPerBatch = RudderUtils.MAX_BATCH_SIZE / individualMessageSize
+        return ceil(totalNumberOfMessages.toDouble() / messagesPerBatch).toInt()
+    }
 }
 
 class GsonAnalyticsTest : AnalyticsTest() {
@@ -841,11 +905,12 @@ class JacksonAnalyticsTest : AnalyticsTest() {
 
 }
 
-class MoshiAnalyticsTest : AnalyticsTest() {
-    override val jsonAdapter: JsonAdapter
-        get() = MoshiAdapter()
-
-}
+// Currently, we are not supporting Moshi adapter.
+//class MoshiAnalyticsTest : AnalyticsTest() {
+//    override val jsonAdapter: JsonAdapter
+//        get() = MoshiAdapter()
+//
+//}
 
 @RunWith(Suite::class)
 @Suite.SuiteClasses(/*MoshiAnalyticsTest::class, JacksonAnalyticsTest::class, */GsonAnalyticsTest::class

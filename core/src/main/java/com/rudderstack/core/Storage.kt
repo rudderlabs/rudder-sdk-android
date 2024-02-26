@@ -65,7 +65,7 @@ interface Storage : InfrastructurePlugin{
     fun setBackpressureStrategy(strategy: BackPressureStrategy = BackPressureStrategy.Drop)
 
     /**
-     * Delete Messages, preferably when no longer required
+     * Delete Messages, preferably when no longer required in an async manner
      *
      * @param messages [Message] objects ready to be removed from storage
      */
@@ -151,6 +151,12 @@ interface Storage : InfrastructurePlugin{
      *
      */
     fun clearStorage()
+    /**
+     * Delete Messages, preferably when no longer required in an sync manner on the calling thread
+     *
+     * @param messages [Message] objects ready to be removed from storage
+     */
+    fun deleteMessagesSync(messages: List<Message>)
 
     /**
      * @see saveStartupMessageInQueue
