@@ -42,7 +42,7 @@ import com.rudderstack.models.MessageContext
 //bt stuff
 //tv,
 //work manager
-fun RudderAnalytics(
+private fun RudderAnalytics(
     writeKey: String,
     configuration: ConfigurationAndroid,
     instanceName: String = DEFAULTS_ANALYTICS_INSTANCE_NAME,
@@ -69,6 +69,49 @@ fun RudderAnalytics(
     ).apply {
         startup()
     }
+}
+
+/**
+ * Initialize the RudderStack SDK with the given writeKey and configuration.
+ * If the instance with the given instanceName already exists, it will return the existing instance.
+ *
+ * @param writeKey String representing the writeKey for the source
+ * @param configuration ConfigurationAndroid object representing the configuration for the source
+ * @param instanceName String representing the instance name for the source
+ * @param dataUploadService DataUploadService object representing the data upload service for the source
+ * @param configDownloadService ConfigDownloadService object representing the config download service for the source
+ * @param storage AndroidStorage object representing the storage for the source
+ * @param initializationListener Function1<Boolean, String?>? representing the initialization listener for the source
+ */
+fun initialize(
+    writeKey: String,
+    configuration: ConfigurationAndroid,
+    instanceName: String = DEFAULTS_ANALYTICS_INSTANCE_NAME,
+    dataUploadService: DataUploadService? = null,
+    configDownloadService: ConfigDownloadService? = null,
+    storage: AndroidStorage = AndroidStorageImpl(
+        configuration.application,
+        instanceName = instanceName,
+        useContentProvider = ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER
+    ),
+    initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
+): Analytics {
+    return AnalyticsInstanceRegistry.getInstance(instanceName) ?: RudderAnalytics(
+        writeKey,
+        configuration,
+        instanceName,
+        dataUploadService,
+        configDownloadService,
+        storage,
+        initializationListener
+    ).also { analyticsInstance ->
+        AnalyticsInstanceRegistry.register(instanceName, analyticsInstance)
+    }
+}
+
+// TODO("Add comments")
+fun getInstance(instanceName: String = DEFAULTS_ANALYTICS_INSTANCE_NAME): Analytics? {
+    return AnalyticsInstanceRegistry.getInstance(instanceName)
 }
 
 internal val Analytics.contextState: ContextState?
