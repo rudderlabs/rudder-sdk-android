@@ -66,6 +66,7 @@ class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
 
     override fun onAppBackgrounded() {
         sendLifecycleStop()
+        analytics?.flush()
     }
 
     override fun onActivityStarted(activityName: String) {

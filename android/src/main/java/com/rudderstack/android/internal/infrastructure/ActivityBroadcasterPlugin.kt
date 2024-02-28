@@ -64,7 +64,6 @@ internal class ActivityBroadcasterPlugin(
                         broadCastApplicationStop()
                     }
                 }
-                analytics?.flush()
             }
 
             override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
