@@ -77,7 +77,10 @@ abstract class AndroidStorageTest {
         whenever(mockConfig.controlPlaneUrl).thenReturn("https://api.rudderstack.com/")
         whenever(mockConfig.dataPlaneUrl).thenReturn(ConfigurationAndroid.Defaults.DEFAULT_ANDROID_DATAPLANE_URL)
         whenever(mockConfig.networkExecutor).thenReturn(TestExecutor())
-        analytics = RudderAnalytics("write_key", mockConfig, storage = storage)
+        whenever(mockConfig.flushQueueSize).thenReturn(200)
+        whenever(mockConfig.maxFlushInterval).thenReturn(1000)
+        analytics = RudderAnalytics("write_key", mockConfig, storage = storage,
+            dataUploadService = mock(), configDownloadService = mock())
     }
 
     @After
