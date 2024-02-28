@@ -77,7 +77,10 @@ abstract class AndroidStorageTest {
         whenever(mockConfig.controlPlaneUrl).thenReturn("https://api.rudderstack.com/")
         whenever(mockConfig.dataPlaneUrl).thenReturn(ConfigurationAndroid.Defaults.DEFAULT_ANDROID_DATAPLANE_URL)
         whenever(mockConfig.networkExecutor).thenReturn(TestExecutor())
-        analytics = RudderAnalytics("write_key", mockConfig, storage = storage)
+        whenever(mockConfig.flushQueueSize).thenReturn(200)
+        whenever(mockConfig.maxFlushInterval).thenReturn(1000)
+        analytics = RudderAnalytics("write_key", mockConfig, storage = storage,
+            dataUploadService = mock(), configDownloadService = mock())
     }
 
     @After
@@ -181,7 +184,20 @@ abstract class AndroidStorageTest {
         storage.clearSessionId()
         MatcherAssert.assertThat(storage.sessionId, Matchers.nullValue())
     }
+    @Test
+    fun `test delete sync`(){
+        val storage = analytics.storage as AndroidStorage
+        storage.clearStorage()
+        val events = (1..20).map {
+            TrackMessage.create("event:$it", RudderUtils.timeStamp)
+        }
+        storage.saveMessage(*events.toTypedArray())
+        while (storage.getDataSync().size != 20) {
+        }
+        storage.deleteMessagesSync(events.take(10))
+        MatcherAssert.assertThat(storage.getDataSync(), Matchers.iterableWithSize(10))
 
+    }
 }
 
 @RunWith(AndroidJUnit4::class)

@@ -37,8 +37,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29])
 class RudderDatabaseTest {
-        private lateinit var database: RudderDatabase
-//    private val delayedExecutor = Executors.newSingleThreadExecutor()
+    private lateinit var database: RudderDatabase
+
+    //    private val delayedExecutor = Executors.newSingleThreadExecutor()
     @Before
     fun initialize() {
         database = RudderDatabase(
@@ -194,6 +195,33 @@ class RudderDatabaseTest {
     }
 
     @Test
+    fun testDeleteSync() {
+        val sampleEntitiesToSave = listOf(
+            SampleEntity("abc", 10, listOf("12", "34", "56")),
+            SampleEntity("fgh", 10, listOf("34", "56", "78")),
+            SampleEntity("def", 20, listOf("78", "90", "12")),
+        )
+        val sampleDao = database.getDao(SampleEntity::class.java)
+        with(sampleDao) {
+            val rowIds = sampleEntitiesToSave.insertSync()
+            assertThat(rowIds, iterableWithSize(3))
+
+            val rowsDeleted = sampleEntitiesToSave.subList(0, 2).deleteSync()
+            // number of deleted rows is 2
+            assertThat(rowsDeleted, equalTo(2))
+            val items = getAllSync()
+            assertThat(
+                items,
+                allOf(
+                    iterableWithSize(1),
+                    contains(sampleEntitiesToSave[2]),
+                ),
+            )
+
+        }
+    }
+
+    @Test
     fun testAutoGenEntities() {
         val entitiesToSave = listOf(
             SampleAutoGenEntity("abc"),
@@ -227,8 +255,9 @@ class RudderDatabaseTest {
         }
         Awaitility.await().atMost(10, TimeUnit.SECONDS).untilTrue(isCompleted)
     }
+
     @Test
-    fun `test multiple database instances`(){
+    fun `test multiple database instances`() {
         val database1 = RudderDatabase(
             ApplicationProvider.getApplicationContext(),
             "testDb1",
