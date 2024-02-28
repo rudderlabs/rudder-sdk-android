@@ -108,7 +108,8 @@ class ReinstatePlugin : Plugin {
 
     private fun fillDefaults(configurationAndroid: ConfigurationAndroid) {
         _analytics?.setAnonymousId(AndroidUtils.getDeviceId(configurationAndroid.application))
-        _analytics?.initializeSessionManagement(null, null)
+        _analytics?.initializeSessionManagement(_analytics?.androidStorage?.sessionId,
+            _analytics?.androidStorage?.lastActiveTimestamp)
     }
 
     private fun reinstateV2FromCache(configurationAndroid: ConfigurationAndroid) {

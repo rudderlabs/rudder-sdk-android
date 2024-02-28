@@ -310,7 +310,7 @@ class SessionUtilsTest {
             mockConfig
         }
         // When
-        analytics.initializeSessionManagement(null, null)
+        analytics.initializeSessionManagement(mockStorage.sessionId, mockStorage.lastActiveTimestamp)
 
         // Then
         // Verify that SessionState is not updated

@@ -68,18 +68,10 @@ abstract class AndroidStorageTest {
             false, instanceName = "test_instance",
             storageExecutor = TestExecutor()
         )
-        mockConfig = mock()
-        whenever(mockConfig.shouldVerifySdk).thenReturn(false)
-        whenever(mockConfig.jsonAdapter).thenReturn(jsonAdapter)
-        whenever(mockConfig.analyticsExecutor).thenReturn(TestExecutor())
-        whenever(mockConfig.application).thenReturn(ApplicationProvider.getApplicationContext())
-        whenever(mockConfig.base64Generator).thenReturn(AndroidUtils.defaultBase64Generator())
-        whenever(mockConfig.controlPlaneUrl).thenReturn("https://api.rudderstack.com/")
-        whenever(mockConfig.dataPlaneUrl).thenReturn(ConfigurationAndroid.Defaults.DEFAULT_ANDROID_DATAPLANE_URL)
-        whenever(mockConfig.networkExecutor).thenReturn(TestExecutor())
-        whenever(mockConfig.flushQueueSize).thenReturn(200)
-        whenever(mockConfig.maxFlushInterval).thenReturn(1000)
-        analytics = RudderAnalytics("write_key", mockConfig, storage = storage,
+        mockConfig = ConfigurationAndroid(ApplicationProvider.getApplicationContext(),
+            jsonAdapter, shouldVerifySdk = false, analyticsExecutor = TestExecutor(),
+            networkExecutor = TestExecutor(), flushQueueSize = 200, maxFlushInterval = 1000)
+        analytics = generateTestAnalytics( mockConfig, storage = storage,
             dataUploadService = mock(), configDownloadService = mock())
     }
 
