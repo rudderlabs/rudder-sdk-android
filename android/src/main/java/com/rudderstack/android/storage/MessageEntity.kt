@@ -32,18 +32,22 @@ import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 
 /**
  * An [Entity] delegate for [Message] model.
- *
+ * @constructor creates a [MessageEntity] from a [Message] and [JsonAdapter]
+ * If this is a legacy message, pass the updatedAt as well, otherwise will be auto generated
  */
 @RudderEntity(
-    TABLE_NAME, [RudderField(
-        RudderField.Type.TEXT, MessageEntity.ColumnNames.messageId, primaryKey = true
-    ), RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.message), RudderField(
-        RudderField.Type.INTEGER, MessageEntity.ColumnNames.updatedAt, isIndex = true
-    )]
+    TABLE_NAME, [
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.messageId, primaryKey = true),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.message),
+        RudderField(RudderField.Type.INTEGER, MessageEntity.ColumnNames.updatedAt, isIndex = true),
+        RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.type),
+    ]
 )
-internal class MessageEntity(val message: Message, private val jsonAdapter: JsonAdapter) : Entity {
+internal class MessageEntity(val message: Message,
+                             private val jsonAdapter: JsonAdapter,
+    private val updatedAt: Long? = null) : Entity {
     object ColumnNames {
-        internal const val messageId = "messageId"
+        internal const val messageId = "id"
         internal const val message = "message"
         internal const val updatedAt = "updated"
         internal const val type = "type"
@@ -57,7 +61,7 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
                 ColumnNames.message,
                 jsonAdapter.writeToJson(message, RudderTypeAdapter {})?.replace("'", BACKLASHES_INVERTED_COMMA)
             )
-            it.put(ColumnNames.updatedAt, System.currentTimeMillis())
+            it.put(ColumnNames.updatedAt, updatedAt?: System.currentTimeMillis())
             it.put(ColumnNames.type, message.getType().value)
         }
     }
@@ -68,7 +72,7 @@ internal class MessageEntity(val message: Message, private val jsonAdapter: Json
 
     companion object {
 
-        internal const val TABLE_NAME = "message"
+        internal const val TABLE_NAME = "events"
         private const val BACKLASHES_INVERTED_COMMA = "\\\\'"
         internal fun create(
             values: Map<String, Any?>, jsonAdapter: JsonAdapter

@@ -180,7 +180,8 @@ class AndroidStorageImpl(
     private fun initDb(analytics: Analytics) {
         rudderDatabase = RudderDatabase(
             application, application.dbName,//TODO: change this to instance name
-            RudderEntityFactory(analytics), useContentProvider, DB_VERSION, executorService =
+            RudderEntityFactory(analytics.currentConfiguration?.jsonAdapter), useContentProvider, DB_VERSION,
+        executorService =
             storageExecutor
         )
         messageDao = rudderDatabase?.getDao(MessageEntity::class.java, storageExecutor)
