@@ -44,7 +44,6 @@ class ReinstatePluginTest {
     private lateinit var androidStorage: AndroidStorage
     private lateinit var mockControlPlane: ConfigDownloadService
 
-    //    private lateinit var context: Context
     private lateinit var configurationAndroid: ConfigurationAndroid
     private lateinit var plugin: ReinstatePlugin
     private lateinit var dummyMessage: Message
@@ -72,7 +71,6 @@ class ReinstatePluginTest {
                 "testSourceId", isSourceEnabled = true
             )
         )
-//        context = mock(Context::class.java)
         configurationAndroid = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(), mock<JsonAdapter>()
         )
@@ -100,8 +98,6 @@ class ReinstatePluginTest {
         assertEquals(chain.originalMessage, interceptedMessage)
     }
 
-    //    @Test
-//    fun `post reinstate messages should not change when `
     @Test
     fun `intercept should process stacked messages when reinstated`() {
         plugin.intercept(chain)
@@ -202,31 +198,4 @@ class ReinstatePluginTest {
             hasProperty("eventName", `is`("message3"))
         )
     }
-
-    /**
-    val message4 = TrackMessage.create("message4", RudderUtils.timeStamp)
-    val message5 = TrackMessage.create("message5", RudderUtils.timeStamp)
-    val message6 = TrackMessage.create("message6", RudderUtils.timeStamp)
-    val message7 = TrackMessage.create("message7", RudderUtils.timeStamp)
-    val message8 = TrackMessage.create("message8", RudderUtils.timeStamp)
-    val message9 = TrackMessage.create("message9", RudderUtils.timeStamp)
-    val message10 = TrackMessage.create("message10", RudderUtils.timeStamp)
-    val message11 = TrackMessage.create("message11", RudderUtils.timeStamp)
-    val message12 = TrackMessage.create("message12", RudderUtils.timeStamp)
-    val message13 = TrackMessage.create("message13", RudderUtils.timeStamp)
-    val message14 = TrackMessage.create("message14", RudderUtils.timeStamp)
-    val message15 = TrackMessage.create("message15", RudderUtils.timeStamp)
-    val message16 = TrackMessage.create("message16", RudderUtils.timeStamp)
-    val message17 = TrackMessage.create("message17", RudderUtils.timeStamp)
-    val message18 = TrackMessage.create("message18", RudderUtils.timeStamp)
-    val message19 = TrackMessage.create("message19", RudderUtils.timeStamp)
-    val message20 = TrackMessage.create("message20", RudderUtils.timeStamp)
-    val message21 = TrackMessage.create("message21", RudderUtils.timeStamp)
-    val message22 = TrackMessage.create("message22", RudderUtils.timeStamp)
-    val message23 = TrackMessage.create("message23", RudderUtils.timeStamp)
-    val message24 = TrackMessage.create("message24", RudderUtils.timeStamp)
-    val message25 = TrackMessage.create("message25", RudderUtils.timeStamp)
-    val message26 = TrackMessage.create("message26", RudderUtils.timeStamp)
-    val message27 = TrackMessage.create("message27", RudderUtils.timeStamp)
-     */
 }

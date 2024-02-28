@@ -152,37 +152,9 @@ private val messagePlugins
 private fun Analytics.startup() {
     addPlugins()
     associateStates()
-//    initializeSessionManagement()
 }
 
-/*private fun Analytics.reinstate() {
-    val context = androidStorage.context
-    contextState?.update(context)
-//    reinstateAnonymousAndUserId()
-    //TODO fill optout
-}*/
 
-/*
-private fun Analytics.reinstateAnonymousAndUserId() {
-    if (currentConfigurationAndroid?.anonymousId == null || currentConfigurationAndroid?.userId == null) {
-        val newAnonId = currentConfigurationAndroid?.anonymousId ?: androidStorage.anonymousId
-                        ?: androidStorage.v1AnonymousId
-                        ?: currentConfigurationAndroid?.application?.let {
-            AndroidUtils.getDeviceId(
-                it
-            )
-        }
-        val newUserId =
-            currentConfigurationAndroid?.userId ?: androidStorage.userId ?: androidStorage.v1UserId
-        applyConfiguration {
-            if (this is ConfigurationAndroid) copy(
-                anonymousId = newAnonId, userId = newUserId
-            )
-            else this
-        }
-    }
-}
-*/
 
 private fun Analytics.associateStates() {
     associateState(ContextState())

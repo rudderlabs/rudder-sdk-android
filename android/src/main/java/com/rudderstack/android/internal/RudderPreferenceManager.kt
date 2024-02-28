@@ -110,13 +110,6 @@ internal class RudderPreferenceManager(application: Application,
     val userId: String?
         get() = preferences.getString(RUDDER_USER_ID_KEY.key, null)
 
-//    fun saveOptStatus(optStatus: Boolean) {
-//        preferences.edit().putBoolean(RUDDER_OPT_STATUS_KEY.key, optStatus).apply()
-//    }
-//
-//    val optStatus: Boolean
-//        get() = preferences.getBoolean(RUDDER_OPT_STATUS_KEY.key, false)
-
     fun updateOptInTime() {
         preferences.edit().putLong(RUDDER_OPT_IN_TIME_KEY.key, System.currentTimeMillis()).apply()
     }
