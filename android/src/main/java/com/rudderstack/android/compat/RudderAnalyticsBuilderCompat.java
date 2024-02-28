@@ -64,7 +64,7 @@ public final class RudderAnalyticsBuilderCompat  {
     }
     public Analytics build() {
 
-        return RudderAnalytics.RudderAnalytics(
+        return RudderAnalytics.initialize(
                 writeKey,
                 configuration,
                 instanceName,
