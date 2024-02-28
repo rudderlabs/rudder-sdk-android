@@ -19,8 +19,6 @@ import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.InfrastructurePlugin
-import com.rudderstack.core.RudderUtils
-import com.rudderstack.models.TrackMessage
 
 class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
 
