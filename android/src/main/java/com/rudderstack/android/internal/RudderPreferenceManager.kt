@@ -162,4 +162,11 @@ internal class RudderPreferenceManager(application: Application,
 
     internal val v1SessionId : Long
         get() =  preferencesV1.getLong(RUDDER_SESSION_ID_KEY, -1)
+
+    fun saveOptStatus(optStatus: Boolean) {
+        preferences.edit().putBoolean(RUDDER_OPT_STATUS_KEY.key, optStatus).apply()
+    }
+
+    val optStatus: Boolean
+        get() = preferences.getBoolean(RUDDER_OPT_STATUS_KEY.key, false)
 }
