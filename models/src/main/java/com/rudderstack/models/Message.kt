@@ -17,6 +17,7 @@ package com.rudderstack.models
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.annotations.SerializedName
 import com.rudderstack.models.Message.EventType
@@ -37,6 +38,7 @@ typealias MessageDestinationProps = Map<String, Map<*, *>>
 typealias GroupTraits = Map<String, Any>
 
 @JsonIgnoreProperties("type\$models")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 sealed class Message(
 
     /**
@@ -82,8 +84,9 @@ sealed class Message(
     @Json(name = "channel")
     @JsonProperty("channel")
     @SerializedName("channel")
-    var channel: String = _channel ?: "server"
-        get() = field
+    var channel: String = _channel?: "server"
+        get() = field?: "server" // required for gson, cause it might set the property null
+    // through reflection
 
     @JsonIgnore
     fun getType() = type

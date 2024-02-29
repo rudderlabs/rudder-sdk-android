@@ -84,14 +84,14 @@ abstract class MessageParseTest {
             "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
             "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
             "  \"userId\": \"debanjanchatterjee\",\n" +
-            "  \"category\": \"login\",\n" +
             "  \"context\": null,\n" +
 
             "  \"integrations\": {\n" +
             "    \n" +
             "  },\n" +
-            "  \"event\": \"Java Test\",\n" +
             "  \"properties\": {\n" +
+            "  \"category\": \"login\",\n" +
+            "  \"name\": \"first_screen\",\n" +
             "    \"count\": \"1\"\n" +
             "  }\n" +
             "}"
@@ -227,9 +227,10 @@ abstract class MessageParseTest {
                 hasProperty("type", `is`(Message.EventType.SCREEN)),
                 hasProperty("channel", `is`("server")),
                 hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
-                hasProperty("properties", allOf(aMapWithSize<String, String>(1))),
+                hasProperty("properties", allOf(aMapWithSize<String, String>(3), hasEntry
+                    ("category", "login"), hasEntry("name", "first_screen")),
+                ),
                 hasProperty("userId", `is`("debanjanchatterjee")),
-                hasProperty("category", `is`("login")),
             ),
         )
         assertThat(screen!!.properties!!["count"], `is`("1"))
