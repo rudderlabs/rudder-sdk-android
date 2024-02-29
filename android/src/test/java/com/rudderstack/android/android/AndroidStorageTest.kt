@@ -68,16 +68,11 @@ abstract class AndroidStorageTest {
             false, instanceName = "test_instance",
             storageExecutor = TestExecutor()
         )
-        mockConfig = mock()
-        whenever(mockConfig.shouldVerifySdk).thenReturn(false)
-        whenever(mockConfig.jsonAdapter).thenReturn(jsonAdapter)
-        whenever(mockConfig.analyticsExecutor).thenReturn(TestExecutor())
-        whenever(mockConfig.application).thenReturn(ApplicationProvider.getApplicationContext())
-        whenever(mockConfig.base64Generator).thenReturn(AndroidUtils.defaultBase64Generator())
-        whenever(mockConfig.controlPlaneUrl).thenReturn("https://api.rudderstack.com/")
-        whenever(mockConfig.dataPlaneUrl).thenReturn(ConfigurationAndroid.Defaults.DEFAULT_ANDROID_DATAPLANE_URL)
-        whenever(mockConfig.networkExecutor).thenReturn(TestExecutor())
-        analytics = RudderAnalytics("write_key", mockConfig, storage = storage)
+        mockConfig = ConfigurationAndroid(ApplicationProvider.getApplicationContext(),
+            jsonAdapter, shouldVerifySdk = false, analyticsExecutor = TestExecutor(),
+            networkExecutor = TestExecutor(), flushQueueSize = 200, maxFlushInterval = 1000)
+        analytics = generateTestAnalytics( mockConfig, storage = storage,
+            dataUploadService = mock(), configDownloadService = mock())
     }
 
     @After
@@ -181,7 +176,20 @@ abstract class AndroidStorageTest {
         storage.clearSessionId()
         MatcherAssert.assertThat(storage.sessionId, Matchers.nullValue())
     }
+    @Test
+    fun `test delete sync`(){
+        val storage = analytics.storage as AndroidStorage
+        storage.clearStorage()
+        val events = (1..20).map {
+            TrackMessage.create("event:$it", RudderUtils.timeStamp)
+        }
+        storage.saveMessage(*events.toTypedArray())
+        while (storage.getDataSync().size != 20) {
+        }
+        storage.deleteMessagesSync(events.take(10))
+        MatcherAssert.assertThat(storage.getDataSync(), Matchers.iterableWithSize(10))
 
+    }
 }
 
 @RunWith(AndroidJUnit4::class)

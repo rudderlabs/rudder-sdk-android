@@ -41,7 +41,8 @@ class VerificationStorage : Storage {
     }
 
     override fun deleteMessages(messages: List<Message>) {
-        storageQ -= messages.toSet()
+        // does not support async delete
+        deleteMessagesSync(messages)
     }
 
     override fun addMessageDataListener(listener: Storage.DataListener) {
@@ -89,6 +90,10 @@ class VerificationStorage : Storage {
 
     override fun clearStorage() {
         storageQ.clear()
+    }
+
+    override fun deleteMessagesSync(messages: List<Message>) {
+        storageQ -= messages.toSet()
     }
 
     override val startupQueue: List<Message>

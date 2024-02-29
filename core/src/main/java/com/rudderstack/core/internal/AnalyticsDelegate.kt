@@ -27,9 +27,11 @@ import com.rudderstack.core.LifecycleController
 import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
+import com.rudderstack.core.RudderUtils.getUTF8Length
+import com.rudderstack.core.RudderUtils.MAX_BATCH_SIZE
+import com.rudderstack.core.State
 import com.rudderstack.core.Storage
 import com.rudderstack.core.flushpolicy.CountBasedFlushPolicy
-import com.rudderstack.core.flushpolicy.FlushPolicy
 import com.rudderstack.core.flushpolicy.IntervalBasedFlushPolicy
 import com.rudderstack.core.flushpolicy.addFlushPolicies
 import com.rudderstack.core.flushpolicy.applyFlushPoliciesClosure
@@ -39,6 +41,7 @@ import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.core.internal.plugins.DestinationConfigurationPlugin
 import com.rudderstack.core.internal.plugins.EventFilteringPlugin
 import com.rudderstack.core.internal.plugins.GDPRPlugin
+import com.rudderstack.core.internal.plugins.EventSizeFilterPlugin
 import com.rudderstack.core.internal.plugins.RudderOptionPlugin
 import com.rudderstack.core.internal.plugins.StoragePlugin
 import com.rudderstack.core.internal.plugins.WakeupActionPlugin
@@ -46,6 +49,7 @@ import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.core.internal.states.DestinationConfigState
 import com.rudderstack.models.Message
 import com.rudderstack.models.RudderServerConfig
+import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.LinkedBlockingQueue
@@ -147,6 +151,7 @@ internal class AnalyticsDelegate(
 
     //plugins
     private val gdprPlugin = GDPRPlugin()
+    private val eventSizeFilterPlugin = EventSizeFilterPlugin()
     private val storagePlugin = StoragePlugin()
     private val wakeupActionPlugin = WakeupActionPlugin()
     private val eventFilteringPlugin = EventFilteringPlugin()
@@ -159,8 +164,21 @@ internal class AnalyticsDelegate(
     init {
         associateState(ConfigurationsState(configuration))
         associateState(DestinationConfigState())
+        attachListeners()
         initializePlugins()
         initializeFlush()
+    }
+
+    private fun attachListeners() {
+        currentConfigurationState?.subscribe { state, _ ->
+            logger.debug(log = "Configuration updated: $state")
+            applyInfrastructureClosure {
+                applyConfigurationClosure(this)
+            }
+            applyMessageClosure {
+                applyConfigurationClosure(this)
+            }
+        }
     }
 
     private fun initializeFlush() {
@@ -169,8 +187,8 @@ internal class AnalyticsDelegate(
     }
 
     private fun initializePlugins() {
-        initializeMessagePlugins()
         initializeInfraPlugins()
+        initializeMessagePlugins()
     }
 
     private fun initializeInfraPlugins() {
@@ -186,13 +204,7 @@ internal class AnalyticsDelegate(
         currentConfiguration?.let {
             val newConfiguration = configurationScope(it)
             currentConfigurationState?.update(newConfiguration)
-            logger.debug(log = "Configuration updated: $newConfiguration")
-            applyInfrastructureClosure {
-                applyConfigurationClosure(this)
-            }
-            applyMessageClosure {
-                applyConfigurationClosure(this)
-            }
+
         }?: logger.error(log = "Configuration not updated, since current configuration is null")
 
     }
@@ -375,7 +387,9 @@ internal class AnalyticsDelegate(
         if(!_isFlushing.compareAndSet(false, true)) return false
         //inform plugins
         broadcastFlush()
-        var latestData = storage.getDataSync()
+
+        // Add `extraInfo` size if sent. Default batch size is 2KB.
+        var latestData = getMessagesTrimmedToMaxSize()
 
         var isFlushSuccess = true
 
@@ -389,9 +403,9 @@ internal class AnalyticsDelegate(
                     }
                     if (response.success) {
                         latestData.successCallback()
-                        storage.deleteMessages(latestData)
-                        latestData = storage.getDataSync()
-
+                        storage.deleteMessagesSync(latestData)
+                        // Add `extraInfo` size if sent. Default batch size is 2KB.
+                        latestData = getMessagesTrimmedToMaxSize()
                     } else {
                         latestData.failureCallback(response.errorThrowable)
                         isFlushSuccess = false
@@ -401,6 +415,29 @@ internal class AnalyticsDelegate(
         }
         _isFlushing.set(false)
         return isFlushSuccess
+    }
+
+    private fun getMessagesTrimmedToMaxSize(defaultBufferSize: Int = 2 * 1024): List<Message> {
+        val data = storage.getDataSync()
+        val config = currentConfiguration ?: return data
+
+        var totalMessageSize = defaultBufferSize
+        var index = 0
+
+        for (message in data) {
+            val messageJSON: String? = config.jsonAdapter.writeToJson(message, object : RudderTypeAdapter<Message>() {})
+            val messageSize = messageJSON.toString().getUTF8Length()
+
+            totalMessageSize += messageSize
+
+            if (totalMessageSize > MAX_BATCH_SIZE) {
+                config.logger.debug(log = "Maximum batch size reached at $index")
+                break
+            }
+            index++
+        }
+
+        return data.subList(0, index)
     }
 
     private fun broadcastFlush() {
@@ -441,49 +478,49 @@ internal class AnalyticsDelegate(
     private fun initDestinationPlugin(plugin: DestinationPlugin<*>) {
 
         val destConfig = currentDestinationConfigurationState?.value ?: DestinationConfig()
-        fun onDestinationReady(isReady: Boolean) {
-            if (isReady) {
-                storage.startupQueue?.forEach {
-                    // will be sent only for the individual destination.
-                    //options need not be considered, since RudderOptionPlugin has
-                    //already done it's job.
-                    processMessage(
-                        message = it,
-                        null,
-                        lifecycleController = LifecycleControllerImpl(it, listOf(plugin))
-                    )
-                }
-                val newDestinationConfig = (currentDestinationConfigurationState?.value
-                                            ?: DestinationConfig()).withIntegration(
-                    plugin.name, isReady
-                )
-                currentDestinationConfigurationState?.update(newDestinationConfig)
-                if (newDestinationConfig.allIntegrationsReady) {
-                    //all integrations are ready, time to clear startup queue
-                    storage.clearStartupQueue()
-                }
-            } else {
-                logger.warn(log = "plugin ${plugin.name} activation failed")
-                //remove from destination config, else all integrations ready won't be true anytime
 
-                val newDestinationConfig = (currentDestinationConfigurationState?.value
-                                            ?: DestinationConfig()).removeIntegration(plugin.name)
-                currentDestinationConfigurationState?.update(newDestinationConfig)
-
-            }
-        }
 
         if (!destConfig.isIntegrationReady(plugin.name)) {
 
             plugin.addIsReadyCallback { _, isReady ->
-                onDestinationReady(isReady)
+                onDestinationReady(isReady, plugin)
             }
         } else {
             //destination is ready for startup queue
-            onDestinationReady(true)
+            onDestinationReady(true, plugin)
         }
     }
+    private fun onDestinationReady(isReady: Boolean, plugin: DestinationPlugin<*>) {
+        if (isReady) {
+            storage.startupQueue?.forEach {
+                // will be sent only for the individual destination.
+                //options need not be considered, since RudderOptionPlugin has
+                //already done it's job.
+                processMessage(
+                    message = it,
+                    null,
+                    lifecycleController = LifecycleControllerImpl(it, listOf(plugin))
+                )
+            }
+            val newDestinationConfig = (currentDestinationConfigurationState?.value
+                                        ?: DestinationConfig()).withIntegration(
+                plugin.name, isReady
+            )
+            currentDestinationConfigurationState?.update(newDestinationConfig)
+            if (newDestinationConfig.allIntegrationsReady) {
+                //all integrations are ready, time to clear startup queue
+                storage.clearStartupQueue()
+            }
+        } else {
+            logger.warn(log = "plugin ${plugin.name} activation failed")
+            //remove from destination config, else all integrations ready won't be true anytime
 
+            val newDestinationConfig = (currentDestinationConfigurationState?.value
+                                        ?: DestinationConfig()).removeIntegration(plugin.name)
+            currentDestinationConfigurationState?.update(newDestinationConfig)
+
+        }
+    }
     private fun updateSourceConfig() {
         var isServerConfigDownloadPossible = false
         applyInfrastructureClosure {
@@ -540,10 +577,11 @@ internal class AnalyticsDelegate(
     private fun handleConfigData(serverConfig: RudderServerConfig) {
         storage.saveServerConfig(serverConfig)
         _serverConfig = serverConfig
-        applyMessageClosure {
+
+        applyInfrastructureClosure {
             applyServerConfigClosure(this)
         }
-        applyInfrastructureClosure {
+        applyMessageClosure {
             applyServerConfigClosure(this)
         }
 
@@ -556,6 +594,7 @@ internal class AnalyticsDelegate(
     private fun initializeMessagePlugins() {
         // check if opted out
         _internalPreMessagePlugins = _internalPreMessagePlugins + gdprPlugin
+        _internalPostCustomPlugins = _internalPostCustomPlugins + eventSizeFilterPlugin
         // rudder option plugin followed by extract state plugin should be added by lifecycle
         // add defaults to message
 //        _internalPrePlugins = _internalPrePlugins + anonymousIdPlugin

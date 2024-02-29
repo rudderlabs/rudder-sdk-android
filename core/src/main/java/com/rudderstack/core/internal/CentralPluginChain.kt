@@ -28,7 +28,7 @@ internal class CentralPluginChain(
     private val message: Message,
     override val plugins: List<Plugin>,
     override val index: Int = 0,
-    override val originalMessage: Message = message
+    override val originalMessage: Message
 ) : Plugin.Chain {
     private val numberOfCalls = AtomicInteger(0)
     override fun message(): Message {
@@ -57,7 +57,7 @@ internal class CentralPluginChain(
             copy(index = index + 1, message = subPluginsModifiedCopyMsg, originalMessage = message)
         } else
             //in case of other plugins, change is propagated
-            copy(index = index + 1, message = message)
+            copy(index = index + 1, message = message, originalMessage = originalMessage)
         return plugin.intercept(next)
 
     }
