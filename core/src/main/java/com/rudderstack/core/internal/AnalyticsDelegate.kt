@@ -29,6 +29,7 @@ import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
 import com.rudderstack.core.RudderUtils.getUTF8Length
 import com.rudderstack.core.RudderUtils.MAX_BATCH_SIZE
+import com.rudderstack.core.State
 import com.rudderstack.core.Storage
 import com.rudderstack.core.flushpolicy.CountBasedFlushPolicy
 import com.rudderstack.core.flushpolicy.IntervalBasedFlushPolicy
@@ -163,8 +164,21 @@ internal class AnalyticsDelegate(
     init {
         associateState(ConfigurationsState(configuration))
         associateState(DestinationConfigState())
+        attachListeners()
         initializePlugins()
         initializeFlush()
+    }
+
+    private fun attachListeners() {
+        currentConfigurationState?.subscribe { state, _ ->
+            logger.debug(log = "Configuration updated: $state")
+            applyInfrastructureClosure {
+                applyConfigurationClosure(this)
+            }
+            applyMessageClosure {
+                applyConfigurationClosure(this)
+            }
+        }
     }
 
     private fun initializeFlush() {
@@ -173,8 +187,8 @@ internal class AnalyticsDelegate(
     }
 
     private fun initializePlugins() {
-        initializeMessagePlugins()
         initializeInfraPlugins()
+        initializeMessagePlugins()
     }
 
     private fun initializeInfraPlugins() {
@@ -190,13 +204,7 @@ internal class AnalyticsDelegate(
         currentConfiguration?.let {
             val newConfiguration = configurationScope(it)
             currentConfigurationState?.update(newConfiguration)
-            logger.debug(log = "Configuration updated: $newConfiguration")
-            applyInfrastructureClosure {
-                applyConfigurationClosure(this)
-            }
-            applyMessageClosure {
-                applyConfigurationClosure(this)
-            }
+
         }?: logger.error(log = "Configuration not updated, since current configuration is null")
 
     }
@@ -470,49 +478,49 @@ internal class AnalyticsDelegate(
     private fun initDestinationPlugin(plugin: DestinationPlugin<*>) {
 
         val destConfig = currentDestinationConfigurationState?.value ?: DestinationConfig()
-        fun onDestinationReady(isReady: Boolean) {
-            if (isReady) {
-                storage.startupQueue?.forEach {
-                    // will be sent only for the individual destination.
-                    //options need not be considered, since RudderOptionPlugin has
-                    //already done it's job.
-                    processMessage(
-                        message = it,
-                        null,
-                        lifecycleController = LifecycleControllerImpl(it, listOf(plugin))
-                    )
-                }
-                val newDestinationConfig = (currentDestinationConfigurationState?.value
-                                            ?: DestinationConfig()).withIntegration(
-                    plugin.name, isReady
-                )
-                currentDestinationConfigurationState?.update(newDestinationConfig)
-                if (newDestinationConfig.allIntegrationsReady) {
-                    //all integrations are ready, time to clear startup queue
-                    storage.clearStartupQueue()
-                }
-            } else {
-                logger.warn(log = "plugin ${plugin.name} activation failed")
-                //remove from destination config, else all integrations ready won't be true anytime
 
-                val newDestinationConfig = (currentDestinationConfigurationState?.value
-                                            ?: DestinationConfig()).removeIntegration(plugin.name)
-                currentDestinationConfigurationState?.update(newDestinationConfig)
-
-            }
-        }
 
         if (!destConfig.isIntegrationReady(plugin.name)) {
 
             plugin.addIsReadyCallback { _, isReady ->
-                onDestinationReady(isReady)
+                onDestinationReady(isReady, plugin)
             }
         } else {
             //destination is ready for startup queue
-            onDestinationReady(true)
+            onDestinationReady(true, plugin)
         }
     }
+    private fun onDestinationReady(isReady: Boolean, plugin: DestinationPlugin<*>) {
+        if (isReady) {
+            storage.startupQueue?.forEach {
+                // will be sent only for the individual destination.
+                //options need not be considered, since RudderOptionPlugin has
+                //already done it's job.
+                processMessage(
+                    message = it,
+                    null,
+                    lifecycleController = LifecycleControllerImpl(it, listOf(plugin))
+                )
+            }
+            val newDestinationConfig = (currentDestinationConfigurationState?.value
+                                        ?: DestinationConfig()).withIntegration(
+                plugin.name, isReady
+            )
+            currentDestinationConfigurationState?.update(newDestinationConfig)
+            if (newDestinationConfig.allIntegrationsReady) {
+                //all integrations are ready, time to clear startup queue
+                storage.clearStartupQueue()
+            }
+        } else {
+            logger.warn(log = "plugin ${plugin.name} activation failed")
+            //remove from destination config, else all integrations ready won't be true anytime
 
+            val newDestinationConfig = (currentDestinationConfigurationState?.value
+                                        ?: DestinationConfig()).removeIntegration(plugin.name)
+            currentDestinationConfigurationState?.update(newDestinationConfig)
+
+        }
+    }
     private fun updateSourceConfig() {
         var isServerConfigDownloadPossible = false
         applyInfrastructureClosure {
@@ -569,10 +577,11 @@ internal class AnalyticsDelegate(
     private fun handleConfigData(serverConfig: RudderServerConfig) {
         storage.saveServerConfig(serverConfig)
         _serverConfig = serverConfig
-        applyMessageClosure {
+
+        applyInfrastructureClosure {
             applyServerConfigClosure(this)
         }
-        applyInfrastructureClosure {
+        applyMessageClosure {
             applyServerConfigClosure(this)
         }
 

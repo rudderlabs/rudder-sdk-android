@@ -65,7 +65,7 @@ interface ConfigurationAndroid : Configuration {
      * @param base64Generator
      */
     val application: Application
-    val anonymousId: String
+    val anonymousId: String?
     val userId: String?
     val trackLifecycleEvents: Boolean
     val recordScreenViews: Boolean
@@ -85,9 +85,7 @@ interface ConfigurationAndroid : Configuration {
         operator fun invoke(
             application: Application,
             jsonAdapter: JsonAdapter,
-            anonymousId: String= AndroidUtils.getDeviceId(
-                application
-            ),
+            anonymousId: String?= null,
             userId: String? = null,
             options: RudderOptions = RudderOptions.defaultOptions(),
             flushQueueSize: Int = Defaults.DEFAULT_FLUSH_QUEUE_SIZE,
@@ -119,7 +117,7 @@ interface ConfigurationAndroid : Configuration {
 //    val contextAddOns: Map<String, Any>? = null // will be added by default to each message
         ) : ConfigurationAndroid = object : ConfigurationAndroid{
             override val application: Application = application
-            override val anonymousId: String = anonymousId
+            override val anonymousId: String? = anonymousId
             override val userId: String? = userId
             override val trackLifecycleEvents: Boolean = trackLifecycleEvents
             override val recordScreenViews: Boolean = recordScreenViews
@@ -259,7 +257,7 @@ interface ConfigurationAndroid : Configuration {
         networkExecutor: ExecutorService = this.networkExecutor,
         advertisingIdFetchExecutor : ExecutorService? = this.advertisingIdFetchExecutor,
         base64Generator: Base64Generator = this.base64Generator,
-        anonymousId: String = this.anonymousId,
+        anonymousId: String? = this.anonymousId,
         userId: String? = this.userId,
         advertisingId: String? = this.advertisingId,
         deviceToken: String? = this.deviceToken,

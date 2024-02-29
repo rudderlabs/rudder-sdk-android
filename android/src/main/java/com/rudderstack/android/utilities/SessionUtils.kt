@@ -93,9 +93,8 @@ internal fun Analytics.startSessionIfNeeded() {
     }
 }
 
-internal fun Analytics.initializeSessionManagement() {
-    val savedSessionId = androidStorage.sessionId
-    val lastActiveTimestamp = androidStorage.lastActiveTimestamp
+internal fun Analytics.initializeSessionManagement(savedSessionId: Long? = null,
+        lastActiveTimestamp: Long? = null) {
     if (currentConfigurationAndroid?.trackAutoSession != true || currentConfigurationAndroid?.trackLifecycleEvents != true) {
         discardAnyPreviousSession(savedSessionId, lastActiveTimestamp)
         return

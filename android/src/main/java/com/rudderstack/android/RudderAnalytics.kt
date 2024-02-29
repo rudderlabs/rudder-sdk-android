@@ -19,15 +19,15 @@ import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
 import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
 import com.rudderstack.android.internal.infrastructure.ResetImplementationPlugin
-import com.rudderstack.android.internal.plugins.PlatformInputsPlugin
+import com.rudderstack.android.internal.plugins.ReinstatePlugin
 import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
+import com.rudderstack.android.internal.plugins.PlatformInputsPlugin
 import com.rudderstack.android.internal.plugins.SessionPlugin
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
-import com.rudderstack.android.utilities.initializeSessionManagement
 import com.rudderstack.android.utilities.shutdownSessionManagement
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
@@ -55,8 +55,7 @@ fun RudderAnalytics(
     ),
     initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
 ): Analytics {
-    return Analytics(
-        writeKey,
+    return Analytics(writeKey,
         configuration,
         instanceName,
         dataUploadService,
@@ -65,8 +64,7 @@ fun RudderAnalytics(
         initializationListener = initializationListener,
         shutdownHook = {
             onShutdown()
-        }
-    ).apply {
+        }).apply {
         startup()
     }
 }
@@ -147,21 +145,16 @@ private val infrastructurePlugins
     )
 private val messagePlugins
     get() = listOf(
-        PlatformInputsPlugin(),
-        ExtractStatePlugin(),
-        FillDefaultsPlugin(),
+        ReinstatePlugin(), PlatformInputsPlugin(), ExtractStatePlugin(), FillDefaultsPlugin(),
         SessionPlugin()
     )
 
 private fun Analytics.startup() {
     addPlugins()
     associateStates()
-    androidStorage.let {
-        contextState?.update(it.context)
-    }
-
-    initializeSessionManagement()
 }
+
+
 
 private fun Analytics.associateStates() {
     associateState(ContextState())
@@ -180,9 +173,16 @@ internal fun Analytics.processNewContext(
     contextState?.update(newContext)
 }
 
-
+fun Analytics.applyConfigurationAndroid(androidConfigurationScope: ConfigurationAndroid.() ->
+ConfigurationAndroid){
+    applyConfiguration {
+        if (this is ConfigurationAndroid) androidConfigurationScope()
+        else this
+    }
+}
 val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
     get() = (currentConfiguration as? ConfigurationAndroid)
+
 private fun Analytics.onShutdown() {
     shutdownSessionManagement()
 }
