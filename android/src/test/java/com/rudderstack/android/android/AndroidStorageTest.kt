@@ -190,6 +190,28 @@ abstract class AndroidStorageTest {
         MatcherAssert.assertThat(storage.getDataSync(), Matchers.iterableWithSize(10))
 
     }
+
+    @Test
+    fun `when user opts out from tracking, then set optOut to true`() {
+        val storage = analytics.storage as AndroidStorage
+        storage.clearStorage()
+
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(false))
+        storage.saveOptOut(true)
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(true))
+    }
+
+    @Test
+    fun `when user opts in for tracking, then set optOut to false`() {
+        val storage = analytics.storage as AndroidStorage
+        storage.clearStorage()
+
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(false))
+        storage.saveOptOut(true)
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(true))
+        storage.saveOptOut(false)
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(false))
+    }
 }
 
 @RunWith(AndroidJUnit4::class)
