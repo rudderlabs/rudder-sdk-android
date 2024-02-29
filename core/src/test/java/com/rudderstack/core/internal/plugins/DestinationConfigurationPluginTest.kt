@@ -67,7 +67,7 @@ class DestinationConfigurationPluginTest {
     fun setup() {
         destinationConfigurationPlugin = DestinationConfigurationPlugin()
         defaultPluginChain = CentralPluginChain(message,
-            destinations/*.toMutableList().also {
+            destinations, originalMessage = message/*.toMutableList().also {
                 it.add(0, destinationConfigurationPlugin!!)
             }*/)
     }

@@ -60,7 +60,7 @@ class RudderOptionPluginTest {
         }
         val chain = CentralPluginChain(message, listOf(
             RudderOptionPlugin(RudderOptions.defaultOptions()),assertPlugin, dest1, dest2, dest3
-        ))
+        ), originalMessage = message)
         chain.proceed(message)
     }
 
@@ -79,7 +79,7 @@ class RudderOptionPluginTest {
             RudderOptionPlugin(RudderOptions.Builder()
                 .withIntegrations(mapOf("All" to false))
                 .build()),assertPlugin, dest1, dest2, dest3
-        ))
+        ), originalMessage = message)
         chain.proceed(message)
     }
 
@@ -99,7 +99,7 @@ class RudderOptionPluginTest {
             RudderOptionPlugin(RudderOptions.Builder()
                 .withIntegrations(mapOf("dest-2" to false,"dest-3" to false))
                 .build()),assertPlugin, dest1, dest2, dest3
-        ))
+        ), originalMessage = message)
         chain.proceed(message)
     }
 
@@ -119,7 +119,7 @@ class RudderOptionPluginTest {
             RudderOptionPlugin(RudderOptions.Builder()
                 .withIntegrations(mapOf("All" to false, "dest-2" to true,"dest-3" to false))
                 .build()),assertPlugin, dest1, dest2, dest3
-        ))
+        ), originalMessage = message)
         chain.proceed(message)
     }
 

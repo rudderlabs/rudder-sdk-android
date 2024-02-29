@@ -24,7 +24,11 @@ class EventSizeFilterPluginTest {
             it.proceed(it.message())
         }
         val message = getMessageUnderMaxSize()
-        val eventSizeFilterTestChain = CentralPluginChain(message, listOf(eventSizeFilterPlugin, testPlugin))
+        val eventSizeFilterTestChain = CentralPluginChain(
+            message, listOf(
+                eventSizeFilterPlugin, testPlugin
+            ), originalMessage = message
+        )
         eventSizeFilterPlugin.updateConfiguration(currentConfiguration)
 
         val returnedMsg = eventSizeFilterTestChain.proceed(message)
@@ -40,7 +44,11 @@ class EventSizeFilterPluginTest {
             it.proceed(it.message())
         }
         val message = getMessageOverMaxSize()
-        val eventSizeFilterTestChain = CentralPluginChain(message, listOf(eventSizeFilterPlugin, testPlugin))
+        val eventSizeFilterTestChain = CentralPluginChain(
+            message,
+            listOf(eventSizeFilterPlugin, testPlugin),
+            originalMessage = message
+        )
         eventSizeFilterPlugin.updateConfiguration(currentConfiguration)
 
         val returnedMsg = eventSizeFilterTestChain.proceed(message)
@@ -50,16 +58,12 @@ class EventSizeFilterPluginTest {
 
     private fun getMessageUnderMaxSize(): Message {
         return TrackMessage.create(
-            "ev-1", RudderUtils.timeStamp,
-            traits = mapOf(
-                "age" to 31,
-                "office" to "Rudderstack"
-            ),
-            externalIds = listOf(
+            "ev-1", RudderUtils.timeStamp, traits = mapOf(
+                "age" to 31, "office" to "Rudderstack"
+            ), externalIds = listOf(
                 mapOf("some_id" to "s_id"),
                 mapOf("amp_id" to "amp_id"),
-            ),
-            customContextMap = null
+            ), customContextMap = null
         ).also { message ->
             val messageJSON = currentConfiguration.jsonAdapter.writeToJson(message)
             val messageSize = messageJSON.toString().getUTF8Length()
@@ -76,9 +80,7 @@ class EventSizeFilterPluginTest {
         properties["property"] = generateDataOfSize(1024 * 33)
 
         return TrackMessage.create(
-            "ev-1",
-            RudderUtils.timeStamp,
-            properties = properties
+            "ev-1", RudderUtils.timeStamp, properties = properties
         ).also { message ->
             val messageJSON = currentConfiguration.jsonAdapter.writeToJson(message)
             val messageSize = messageJSON.toString().getUTF8Length()

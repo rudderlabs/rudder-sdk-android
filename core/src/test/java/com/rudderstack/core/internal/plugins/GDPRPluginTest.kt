@@ -46,7 +46,8 @@ class GDPRPluginTest {
             assert(false)
             it.proceed(it.message())
         }
-        val optOutTestChain = CentralPluginChain(message, listOf(gdprPlugin, testPluginForOptOut))
+        val optOutTestChain = CentralPluginChain(message, listOf(gdprPlugin, testPluginForOptOut)
+            , originalMessage = message)
         //opted out
         gdprPlugin.updateConfiguration(Configuration( jsonAdapter = JacksonAdapter(),
             isOptOut = true))
@@ -63,7 +64,8 @@ class GDPRPluginTest {
             isCalled = true
             it.proceed(it.message())
         }
-        val optInTestChain = CentralPluginChain(message, listOf(gdprPlugin, testPluginForOptIn))
+        val optInTestChain = CentralPluginChain(message, listOf(gdprPlugin, testPluginForOptIn),
+            originalMessage = message)
         //opted out
         gdprPlugin.updateConfiguration(Configuration(jsonAdapter = JacksonAdapter(),isOptOut = false))
         //check for opt out
