@@ -16,7 +16,6 @@ package com.rudderstack.core.internal.plugins
 
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.Configuration
 import com.rudderstack.models.Message
 
 /**
