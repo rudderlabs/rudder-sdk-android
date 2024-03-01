@@ -132,7 +132,7 @@ abstract class MessageParseTest {
     @Test
     fun testTrackParsing() {
         val track = jsonAdapter.readJson(TRACK_JSON, TrackMessage::class.java)
-        println("channel : ${track?.channel}")
+        println("track: $track, \nchannel : ${track?.channel}")
 
         MatcherAssert.assertThat(
             track,

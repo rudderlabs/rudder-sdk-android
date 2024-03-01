@@ -169,35 +169,35 @@ sealed class Message(
     }
 
     enum class EventType(val value: String) {
-        @SerializedName("Alias")
-        @JsonProperty("Alias")
-        @Json(name = "Alias")
-        ALIAS("Alias"),
+        @SerializedName("alias")
+        @JsonProperty("alias")
+        @Json(name = "alias")
+        ALIAS("alias"),
 
-        @SerializedName("Group")
-        @JsonProperty("Group")
-        @Json(name = "Group")
-        GROUP("Group"),
+        @SerializedName("group")
+        @JsonProperty("group")
+        @Json(name = "group")
+        GROUP("group"),
 
-        @SerializedName("Page")
-        @JsonProperty("Page")
-        @Json(name = "Page")
-        PAGE("Page"),
+        @SerializedName("page")
+        @JsonProperty("page")
+        @Json(name = "page")
+        PAGE("page"),
 
-        @SerializedName("Screen")
-        @JsonProperty("Screen")
-        @Json(name = "Screen")
-        SCREEN("Screen"),
+        @SerializedName("screen")
+        @JsonProperty("screen")
+        @Json(name = "screen")
+        SCREEN("screen"),
 
-        @SerializedName("Track")
-        @JsonProperty("Track")
-        @Json(name = "Track")
-        TRACK("Track"),
+        @SerializedName("track")
+        @JsonProperty("track")
+        @Json(name = "track")
+        TRACK("track"),
 
-        @SerializedName("Identify")
-        @JsonProperty("Identify")
-        @Json(name = "Identify")
-        IDENTIFY("Identify"), ;
+        @SerializedName("identify")
+        @JsonProperty("identify")
+        @Json(name = "identify")
+        IDENTIFY("identify"), ;
 
         companion object {
             fun fromValue(value: String) = when (value.lowercase()) {

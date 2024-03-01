@@ -154,6 +154,7 @@ class ReinstatePlugin : Plugin {
             if (shouldMigrateContext()) {
                 _analytics?.migrateContextFromV1()
             }
+            _analytics?.androidStorage?.migrateV1StorageToV2Sync()
 
             _analytics?.initializeSessionManagement(
                 _analytics?.androidStorage?.v1SessionId, _analytics?.androidStorage?.v1LastActiveTimestamp

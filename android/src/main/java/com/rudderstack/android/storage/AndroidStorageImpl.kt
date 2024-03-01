@@ -375,6 +375,11 @@ class AndroidStorageImpl(
         preferenceManager?.resetV1ExternalIds()
     }
 
+    override fun migrateV1StorageToV2Sync() {
+        migrateV1MessagesToV2Database(application, rudderDatabase?:return,
+            jsonAdapter?:return, logger)
+    }
+
     override val libraryName: String
         get() = BuildConfig.LIBRARY_PACKAGE_NAME
     override val libraryVersion: String

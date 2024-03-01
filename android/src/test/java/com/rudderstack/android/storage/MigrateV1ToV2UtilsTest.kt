@@ -32,6 +32,7 @@ import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.gsonrudderadapter.GsonAdapter
+import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.Message
 import com.rudderstack.models.android.RudderApp
 import com.rudderstack.models.android.RudderContext
@@ -40,7 +41,7 @@ import com.rudderstack.models.android.RudderOSInfo
 import com.rudderstack.models.android.RudderScreenInfo
 import com.rudderstack.models.android.RudderTraits
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+import junit.framework.TestSuite
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
@@ -51,69 +52,74 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.Suite
 import org.robolectric.annotation.Config
 import java.lang.reflect.Type
 import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [29])/*abstract*/ class MigrateV1ToV2UtilsTest {
-    /*abstract*/ val jsonAdapter: JsonAdapter = GsonAdapter()
-    fun v1Entity1(type: String) = V1Entity(V1Message(
-        messageId = "messageId1",
-        channel = "mobile",
-        context = RudderContext().also {
-            it.app = RudderApp(
-                "build", "name", "namespace", "1.0"
-            )
-            it.customContextMap = mutableMapOf("key_cc" to "value_cc")
-            it.os = RudderOSInfo(
-                "name", "version"
-            )
-            it.device = RudderDeviceInfo(
-                "id", "manufacturer", "model",  "name", "type","token"
-            )
-            it.screen = RudderScreenInfo(
-                10, 45, 60
-            )
-            it.locale = "locale"
-        },
-        type = type,
-        action = "action",
-        timestamp = "timestamp",
-        anonymousId = "anonymousId",
-        userId = "userId",
-        event = "event",
-        properties = mapOf("key1" to "value1"),
-        userProperties = mapOf("key2" to "value2"),
-        integrations = mapOf("key3" to true),
-        destinationProps = mapOf("key4" to mapOf("key5" to "value5")),
-        previousId = "previousId",
-        traits = RudderTraits(
-            RudderTraits.Address(
-                "city", "country", "7474747", "state", "street"
-            ),
-            "email",
-            "19/12/2005",
-            RudderTraits.Company().also {
-                it.putId("id")
-                it.putName("name")
-                it.putIndustry("industry")
+@Config(sdk = [29])
+abstract class MigrateV1ToV2UtilsTest {
+    abstract val jsonAdapter: JsonAdapter
+    fun v1Entity1(type: String) = V1Entity(
+        V1Message(
+            messageId = "messageId1",
+            channel = "mobile",
+            context = RudderContext().also {
+                it.app = RudderApp(
+                    "build", "name", "namespace", "1.0"
+                )
+                it.customContextMap = mutableMapOf("key_cc" to "value_cc")
+                it.os = RudderOSInfo(
+                    "name", "version"
+                )
+                it.device = RudderDeviceInfo(
+                    "id", "manufacturer", "model", "name", "type", "token"
+                )
+                it.screen = RudderScreenInfo(
+                    10, 45, 60
+                )
+                it.locale = "locale"
             },
-            "19/01/1992",
-            "description",
-            "c_name@gmail.com",
-            "firstName",
-            "male",
-            "id",
-            "lastName",
-            "my_name",
-            "023-8393939",
-            "title",
-            "username",
-        ),
+            type = type,
+            action = "action",
+            timestamp = "timestamp",
+            anonymousId = "anonymousId",
+            userId = "userId",
+            event = "event",
+            properties = mapOf("key1" to "value1"),
+            userProperties = mapOf("key2" to "value2"),
+            integrations = mapOf("key3" to true),
+            destinationProps = mapOf("key4" to mapOf("key5" to "value5")),
+            previousId = "previousId",
+            traits = RudderTraits(
+                RudderTraits.Address(
+                    "city", "country", "7474747", "state", "street"
+                ),
+                "email",
+                "19/12/2005",
+                RudderTraits.Company().also {
+                    it.putId("id")
+                    it.putName("name")
+                    it.putIndustry("industry")
+                },
+                "19/01/1992",
+                "description",
+                "c_name@gmail.com",
+                "firstName",
+                "male",
+                "id",
+                "lastName",
+                "my_name",
+                "023-8393939",
+                "title",
+                "username",
+            ),
 
-        groupId = "groupId"
-    ))
+            groupId = "groupId"
+        )
+    )
+
     private lateinit var v2Database: RudderDatabase
 
     @Before
@@ -126,10 +132,12 @@ import java.util.UUID
         )
         busyWait(100)
     }
+
     @After
     fun tearDown() {
         v2Database.shutDown()
     }
+
     @Test
     fun testMigrateTrackV1ToV2() {
 
@@ -149,7 +157,11 @@ import java.util.UUID
         v1Database.shutDown()
 
         migrateV1MessagesToV2Database(
-            ApplicationProvider.getApplicationContext(), v2Database, jsonAdapter, TestExecutor()
+            ApplicationProvider.getApplicationContext(),
+            v2Database,
+            jsonAdapter,
+            null,
+            TestExecutor()
         )
         //assert that v1 database is empty
         v1Database = RudderDatabase(
@@ -172,8 +184,13 @@ import java.util.UUID
                 hasProperty("messageId", Matchers.equalTo(v1Entity1.v1Message.messageId)),
                 hasProperty("channel", Matchers.equalTo(v1Entity1.v1Message.channel)),
                 hasProperty("eventName", Matchers.equalTo(v1Entity1.v1Message.event)),
-                hasProperty("type", Matchers.equalTo(Message.EventType.fromValue(v1Entity1
-                    .v1Message.type!!))),
+                hasProperty(
+                    "type", Matchers.equalTo(
+                        Message.EventType.fromValue(
+                            v1Entity1.v1Message.type!!
+                        )
+                    )
+                ),
 //            hasProperty("action", Matchers.equalTo(v1Entity1.action)), not required
                 hasProperty("timestamp", Matchers.equalTo(v1Entity1.v1Message.timestamp)),
                 hasProperty("anonymousId", Matchers.equalTo(v1Entity1.v1Message.anonymousId)),
@@ -181,12 +198,15 @@ import java.util.UUID
                 hasProperty("properties", Matchers.equalTo(v1Entity1.v1Message.properties)),
 //            hasProperty("userProperties", Matchers.equalTo(v1Entity1.userProperties)),
                 hasProperty("integrations", Matchers.equalTo(v1Entity1.v1Message.integrations)),
-                hasProperty("destinationProps", Matchers.equalTo(v1Entity1.v1Message.destinationProps)),
+                hasProperty(
+                    "destinationProps", Matchers.equalTo(v1Entity1.v1Message.destinationProps)
+                ),
 //            hasProperty("previousId", Matchers.equalTo(v1Entity1.v1Message.previousId)),
 //            hasProperty("groupId", Matchers.equalTo(v1Entity1.v1Message.groupId))
             )
         )
     }
+
     @Test
     fun testMigrateGroupV1ToV2() {
 
@@ -206,7 +226,10 @@ import java.util.UUID
         v1Database.shutDown()
 
         migrateV1MessagesToV2Database(
-            ApplicationProvider.getApplicationContext(), v2Database, jsonAdapter, TestExecutor()
+            ApplicationProvider.getApplicationContext(),
+            v2Database,
+            jsonAdapter,
+            executorService = TestExecutor()
         )
         //assert that v1 database is empty
         v1Database = RudderDatabase(
@@ -229,8 +252,13 @@ import java.util.UUID
                 hasProperty("messageId", Matchers.equalTo(v1Entity1.v1Message.messageId)),
                 hasProperty("channel", Matchers.equalTo(v1Entity1.v1Message.channel)),
 //                hasProperty("eventName", Matchers.equalTo(v1Entity1.v1Message.event)),
-                hasProperty("type", Matchers.equalTo(Message.EventType.fromValue(v1Entity1
-                    .v1Message.type!!))),
+                hasProperty(
+                    "type", Matchers.equalTo(
+                        Message.EventType.fromValue(
+                            v1Entity1.v1Message.type!!
+                        )
+                    )
+                ),
 //            hasProperty("action", Matchers.equalTo(v1Entity1.action)), not required
                 hasProperty("timestamp", Matchers.equalTo(v1Entity1.v1Message.timestamp)),
                 hasProperty("anonymousId", Matchers.equalTo(v1Entity1.v1Message.anonymousId)),
@@ -238,12 +266,15 @@ import java.util.UUID
 //                hasProperty("properties", Matchers.equalTo(v1Entity1.v1Message.properties)),
 //            hasProperty("userProperties", Matchers.equalTo(v1Entity1.userProperties)),
                 hasProperty("integrations", Matchers.equalTo(v1Entity1.v1Message.integrations)),
-                hasProperty("destinationProps", Matchers.equalTo(v1Entity1.v1Message.destinationProps)),
+                hasProperty(
+                    "destinationProps", Matchers.equalTo(v1Entity1.v1Message.destinationProps)
+                ),
 //            hasProperty("previousId", Matchers.equalTo(v1Entity1.v1Message.previousId)),
-            hasProperty("groupId", Matchers.equalTo(v1Entity1.v1Message.groupId))
+                hasProperty("groupId", Matchers.equalTo(v1Entity1.v1Message.groupId))
             )
         )
     }
+
     @Test
     fun testMigrateIdentifyV1ToV2() {
 
@@ -263,7 +294,10 @@ import java.util.UUID
         v1Database.shutDown()
 
         migrateV1MessagesToV2Database(
-            ApplicationProvider.getApplicationContext(), v2Database, jsonAdapter, TestExecutor()
+            ApplicationProvider.getApplicationContext(),
+            v2Database,
+            jsonAdapter,
+            executorService = TestExecutor()
         )
         //assert that v1 database is empty
         v1Database = RudderDatabase(
@@ -286,8 +320,13 @@ import java.util.UUID
                 hasProperty("messageId", Matchers.equalTo(v1Entity1.v1Message.messageId)),
                 hasProperty("channel", Matchers.equalTo(v1Entity1.v1Message.channel)),
 //                hasProperty("eventName", Matchers.equalTo(v1Entity1.v1Message.event)),
-                hasProperty("type", Matchers.equalTo(Message.EventType.fromValue(v1Entity1
-                    .v1Message.type!!))),
+                hasProperty(
+                    "type", Matchers.equalTo(
+                        Message.EventType.fromValue(
+                            v1Entity1.v1Message.type!!
+                        )
+                    )
+                ),
 //            hasProperty("action", Matchers.equalTo(v1Entity1.action)), not required
                 hasProperty("timestamp", Matchers.equalTo(v1Entity1.v1Message.timestamp)),
                 hasProperty("anonymousId", Matchers.equalTo(v1Entity1.v1Message.anonymousId)),
@@ -295,12 +334,15 @@ import java.util.UUID
                 hasProperty("properties", Matchers.equalTo(v1Entity1.v1Message.properties)),
 //            hasProperty("userProperties", Matchers.equalTo(v1Entity1.userProperties)),
                 hasProperty("integrations", Matchers.equalTo(v1Entity1.v1Message.integrations)),
-                hasProperty("destinationProps", Matchers.equalTo(v1Entity1.v1Message.destinationProps)),
+                hasProperty(
+                    "destinationProps", Matchers.equalTo(v1Entity1.v1Message.destinationProps)
+                ),
 //            hasProperty("previousId", Matchers.equalTo(v1Entity1.v1Message.previousId)),
 //            hasProperty("groupId", Matchers.equalTo(v1Entity1.v1Message.groupId))
             )
         )
     }
+
     @Test
     fun testMigrateScreenV1ToV2() {
 
@@ -320,7 +362,10 @@ import java.util.UUID
         v1Database.shutDown()
 
         migrateV1MessagesToV2Database(
-            ApplicationProvider.getApplicationContext(), v2Database, jsonAdapter, TestExecutor()
+            ApplicationProvider.getApplicationContext(),
+            v2Database,
+            jsonAdapter,
+            executorService = TestExecutor()
         )
         //assert that v1 database is empty
         v1Database = RudderDatabase(
@@ -343,15 +388,22 @@ import java.util.UUID
                 hasProperty("messageId", Matchers.equalTo(v1Entity1.v1Message.messageId)),
                 hasProperty("channel", Matchers.equalTo(v1Entity1.v1Message.channel)),
                 not(hasProperty("eventName", Matchers.equalTo(v1Entity1.v1Message.event))),
-                hasProperty("type", Matchers.equalTo(Message.EventType.fromValue(v1Entity1
-                    .v1Message.type!!))),
+                hasProperty(
+                    "type", Matchers.equalTo(
+                        Message.EventType.fromValue(
+                            v1Entity1.v1Message.type!!
+                        )
+                    )
+                ),
                 hasProperty("timestamp", Matchers.equalTo(v1Entity1.v1Message.timestamp)),
                 hasProperty("anonymousId", Matchers.equalTo(v1Entity1.v1Message.anonymousId)),
                 hasProperty("userId", Matchers.equalTo(v1Entity1.v1Message.userId)),
                 hasProperty("properties", Matchers.equalTo(v1Entity1.v1Message.properties)),
 //            hasProperty("userProperties", Matchers.equalTo(v1Entity1.userProperties)),
                 hasProperty("integrations", Matchers.equalTo(v1Entity1.v1Message.integrations)),
-                hasProperty("destinationProps", Matchers.equalTo(v1Entity1.v1Message.destinationProps)),
+                hasProperty(
+                    "destinationProps", Matchers.equalTo(v1Entity1.v1Message.destinationProps)
+                ),
 //            hasProperty("previousId", Matchers.equalTo(v1Entity1.v1Message.previousId)),
 //            hasProperty("groupId", Matchers.equalTo(v1Entity1.v1Message.groupId))
             )
@@ -390,9 +442,7 @@ import java.util.UUID
         )
 
         override fun generateContentValues(): ContentValues {
-            val messageJson =
-                gsonAdapter.writeToJson(v1Message)
-                    ?.replace("'", BACKSLASH)
+            val messageJson = gsonAdapter.writeToJson(v1Message)?.replace("'", BACKSLASH)
             return ContentValues().also {
                 it.put(ColumnNames.MESSAGE_ID_COL, v1Message.messageId)
                 it.put(
@@ -417,8 +467,7 @@ data class V1Message(
     val context: RudderContext? = null,
     val type: String? = null,
     val action: String? = null,
-    @SerializedName("originalTimestamp")
-    val timestamp: String? = RudderUtils.timeStamp,
+    @SerializedName("originalTimestamp") val timestamp: String? = RudderUtils.timeStamp,
     val anonymousId: String? = null,
     val userId: String? = null,
     val event: String? = null,
@@ -481,4 +530,33 @@ class RudderTraitsTypeAdapter : JsonSerializer<RudderTraits?> {
         }
     }
 }
+
+@RunWith(AndroidJUnit4::class)
+@Config(sdk = [29])
+class GsonMigrateV1ToV2UtilsTest : MigrateV1ToV2UtilsTest() {
+    override val jsonAdapter: JsonAdapter
+        get() = GsonAdapter()
+}
+
+@RunWith(AndroidJUnit4::class)
+@Config(sdk = [29])
+class JacksonMigrateV1ToV2UtilsTest : MigrateV1ToV2UtilsTest() {
+    override val jsonAdapter: JsonAdapter
+        get() = JacksonAdapter()
+}
+
+/*@RunWith(AndroidJUnit4::class)
+@Config(sdk = [29])
+class MoshiMigrateV1ToV2UtilsTest : MigrateV1ToV2UtilsTest() {
+    override val jsonAdapter: JsonAdapter
+        get() = MoshiAdapter()
+}*/
+
+@RunWith(Suite::class)
+@Suite.SuiteClasses(
+    GsonMigrateV1ToV2UtilsTest::class, JacksonMigrateV1ToV2UtilsTest::class,
+    //TODO fix moshi adapter
+//    MoshiMigrateV1ToV2UtilsTest::class
+)
+class MigrateV1ToV2UtilsTestSuite : TestSuite() {}
 

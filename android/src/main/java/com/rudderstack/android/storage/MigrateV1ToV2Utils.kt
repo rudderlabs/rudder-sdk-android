@@ -18,12 +18,12 @@ import android.content.Context
 import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.EntityFactory
 import com.rudderstack.android.repository.RudderDatabase
+import com.rudderstack.core.Logger
 import com.rudderstack.models.AliasMessage
 import com.rudderstack.models.GroupMessage
 import com.rudderstack.models.GroupTraits
 import com.rudderstack.models.IdentifyMessage
 import com.rudderstack.models.IdentifyProperties
-import com.rudderstack.models.IdentifyTraits
 import com.rudderstack.models.Message
 import com.rudderstack.models.MessageDestinationProps
 import com.rudderstack.models.MessageIntegrations
@@ -36,29 +36,45 @@ import com.rudderstack.models.externalIds
 import com.rudderstack.models.traits
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
-import java.sql.Timestamp
 import java.util.concurrent.ExecutorService
 
 private const val V1_DATABASE_NAME = "rl_persistence.db"
 private val synchronizeOn = Any()
-fun migrateV1MessagesToV2Database(context: Context,
-                                  v2Database: RudderDatabase, jsonAdapter: JsonAdapter,
-                                  executorService: ExecutorService? = null) {
+
+/**
+ * Migrate the V1 events to V2 storage
+ *
+ * @param context Android context
+ * @param v2Database The recent database
+ * @param jsonAdapter Json adapter to parse events or messages
+ * @param executorService Passed to V1 database to perform operations, will be shutdown post
+ * migration
+ */
+internal fun migrateV1MessagesToV2Database(
+    context: Context,
+    v2Database: RudderDatabase,
+    jsonAdapter: JsonAdapter,
+    logger: Logger? = null,
+    executorService: ExecutorService? = null
+) {
+    logger?.info(log = "Migrating V1 messages to V2 database")
     synchronized(synchronizeOn) {
         val v1Database = RudderDatabase(
-            context, V1_DATABASE_NAME, V1EntityFactory(jsonAdapter), false, 1,
+            context,
+            V1_DATABASE_NAME,
+            V1EntityFactory(jsonAdapter),
+            false,
+            1,
             executorService = executorService
         )
         val v1MessagesDao = v1Database.getDao<MessageEntity>(MessageEntity::class.java)
         val v1Messages = v1MessagesDao.getAllSync()?.takeIf { it.isNotEmpty() } ?: return
         with(v2Database.getDao(MessageEntity::class.java)) {
+            logger?.info(log = "Migrating ${v1Messages.size} messages")
             v1Messages.insertSync()
         }
-        with(v1MessagesDao) {
-            v1Messages.delete {
-                v1Database.shutDown()
-            } // change to delete sync TODO after merge
-        }
+        v1Database.delete()
+        v1Database.shutDown()
     }
 }
 
@@ -86,6 +102,7 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
             MessageEntity::class.java -> {
                 val message = values[MESSAGE_COL] as String
                 val updatedAt = values[UPDATED_COL] as Long
+                //TODO - DMT
                 /*val status = when (values[V1_STATUS_COL] as Int) {
                     V1_STATUS_CLOUD_MODE_DONE -> MessageEntity.Status.CLOUD_MODE_DONE
                     V1_STATUS_DEVICE_MODE_DONE -> MessageEntity.Status.DEVICE_MODE_DONE
@@ -98,8 +115,7 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
                     else -> false
                 }*/
                 MessageEntity(
-                    deserializeV1EntityToMessage(message) ?: return null, jsonAdapter,
-                    updatedAt
+                    deserializeV1EntityToMessage(message) ?: return null, jsonAdapter, updatedAt
                 ) as T
             }
 
@@ -117,50 +133,28 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
         val anonymousId = v1EventMap["anonymousId"] as? String
         val userId = v1EventMap["userId"] as? String ?: return null
         val type = v1EventMap["type"] as? String ?: return null
-        val timestamp = v1EventMap["originalTimestamp"] as? String?:return null
+        val timestamp = v1EventMap["originalTimestamp"] as? String ?: return null
         val channel = v1EventMap["channel"] as? String ?: "android"
         val integrations = v1EventMap["integrations"] as? MessageIntegrations
         return when (type) {
-            V1MessageType.TRACK -> createTrackMessage(v1EventMap, messageId, anonymousId,
-                userId,
-                timestamp,
-                context,
-                destinationProps)
+            V1MessageType.TRACK -> createTrackMessage(
+                v1EventMap, messageId, anonymousId, userId, timestamp, context, destinationProps
+            )
+
             V1MessageType.SCREEN -> createScreenMessage(
-                v1EventMap,
-                messageId,
-                anonymousId,
-                userId,
-                timestamp,
-                context,
-                destinationProps
+                v1EventMap, messageId, anonymousId, userId, timestamp, context, destinationProps
             )
-            V1MessageType.IDENTIFY ->createIdentifyMessage(
-                v1EventMap,
-                messageId,
-                anonymousId,
-                userId,
-                timestamp,
-                context,
-                destinationProps
+
+            V1MessageType.IDENTIFY -> createIdentifyMessage(
+                v1EventMap, messageId, anonymousId, userId, timestamp, context, destinationProps
             )
+
             V1MessageType.ALIAS -> createAliasMessage(
-                v1EventMap,
-                messageId,
-                anonymousId,
-                userId,
-                timestamp,
-                context,
-                destinationProps
+                v1EventMap, messageId, anonymousId, userId, timestamp, context, destinationProps
             )
+
             V1MessageType.GROUP -> createGroupMessage(
-                v1EventMap,
-                messageId,
-                anonymousId,
-                userId,
-                timestamp,
-                context,
-                destinationProps
+                v1EventMap, messageId, anonymousId, userId, timestamp, context, destinationProps
             )
 
 
@@ -193,6 +187,7 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
             messageId
         )
     }
+
     private fun createScreenMessage(
         v1EventMap: Map<String, Any?>,
         messageId: String,
@@ -201,10 +196,10 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
         timestamp: String,
         context: Map<String, Any?>?,
         destinationProps: MessageDestinationProps?
-    ): ScreenMessage?{
+    ): ScreenMessage? {
         val properties = v1EventMap["properties"] as? ScreenProperties ?: return null
         return ScreenMessage.create(
-        timestamp,
+            timestamp,
             anonymousId,
             userId,
             destinationProps,
@@ -217,6 +212,7 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
             messageId
         )
     }
+
     private fun createGroupMessage(
         v1EventMap: Map<String, Any?>,
         messageId: String,
@@ -225,20 +221,21 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
         timestamp: String,
         context: Map<String, Any?>?,
         destinationProps: MessageDestinationProps?
-    ): GroupMessage?{
+    ): GroupMessage? {
         return GroupMessage.create(
             anonymousId,
             userId,
-        timestamp,
+            timestamp,
             destinationProps,
             v1EventMap["groupId"] as? String ?: return null,
-            v1EventMap["traits"] as? GroupTraits ?,
+            v1EventMap["traits"] as? GroupTraits?,
             context?.traits,
             context?.externalIds,
             context?.customContexts,
             messageId
         )
     }
+
     private fun createIdentifyMessage(
         v1EventMap: Map<String, Any?>,
         messageId: String,
@@ -247,11 +244,11 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
         timestamp: String,
         context: Map<String, Any?>?,
         destinationProps: MessageDestinationProps?
-    ): IdentifyMessage?{
+    ): IdentifyMessage? {
         return IdentifyMessage.create(
             anonymousId,
             userId,
-        timestamp,
+            timestamp,
             v1EventMap["properties"] as? IdentifyProperties,
             destinationProps,
             context?.traits,
@@ -260,6 +257,7 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
             messageId
         )
     }
+
     private fun createAliasMessage(
         v1EventMap: Map<String, Any?>,
         messageId: String,
@@ -268,9 +266,9 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
         timestamp: String,
         context: Map<String, Any?>?,
         destinationProps: MessageDestinationProps?
-    ): AliasMessage?{
+    ): AliasMessage? {
         return AliasMessage.create(
-        timestamp,
+            timestamp,
             anonymousId,
             userId,
             destinationProps,

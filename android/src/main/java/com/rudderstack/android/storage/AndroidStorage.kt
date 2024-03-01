@@ -53,4 +53,5 @@ interface AndroidStorage : Storage {
     fun resetV1OptOut()
     fun resetV1Traits()
     fun resetV1ExternalIds()
+    fun migrateV1StorageToV2Sync()
 }

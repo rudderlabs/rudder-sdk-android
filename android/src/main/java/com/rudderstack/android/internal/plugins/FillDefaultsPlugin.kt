@@ -55,7 +55,6 @@ internal class FillDefaultsPlugin : Plugin {
     @Throws(MissingPropertiesException::class)
     private inline fun <reified T : Message> T.withDefaults(): T {
         val anonId = this.anonymousId ?: _analytics?.currentConfigurationAndroid?.anonymousId
-        println("anonId: $anonId, analytics: $_analytics")
         val userId = this.userId ?: _analytics?.currentConfigurationAndroid?.userId
         if (anonId == null && userId == null) {
             val ex = MissingPropertiesException("Either Anonymous Id or User Id must be present");
