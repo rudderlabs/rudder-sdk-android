@@ -124,7 +124,7 @@ class ReinstatePlugin : Plugin {
                 anonymousId = anonId, isOptOut = optOut, userId = userId
             )
         }
-        _analytics?.processNewContext(context ?: createContext())
+        _analytics?.contextState?.update(context ?: createContext())
         _analytics?.initializeSessionManagement(
             _analytics?.androidStorage?.sessionId, _analytics?.androidStorage?.lastActiveTimestamp
         )

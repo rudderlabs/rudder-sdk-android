@@ -407,10 +407,5 @@ class AndroidStorageImpl(
         )
     }
 
-    private fun importV1Data() {
-        val oldDbName = "rl_persistence.db"
-        val oldDb = application.getDatabasePath(oldDbName)
-
-    }
 
 }

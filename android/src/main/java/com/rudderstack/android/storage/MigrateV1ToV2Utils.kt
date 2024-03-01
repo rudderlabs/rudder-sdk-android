@@ -64,7 +64,7 @@ internal fun migrateV1MessagesToV2Database(
             V1_DATABASE_NAME,
             V1EntityFactory(jsonAdapter),
             false,
-            1,
+            3,
             executorService = executorService
         )
         val v1MessagesDao = v1Database.getDao<MessageEntity>(MessageEntity::class.java)
