@@ -23,18 +23,19 @@ import com.rudderstack.models.Message
  *
  */
 internal class GDPRPlugin : Plugin {
-    private var isOptOut = false
+
+    private var analytics: Analytics? = null
     override fun intercept(chain: Plugin.Chain): Message {
+        val isOptOut = analytics?.storage?.isOptedOut ?: false
         return if (isOptOut) {
             chain.message()
-        }
-        else
+        } else {
             chain.proceed(chain.message())
-
+        }
     }
 
     override fun setup(analytics: Analytics) {
         super.setup(analytics)
-        isOptOut = analytics.storage.isOptedOut
+        this.analytics = analytics
     }
 }
