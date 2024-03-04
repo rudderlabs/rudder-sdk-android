@@ -74,7 +74,7 @@ class AndroidStorageImpl(
     //we update this once on init and then on data change listener
     private val _dataCount = AtomicLong()
 
-    private var _optOut: AtomicBoolean = AtomicBoolean(preferenceManager?.optStatus ?: false)
+    private var _optOut: AtomicBoolean = AtomicBoolean(false)
         set(newValue) {
             val oldValue = field.get()
             if (oldValue != newValue.get()) {
@@ -388,6 +388,7 @@ class AndroidStorageImpl(
     override fun setup(analytics: Analytics) {
         initDb(analytics)
         preferenceManager = RudderPreferenceManager(application, analytics.instanceName)
+        _optOut = AtomicBoolean(preferenceManager?.optStatus ?: false)
     }
 
     private val Iterable<Message>.entities
