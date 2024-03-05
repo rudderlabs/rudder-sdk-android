@@ -34,10 +34,10 @@ private const val RUDDER_SESSION_ID_KEY = "rl_session_id_key"
 private const val RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY =
     "rl_last_event_timestamp_key"
 internal class RudderPreferenceManager(application: Application,
-    private val instanceName: String) {
+    private val writeKey: String) {
 
     private val String.key: String
-        get() = "$this-$instanceName"
+        get() = "$this-$writeKey"
 
     private lateinit var preferences: SharedPreferences
     private lateinit var preferencesV1: SharedPreferences

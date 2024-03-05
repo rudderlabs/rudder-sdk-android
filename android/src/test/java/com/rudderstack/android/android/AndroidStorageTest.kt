@@ -17,12 +17,9 @@ package com.rudderstack.android.android
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.RudderAnalytics
 import com.rudderstack.android.android.utils.TestExecutor
 import com.rudderstack.android.android.utils.busyWait
-import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
@@ -45,7 +42,6 @@ import org.junit.runners.Suite
 import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 import org.robolectric.annotation.Config
 import java.util.*
 
@@ -65,7 +61,7 @@ abstract class AndroidStorageTest {
         MockitoAnnotations.openMocks(this)
         val storage = AndroidStorageImpl(
             ApplicationProvider.getApplicationContext(),
-            false, instanceName = "test_instance",
+            false, writeKey = "test_writeKey",
             storageExecutor = TestExecutor()
         )
         mockConfig = ConfigurationAndroid(ApplicationProvider.getApplicationContext(),

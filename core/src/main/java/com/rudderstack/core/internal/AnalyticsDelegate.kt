@@ -29,7 +29,6 @@ import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
 import com.rudderstack.core.RudderUtils.getUTF8Length
 import com.rudderstack.core.RudderUtils.MAX_BATCH_SIZE
-import com.rudderstack.core.State
 import com.rudderstack.core.Storage
 import com.rudderstack.core.flushpolicy.CountBasedFlushPolicy
 import com.rudderstack.core.flushpolicy.IntervalBasedFlushPolicy
@@ -61,7 +60,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal class AnalyticsDelegate(
     configuration: Configuration,
     override val storage: Storage,
-    override val instanceName: String,
+    override val writeKey: String,
     override val dataUploadService: DataUploadService,
     override val configDownloadService: ConfigDownloadService?,
     //optional

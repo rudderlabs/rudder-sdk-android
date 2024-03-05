@@ -14,8 +14,6 @@
 
 package com.rudderstack.core.compat;
 
-import static com.rudderstack.core.AnalyticsKt.DEFAULTS_ANALYTICS_INSTANCE_NAME;
-
 import com.rudderstack.core.Analytics;
 import com.rudderstack.core.BasicStorageImpl;
 import com.rudderstack.core.ConfigDownloadService;
@@ -34,8 +32,6 @@ public class AnalyticsBuilderCompat {
 
     private final Configuration configuration;
     private Storage storage = new BasicStorageImpl();
-
-    private String instanceName = DEFAULTS_ANALYTICS_INSTANCE_NAME;
     private DataUploadService dataUploadService = null;
     private ConfigDownloadService configDownloadService = null;
 
@@ -45,11 +41,6 @@ public class AnalyticsBuilderCompat {
     public AnalyticsBuilderCompat(String writeKey, Configuration configuration) {
         this.writeKey = writeKey;
         this.configuration = configuration;
-    }
-
-    public AnalyticsBuilderCompat withInstanceName(String instanceName) {
-        this.instanceName = instanceName;
-        return this;
     }
 
     public AnalyticsBuilderCompat withDataUploadService(DataUploadService dataUploadService) {
@@ -84,7 +75,7 @@ public class AnalyticsBuilderCompat {
     }
 
     public Analytics build() {
-        return new Analytics(writeKey, configuration, instanceName,
+        return new Analytics(writeKey, configuration,
                 dataUploadService == null ? new DataUploadServiceImpl(
                         writeKey) : dataUploadService, configDownloadService == null ?
                 new ConfigDownloadServiceImpl(writeKey) : configDownloadService,

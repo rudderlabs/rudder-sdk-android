@@ -14,7 +14,6 @@
 
 package com.rudderstack.android.compat;
 
-import static com.rudderstack.core.AnalyticsKt.DEFAULTS_ANALYTICS_INSTANCE_NAME;
 
 import androidx.annotation.NonNull;
 
@@ -40,10 +39,9 @@ public final class RudderAnalyticsBuilderCompat  {
     private DataUploadService dataUploadService = null;
     private ConfigDownloadService configDownloadService = null;
     private InitializationListener initializationListener = null;
-    private String instanceName = DEFAULTS_ANALYTICS_INSTANCE_NAME;
     private AndroidStorage storage = new AndroidStorageImpl(configuration.getApplication(),
             ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER,
-            instanceName = "test_instance",
+            writeKey,
             Executors.newSingleThreadExecutor());
 
     public RudderAnalyticsBuilderCompat(@NonNull String writeKey, @NonNull ConfigurationAndroid configuration) {
@@ -67,7 +65,6 @@ public final class RudderAnalyticsBuilderCompat  {
         return RudderAnalytics.RudderAnalytics(
                 writeKey,
                 configuration,
-                instanceName,
                 dataUploadService,
                 configDownloadService,
                 storage,
