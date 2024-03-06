@@ -2,8 +2,11 @@ package com.rudderstack.android.sampleapp.mainview
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.rudderstack.android.applyConfigurationAndroid
 import com.rudderstack.android.sampleapp.MyApplication
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils
+import com.rudderstack.android.utilities.endSession
+import com.rudderstack.android.utilities.startSession
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
 import com.rudderstack.models.GroupTraits
@@ -125,6 +128,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _rudderReporter?.errorClient?.addMetadata("Error MD", "md_key", "md_value")
                 _rudderReporter?.errorClient?.notify(Exception("Non Fatal Exception"))
                 "Sending an error"
+            }
+            AnalyticsState.EnableAutoTracking -> {
+                _rudderAnalytics?.applyConfigurationAndroid{
+                    copy(trackAutoSession = true)
+                }
+                "Auto tracking enabled"
+            }
+            AnalyticsState.DisableAutoTracking -> {
+                _rudderAnalytics?.applyConfigurationAndroid{
+                    copy(trackAutoSession = false)
+                }
+                "Auto tracking disabled"
+            }
+            AnalyticsState.StartManualSession -> {
+                _rudderAnalytics?.startSession()
+                "Manual Session Started"
+            }
+            AnalyticsState.EndSession -> {
+                _rudderAnalytics?.endSession()
+                "Session Ended"
             }
 
             else -> "What's this?"
