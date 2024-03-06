@@ -1,6 +1,8 @@
 package com.rudderstack.android.sdk.core;
 
 import static com.rudderstack.android.sdk.core.DBPersistentManager.BACKSLASH;
+import static com.rudderstack.android.sdk.core.ReportManager.LABEL_TYPE;
+import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
 
 import android.app.Application;
 import android.content.ContentValues;
@@ -16,7 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter;
+import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.persistence.DefaultPersistenceProviderFactory;
 import com.rudderstack.android.sdk.core.persistence.Persistence;
 import com.rudderstack.android.sdk.core.persistence.PersistenceProvider;
@@ -193,15 +195,35 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
      * Receives message from Repository, and passes it to the Handler thread if it exists, else adds it to a queue for replay
      * once Handler thread is initialized.
      * */
-    void saveEvent(String messageJson, EventInsertionCallback callback) {
-        Message msg = createOsMessageFromJson(messageJson, callback);
+    void saveEvent(@NonNull RudderMessage message, EventInsertionCallback callback) {
         synchronized (DBPersistentManager.QUEUE_LOCK) {
+            String eventJson = getEventJsonString(message);
+            if (eventJson == null) {
+                RudderLogger.logError("EventRepository: processMessage: eventJson is null after serialization");
+                return;
+            }
+            if (isMessageJsonExceedingMaxSize(eventJson)) {
+                incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_SIZE_INVALID));
+                RudderLogger.logError(String.format(Locale.US, "EventRepository: processMessage: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
+                return;
+            }
+            RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: processMessage: message: %s", eventJson));
+            Message msg = createOsMessageFromJson(eventJson, callback);
+
             if (dbInsertionHandlerThread == null) {
                 queue.add(msg);
                 return;
             }
-            addMessageToHandlerThread(msg);
+            dbInsertionHandlerThread.addMessage(msg);
         }
+    }
+
+    String getEventJsonString(RudderMessage message) {
+        return RudderGson.serialize(message);
+    }
+
+    private boolean isMessageJsonExceedingMaxSize(String eventJson) {
+        return Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE;
     }
 
     private Message createOsMessageFromJson(String messageJson, EventInsertionCallback callback) {
@@ -211,13 +233,6 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         eventBundle.putString(EVENT, messageJson);
         msg.setData(eventBundle);
         return msg;
-    }
-
-    /*
-       Passes the input message to the Handler thread.
-     */
-    void addMessageToHandlerThread(Message msg) {
-        dbInsertionHandlerThread.addMessage(msg);
     }
 
     @VisibleForTesting
@@ -467,7 +482,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
                     dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", persistence);
                     dbInsertionHandlerThread.start();
                     for (Message msg : queue) {
-                        addMessageToHandlerThread(msg);
+                        dbInsertionHandlerThread.addMessage(msg);
                     }
                 }
             } catch (SQLiteDatabaseCorruptException | ConcurrentModificationException |
@@ -548,6 +563,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             Thread.currentThread().interrupt();
         }
     }
+
     private void waitTillMigrationsAreDone() {
         if(migrationSemaphore.availablePermits() == 1 ){
             return;

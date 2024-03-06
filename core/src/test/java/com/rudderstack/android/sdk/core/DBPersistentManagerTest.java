@@ -1,6 +1,9 @@
 package com.rudderstack.android.sdk.core;
 
 import org.hamcrest.Matchers;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,6 +17,7 @@ import org.robolectric.annotation.Config;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
@@ -42,6 +46,8 @@ import com.google.common.collect.ImmutableList;
 import com.rudderstack.android.sdk.core.gson.RudderGson;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -52,8 +58,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class DBPersistentManagerTest {
 
     DBPersistentManager dbPersistentManager;
-    private final List<String> messages = new ArrayList<String>(ImmutableList.of("{\"message\":\"m-1\"}",
-            "{\"message\":\"m-2\"}", "{\"message\":\"m-3\"}", "{\"message\":\"m-4\"}", "{\"message\":\"m-5\"}", "{\"message\":\"m-6\"}", "{\"message\":\"m-7\"}", "{\"message\":\"m-8\"}", "{\"message\":\"m-9\"}"));
+    private final List<RudderMessage> messages = new ArrayList<RudderMessage>();
     private static final String MESSAGE_1 = "    {\n" +
             "       \"event\": \"mess-1\",\n" +
             "       \"messageId\": \"e-1\",\n" +
@@ -78,7 +83,8 @@ public class DBPersistentManagerTest {
             "      \"message\": \"m-4\",\n" +
             "      \"sentAt\": \"2022-07-14T06:46:42.365Z\"\n" +
             "    }\n";
-    private RudderDeviceModeManager deviceModeManager ;
+    private RudderDeviceModeManager deviceModeManager;
+
     @Before
     public void setUp() throws Exception {
         dbPersistentManager = PowerMockito.mock(DBPersistentManager.class);
@@ -99,32 +105,162 @@ public class DBPersistentManagerTest {
     private int addMessageCalled = 0;
 
     @Test
+    public void testGetEventJson() throws JSONException {
+        HashMap jsonData = new HashMap<String, Object>();
+        jsonData.put("pinId", 2351636);
+        jsonData.put("userLocationLongitude", 12.516869940636775);
+        jsonData.put("userLocationLatitude", 55.661663449562205);
+        jsonData.put("userDirection", 12.311176);
+        jsonData.put("userSpeed", 13.888889);
+        jsonData.put("locationHorizontalAccuracy", 3.813398);
+        jsonData.put("locationVerticalAccuracy", 0.0);
+        jsonData.put("speedAccuracy", 0.0);
+        jsonData.put("directionAccuracy", 0.0);
+        JSONArray locationsBefore = new JSONArray();
+        locationsBefore.put(new JSONObject().put("latitude", 55.66132122924984).put("longitude", 12.51671169784383));
+        locationsBefore.put(new JSONObject().put("latitude", 55.661428115890374).put("longitude", 12.51677390468785));
+        locationsBefore.put(new JSONObject().put("latitude", 55.661663449562205).put("longitude", 12.516869940636775));
+        jsonData.put("locationsBefore", locationsBefore);
+        JSONArray locationsAfter = new JSONArray();
+        locationsAfter.put(new JSONObject().put("latitude", 55.66190443423447).put("longitude", 12.516850445696493));
+        locationsAfter.put(new JSONObject().put("latitude", 55.66214021085126).put("longitude", 12.516731010346978));
+        locationsAfter.put(new JSONObject().put("latitude", 55.66237844832189).put("longitude", 12.516618424859859));
+        jsonData.put("locationsAfter", locationsAfter);
+        JSONArray speedsBefore = new JSONArray();
+        speedsBefore.put(new JSONObject().put("speed", 0));
+        speedsBefore.put(new JSONObject().put("speed", 13.888889));
+        speedsBefore.put(new JSONObject().put("speed", 13.888889));
+        jsonData.put("speedsBefore", speedsBefore);
+        JSONArray speedsAfter = new JSONArray();
+        speedsAfter.put(new JSONObject().put("speed", 13.888889));
+        speedsAfter.put(new JSONObject().put("speed", 13.888889));
+        jsonData.put("speedsAfter", speedsAfter);
+        jsonData.put("pinType", 1);
+        jsonData.put("pinSubtype", 11);
+        jsonData.put("pinDirection", 0.0);
+        jsonData.put("pinLocationLongitude", 12.507275);
+        jsonData.put("pinLocationLatitude", 55.672436);
+        jsonData.put("coDriverVersion", -1.0);
+        RudderMessage message = new RudderMessageBuilder().setEventName("TestEvent").setProperty(jsonData).build();
+        String expectedJsonString = "{\n" +
+                "  \"messageId\": \"" + message.getMessageId() + "\",\n" +
+                "  \"channel\": \"mobile\",\n" +
+                "  \"context\": {},\n" +
+                "  \"originalTimestamp\": \"2022-03-14T06:46:41.365Z\",\n" +
+                "  \"event\": \"TestEvent\",\n" +
+                "  \"properties\": {\n" +
+                "    \"pinLocationLongitude\": 12.507275,\n" +
+                "    \"userDirection\": 12.311176,\n" +
+                "    \"locationHorizontalAccuracy\": 3.813398,\n" +
+                "    \"pinId\": 2351636,\n" +
+                "    \"pinDirection\": 0.0,\n" +
+                "    \"coDriverVersion\": -1.0,\n" +
+                "    \"userLocationLatitude\": 55.661663449562205,\n" +
+                "    \"userSpeed\": 13.888889,\n" +
+                "    \"locationsBefore\": [\n" +
+                "      {\n" +
+                "        \"latitude\": 55.66132122924984,\n" +
+                "        \"longitude\": 12.51671169784383\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"latitude\": 55.661428115890374,\n" +
+                "        \"longitude\": 12.51677390468785\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"latitude\": 55.661663449562205,\n" +
+                "        \"longitude\": 12.516869940636775\n" +
+                "      }\n" +
+                "    ],\n" +
+                "    \"speedAccuracy\": 0.0,\n" +
+                "    \"locationVerticalAccuracy\": 0.0,\n" +
+                "    \"pinType\": 1,\n" +
+                "    \"speedsAfter\": [\n" +
+                "      {\n" +
+                "        \"speed\": 13.888889\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"speed\": 13.888889\n" +
+                "      }\n" +
+                "    ],\n" +
+                "    \"pinSubtype\": 11,\n" +
+                "    \"locationsAfter\": [\n" +
+                "      {\n" +
+                "        \"latitude\": 55.66190443423447,\n" +
+                "        \"longitude\": 12.516850445696493\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"latitude\": 55.66214021085126,\n" +
+                "        \"longitude\": 12.516731010346978\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"latitude\": 55.66237844832189,\n" +
+                "        \"longitude\": 12.516618424859859\n" +
+                "      }\n" +
+                "    ],\n" +
+                "    \"speedsBefore\": [\n" +
+                "      {\n" +
+                "        \"speed\": 0\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"speed\": 13.888889\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"speed\": 13.888889\n" +
+                "      }\n" +
+                "    ],\n" +
+                "    \"pinLocationLatitude\": 55.672436,\n" +
+                "    \"userLocationLongitude\": 12.516869940636775,\n" +
+                "    \"directionAccuracy\": 0.0\n" +
+                "  },\n" +
+                "  \"integrations\": {}\n" +
+                "}";
+        String outputJsonString = dbPersistentManager.getEventJsonString(message);
+        assertThat("JSONObjects and JSONArray are serialized perfectly", outputJsonString, is(expectedJsonString.replace("\n", "").replace(" ", "")));
+    }
+
+    @Test
     public void testSynchronicity() throws Exception {
         final AtomicInteger messagesSaved = new AtomicInteger(0);
         // Mocking the addMessageToQueue, which is used by both the save-event-thread and Handler thread, to verify synchronization
         PowerMockito.when(dbPersistentManager, "addMessageToHandlerThread", any(Message.class))
                 .thenAnswer((Answer<Void>) invocation -> {
-                    ++addMessageCalled;
-                    System.out.println("addMessageToQueue called by: " + Thread.currentThread().getName());
-                    //assert if called by multiple thread
-                    assertThat(addMessageCalled, Matchers.lessThan(2));
-                    sleep(500);
-                    --addMessageCalled;
-                    assertThat(addMessageCalled, Matchers.lessThan(1));
-                    System.out.println("return from addMessageToQueue by: " + Thread.currentThread().getName());
-                    messagesSaved.incrementAndGet();
-                    return null;
-                }
+                            ++addMessageCalled;
+                            System.out.println("addMessageToQueue called by: " + Thread.currentThread().getName());
+                            //assert if called by multiple thread
+                            assertThat(addMessageCalled, Matchers.lessThan(2));
+                            sleep(500);
+                            --addMessageCalled;
+                            assertThat(addMessageCalled, Matchers.lessThan(1));
+                            System.out.println("return from addMessageToQueue by: " + Thread.currentThread().getName());
+                            messagesSaved.incrementAndGet();
+                            return null;
+                        }
                 );
 
         // Triggering the saveEvent method of DBPersistentManager from save-event-thread, as this method adds messages to the queue.
         new Thread(new Runnable() {
             @Override
             public void run() {
+                messages.add(new RudderMessageBuilder()
+                        .setEventName("e-1")
+                        .setGroupId("g-id")
+                        .setPreviousId("p-id")
+                        .setProperty(Collections.singletonMap("s-id", "some-prop"))
+                        .build());
+                messages.add(new RudderMessageBuilder()
+                        .setEventName("e-2")
+                        .setGroupId("g-id")
+                        .setPreviousId("p-id")
+                        .setProperty(Collections.singletonMap("s-id", "some-prop"))
+                        .build());
+                messages.add(new RudderMessageBuilder()
+                        .setEventName("e-3")
+                        .setGroupId("g-id")
+                        .setPreviousId("p-id")
+                        .setProperty(Collections.singletonMap("s-id", "some-prop"))
+                        .build());
                 for (int i = 0; i < messages.size(); i++) {
-                    dbPersistentManager.saveEvent(messages.get(i),
-                            new EventInsertionCallback(new RudderMessageBuilder().build(),
-                                    deviceModeManager));
+                    dbPersistentManager.saveEvent(messages.get(i), new EventInsertionCallback(new RudderMessageBuilder().build(), deviceModeManager));
                     // Starting the Handler thread, only when some events are added to the queue, so that the replay happens, and handler
                     // thread starts reading from the queue.
                     if (i == messages.size() / 2) {
@@ -149,6 +285,7 @@ public class DBPersistentManagerTest {
             }
         });
     }
+
     @Test
     public void doneEventsTest() {
         final DBPersistentManager dbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider
@@ -208,6 +345,7 @@ public class DBPersistentManagerTest {
         dbPersistentManager.close();
 
     }
+
     private List<RudderMessage> parse(List<String> messageJsons) {
         List<RudderMessage> messages = new ArrayList<>();
         for (String mJson :

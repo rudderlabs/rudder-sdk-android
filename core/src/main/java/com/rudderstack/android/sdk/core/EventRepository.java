@@ -339,26 +339,7 @@ class EventRepository {
         RudderMessage updatedMessage = updateMessageWithConsentedDestinations(message);
         userSessionManager.applySessionTracking(updatedMessage);
 
-        String eventJson = getEventJsonString(updatedMessage);
-        if (eventJson == null) {
-            RudderLogger.logError("EventRepository: processMessage: eventJson is null after serialization");
-            return;
-        }
-        if (isMessageJsonExceedingMaxSize(eventJson)) {
-            incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_SIZE_INVALID));
-            RudderLogger.logError(String.format(Locale.US, "EventRepository: processMessage: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
-            return;
-        }
-        RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: processMessage: message: %s", eventJson));
-        dbManager.saveEvent(eventJson, new EventInsertionCallback(message, deviceModeManager));
-    }
-
-    String getEventJsonString(RudderMessage message) {
-        return RudderGson.serialize(message);
-    }
-
-    private boolean isMessageJsonExceedingMaxSize(String eventJson) {
-        return Utils.getUTF8Length(eventJson) > Utils.MAX_EVENT_SIZE;
+        dbManager.saveEvent(updatedMessage, new EventInsertionCallback(message, deviceModeManager));
     }
 
     @VisibleForTesting
@@ -379,7 +360,7 @@ class EventRepository {
             message.setIntegrations(prepareIntegrations());
         }
     }
-
+    
     void flushSync() {
         if (dataPlaneUrl == null) {
             RudderLogger.logError(Constants.Logs.DATA_PLANE_URL_FLUSH_ERROR);
