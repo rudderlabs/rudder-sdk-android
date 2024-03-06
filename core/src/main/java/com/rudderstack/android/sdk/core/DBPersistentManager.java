@@ -214,7 +214,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
                 queue.add(msg);
                 return;
             }
-            dbInsertionHandlerThread.addMessage(msg);
+            addMessageToHandlerThread(msg);
         }
     }
 
@@ -233,6 +233,13 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         eventBundle.putString(EVENT, messageJson);
         msg.setData(eventBundle);
         return msg;
+    }
+
+    /*
+       Passes the input message to the Handler thread.
+     */
+    void addMessageToHandlerThread(Message msg) {
+        dbInsertionHandlerThread.addMessage(msg);
     }
 
     @VisibleForTesting
@@ -482,7 +489,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
                     dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", persistence);
                     dbInsertionHandlerThread.start();
                     for (Message msg : queue) {
-                        dbInsertionHandlerThread.addMessage(msg);
+                        addMessageToHandlerThread(msg);
                     }
                 }
             } catch (SQLiteDatabaseCorruptException | ConcurrentModificationException |
@@ -565,7 +572,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
     }
 
     private void waitTillMigrationsAreDone() {
-        if(migrationSemaphore.availablePermits() == 1 ){
+        if (migrationSemaphore.availablePermits() == 1) {
             return;
         }
         acquireSemaphore();

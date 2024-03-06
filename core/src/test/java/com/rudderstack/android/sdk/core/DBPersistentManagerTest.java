@@ -89,7 +89,7 @@ public class DBPersistentManagerTest {
     public void setUp() throws Exception {
         dbPersistentManager = PowerMockito.mock(DBPersistentManager.class);
         PowerMockito.when(dbPersistentManager, "saveEventSync", anyString()).thenCallRealMethod();
-        PowerMockito.when(dbPersistentManager, "saveEvent", anyString(), any()).thenCallRealMethod();
+        PowerMockito.when(dbPersistentManager, "saveEvent", any(RudderMessage.class), any()).thenCallRealMethod();
         PowerMockito.when(dbPersistentManager, "startHandlerThread").thenCallRealMethod();
         Whitebox.setInternalState(dbPersistentManager, "queue", new LinkedList<Message>());
         deviceModeManager = Mockito.mock(RudderDeviceModeManager.class);
