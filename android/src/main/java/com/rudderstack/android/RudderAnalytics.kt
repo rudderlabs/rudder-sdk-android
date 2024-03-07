@@ -15,6 +15,7 @@
 
 package com.rudderstack.android
 
+import android.app.Application
 import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
 import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
@@ -36,6 +37,7 @@ import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.models.MessageContext
+import com.rudderstack.rudderjsonadapter.JsonAdapter
 
 //device info and stuff
 //multi process
@@ -44,19 +46,22 @@ import com.rudderstack.models.MessageContext
 //work manager
 fun RudderAnalytics(
     writeKey: String,
-    configuration: ConfigurationAndroid,
+    jsonAdapter: JsonAdapter,
+    application: Application,
+    configurationInitializer: ConfigurationAndroid.() -> ConfigurationAndroid = { this },
     instanceName: String = DEFAULTS_ANALYTICS_INSTANCE_NAME,
     dataUploadService: DataUploadService? = null,
     configDownloadService: ConfigDownloadService? = null,
     storage: AndroidStorage = AndroidStorageImpl(
-        configuration.application,
+        application,
         instanceName = instanceName,
         useContentProvider = ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER
     ),
     initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
 ): Analytics {
     return Analytics(writeKey,
-        configuration,
+        jsonAdapter,
+        configurationInitializer(application.initialConfigurationAndroid(storage)),
         instanceName,
         dataUploadService,
         configDownloadService,
@@ -172,17 +177,6 @@ internal fun Analytics.processNewContext(
     androidStorage.cacheContext(newContext)
     contextState?.update(newContext)
 }
-
-fun Analytics.applyConfigurationAndroid(androidConfigurationScope: ConfigurationAndroid.() ->
-ConfigurationAndroid){
-    applyConfiguration {
-        if (this is ConfigurationAndroid) androidConfigurationScope()
-        else this
-    }
-}
-val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
-    get() = (currentConfiguration as? ConfigurationAndroid)
-
 private fun Analytics.onShutdown() {
     shutdownSessionManagement()
 }

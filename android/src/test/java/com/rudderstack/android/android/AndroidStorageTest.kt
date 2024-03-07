@@ -69,9 +69,9 @@ abstract class AndroidStorageTest {
             storageExecutor = TestExecutor()
         )
         mockConfig = ConfigurationAndroid(ApplicationProvider.getApplicationContext(),
-            jsonAdapter, shouldVerifySdk = false, analyticsExecutor = TestExecutor(),
+             shouldVerifySdk = false, analyticsExecutor = TestExecutor(),
             networkExecutor = TestExecutor(), flushQueueSize = 200, maxFlushInterval = 1000)
-        analytics = generateTestAnalytics( mockConfig, storage = storage,
+        analytics = generateTestAnalytics(jsonAdapter, mockConfig, storage = storage,
             dataUploadService = mock(), configDownloadService = mock())
     }
 

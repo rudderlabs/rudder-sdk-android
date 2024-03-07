@@ -1,5 +1,6 @@
 package com.rudderstack.core.internal.plugins
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
@@ -9,13 +10,19 @@ import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.models.Message
 import com.rudderstack.models.TrackMessage
+import io.mockk.every
+import io.mockk.junit4.MockKRule
+import io.mockk.mockk
+import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.whenever
 
 class EventSizeFilterPluginTest {
-
+    @get:Rule
+    val mockkRule = MockKRule(this)
     private val eventSizeFilterPlugin = EventSizeFilterPlugin()
-    private val currentConfiguration = Configuration(jsonAdapter = GsonAdapter(), isOptOut = false)
-
+    private val currentConfiguration = Configuration( isOptOut = false)
+    private val jsonAdapter = GsonAdapter()
     @Test
     fun `given event size does not exceed the maximum size, then the next plugin in the chain should be called`() {
         var isCalled = false
@@ -49,6 +56,10 @@ class EventSizeFilterPluginTest {
             listOf(eventSizeFilterPlugin, testPlugin),
             originalMessage = message
         )
+        val analytics = mockk<Analytics>()
+        every { analytics.jsonAdapter } returns jsonAdapter
+
+        eventSizeFilterPlugin.setup(analytics)
         eventSizeFilterPlugin.updateConfiguration(currentConfiguration)
 
         val returnedMsg = eventSizeFilterTestChain.proceed(message)
@@ -65,7 +76,7 @@ class EventSizeFilterPluginTest {
                 mapOf("amp_id" to "amp_id"),
             ), customContextMap = null
         ).also { message ->
-            val messageJSON = currentConfiguration.jsonAdapter.writeToJson(message)
+            val messageJSON = jsonAdapter.writeToJson(message)
             val messageSize = messageJSON.toString().getUTF8Length()
             assert(messageSize < MAX_EVENT_SIZE)
         }
@@ -82,7 +93,7 @@ class EventSizeFilterPluginTest {
         return TrackMessage.create(
             "ev-1", RudderUtils.timeStamp, properties = properties
         ).also { message ->
-            val messageJSON = currentConfiguration.jsonAdapter.writeToJson(message)
+            val messageJSON = jsonAdapter.writeToJson(message)
             val messageSize = messageJSON.toString().getUTF8Length()
             assert(messageSize > MAX_EVENT_SIZE)
         }

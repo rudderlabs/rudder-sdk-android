@@ -84,7 +84,6 @@ interface ConfigurationAndroid : Configuration {
     companion object {
         operator fun invoke(
             application: Application,
-            jsonAdapter: JsonAdapter,
             anonymousId: String?= null,
             userId: String? = null,
             options: RudderOptions = RudderOptions.defaultOptions(),
@@ -130,7 +129,6 @@ interface ConfigurationAndroid : Configuration {
             override val advertisingIdFetchExecutor : ExecutorService? = advertisingIdFetchExecutor
             override val trackAutoSession: Boolean = trackAutoSession
             override val sessionTimeoutMillis: Long = sessionTimeoutMillis
-            override val jsonAdapter: JsonAdapter = jsonAdapter
             override val options: RudderOptions = options
             override val flushQueueSize: Int = flushQueueSize
             override val maxFlushInterval: Long = maxFlushInterval
@@ -177,7 +175,6 @@ interface ConfigurationAndroid : Configuration {
         ): ConfigurationAndroid=
             invoke(
                 application,
-                configuration.jsonAdapter,
                 anonymousId,
                 userId,
                 configuration.options,
@@ -207,7 +204,6 @@ interface ConfigurationAndroid : Configuration {
     }
 
     override fun copy(
-        jsonAdapter: JsonAdapter,
         options: RudderOptions,
         flushQueueSize: Int,
         maxFlushInterval: Long,
@@ -221,9 +217,8 @@ interface ConfigurationAndroid : Configuration {
         analyticsExecutor: ExecutorService,
         networkExecutor: ExecutorService,
         base64Generator: Base64Generator,
-    ): Configuration {
+    ): ConfigurationAndroid {
         return copy(
-            jsonAdapter,
             options,
             flushQueueSize,
             maxFlushInterval,
@@ -242,7 +237,6 @@ interface ConfigurationAndroid : Configuration {
     }
 
     fun copy(
-        jsonAdapter: JsonAdapter = this.jsonAdapter,
         options: RudderOptions = this.options,
         flushQueueSize: Int = this.flushQueueSize,
         maxFlushInterval: Long = this.maxFlushInterval,
@@ -261,12 +255,12 @@ interface ConfigurationAndroid : Configuration {
         userId: String? = this.userId,
         advertisingId: String? = this.advertisingId,
         deviceToken: String? = this.deviceToken,
+        recordScreenViews: Boolean = this.recordScreenViews,
         trackAutoSession: Boolean = this.trackAutoSession,
         sessionTimeoutMillis: Long = this.sessionTimeoutMillis
     ) : ConfigurationAndroid{
         return ConfigurationAndroid(
             application,
-            jsonAdapter,
             anonymousId,
             userId,
             options,

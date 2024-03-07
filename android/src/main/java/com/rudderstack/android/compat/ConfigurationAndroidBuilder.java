@@ -19,7 +19,6 @@ import android.app.Application;
 import com.rudderstack.android.AndroidUtils;
 import com.rudderstack.android.ConfigurationAndroid;
 import com.rudderstack.core.compat.ConfigurationBuilder;
-import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import java.util.concurrent.ExecutorService;
 
@@ -40,8 +39,8 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     private boolean trackAutoSession = ConfigurationAndroid.Defaults.AUTO_SESSION_TRACKING;
     private long sessionTimeoutMillis = ConfigurationAndroid.Defaults.SESSION_TIMEOUT;
 
-    public ConfigurationAndroidBuilder(Application application, JsonAdapter jsonAdapter) {
-        super(jsonAdapter);
+    public ConfigurationAndroidBuilder(Application application) {
+        super();
         this.application = application;
         anonymousId = AndroidUtils.INSTANCE.getDeviceId(application);
     }

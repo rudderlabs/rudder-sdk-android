@@ -52,8 +52,8 @@ class IntervalBasedFlushPolicyTest {
         Mockito.`when`(mockUploadService.uploadSync(any<List<Message>>(), anyOrNull())).thenReturn(
             mockedResponse
         )
-        analytics = generateTestAnalytics(
-            Configuration(mock(), shouldVerifySdk = false),
+        analytics = generateTestAnalytics(mock(),
+            Configuration( shouldVerifySdk = false),
             dataUploadService = mockUploadService
         )
         flushPolicy = IntervalBasedFlushPolicy()

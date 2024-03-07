@@ -49,7 +49,7 @@ private const val CHANNEL = "mobile"
 internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     //if true collects advertising id automatically
     private val jsonAdapter
-        get() = _analytics?.currentConfiguration?.jsonAdapter
+        get() = _analytics?.jsonAdapter
 
     private val application
         get() = _analytics?.currentConfigurationAndroid?.application

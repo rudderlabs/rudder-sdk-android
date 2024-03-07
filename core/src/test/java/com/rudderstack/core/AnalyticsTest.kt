@@ -105,8 +105,8 @@ abstract class AnalyticsTest {
         }
         analytics = Analytics(
             writeKey,
+            jsonAdapter,
             Configuration(
-                jsonAdapter,
                 shouldVerifySdk = false
             ),
             storage = storage,
@@ -132,8 +132,8 @@ abstract class AnalyticsTest {
         analytics.shutdown()
         val isDone = AtomicBoolean(false)
         analytics = Analytics(
-            writeKey, Configuration(
-                jsonAdapter, shouldVerifySdk = true
+            writeKey, jsonAdapter, Configuration(
+                shouldVerifySdk = true
             ), initializationListener = { success, message ->
                 assertThat(success, `is`(true))
                 assertThat(message, nullValue())
@@ -159,8 +159,7 @@ abstract class AnalyticsTest {
             }
         }
         analytics = Analytics(
-            "some wrong write key", Configuration(
-                jsonAdapter,
+            "some wrong write key", jsonAdapter, Configuration(
                 sdkVerifyRetryStrategy = RetryStrategy.exponential(1),
                 shouldVerifySdk = true
             ), initializationListener = { success, message ->
@@ -191,8 +190,8 @@ abstract class AnalyticsTest {
         analytics.shutdown()
         val retryStrategy = mock<RetryStrategy>()
         analytics = Analytics(
-            writeKey, Configuration(
-                jsonAdapter, sdkVerifyRetryStrategy = retryStrategy, shouldVerifySdk = true
+            writeKey, jsonAdapter, Configuration(
+                 sdkVerifyRetryStrategy = retryStrategy, shouldVerifySdk = true
             ), configDownloadService = mockedControlPlane
         )
         assertThat(analytics.currentConfiguration?.sdkVerifyRetryStrategy, `is`(retryStrategy))
@@ -202,7 +201,7 @@ abstract class AnalyticsTest {
     fun `test identify`() {
         println("running test test identify")
         analytics.shutdown()
-        analytics = generateTestAnalytics(Configuration(jsonAdapter))
+        analytics = generateTestAnalytics(jsonAdapter, Configuration())
         analytics.identify("user_id", mapOf("trait-1" to "t-1", "trait-2" to "t-2"))
         analytics.assertArgument { input, output ->
             println("Input: $input\nOutput: $output")
@@ -232,7 +231,7 @@ abstract class AnalyticsTest {
     fun `test track event`() {
         println("running test test track event")
         analytics.shutdown()
-        analytics = generateTestAnalytics(Configuration(jsonAdapter))
+        analytics = generateTestAnalytics(jsonAdapter, Configuration())
         analytics.track {
             event("event-1")
             userId("user_id")
@@ -266,7 +265,7 @@ abstract class AnalyticsTest {
     fun `test alias event`() {
         println("running test test alias event")
         analytics.shutdown()
-        analytics = generateTestAnalytics(Configuration(jsonAdapter))
+        analytics = generateTestAnalytics(jsonAdapter, Configuration())
         analytics.alias {
             userId("user_id")
             newId("new_id")
@@ -293,8 +292,8 @@ abstract class AnalyticsTest {
     fun `test with later initialized destinations`() {
         println("running test test with later initialized destinations")
         analytics.shutdown()
-        analytics = generateTestAnalytics(
-            Configuration(jsonAdapter, shouldVerifySdk = true), mockedControlPlane
+        analytics = generateTestAnalytics(jsonAdapter,
+            Configuration( shouldVerifySdk = true), mockedControlPlane
         )
         val laterInitDestPlugin = mock(DestinationPlugin::class.java)
         whenever(laterInitDestPlugin.name).thenReturn("enabled-destination")
@@ -337,8 +336,9 @@ abstract class AnalyticsTest {
         analytics.shutdown()
         analytics = Analytics(
             writeKey,
+            jsonAdapter,
             Configuration(
-                jsonAdapter, shouldVerifySdk = true
+                shouldVerifySdk = true
             ),
             storage = storage,
             initializationListener = { success, message ->
@@ -631,8 +631,7 @@ abstract class AnalyticsTest {
         println("running test test should verify sdk")
         val spyControlPlane = spy(ConfigDownloadService::class.java)
         Analytics(
-            writeKey, Configuration(
-                jsonAdapter
+            writeKey, jsonAdapter, Configuration(
             ), configDownloadService = spyControlPlane
         ).shutdown()
         verify(spyControlPlane, times(0)).download(
@@ -681,8 +680,7 @@ abstract class AnalyticsTest {
         val spyDataUploadService = spy(DataUploadService::class.java)
 
         analytics = Analytics(
-            writeKey, Configuration(
-                jsonAdapter
+            writeKey, jsonAdapter, Configuration(
             ), storage = storage, initializationListener = { success, message ->
                 assertThat(success, `is`(true))
             }, dataUploadService = spyDataUploadService, configDownloadService = mockedControlPlane
@@ -707,8 +705,8 @@ abstract class AnalyticsTest {
         }
         val someAnalytics = Analytics(
             writeKey,
+            jsonAdapter,
             Configuration(
-                jsonAdapter
             ),
             storage = storage,
             initializationListener = { success, message ->
@@ -819,8 +817,8 @@ abstract class AnalyticsTest {
         }
         analytics = Analytics(
             writeKey,
+            jsonAdapter,
             Configuration(
-                jsonAdapter,
                 maxFlushInterval = 15_000,
                 flushQueueSize = 100,
 
@@ -880,7 +878,7 @@ abstract class AnalyticsTest {
      */
     private fun calculateNumberOfBatches(message: Message?, totalNumberOfMessages: Int): Int {
         val messageJSON = message?.let {
-            analytics.currentConfiguration?.jsonAdapter?.writeToJson(it, object : RudderTypeAdapter<Message>() {})
+            jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Message>() {})
         } ?: return 0
 
         val individualMessageSize = messageJSON.getUTF8Length()

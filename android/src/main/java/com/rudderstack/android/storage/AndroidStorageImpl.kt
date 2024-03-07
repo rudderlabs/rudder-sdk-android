@@ -120,6 +120,7 @@ class AndroidStorageImpl(
             DB_VERSION,
             executorService = storageExecutor
         )
+        jsonAdapter = analytics.jsonAdapter
         messageDao = rudderDatabase?.getDao(MessageEntity::class.java, storageExecutor)
         messageDao?.addDataChangeListener(_messageDataListener)
 
@@ -127,7 +128,6 @@ class AndroidStorageImpl(
 
     override fun updateConfiguration(configuration: Configuration) {
         super.updateConfiguration(configuration)
-        jsonAdapter = configuration.jsonAdapter
         logger = configuration.logger
     }
 

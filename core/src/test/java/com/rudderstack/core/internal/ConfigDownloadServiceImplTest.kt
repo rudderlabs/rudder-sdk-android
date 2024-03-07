@@ -47,15 +47,15 @@ abstract class ConfigDownloadServiceImplTest {
 
     @Before
     fun setup() {
-        val config = Configuration(jsonAdapter)
-        analytics = generateTestAnalytics(config)
+        val config = Configuration()
+        analytics = generateTestAnalytics(jsonAdapter, config)
         dummyWebService.nextBody =
             RudderServerConfig(source = RudderServerConfig.RudderServerConfigSource())
 //        ConfigurationsState.update(ConfigurationsState.value ?: Configuration.invoke(jsonAdapter))
         configDownloadServiceImpl = ConfigDownloadServiceImpl(
             Base64.getEncoder().encodeToString(
                 String.format(Locale.US, "%s:", writeKey).toByteArray(charset("UTF-8"))
-            ), dummyWebService
+            ), jsonAdapter, dummyWebService
         )
         configDownloadServiceImpl.setup(analytics)
         configDownloadServiceImpl.updateConfiguration(config)

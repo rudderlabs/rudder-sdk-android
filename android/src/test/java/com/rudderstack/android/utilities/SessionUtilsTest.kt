@@ -45,10 +45,9 @@ class SessionUtilsTest {
     @Before
     fun setup() {
         mockStorage = mock<AndroidStorage>()
-        analytics = generateTestAnalytics(
+        analytics = generateTestAnalytics( mock(),
             mockConfiguration = ConfigurationAndroid(
                 ApplicationProvider.getApplicationContext(),
-                mock(),
                 shouldVerifySdk = false,
                 trackLifecycleEvents = true,
                 trackAutoSession = true
@@ -116,7 +115,6 @@ class SessionUtilsTest {
 
         val mockConfig = ConfigurationAndroid(
             application = ApplicationProvider.getApplicationContext(),
-            mock<JsonAdapter>(),
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
@@ -173,7 +171,6 @@ class SessionUtilsTest {
         // Given
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            JacksonAdapter(),
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true
@@ -199,7 +196,6 @@ class SessionUtilsTest {
         // Given
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            mock<JsonAdapter>(),
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
@@ -231,7 +227,6 @@ class SessionUtilsTest {
 // Given
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            mock<JsonAdapter>(),
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true
@@ -263,7 +258,6 @@ class SessionUtilsTest {
         // Given
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            mock<JsonAdapter>(),
             shouldVerifySdk = false,
 
             trackLifecycleEvents = true,
@@ -301,7 +295,6 @@ class SessionUtilsTest {
         whenever(mockStorage.lastActiveTimestamp).thenReturn(lastActiveTimestamp)
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            mock<JsonAdapter>(),
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
@@ -330,7 +323,6 @@ class SessionUtilsTest {
         whenever(mockStorage.lastActiveTimestamp).thenReturn(lastActiveTimestamp)
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            mock<JsonAdapter>(),
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
@@ -360,7 +352,6 @@ class SessionUtilsTest {
         whenever(mockStorage.lastActiveTimestamp).thenReturn(null)
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            mock<JsonAdapter>(),
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
@@ -384,13 +375,13 @@ class SessionUtilsTest {
         whenever(mockStorage.lastActiveTimestamp).thenReturn(null)
         val mockConfig = ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
-            mock<JsonAdapter>(),
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
         )
         analytics.shutdown()
         analytics = generateTestAnalytics(
+            mock<JsonAdapter>(),
             mockConfiguration = mockConfig,
             storage = mockStorage
         )

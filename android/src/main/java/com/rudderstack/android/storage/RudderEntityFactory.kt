@@ -24,7 +24,7 @@ internal class RudderEntityFactory(private val analytics: Analytics) : EntityFac
 
         //we will check the class for conversion
         return when(entity){
-            MessageEntity::class.java -> analytics.currentConfiguration?.jsonAdapter?.let {  MessageEntity.create(values, it) as? T?}
+            MessageEntity::class.java -> analytics.jsonAdapter.let {  MessageEntity.create(values, it) as? T?}
             else -> null
         }
     }

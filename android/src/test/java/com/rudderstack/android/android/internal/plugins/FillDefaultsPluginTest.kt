@@ -65,13 +65,12 @@ class FillDefaultsPluginTest {
     fun setup() {
         mockConfig = ConfigurationAndroid(
             application = getApplicationContext(),
-            mock(),
             anonymousId = "anon_id",
             userId = "user_id",
             shouldVerifySdk = false,
             analyticsExecutor = TestExecutor(),
         )
-        analytics = generateTestAnalytics(mockConfig)
+        analytics = generateTestAnalytics(mock(), mockConfig)
         analytics.associateState(ContextState())
         fillDefaultsPlugin.setup(analytics)
         fillDefaultsPlugin.updateConfiguration(mockConfig)

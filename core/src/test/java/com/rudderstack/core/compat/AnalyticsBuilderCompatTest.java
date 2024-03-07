@@ -30,8 +30,7 @@ public class AnalyticsBuilderCompatTest {
     private JsonAdapter jsonAdapter = new JacksonAdapter();
     @Test
     public void constructorInitialization() {
-        AnalyticsBuilderCompat analyticsBuilder = new AnalyticsBuilderCompat("writeKey",
-                new ConfigurationBuilder(jsonAdapter).build());
+        AnalyticsBuilderCompat analyticsBuilder = new AnalyticsBuilderCompat("writeKey",jsonAdapter);
         Analytics analytics = analyticsBuilder.build();
         assertNotNull(analytics.getCurrentConfiguration());
         assertNotNull(analytics.getDataUploadService());
@@ -41,8 +40,7 @@ public class AnalyticsBuilderCompatTest {
     @Test
     public void withDataUploadService() {
         DataUploadService mockDataUploadService = mock(DataUploadService.class);
-        AnalyticsBuilderCompat analyticsBuilder = new AnalyticsBuilderCompat("writeKey",
-                new ConfigurationBuilder(jsonAdapter).build())
+        AnalyticsBuilderCompat analyticsBuilder = new AnalyticsBuilderCompat("writeKey", jsonAdapter)
                 .withDataUploadService(mockDataUploadService);
 
         assertEquals(mockDataUploadService, analyticsBuilder.build().getDataUploadService());
@@ -56,8 +54,7 @@ public class AnalyticsBuilderCompatTest {
         AnalyticsBuilderCompat.InitializationListener mockInitializationListener =
                 mock(AnalyticsBuilderCompat.InitializationListener.class);
 
-        AnalyticsBuilderCompat analyticsBuilder = new AnalyticsBuilderCompat("writeKey",
-                new ConfigurationBuilder(jsonAdapter).build())
+        AnalyticsBuilderCompat analyticsBuilder = new AnalyticsBuilderCompat("writeKey", jsonAdapter)
                 .withDataUploadService(mockDataUploadService)
                 .withConfigDownloadService(mockConfigDownloadService)
                 .withShutdownHook(mockShutdownHook)

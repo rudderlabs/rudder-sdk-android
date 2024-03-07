@@ -24,13 +24,11 @@ import com.rudderstack.core.RetryStrategy;
 import com.rudderstack.core.RudderOptions;
 import com.rudderstack.core.RudderUtils;
 import com.rudderstack.core.internal.KotlinLogger;
-import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ConfigurationBuilder {
-    private JsonAdapter jsonAdapter;
     private RudderOptions options = RudderOptions.defaultOptions();
     private int flushQueueSize = FLUSH_QUEUE_SIZE;
     private long maxFlushInterval = MAX_FLUSH_INTERVAL;
@@ -44,10 +42,6 @@ public class ConfigurationBuilder {
     private ExecutorService analyticsExecutor = Executors.newSingleThreadExecutor();
     private ExecutorService networkExecutor = Executors.newCachedThreadPool();
     private Base64Generator base64Generator = RudderUtils.INSTANCE.getDefaultBase64Generator();
-
-    public ConfigurationBuilder(JsonAdapter jsonAdapter) {
-        this.jsonAdapter = jsonAdapter;
-    }
 
     public ConfigurationBuilder withOptions(RudderOptions options) {
         this.options = options;
@@ -115,7 +109,7 @@ public class ConfigurationBuilder {
     }
 
     public Configuration build() {
-        return Configuration.Companion.invoke(jsonAdapter, options, flushQueueSize, maxFlushInterval, isOptOut,
+        return Configuration.Companion.invoke(options, flushQueueSize, maxFlushInterval, isOptOut,
                 shouldVerifySdk, gzipEnabled, sdkVerifyRetryStrategy, dataPlaneUrl,
                 controlPlaneUrl, logger,
                 analyticsExecutor, networkExecutor, base64Generator);
