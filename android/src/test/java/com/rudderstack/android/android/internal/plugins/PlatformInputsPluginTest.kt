@@ -62,8 +62,8 @@ class PlatformInputsPluginTest {
     fun setUp() {
         val app = getApplicationContext<AndroidContextPluginTestApplication>()
         platformInputsPlugin = PlatformInputsPlugin()
-        analytics = generateTestAnalytics(ConfigurationAndroid(app,
-            jsonAdapter, shouldVerifySdk = false))
+        analytics = generateTestAnalytics(jsonAdapter, ConfigurationAndroid(app, shouldVerifySdk =
+        false))
         platformInputsPlugin.setup(analytics)
     }
     @After

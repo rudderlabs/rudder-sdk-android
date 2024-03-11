@@ -37,7 +37,9 @@ import com.rudderstack.core.flushpolicy.addFlushPolicies
 import com.rudderstack.core.flushpolicy.applyFlushPoliciesClosure
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.removeState
+import com.rudderstack.core.holder.retrieve
 import com.rudderstack.core.holder.retrieveState
+import com.rudderstack.core.holder.store
 import com.rudderstack.core.internal.plugins.DestinationConfigurationPlugin
 import com.rudderstack.core.internal.plugins.EventFilteringPlugin
 import com.rudderstack.core.internal.plugins.GDPRPlugin
@@ -49,6 +51,7 @@ import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.core.internal.states.DestinationConfigState
 import com.rudderstack.models.Message
 import com.rudderstack.models.RudderServerConfig
+import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
 import java.util.concurrent.ExecutorService
@@ -59,6 +62,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 internal class AnalyticsDelegate(
+    jsonAdapter: JsonAdapter,
     configuration: Configuration,
     override val storage: Storage,
     override val instanceName: String,
@@ -162,11 +166,16 @@ internal class AnalyticsDelegate(
     private var _serverConfig: RudderServerConfig? = null
 
     init {
+        associateJsonAdapter(jsonAdapter)
         associateState(ConfigurationsState(configuration))
         associateState(DestinationConfigState())
         attachListeners()
         initializePlugins()
         initializeFlush()
+    }
+
+    private fun Controller.associateJsonAdapter(jsonAdapter: JsonAdapter) {
+        store(JsonAdapter::class.java.simpleName, jsonAdapter)
     }
 
     private fun attachListeners() {
@@ -242,6 +251,8 @@ internal class AnalyticsDelegate(
         }
     override val currentConfiguration: Configuration?
         get() = currentConfigurationState?.value
+    override val jsonAdapter: JsonAdapter
+        get() = retrieve(JsonAdapter::class.java.simpleName)?: throw Exception("JsonAdapter not found")
 
 
     override fun addPlugin(vararg plugins: Plugin) {
@@ -425,7 +436,7 @@ internal class AnalyticsDelegate(
         var index = 0
 
         for (message in data) {
-            val messageJSON: String? = config.jsonAdapter.writeToJson(message, object : RudderTypeAdapter<Message>() {})
+            val messageJSON: String? = jsonAdapter.writeToJson(message, object : RudderTypeAdapter<Message>() {})
             val messageSize = messageJSON.toString().getUTF8Length()
 
             totalMessageSize += messageSize

@@ -72,9 +72,9 @@ class ReinstatePluginTest {
             )
         )
         configurationAndroid = ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(), mock<JsonAdapter>()
+            ApplicationProvider.getApplicationContext()
         )
-        analytics = generateTestAnalytics(
+        analytics = generateTestAnalytics(mock<JsonAdapter>(),
             configurationAndroid, storage = androidStorage, configDownloadService = mockControlPlane
         )
 
@@ -111,7 +111,7 @@ class ReinstatePluginTest {
     fun `intercept should proceed if should verify sdk is false`() {
         val configCopy = configurationAndroid.copy(shouldVerifySdk = false)
         analytics.shutdown()
-        analytics = generateTestAnalytics(configCopy, storage = androidStorage)
+        analytics = generateTestAnalytics(mock(), configCopy, storage = androidStorage)
         plugin.updateConfiguration(configCopy)
         plugin.intercept(chain)
         verify(chain, times(1)).proceed(dummyMessage)
@@ -125,6 +125,7 @@ class ReinstatePluginTest {
         val storage = mock<AndroidStorage>()
         whenever(storage.anonymousId).thenReturn("testAnonymousId")
         analytics = generateTestAnalytics(
+            mock(),
             configurationAndroid, storage = storage, configDownloadService = mockControlPlane
         )
         plugin.setup(analytics)
@@ -142,7 +143,7 @@ class ReinstatePluginTest {
         plugin = ReinstatePlugin()
         val storage = mock<AndroidStorage>()
         whenever(storage.userId).thenReturn("userId")
-        analytics = generateTestAnalytics(
+        analytics = generateTestAnalytics( mock(),
             configurationAndroid, storage = storage, configDownloadService = mockControlPlane
         )
         plugin.setup(analytics)

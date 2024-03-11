@@ -31,6 +31,7 @@ import org.hamcrest.Matchers.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 /**
  * Wake up action plugin forwards only those destination plugins, that have initialized.
@@ -66,7 +67,8 @@ class WakeupActionPluginTest {
     @Before
     fun setup() {
         analytics = generateTestAnalytics(
-            Configuration(jsonAdapter = JacksonAdapter(),
+            mock(),
+            Configuration(
                 shouldVerifySdk = false), storage = storage
         )
         wakeupActionPlugin.setup(analytics)

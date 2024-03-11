@@ -51,8 +51,8 @@ class StoragePluginTest {
     @Before
     fun setup() {
         storage = VerificationStorage()
-        analytics = generateTestAnalytics(
-            mockConfiguration = Configuration(mock(), shouldVerifySdk = false), storage = storage
+        analytics = generateTestAnalytics(mock(),
+            mockConfiguration = Configuration(shouldVerifySdk = false), storage = storage
         )
     }
     @After

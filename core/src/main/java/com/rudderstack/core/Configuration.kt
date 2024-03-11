@@ -37,7 +37,6 @@ import java.util.concurrent.Executors
  * @property isOptOut GDPR implementation. Data won't be sent if GDPR is true
  */
 interface Configuration {
-    val jsonAdapter: JsonAdapter
     val options: RudderOptions
     val flushQueueSize: Int
     val maxFlushInterval: Long
@@ -62,7 +61,6 @@ interface Configuration {
         // events will be flushed to server after maxFlushInterval millis
         const val MAX_FLUSH_INTERVAL = 10 * 1000L //10 seconds
         operator fun invoke(
-            jsonAdapter: JsonAdapter,
             options: RudderOptions = RudderOptions.defaultOptions(),
             flushQueueSize: Int = FLUSH_QUEUE_SIZE,
             maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
@@ -77,7 +75,6 @@ interface Configuration {
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             base64Generator: Base64Generator = RudderUtils.defaultBase64Generator,
         ) = object : Configuration {
-            override val jsonAdapter: JsonAdapter = jsonAdapter
             override val options: RudderOptions = options
             override val flushQueueSize: Int = flushQueueSize
             override val maxFlushInterval: Long = maxFlushInterval
@@ -92,9 +89,11 @@ interface Configuration {
             override val networkExecutor: ExecutorService = networkExecutor
             override val base64Generator: Base64Generator = base64Generator
         }
+
+        @JvmStatic
+        val DEFAULT = Configuration()
     }
     fun copy(
-        jsonAdapter: JsonAdapter = this.jsonAdapter,
         options: RudderOptions = this.options,
         flushQueueSize: Int = this.flushQueueSize,
         maxFlushInterval: Long = this.maxFlushInterval,
@@ -109,7 +108,6 @@ interface Configuration {
         networkExecutor: ExecutorService = this.networkExecutor,
         base64Generator: Base64Generator = this.base64Generator,
     ) = Configuration(
-        jsonAdapter = jsonAdapter,
         options = options,
         flushQueueSize = flushQueueSize,
         maxFlushInterval = maxFlushInterval,

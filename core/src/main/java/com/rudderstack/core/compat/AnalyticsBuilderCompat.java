@@ -24,6 +24,7 @@ import com.rudderstack.core.DataUploadService;
 import com.rudderstack.core.Storage;
 import com.rudderstack.core.internal.ConfigDownloadServiceImpl;
 import com.rudderstack.core.internal.DataUploadServiceImpl;
+import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
@@ -31,8 +32,9 @@ import kotlin.jvm.functions.Function2;
 
 public class AnalyticsBuilderCompat {
     private final String writeKey;
+    private final JsonAdapter jsonAdapter;
 
-    private final Configuration configuration;
+    private Configuration configuration = Configuration.getDEFAULT();
     private Storage storage = new BasicStorageImpl();
 
     private String instanceName = DEFAULTS_ANALYTICS_INSTANCE_NAME;
@@ -42,9 +44,9 @@ public class AnalyticsBuilderCompat {
     private Function1<Analytics, Unit> shutdownHook = null;
     private Function2<Boolean, String, Unit> initializationListener;
 
-    public AnalyticsBuilderCompat(String writeKey, Configuration configuration) {
+    public AnalyticsBuilderCompat(String writeKey, JsonAdapter jsonAdapter) {
         this.writeKey = writeKey;
-        this.configuration = configuration;
+        this.jsonAdapter = jsonAdapter;
     }
 
     public AnalyticsBuilderCompat withInstanceName(String instanceName) {
@@ -84,10 +86,10 @@ public class AnalyticsBuilderCompat {
     }
 
     public Analytics build() {
-        return new Analytics(writeKey, configuration, instanceName,
+        return new Analytics(writeKey, jsonAdapter, configuration, instanceName,
                 dataUploadService == null ? new DataUploadServiceImpl(
-                        writeKey) : dataUploadService, configDownloadService == null ?
-                new ConfigDownloadServiceImpl(writeKey) : configDownloadService,
+                        writeKey, jsonAdapter) : dataUploadService, configDownloadService == null ?
+                new ConfigDownloadServiceImpl(writeKey, jsonAdapter) : configDownloadService,
                 storage,
                 initializationListener, shutdownHook
         );

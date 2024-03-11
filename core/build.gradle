@@ -47,6 +47,7 @@ dependencies {
     testImplementation deps.mockito
     testImplementation deps.mockito_kotlin
     testImplementation deps.awaitility
+    testImplementation deps.mockk
 
     testImplementation(project(path: ':moshirudderadapter'))
     testImplementation(project(path: projects.test_common))

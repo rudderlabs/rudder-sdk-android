@@ -100,10 +100,10 @@ abstract class DataServiceUploadImplTest {
 
         }
         dataServiceImpl = DataUploadServiceImpl(
-            writeKey, dummyWebService
+            writeKey, jsonAdapter, dummyWebService
         )
         val configuration =
-            Configuration(jsonAdapter, dataPlaneUrl = dataPlaneUrl, base64Generator = {
+            Configuration(dataPlaneUrl = dataPlaneUrl, base64Generator = {
                 Base64.getEncoder().encodeToString(
                     String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8"))
                 )
@@ -156,7 +156,7 @@ abstract class DataServiceUploadImplTest {
                 callback(HttpResponse(400, "Bad Request", null))
             }
         }
-        dataServiceImpl = DataUploadServiceImpl("write_key", dummyWebService)
+        dataServiceImpl = DataUploadServiceImpl("write_key", jsonAdapter, dummyWebService)
         dataServiceImpl.upload(testMessagesList) {
             assertThat(it.status, allOf(greaterThanOrEqualTo(400)))
         }

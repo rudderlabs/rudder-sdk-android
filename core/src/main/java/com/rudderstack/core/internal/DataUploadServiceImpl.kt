@@ -17,6 +17,7 @@ package com.rudderstack.core.internal
 import com.rudderstack.core.*
 import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.Message
+import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpInterceptor
 import com.rudderstack.web.HttpResponse
@@ -29,6 +30,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 internal class DataUploadServiceImpl @JvmOverloads constructor(
     private val writeKey: String,
+    private val jsonAdapter: JsonAdapter,
     webService: WebService? = null
 ) : DataUploadService {
     private val encodedWriteKey: AtomicReference<String?> = AtomicReference()
@@ -98,7 +100,7 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
             ).let {
                 if (extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
             }.let {
-                config.jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String, Any>>()
+                jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String, Any>>()
                 {})
             }
             webService.get()?.post(mapOf("Content-Type" to "application/json",
@@ -113,7 +115,7 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
     }
 
     override fun setup(analytics: Analytics) {
-        // No-op
+        //no-op
     }
 
     override fun updateConfiguration(configuration: Configuration) {

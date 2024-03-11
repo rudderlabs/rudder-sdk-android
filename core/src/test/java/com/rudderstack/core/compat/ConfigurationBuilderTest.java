@@ -26,8 +26,6 @@ import com.rudderstack.core.Configuration;
 import com.rudderstack.core.Logger;
 import com.rudderstack.core.RetryStrategy;
 import com.rudderstack.core.RudderOptions;
-import com.rudderstack.core.Storage;
-import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -39,13 +37,11 @@ public class ConfigurationBuilderTest {
 
     @Test
     public void buildConfigurationWithDefaultValues() {
-        JsonAdapter mockJsonAdapter = mock(JsonAdapter.class);
-        ConfigurationBuilder configurationBuilder = new ConfigurationBuilder(mockJsonAdapter);
+        ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 
         Configuration configuration = configurationBuilder.build();
 
         assertNotNull(configuration);
-        assertEquals(mockJsonAdapter, configuration.getJsonAdapter());
         assertEquals(RudderOptions.defaultOptions(), configuration.getOptions());
         assertEquals(Configuration.FLUSH_QUEUE_SIZE, configuration.getFlushQueueSize());
         assertEquals(Configuration.MAX_FLUSH_INTERVAL, configuration.getMaxFlushInterval());
@@ -62,7 +58,6 @@ public class ConfigurationBuilderTest {
 
     @Test
     public void buildConfigurationWithCustomValues() {
-        JsonAdapter mockJsonAdapter = mock(JsonAdapter.class);
         RudderOptions customOptions = new RudderOptions.Builder().build();
         int customFlushQueueSize = 100;
         long customMaxFlushInterval = 5000;
@@ -72,12 +67,11 @@ public class ConfigurationBuilderTest {
         String customDataPlaneUrl = "https://custom-data-plane-url.com";
         String customControlPlaneUrl = "https://custom-control-plane-url.com";
         Logger customLogger = mock(Logger.class);
-        Storage customStorage = mock(Storage.class);
         ExecutorService customAnalyticsExecutor = Executors.newFixedThreadPool(2);
         ExecutorService customNetworkExecutor = Executors.newFixedThreadPool(3);
         Base64Generator customBase64Generator = mock(Base64Generator.class);
 
-        ConfigurationBuilder configurationBuilder = new ConfigurationBuilder(mockJsonAdapter)
+        ConfigurationBuilder configurationBuilder = new ConfigurationBuilder()
                 .withOptions(customOptions)
                 .withFlushQueueSize(customFlushQueueSize)
                 .withMaxFlushInterval(customMaxFlushInterval)
@@ -94,7 +88,6 @@ public class ConfigurationBuilderTest {
         Configuration configuration = configurationBuilder.build();
 
         assertNotNull(configuration);
-        assertEquals(mockJsonAdapter, configuration.getJsonAdapter());
         assertEquals(customOptions, configuration.getOptions());
         assertEquals(customFlushQueueSize, configuration.getFlushQueueSize());
         assertEquals(customMaxFlushInterval, configuration.getMaxFlushInterval());

@@ -16,6 +16,8 @@ package com.rudderstack.android.compat;
 
 import static com.rudderstack.core.AnalyticsKt.DEFAULTS_ANALYTICS_INSTANCE_NAME;
 
+import android.app.Application;
+
 import androidx.annotation.NonNull;
 
 import com.rudderstack.android.ConfigurationAndroid;
@@ -25,6 +27,7 @@ import com.rudderstack.android.storage.AndroidStorageImpl;
 import com.rudderstack.core.Analytics;
 import com.rudderstack.core.ConfigDownloadService;
 import com.rudderstack.core.DataUploadService;
+import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import java.util.concurrent.Executors;
 
@@ -33,40 +36,60 @@ import kotlin.Unit;
 /**
  * To be used by java projects
  */
-public final class RudderAnalyticsBuilderCompat  {
-
+public final class RudderAnalyticsBuilderCompat {
+    private final Application application;
+    private final JsonAdapter jsonAdapter;
     private @NonNull String writeKey;
-    private @NonNull ConfigurationAndroid configuration;
     private DataUploadService dataUploadService = null;
     private ConfigDownloadService configDownloadService = null;
     private InitializationListener initializationListener = null;
     private String instanceName = DEFAULTS_ANALYTICS_INSTANCE_NAME;
-    private AndroidStorage storage = new AndroidStorageImpl(configuration.getApplication(),
-            ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER,
-            instanceName = "test_instance",
-            Executors.newSingleThreadExecutor());
+    private AndroidStorage storage;
+    private InitialConfigurationGenerator initialConfigurationGenerator;
 
-    public RudderAnalyticsBuilderCompat(@NonNull String writeKey, @NonNull ConfigurationAndroid configuration) {
+
+    public RudderAnalyticsBuilderCompat(@NonNull String writeKey,
+                                        @NonNull Application application,
+                                        @NonNull JsonAdapter jsonAdapter){
         this.writeKey = writeKey;
-        this.configuration = configuration;
+        this.application = application;
+        this.jsonAdapter = jsonAdapter;
     }
+
     public RudderAnalyticsBuilderCompat withDataUploadService(DataUploadService dataUploadService) {
         this.dataUploadService = dataUploadService;
         return this;
     }
+
     public RudderAnalyticsBuilderCompat withConfigDownloadService(ConfigDownloadService configDownloadService) {
         this.configDownloadService = configDownloadService;
         return this;
     }
+
     public RudderAnalyticsBuilderCompat withInitializationListener(InitializationListener initializationListener) {
         this.initializationListener = initializationListener;
         return this;
     }
-    public Analytics build() {
 
+    public RudderAnalyticsBuilderCompat withConfigurationInitializer(InitialConfigurationGenerator initialConfigurationGenerator) {
+        this.initialConfigurationGenerator = initialConfigurationGenerator;
+        return this;
+    }
+
+    public Analytics build() {
+        if (this.storage == null) {
+            this.storage = new AndroidStorageImpl(application,
+                    ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER,
+                    instanceName,
+                    Executors.newSingleThreadExecutor());
+        }
         return RudderAnalytics.RudderAnalytics(
                 writeKey,
-                configuration,
+                jsonAdapter,
+                application,
+                configurationAndroid ->
+                        initialConfigurationGenerator == null ? configurationAndroid :
+                                initialConfigurationGenerator.generate(configurationAndroid),
                 instanceName,
                 dataUploadService,
                 configDownloadService,
@@ -87,6 +110,11 @@ public final class RudderAnalyticsBuilderCompat  {
     public RudderAnalyticsBuilderCompat withStorage(AndroidStorage storage) {
         this.storage = storage;
         return this;
+    }
+
+    @FunctionalInterface
+    public interface InitialConfigurationGenerator {
+        ConfigurationAndroid generate(ConfigurationAndroid initialConfiguration);
     }
 
 }

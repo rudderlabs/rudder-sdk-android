@@ -32,7 +32,7 @@ class ResetImplementationPluginTest{
     private lateinit var analytics: Analytics
     @Before
     fun setup(){
-        analytics = generateTestAnalytics(Configuration(jsonAdapter = mock (),),
+        analytics = generateTestAnalytics(mock (), Configuration(),
             storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(),
                 instanceName = "test_instance",
                 storageExecutor = TestExecutor()))

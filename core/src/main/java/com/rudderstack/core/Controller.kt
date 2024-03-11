@@ -15,6 +15,7 @@
 package com.rudderstack.core
 
 import com.rudderstack.models.Message
+import com.rudderstack.rudderjsonadapter.JsonAdapter
 
 /**
  * Handles all messages, assorting the plugins, keeping track of cache, to name a few of it's
@@ -63,6 +64,8 @@ interface Controller {
 
     val dataUploadService:DataUploadService
     val configDownloadService:ConfigDownloadService?
+
+    val jsonAdapter: JsonAdapter
 
     /**
      * The name of the instance
