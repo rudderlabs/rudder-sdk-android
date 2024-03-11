@@ -77,7 +77,8 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
                         val response = ongoingConfigFuture?.get()
                         lastRudderServerConfig = response?.body
                         lastErrorMsg = response?.errorBody ?: response?.error?.message
-                        return@perform (ongoingConfigFuture?.get()?.status ?: -1) == 200
+                        return@perform (ongoingConfigFuture?.get()?.status ?: -1) == 200 //TODO -
+                    // if the status is excluded from retry 429 or 500-599
                     }) {
                         callback.invoke(it, lastRudderServerConfig, lastErrorMsg)
                     }

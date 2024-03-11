@@ -124,7 +124,7 @@ class ReinstatePlugin : Plugin {
                 anonymousId = anonId, isOptOut = optOut, userId = userId
             )
         }
-        _analytics?.processNewContext(context ?: createContext())
+        _analytics?.contextState?.update(context ?: createContext())
         _analytics?.initializeSessionManagement(
             _analytics?.androidStorage?.sessionId, _analytics?.androidStorage?.lastActiveTimestamp
         )
@@ -154,6 +154,7 @@ class ReinstatePlugin : Plugin {
             if (shouldMigrateContext()) {
                 _analytics?.migrateContextFromV1()
             }
+            _analytics?.androidStorage?.migrateV1StorageToV2Sync()
 
             _analytics?.initializeSessionManagement(
                 _analytics?.androidStorage?.v1SessionId, _analytics?.androidStorage?.v1LastActiveTimestamp

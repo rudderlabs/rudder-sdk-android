@@ -18,6 +18,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -221,5 +222,14 @@ class RudderDatabase(private val context: Context,
         commonExecutor.shutdown()
         dbDetailsListeners = emptyList()
         databaseUpgradeCallback = null
+    }
+
+    /**
+     * Deletes the database along with all the tables
+     *
+     */
+    fun delete() {
+        val file = sqliteOpenHelper?.readableDatabase?.path?.let { File(it) }?:return
+        SQLiteDatabase.deleteDatabase(file)
     }
 }

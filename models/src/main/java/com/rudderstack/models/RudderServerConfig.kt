@@ -23,6 +23,7 @@ import java.util.*
  * Configuration of the server
  * @property source
  */
+//TODO add readObject writeObject and uid
 data class RudderServerConfig(
     @Json(name = "isHosted")
     @JsonProperty("isHosted")

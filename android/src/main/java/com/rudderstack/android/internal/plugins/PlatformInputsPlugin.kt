@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicReference
  * Initiates the values
  *
  */
-private const val CHANNEL = "mobile"
+private const val CHANNEL = "android"
 internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     //if true collects advertising id automatically
     private val jsonAdapter

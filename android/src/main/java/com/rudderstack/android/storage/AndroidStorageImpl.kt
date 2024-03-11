@@ -115,7 +115,7 @@ class AndroidStorageImpl(
         rudderDatabase = RudderDatabase(
             application,
             dbName,
-            RudderEntityFactory(analytics),
+            RudderEntityFactory(analytics.currentConfiguration?.jsonAdapter),
             useContentProvider,
             DB_VERSION,
             executorService = storageExecutor
@@ -155,7 +155,8 @@ class AndroidStorageImpl(
                         messageDao?.delete(
                             "${MessageEntity.ColumnNames.messageId} IN (" +
                             //COMMAND FOR SELECTING FIRST $excessMessages to be removed from DB
-                            "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${MessageEntity.TABLE_NAME} " + "ORDER BY ${MessageEntity.ColumnNames.timestamp} LIMIT $excessMessages)",
+                            "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${MessageEntity
+                                .TABLE_NAME} " + "ORDER BY ${MessageEntity.ColumnNames.updatedAt} LIMIT $excessMessages)",
                             null
                         ) {
                             //check messages exceed storage cap
@@ -380,6 +381,11 @@ class AndroidStorageImpl(
         preferenceManager?.resetV1ExternalIds()
     }
 
+    override fun migrateV1StorageToV2Sync() {
+        migrateV1MessagesToV2Database(application, rudderDatabase?:return,
+            jsonAdapter?:return, logger)
+    }
+
     override val libraryName: String
         get() = BuildConfig.LIBRARY_PACKAGE_NAME
     override val libraryVersion: String
@@ -407,10 +413,5 @@ class AndroidStorageImpl(
         )
     }
 
-    private fun importV1Data() {
-        val oldDbName = "events.db"
-        val oldDb = application.getDatabasePath(oldDbName)
-
-    }
 
 }

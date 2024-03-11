@@ -760,7 +760,7 @@ class Dao<T : Entity>(
         RudderField.Type.INTEGER -> if (isNullable) {
             cursor.getLongOrNull(
                 cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
-                ?: throw IllegalArgumentException("No such column $fieldName"),
+                ?: -1,
             )
         } else cursor.getLong(
             cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
@@ -770,7 +770,7 @@ class Dao<T : Entity>(
         RudderField.Type.TEXT -> if (isNullable) {
             cursor.getStringOrNull(
                 cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
-                ?: throw IllegalArgumentException("No such column $fieldName"),
+                ?: -1,
             )
         } else cursor.getString(
             cursor.getColumnIndex(fieldName).takeIf { it >= 0 }
