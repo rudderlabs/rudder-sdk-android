@@ -17,7 +17,6 @@ package com.rudderstack.android.internal.plugins
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.internal.extensions.withSessionId
 import com.rudderstack.android.internal.extensions.withSessionStart
-import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.android.utilities.defaultLastActiveTimestamp
 import com.rudderstack.android.utilities.resetSession
 import com.rudderstack.android.utilities.startSessionIfNeeded

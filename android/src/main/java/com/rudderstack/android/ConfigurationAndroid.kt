@@ -257,7 +257,12 @@ interface ConfigurationAndroid : Configuration {
         deviceToken: String? = this.deviceToken,
         recordScreenViews: Boolean = this.recordScreenViews,
         trackAutoSession: Boolean = this.trackAutoSession,
-        sessionTimeoutMillis: Long = this.sessionTimeoutMillis
+        sessionTimeoutMillis: Long = this.sessionTimeoutMillis,
+        trackLifecycleEvents : Boolean = this.trackLifecycleEvents,
+        isPeriodicFlushEnabled : Boolean = this.isPeriodicFlushEnabled,
+        autoCollectAdvertId : Boolean = this.autoCollectAdvertId,
+        multiProcessEnabled : Boolean = this.multiProcessEnabled,
+        defaultProcessName : String? = this.defaultProcessName,
     ) : ConfigurationAndroid{
         return ConfigurationAndroid(
             application,

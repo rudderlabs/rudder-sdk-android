@@ -71,17 +71,17 @@ fun Analytics.endSession() {
 }
 
 
-internal fun Analytics.startSessionIfNeeded() {
-    if (currentConfigurationAndroid?.trackAutoSession != true || currentConfigurationAndroid?.trackLifecycleEvents != true) return
+internal fun Analytics.startSessionIfNeeded() : Boolean {
+    if (currentConfigurationAndroid?.trackAutoSession != true || currentConfigurationAndroid?.trackLifecycleEvents != true) return false
 
     val currentSession = userSessionState?.value
     if (currentSession == null) {
         updateSessionStart(defaultSessionId)
-        return
+        return true
     }
     if (!currentSession.isActive || currentSession.lastActiveTimestamp == -1L) {
         updateSessionStart(defaultSessionId)
-        return
+        return true
     }
     val timeDifference: Long = synchronized(this) {
         abs(System.currentTimeMillis() - currentSession.lastActiveTimestamp)
@@ -90,13 +90,15 @@ internal fun Analytics.startSessionIfNeeded() {
                            ?: 0)
     ) {
         refreshSessionUpdate()
+        return true
     }
+    return false
 }
 
 internal fun Analytics.initializeSessionManagement(savedSessionId: Long? = null,
         lastActiveTimestamp: Long? = null) {
-    if (currentConfigurationAndroid?.trackAutoSession != true
-        || currentConfigurationAndroid?.trackLifecycleEvents != true
+    if ((currentConfigurationAndroid?.trackAutoSession != true
+        || currentConfigurationAndroid?.trackLifecycleEvents != true)
         && androidStorage.trackAutoSession) {
         discardAnyPreviousSession()
         return
@@ -111,8 +113,24 @@ internal fun Analytics.initializeSessionManagement(savedSessionId: Long? = null,
             )
         )
     }
-    startSessionIfNeeded()
+    val isNewSessionStarted = startSessionIfNeeded()
+    if (!isNewSessionStarted) {
+        updateSessionLastActiveTimestamp()
+    }
     listenToSessionChanges()
+}
+
+private fun Analytics.updateSessionLastActiveTimestamp() {
+    userSessionState?.apply {
+        value?.let {
+            update(
+            it.copy(
+                lastActiveTimestamp = defaultLastActiveTimestamp
+            )
+        )
+        }
+
+    }
 }
 
 private fun Analytics.discardAnyPreviousSession() {
