@@ -67,6 +67,8 @@ class EventRepository {
 
     private static final String CHARSET_UTF_8 = "UTF-8";
 
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+
     // Handler instance associated with the main thread
     static final Handler HANDLER =
             new Handler(Looper.getMainLooper()) {
@@ -326,12 +328,10 @@ class EventRepository {
         rudderFlushWorkManager.saveRudderFlushConfig(rudderFlushConfig);
     }
 
-
     /*
      * generic method for processing all the events
      * */
     void processMessage(@NonNull RudderMessage message) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
         Runnable runnable = () -> {
             try {
                 if (!isSDKEnabled) {
