@@ -67,7 +67,7 @@ class EventRepository {
 
     private static final String CHARSET_UTF_8 = "UTF-8";
 
-    ExecutorService messageExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService messageExecutor = Executors.newSingleThreadExecutor();
 
     // Handler instance associated with the main thread
     static final Handler HANDLER =
