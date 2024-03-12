@@ -67,7 +67,7 @@ class EventRepository {
 
     private static final String CHARSET_UTF_8 = "UTF-8";
 
-    ExecutorService executor = Executors.newSingleThreadExecutor();
+    ExecutorService messageExecutor = Executors.newSingleThreadExecutor();
 
     // Handler instance associated with the main thread
     static final Handler HANDLER =
@@ -360,7 +360,7 @@ class EventRepository {
                 ReportManager.reportError(e);
             }
         };
-        executor.execute(runnable);
+        messageExecutor.execute(runnable);
     }
 
     String getEventJsonString(RudderMessage message) {
