@@ -379,6 +379,10 @@ class EventRepository {
             message.setIntegrations(prepareIntegrations());
         }
 
+        mergeGlobalWithLocalCustomContexts(message);
+    }
+
+    private void mergeGlobalWithLocalCustomContexts(RudderMessage message) {
         // Merge local customContext (message.getContext().customContextMap) with global customContext (defaultOption.getCustomContexts()) giving preference to local one.
         RudderOption defaultOption = RudderClient.getDefaultOptions();
         if (defaultOption != null) {
