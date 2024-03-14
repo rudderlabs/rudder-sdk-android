@@ -99,7 +99,7 @@ internal object AndroidUtils {
 
     internal fun defaultBase64Generator() = Base64Generator {
         Base64.encodeToString(
-            String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8")), Base64.DEFAULT
+            String.format(Locale.US, "%s:", it).toByteArray(Charsets.UTF_8), Base64.NO_WRAP
         )
     }
 

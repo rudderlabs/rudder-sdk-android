@@ -333,6 +333,8 @@ class AndroidStorageImpl(
         get() = preferenceManager?.v1ExternalIdsJson?.let {
             jsonAdapter?.readJson(it, object : RudderTypeAdapter<List<Map<String, String>>>() {})
         }
+    override val trackAutoSession: Boolean
+        get() = preferenceManager?.trackAutoSession?: false
 
     override fun setAnonymousId(anonymousId: String) {
         _anonymousId = anonymousId
@@ -346,6 +348,10 @@ class AndroidStorageImpl(
 
     override fun setSessionId(sessionId: Long) {
         preferenceManager?.saveSessionId(sessionId)
+    }
+
+    override fun setTrackAutoSession(trackAutoSession: Boolean) {
+        preferenceManager?.saveTrackAutoSession(trackAutoSession)
     }
 
     override fun saveLastActiveTimestamp(timestamp: Long) {
