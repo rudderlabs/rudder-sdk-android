@@ -34,14 +34,12 @@ import java.util.concurrent.Executors
  * passed the threshold
 // * @property trackLifecycleEvents Will track activity lifecycle if set to true, else false
 // * @property recordScreenViews Will record screen views if true.
- * @property isOptOut GDPR implementation. Data won't be sent if GDPR is true
  */
 interface Configuration {
     val jsonAdapter: JsonAdapter
     val options: RudderOptions
     val flushQueueSize: Int
     val maxFlushInterval: Long
-    val isOptOut: Boolean
     // changing the value post source config download has no effect
     val shouldVerifySdk: Boolean
     val gzipEnabled: Boolean
@@ -66,7 +64,6 @@ interface Configuration {
             options: RudderOptions = RudderOptions.defaultOptions(),
             flushQueueSize: Int = FLUSH_QUEUE_SIZE,
             maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
-            isOptOut: Boolean = false,
             shouldVerifySdk: Boolean = false,
             gzipEnabled: Boolean = true,
             sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
@@ -81,7 +78,6 @@ interface Configuration {
             override val options: RudderOptions = options
             override val flushQueueSize: Int = flushQueueSize
             override val maxFlushInterval: Long = maxFlushInterval
-            override val isOptOut: Boolean = isOptOut
             override val shouldVerifySdk: Boolean = shouldVerifySdk
             override val gzipEnabled: Boolean = gzipEnabled
             override val sdkVerifyRetryStrategy: RetryStrategy = sdkVerifyRetryStrategy
@@ -98,7 +94,6 @@ interface Configuration {
         options: RudderOptions = this.options,
         flushQueueSize: Int = this.flushQueueSize,
         maxFlushInterval: Long = this.maxFlushInterval,
-        isOptOut: Boolean = this.isOptOut,
         shouldVerifySdk: Boolean = this.shouldVerifySdk,
         gzipEnabled: Boolean = this.gzipEnabled,
         sdkVerifyRetryStrategy: RetryStrategy = this.sdkVerifyRetryStrategy,
@@ -113,7 +108,6 @@ interface Configuration {
         options = options,
         flushQueueSize = flushQueueSize,
         maxFlushInterval = maxFlushInterval,
-        isOptOut = isOptOut,
         shouldVerifySdk = shouldVerifySdk,
         gzipEnabled = gzipEnabled,
         sdkVerifyRetryStrategy = sdkVerifyRetryStrategy,

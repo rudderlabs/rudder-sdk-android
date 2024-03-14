@@ -17,12 +17,9 @@ package com.rudderstack.android.android
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.RudderAnalytics
 import com.rudderstack.android.android.utils.TestExecutor
 import com.rudderstack.android.android.utils.busyWait
-import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
@@ -45,7 +42,6 @@ import org.junit.runners.Suite
 import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 import org.robolectric.annotation.Config
 import java.util.*
 
@@ -189,6 +185,28 @@ abstract class AndroidStorageTest {
         storage.deleteMessagesSync(events.take(10))
         MatcherAssert.assertThat(storage.getDataSync(), Matchers.iterableWithSize(10))
 
+    }
+
+    @Test
+    fun `when user opts out from tracking, then set optOut to true`() {
+        val storage = analytics.storage as AndroidStorage
+        storage.clearStorage()
+
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(false))
+        storage.saveOptOut(true)
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(true))
+    }
+
+    @Test
+    fun `when user opts in for tracking, then set optOut to false`() {
+        val storage = analytics.storage as AndroidStorage
+        storage.clearStorage()
+
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(false))
+        storage.saveOptOut(true)
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(true))
+        storage.saveOptOut(false)
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(false))
     }
 }
 
