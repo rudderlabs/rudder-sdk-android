@@ -22,7 +22,8 @@ class RudderElementCache {
         if (cachedContext == null) {
             RudderLogger.logDebug("RudderElementCache: initiating RudderContext");
             cachedContext = new RudderContext(application, anonymousId, advertisingId, deviceToken, isCollectDeviceId);
-            if (isAutoCollectAdvertId) {
+            // we will perform the auto collection of advertisingId only when the user didn't pass any advertisingId by calling the putAdvertisementId()
+            if (cachedContext.getAdvertisingId() == null && isAutoCollectAdvertId) {
                 cachedContext.updateDeviceWithAdId();
             }
         }
