@@ -419,6 +419,13 @@ class EventRepository {
     }
 
     void reset() {
+        RudderOption defaultOption = RudderClient.getDefaultOptions();
+        if (defaultOption != null) {
+            // Since the reset operation is intended to reset user-level fields, we clear the globalOptions->customContext field.
+            // The globalOptions->integrations field is a workspace-level setting and should not be cleared.
+            defaultOption.getCustomContexts().clear();
+        }
+
         deviceModeManager.reset();
         RudderLogger.logDebug("EventRepository: reset: resetting the SDK");
         userSessionManager.reset();
