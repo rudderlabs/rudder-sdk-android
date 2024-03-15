@@ -38,12 +38,12 @@ import java.util.concurrent.atomic.AtomicLong
 class AndroidStorageImpl(
     private val application: Application,
     private val useContentProvider: Boolean = false,
-    private val instanceName: String,
+    private val writeKey: String,
     private val storageExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 ) : AndroidStorage {
 
     private var logger: Logger? = null
-    private val dbName get() = "rs_persistence_$instanceName"
+    private val dbName get() = "rs_persistence_$writeKey"
     private var jsonAdapter: JsonAdapter? = null
 
     private var preferenceManager: RudderPreferenceManager? = null
@@ -58,9 +58,9 @@ class AndroidStorageImpl(
     }
 
     private val serverConfigFileName
-        get() = "$SERVER_CONFIG_FILE_NAME-{instanceName}"
+        get() = "$SERVER_CONFIG_FILE_NAME-{$writeKey}"
     private val contextFileName
-        get() = "$CONTEXT_FILE_NAME-{instanceName}"
+        get() = "$CONTEXT_FILE_NAME-{$writeKey}"
 
     private var messageDao: Dao<MessageEntity>? = null
 
@@ -393,7 +393,7 @@ class AndroidStorageImpl(
 
     override fun setup(analytics: Analytics) {
         initDb(analytics)
-        preferenceManager = RudderPreferenceManager(application, analytics.instanceName)
+        preferenceManager = RudderPreferenceManager(application, writeKey)
         _optOut = AtomicBoolean(preferenceManager?.optStatus ?: false)
     }
 

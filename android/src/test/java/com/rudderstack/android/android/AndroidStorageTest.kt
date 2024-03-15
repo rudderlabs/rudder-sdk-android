@@ -61,7 +61,7 @@ abstract class AndroidStorageTest {
         MockitoAnnotations.openMocks(this)
         val storage = AndroidStorageImpl(
             ApplicationProvider.getApplicationContext(),
-            false, instanceName = "test_instance",
+            false, writeKey = "test_writeKey",
             storageExecutor = TestExecutor()
         )
         mockConfig = ConfigurationAndroid(ApplicationProvider.getApplicationContext(),
