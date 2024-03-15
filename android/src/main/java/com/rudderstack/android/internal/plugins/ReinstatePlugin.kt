@@ -96,7 +96,7 @@ class ReinstatePlugin : Plugin {
             return
         }
         if (!config.shouldVerifySdk){
-            fillDefaults(config)
+            defaults(config)
             isReinstated.set(true)
             return
         }
@@ -106,7 +106,7 @@ class ReinstatePlugin : Plugin {
         isReinstated.set(true)
     }
 
-    private fun fillDefaults(configurationAndroid: ConfigurationAndroid) {
+    private fun defaults(configurationAndroid: ConfigurationAndroid) {
         _analytics?.setAnonymousId(AndroidUtils.getDeviceId(configurationAndroid.application))
         _analytics?.initializeSessionManagement(_analytics?.androidStorage?.sessionId,
             _analytics?.androidStorage?.lastActiveTimestamp)
@@ -118,10 +118,9 @@ class ReinstatePlugin : Plugin {
             configurationAndroid.application
         )
         val context = _analytics?.androidStorage?.context
-        val optOut = _analytics?.androidStorage?.isOptedOut ?: false
         _analytics?.applyConfigurationAndroid {
             copy(
-                anonymousId = anonId, isOptOut = optOut, userId = userId
+                anonymousId = anonId, userId = userId
             )
         }
         _analytics?.processNewContext(context ?: createContext())

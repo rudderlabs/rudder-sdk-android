@@ -18,6 +18,10 @@ sealed class AnalyticsState(val eventName: String) {
     object GroupEvent : AnalyticsState("Group")
     object ScreenEvent : AnalyticsState("Screen")
     object OptInAnalytics : AnalyticsState("Opt In/Out")
+    object StartManualSession : AnalyticsState("start manual session")
+    object EndSession : AnalyticsState("End Session")
+    object EnableAutoTracking : AnalyticsState("Enable Auto Tracking")
+    object DisableAutoTracking : AnalyticsState("Disable Auto Tracking")
     object ForceFlush : AnalyticsState("Force Flush")
     object SendError : AnalyticsState("Send Error")
 }

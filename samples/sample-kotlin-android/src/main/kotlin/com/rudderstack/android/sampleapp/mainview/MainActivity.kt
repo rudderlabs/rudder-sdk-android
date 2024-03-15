@@ -127,6 +127,16 @@ class MainActivity : ComponentActivity() {
                 weight = .5f,
                 viewModel = viewModel
             )
+            CreateRowOfApis(
+                names = arrayOf(AnalyticsState.StartManualSession, AnalyticsState.EndSession),
+                weight = .5f,
+                viewModel = viewModel
+            )
+            CreateRowOfApis(
+                names = arrayOf(AnalyticsState.EnableAutoTracking, AnalyticsState.DisableAutoTracking),
+                weight = .5f,
+                viewModel = viewModel
+            )
             Spacer(modifier = Modifier.height(8.dp))
             CreateRowOfApis(
                 names = arrayOf(AnalyticsState.SendError),

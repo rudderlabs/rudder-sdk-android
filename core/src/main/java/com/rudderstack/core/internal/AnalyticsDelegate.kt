@@ -226,13 +226,10 @@ internal class AnalyticsDelegate(
 
     override fun optOut(optOut: Boolean) {
         storage.saveOptOut(optOut)
-        applyConfiguration {
-            copy(isOptOut = optOut)
-        }
     }
 
     override val isOptedOut: Boolean
-        get() = currentConfiguration?.isOptOut ?: storage.isOptedOut ?: false
+        get() = storage.isOptedOut
     private val currentConfigurationState: ConfigurationsState?
         get() = retrieveState<ConfigurationsState>()
     private val currentDestinationConfigurationState: DestinationConfigState?
