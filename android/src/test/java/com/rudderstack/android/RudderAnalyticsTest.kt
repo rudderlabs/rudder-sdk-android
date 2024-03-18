@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 11/12/23, 11:14 am Last modified: 11/12/23, 11:14 am
- * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 18/03/24, 3:39 pm Last modified: 11/03/24, 1:55 pm
+ * Copyright: All rights reserved Ⓒ 2024 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,14 +12,10 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.android
+package com.rudderstack.android
 
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
-import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.RudderAnalytics
-import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.setAnonymousId
 import com.rudderstack.core.Analytics
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import org.hamcrest.MatcherAssert

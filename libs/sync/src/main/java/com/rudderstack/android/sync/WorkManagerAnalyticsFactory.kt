@@ -25,6 +25,6 @@ import com.rudderstack.core.Analytics
  * wth reflection
  *
  */
-interface WorkManagerAnalyticsFactory {
+fun interface WorkManagerAnalyticsFactory {
     fun createAnalytics(application: Application): Analytics
 }

@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 07/09/22, 12:19 PM Last modified: 07/09/22, 12:08 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 18/03/24, 12:47 pm Last modified: 18/03/24, 12:13 pm
+ * Copyright: All rights reserved Ⓒ 2024 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,22 +12,19 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.android
+package com.rudderstack.android.sync
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.TestWorkerBuilder
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.android.utils.TestLogger
 import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.internal.AndroidLogger
 import com.rudderstack.android.internal.infrastructure.sync.RudderSyncWorker
 import com.rudderstack.android.internal.infrastructure.sync.WorkManagerAnalyticsFactory
 import com.rudderstack.android.internal.infrastructure.sync.registerWorkManager
+import com.rudderstack.android.sync.utils.TestLogger
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.Base64Generator
-import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -38,7 +35,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.anyOrNull
 
 import org.robolectric.annotation.Config
 import java.util.concurrent.ExecutorService

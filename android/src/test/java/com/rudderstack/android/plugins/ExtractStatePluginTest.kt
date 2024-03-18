@@ -12,13 +12,12 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.android.internal.plugins
+package com.rudderstack.android.plugins
 
 import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.core.RudderOptions
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.BasicStorageImpl
-import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.models.IdentifyMessage
 import org.junit.Test
 

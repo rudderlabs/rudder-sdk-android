@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 28/10/21, 7:56 PM Last modified: 28/10/21, 7:56 PM
- * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 18/03/24, 11:44 am Last modified: 18/03/24, 11:44 am
+ * Copyright: All rights reserved Ⓒ 2024 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,20 +12,27 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.android
+package com.rudderstack.android.sync
+
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 import org.junit.Test
+import org.junit.runner.RunWith
 
 import org.junit.Assert.*
 
 /**
- * Example local unit test, which will execute on the development machine (host).
+ * Instrumented test, which will execute on an Android device.
  *
  * See [testing documentation](http://d.android.com/tools/testing).
  */
-class ExampleUnitTest {
+@RunWith(AndroidJUnit4::class)
+class ExampleInstrumentedTest {
     @Test
-    fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+    fun useAppContext() {
+        // Context of the app under test.
+        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+        assertEquals("com.rudderstack.android.sync.test", appContext.packageName)
     }
 }

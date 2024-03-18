@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.android.internal.plugins
+package com.rudderstack.android.plugins
 
 import android.app.Application
 import android.content.pm.ApplicationInfo

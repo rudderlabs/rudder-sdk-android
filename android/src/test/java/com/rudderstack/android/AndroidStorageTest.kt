@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 20/07/22, 11:57 PM Last modified: 20/07/22, 11:57 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 18/03/24, 3:39 pm Last modified: 11/03/24, 1:55 pm
+ * Copyright: All rights reserved Ⓒ 2024 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,17 +12,13 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.android
+package com.rudderstack.android
 
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.rudderstack.android.AndroidUtils
-import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.RudderAnalytics
-import com.rudderstack.android.android.utils.TestExecutor
-import com.rudderstack.android.android.utils.busyWait
-import com.rudderstack.android.internal.RudderPreferenceManager
+import com.rudderstack.android.utils.TestExecutor
+import com.rudderstack.android.utils.busyWait
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
@@ -45,7 +41,6 @@ import org.junit.runners.Suite
 import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 import org.robolectric.annotation.Config
 import java.util.*
 

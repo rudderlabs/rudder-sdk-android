@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.android.utils
+package com.rudderstack.android.sync.utils
 
 import com.rudderstack.core.Logger
 
