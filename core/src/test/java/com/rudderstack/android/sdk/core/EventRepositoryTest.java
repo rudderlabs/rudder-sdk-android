@@ -5,31 +5,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
-import static java.lang.Double.POSITIVE_INFINITY;
+import static org.mockito.Mockito.when;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.text.TextUtils;
 
 import com.google.common.collect.ImmutableList;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
-import com.google.gson.TypeAdapter;
-import com.google.gson.TypeAdapterFactory;
-import com.google.gson.internal.bind.TypeAdapters;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
-import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import org.hamcrest.Matchers;
@@ -50,10 +35,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +47,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @PrepareForTest({FlushUtils.class,
         RudderLogger.class,
         TextUtils.class, Utils.class,
-        RudderNetworkManager.class})
+        RudderNetworkManager.class,
+        RudderClient.class})
 public class EventRepositoryTest {
 
     // data to be used
@@ -113,7 +96,7 @@ public class EventRepositoryTest {
             msgParams.addAll(messages);
             return null;
         }).when(dbPersistentManager).fetchAllCloudModeEventsFromDB(ArgumentMatchers.<List<Integer>>any(), ArgumentMatchers.<List<String>>any());
-        Mockito.when(networkManager.sendNetworkRequest(anyString(), anyString(),
+        when(networkManager.sendNetworkRequest(anyString(), anyString(),
                         ArgumentMatchers.any(RudderNetworkManager.RequestMethod.class), anyBoolean()))
                 .thenAnswer((Answer<RudderNetworkManager.Result>) invocation -> {
                     System.out.println(invocation.getArguments().length);
@@ -371,6 +354,191 @@ public class EventRepositoryTest {
                 "}";
         String outputJsonString = repo.getEventJsonString(message);
         assertThat("JSONObjects and JSONArray are serialized perfectly", outputJsonString, is(expectedJsonString.replace("\n", "").replace(" ", "")));
+    }
+
+    @Test
+    public void testLocalCustomContextIsNotAffected() {
+        EventRepository repo = new EventRepository();
+
+        Map<String, Object> customContext = new HashMap<>();
+        customContext.put("category", "premium");
+        customContext.put("type", "gold");
+
+        RudderOption localOptions = new RudderOption();
+
+        localOptions.putCustomContext("tier-local", customContext);
+        RudderMessage message = new RudderMessageBuilder()
+                .setUserId("u-id")
+                .setRudderOption(localOptions)
+                .build();
+
+        Map<String, Object> matchingCustomContext = new HashMap<>();
+        matchingCustomContext.put("tier-local", customContext);
+
+        repo.applyRudderOptionsToMessageIntegrations(message);
+
+        assertEquals(matchingCustomContext, message.getContext().customContextMap);
+    }
+
+    @Test
+    public void testGlobalCustomContextIsAppliedToEvent() {
+        EventRepository repo = new EventRepository();
+
+        Map<String, Object> customContext = new HashMap<>();
+        customContext.put("category", "premium");
+        customContext.put("type", "gold");
+
+        RudderOption globalOptions = new RudderOption();
+
+        globalOptions.putCustomContext("tier-global", customContext);
+
+        RudderMessage message = new RudderMessageBuilder()
+                .setUserId("u-id")
+                .build();
+
+        Map<String, Object> matchingCustomContext = new HashMap<>();
+        matchingCustomContext.put("tier-global", customContext);
+
+        PowerMockito.mockStatic(RudderClient.class);
+        when(RudderClient.getDefaultOptions()).thenAnswer(new Answer<RudderOption>() {
+            @Override
+            public RudderOption answer(InvocationOnMock invocation) throws Throwable {
+                return globalOptions;
+            }
+        });
+
+        repo.applyRudderOptionsToMessageIntegrations(message);
+
+        assertEquals(matchingCustomContext, message.getContext().customContextMap);
+    }
+
+    @Test
+    public void testMergingOfLocalCustomContextWithGlobalCustomContext() {
+        EventRepository repo = new EventRepository();
+
+        Map<String, Object> localCustomContext = new HashMap<>();
+        localCustomContext.put("category", "premium");
+        localCustomContext.put("type", "gold");
+        RudderOption localOptions = new RudderOption();
+        localOptions.putCustomContext("tier-local", localCustomContext);
+
+        Map<String, Object> globalCustomContext = new HashMap<>();
+        globalCustomContext.put("category", "premium");
+        globalCustomContext.put("type", "gold");
+        RudderOption globalOptions = new RudderOption();
+        globalOptions.putCustomContext("tier-global", globalCustomContext);
+
+        RudderMessage message = new RudderMessageBuilder()
+                .setUserId("u-id")
+                .setRudderOption(localOptions)
+                .build();
+
+        Map<String, Object> matchingCustomContext = new HashMap<>();
+        matchingCustomContext.put("tier-local", localCustomContext);
+        matchingCustomContext.put("tier-global", globalCustomContext);
+
+        PowerMockito.mockStatic(RudderClient.class);
+        when(RudderClient.getDefaultOptions()).thenAnswer(new Answer<RudderOption>() {
+            @Override
+            public RudderOption answer(InvocationOnMock invocation) throws Throwable {
+                return globalOptions;
+            }
+        });
+
+        repo.applyRudderOptionsToMessageIntegrations(message);
+
+        assertEquals(matchingCustomContext, message.getContext().customContextMap);
+    }
+
+    @Test
+    public void testOverrideGlobalCustomContextWithLocalCustomContext() {
+        EventRepository repo = new EventRepository();
+
+        Map<String, Object> localCustomContext = new HashMap<>();
+        localCustomContext.put("category-OVERRIDE", "premium");
+        localCustomContext.put("type", "gold-OVERRIDE");
+        RudderOption localOptions = new RudderOption();
+        localOptions.putCustomContext("tier-global", localCustomContext);
+
+        Map<String, Object> globalCustomContext = new HashMap<>();
+        globalCustomContext.put("category", "premium");
+        globalCustomContext.put("type", "gold");
+        RudderOption globalOptions = new RudderOption();
+        globalOptions.putCustomContext("tier-global", globalCustomContext);
+
+        RudderMessage message = new RudderMessageBuilder()
+                .setUserId("u-id")
+                .setRudderOption(localOptions)
+                .build();
+
+        Map<String, Object> matchingCustomContext = new HashMap<>();
+        matchingCustomContext.put("tier-global", localCustomContext);
+
+        PowerMockito.mockStatic(RudderClient.class);
+        when(RudderClient.getDefaultOptions()).thenAnswer(new Answer<RudderOption>() {
+            @Override
+            public RudderOption answer(InvocationOnMock invocation) throws Throwable {
+                return globalOptions;
+            }
+        });
+
+        repo.applyRudderOptionsToMessageIntegrations(message);
+
+        assertEquals(matchingCustomContext, message.getContext().customContextMap);
+    }
+
+    @Test
+    public void testMergingAndOverrideOfLocalCustomContextWithGlobalCustomContext() {
+        EventRepository repo = new EventRepository();
+
+        // Local Custom Context
+        Map<String, Object> localCustomContext = new HashMap<>();
+        localCustomContext.put("category-OVERRIDE", "premium");
+        localCustomContext.put("type", "gold-OVERRIDE");
+
+        Map<String, Object> localCustomContext2 = new HashMap<>();
+        localCustomContext2.put("category", "premium");
+        localCustomContext2.put("type", "gold");
+
+        RudderOption localOptions = new RudderOption();
+        localOptions.putCustomContext("tier-global", localCustomContext);
+        localOptions.putCustomContext("tier-local", localCustomContext2);
+
+        // Global Custom Context
+        Map<String, Object> globalCustomContext = new HashMap<>();
+        globalCustomContext.put("category", "premium");
+        globalCustomContext.put("type", "gold");
+
+        Map<String, Object> globalCustomContext2 = new HashMap<>();
+        globalCustomContext2.put("category", "premium");
+        globalCustomContext2.put("type", "gold");
+
+        RudderOption globalOptions = new RudderOption();
+        globalOptions.putCustomContext("tier-global", globalCustomContext);
+        globalOptions.putCustomContext("tier-global-2", globalCustomContext2);
+
+        RudderMessage message = new RudderMessageBuilder()
+                .setUserId("u-id")
+                .setRudderOption(localOptions)
+                .build();
+
+        // Merged Custom Context
+        Map<String, Object> matchingCustomContext = new HashMap<>();
+        matchingCustomContext.put("tier-global", localCustomContext);
+        matchingCustomContext.put("tier-local", localCustomContext2);
+        matchingCustomContext.put("tier-global-2", globalCustomContext2);
+
+        PowerMockito.mockStatic(RudderClient.class);
+        when(RudderClient.getDefaultOptions()).thenAnswer(new Answer<RudderOption>() {
+            @Override
+            public RudderOption answer(InvocationOnMock invocation) throws Throwable {
+                return globalOptions;
+            }
+        });
+
+        repo.applyRudderOptionsToMessageIntegrations(message);
+
+        assertEquals(matchingCustomContext, message.getContext().customContextMap);
     }
 }
 

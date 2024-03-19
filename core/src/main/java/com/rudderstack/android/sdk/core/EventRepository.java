@@ -378,6 +378,31 @@ class EventRepository {
         if (!message.getIntegrations().containsKey("All")) {
             message.setIntegrations(prepareIntegrations());
         }
+
+        mergeGlobalWithLocalCustomContexts(message);
+    }
+
+    private void mergeGlobalWithLocalCustomContexts(RudderMessage message) {
+        // Merge local customContext (message.getContext().customContextMap) with global customContext (defaultOption.getCustomContexts()) giving preference to local one.
+        RudderOption defaultOption = RudderClient.getDefaultOptions();
+        if (defaultOption != null) {
+            Map<String, Object> mergedCustomContextValues = new HashMap<>();
+            if (message.getContext().customContextMap != null) {
+                mergedCustomContextValues.putAll(message.getContext().customContextMap);
+            }
+
+            if (!defaultOption.getCustomContexts().isEmpty()) {
+                for (Map.Entry<String, Object> entry : defaultOption.getCustomContexts().entrySet()) {
+                    if (!mergedCustomContextValues.containsKey(entry.getKey())) {
+                        mergedCustomContextValues.put(entry.getKey(), entry.getValue());
+                    }
+                }
+            }
+
+            if (!mergedCustomContextValues.isEmpty()) {
+                message.getContext().setCustomContexts(mergedCustomContextValues);
+            }
+        }
     }
 
     void flushSync() {
@@ -398,6 +423,13 @@ class EventRepository {
     }
 
     void reset() {
+        RudderOption defaultOption = RudderClient.getDefaultOptions();
+        if (defaultOption != null) {
+            // Since the reset operation is intended to reset user-level fields, we clear the globalOptions->customContext field.
+            // The globalOptions->integrations field is a workspace-level setting and should not be cleared.
+            defaultOption.getCustomContexts().clear();
+        }
+
         deviceModeManager.reset();
         RudderLogger.logDebug("EventRepository: reset: resetting the SDK");
         userSessionManager.reset();
