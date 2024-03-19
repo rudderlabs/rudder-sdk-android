@@ -106,7 +106,7 @@ public class RudderContext {
 
         this.screenInfo = new RudderScreenInfo(application);
         this.userAgent = System.getProperty("http.agent");
-        this.deviceInfo = new RudderDeviceInfo(advertisingId, deviceToken, collectDeviceId);
+        this.deviceInfo = new RudderDeviceInfo(advertisingId, deviceToken, collectDeviceId, preferenceManger);
         this.networkInfo = new RudderNetwork(application);
         this.osInfo = new RudderOSInfo();
         this.libraryInfo = new RudderLibraryInfo();
@@ -199,6 +199,10 @@ public class RudderContext {
         }
     }
 
+    void clearAdvertisingId() {
+        this.deviceInfo.clearAdvertisingId();
+    }
+
     void updateDeviceWithAdId() {
         if (isOnClassPath("com.google.android.gms.ads.identifier.AdvertisingIdClient")) {
             // This needs to be done each time since the settings may have been updated.
@@ -248,7 +252,7 @@ public class RudderContext {
         if (TextUtils.isEmpty(this.deviceInfo.getAdvertisingId())) {
             // set the values if and only if the values are not set
             // if value exists, it must have been set by the developer. don't overwrite
-            this.deviceInfo.setAdvertisingId((String) advertisingInfo.getClass().getMethod("getId").invoke(advertisingInfo));
+            this.deviceInfo.setAutoCollectedAdvertisingId((String) advertisingInfo.getClass().getMethod("getId").invoke(advertisingInfo));
             this.deviceInfo.setAdTrackingEnabled(true);
         }
 
@@ -273,7 +277,7 @@ public class RudderContext {
         if (TextUtils.isEmpty(this.deviceInfo.getAdvertisingId())) {
             // set the values if and only if the values are not set
             // if value exists, it must have been set by the developer. don't overwrite
-            this.deviceInfo.setAdvertisingId(Settings.Secure.getString(contentResolver, "advertising_id"));
+            this.deviceInfo.setAutoCollectedAdvertisingId(Settings.Secure.getString(contentResolver, "advertising_id"));
             this.deviceInfo.setAdTrackingEnabled(true);
         }
 

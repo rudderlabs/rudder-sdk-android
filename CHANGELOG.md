@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.22.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.21.3...v1.22.0) (2024-03-19)
+
+
+### Features
+
+* add support for global customContext option ([#407](https://github.com/rudderlabs/rudder-sdk-android/issues/407)) ([71b001e](https://github.com/rudderlabs/rudder-sdk-android/commit/71b001ec7fa262dbeb0ab6d23f0a2db05c97d0ea))
+* added persistence support for advertisingId and api to clear advertisingId ([#406](https://github.com/rudderlabs/rudder-sdk-android/issues/406)) ([b1d7905](https://github.com/rudderlabs/rudder-sdk-android/commit/b1d790563f67820a8e3bdcfa95e839f73d10d662))
+
+
+### Bug Fixes
+
+* serialisation happening on a separate thread executor service ([#403](https://github.com/rudderlabs/rudder-sdk-android/issues/403)) ([c3b0d84](https://github.com/rudderlabs/rudder-sdk-android/commit/c3b0d84fdaf01ebeb5a46eadb95a03ae2e57032f))
+
 ### [1.21.3](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.21.2...v1.21.3) (2024-02-07)
 
 

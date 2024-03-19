@@ -29,6 +29,8 @@ class RudderPreferenceManager {
     private static final String RUDDER_PERIODIC_WORK_REQUEST_ID_KEY = "rl_periodic_work_request_key";
     private static final String RUDDER_LAST_ACTIVE_TIMESTAMP_KEY = "rl_last_event_timestamp_key";
     private static final String RUDDER_SESSION_ID_KEY = "rl_session_id_key";
+
+    private static final String RUDDER_ADVERTISING_ID_KEY = "rl_advertising_id_key";
     private static final String RUDDER_AUTO_SESSION_TRACKING_STATUS_KEY = "rl_auto_session_tracking_status_key";
     private static final String RUDDER_DMT_HEADER_KEY = "rl_dmt_header_key";
 
@@ -177,6 +179,19 @@ class RudderPreferenceManager {
 
     void clearSessionId() {
         preferences.edit().remove(RUDDER_SESSION_ID_KEY).apply();
+    }
+
+    void saveAdvertisingId(String advertisingId) {
+        preferences.edit().putString(RUDDER_ADVERTISING_ID_KEY, advertisingId).apply();
+    }
+
+    @Nullable
+    String getAdvertisingId() {
+        return preferences.getString(RUDDER_ADVERTISING_ID_KEY, null);
+    }
+
+    void clearAdvertisingId() {
+        preferences.edit().remove(RUDDER_ADVERTISING_ID_KEY).apply();
     }
 
     @Nullable
