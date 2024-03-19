@@ -30,6 +30,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /*
  * utility class for event processing
@@ -64,6 +66,8 @@ class EventRepository {
     private final String writeKey;
 
     private static final String CHARSET_UTF_8 = "UTF-8";
+
+    private final ExecutorService messageExecutor = Executors.newSingleThreadExecutor();
 
     // Handler instance associated with the main thread
     static final Handler HANDLER =
@@ -324,33 +328,39 @@ class EventRepository {
         rudderFlushWorkManager.saveRudderFlushConfig(rudderFlushConfig);
     }
 
-
     /*
      * generic method for processing all the events
      * */
     void processMessage(@NonNull RudderMessage message) {
-        if (!isSDKEnabled) {
-            incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_SDK_DISABLED));
-            return;
-        }
-        RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processMessage: eventName: %s", message.getEventName()));
+        Runnable runnable = () -> {
+            try {
+                if (!isSDKEnabled) {
+                    incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_SDK_DISABLED));
+                    return;
+                }
+                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: processMessage: eventName: %s", message.getEventName()));
+                applyRudderOptionsToMessageIntegrations(message);
+                RudderMessage updatedMessage = updateMessageWithConsentedDestinations(message);
+                userSessionManager.applySessionTracking(updatedMessage);
 
-        applyRudderOptionsToMessageIntegrations(message);
-        RudderMessage updatedMessage = updateMessageWithConsentedDestinations(message);
-        userSessionManager.applySessionTracking(updatedMessage);
-
-        String eventJson = getEventJsonString(updatedMessage);
-        if (eventJson == null) {
-            RudderLogger.logError("EventRepository: processMessage: eventJson is null after serialization");
-            return;
-        }
-        if (isMessageJsonExceedingMaxSize(eventJson)) {
-            incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_SIZE_INVALID));
-            RudderLogger.logError(String.format(Locale.US, "EventRepository: processMessage: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
-            return;
-        }
-        RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: processMessage: message: %s", eventJson));
-        dbManager.saveEvent(eventJson, new EventInsertionCallback(message, deviceModeManager));
+                String eventJson = getEventJsonString(updatedMessage);
+                if (eventJson == null) {
+                    RudderLogger.logError("EventRepository: processMessage: eventJson is null after serialization");
+                    return;
+                }
+                if (isMessageJsonExceedingMaxSize(eventJson)) {
+                    incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_MSG_SIZE_INVALID));
+                    RudderLogger.logError(String.format(Locale.US, "EventRepository: processMessage: Event size exceeds the maximum permitted event size(%d)", Utils.MAX_EVENT_SIZE));
+                    return;
+                }
+                RudderLogger.logVerbose(String.format(Locale.US, "EventRepository: processMessage: message: %s", eventJson));
+                dbManager.saveEvent(eventJson, new EventInsertionCallback(message, deviceModeManager));
+            } catch (Exception e) {
+                RudderLogger.logError(e);
+                ReportManager.reportError(e);
+            }
+        };
+        messageExecutor.execute(runnable);
     }
 
     String getEventJsonString(RudderMessage message) {
