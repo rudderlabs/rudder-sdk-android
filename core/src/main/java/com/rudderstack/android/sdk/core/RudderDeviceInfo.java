@@ -32,8 +32,11 @@ class RudderDeviceInfo {
     @SerializedName("advertisingId")
     private String advertisingId;
 
+    private transient RudderPreferenceManager preferenceManager;
+
     RudderDeviceInfo(String advertisingId, String token, boolean collectDeviceId, RudderPreferenceManager preferenceManager) {
 
+        this.preferenceManager = preferenceManager;
         if (collectDeviceId) {
             this.deviceId = Utils.getDeviceId(RudderClient.getApplication());
         }
@@ -68,11 +71,8 @@ class RudderDeviceInfo {
 
     void setAdvertisingId(String advertisingId) {
         this.advertisingId = advertisingId;
-        this.adTrackingEnabled = (this.advertisingId != null);
-        if (RudderClient.getApplication() != null) {
-            RudderPreferenceManager preferenceManager = RudderPreferenceManager.getInstance(RudderClient.getApplication());
-            preferenceManager.saveAdvertisingId(advertisingId);
-        }
+        this.adTrackingEnabled = true;
+        preferenceManager.saveAdvertisingId(advertisingId);
     }
 
     void setAutoCollectedAdvertisingId(String advertisingId) {
@@ -89,10 +89,7 @@ class RudderDeviceInfo {
 
     void clearAdvertisingId() {
         this.advertisingId = null;
-        this.adTrackingEnabled = (this.advertisingId != null);
-        if (RudderClient.getApplication() != null) {
-            RudderPreferenceManager preferenceManager = RudderPreferenceManager.getInstance(RudderClient.getApplication());
-            preferenceManager.clearAdvertisingId();
-        }
+        this.adTrackingEnabled = false;
+        preferenceManager.clearAdvertisingId();
     }
 }
