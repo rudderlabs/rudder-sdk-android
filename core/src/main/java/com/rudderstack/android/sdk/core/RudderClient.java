@@ -628,11 +628,9 @@ public class RudderClient {
     }
 
     /**
-     * Set the AdvertisingId yourself. If set, SDK will not capture idfa automatically
+     * Set the AdvertisingId yourself. If set, SDK will not capture advertisingId automatically
      *
-     * <b>Call this method before initializing the RudderClient</b>
-     *
-     * @param advertisingId IDFA for the device
+     * @param advertisingId advertisingId for the device
      */
     public static void putAdvertisingId(@NonNull String advertisingId) {
         if (RudderClient.getInstance() == null) {
@@ -644,6 +642,14 @@ public class RudderClient {
             return;
         }
         RudderElementCache.cachedContext.updateWithAdvertisingId(advertisingId);
+    }
+
+    /**
+     *  Clears the AdvertisingId set manually.
+     */
+
+    public void clearAdvertisingId() {
+         RudderElementCache.cachedContext.clearAdvertisingId();
     }
 
     /**
