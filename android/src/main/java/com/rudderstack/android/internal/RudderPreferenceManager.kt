@@ -34,6 +34,8 @@ private const val RUDDER_PERIODIC_WORK_REQUEST_ID_KEY = "rl_periodic_work_reques
 private const val RUDDER_SESSION_ID_KEY = "rl_session_id_key"
 private const val RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY =
     "rl_last_event_timestamp_key"
+private const val RUDDER_APPLICATION_VERSION_KEY = "rl_application_version_key"
+private const val RUDDER_APPLICATION_BUILD_KEY = "rl_application_build_key"
 internal class RudderPreferenceManager(application: Application,
     private val writeKey: String) {
 
@@ -175,4 +177,18 @@ internal class RudderPreferenceManager(application: Application,
 
     val optStatus: Boolean
         get() = preferences.getBoolean(RUDDER_OPT_STATUS_KEY.key, false)
+
+    fun saveVersionName(versionName: String) {
+        preferences.edit().putString(RUDDER_APPLICATION_VERSION_KEY, versionName).apply()
+    }
+
+    val versionName: String?
+        get() = preferences.getString(RUDDER_APPLICATION_VERSION_KEY, null)
+
+    fun saveBuild(versionCode: Int) {
+        preferences.edit().putInt(RUDDER_APPLICATION_BUILD_KEY, versionCode).apply()
+    }
+
+    val build: Int
+        get() = preferences.getInt(RUDDER_APPLICATION_BUILD_KEY, -1)
 }
