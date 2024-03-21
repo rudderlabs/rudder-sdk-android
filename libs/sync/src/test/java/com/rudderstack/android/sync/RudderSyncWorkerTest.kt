@@ -17,12 +17,13 @@ package com.rudderstack.android.sync
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.work.ListenableWorker
 import androidx.work.testing.TestWorkerBuilder
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.internal.infrastructure.sync.RudderSyncWorker
-import com.rudderstack.android.internal.infrastructure.sync.WorkManagerAnalyticsFactory
-import com.rudderstack.android.internal.infrastructure.sync.registerWorkManager
+import com.rudderstack.android.sync.internal.RudderSyncWorker
+import com.rudderstack.android.sync.internal.registerWorkManager
+import com.rudderstack.android.sync.internal.workerInputData
 import com.rudderstack.android.sync.utils.TestLogger
 import com.rudderstack.core.Analytics
 import io.mockk.MockKAnnotations
@@ -31,6 +32,8 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.mockk
 import io.mockk.verify
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -64,6 +67,7 @@ class RudderSyncWorkerTest {
         every{analytics.logger} returns logger
         every{analytics.currentConfigurationAndroid} returns configuration
         every{analytics.currentConfiguration} returns configuration
+        every { analytics.instanceName } returns "test_analytics"
         application.registerWorkManager(analytics, DummyAnalyticsFactory::class.java)
         executorService = Executors.newSingleThreadExecutor()
 
@@ -73,8 +77,12 @@ class RudderSyncWorkerTest {
     fun testRudderSyncWorker(){
         every{analytics.blockingFlush()} returns true
         every { analytics.isShutdown } returns false
-        val worker = TestWorkerBuilder.from(application, RudderSyncWorker::class.java, executorService).build()
+        val worker = TestWorkerBuilder.from(application, RudderSyncWorker::class.java,
+            executorService).setInputData(analytics.workerInputData(
+            DummyAnalyticsFactory::class.java
+            )).build()
         val result = worker.doWork()
+        assertThat(result, Matchers.`is`(ListenableWorker.Result.success()))
         verify(exactly = 1){
             analytics.blockingFlush()
         }

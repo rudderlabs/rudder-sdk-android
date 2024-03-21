@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.internal.infrastructure.sync
+package com.rudderstack.android.sync
 
 import android.app.Application
 import com.rudderstack.core.Analytics
@@ -25,6 +25,6 @@ import com.rudderstack.core.Analytics
  * wth reflection
  *
  */
-fun interface WorkManagerAnalyticsFactory {
+interface WorkManagerAnalyticsFactory {
     fun createAnalytics(application: Application): Analytics
 }

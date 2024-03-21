@@ -120,6 +120,7 @@ dependencies {
     implementation(project(":web"))
     implementation(project(":rudderjsonadapter"))
     implementation(project(":rudderreporter"))
+    implementation(project(":libs:sync"))
 
 
     testImplementation("junit:junit:4.13.2")

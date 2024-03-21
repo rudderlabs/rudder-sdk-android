@@ -12,17 +12,21 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.internal.infrastructure.sync
+package com.rudderstack.android.sync
 
 import android.app.Application
 import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.sync.internal.registerWorkManager
+import com.rudderstack.android.sync.internal.unregisterWorkManager
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.InfrastructurePlugin
 
 abstract class WorkerManagerPlugin : InfrastructurePlugin {
     private var application: Application?= null
+    private var analyticsIdentifier: String? = null
     override fun setup(analytics: Analytics) {
+        analyticsIdentifier = analytics.instanceName
         val currentConfig = analytics.currentConfigurationAndroid
         if (currentConfig?.isPeriodicFlushEnabled != true) {
             return
@@ -35,7 +39,8 @@ abstract class WorkerManagerPlugin : InfrastructurePlugin {
         }
     }
     override fun shutdown() {
-        application?.unregisterWorkManager()
+        application?.unregisterWorkManager(analyticsIdentifier ?: return)
+        analyticsIdentifier = null
     }
 
     abstract val workManagerAnalyticsFactoryClassName: Class<out WorkManagerAnalyticsFactory>

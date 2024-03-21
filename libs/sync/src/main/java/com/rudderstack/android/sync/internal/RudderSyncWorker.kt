@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 27/11/23, 2:51 pm Last modified: 23/11/23, 6:21 pm
- * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 18/03/24, 6:20 pm Last modified: 18/03/24, 6:11 pm
+ * Copyright: All rights reserved Ⓒ 2024 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,12 +12,13 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.internal.infrastructure.sync
+package com.rudderstack.android.sync.internal
 
 import android.app.Application
 import android.content.Context
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import com.rudderstack.android.sync.WorkManagerAnalyticsFactory
 import com.rudderstack.core.Analytics
 
 //import androidx.work.Worker
@@ -27,22 +28,30 @@ import com.rudderstack.core.Analytics
  * Syncs the data at an interval with rudder server
  *
  */
-internal class  RudderSyncWorker(appContext: Context, workerParams: WorkerParameters
-) :
-    Worker(appContext, workerParams) {
-    companion object{
+internal class RudderSyncWorker(
+    appContext: Context, workerParams: WorkerParameters
+) : Worker(appContext, workerParams) {
+    companion object {
         internal const val WORKER_ANALYTICS_FACTORY_KEY = "WORKER_ANALYTICS_FACTORY_KEY"
+        internal const val WORKER_ANALYTICS_INSTANCE_KEY = "WORKER_ANALYTICS_INSTANCE_KEY"
     }
+
     override fun doWork(): Result {
 
         (applicationContext as? Application)?.let {
-            val weakSinkAnalytics = it.sinkAnalytics
-            val sinkAnalytics = (weakSinkAnalytics?:createSinkAnalytics())
+            val analyticsInstanceKey =
+                inputData.getString(WORKER_ANALYTICS_INSTANCE_KEY) ?: return Result.failure()
+            val weakSinkAnalytics = getAnalytics(analyticsInstanceKey)
+            if (weakSinkAnalytics?.isShutdown == true) {
+                weakSinkAnalytics.logger.warn(log = "Cannot do work. Analytics instance is " +
+                                                    "already shutdown")
+                return Result.failure()
+            }
+            val sinkAnalytics = (weakSinkAnalytics ?: createSinkAnalytics())
             val success = sinkAnalytics?.blockingFlush()
             sinkAnalytics?.logger?.debug(log = "Data upload through worker. success: $success")
-            if(weakSinkAnalytics == null)
-                sinkAnalytics?.shutdown()
-            return if(success == true) Result.success() else Result.failure()
+            if (weakSinkAnalytics == null) sinkAnalytics?.shutdown()
+            return if (success == true) Result.success() else Result.failure()
         }
         return Result.failure()
     }

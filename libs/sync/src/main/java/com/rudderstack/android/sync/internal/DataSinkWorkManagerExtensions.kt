@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 23/11/23, 6:20 pm Last modified: 21/11/23, 5:14 pm
- * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 18/03/24, 6:22 pm Last modified: 04/01/24, 5:47 pm
+ * Copyright: All rights reserved Ⓒ 2024 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,9 +12,10 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.internal.infrastructure.sync
+package com.rudderstack.android.sync.internal
 
 import android.app.Application
+import androidx.annotation.VisibleForTesting
 import androidx.work.Configuration
 import androidx.work.Constraints
 import androidx.work.Data
@@ -24,8 +25,10 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.multiprocess.RemoteWorkManager
 import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.sync.WorkManagerAnalyticsFactory
 import com.rudderstack.core.Analytics
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 /**
@@ -35,37 +38,46 @@ import java.util.concurrent.TimeUnit
  * For multi-process support, the following dependency is expected
  * Implementation "androidx.work:work-multiprocess:2.5.x"
  */
-
-private var analyticsRef: WeakReference<Analytics>? = null
 private const val WORK_MANAGER_TAG = "rudder_sink"
 private const val WORK_NAME = "rudder_sink_work"
 private const val REPEAT_INTERVAL_IN_MINS = 15L
+private var analyticsRefMap = ConcurrentHashMap<String, WeakReference<Analytics>>()
 
-internal val Application.sinkAnalytics
-    get() = analyticsRef?.get()?.takeUnless { it.isShutdown }
+private fun Analytics.generateKeyForLabel(label: String) = addKeyToLabel(label, instanceName)
+private fun addKeyToLabel(label: String, key: String) = "${label}_$key"
+internal fun getAnalytics(key: String) = analyticsRefMap[key]?.get()
 
 
 private val constraints by lazy {
     Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 }
-private fun sinkWorker(workManagerAnalyticsFactoryClassName: Class<out
-WorkManagerAnalyticsFactory>) =
-    PeriodicWorkRequestBuilder<RudderSyncWorker>(
-        REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES
-    ).setInitialDelay(REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES).setConstraints(constraints)
-        .setInputData(Data.Builder().putString(
-            RudderSyncWorker.WORKER_ANALYTICS_FACTORY_KEY,
-            workManagerAnalyticsFactoryClassName.name
-        ).build())
-        .addTag(WORK_MANAGER_TAG).build()
 
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<block flush works after shutdown>>>>>>>>>>>>>>>>>>>>>>>>>>
+private fun Analytics.sinkWorker(
+    workManagerAnalyticsFactoryClassName: Class<out WorkManagerAnalyticsFactory>
+) = PeriodicWorkRequestBuilder<RudderSyncWorker>(
+    REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES
+).setInitialDelay(REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES).setConstraints(constraints)
+    .setInputData(
+        workerInputData(workManagerAnalyticsFactoryClassName)
+    ).addTag(generateKeyForLabel(WORK_MANAGER_TAG)).build()
+
+@VisibleForTesting
+internal fun Analytics.workerInputData(workManagerAnalyticsFactoryClassName: Class<out
+WorkManagerAnalyticsFactory>) =
+    Data.Builder().putString(
+        RudderSyncWorker.WORKER_ANALYTICS_FACTORY_KEY, workManagerAnalyticsFactoryClassName.name
+    ).putString(RudderSyncWorker.WORKER_ANALYTICS_INSTANCE_KEY, instanceName).build()
+
 internal fun Application.registerWorkManager(
     analytics: Analytics, workManagerAnalyticsFactoryClass: Class<out WorkManagerAnalyticsFactory>
 ) {
     analytics.logger.debug(log = "Initializing work manager")
-    //if analytics object has changed, shutting it down is not this method's responsibility
-    analyticsRef = WeakReference(analytics)
+    if (getAnalytics(analytics.instanceName)?.takeUnless { it.isShutdown } != null) {
+        analytics.logger.debug(log = "Work manager already initialized")
+        return
+    }
+
+    analyticsRefMap[analytics.instanceName] = WeakReference(analytics)
 
     Configuration.Builder().also {
         // if process name is available, this is a multi-process app
@@ -76,20 +88,27 @@ internal fun Application.registerWorkManager(
             it.setExecutor(this)
         }
     }.let {
-            WorkManager.initialize(this, it.build())
-        }
+        WorkManager.initialize(this, it.build())
+    }
     if (analytics.currentConfigurationAndroid?.multiProcessEnabled == true) {
         RemoteWorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE, sinkWorker(workManagerAnalyticsFactoryClass)
+            analytics.generateKeyForLabel(WORK_NAME),
+            ExistingPeriodicWorkPolicy.REPLACE,
+            analytics.sinkWorker(workManagerAnalyticsFactoryClass)
         )
     } else WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-        WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE, sinkWorker(workManagerAnalyticsFactoryClass)
+        analytics.generateKeyForLabel(WORK_NAME),
+        ExistingPeriodicWorkPolicy.REPLACE,
+        analytics.sinkWorker(workManagerAnalyticsFactoryClass)
     )
 
 }
-internal fun Application.unregisterWorkManager() {
-    analyticsRef?.clear()
-    analyticsRef = null
-    WorkManager.getInstance(this).cancelAllWorkByTag(WORK_MANAGER_TAG)
-    RemoteWorkManager.getInstance(this).cancelAllWorkByTag(WORK_MANAGER_TAG)
+
+fun Application.unregisterWorkManager(instanceName: String) {
+    analyticsRefMap[instanceName]?.clear()
+    analyticsRefMap.remove(instanceName)
+    WorkManager.getInstance(this)
+        .cancelAllWorkByTag(addKeyToLabel(WORK_MANAGER_TAG, instanceName))
+    RemoteWorkManager.getInstance(this)
+        .cancelAllWorkByTag(addKeyToLabel(WORK_MANAGER_TAG, instanceName))
 }
