@@ -14,7 +14,7 @@ import org.junit.Test
 class EventSizeFilterPluginTest {
 
     private val eventSizeFilterPlugin = EventSizeFilterPlugin()
-    private val currentConfiguration = Configuration(jsonAdapter = GsonAdapter(), isOptOut = false)
+    private val currentConfiguration = Configuration(jsonAdapter = GsonAdapter())
 
     @Test
     fun `given event size does not exceed the maximum size, then the next plugin in the chain should be called`() {

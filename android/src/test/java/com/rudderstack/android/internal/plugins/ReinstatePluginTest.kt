@@ -52,7 +52,7 @@ class ReinstatePluginTest {
     fun setUp() {
         androidStorage = AndroidStorageImpl(
             ApplicationProvider.getApplicationContext(),
-            instanceName = "testInstance",
+            writeKey = "testWriteKey",
             storageExecutor = TestExecutor()
         )
         mockControlPlane = mock<ConfigDownloadService>()

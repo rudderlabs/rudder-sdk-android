@@ -31,7 +31,6 @@ import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.android.utilities.shutdownSessionManagement
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
-import com.rudderstack.core.DEFAULTS_ANALYTICS_INSTANCE_NAME
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.retrieveState
@@ -45,19 +44,17 @@ import com.rudderstack.models.MessageContext
 fun RudderAnalytics(
     writeKey: String,
     configuration: ConfigurationAndroid,
-    instanceName: String = DEFAULTS_ANALYTICS_INSTANCE_NAME,
     dataUploadService: DataUploadService? = null,
     configDownloadService: ConfigDownloadService? = null,
     storage: AndroidStorage = AndroidStorageImpl(
         configuration.application,
-        instanceName = instanceName,
+        writeKey = writeKey,
         useContentProvider = ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER
     ),
     initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
 ): Analytics {
     return Analytics(writeKey,
         configuration,
-        instanceName,
         dataUploadService,
         configDownloadService,
         storage,

@@ -14,15 +14,19 @@ import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 
 object RudderAnalyticsUtils {
 
-    private var _rudderAnalytics: Analytics? = null
-    private var _rudderReporter: RudderReporter? = null
-    private var _listener: InitializationListener? = null
+    private const val PRIMARY_INSTANCE_NAME = "primary"
+    private const val SECONDARY_INSTANCE_NAME = "secondary"
 
-    fun initialize(application: Application) {
+    private var _rudderAnalytics: Analytics? = null
+    private var _rudderAnalyticsSecondary: Analytics? = null
+    private var _rudderReporter: RudderReporter? = null
+
+    fun initialize(application: Application, listener: InitializationListener? = null) {
         _rudderAnalytics = RudderAnalytics(
             writeKey = WRITE_KEY,
+            instanceName = PRIMARY_INSTANCE_NAME,
             initializationListener = { success, message ->
-                _listener?.onAnalyticsInitialized(success, message)
+                listener?.onAnalyticsInitialized(PRIMARY_INSTANCE_NAME, success, message)
             },
             configuration = ConfigurationAndroid(
                 application = application,
@@ -33,36 +37,51 @@ object RudderAnalyticsUtils {
                 recordScreenViews = true,
             )
         )
+        _rudderAnalyticsSecondary = RudderAnalytics(
+            writeKey = WRITE_KEY_SECONDARY,
+            instanceName = SECONDARY_INSTANCE_NAME,
+            initializationListener = { success, message ->
+                listener?.onAnalyticsInitialized(SECONDARY_INSTANCE_NAME, success, message)
+            },
+            configuration = ConfigurationAndroid(
+                application = application,
+                GsonAdapter(),
+                dataPlaneUrl = DATA_PLANE_URL_SECONDARY,
+                controlPlaneUrl = CONTROL_PLANE_URL_SECONDARY,
+                trackLifecycleEvents = true,
+                recordScreenViews = true,
+            )
+        )
         _rudderReporter = DefaultRudderReporter(
-            context = application,
-            baseUrl = BASE_URL,
-            configuration = Configuration(
+            context = application, baseUrl = METRICS_BASE_URL, configuration = Configuration(
                 LibraryMetadata(
                     name = "android",
                     sdkVersion = BuildConfig.LIBRARY_PACKAGE_NAME,
                     versionCode = BuildConfig.LIBRARY_VERSION_NAME,
                     writeKey = WRITE_KEY
                 )
-            ),
-            JacksonAdapter()
+            ), JacksonAdapter()
         )
     }
 
-    fun getInstance(): Analytics? {
-        return _rudderAnalytics
-    }
+    val primaryAnalytics: Analytics
+        get() = _rudderAnalytics ?: throw IllegalStateException(
+            "Rudder Analytics Primary not " + "initialized"
+        )
+
+    val secondaryAnalytics: Analytics
+        get() = _rudderAnalyticsSecondary ?: throw IllegalStateException(
+            "Rudder Analytics " + "Secondary" + " not initialized"
+        )
+
 
     fun getReporter(): RudderReporter? {
         return _rudderReporter
     }
 
-    fun setInitializationListener(listener: InitializationListener) {
-        _listener = listener
-    }
-
     fun interface InitializationListener {
 
-        fun onAnalyticsInitialized(success: Boolean, message: String?)
+        fun onAnalyticsInitialized(instanceName: String, success: Boolean, message: String?)
     }
 
 }

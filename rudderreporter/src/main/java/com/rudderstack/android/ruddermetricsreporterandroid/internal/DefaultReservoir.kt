@@ -34,10 +34,10 @@ import kotlin.math.pow
 class DefaultReservoir @JvmOverloads constructor(
     androidContext: Context,
     useContentProvider: Boolean,
-    private val instanceName: String,
+    private val writeKey: String,
     private val dbExecutor: ExecutorService? = null,
 ) : Reservoir {
-    private val dbName = "metrics_db_${instanceName}_${androidContext.packageName}.db"
+    private val dbName = "metrics_db_${writeKey}_${androidContext.packageName}.db"
     private val metricDao: Dao<MetricEntity>
     private val labelDao: Dao<LabelEntity>
     private val errorDao: Dao<ErrorEntity>

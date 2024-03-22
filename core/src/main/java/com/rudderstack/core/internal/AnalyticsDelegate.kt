@@ -29,7 +29,6 @@ import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
 import com.rudderstack.core.RudderUtils.getUTF8Length
 import com.rudderstack.core.RudderUtils.MAX_BATCH_SIZE
-import com.rudderstack.core.State
 import com.rudderstack.core.Storage
 import com.rudderstack.core.flushpolicy.CountBasedFlushPolicy
 import com.rudderstack.core.flushpolicy.IntervalBasedFlushPolicy
@@ -61,7 +60,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal class AnalyticsDelegate(
     configuration: Configuration,
     override val storage: Storage,
-    override val instanceName: String,
+    override val writeKey: String,
     override val dataUploadService: DataUploadService,
     override val configDownloadService: ConfigDownloadService?,
     //optional
@@ -227,13 +226,10 @@ internal class AnalyticsDelegate(
 
     override fun optOut(optOut: Boolean) {
         storage.saveOptOut(optOut)
-        applyConfiguration {
-            copy(isOptOut = optOut)
-        }
     }
 
     override val isOptedOut: Boolean
-        get() = currentConfiguration?.isOptOut ?: storage.isOptedOut ?: false
+        get() = storage.isOptedOut
     private val currentConfigurationState: ConfigurationsState?
         get() = retrieveState<ConfigurationsState>()
     private val currentDestinationConfigurationState: DestinationConfigState?

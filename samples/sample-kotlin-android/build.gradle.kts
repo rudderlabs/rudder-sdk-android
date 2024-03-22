@@ -1,7 +1,22 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-android")
+}
+var sampleRudderProperties = Properties()
+if (project.rootProject.file("samples/sample-kotlin-android/local.properties").canRead()) {
+    sampleRudderProperties.apply {
+        load(
+            FileInputStream(
+                File(
+                    rootProject.rootDir, "samples/sample-kotlin-android/local" + ".properties"
+                )
+            )
+        )
+    }
 }
 
 android {
@@ -29,6 +44,28 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField(
+            "String", "WRITE_KEY", sampleRudderProperties.getProperty("writeKey")
+        )
+        buildConfigField(
+            "String", "WRITE_KEY_SECONDARY", sampleRudderProperties.getProperty("writeKeySecondary")
+        )
+        buildConfigField(
+            "String", "CONTROL_PLANE_URL", sampleRudderProperties.getProperty("controlplaneUrl")
+        )
+        buildConfigField(
+            "String", "CONTROL_PLANE_URL_SECONDARY",
+            sampleRudderProperties.getProperty("controlplaneUrlSecondary")
+        )
+        buildConfigField(
+            "String", "DATA_PLANE_URL",
+                sampleRudderProperties.getProperty("dataplaneUrl")
+        )
+        buildConfigField(
+            "String", "DATA_PLANE_URL_SECONDARY",
+                sampleRudderProperties.getProperty("dataplaneUrlSecondary")
+        )
     }
 
     buildTypes {
@@ -36,8 +73,7 @@ android {
             isMinifyEnabled = false
             setProguardFiles(
                 listOf(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro"
+                    getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
                 )
             )
         }
@@ -47,8 +83,7 @@ android {
             isMinifyEnabled = false
             setProguardFiles(
                 listOf(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro"
+                    getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
                 )
             )
         }

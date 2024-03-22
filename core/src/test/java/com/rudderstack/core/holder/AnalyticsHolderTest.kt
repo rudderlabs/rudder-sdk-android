@@ -32,7 +32,7 @@ class AnalyticsHolderTest {
 
     @Before
     fun setup() {
-        whenever(controller.instanceName).thenReturn("testInstance")
+        whenever(controller.writeKey).thenReturn("writeKey")
     }
     @After
     fun tearDown() {
@@ -71,7 +71,7 @@ class AnalyticsHolderTest {
         val valueForController1 = "testValue"
         val valueForController2 = "testValue2"
         val controller2 = mock<Controller>()
-        whenever(controller2.instanceName).thenReturn("testInstance2")
+        whenever(controller2.writeKey).thenReturn("writeKey2")
 
         // Execute
         controller.store(identifier, valueForController1)

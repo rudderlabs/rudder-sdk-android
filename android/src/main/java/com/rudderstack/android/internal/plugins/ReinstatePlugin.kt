@@ -118,10 +118,9 @@ class ReinstatePlugin : Plugin {
             configurationAndroid.application
         )
         val context = _analytics?.androidStorage?.context
-        val optOut = _analytics?.androidStorage?.isOptedOut ?: false
         _analytics?.applyConfigurationAndroid {
             copy(
-                anonymousId = anonId, isOptOut = optOut, userId = userId
+                anonymousId = anonId, userId = userId
             )
         }
         _analytics?.processNewContext(context ?: createContext())

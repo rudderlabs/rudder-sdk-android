@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 18/03/24, 3:39 pm Last modified: 11/03/24, 1:55 pm
- * Copyright: All rights reserved Ⓒ 2024 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 20/07/22, 11:57 PM Last modified: 20/07/22, 11:57 PM
+ * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -19,6 +19,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.android.utils.busyWait
+import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.android.utils.TestExecutor
+import com.rudderstack.android.android.utils.busyWait
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
@@ -60,7 +63,7 @@ abstract class AndroidStorageTest {
         MockitoAnnotations.openMocks(this)
         val storage = AndroidStorageImpl(
             ApplicationProvider.getApplicationContext(),
-            false, instanceName = "test_instance",
+            false, writeKey = "test_writeKey",
             storageExecutor = TestExecutor()
         )
         mockConfig = ConfigurationAndroid(ApplicationProvider.getApplicationContext(),
@@ -184,6 +187,28 @@ abstract class AndroidStorageTest {
         storage.deleteMessagesSync(events.take(10))
         MatcherAssert.assertThat(storage.getDataSync(), Matchers.iterableWithSize(10))
 
+    }
+
+    @Test
+    fun `when user opts out from tracking, then set optOut to true`() {
+        val storage = analytics.storage as AndroidStorage
+        storage.clearStorage()
+
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(false))
+        storage.saveOptOut(true)
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(true))
+    }
+
+    @Test
+    fun `when user opts in for tracking, then set optOut to false`() {
+        val storage = analytics.storage as AndroidStorage
+        storage.clearStorage()
+
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(false))
+        storage.saveOptOut(true)
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(true))
+        storage.saveOptOut(false)
+        MatcherAssert.assertThat(storage.isOptedOut, Matchers.`is`(false))
     }
 }
 

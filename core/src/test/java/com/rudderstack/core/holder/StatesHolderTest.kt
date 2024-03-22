@@ -34,7 +34,7 @@ class StatesHolderTest {
 
     @Before
     fun setup() {
-        whenever(controller.instanceName).thenReturn("testInstance")
+        whenever(controller.writeKey).thenReturn("testInstance")
     }
     @After
     fun tearDown() {

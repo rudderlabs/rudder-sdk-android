@@ -59,7 +59,7 @@ class IntervalBasedFlushPolicy : FlushPolicy {
 
     override fun setup(analytics: Analytics) {
         _isShutDown.set(false)
-        thresholdCountDownTimer = Timer(analytics.instanceName + "-IntervalBasedFlushPolicy")
+        thresholdCountDownTimer = Timer(analytics.writeKey + "-IntervalBasedFlushPolicy")
         _analyticsRef.set(analytics)
     }
 
