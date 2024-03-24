@@ -14,9 +14,9 @@ internal class AppVersionManager(
     logger: Logger,
 ) {
 
-    private val previousBuild: Int? = analyticsStorage.build
+    private val previousVersionCode: Int? = analyticsStorage.versionCode
     private val previousVersionName: String? = analyticsStorage.versionName
-    private var currentBuild: Int? = null
+    private var currentVersionCode: Int? = null
     private var currentVersionName: String? = null
 
     private val packageInfo: PackageInfo?
@@ -29,7 +29,7 @@ internal class AppVersionManager(
     init {
         try {
             currentVersionName = packageInfo?.versionName
-            currentBuild = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            currentVersionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 packageInfo?.longVersionCode?.toInt()
             } else {
                 packageInfo?.versionCode
@@ -41,15 +41,15 @@ internal class AppVersionManager(
 
     fun getAppVersionInfo(): AppVersion {
         return AppVersion(
-            previousBuild = previousBuild ?: AppVersion.DEFAULT_BUILD,
+            previousVersionCode = previousVersionCode ?: AppVersion.DEFAULT_VERSION_CODE,
             previousVersionName = previousVersionName ?: AppVersion.DEFAULT_VERSION_NAME,
-            currentBuild = currentBuild ?: AppVersion.DEFAULT_BUILD,
+            currentVersionCode = currentVersionCode ?: AppVersion.DEFAULT_VERSION_CODE,
             currentVersionName = currentVersionName ?: AppVersion.DEFAULT_VERSION_NAME,
         )
     }
 
     fun updateAppVersionInStorage() {
         currentVersionName?.let { analyticsStorage.setVersionName(it) }
-        currentBuild?.let { analyticsStorage.setBuild(it) }
+        currentVersionCode?.let { analyticsStorage.setVersionCode(it) }
     }
 }

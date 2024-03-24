@@ -1,22 +1,22 @@
 package com.rudderstack.android.utilities
 
 data class AppVersion(
-    val previousBuild: Int,
+    val previousVersionCode: Int,
     val previousVersionName: String,
-    val currentBuild: Int,
+    val currentVersionCode: Int,
     val currentVersionName: String,
 ) {
 
     companion object {
-        const val DEFAULT_BUILD = -1
+        const val DEFAULT_VERSION_CODE = -1
         const val DEFAULT_VERSION_NAME = ""
     }
 
     fun isApplicationInstalled(): Boolean {
-        return previousBuild == -1
+        return previousVersionCode == -1
     }
 
     fun isApplicationUpdated(): Boolean {
-        return previousBuild != -1 && previousBuild != currentBuild
+        return previousVersionCode != -1 && previousVersionCode != currentVersionCode
     }
 }

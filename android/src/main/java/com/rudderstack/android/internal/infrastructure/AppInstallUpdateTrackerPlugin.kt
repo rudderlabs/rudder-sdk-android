@@ -17,9 +17,9 @@ class AppInstallUpdateTrackerPlugin : InfrastructurePlugin {
 
     companion object {
         private const val PREVIOUS_VERSION = "previous_version"
-        private const val PREVIOUS_BUILD = "previous_build"
+        private const val PREVIOUS_VERSION_CODE = "previous_build"
         private const val VERSION = "version"
-        private const val BUILD = "build"
+        private const val VERSION_CODE = "build"
 
         const val EVENT_NAME_APPLICATION_INSTALLED = "Application Installed"
         const val EVENT_NAME_APPLICATION_UPDATED = "Application Updated"
@@ -51,7 +51,7 @@ class AppInstallUpdateTrackerPlugin : InfrastructurePlugin {
         this.analytics?.logger?.debug(log = "Tracking Application Installed event")
         val trackProperties = mutableMapOf<String, Any>()
         trackProperties[VERSION] = this.appVersion.currentVersionName
-        trackProperties[BUILD] = this.appVersion.currentBuild
+        trackProperties[VERSION_CODE] = this.appVersion.currentVersionCode
 
         sendEvent(EVENT_NAME_APPLICATION_INSTALLED, trackProperties)
     }
@@ -60,9 +60,9 @@ class AppInstallUpdateTrackerPlugin : InfrastructurePlugin {
         this.analytics?.logger?.debug(log = "Tracking Application Updated event")
         val trackProperties = mutableMapOf<String, Any>()
         trackProperties[PREVIOUS_VERSION] = this.appVersion.previousVersionName
-        trackProperties[PREVIOUS_BUILD] = this.appVersion.previousBuild
+        trackProperties[PREVIOUS_VERSION_CODE] = this.appVersion.previousVersionCode
         trackProperties[VERSION] = this.appVersion.currentVersionName
-        trackProperties[BUILD] = this.appVersion.currentBuild
+        trackProperties[VERSION_CODE] = this.appVersion.currentVersionCode
 
         sendEvent(EVENT_NAME_APPLICATION_UPDATED, trackProperties)
     }

@@ -185,10 +185,10 @@ internal class RudderPreferenceManager(application: Application,
     val versionName: String?
         get() = preferences.getString(RUDDER_APPLICATION_VERSION_KEY, null)
 
-    fun saveBuild(versionCode: Int) {
+    fun saveVersionCode(versionCode: Int) {
         preferences.edit().putInt(RUDDER_APPLICATION_BUILD_KEY, versionCode).apply()
     }
 
-    val build: Int
+    val versionCode: Int
         get() = preferences.getInt(RUDDER_APPLICATION_BUILD_KEY, -1)
 }
