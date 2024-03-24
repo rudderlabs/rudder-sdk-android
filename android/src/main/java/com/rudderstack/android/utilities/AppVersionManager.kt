@@ -14,6 +14,11 @@ internal class AppVersionManager(
     logger: Logger,
 ) {
 
+    companion object {
+        const val DEFAULT_VERSION_CODE = -1
+        const val DEFAULT_VERSION_NAME = ""
+    }
+
     private val previousVersionCode: Int? = analyticsStorage.versionCode
     private val previousVersionName: String? = analyticsStorage.versionName
     private var currentVersionCode: Int? = null
@@ -41,10 +46,10 @@ internal class AppVersionManager(
 
     fun getAppVersionInfo(): AppVersion {
         return AppVersion(
-            previousVersionCode = previousVersionCode ?: AppVersion.DEFAULT_VERSION_CODE,
-            previousVersionName = previousVersionName ?: AppVersion.DEFAULT_VERSION_NAME,
-            currentVersionCode = currentVersionCode ?: AppVersion.DEFAULT_VERSION_CODE,
-            currentVersionName = currentVersionName ?: AppVersion.DEFAULT_VERSION_NAME,
+            previousVersionCode = previousVersionCode ?: DEFAULT_VERSION_CODE,
+            previousVersionName = previousVersionName ?: DEFAULT_VERSION_NAME,
+            currentVersionCode = currentVersionCode ?: DEFAULT_VERSION_CODE,
+            currentVersionName = currentVersionName ?: DEFAULT_VERSION_NAME,
         )
     }
 

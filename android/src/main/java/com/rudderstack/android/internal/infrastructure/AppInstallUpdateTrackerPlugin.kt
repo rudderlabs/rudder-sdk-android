@@ -40,11 +40,19 @@ class AppInstallUpdateTrackerPlugin : InfrastructurePlugin {
     }
 
     private fun trackApplicationStatus() {
-        if (this.appVersion.isApplicationInstalled()) {
+        if (this.isApplicationInstalled()) {
             sendApplicationInstalledEvent()
-        } else if(this.appVersion.isApplicationUpdated()) {
+        } else if(this.isApplicationUpdated()) {
             sendApplicationUpdatedEvent()
         }
+    }
+
+    private fun isApplicationInstalled(): Boolean {
+        return this.appVersion.previousVersionCode == -1
+    }
+
+    private fun isApplicationUpdated(): Boolean {
+        return this.appVersion.previousVersionCode != -1 && this.appVersion.previousVersionCode != this.appVersion.currentVersionCode
     }
 
     private fun sendApplicationInstalledEvent() {
