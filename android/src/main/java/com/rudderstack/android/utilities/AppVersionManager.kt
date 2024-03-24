@@ -7,6 +7,7 @@ import android.content.pm.PackageManager.NameNotFoundException
 import android.os.Build
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.core.Logger
+import com.rudderstack.models.AppVersion
 
 internal class AppVersionManager(
     private val application: Application?,

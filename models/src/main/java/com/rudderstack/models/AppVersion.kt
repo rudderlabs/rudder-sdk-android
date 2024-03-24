@@ -1,4 +1,4 @@
-package com.rudderstack.android.utilities
+package com.rudderstack.models
 
 data class AppVersion(
     val previousVersionCode: Int,

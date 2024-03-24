@@ -4,7 +4,7 @@ import android.app.Application
 import com.rudderstack.android.androidStorage
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.storage.AndroidStorage
-import com.rudderstack.android.utilities.AppVersion
+import com.rudderstack.models.AppVersion
 import com.rudderstack.android.utilities.AppVersionManager
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.InfrastructurePlugin
