@@ -1,6 +1,6 @@
 /*
- * Creator: Debanjan Chatterjee on 07/09/22, 12:19 PM Last modified: 07/09/22, 12:08 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Creator: Debanjan Chatterjee on 18/03/24, 12:47 pm Last modified: 18/03/24, 12:13 pm
+ * Copyright: All rights reserved Ⓒ 2024 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -12,33 +12,32 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.android
+package com.rudderstack.android.sync
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.work.ListenableWorker
 import androidx.work.testing.TestWorkerBuilder
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.android.utils.TestLogger
 import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.internal.AndroidLogger
-import com.rudderstack.android.internal.infrastructure.sync.RudderSyncWorker
-import com.rudderstack.android.internal.infrastructure.sync.WorkManagerAnalyticsFactory
-import com.rudderstack.android.internal.infrastructure.sync.registerWorkManager
+import com.rudderstack.android.sync.internal.RudderSyncWorker
+import com.rudderstack.android.sync.internal.registerWorkManager
+import com.rudderstack.android.sync.internal.workerInputData
+import com.rudderstack.android.sync.utils.TestLogger
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.Base64Generator
-import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.mockk
 import io.mockk.verify
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.anyOrNull
 
 import org.robolectric.annotation.Config
 import java.util.concurrent.ExecutorService
@@ -68,6 +67,7 @@ class RudderSyncWorkerTest {
         every{analytics.logger} returns logger
         every{analytics.currentConfigurationAndroid} returns configuration
         every{analytics.currentConfiguration} returns configuration
+        every { analytics.instanceName } returns "test_analytics"
         application.registerWorkManager(analytics, DummyAnalyticsFactory::class.java)
         executorService = Executors.newSingleThreadExecutor()
 
@@ -77,8 +77,12 @@ class RudderSyncWorkerTest {
     fun testRudderSyncWorker(){
         every{analytics.blockingFlush()} returns true
         every { analytics.isShutdown } returns false
-        val worker = TestWorkerBuilder.from(application, RudderSyncWorker::class.java, executorService).build()
+        val worker = TestWorkerBuilder.from(application, RudderSyncWorker::class.java,
+            executorService).setInputData(analytics.workerInputData(
+            DummyAnalyticsFactory::class.java
+            )).build()
         val result = worker.doWork()
+        assertThat(result, Matchers.`is`(ListenableWorker.Result.success()))
         verify(exactly = 1){
             analytics.blockingFlush()
         }

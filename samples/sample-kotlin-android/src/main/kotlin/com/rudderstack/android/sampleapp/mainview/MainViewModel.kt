@@ -30,9 +30,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _loggingInterceptor by lazy {
         object : Plugin {
-            private var _instanceName: String? = null
+            private var _writeKey: String? = null
             override fun setup(analytics: Analytics) {
-                _instanceName = analytics.instanceName
+                _writeKey = analytics.writeKey
             }
 
             override fun intercept(chain: Plugin.Chain): Message {
@@ -40,7 +40,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _state.update { state ->
                     state.copy(
                         logDataList = state.logDataList + LogData(
-                            Date(), "from $_instanceName, msg: $msg"
+                            Date(), "from $_writeKey, msg: $msg"
                         )
                     )
                 }

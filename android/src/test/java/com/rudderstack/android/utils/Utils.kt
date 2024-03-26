@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 27/07/23, 7:28 pm Last modified: 27/07/23, 7:28 pm
+ * Creator: Debanjan Chatterjee on 27/12/23, 11:41 am Last modified: 27/12/23, 11:41 am
  * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,27 +12,11 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.android.utils
+package com.rudderstack.android.utils
 
-import com.rudderstack.core.Logger
-
-class TestLogger : Logger {
-    override fun activate(level: Logger.LogLevel) {
-
+fun busyWait(millis: Long) {
+    val start = System.currentTimeMillis()
+    while (System.currentTimeMillis() - start < millis) {
+        // busy wait
     }
-
-    override fun info(tag: String, log: String) {
-    }
-
-    override fun debug(tag: String, log: String) {
-    }
-
-    override fun warn(tag: String, log: String) {
-    }
-
-    override fun error(tag: String, log: String, throwable: Throwable?) {
-    }
-
-    override val level: Logger.LogLevel
-        get() = Logger.LogLevel.Error
 }
