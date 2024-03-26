@@ -87,18 +87,16 @@ internal fun Application.registerWorkManager(
         analytics.currentConfigurationAndroid?.networkExecutor?.apply {
             it.setExecutor(this)
         }
-    }.let {
-        WorkManager.initialize(this, it.build())
     }
     if (analytics.currentConfigurationAndroid?.multiProcessEnabled == true) {
         RemoteWorkManager.getInstance(this).enqueueUniquePeriodicWork(
             analytics.generateKeyForLabel(WORK_NAME),
-            ExistingPeriodicWorkPolicy.REPLACE,
+            ExistingPeriodicWorkPolicy.KEEP,
             analytics.sinkWorker(workManagerAnalyticsFactoryClass)
         )
     } else WorkManager.getInstance(this).enqueueUniquePeriodicWork(
         analytics.generateKeyForLabel(WORK_NAME),
-        ExistingPeriodicWorkPolicy.REPLACE,
+        ExistingPeriodicWorkPolicy.KEEP,
         analytics.sinkWorker(workManagerAnalyticsFactoryClass)
     )
 

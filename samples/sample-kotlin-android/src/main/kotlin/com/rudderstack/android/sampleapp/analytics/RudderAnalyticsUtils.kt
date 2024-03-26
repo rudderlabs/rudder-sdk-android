@@ -63,10 +63,12 @@ object RudderAnalyticsUtils {
                 controlPlaneUrl = CONTROL_PLANE_URL,
                 trackLifecycleEvents = true,
                 recordScreenViews = true,
+                isPeriodicFlushEnabled = true
+
             )
         )
     }
-    fun Analytics.initializeWorkManager() {
+    private fun Analytics.initializeWorkManager() {
         addInfrastructurePlugin(SampleWorkManagerPlugin())
     }
 
