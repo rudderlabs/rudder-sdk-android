@@ -8,40 +8,25 @@ import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.DefaultRudderReporter
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter
+import com.rudderstack.android.sampleapp.analytics.workmanger.SampleWorkManagerPlugin
 import com.rudderstack.core.Analytics
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 
 object RudderAnalyticsUtils {
 
-    private const val PRIMARY_INSTANCE_NAME = "primary"
-    private const val SECONDARY_INSTANCE_NAME = "secondary"
 
     private var _rudderAnalytics: Analytics? = null
     private var _rudderAnalyticsSecondary: Analytics? = null
     private var _rudderReporter: RudderReporter? = null
 
     fun initialize(application: Application, listener: InitializationListener? = null) {
-        _rudderAnalytics = RudderAnalytics(
-            writeKey = WRITE_KEY,
-            instanceName = PRIMARY_INSTANCE_NAME,
-            initializationListener = { success, message ->
-                listener?.onAnalyticsInitialized(PRIMARY_INSTANCE_NAME, success, message)
-            },
-            configuration = ConfigurationAndroid(
-                application = application,
-                GsonAdapter(),
-                dataPlaneUrl = DATA_PLANE_URL,
-                controlPlaneUrl = CONTROL_PLANE_URL,
-                trackLifecycleEvents = true,
-                recordScreenViews = true,
-            )
-        )
+        //wen add work manager support to this instance
+        _rudderAnalytics = createV1AnalyticsInstance(application, listener)
         _rudderAnalyticsSecondary = RudderAnalytics(
             writeKey = WRITE_KEY_SECONDARY,
-            instanceName = SECONDARY_INSTANCE_NAME,
             initializationListener = { success, message ->
-                listener?.onAnalyticsInitialized(SECONDARY_INSTANCE_NAME, success, message)
+                listener?.onAnalyticsInitialized(WRITE_KEY_SECONDARY, success, message)
             },
             configuration = ConfigurationAndroid(
                 application = application,
@@ -62,6 +47,27 @@ object RudderAnalyticsUtils {
                 )
             ), JacksonAdapter()
         )
+        _rudderAnalytics?.initializeWorkManager()
+    }
+
+    fun createV1AnalyticsInstance(application: Application, listener: InitializationListener? = null): Analytics {
+        return RudderAnalytics(
+            writeKey = WRITE_KEY,
+            initializationListener = { success, message ->
+                listener?.onAnalyticsInitialized(WRITE_KEY, success, message)
+            },
+            configuration = ConfigurationAndroid(
+                application = application,
+                GsonAdapter(),
+                dataPlaneUrl = DATA_PLANE_URL,
+                controlPlaneUrl = CONTROL_PLANE_URL,
+                trackLifecycleEvents = true,
+                recordScreenViews = true,
+            )
+        )
+    }
+    fun Analytics.initializeWorkManager() {
+        addInfrastructurePlugin(SampleWorkManagerPlugin())
     }
 
     val primaryAnalytics: Analytics
@@ -81,7 +87,7 @@ object RudderAnalyticsUtils {
 
     fun interface InitializationListener {
 
-        fun onAnalyticsInitialized(instanceName: String, success: Boolean, message: String?)
+        fun onAnalyticsInitialized(writeKey: String, success: Boolean, message: String?)
     }
 
 }

@@ -156,6 +156,7 @@ dependencies {
     implementation(project(":rudderjsonadapter"))
     implementation(project(":rudderreporter"))
     implementation(project(":libs:sync"))
+    implementation(project(":libs:navigationplugin"))
 
 
     testImplementation("junit:junit:4.13.2")

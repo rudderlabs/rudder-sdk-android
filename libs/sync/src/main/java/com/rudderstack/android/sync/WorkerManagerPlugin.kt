@@ -26,7 +26,7 @@ abstract class WorkerManagerPlugin : InfrastructurePlugin {
     private var application: Application?= null
     private var analyticsIdentifier: String? = null
     override fun setup(analytics: Analytics) {
-        analyticsIdentifier = analytics.instanceName
+        analyticsIdentifier = analytics.writeKey
         val currentConfig = analytics.currentConfigurationAndroid
         if (currentConfig?.isPeriodicFlushEnabled != true) {
             return

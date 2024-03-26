@@ -16,6 +16,7 @@ package com.rudderstack.android.sync.internal
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.rudderstack.android.sync.WorkManagerAnalyticsFactory
@@ -37,7 +38,7 @@ internal class RudderSyncWorker(
     }
 
     override fun doWork(): Result {
-
+        Log.e("RudderSyncWorker", "doWork")
         (applicationContext as? Application)?.let {
             val analyticsInstanceKey =
                 inputData.getString(WORKER_ANALYTICS_INSTANCE_KEY) ?: return Result.failure()
@@ -51,6 +52,8 @@ internal class RudderSyncWorker(
             val success = sinkAnalytics?.blockingFlush()
             sinkAnalytics?.logger?.debug(log = "Data upload through worker. success: $success")
             if (weakSinkAnalytics == null) sinkAnalytics?.shutdown()
+            Log.e("RudderSyncWorker", "result :$success")
+
             return if (success == true) Result.success() else Result.failure()
         }
         return Result.failure()

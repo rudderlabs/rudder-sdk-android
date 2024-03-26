@@ -43,7 +43,7 @@ private const val WORK_NAME = "rudder_sink_work"
 private const val REPEAT_INTERVAL_IN_MINS = 15L
 private var analyticsRefMap = ConcurrentHashMap<String, WeakReference<Analytics>>()
 
-private fun Analytics.generateKeyForLabel(label: String) = addKeyToLabel(label, instanceName)
+private fun Analytics.generateKeyForLabel(label: String) = addKeyToLabel(label, writeKey)
 private fun addKeyToLabel(label: String, key: String) = "${label}_$key"
 internal fun getAnalytics(key: String) = analyticsRefMap[key]?.get()
 
@@ -66,18 +66,18 @@ internal fun Analytics.workerInputData(workManagerAnalyticsFactoryClassName: Cla
 WorkManagerAnalyticsFactory>) =
     Data.Builder().putString(
         RudderSyncWorker.WORKER_ANALYTICS_FACTORY_KEY, workManagerAnalyticsFactoryClassName.name
-    ).putString(RudderSyncWorker.WORKER_ANALYTICS_INSTANCE_KEY, instanceName).build()
+    ).putString(RudderSyncWorker.WORKER_ANALYTICS_INSTANCE_KEY, writeKey).build()
 
 internal fun Application.registerWorkManager(
     analytics: Analytics, workManagerAnalyticsFactoryClass: Class<out WorkManagerAnalyticsFactory>
 ) {
     analytics.logger.debug(log = "Initializing work manager")
-    if (getAnalytics(analytics.instanceName)?.takeUnless { it.isShutdown } != null) {
+    if (getAnalytics(analytics.writeKey)?.takeUnless { it.isShutdown } != null) {
         analytics.logger.debug(log = "Work manager already initialized")
         return
     }
 
-    analyticsRefMap[analytics.instanceName] = WeakReference(analytics)
+    analyticsRefMap[analytics.writeKey] = WeakReference(analytics)
 
     Configuration.Builder().also {
         // if process name is available, this is a multi-process app
@@ -104,11 +104,11 @@ internal fun Application.registerWorkManager(
 
 }
 
-fun Application.unregisterWorkManager(instanceName: String) {
-    analyticsRefMap[instanceName]?.clear()
-    analyticsRefMap.remove(instanceName)
+fun Application.unregisterWorkManager(writeKey: String) {
+    analyticsRefMap[writeKey]?.clear()
+    analyticsRefMap.remove(writeKey)
     WorkManager.getInstance(this)
-        .cancelAllWorkByTag(addKeyToLabel(WORK_MANAGER_TAG, instanceName))
+        .cancelAllWorkByTag(addKeyToLabel(WORK_MANAGER_TAG, writeKey))
     RemoteWorkManager.getInstance(this)
-        .cancelAllWorkByTag(addKeyToLabel(WORK_MANAGER_TAG, instanceName))
+        .cancelAllWorkByTag(addKeyToLabel(WORK_MANAGER_TAG, writeKey))
 }
