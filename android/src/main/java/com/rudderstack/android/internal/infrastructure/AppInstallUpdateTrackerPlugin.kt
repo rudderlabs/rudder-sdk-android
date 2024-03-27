@@ -28,7 +28,7 @@ class AppInstallUpdateTrackerPlugin : InfrastructurePlugin {
     override fun setup(analytics: Analytics) {
         this.analytics = analytics
         this.appVersion = getAppVersion(analytics)
-        storeVersionNameAndCode(analytics.androidStorage)
+        storeVersionNameAndBuild(analytics.androidStorage)
         if (this.analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true) {
             trackApplicationStatus()
         }
@@ -65,9 +65,9 @@ class AppInstallUpdateTrackerPlugin : InfrastructurePlugin {
         )
     }
 
-    private fun storeVersionNameAndCode(analyticsStorage: AndroidStorage) {
-        this.appVersion.currentVersionName.let { analyticsStorage.setVersionName(it) }
-        this.appVersion.currentBuild.let { analyticsStorage.setBuild(it) }
+    private fun storeVersionNameAndBuild(analyticsStorage: AndroidStorage) {
+        analyticsStorage.setVersionName(this.appVersion.currentVersionName)
+        analyticsStorage.setBuild(this.appVersion.currentBuild)
     }
 
     private fun trackApplicationStatus() {
