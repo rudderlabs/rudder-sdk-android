@@ -1,8 +1,8 @@
 package com.rudderstack.models
 
 data class AppVersion(
-    val previousVersionCode: Int,
+    val previousBuild: Int,
     val previousVersionName: String,
-    val currentVersionCode: Int,
+    val currentBuild: Int,
     val currentVersionName: String,
 )

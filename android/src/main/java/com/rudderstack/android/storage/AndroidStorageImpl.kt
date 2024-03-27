@@ -335,8 +335,8 @@ class AndroidStorageImpl(
         }
     override val trackAutoSession: Boolean
         get() = preferenceManager?.trackAutoSession?: false
-    override val versionCode: Int?
-        get() = preferenceManager?.versionCode
+    override val build: Int?
+        get() = preferenceManager?.build
     override val versionName: String?
         get() = preferenceManager?.versionName
 
@@ -386,8 +386,8 @@ class AndroidStorageImpl(
         preferenceManager?.resetV1ExternalIds()
     }
 
-    override fun setVersionCode(build: Int) {
-        preferenceManager?.saveVersionCode(build)
+    override fun setBuild(build: Int) {
+        preferenceManager?.saveBuild(build)
     }
 
     override fun setVersionName(versionName: String) {
