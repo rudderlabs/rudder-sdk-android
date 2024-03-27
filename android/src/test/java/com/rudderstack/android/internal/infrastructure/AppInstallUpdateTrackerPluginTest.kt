@@ -239,6 +239,64 @@ class AppInstallUpdateTrackerPluginTest {
         )
     }
 
+    @Test
+    fun `when version name is changed, then Application Update should not be made`() {
+        analytics = generateTestAnalytics()
+        setDefaultVersionNameAndCode()
+        setCurrentVersionNameAndCode("1.0.0", 1)
+        appInstallUpdateTrackerPlugin.setup(analytics)
+        simulateAppRestart()
+        analytics = generateTestAnalytics()
+        setCurrentVersionNameAndCode("1.0.1", 1)
+
+        appInstallUpdateTrackerPlugin.setup(analytics)
+
+        val saved = analytics.storage.getDataSync()
+        MatcherAssert.assertThat(
+            saved, Matchers.empty()
+        )
+    }
+
+    @Test
+    fun `given first time application is updated with lifecycle tracking disabled, when app is updated again with lifecycle tracking enabled, then Application Updated should be made with correct properties`() {
+        analytics = generateTestAnalytics()
+        setDefaultVersionNameAndCode()
+        setCurrentVersionNameAndCode("1.0.1", 1)
+        appInstallUpdateTrackerPlugin.setup(analytics)
+        simulateAppRestart()
+        analytics = generateTestAnalytics(false)
+        setCurrentVersionNameAndCode("1.0.2", 2)
+        appInstallUpdateTrackerPlugin.setup(analytics)
+        simulateAppRestart()
+        analytics = generateTestAnalytics()
+        setCurrentVersionNameAndCode("1.0.3", 3)
+        appInstallUpdateTrackerPlugin.setup(analytics)
+
+        appInstallUpdateTrackerPlugin.setup(analytics)
+
+        val saved = analytics.storage.getDataSync()
+        MatcherAssert.assertThat(
+            saved, Matchers.allOf(
+                Matchers.hasItems(
+                    Matchers.allOf(
+                        Matchers.isA(TrackMessage::class.java),
+                        Matchers.hasProperty(
+                            "eventName", Matchers.equalTo("Application Updated")
+                        ),
+                        Matchers.hasProperty(
+                            "properties", Matchers.allOf(
+                                Matchers.hasEntry("previous_version", "1.0.2"),
+                                Matchers.hasEntry("previous_build", 2.0),
+                                Matchers.hasEntry("version", "1.0.3"),
+                                Matchers.hasEntry("build", 3.0)
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    }
+
     /**
      * Helper function to set the version name and build in the Robolectric Application object.
      */
