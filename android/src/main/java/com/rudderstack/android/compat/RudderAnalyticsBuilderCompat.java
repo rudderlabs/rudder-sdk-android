@@ -62,7 +62,7 @@ public final class RudderAnalyticsBuilderCompat  {
     }
     public Analytics build() {
 
-        return RudderAnalytics.RudderAnalytics(
+        return RudderAnalytics.createInstance(
                 writeKey,
                 configuration,
                 dataUploadService,
