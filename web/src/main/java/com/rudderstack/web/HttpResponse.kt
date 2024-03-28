@@ -24,10 +24,12 @@ package com.rudderstack.web
  * @property error In case a http(s) request fails due to an exception
  */
 data class HttpResponse<T>(
-    val status: Int, val body: T?, val errorBody: String?,
-    val error: Throwable? = null
-){
-    companion object{
+    val status: Int,
+    val body: T?,
+    val errorBody: String?,
+    val error: Throwable? = null,
+) {
+    companion object {
         const val HTTP_STATUS_NONE = 0
     }
 }

@@ -15,7 +15,6 @@
 package com.rudderstack.web.models
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.rudderstack.web.Info
 import com.squareup.moshi.Json
 
 data class ArtDataListResponse(
@@ -27,5 +26,5 @@ data class ArtDataListResponse(
     val `data`: List<Data>,
     @Json(name = "info")
     @JsonProperty("info")
-    val info: Info
+    val info: Info,
 )

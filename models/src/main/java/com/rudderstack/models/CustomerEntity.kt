@@ -12,19 +12,23 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.models
+package com.rudderstack.web.models
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
-data class CustomerEntity(
-    @SerializedName("name")
-    @get:JsonProperty
-    val name: String,
-    @SerializedName("address")
-    @get:JsonProperty
-    val address: String,
-    @SerializedName("work_address")
-    @get:JsonProperty("work_address")
-    val workAddress: String,
+data class Info(
+    @Json(name = "license_links")
+    @JsonProperty("license_links")
+    @SerializedName("license_links")
+    val licenseLinks: List<String>,
+    @Json(name = "license_text")
+    @JsonProperty("license_text")
+    @SerializedName("license_text")
+    val licenseText: String,
+    @Json(name = "version")
+    @JsonProperty("version")
+    @SerializedName("version")
+    val version: String,
 )

@@ -28,7 +28,8 @@ enum class MetricType(val value: String) {
     @SerializedName("gauge")
     @JsonProperty("gauge")
     @Json(name = "gauge")
-    GAUGE("gauge");
+    GAUGE("gauge"),
+    ;
 
     companion object {
         fun getType(type: String): MetricType {

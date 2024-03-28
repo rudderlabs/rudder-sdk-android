@@ -16,7 +16,7 @@ package com.rudderstack.android.ruddermetricsreporterandroid.metrics
 
 interface Meter {
     fun longCounter(name: String): LongCounter
-    //we will not be supporting gauges for now
+    // we will not be supporting gauges for now
 //    fun longGauge(name: String): LongGauge
 //    fun shortGauge(name: String?): ShortGauge
 }

@@ -21,7 +21,10 @@ import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.squareup.moshi.Json
 
 open class MetricModel<T : Any>(
-    val name: String, val type: MetricType, val value: T, val labels: Map<String, String>
+    val name: String,
+    val type: MetricType,
+    val value: T,
+    val labels: Map<String, String>,
 ) : JSerialize<MetricModel<T>> {
 
     companion object {
@@ -71,8 +74,6 @@ open class MetricModel<T : Any>(
     override fun toString(): String {
         return "MetricModel($NAME_TAG ='$name', $TYPE_TAG = $type, $VALUE_TAG = $value, $LABELS_TAG = $labels)"
     }
-
-
 }
 
 class MetricModelWithId<T : Any>(
@@ -80,7 +81,7 @@ class MetricModelWithId<T : Any>(
     name: String,
     type: MetricType,
     value: T,
-    labels: Map<String, String>
+    labels: Map<String, String>,
 ) : MetricModel<T>(name, type, value, labels) {
     companion object {
         @Keep private const val ID_TAG = "id"
@@ -101,5 +102,4 @@ class MetricModelWithId<T : Any>(
     override fun toString(): String {
         return "MetricModelWithId(i$ID_TAG='$id'), parent = ${super.toString()})"
     }
-
 }

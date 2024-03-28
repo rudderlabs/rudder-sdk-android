@@ -18,8 +18,8 @@ import com.rudderstack.android.ruddermetricsreporterandroid.error.Metadata
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.BaseObservable
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.StateEvent
 
-
-internal data class MetadataState(val metadata: Metadata = Metadata()) : BaseObservable(),
+internal data class MetadataState(val metadata: Metadata = Metadata()) :
+    BaseObservable(),
     MetadataAware {
 
     override fun addMetadata(section: String, value: Map<String, Any?>) {
@@ -75,7 +75,7 @@ internal data class MetadataState(val metadata: Metadata = Metadata()) : BaseObs
                 StateEvent.AddMetadata(
                     section,
                     key,
-                    metadata.getMetadata(section, key)
+                    metadata.getMetadata(section, key),
                 )
             }
         }
@@ -87,7 +87,7 @@ internal data class MetadataState(val metadata: Metadata = Metadata()) : BaseObs
                 StateEvent.AddMetadata(
                     section,
                     it.key,
-                    metadata.getMetadata(section, it.key)
+                    metadata.getMetadata(section, it.key),
                 )
             }
         }

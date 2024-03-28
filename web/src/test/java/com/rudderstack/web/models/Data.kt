@@ -14,7 +14,6 @@
 
 package com.rudderstack.web.models
 
-
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.squareup.moshi.Json
 
@@ -24,5 +23,5 @@ data class Data(
     val id: Int,
     @Json(name = "title")
     @JsonProperty("title")
-    val title: String
+    val title: String,
 )

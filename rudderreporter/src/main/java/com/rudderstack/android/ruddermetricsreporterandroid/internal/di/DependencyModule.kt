@@ -3,7 +3,6 @@ package com.rudderstack.android.ruddermetricsreporterandroid.internal.di
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.BackgroundTaskService
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.TaskType
 
-
 internal abstract class DependencyModule {
 
     private val properties = mutableListOf<Lazy<*>>()
@@ -31,7 +30,7 @@ internal abstract class DependencyModule {
                 taskType,
                 Runnable {
                     properties.forEach { it.value }
-                }
+                },
             ).get()
         }
     }

@@ -15,14 +15,21 @@
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        gradlePluginPortal()
         google()
         mavenCentral()
+        maven { url = "https://maven.pkg,space/public/p/compose/dev" }
+        maven {
+            url = uri("https://plugins.gradle.org/m2/")
+        }
         jcenter() // Warning: this repository is going to shut down soon
     }
 }
 
 rootProject.name = "Rudder-Android-Libs"
 //include ':app'
+include ':core'
+include ':android'
 include ':web'
 include ':gsonrudderadapter'
 include ':repository'
@@ -31,3 +38,7 @@ include ':rudderjsonadapter'
 include ':rudderreporter'
 include ':jacksonrudderadapter'
 include ':moshirudderadapter'
+include ':libs:navigationplugin'
+//include ':libs:testcommon'
+include ':libs:test-common'
+include ':samples:sample-kotlin-android'

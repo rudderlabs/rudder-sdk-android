@@ -29,14 +29,33 @@ compileTestKotlin {
     kotlinOptions.javaParameters = true
 }
 
-apply from : "$rootDir/dependencies.gradle"
+apply from : "$projectDir/../dependencies.gradle"
 
 dependencies {
-
+    
     //json parsers as compileOnly just for annotations
     compileOnly deps.gson
     compileOnly deps.jackson
+    compileOnly deps.moshi.core
+    compileOnly deps.moshi.kotlin
+    compileOnly deps.moshi.adapter
+
+    //test
     testImplementation 'junit:junit:4.+'
+
+    testImplementation deps.gson
+    testImplementation deps.jackson
+    testImplementation deps.moshi.core
+    testImplementation deps.moshi.kotlin
+    testImplementation deps.moshi.adapter
+    testImplementation deps.jsonAssert
+
+    testImplementation(project(':moshirudderadapter'))
+    testImplementation(project(':gsonrudderadapter'))
+    testImplementation(project(':jacksonrudderadapter'))
+    testImplementation(project(":rudderjsonadapter"))
+
+    testImplementation deps.hamcrest
 }
 apply from: rootProject.file('gradle/artifacts-jar.gradle')
 apply from: rootProject.file('gradle/mvn-publish.gradle')

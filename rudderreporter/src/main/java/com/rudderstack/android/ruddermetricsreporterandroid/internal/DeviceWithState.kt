@@ -1,10 +1,6 @@
 package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.google.gson.annotations.SerializedName
-import com.rudderstack.android.ruddermetricsreporterandroid.internal.Device
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.squareup.moshi.Json
 import java.util.Date
 
 /**
@@ -36,9 +32,9 @@ class DeviceWithState internal constructor(
     /**
      * The timestamp on the device when the event occurred
      */
-    var time: Date?=null,
-//private final String timestampString;
-) : Device(buildInfo, buildInfo.cpuAbis, jailbroken,locale, totalMemory, runtimeVersions){
+    var time: Date? = null,
+// private final String timestampString;
+) : Device(buildInfo, buildInfo.cpuAbis, jailbroken, locale, totalMemory, runtimeVersions) {
     override fun serialize(jsonAdapter: JsonAdapter): String? {
         return jsonAdapter.writeToJson(this)
     }
@@ -48,7 +44,7 @@ class DeviceWithState internal constructor(
             "freeDisk" to freeDisk.toString(),
             "freeMemory" to freeMemory.toString(),
             "orientation" to orientation.toString(),
-            "time" to time?.let {  DateUtils.toIso8601(it)},
+            "time" to time?.let { DateUtils.toIso8601(it) },
         )
     }
 }

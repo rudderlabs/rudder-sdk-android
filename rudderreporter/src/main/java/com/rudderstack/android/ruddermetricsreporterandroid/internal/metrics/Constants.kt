@@ -14,7 +14,7 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.internal.metrics
 
-object LABEL_CONSTANTS{
+object LABEL_CONSTANTS {
     const val LABEL_TRACK = 0X1
     const val LABEL_IDENTIFY = 0X2
     const val LABEL_ALIAS = 0X4

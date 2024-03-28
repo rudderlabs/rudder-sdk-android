@@ -6,6 +6,17 @@
   "targets": {
     "build": {
       "executor": "@jnxplus/nx-gradle:build",
+      "dependsOn": [
+        {
+          "projects": [
+            "gsonrudderadapter",
+            "jacksonrudderadapter",
+            "moshirudderadapter",
+            "web"
+          ],
+          "target": "build"
+        }
+      ],
       "outputs": [
         "{projectRoot}/core/build"
       ]
@@ -33,7 +44,7 @@
       "options": {
         "baseBranch": "master",
         "preset": "conventional",
-        "tagPrefix": "${projectName}@"
+        "tagPrefix": "{projectName}@"
       }
     },
     "sync-bumped-version-properties": {
@@ -55,7 +66,7 @@
       ],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'core-release' && ./gradlew :core:publishToSonatype -Prelease closeAndReleaseSonatypeStagingRepository"
+        "command": "echo 'core-release' && ./gradlew publishToSonatype -p core -Prelease && ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository && ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository"
       }
     },
     "snapshot-release": {
@@ -64,7 +75,7 @@
       ],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'core-snapshot' && ./gradlew :core:publishToSonatype"
+        "command": "echo 'core-snapshot' && cd core && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype && cd .."
       }
     }
   },
