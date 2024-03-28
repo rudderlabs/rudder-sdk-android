@@ -17,6 +17,7 @@ package com.rudderstack.android
 
 import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
 import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
+import com.rudderstack.android.internal.infrastructure.AppInstallUpdateTrackerPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
 import com.rudderstack.android.internal.infrastructure.ResetImplementationPlugin
 import com.rudderstack.android.internal.plugins.ReinstatePlugin
@@ -136,6 +137,7 @@ fun Analytics.setUserId(userId: String) {
 private val infrastructurePlugins
     get() = arrayOf(
         AnonymousIdHeaderPlugin(),
+        AppInstallUpdateTrackerPlugin(),
         LifecycleObserverPlugin(),
         ActivityBroadcasterPlugin(),
         ResetImplementationPlugin()
