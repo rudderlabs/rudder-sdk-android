@@ -29,6 +29,7 @@ internal object AnalyticsRegistry {
      * @param writeKey The unique identifier associated with the Analytics instance.
      * @param analytics The Analytics instance to be registered.
      */
+    @JvmStatic
     fun register(writeKey: String, analytics: Analytics) {
         writeKeyToInstance.putIfAbsent(writeKey, analytics)
     }
@@ -39,6 +40,7 @@ internal object AnalyticsRegistry {
      * @param writeKey The write key associated with the desired Analytics instance.
      * @return The Analytics instance if found, otherwise null.
      */
+    @JvmStatic
     fun getInstance(writeKey: String): Analytics? {
         return writeKeyToInstance[writeKey]
     }
