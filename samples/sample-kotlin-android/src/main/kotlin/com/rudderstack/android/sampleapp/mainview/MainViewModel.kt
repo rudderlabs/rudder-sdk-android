@@ -31,8 +31,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _loggingInterceptor by lazy {
         object : Plugin {
             private var _instanceName: String? = null
-            override fun setup(analytics: Analytics) {
-            }
 
             override fun intercept(chain: Plugin.Chain): Message {
                 val msg = chain.message()
