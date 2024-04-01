@@ -32,7 +32,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         object : Plugin {
             private var _instanceName: String? = null
             override fun setup(analytics: Analytics) {
-                _instanceName = analytics.instanceName
             }
 
             override fun intercept(chain: Plugin.Chain): Message {
