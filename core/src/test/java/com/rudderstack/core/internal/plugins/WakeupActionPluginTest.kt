@@ -101,7 +101,7 @@ class WakeupActionPluginTest {
             )
         )
         val plugins = listOf(wakeupActionPlugin)
-        val centralPluginChain = CentralPluginChain(testMessage, plugins)
+        val centralPluginChain = CentralPluginChain(testMessage, plugins, originalMessage = testMessage)
         centralPluginChain.proceed(testMessage)
         //dest1 is not ready, hence message should be stored
         assertThat(
@@ -127,7 +127,7 @@ class WakeupActionPluginTest {
             )
         )
         val plugins = listOf(wakeupActionPlugin)
-        val centralPluginChain = CentralPluginChain(testMessage, plugins)
+        val centralPluginChain = CentralPluginChain(testMessage, plugins, originalMessage = testMessage)
         centralPluginChain.proceed(testMessage)
         //dest1 is not ready, hence message should be stored
         assertThat(storage.startupQueue, iterableWithSize(0))

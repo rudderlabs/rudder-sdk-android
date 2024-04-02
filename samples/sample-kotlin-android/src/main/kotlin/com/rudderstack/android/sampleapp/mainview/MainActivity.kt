@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
             userScrollEnabled = true,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp)
+                .padding(vertical = 8.dp)
                 .weight(1f)
         ) {
             items(logCatList.size, null) { index ->
@@ -102,38 +102,85 @@ class MainActivity : ComponentActivity() {
                 .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Text(text = "Primary Analytics", modifier = Modifier.padding(2.dp).align(Alignment
+                .CenterHorizontally), )
             CreateRowOfApis(
                 names = arrayOf(
-                    AnalyticsState.InitializeAnalytics,
                     AnalyticsState.ShutDownAnalytics,
-                    AnalyticsState.ClearAnalytics,
-                ), weight = .3f, viewModel = viewModel
+                    AnalyticsState.ForceFlush,
+                    AnalyticsState.OptInAnalytics
+                ), weight = .5f, viewModel = viewModel
             )
-            Spacer(modifier = Modifier.height(8.dp))
             CreateRowOfApis(
-                names = arrayOf(AnalyticsState.AliasEvent, AnalyticsState.TrackEvent, AnalyticsState.ScreenEvent),
+                names = arrayOf(AnalyticsState.AliasEvent,
+                    AnalyticsState.TrackEvent,
+                    AnalyticsState.ScreenEvent),
                 weight = .3f,
                 viewModel = viewModel
             )
-            Spacer(modifier = Modifier.height(8.dp))
             CreateRowOfApis(
                 names = arrayOf(AnalyticsState.IdentifyEvent, AnalyticsState.GroupEvent),
                 weight = .5f,
                 viewModel = viewModel
             )
-            Spacer(modifier = Modifier.height(8.dp))
             CreateRowOfApis(
-                names = arrayOf(AnalyticsState.OptInAnalytics, AnalyticsState.ForceFlush),
+                names = arrayOf(AnalyticsState.StartManualSession, AnalyticsState.EndSession),
                 weight = .5f,
                 viewModel = viewModel
             )
-            Spacer(modifier = Modifier.height(8.dp))
             CreateRowOfApis(
-                names = arrayOf(AnalyticsState.SendError),
+                names = arrayOf(AnalyticsState.EnableAutoTracking, AnalyticsState.DisableAutoTracking),
                 weight = .5f,
                 viewModel = viewModel
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Secondary Analytics", modifier = Modifier.padding(8.dp).align(Alignment
+                .CenterHorizontally), )
+            Spacer(modifier = Modifier.height(2.dp))
+            CreateRowOfApis(
+                names = arrayOf(
+                    AnalyticsState.ShutDownAnalyticsSecondary,
+                    AnalyticsState.ForceFlushSecondary,
+                    AnalyticsState.OptInAnalyticsSecondary
+                ), weight = .3f, viewModel = viewModel
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            CreateRowOfApis(
+                names = arrayOf(AnalyticsState.AliasEventSecondary,
+                    AnalyticsState.TrackEventSecondary,
+                    AnalyticsState.ScreenEventSecondary),
+                weight = .3f,
+                viewModel = viewModel
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            CreateRowOfApis(
+                names = arrayOf(AnalyticsState.IdentifyEventSecondary, AnalyticsState
+                    .GroupEventSecondary),
+                weight = .5f,
+                viewModel = viewModel
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+
+            CreateRowOfApis(
+                names = arrayOf(AnalyticsState.StartManualSessionSecondary, AnalyticsState
+                    .EndSessionSecondary),
+                weight = .5f,
+                viewModel = viewModel
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            CreateRowOfApis(
+                names = arrayOf(AnalyticsState.EnableAutoTrackingSecondary, AnalyticsState
+                    .DisableAutoTrackingSecondary),
+                weight = .5f,
+                viewModel = viewModel
+            )
+            CreateRowOfApis(
+                names = arrayOf(AnalyticsState.SendError,
+                    AnalyticsState.ClearAnalytics,
+                    ),
+                weight = .5f,
+                viewModel = viewModel
+            )
+            Spacer(modifier = Modifier.height(2.dp))
             CreateLogcat(state.logDataList)
         }
     }

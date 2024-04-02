@@ -20,7 +20,6 @@ import android.os.Bundle
 import com.rudderstack.android.LifecycleListenerPlugin
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.Configuration
 import com.rudderstack.core.InfrastructurePlugin
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -37,16 +36,16 @@ internal class ActivityBroadcasterPlugin(
     private val lifecycleCallback by lazy {
         object : Application.ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-                if(analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true  &&
-                    activityCount.get() == 0) {
-                    broadCastApplicationStart()
-                }
             }
 
             override fun onActivityStarted(activity: Activity) {
                 incrementActivityCount()
                 if (analytics?.currentConfigurationAndroid?.recordScreenViews == true) {
                     broadcastActivityStart(activity)
+                }
+                if(analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true  &&
+                    activityCount.get() == 1) {
+                    broadCastApplicationStart()
                 }
             }
 

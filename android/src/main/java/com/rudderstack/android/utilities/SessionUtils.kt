@@ -95,8 +95,10 @@ internal fun Analytics.startSessionIfNeeded() {
 
 internal fun Analytics.initializeSessionManagement(savedSessionId: Long? = null,
         lastActiveTimestamp: Long? = null) {
-    if (currentConfigurationAndroid?.trackAutoSession != true || currentConfigurationAndroid?.trackLifecycleEvents != true) {
-        discardAnyPreviousSession(savedSessionId, lastActiveTimestamp)
+    if (currentConfigurationAndroid?.trackAutoSession != true
+        || currentConfigurationAndroid?.trackLifecycleEvents != true
+        && androidStorage.trackAutoSession) {
+        discardAnyPreviousSession()
         return
     }
 
@@ -113,10 +115,7 @@ internal fun Analytics.initializeSessionManagement(savedSessionId: Long? = null,
     listenToSessionChanges()
 }
 
-private fun Analytics.discardAnyPreviousSession(savedSessionId: Long?, lastActiveTimestamp: Long?) {
-    if (savedSessionId != null && lastActiveTimestamp != null) {
-        applySessionToStorage(UserSession())
-    }
+private fun Analytics.discardAnyPreviousSession() {
     updateSessionEnd()
 }
 

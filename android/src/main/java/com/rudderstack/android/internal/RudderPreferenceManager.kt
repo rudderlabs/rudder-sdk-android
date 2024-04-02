@@ -23,6 +23,7 @@ private const val RUDDER_PREFS = "rl_prefs"
 private const val RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY = "rl_server_last_updated"
 private const val RUDDER_TRAITS_KEY = "rl_traits"
 private const val RUDDER_APPLICATION_INFO_KEY = "rl_application_info_key"
+private const val RUDDER_TRACK_AUTO_SESSION_KEY = "rl_track_auto_session_key"
 private const val RUDDER_EXTERNAL_ID_KEY = "rl_external_id"
 private const val RUDDER_OPT_STATUS_KEY = "rl_opt_status"
 private const val RUDDER_OPT_IN_TIME_KEY = "rl_opt_in_time"
@@ -34,10 +35,10 @@ private const val RUDDER_SESSION_ID_KEY = "rl_session_id_key"
 private const val RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY =
     "rl_last_event_timestamp_key"
 internal class RudderPreferenceManager(application: Application,
-    private val instanceName: String) {
+    private val writeKey: String) {
 
     private val String.key: String
-        get() = "$this-$instanceName"
+        get() = "$this-$writeKey"
 
     private lateinit var preferences: SharedPreferences
     private lateinit var preferencesV1: SharedPreferences
@@ -106,6 +107,11 @@ internal class RudderPreferenceManager(application: Application,
     fun saveUserId(userId: String?) {
         preferences.edit().putString(RUDDER_USER_ID_KEY.key, userId).apply()
     }
+    fun saveTrackAutoSession(trackAutoSession: Boolean) {
+        preferences.edit().putBoolean(RUDDER_TRACK_AUTO_SESSION_KEY.key, trackAutoSession).apply()
+    }
+    internal val trackAutoSession: Boolean
+        get() =  preferences.getBoolean(RUDDER_TRACK_AUTO_SESSION_KEY, false)
 
     val userId: String?
         get() = preferences.getString(RUDDER_USER_ID_KEY.key, null)
@@ -162,4 +168,11 @@ internal class RudderPreferenceManager(application: Application,
 
     internal val v1SessionId : Long
         get() =  preferencesV1.getLong(RUDDER_SESSION_ID_KEY, -1)
+
+    fun saveOptStatus(optStatus: Boolean) {
+        preferences.edit().putBoolean(RUDDER_OPT_STATUS_KEY.key, optStatus).apply()
+    }
+
+    val optStatus: Boolean
+        get() = preferences.getBoolean(RUDDER_OPT_STATUS_KEY.key, false)
 }

@@ -70,7 +70,7 @@ class StoragePluginTest {
         storagePlugin.setup(analytics)
 //        storagePlugin.updateConfiguration()
         testMessagesList.forEach { msg ->
-            CentralPluginChain(msg, listOf(storagePlugin)).proceed(msg)
+            CentralPluginChain(msg, listOf(storagePlugin), originalMessage = msg).proceed(msg)
         }
         val dataOfNames = storage.getDataSync().map {
             (it as TrackMessage).eventName

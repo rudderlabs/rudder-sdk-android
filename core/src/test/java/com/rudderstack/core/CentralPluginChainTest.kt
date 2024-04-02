@@ -106,7 +106,7 @@ class CentralPluginChainTest {
         }
         // Initialize the list of plugins for testing
         val plugins = listOf(mockPlugin1, mockPlugin2, mockDestinationPlugin)
-        centralPluginChain = CentralPluginChain(mockMessage, plugins)
+        centralPluginChain = CentralPluginChain(mockMessage, plugins, originalMessage = mockMessage)
         whenever(mockMessage.copy()).thenReturn(mockMessage)
     }
     @Test

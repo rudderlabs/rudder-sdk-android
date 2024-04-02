@@ -38,30 +38,29 @@ import java.util.concurrent.atomic.AtomicLong
 class AndroidStorageImpl(
     private val application: Application,
     private val useContentProvider: Boolean = false,
-    private val instanceName: String,
+    private val writeKey: String,
     private val storageExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 ) : AndroidStorage {
-    private var logger: Logger? = null
-    private val dbName get() = "rs_persistence_$instanceName"
-    private var jsonAdapter: JsonAdapter? = null
 
+    private var logger: Logger? = null
+    private val dbName get() = "rs_persistence_$writeKey"
+    private var jsonAdapter: JsonAdapter? = null
 
     private var preferenceManager: RudderPreferenceManager? = null
 
     companion object {
+
         private const val DB_VERSION = 1
         private const val SERVER_CONFIG_FILE_NAME = "RudderServerConfig"
 
-
         private const val CONTEXT_FILE_NAME = "pref_context"
-
 
     }
 
     private val serverConfigFileName
-        get() = "$SERVER_CONFIG_FILE_NAME-{instanceName}"
+        get() = "$SERVER_CONFIG_FILE_NAME-{$writeKey}"
     private val contextFileName
-        get() = "$CONTEXT_FILE_NAME-{instanceName}"
+        get() = "$CONTEXT_FILE_NAME-{$writeKey}"
 
     private var messageDao: Dao<MessageEntity>? = null
 
@@ -75,7 +74,14 @@ class AndroidStorageImpl(
     //we update this once on init and then on data change listener
     private val _dataCount = AtomicLong()
 
-    private val _optOut = AtomicBoolean(false)
+    private var _optOut: AtomicBoolean = AtomicBoolean(false)
+        set(newValue) {
+            val oldValue = field.get()
+            if (oldValue != newValue.get()) {
+                preferenceManager?.saveOptStatus(newValue.get())
+            }
+            field = newValue
+        }
     private val _optOutTime = AtomicLong(0L)
     private val _optInTime = AtomicLong(System.currentTimeMillis())
 
@@ -90,7 +96,6 @@ class AndroidStorageImpl(
     private var _cachedContext: MessageContext? = null
 
     private var rudderDatabase: RudderDatabase? = null
-
 
     //message table listener
     private val _messageDataListener = object : Dao.DataChangeListener<MessageEntity> {
@@ -109,7 +114,6 @@ class AndroidStorageImpl(
             }
         }
     }
-
 
     private fun initDb(analytics: Analytics) {
         rudderDatabase = RudderDatabase(
@@ -154,9 +158,9 @@ class AndroidStorageImpl(
 
                         messageDao?.delete(
                             "${MessageEntity.ColumnNames.messageId} IN (" +
-                            //COMMAND FOR SELECTING FIRST $excessMessages to be removed from DB
-                            "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${MessageEntity
-                                .TABLE_NAME} " + "ORDER BY ${MessageEntity.ColumnNames.updatedAt} LIMIT $excessMessages)",
+                                    //COMMAND FOR SELECTING FIRST $excessMessages to be removed from DB
+                                    "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${MessageEntity
+                                        .TABLE_NAME} " + "ORDER BY ${MessageEntity.ColumnNames.updatedAt} LIMIT $excessMessages)",
                             null
                         ) {
                             //check messages exceed storage cap
@@ -237,7 +241,6 @@ class AndroidStorageImpl(
             _cachedContext
         } else _cachedContext)
 
-
     //for local caching
     private var _serverConfig: RudderServerConfig? = null
     override fun saveServerConfig(serverConfig: RudderServerConfig) {
@@ -264,7 +267,6 @@ class AndroidStorageImpl(
             _optInTime.set(System.currentTimeMillis())
         }
     }
-
 
     override fun saveStartupMessageInQueue(message: Message) {
         startupQ.add(message)
@@ -332,6 +334,8 @@ class AndroidStorageImpl(
         get() = preferenceManager?.v1ExternalIdsJson?.let {
             jsonAdapter?.readJson(it, object : RudderTypeAdapter<List<Map<String, String>>>() {})
         }
+    override val trackAutoSession: Boolean
+        get() = preferenceManager?.trackAutoSession?: false
 
     override fun setAnonymousId(anonymousId: String) {
         _anonymousId = anonymousId
@@ -345,6 +349,10 @@ class AndroidStorageImpl(
 
     override fun setSessionId(sessionId: Long) {
         preferenceManager?.saveSessionId(sessionId)
+    }
+
+    override fun setTrackAutoSession(trackAutoSession: Boolean) {
+        preferenceManager?.saveTrackAutoSession(trackAutoSession)
     }
 
     override fun saveLastActiveTimestamp(timestamp: Long) {
@@ -391,7 +399,8 @@ class AndroidStorageImpl(
 
     override fun setup(analytics: Analytics) {
         initDb(analytics)
-        preferenceManager = RudderPreferenceManager(application, analytics.instanceName)
+        preferenceManager = RudderPreferenceManager(application, writeKey)
+        _optOut = AtomicBoolean(preferenceManager?.optStatus ?: false)
     }
 
     private val Iterable<Message>.entities

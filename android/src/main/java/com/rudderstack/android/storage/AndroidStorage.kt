@@ -29,6 +29,7 @@ interface AndroidStorage : Storage {
     val v1LastActiveTimestamp: Long?
     val v1Traits: Map<String, Any?>?
     val v1ExternalIds: List<Map<String, String>>?
+    val trackAutoSession: Boolean
     /**
      * Platform specific implementation of caching context. This can be done locally too.
      *
@@ -45,6 +46,7 @@ interface AndroidStorage : Storage {
     fun setUserId(userId: String)
 
     fun setSessionId(sessionId: Long)
+    fun setTrackAutoSession(trackAutoSession : Boolean)
     fun saveLastActiveTimestamp(timestamp: Long)
 
     fun clearSessionId()

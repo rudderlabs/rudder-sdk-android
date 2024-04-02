@@ -127,7 +127,7 @@ class EventFilteringPluginTest{
         var chainCopy: Plugin.Chain? = null
         whenever(chain.with(anyList())).then {
             val list = it.arguments[0] as List<Plugin>
-            CentralPluginChain(demoMessage, list).also { chainCopy = it }
+            CentralPluginChain(demoMessage, list, originalMessage = demoMessage).also { chainCopy = it }
         }
         // When
         eventFilteringPlugin.updateRudderServerConfig(serverConfig)
@@ -188,7 +188,7 @@ class EventFilteringPluginTest{
         var chainCopy: Plugin.Chain? = null
         whenever(chain.with(anyList())).then {
             val list = it.arguments[0] as List<Plugin>
-            CentralPluginChain(demoMessage, list).also { chainCopy = it }
+            CentralPluginChain(demoMessage, list, originalMessage = demoMessage).also { chainCopy = it }
         }
         // When
         eventFilteringPlugin.updateRudderServerConfig(serverConfig)
@@ -262,7 +262,7 @@ class EventFilteringPluginTest{
         var chainCopy: Plugin.Chain? = null
         whenever(chain.with(anyList())).then {
             val list = it.arguments[0] as List<Plugin>
-            CentralPluginChain(demoMessage, list).also { chainCopy = it }
+            CentralPluginChain(demoMessage, list, originalMessage = demoMessage).also { chainCopy = it }
         }
         // When
         eventFilteringPlugin.updateRudderServerConfig(serverConfig)
@@ -322,7 +322,7 @@ class EventFilteringPluginTest{
         var chainCopy: Plugin.Chain? = null
         whenever(chain.with(anyList())).then {
             val list = it.arguments[0] as List<Plugin>
-            CentralPluginChain(demoMessage, list).also { chainCopy = it }
+            CentralPluginChain(demoMessage, list, originalMessage = demoMessage).also { chainCopy = it }
         }
         // When
         eventFilteringPlugin.updateRudderServerConfig(serverConfig)
