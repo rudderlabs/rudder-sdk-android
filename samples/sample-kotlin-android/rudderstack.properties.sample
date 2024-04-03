@@ -1,0 +1,13 @@
+## This file must *NOT* be checked into Version Control Systems,
+# as it contains information specific to your local configuration.
+
+# Create a new rudderstack.properties file and replace with your own Rudderstack values!!
+
+writeKey=""
+controlplaneUrl=""
+dataplaneUrl=""
+
+# For a secondary Rudderstack instance, replace with your other Rudderstack values
+writeKeySecondary=""
+controlplaneUrlSecondary=""
+dataplaneUrlSecondary=""
