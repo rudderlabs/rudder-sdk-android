@@ -1,17 +1,21 @@
 package com.rudderstack.android.internal.infrastructure
 
+import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.android.utils.TestExecutor
+import com.rudderstack.android.android.utils.busyWait
 import com.rudderstack.android.androidStorage
 import com.rudderstack.android.internal.plugins.ReinstatePlugin
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
+import com.rudderstack.android.storage.saveObject
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
+import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.models.Message
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.models.TrackMessage
@@ -25,6 +29,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
@@ -48,7 +53,10 @@ class ReinstatePluginTest {
     private lateinit var configurationAndroid: ConfigurationAndroid
     private lateinit var plugin: ReinstatePlugin
     private lateinit var dummyMessage: Message
-
+    private val RUDDER_SERVER_FILE_NAME_V1 = "RudderServerConfig"
+    private val TEST_SOURCE_ID = "testSourceId"
+    private val context
+        get() = ApplicationProvider.getApplicationContext<Application>()
     @Before
     fun setUp() {
         androidStorage = mock<AndroidStorage>()
@@ -64,11 +72,12 @@ class ReinstatePluginTest {
         dummyMessage = TrackMessage.create("dummyEvent", RudderUtils.timeStamp)
         config = RudderServerConfig(
             source = RudderServerConfig.RudderServerConfigSource(
-                "testSourceId", isSourceEnabled = true
+                TEST_SOURCE_ID, isSourceEnabled = true,
             )
         )
         configurationAndroid = ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(), mock<JsonAdapter>()
+            context, mock<JsonAdapter>(), shouldVerifySdk = true,
+            analyticsExecutor = TestExecutor()
         )
         analytics = generateTestAnalytics(
             configurationAndroid, storage = androidStorage, configDownloadService = mockControlPlane
@@ -89,24 +98,75 @@ class ReinstatePluginTest {
     fun `test migration should be called if v1 data available and v2 unavailable`(){
         whenever(androidStorage.anonymousId).thenReturn(null)
         whenever(androidStorage.userId).thenReturn(null)
-    }
-    fun `test v1userId should be called if v1 data available and v2 unavailable`(){
+        whenever(androidStorage.v1Traits).thenReturn(mapOf())
+        whenever(androidStorage.v1ExternalIds).thenReturn(listOf())
+        whenever(androidStorage.v1OptOut).thenReturn(false)
+
+        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger)
+        plugin.updateRudderServerConfig(config)
+
+//        plugin.updateConfiguration(configurationAndroid)
+        busyWait(100)
+        Mockito.verify(androidStorage, times(1)).migrateV1StorageToV2Sync()
+
 
     }
     @Test
-    fun `test v1AnonymousId should be called if v1 data available and v2 unavailable`(){
+    fun `test v1Traits should be called if v1 data available and v2 unavailable`(){
+        whenever(androidStorage.anonymousId).thenReturn(null)
+        whenever(androidStorage.userId).thenReturn(null)
+        whenever(androidStorage.v1Traits).thenReturn(mapOf("userId" to "uid"))
+        whenever(androidStorage.v1ExternalIds).thenReturn(listOf())
+        whenever(androidStorage.v1OptOut).thenReturn(false)
 
+        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger)
+        plugin.updateRudderServerConfig(config)
+
+//        plugin.updateConfiguration(configurationAndroid)
+        busyWait(100)
+        Mockito.verify(androidStorage, times(1)).v1Traits
     }
     @Test
     fun `test v1OptOut should be called if v1 data available and v2 unavailable`(){
+        whenever(androidStorage.anonymousId).thenReturn(null)
+        whenever(androidStorage.userId).thenReturn(null)
+        whenever(androidStorage.v1Traits).thenReturn(mapOf("userId" to "uid"))
+        whenever(androidStorage.v1ExternalIds).thenReturn(listOf())
+        whenever(androidStorage.v1OptOut).thenReturn(false)
 
+        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger)
+        plugin.updateRudderServerConfig(config)
+
+//        plugin.updateConfiguration(configurationAndroid)
+        busyWait(100)
+        Mockito.verify(androidStorage, times(1)).v1OptOut
     }
     @Test
     fun `test migration should not be called if v1 data unavailable`(){
+        whenever(androidStorage.anonymousId).thenReturn(null)
+        whenever(androidStorage.userId).thenReturn(null)
+        whenever(androidStorage.v1Traits).thenReturn(mapOf())
+        whenever(androidStorage.v1ExternalIds).thenReturn(listOf())
+        whenever(androidStorage.v1OptOut).thenReturn(false)
 
+        plugin.updateRudderServerConfig(config)
+
+//        plugin.updateConfiguration(configurationAndroid)
+        busyWait(100)
+        Mockito.verify(androidStorage, never()).migrateV1StorageToV2Sync()
     }
     @Test
     fun `test migration should not be called if v2 data available`(){
+        whenever(androidStorage.anonymousId).thenReturn("anonId")
+        whenever(androidStorage.userId).thenReturn("userId")
+        whenever(androidStorage.v1Traits).thenReturn(mapOf())
+        whenever(androidStorage.v1ExternalIds).thenReturn(listOf())
+        whenever(androidStorage.v1OptOut).thenReturn(false)
+        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger)
+        plugin.updateRudderServerConfig(config)
 
+//        plugin.updateConfiguration(configurationAndroid)
+        busyWait(100)
+        Mockito.verify(androidStorage, never()).migrateV1StorageToV2Sync()
     }
 }

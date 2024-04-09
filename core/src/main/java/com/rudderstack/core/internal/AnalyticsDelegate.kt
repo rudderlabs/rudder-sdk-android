@@ -37,7 +37,6 @@ import com.rudderstack.core.flushpolicy.applyFlushPoliciesClosure
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.removeState
 import com.rudderstack.core.holder.retrieveState
-import com.rudderstack.core.internal.plugins.CorePlatformInputsPlugin
 import com.rudderstack.core.internal.plugins.DestinationConfigurationPlugin
 import com.rudderstack.core.internal.plugins.EventFilteringPlugin
 import com.rudderstack.core.internal.plugins.GDPRPlugin
