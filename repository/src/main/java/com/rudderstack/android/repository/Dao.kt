@@ -323,6 +323,9 @@ class Dao<T : Entity>(
     }
 
     private fun awaitDbInitialization() {
+        while (_db == null){
+            // busy wait until _db is assigned
+        }
         todoLock.lock()
         todoLock.unlock()
     }

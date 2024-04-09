@@ -159,8 +159,10 @@ class AndroidStorageImpl(
                         messageDao?.delete(
                             "${MessageEntity.ColumnNames.messageId} IN (" +
                                     //COMMAND FOR SELECTING FIRST $excessMessages to be removed from DB
-                                    "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${MessageEntity
-                                        .TABLE_NAME} " + "ORDER BY ${MessageEntity.ColumnNames.updatedAt} LIMIT $excessMessages)",
+                                    "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${
+                                        MessageEntity
+                                            .TABLE_NAME
+                                    } " + "ORDER BY ${MessageEntity.ColumnNames.updatedAt} LIMIT $excessMessages)",
                             null
                         ) {
                             //check messages exceed storage cap
@@ -214,7 +216,10 @@ class AndroidStorageImpl(
     }
 
     override fun getData(offset: Int, callback: (List<Message>) -> Unit) {
-        messageDao?.runGetQuery(limit = "$offset,$_maxFetchLimit") {
+        messageDao?.runGetQuery(
+            limit = "$offset,$_maxFetchLimit",
+            orderBy = MessageEntity.ColumnNames.updatedAt
+        ) {
             callback.invoke(it.map { it.message })
         }
     }
@@ -225,7 +230,8 @@ class AndroidStorageImpl(
 
     override fun getDataSync(offset: Int): List<Message> {
         return messageDao?.runGetQuerySync(
-            null, null, null, null, "$offset,$_maxFetchLimit"
+            null, null, null, MessageEntity.ColumnNames.updatedAt,
+            "$offset,$_maxFetchLimit"
         )?.map {
             it.message
         } ?: listOf()
@@ -400,7 +406,9 @@ class AndroidStorageImpl(
     override fun setup(analytics: Analytics) {
         initDb(analytics)
         preferenceManager = RudderPreferenceManager(application, writeKey)
-        _optOut = AtomicBoolean(preferenceManager?.optStatus ?: false)
+        preferenceManager?.optStatus?.apply {
+            _optOut = AtomicBoolean(this)
+        }
     }
 
     private val Iterable<Message>.entities

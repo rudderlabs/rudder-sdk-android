@@ -27,16 +27,12 @@ import com.rudderstack.android.utilities.initializeSessionManagement
 import com.rudderstack.android.utilities.isV1SavedServerConfigContainsSourceId
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
-import com.rudderstack.core.Plugin
-import com.rudderstack.models.Message
+import com.rudderstack.core.DataUploadService
+import com.rudderstack.core.InfrastructurePlugin
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.models.createContext
 import com.rudderstack.models.traits
-import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
-
-
-private const val RUDDER_SERVER_FILE_NAME_V1 = "RudderServerConfig"
 
 /**
  * This plugin is used to reinstate the cache data in V2 SDK.
@@ -48,39 +44,38 @@ private const val RUDDER_SERVER_FILE_NAME_V1 = "RudderServerConfig"
  * Initialise session management for the user
  * Reinstate traits and external ids
  */
-class ReinstatePlugin : Plugin {
+private const val RUDDER_SERVER_FILE_NAME_V1 = "RudderServerConfig"
+
+internal class ReinstatePlugin : InfrastructurePlugin {
     private var _analytics: Analytics? = null
     private var sourceId: String? = null
-    private val isReinstated = AtomicBoolean(false)
-    private val stackedChainsTillReinstate = LinkedBlockingQueue<Plugin.Chain>()
-    override fun intercept(chain: Plugin.Chain): Message {
-        if(!isReinstated.get()){
-            stackedChainsTillReinstate.add(chain)
-            return chain.message()
-        }
-        processStackedMessages()
-        return chain.proceed(chain.message())
-    }
-
-    private fun processStackedMessages() {
-        if(!isReinstated.get()) return
-        synchronized(this) {
-            while (stackedChainsTillReinstate.isNotEmpty()) {
-                val stackedChain = stackedChainsTillReinstate.poll() ?: continue
-                stackedChain.proceed(stackedChain.message())
+    private val _isReinstated = AtomicBoolean(false)
+    private fun setReinstated(isReinstated: Boolean){
+        synchronized(_isReinstated) {
+            _isReinstated.set(isReinstated)
+            if (isReinstated){
+                _analytics?.applyInfrastructureClosure {
+                    if(this is DataUploadService)
+                        this.resume()
+                }
+            }else{
+                _analytics?.applyInfrastructureClosure {
+                    if(this is DataUploadService)
+                        this.pause()
+                }
             }
         }
     }
 
     override fun setup(analytics: Analytics) {
         _analytics = analytics
+        setReinstated(false)
     }
 
     override fun updateRudderServerConfig(config: RudderServerConfig) {
         val sourceId = config.source?.sourceId ?: return
         this.sourceId = sourceId
         reinstate()
-        processStackedMessages()
     }
 
     override fun updateConfiguration(configuration: Configuration) {
@@ -88,25 +83,25 @@ class ReinstatePlugin : Plugin {
     }
 
     private fun reinstate() {
-        if (isReinstated.get()) return
+        if (_isReinstated.get()) return
         val config = _analytics?.currentConfigurationAndroid ?: return
         if (isV2DataAvailable()) {
-            isReinstated.set(true)
+            setReinstated(true)
             reinstateV2FromCache(config)
             return
         }
         if (!config.shouldVerifySdk){
-            defaults(config)
-            isReinstated.set(true)
+            fillDefaults(config)
+            setReinstated(true)
             return
         }
         val sourceId = this.sourceId ?: return
 
         migrateV1DataIfAvailable(config.application, sourceId, config)
-        isReinstated.set(true)
+        setReinstated(true)
     }
 
-    private fun defaults(configurationAndroid: ConfigurationAndroid) {
+    private fun fillDefaults(configurationAndroid: ConfigurationAndroid) {
         _analytics?.setAnonymousId(AndroidUtils.getDeviceId(configurationAndroid.application))
         _analytics?.initializeSessionManagement(_analytics?.androidStorage?.sessionId,
             _analytics?.androidStorage?.lastActiveTimestamp)
@@ -135,10 +130,6 @@ class ReinstatePlugin : Plugin {
                !_analytics?.contextState?.value.isNullOrEmpty()
     }
 
-    override fun onShutDown() {
-        _analytics = null
-        this.sourceId = null
-    }
     private fun migrateV1DataIfAvailable(
         context: Context, sourceId: String, configurationAndroid: ConfigurationAndroid
     ) {
@@ -195,6 +186,11 @@ class ReinstatePlugin : Plugin {
     private fun shouldMigrateContext(): Boolean {
         val context = _analytics?.contextState?.value ?: return false
         return context.isEmpty() || context.traits.isNullOrEmpty()
+    }
+
+    override fun shutdown() {
+        _analytics = null
+        this.sourceId = null
     }
 
 }

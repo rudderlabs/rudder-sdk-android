@@ -64,7 +64,7 @@ sealed class Message(
 
     // format - yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
     // @Expose
-    @SerializedName("timestamp") @JsonProperty("timestamp") @Json(name = "timestamp") val timestamp: String,
+    @SerializedName("originalTimestamp") @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") val timestamp: String,
 
     // @Expose
     @SerializedName("destinationProps") @JsonProperty("destinationProps") @Json(name = "destinationProps") val destinationProps: MessageDestinationProps? = null,
@@ -85,6 +85,9 @@ sealed class Message(
     @JsonProperty("channel")
     @SerializedName("channel")
     var channel: String = _channel?: "server"
+        set(value) {
+            field = value
+        }
         get() = field?: "server" // required for gson, cause it might set the property null
     // through reflection
 
@@ -166,6 +169,7 @@ sealed class Message(
         )
     }.also {
         it.integrations = integrations
+        it.channel = channel
     }
 
     enum class EventType(val value: String) {

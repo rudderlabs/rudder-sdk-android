@@ -15,6 +15,8 @@
 package com.rudderstack.android.storage
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.util.Log
 import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.EntityFactory
 import com.rudderstack.android.repository.RudderDatabase
@@ -37,6 +39,7 @@ import com.rudderstack.models.traits
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import java.util.concurrent.ExecutorService
+import kotlin.math.log
 
 private const val V1_DATABASE_NAME = "rl_persistence.db"
 private val synchronizeOn = Any()
@@ -59,12 +62,17 @@ internal fun migrateV1MessagesToV2Database(
 ) {
     logger?.info(log = "Migrating V1 messages to V2 database")
     synchronized(synchronizeOn) {
+        val db = SQLiteDatabase.openDatabase(context.getDatabasePath(V1_DATABASE_NAME).absolutePath, null,
+            SQLiteDatabase.OPEN_READONLY)
+        val prevVersion = db.version
+        db.close()
+        logger?.debug(log = "Migrating from version: $prevVersion")
         val v1Database = RudderDatabase(
             context,
             V1_DATABASE_NAME,
             V1EntityFactory(jsonAdapter),
             false,
-            3,
+            prevVersion,
             executorService = executorService
         )
         val v1MessagesDao = v1Database.getDao<MessageEntity>(MessageEntity::class.java)
@@ -127,35 +135,21 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
         val v1EventMap =
             jsonAdapter.readJson(v1EventJson, object : RudderTypeAdapter<Map<String, Any?>>() {})
             ?: return null
-        val messageId = v1EventMap["messageId"] as? String ?: return null
-        val context = v1EventMap["context"] as? Map<String, Any?>?
-        val destinationProps = v1EventMap["destinationProps"] as? MessageDestinationProps
-        val anonymousId = v1EventMap["anonymousId"] as? String
-        val userId = v1EventMap["userId"] as? String ?: return null
+
+
         val type = v1EventMap["type"] as? String ?: return null
-        val timestamp = v1EventMap["originalTimestamp"] as? String ?: return null
         val channel = v1EventMap["channel"] as? String ?: "android"
         val integrations = v1EventMap["integrations"] as? MessageIntegrations
         return when (type) {
-            V1MessageType.TRACK -> createTrackMessage(
-                v1EventMap, messageId, anonymousId, userId, timestamp, context, destinationProps
-            )
+            V1MessageType.TRACK -> jsonAdapter.readJson(v1EventJson, TrackMessage::class.java)
 
-            V1MessageType.SCREEN -> createScreenMessage(
-                v1EventMap, messageId, anonymousId, userId, timestamp, context, destinationProps
-            )
+            V1MessageType.SCREEN -> jsonAdapter.readJson(v1EventJson, ScreenMessage::class.java)
 
-            V1MessageType.IDENTIFY -> createIdentifyMessage(
-                v1EventMap, messageId, anonymousId, userId, timestamp, context, destinationProps
-            )
+            V1MessageType.IDENTIFY -> jsonAdapter.readJson(v1EventJson, IdentifyMessage::class.java)
 
-            V1MessageType.ALIAS -> createAliasMessage(
-                v1EventMap, messageId, anonymousId, userId, timestamp, context, destinationProps
-            )
+            V1MessageType.ALIAS -> jsonAdapter.readJson(v1EventJson, AliasMessage::class.java)
 
-            V1MessageType.GROUP -> createGroupMessage(
-                v1EventMap, messageId, anonymousId, userId, timestamp, context, destinationProps
-            )
+            V1MessageType.GROUP -> jsonAdapter.readJson(v1EventJson, GroupMessage::class.java)
 
 
             else -> null
@@ -163,121 +157,6 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
             it.channel = channel
             it.integrations = integrations
         }
-    }
-
-    private fun createTrackMessage(
-        v1EventMap: Map<String, Any?>,
-        messageId: String,
-        anonymousId: String?,
-        userId: String?,
-        timestamp: String,
-        context: Map<String, Any?>?,
-        destinationProps: MessageDestinationProps?
-    ): TrackMessage? {
-        return TrackMessage.create(
-            v1EventMap["event"] as? String ?: return null,
-            timestamp,
-            v1EventMap["properties"] as? TrackProperties,
-            anonymousId,
-            userId,
-            destinationProps,
-            context?.traits,
-            context?.externalIds,
-            context?.customContexts,
-            messageId
-        )
-    }
-
-    private fun createScreenMessage(
-        v1EventMap: Map<String, Any?>,
-        messageId: String,
-        anonymousId: String?,
-        userId: String?,
-        timestamp: String,
-        context: Map<String, Any?>?,
-        destinationProps: MessageDestinationProps?
-    ): ScreenMessage? {
-        val properties = v1EventMap["properties"] as? ScreenProperties ?: return null
-        return ScreenMessage.create(
-            timestamp,
-            anonymousId,
-            userId,
-            destinationProps,
-            null,
-            null,
-            properties,
-            context?.traits,
-            context?.externalIds,
-            context?.customContexts,
-            messageId
-        )
-    }
-
-    private fun createGroupMessage(
-        v1EventMap: Map<String, Any?>,
-        messageId: String,
-        anonymousId: String?,
-        userId: String?,
-        timestamp: String,
-        context: Map<String, Any?>?,
-        destinationProps: MessageDestinationProps?
-    ): GroupMessage? {
-        return GroupMessage.create(
-            anonymousId,
-            userId,
-            timestamp,
-            destinationProps,
-            v1EventMap["groupId"] as? String ?: return null,
-            v1EventMap["traits"] as? GroupTraits?,
-            context?.traits,
-            context?.externalIds,
-            context?.customContexts,
-            messageId
-        )
-    }
-
-    private fun createIdentifyMessage(
-        v1EventMap: Map<String, Any?>,
-        messageId: String,
-        anonymousId: String?,
-        userId: String?,
-        timestamp: String,
-        context: Map<String, Any?>?,
-        destinationProps: MessageDestinationProps?
-    ): IdentifyMessage? {
-        return IdentifyMessage.create(
-            anonymousId,
-            userId,
-            timestamp,
-            v1EventMap["properties"] as? IdentifyProperties,
-            destinationProps,
-            context?.traits,
-            context?.externalIds,
-            context?.customContexts,
-            messageId
-        )
-    }
-
-    private fun createAliasMessage(
-        v1EventMap: Map<String, Any?>,
-        messageId: String,
-        anonymousId: String?,
-        userId: String?,
-        timestamp: String,
-        context: Map<String, Any?>?,
-        destinationProps: MessageDestinationProps?
-    ): AliasMessage? {
-        return AliasMessage.create(
-            timestamp,
-            anonymousId,
-            userId,
-            destinationProps,
-            v1EventMap["previousId"] as? String,
-            context?.traits,
-            context?.externalIds,
-            context?.customContexts,
-            messageId
-        )
     }
 
     object V1MessageType {

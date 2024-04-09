@@ -24,7 +24,6 @@ object RudderAnalyticsUtils {
     fun initialize(application: Application, listener: InitializationListener? = null) {
         _rudderAnalytics = RudderAnalytics(
             writeKey = WRITE_KEY,
-            instanceName = PRIMARY_INSTANCE_NAME,
             initializationListener = { success, message ->
                 listener?.onAnalyticsInitialized(PRIMARY_INSTANCE_NAME, success, message)
             },
@@ -39,7 +38,6 @@ object RudderAnalyticsUtils {
         )
         _rudderAnalyticsSecondary = RudderAnalytics(
             writeKey = WRITE_KEY_SECONDARY,
-            instanceName = SECONDARY_INSTANCE_NAME,
             initializationListener = { success, message ->
                 listener?.onAnalyticsInitialized(SECONDARY_INSTANCE_NAME, success, message)
             },

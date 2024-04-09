@@ -19,10 +19,10 @@ import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
 import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
 import com.rudderstack.android.internal.infrastructure.ResetImplementationPlugin
-import com.rudderstack.android.internal.plugins.ReinstatePlugin
 import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.plugins.PlatformInputsPlugin
+import com.rudderstack.android.internal.plugins.ReinstatePlugin
 import com.rudderstack.android.internal.plugins.SessionPlugin
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.internal.states.UserSessionState
@@ -135,6 +135,7 @@ fun Analytics.setUserId(userId: String) {
 
 private val infrastructurePlugins
     get() = arrayOf(
+        ReinstatePlugin(),
         AnonymousIdHeaderPlugin(),
         LifecycleObserverPlugin(),
         ActivityBroadcasterPlugin(),
@@ -142,7 +143,7 @@ private val infrastructurePlugins
     )
 private val messagePlugins
     get() = listOf(
-        ReinstatePlugin(), PlatformInputsPlugin(), ExtractStatePlugin(), FillDefaultsPlugin(),
+        PlatformInputsPlugin(), ExtractStatePlugin(), FillDefaultsPlugin(),
         SessionPlugin()
     )
 
@@ -150,7 +151,6 @@ private fun Analytics.startup() {
     addPlugins()
     associateStates()
 }
-
 
 
 private fun Analytics.associateStates() {
@@ -170,13 +170,16 @@ internal fun Analytics.processNewContext(
     contextState?.update(newContext)
 }
 
-fun Analytics.applyConfigurationAndroid(androidConfigurationScope: ConfigurationAndroid.() ->
-ConfigurationAndroid){
+fun Analytics.applyConfigurationAndroid(
+    androidConfigurationScope: ConfigurationAndroid.() ->
+    ConfigurationAndroid
+) {
     applyConfiguration {
         if (this is ConfigurationAndroid) androidConfigurationScope()
         else this
     }
 }
+
 val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
     get() = (currentConfiguration as? ConfigurationAndroid)
 
