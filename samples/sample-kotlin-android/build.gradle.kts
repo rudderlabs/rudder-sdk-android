@@ -6,17 +6,10 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("kotlin-android")
 }
-var sampleRudderProperties = Properties()
-if (project.rootProject.file("samples/sample-kotlin-android/local.properties").canRead()) {
-    sampleRudderProperties.apply {
-        load(
-            FileInputStream(
-                File(
-                    rootProject.rootDir, "samples/sample-kotlin-android/local" + ".properties"
-                )
-            )
-        )
-    }
+
+val sampleRudderPropertiesFile: File = rootProject.file("${projectDir}/rudderstack.properties")
+val sampleRudderProperties = Properties().apply {
+    sampleRudderPropertiesFile.canRead().apply { load(FileInputStream(sampleRudderPropertiesFile)) }
 }
 
 android {
@@ -46,13 +39,16 @@ android {
         }
 
         buildConfigField(
-            "String", "WRITE_KEY", sampleRudderProperties.getProperty("writeKey")
+            "String", "WRITE_KEY",
+            sampleRudderProperties.getProperty("writeKey")
         )
         buildConfigField(
-            "String", "WRITE_KEY_SECONDARY", sampleRudderProperties.getProperty("writeKeySecondary")
+            "String", "WRITE_KEY_SECONDARY",
+            sampleRudderProperties.getProperty("writeKeySecondary")
         )
         buildConfigField(
-            "String", "CONTROL_PLANE_URL", sampleRudderProperties.getProperty("controlplaneUrl")
+            "String", "CONTROL_PLANE_URL",
+            sampleRudderProperties.getProperty("controlplaneUrl")
         )
         buildConfigField(
             "String", "CONTROL_PLANE_URL_SECONDARY",
@@ -60,11 +56,11 @@ android {
         )
         buildConfigField(
             "String", "DATA_PLANE_URL",
-                sampleRudderProperties.getProperty("dataplaneUrl")
+            sampleRudderProperties.getProperty("dataplaneUrl")
         )
         buildConfigField(
             "String", "DATA_PLANE_URL_SECONDARY",
-                sampleRudderProperties.getProperty("dataplaneUrlSecondary")
+            sampleRudderProperties.getProperty("dataplaneUrlSecondary")
         )
     }
 
