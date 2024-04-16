@@ -2,15 +2,14 @@ name: CI for v2
 
 on:
   push:
-    branches: [ 'master-v2' ]
+    branches: ["master-v2"]
   pull_request:
-    branches: [ 'master-v2', 'develop-v2' ]
-    types: [ 'opened', 'reopened', 'edited', 'synchronize' ]
+    branches: ["master-v2", "develop-v2"]
+    types: ["opened", "reopened", "edited", "synchronize"]
   workflow_dispatch:
 
 jobs:
   cancel_previous-v2:
-
     runs-on: ubuntu-latest
     steps:
       - uses: styfle/cancel-workflow-action@0.9.1
@@ -29,8 +28,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '11'
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -38,8 +37,8 @@ jobs:
       - name: Set Node 16
         uses: actions/setup-node@v3
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version-file: ".nvmrc"
+          cache: "npm"
 
       - name: Install node_modules
         run: |
