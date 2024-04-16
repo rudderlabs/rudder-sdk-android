@@ -14,8 +14,8 @@ import androidx.annotation.RequiresApi;
 
 import com.rudderstack.android.sdk.core.RudderLogger;
 
-import net.sqlcipher.database.SQLiteDatabase;
-import net.sqlcipher.database.SQLiteOpenHelper;
+import net.zetetic.database.sqlcipher.SQLiteDatabase;
+import net.zetetic.database.sqlcipher.SQLiteOpenHelper;
 
 import java.io.File;
 import java.util.List;
@@ -29,21 +29,21 @@ import java.util.Locale;
 public class EncryptedPersistence extends SQLiteOpenHelper implements Persistence {
     private final List<DbCloseListener> dbCloseListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
     private final DbCreateListener dbCreateListener;
-    private final String encryptPassword;
     private SQLiteDatabase initialDatabase = null;
 
 
     EncryptedPersistence(Application application, DbParams params, @Nullable DbCreateListener dbCreateListener) {
-        super(application, params.dbName, null, params.dbVersion);
-        this.encryptPassword = params.encryptPassword;
+        super(application, params.dbName, params.encryptPassword,null, params.dbVersion,
+                0, null, null, false);
         this.dbCreateListener = dbCreateListener;
     }
 
-    private SQLiteDatabase getWritableDatabase() {
+    @NonNull
+    public SQLiteDatabase getWritableDatabase() {
         if (initialDatabase != null) {
             return initialDatabase;
         }
-        return getWritableDatabase(encryptPassword);
+        return super.getWritableDatabase();
     }
 
     @Override
