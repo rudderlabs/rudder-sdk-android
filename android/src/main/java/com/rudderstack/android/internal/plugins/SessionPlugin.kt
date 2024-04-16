@@ -19,7 +19,7 @@ import com.rudderstack.android.internal.extensions.withSessionId
 import com.rudderstack.android.internal.extensions.withSessionStart
 import com.rudderstack.android.utilities.defaultLastActiveTimestamp
 import com.rudderstack.android.utilities.resetSession
-import com.rudderstack.android.utilities.startSessionIfNeeded
+import com.rudderstack.android.utilities.startAutoSessionIfNeeded
 import com.rudderstack.android.utilities.updateSessionEnd
 import com.rudderstack.android.utilities.userSessionState
 import com.rudderstack.core.Analytics
@@ -45,7 +45,7 @@ internal class SessionPlugin : Plugin {
             _analytics?.updateSessionEnd()
             return
         }
-        _analytics?.startSessionIfNeeded()
+        _analytics?.startAutoSessionIfNeeded()
     }
 
     override fun intercept(chain: Plugin.Chain): Message {
@@ -53,7 +53,7 @@ internal class SessionPlugin : Plugin {
         // update last active timestamp
         // if difference between two events is more than session timeout, refresh session
         val message = chain.message()
-        _analytics?.startSessionIfNeeded()
+        _analytics?.startAutoSessionIfNeeded()
         val newMsg = _analytics?.userSessionState?.value?.takeIf { it.isActive }?.let {
             updateWithSession(message, it)
         } ?: message

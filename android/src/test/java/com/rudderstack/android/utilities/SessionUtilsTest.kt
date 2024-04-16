@@ -178,7 +178,7 @@ class SessionUtilsTest {
             mockConfig
         }
         // When
-        analytics.startSessionIfNeeded()
+        analytics.startAutoSessionIfNeeded()
 
         // Then
         // Verify that SessionState is updated
@@ -210,7 +210,7 @@ class SessionUtilsTest {
             mockConfig
         }
         // When
-        analytics.startSessionIfNeeded()
+        analytics.startAutoSessionIfNeeded()
 
         // Then
         // Verify that SessionState is not updated
@@ -240,7 +240,7 @@ class SessionUtilsTest {
             mockConfig
         }
         // When
-        analytics.startSessionIfNeeded()
+        analytics.startAutoSessionIfNeeded()
 
         // Then
         // Verify that SessionState is updated
@@ -273,7 +273,7 @@ class SessionUtilsTest {
             mockConfig
         }
         // When
-        analytics.startSessionIfNeeded()
+        analytics.startAutoSessionIfNeeded()
 
         // Then
         // Verify that SessionState is updated

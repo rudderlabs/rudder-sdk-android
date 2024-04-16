@@ -71,8 +71,8 @@ fun Analytics.endSession() {
 }
 
 
-internal fun Analytics.startSessionIfNeeded() : Boolean {
-    if (currentConfigurationAndroid?.trackAutoSession != true || currentConfigurationAndroid?.trackLifecycleEvents != true) return false
+internal fun Analytics.startAutoSessionIfNeeded() : Boolean {
+    if (currentConfigurationAndroid?.trackAutoSession != true) return false
 
     val currentSession = userSessionState?.value
     if (currentSession == null) {
@@ -97,9 +97,7 @@ internal fun Analytics.startSessionIfNeeded() : Boolean {
 
 internal fun Analytics.initializeSessionManagement(savedSessionId: Long? = null,
         lastActiveTimestamp: Long? = null) {
-    if ((currentConfigurationAndroid?.trackAutoSession != true
-        || currentConfigurationAndroid?.trackLifecycleEvents != true)
-        && androidStorage.trackAutoSession) {
+    if (isAutoTrackingDisabledInNewSession()) {
         discardAnyPreviousSession()
         return
     }
@@ -113,12 +111,16 @@ internal fun Analytics.initializeSessionManagement(savedSessionId: Long? = null,
             )
         )
     }
-    val isNewSessionStarted = startSessionIfNeeded()
+    val isNewSessionStarted = startAutoSessionIfNeeded()
     if (!isNewSessionStarted) {
         updateSessionLastActiveTimestamp()
     }
     listenToSessionChanges()
 }
+
+private fun Analytics.isAutoTrackingDisabledInNewSession() =
+    ((currentConfigurationAndroid?.trackAutoSession != true)
+            && androidStorage.trackAutoSession)
 
 private fun Analytics.updateSessionLastActiveTimestamp() {
     userSessionState?.apply {
@@ -174,7 +176,7 @@ internal fun Analytics.updateSessionStart(sessionId: Long) {
 
 internal fun Analytics.resetSession() {
     updateSessionEnd()
-    startSessionIfNeeded()
+    startAutoSessionIfNeeded()
 }
 
 internal fun Analytics.updateSessionEnd() {
