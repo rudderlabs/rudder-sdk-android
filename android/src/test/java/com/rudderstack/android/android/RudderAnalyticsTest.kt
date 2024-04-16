@@ -16,8 +16,9 @@ package com.rudderstack.android.android
 
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
+import com.rudderstack.android.AnalyticsRegistry
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.RudderAnalytics
+import com.rudderstack.android.createInstance
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.setAnonymousId
 import com.rudderstack.core.Analytics
@@ -34,22 +35,100 @@ import org.robolectric.annotation.Config
 @RunWith(
     RobolectricTestRunner::class)
 @Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])class RudderAnalyticsTest {
-    private lateinit var analytics: Analytics
+    val writeKey = "writeKey"
 
     @Before
-    fun setup() {
-        analytics = RudderAnalytics("testKey", ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
-            JacksonAdapter()
-        ))
+    fun setUp() {
+        AnalyticsRegistry.clear()
     }
 
     @Test
     fun `test put anonymous id`() {
+        val analytics = createInstance("testKey", ConfigurationAndroid(
+            ApplicationProvider.getApplicationContext(),
+            JacksonAdapter()
+        ))
+
         analytics.setAnonymousId("anon_id")
         MatcherAssert.assertThat(
             analytics.currentConfigurationAndroid, allOf(Matchers.isA(ConfigurationAndroid::class.java),
                 Matchers.hasProperty("anonymousId", Matchers.equalTo("anon_id"))
         ))
+    }
+
+    @Test
+    fun `when writeKey and configuration is passed, then createInstance should return Analytics instance`() {
+        val analytics = createInstance(writeKey, ConfigurationAndroid(
+            ApplicationProvider.getApplicationContext(),
+            JacksonAdapter()
+        ))
+
+        MatcherAssert.assertThat(analytics, Matchers.isA(Analytics::class.java))
+    }
+
+    @Test
+    fun `when multiple instances are created with different writeKeys, then the instances should be different`() {
+        val writeKey2 = "writeKey2"
+        val analytics = createInstance(writeKey, ConfigurationAndroid(
+            ApplicationProvider.getApplicationContext(),
+            JacksonAdapter()
+        ))
+
+        val analytics2 = createInstance(writeKey2, ConfigurationAndroid(
+            ApplicationProvider.getApplicationContext(),
+            JacksonAdapter()
+        ))
+
+        MatcherAssert.assertThat(analytics, Matchers.isA(Analytics::class.java))
+        MatcherAssert.assertThat(analytics2, Matchers.isA(Analytics::class.java))
+        assert(analytics != analytics2)
+    }
+
+    @Test
+    fun `given instance is already created with the writeKey, when createInstance is called with same write key, then the previous instance should be returned`() {
+        val analytics = createInstance(writeKey, ConfigurationAndroid(
+            ApplicationProvider.getApplicationContext(),
+            JacksonAdapter()
+        ))
+
+        val analytics2 = createInstance(writeKey, ConfigurationAndroid(
+            ApplicationProvider.getApplicationContext(),
+            JacksonAdapter()
+        ))
+
+        MatcherAssert.assertThat(analytics, Matchers.isA(Analytics::class.java))
+        MatcherAssert.assertThat(analytics2, Matchers.isA(Analytics::class.java))
+        assert(analytics == analytics2)
+    }
+
+    @Test
+    fun `given instance is already created with the writeKey, when getInstance is called with that write key, then the Analytics instance should be returned`() {
+        val analytics = createInstance(writeKey, ConfigurationAndroid(
+            ApplicationProvider.getApplicationContext(),
+            JacksonAdapter()
+        ))
+
+        val result = AnalyticsRegistry.getInstance(writeKey)
+        assert(result == analytics)
+    }
+
+    @Test
+    fun `given multiple instances are already created with different writeKeys, when getInstance is called with those write keys, then the Analytics instances should be returned`() {
+        val writeKey2 = "writeKey2"
+        val analytics = createInstance(writeKey, ConfigurationAndroid(
+            ApplicationProvider.getApplicationContext(),
+            JacksonAdapter()
+        ))
+
+        val analytics2 = createInstance(writeKey2, ConfigurationAndroid(
+            ApplicationProvider.getApplicationContext(),
+            JacksonAdapter()
+        ))
+
+        val result1 = AnalyticsRegistry.getInstance(writeKey)
+        val result2 = AnalyticsRegistry.getInstance(writeKey2)
+
+        assert(result1 == analytics)
+        assert(result2 == analytics2)
     }
 }
