@@ -46,7 +46,7 @@ class CentralPluginChainTest {
     @MockK
     lateinit var mockDestinationPlugin: DestinationPlugin<*>
 
-    private val mockMessage: Message = TrackMessage.create(
+    private val message: Message = TrackMessage.create(
         "ev-1", RudderUtils.timeStamp,
         traits = mapOf(
             "age" to 31,
@@ -67,25 +67,25 @@ class CentralPluginChainTest {
         // Mock the behavior of plugins and destination plugin
         every { mockPlugin1.intercept(any()) } answers {
             val chain = arg<CentralPluginChain>(0)
-            chain.proceed(mockMessage)
+            chain.proceed(message)
         }
         every { mockPlugin2.intercept(any()) } answers {
             val chain = arg<CentralPluginChain>(0)
-            chain.proceed(mockMessage)
+            chain.proceed(message)
         }
         every { mockDestinationPlugin.intercept(any()) } answers {
             val chain = arg<CentralPluginChain>(0)
-            chain.proceed(mockMessage)
+            chain.proceed(message)
         }
 
         // Initialize the list of plugins for testing
         val plugins = listOf(mockPlugin1, mockPlugin2, mockDestinationPlugin)
-        centralPluginChain = CentralPluginChain(mockMessage, plugins, originalMessage = mockMessage)
+        centralPluginChain = CentralPluginChain(message, plugins, originalMessage = message)
     }
 
     @Test
     fun testMessage() {
-        assertThat(centralPluginChain.message(), equalTo(mockMessage))
+        assertThat(centralPluginChain.message(), equalTo(message))
     }
 
     @Test
@@ -94,49 +94,49 @@ class CentralPluginChainTest {
         val chainCaptor1 = slot<CentralPluginChain>()
         every { mockPlugin1.intercept(capture(chainCaptor1)) } answers {
             val chain = arg<CentralPluginChain>(0)
-            chain.proceed(mockMessage)
+            chain.proceed(message)
         }
 
         val chainCaptor2 = slot<CentralPluginChain>()
         every { mockPlugin2.intercept(capture(chainCaptor2)) } answers {
             val chain = arg<CentralPluginChain>(0)
-            chain.proceed(mockMessage)
+            chain.proceed(message)
         }
 
         val chainCaptor3 = slot<CentralPluginChain>()
         every { mockDestinationPlugin.intercept(capture(chainCaptor3)) } answers {
             val chain = arg<CentralPluginChain>(0)
-            chain.proceed(mockMessage)
+            chain.proceed(message)
         }
 
         // Call the method under test
-        val resultMessage = centralPluginChain.proceed(mockMessage)
+        val resultMessage = centralPluginChain.proceed(message)
 
         val chain1 = chainCaptor1.captured
         assertThat(chain1.index, `is`(1))
         assertThat(chain1.plugins.size, `is`(3))
-        assertThat(chain1.originalMessage, equalTo(mockMessage))
+        assertThat(chain1.originalMessage, equalTo(message))
 
         val chain2 = chainCaptor2.captured
         assertThat(chain2.index, `is`(2))
         assertThat(chain2.plugins.size, `is`(3))
-        assertThat(chain2.originalMessage, equalTo(mockMessage))
+        assertThat(chain2.originalMessage, equalTo(message))
 
         val chain3 = chainCaptor3.captured
         assertThat(chain3.index, `is`(3))
         assertThat(chain3.plugins.size, `is`(3))
-        assertThat(chain3.originalMessage, equalTo(mockMessage))
+        assertThat(chain3.originalMessage, equalTo(message))
 
         // Assert the result
-        assertThat(resultMessage, equalTo(mockMessage))
+        assertThat(resultMessage, equalTo(message))
     }
 
     @Test(expected = IllegalStateException::class)
     fun testProceedTwice() {
 
         // Call the method under test twice
-        centralPluginChain.proceed(mockMessage)
-        centralPluginChain.proceed(mockMessage)
+        centralPluginChain.proceed(message)
+        centralPluginChain.proceed(message)
     }
 
     @Test
@@ -147,28 +147,28 @@ class CentralPluginChainTest {
         val subPlugin1 = mockk<DestinationPlugin.DestinationInterceptor>()
         every { subPlugin1.intercept(capture(subChainCaptor1)) } answers {
             val chain = arg<CentralPluginChain>(0)
-            chain.proceed(mockMessage)
+            chain.proceed(message)
         }
 
         val subPlugin2 = mockk<DestinationPlugin.DestinationInterceptor>()
         // Mock the behavior of plugins and destination plugin
         every { subPlugin2.intercept(capture(subChainCaptor2)) } answers {
             val chain = arg<CentralPluginChain>(0)
-            chain.proceed(mockMessage)
+            chain.proceed(message)
         }
 
         every { mockDestinationPlugin.subPlugins } returns listOf(subPlugin1, subPlugin2)
 
-        centralPluginChain.proceed(mockMessage)
+        centralPluginChain.proceed(message)
 
         val chain1 = subChainCaptor1.captured
         assertThat(chain1.index, `is`(1)) // index should be 1 for sub plugins
         assertThat(chain1.plugins.size, `is`(2)) //number of plugins should be 2 for sub plugins
-        assertThat(chain1.originalMessage, equalTo(mockMessage))
+        assertThat(chain1.originalMessage, equalTo(message))
 
         val chain2 = subChainCaptor2.captured
         assertThat(chain2.index, `is`(2)) // index should be 2 for sub plugins
         assertThat(chain2.plugins.size, `is`(2)) //number of plugins should be 2 for sub plugins
-        assertThat(chain2.originalMessage, equalTo(mockMessage))
+        assertThat(chain2.originalMessage, equalTo(message))
     }
 }
