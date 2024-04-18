@@ -16,6 +16,7 @@ package com.rudderstack.core
 
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.models.Message
+import com.rudderstack.models.TrackMessage
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -45,8 +46,18 @@ class CentralPluginChainTest {
     @MockK
     lateinit var mockDestinationPlugin: DestinationPlugin<*>
 
-    @MockK
-    lateinit var mockMessage: Message
+    private val mockMessage: Message = TrackMessage.create(
+        "ev-1", RudderUtils.timeStamp,
+        traits = mapOf(
+            "age" to 31,
+            "office" to "Rudderstack"
+        ),
+        externalIds = listOf(
+            mapOf("some_id" to "s_id"),
+            mapOf("amp_id" to "amp_id"),
+        ),
+        customContextMap = null
+    )
 
     private lateinit var centralPluginChain: CentralPluginChain
 
@@ -70,7 +81,6 @@ class CentralPluginChainTest {
         // Initialize the list of plugins for testing
         val plugins = listOf(mockPlugin1, mockPlugin2, mockDestinationPlugin)
         centralPluginChain = CentralPluginChain(mockMessage, plugins, originalMessage = mockMessage)
-        every { mockMessage.copy() } returns mockMessage
     }
 
     @Test
@@ -93,7 +103,6 @@ class CentralPluginChainTest {
             chain.proceed(mockMessage)
         }
 
-
         val chainCaptor3 = slot<CentralPluginChain>()
         every { mockDestinationPlugin.intercept(capture(chainCaptor3)) } answers {
             val chain = arg<CentralPluginChain>(0)
@@ -112,7 +121,6 @@ class CentralPluginChainTest {
         assertThat(chain2.index, `is`(2))
         assertThat(chain2.plugins.size, `is`(3))
         assertThat(chain2.originalMessage, equalTo(mockMessage))
-
 
         val chain3 = chainCaptor3.captured
         assertThat(chain3.index, `is`(3))
