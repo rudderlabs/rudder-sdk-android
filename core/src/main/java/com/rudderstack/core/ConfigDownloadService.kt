@@ -30,4 +30,11 @@ interface ConfigDownloadService : InfrastructurePlugin {
     fun download(
         callback: (success: Boolean, RudderServerConfig?, lastErrorMsg: String?) -> Unit
     )
+
+    fun addListener(listener: Listener, replay: Int)
+    fun removeListener(listener: Listener)
+
+    fun interface Listener{
+        fun onDownloaded(success: Boolean)
+    }
 }

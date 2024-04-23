@@ -37,6 +37,7 @@ import com.rudderstack.core.flushpolicy.applyFlushPoliciesClosure
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.removeState
 import com.rudderstack.core.holder.retrieveState
+import com.rudderstack.core.internal.plugins.CoreInputsPlugin
 import com.rudderstack.core.internal.plugins.DestinationConfigurationPlugin
 import com.rudderstack.core.internal.plugins.EventFilteringPlugin
 import com.rudderstack.core.internal.plugins.GDPRPlugin
@@ -517,7 +518,7 @@ internal class AnalyticsDelegate(
 
         }
     }
-    private fun updateSourceConfig() {
+    override fun updateSourceConfig() {
         var isServerConfigDownloadPossible = false
         applyInfrastructureClosure {
             if (this is ConfigDownloadService) {
@@ -590,6 +591,7 @@ internal class AnalyticsDelegate(
     private fun initializeMessagePlugins() {
         // check if opted out
         _internalPreMessagePlugins = _internalPreMessagePlugins + gdprPlugin
+        _internalPreMessagePlugins = _internalPreMessagePlugins + CoreInputsPlugin
         _internalPostCustomPlugins = _internalPostCustomPlugins + eventSizeFilterPlugin
         // rudder option plugin followed by extract state plugin should be added by lifecycle
         // add defaults to message

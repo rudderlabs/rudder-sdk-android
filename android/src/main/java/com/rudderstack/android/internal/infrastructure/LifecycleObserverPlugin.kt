@@ -14,26 +14,45 @@
 
 package com.rudderstack.android.internal.infrastructure
 
+import android.os.SystemClock
 import com.rudderstack.android.LifecycleListenerPlugin
+import com.rudderstack.android.androidStorage
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.InfrastructurePlugin
+import java.util.concurrent.atomic.AtomicLong
 
+const val EVENT_NAME_APPLICATION_OPENED = "Application Opened"
+const val EVENT_NAME_APPLICATION_STOPPED = "Application Backgrounded"
+private const val MAX_CONFIG_DOWNLOAD_INTERVAL = 90*60*1000 // 90 MINUTES
 class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
 
-    companion object {
-        const val EVENT_NAME_APPLICATION_OPENED = "Application Opened"
-        const val EVENT_NAME_APPLICATION_STOPPED = "Application Backgrounded"
-    }
 
+    private var _lastSuccessfulDownloadTimeInMillis = AtomicLong(-1L)
     private var analytics: Analytics? = null
     private var currentActivityName: String? = null
+    private val listener = ConfigDownloadService.Listener {
+        if(it){
+            _lastSuccessfulDownloadTimeInMillis.set(SystemClock.uptimeMillis())
+        }
+    }
 
     private fun sendLifecycleStart() {
         withTrackLifeCycle {
-            analytics?.track {
-                event(EVENT_NAME_APPLICATION_OPENED)
+            analytics?.also { analytics ->
+                analytics.track {
+                    event(EVENT_NAME_APPLICATION_OPENED)
+                    trackProperties {
+                        analytics.androidStorage.isFirstLaunch.also {isFirstLaunch ->
+                        add("from_background" to isFirstLaunch)
+                        }.takeIf { it }?.let {
+                            analytics.androidStorage.setIsFirstLaunch(false)
+                            add("version" to (analytics.androidStorage.versionName ?: ""))
+                        }
+                    }
+                }
             }
         }
     }
@@ -48,9 +67,20 @@ class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
 
     override fun setup(analytics: Analytics) {
         this.analytics = analytics
+        analytics.applyInfrastructureClosure {
+            if (this is ConfigDownloadService){
+                addListener(listener, 1)
+            }
+        }
     }
 
     override fun shutdown() {
+        _lastSuccessfulDownloadTimeInMillis.set(0)
+        analytics?.applyInfrastructureClosure {
+            if(this is ConfigDownloadService){
+                removeListener(listener)
+            }
+        }
         analytics = null
     }
 
@@ -60,6 +90,15 @@ class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
 
     override fun onAppForegrounded() {
         sendLifecycleStart()
+        checkAndDownloadSourceConfig()
+    }
+
+    private fun checkAndDownloadSourceConfig() {
+        analytics?.apply {
+            if(SystemClock.uptimeMillis() - (_lastSuccessfulDownloadTimeInMillis.get()) >= MAX_CONFIG_DOWNLOAD_INTERVAL){
+                analytics?.updateSourceConfig()
+            }
+        }
     }
 
     override fun onAppBackgrounded() {

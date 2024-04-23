@@ -30,6 +30,7 @@ private const val RUDDER_OPT_IN_TIME_KEY = "rl_opt_in_time"
 private const val RUDDER_OPT_OUT_TIME_KEY = "rl_opt_out_time"
 private const val RUDDER_ANONYMOUS_ID_KEY = "rl_anonymous_id_key"
 private const val RUDDER_USER_ID_KEY = "rl_user_id_key"
+private const val RUDDER_IS_FIRST_LAUNCH_KEY = "rl_user_id_key"
 private const val RUDDER_PERIODIC_WORK_REQUEST_ID_KEY = "rl_periodic_work_request_key"
 private const val RUDDER_SESSION_ID_KEY = "rl_session_id_key"
 private const val RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY =
@@ -39,6 +40,8 @@ private const val RUDDER_APPLICATION_BUILD_KEY = "rl_application_build_key"
 internal class RudderPreferenceManager(application: Application,
     private val writeKey: String) {
 
+    val isFirstLaunch: Boolean
+        get() = preferences.getBoolean(RUDDER_IS_FIRST_LAUNCH_KEY, true)
     private val String.key: String
         get() = "$this-$writeKey"
 
@@ -111,6 +114,9 @@ internal class RudderPreferenceManager(application: Application,
     }
     fun saveTrackAutoSession(trackAutoSession: Boolean) {
         preferences.edit().putBoolean(RUDDER_TRACK_AUTO_SESSION_KEY.key, trackAutoSession).apply()
+    }
+    fun saveIsFirstLaunch(isFirstLaunch: Boolean) {
+        preferences.edit().putBoolean(RUDDER_IS_FIRST_LAUNCH_KEY.key, isFirstLaunch).apply()
     }
     internal val trackAutoSession: Boolean
         get() =  preferences.getBoolean(RUDDER_TRACK_AUTO_SESSION_KEY, false)

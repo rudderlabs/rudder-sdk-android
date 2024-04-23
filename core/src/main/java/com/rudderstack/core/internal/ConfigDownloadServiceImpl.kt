@@ -17,15 +17,14 @@ package com.rudderstack.core.internal
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
-import com.rudderstack.core.RetryStrategy
-import com.rudderstack.core.State
-import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.web.HttpResponse
 import com.rudderstack.web.WebService
 import com.rudderstack.web.WebServiceFactory
 import java.lang.ref.WeakReference
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicReference
 
@@ -33,6 +32,8 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
     private val writeKey: String,
     webService: WebService? = null,
 ) : ConfigDownloadService {
+    private val downloadSequence = CopyOnWriteArrayList<Boolean>()
+    private var listeners = ConcurrentHashMap<ConfigDownloadService.Listener, Int>()
     private val controlPlaneWebService: AtomicReference<WebService?> =
         AtomicReference<WebService?>(webService)
     private val encodedWriteKey: AtomicReference<String?> = AtomicReference()
@@ -79,7 +80,14 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
                         lastErrorMsg = response?.errorBody ?: response?.error?.message
                         return@perform (ongoingConfigFuture?.get()?.status ?: -1) == 200
                     }) {
+
+                        if(it)
+                            analyticsRef?.get()?.storage?.updateLastConfigDownloadTimestampMillisToCurrentTime()
                         callback.invoke(it, lastRudderServerConfig, lastErrorMsg)
+                        listeners.keys.forEach{ listener ->
+                            listener.onDownloaded(it)
+                        }
+                        downloadSequence.add(it)
                     }
                 }
             }
@@ -87,12 +95,29 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
 
     }
 
+    override fun addListener(listener: ConfigDownloadService.Listener, replay: Int) {
+        val replayAccepted = replay.coerceAtLeast(0)
+        for (i in (downloadSequence.size -1 - replayAccepted ).coerceAtLeast(0) until downloadSequence.size){
+            listener.onDownloaded(downloadSequence[i])
+        }
+        listeners += listener to replayAccepted
+    }
+
+    override fun removeListener(listener: ConfigDownloadService.Listener) {
+        listeners.remove(listener)
+    }
+
+//    override val lastDownloadTimeInMillis: Long
+//        get() = analyticsRef?.get()?.storage?.lastDownloadedSourceConfigTimestampMillis ?: -1L
+
     override fun updateConfiguration(configuration: Configuration) {
         encodedWriteKey.set(configuration.base64Generator.generateBase64(writeKey))
         configuration.initializeWebServiceIfRequired()
         currentConfigurationAtomic.set(configuration)
     }
     override fun shutdown() {
+        listeners.clear()
+        downloadSequence.clear()
         controlPlaneWebService.get()?.shutdown()
         controlPlaneWebService.set(null)
         currentConfigurationAtomic.set(null)
