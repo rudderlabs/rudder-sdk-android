@@ -299,8 +299,6 @@ class AndroidStorageImpl(
         get() = _optOutTime.get()
     override val optInTime: Long
         get() = _optInTime.get()
-    override val isFirstLaunch: Boolean
-        get() = preferenceManager?.isFirstLaunch?:false
     override val v1OptOut: Boolean
         get() = preferenceManager?.v1optOutStatus ?: false
     override val anonymousId: String?
@@ -362,10 +360,6 @@ class AndroidStorageImpl(
 
     override fun saveLastActiveTimestamp(timestamp: Long) {
         preferenceManager?.saveLastActiveTimestamp(timestamp)
-    }
-
-    override fun setIsFirstLaunch(isFirstLaunch: Boolean) {
-        preferenceManager?.saveIsFirstLaunch(isFirstLaunch)
     }
 
     override fun clearSessionId() {

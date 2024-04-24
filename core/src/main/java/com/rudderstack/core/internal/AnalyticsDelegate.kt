@@ -617,7 +617,6 @@ internal class AnalyticsDelegate(
         messagePluginStartupClosure(analytics)
         infraPluginStartupClosure(analytics)
         _analytics = analytics
-        println("init analytics $_analytics ${currentConfiguration?.shouldVerifySdk}")
         if (currentConfiguration?.shouldVerifySdk == true) {
             updateSourceConfig()
         } else {

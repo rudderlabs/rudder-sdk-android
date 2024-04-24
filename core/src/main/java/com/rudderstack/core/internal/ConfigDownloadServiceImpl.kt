@@ -33,7 +33,7 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
     webService: WebService? = null,
 ) : ConfigDownloadService {
     private val downloadSequence = CopyOnWriteArrayList<Boolean>()
-    private var listeners = ConcurrentHashMap<ConfigDownloadService.Listener, Int>()
+    private var listeners = CopyOnWriteArrayList<ConfigDownloadService.Listener>()
     private val controlPlaneWebService: AtomicReference<WebService?> =
         AtomicReference<WebService?>(webService)
     private val encodedWriteKey: AtomicReference<String?> = AtomicReference()
@@ -80,14 +80,11 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
                         lastErrorMsg = response?.errorBody ?: response?.error?.message
                         return@perform (ongoingConfigFuture?.get()?.status ?: -1) == 200
                     }) {
-
-                        if(it)
-                            analyticsRef?.get()?.storage?.updateLastConfigDownloadTimestampMillisToCurrentTime()
-                        callback.invoke(it, lastRudderServerConfig, lastErrorMsg)
-                        listeners.keys.forEach{ listener ->
+                        listeners.forEach{ listener ->
                             listener.onDownloaded(it)
                         }
                         downloadSequence.add(it)
+                        callback.invoke(it, lastRudderServerConfig, lastErrorMsg)
                     }
                 }
             }
@@ -97,10 +94,10 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
 
     override fun addListener(listener: ConfigDownloadService.Listener, replay: Int) {
         val replayAccepted = replay.coerceAtLeast(0)
-        for (i in (downloadSequence.size -1 - replayAccepted ).coerceAtLeast(0) until downloadSequence.size){
+        for (i in (downloadSequence.size - replayAccepted ).coerceAtLeast(0) until downloadSequence.size){
             listener.onDownloaded(downloadSequence[i])
         }
-        listeners += listener to replayAccepted
+        listeners += listener
     }
 
     override fun removeListener(listener: ConfigDownloadService.Listener) {

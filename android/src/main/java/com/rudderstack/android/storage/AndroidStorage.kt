@@ -19,7 +19,6 @@ import com.rudderstack.models.Message
 import com.rudderstack.models.MessageContext
 
 interface AndroidStorage : Storage {
-    val isFirstLaunch: Boolean
     val v1OptOut: Boolean
     val anonymousId: String?
     val userId: String?
@@ -51,7 +50,6 @@ interface AndroidStorage : Storage {
     fun setSessionId(sessionId: Long)
     fun setTrackAutoSession(trackAutoSession : Boolean)
     fun saveLastActiveTimestamp(timestamp: Long)
-    fun setIsFirstLaunch(isFirstLaunch: Boolean)
 
     fun clearSessionId()
     fun clearLastActiveTimestamp()

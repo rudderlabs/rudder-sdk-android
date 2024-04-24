@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.android.utils
+package com.rudderstack.android.utils
 
 import java.util.concurrent.AbstractExecutorService
 import java.util.concurrent.TimeUnit

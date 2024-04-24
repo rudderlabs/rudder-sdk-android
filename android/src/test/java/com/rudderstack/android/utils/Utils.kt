@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.android.utils
+package com.rudderstack.android.utils
 
 fun busyWait(millis: Long) {
     val start = System.currentTimeMillis()

@@ -30,6 +30,13 @@ class MockConfigDownloadService(val mockConfigDownloadSuccess: Boolean = true,
         callback(mockConfigDownloadSuccess, mockConfig, mockLastErrorMsg)
     }
 
+    override fun addListener(listener: ConfigDownloadService.Listener, replay: Int) {
+
+    }
+
+    override fun removeListener(listener: ConfigDownloadService.Listener) {
+    }
+
     override fun setup(analytics: Analytics) {
 
     }

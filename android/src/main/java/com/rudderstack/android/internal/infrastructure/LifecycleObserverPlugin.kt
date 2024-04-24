@@ -22,20 +22,26 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.InfrastructurePlugin
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 const val EVENT_NAME_APPLICATION_OPENED = "Application Opened"
 const val EVENT_NAME_APPLICATION_STOPPED = "Application Backgrounded"
-private const val MAX_CONFIG_DOWNLOAD_INTERVAL = 90*60*1000 // 90 MINUTES
-class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
+private const val MAX_CONFIG_DOWNLOAD_INTERVAL = 90 * 60 * 1000 // 90 MINUTES
 
+internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) = { SystemClock.uptimeMillis() }) :
+    InfrastructurePlugin, LifecycleListenerPlugin {
+
+    private var _isFirstLaunch = AtomicBoolean(true)
 
     private var _lastSuccessfulDownloadTimeInMillis = AtomicLong(-1L)
     private var analytics: Analytics? = null
     private var currentActivityName: String? = null
     private val listener = ConfigDownloadService.Listener {
-        if(it){
-            _lastSuccessfulDownloadTimeInMillis.set(SystemClock.uptimeMillis())
+        if (it) {
+            _lastSuccessfulDownloadTimeInMillis.set(currentMillisGenerator().also {
+                println("setting time $it")
+            })
         }
     }
 
@@ -45,10 +51,9 @@ class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
                 analytics.track {
                     event(EVENT_NAME_APPLICATION_OPENED)
                     trackProperties {
-                        analytics.androidStorage.isFirstLaunch.also {isFirstLaunch ->
-                        add("from_background" to isFirstLaunch)
+                        _isFirstLaunch.getAndSet(false).also { isFirstLaunch ->
+                            add("from_background" to !isFirstLaunch)
                         }.takeIf { it }?.let {
-                            analytics.androidStorage.setIsFirstLaunch(false)
                             add("version" to (analytics.androidStorage.versionName ?: ""))
                         }
                     }
@@ -68,7 +73,7 @@ class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
     override fun setup(analytics: Analytics) {
         this.analytics = analytics
         analytics.applyInfrastructureClosure {
-            if (this is ConfigDownloadService){
+            if (this is ConfigDownloadService) {
                 addListener(listener, 1)
             }
         }
@@ -77,7 +82,7 @@ class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
     override fun shutdown() {
         _lastSuccessfulDownloadTimeInMillis.set(0)
         analytics?.applyInfrastructureClosure {
-            if(this is ConfigDownloadService){
+            if (this is ConfigDownloadService) {
                 removeListener(listener)
             }
         }
@@ -94,8 +99,12 @@ class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
     }
 
     private fun checkAndDownloadSourceConfig() {
-        analytics?.apply {
-            if(SystemClock.uptimeMillis() - (_lastSuccessfulDownloadTimeInMillis.get()) >= MAX_CONFIG_DOWNLOAD_INTERVAL){
+        analytics?.takeIf { it.currentConfiguration?.shouldVerifySdk == true }?.apply {
+            if (currentMillisGenerator().also {
+                println("current: $it")
+                } - (_lastSuccessfulDownloadTimeInMillis.get().also {
+                    println("last: $it")
+                }) >= MAX_CONFIG_DOWNLOAD_INTERVAL) {
                 analytics?.updateSourceConfig()
             }
         }
@@ -120,12 +129,12 @@ class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
     }
 
     override fun onScreenChange(name: String, arguments: Map<String, Any>?) {
-        val activityName = currentActivityName?:""
+        val activityName = currentActivityName ?: ""
         withRecordScreenViews {
             analytics?.screen {
                 screenName(activityName)
                 this.category(name)
-                this.screenProperties{
+                this.screenProperties {
                     add(arguments ?: mapOf())
                 }
             }
@@ -137,14 +146,17 @@ class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
             body()
         }
     }
+
     private fun withRecordScreenViews(body: () -> Unit) {
         if (analytics?.currentConfigurationAndroid?.recordScreenViews == true) {
             body()
         }
     }
+
     private fun withTrackLifeCycleAndRecordScreenViews(body: () -> Unit) {
         if (analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true
-            && analytics?.currentConfigurationAndroid?.recordScreenViews == true) {
+            && analytics?.currentConfigurationAndroid?.recordScreenViews == true
+        ) {
             body()
         }
     }

@@ -12,15 +12,10 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.android
+package com.rudderstack.android
 
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
-import com.rudderstack.android.AnalyticsRegistry
-import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.createInstance
-import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.setAnonymousId
 import com.rudderstack.core.Analytics
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import org.hamcrest.MatcherAssert
