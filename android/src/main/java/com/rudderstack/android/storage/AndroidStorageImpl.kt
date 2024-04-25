@@ -342,6 +342,10 @@ class AndroidStorageImpl(
         }
     override val trackAutoSession: Boolean
         get() = preferenceManager?.trackAutoSession?: false
+    override val build: Int?
+        get() = preferenceManager?.build
+    override val versionName: String?
+        get() = preferenceManager?.versionName
 
     override fun setAnonymousId(anonymousId: String) {
         _anonymousId = anonymousId
@@ -392,6 +396,14 @@ class AndroidStorageImpl(
     override fun migrateV1StorageToV2Sync() {
         migrateV1MessagesToV2Database(application, rudderDatabase?:return,
             jsonAdapter?:return, logger)
+    }
+
+    override fun setBuild(build: Int) {
+        preferenceManager?.saveBuild(build)
+    }
+
+    override fun setVersionName(versionName: String) {
+        preferenceManager?.saveVersionName(versionName)
     }
 
     override val libraryName: String
