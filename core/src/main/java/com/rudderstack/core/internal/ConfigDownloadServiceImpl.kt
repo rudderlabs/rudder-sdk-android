@@ -23,7 +23,6 @@ import com.rudderstack.web.WebService
 import com.rudderstack.web.WebServiceFactory
 import java.lang.ref.WeakReference
 import java.util.Locale
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicReference
@@ -40,6 +39,7 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
     private val currentConfigurationAtomic = AtomicReference<Configuration?>()
     private val currentConfiguration
         get() = currentConfigurationAtomic.get()
+
     private fun Configuration.initializeWebServiceIfRequired() {
         if (controlPlaneWebService.get() == null) controlPlaneWebService.set(
             WebServiceFactory.getWebService(
@@ -47,7 +47,8 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
             )
         )
     }
-    private var analyticsRef : WeakReference<Analytics>?= null
+
+    private var analyticsRef: WeakReference<Analytics>? = null
 
     private var ongoingConfigFuture: Future<HttpResponse<RudderServerConfig>>? = null
     private var lastRudderServerConfig: RudderServerConfig? = null
@@ -59,7 +60,7 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
     ) {
         currentConfiguration?.apply {
             networkExecutor.submit {
-                with(sdkVerifyRetryStrategy){
+                with(sdkVerifyRetryStrategy) {
                     analyticsRef?.get()?.perform({
                         ongoingConfigFuture = controlPlaneWebService.get()?.get(
                             mapOf(
@@ -80,7 +81,7 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
                         lastErrorMsg = response?.errorBody ?: response?.error?.message
                         return@perform (ongoingConfigFuture?.get()?.status ?: -1) == 200
                     }) {
-                        listeners.forEach{ listener ->
+                        listeners.forEach { listener ->
                             listener.onDownloaded(it)
                         }
                         downloadSequence.add(it)
@@ -94,7 +95,7 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
 
     override fun addListener(listener: ConfigDownloadService.Listener, replay: Int) {
         val replayAccepted = replay.coerceAtLeast(0)
-        for (i in (downloadSequence.size - replayAccepted ).coerceAtLeast(0) until downloadSequence.size){
+        for (i in (downloadSequence.size - replayAccepted).coerceAtLeast(0) until downloadSequence.size) {
             listener.onDownloaded(downloadSequence[i])
         }
         listeners += listener
@@ -104,14 +105,12 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
         listeners.remove(listener)
     }
 
-//    override val lastDownloadTimeInMillis: Long
-//        get() = analyticsRef?.get()?.storage?.lastDownloadedSourceConfigTimestampMillis ?: -1L
-
     override fun updateConfiguration(configuration: Configuration) {
         encodedWriteKey.set(configuration.base64Generator.generateBase64(writeKey))
         configuration.initializeWebServiceIfRequired()
         currentConfigurationAtomic.set(configuration)
     }
+
     override fun shutdown() {
         listeners.clear()
         downloadSequence.clear()
