@@ -59,7 +59,8 @@ internal class MessageEntity(val message: Message,
             it.put(ColumnNames.messageId, message.messageId)
             it.put(
                 ColumnNames.message,
-                jsonAdapter.writeToJson(message, RudderTypeAdapter {})?.replace("'", BACKLASHES_INVERTED_COMMA)
+                jsonAdapter.writeToJson(message, RudderTypeAdapter {})
+                    ?.replace("'", BACKLASHES_INVERTED_COMMA)
             )
             it.put(ColumnNames.updatedAt, updatedAt?: System.currentTimeMillis())
             it.put(ColumnNames.type, message.getType().value)

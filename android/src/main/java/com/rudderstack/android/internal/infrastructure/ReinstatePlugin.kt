@@ -23,6 +23,7 @@ import com.rudderstack.android.contextState
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.processNewContext
 import com.rudderstack.android.setAnonymousId
+import com.rudderstack.android.setUserId
 import com.rudderstack.android.utilities.initializeSessionManagement
 import com.rudderstack.android.utilities.isV1SavedServerConfigContainsSourceId
 import com.rudderstack.core.Analytics
@@ -87,11 +88,11 @@ internal class ReinstatePlugin : InfrastructurePlugin {
         val config = _analytics?.currentConfigurationAndroid ?: return
         if (isV2DataAvailable()) {
             setReinstated(true)
-            reinstateV2FromCache(config)
+            reinstateV2FromCache()
             return
         }
+        fillDefaults()
         if (!config.shouldVerifySdk){
-            fillDefaults(config)
             setReinstated(true)
             return
         }
@@ -101,24 +102,23 @@ internal class ReinstatePlugin : InfrastructurePlugin {
         setReinstated(true)
     }
 
-    private fun fillDefaults(configurationAndroid: ConfigurationAndroid) {
-        _analytics?.setAnonymousId(AndroidUtils.getDeviceId(configurationAndroid.application))
+    private fun fillDefaults() {
+        _analytics?.setAnonymousId(AndroidUtils.getDeviceId())
         _analytics?.initializeSessionManagement(_analytics?.androidStorage?.sessionId,
             _analytics?.androidStorage?.lastActiveTimestamp)
     }
 
-    private fun reinstateV2FromCache(configurationAndroid: ConfigurationAndroid) {
+    private fun reinstateV2FromCache() {
         val userId = _analytics?.androidStorage?.userId
-        val anonId = _analytics?.androidStorage?.anonymousId ?: AndroidUtils.getDeviceId(
-            configurationAndroid.application
-        )
+        val anonId = _analytics?.androidStorage?.anonymousId ?: AndroidUtils.getDeviceId()
         val context = _analytics?.androidStorage?.context
-        _analytics?.applyConfigurationAndroid {
-            copy(
-                anonymousId = anonId, userId = userId
-            )
+        context?.let {
+            _analytics?.processNewContext(context)
         }
-        _analytics?.contextState?.update(context ?: createContext())
+        userId?.let {
+            _analytics?.setUserId(it)
+        }
+        _analytics?.setAnonymousId(anonId)
         _analytics?.initializeSessionManagement(
             _analytics?.androidStorage?.sessionId, _analytics?.androidStorage?.lastActiveTimestamp
         )
@@ -160,9 +160,7 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     }
 
     private fun Analytics.migrateAnonymousIdFromV1() {
-        val anonymousId = androidStorage.v1AnonymousId
-        if (anonymousId.isNullOrEmpty() || !this.androidStorage.anonymousId.isNullOrEmpty()) return
-        _analytics?.setAnonymousId(anonymousId)
+        androidStorage.v1AnonymousId?.let { _analytics?.setAnonymousId(it) }
         androidStorage.resetV1AnonymousId()
     }
 

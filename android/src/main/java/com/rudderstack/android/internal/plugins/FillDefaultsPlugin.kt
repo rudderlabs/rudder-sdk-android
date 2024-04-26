@@ -79,8 +79,6 @@ internal class FillDefaultsPlugin : Plugin {
 
     private infix fun MessageContext?.selectiveReplace(context: MessageContext?): MessageContext? {
         if (this == null) return context else if (context == null) return this
-
-
         return this.updateWith(context)
     }
 
