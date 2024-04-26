@@ -39,9 +39,7 @@ internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) 
     private var currentActivityName: String? = null
     private val listener = ConfigDownloadService.Listener {
         if (it) {
-            _lastSuccessfulDownloadTimeInMillis.set(currentMillisGenerator().also {
-                println("setting time $it")
-            })
+            _lastSuccessfulDownloadTimeInMillis.set(currentMillisGenerator())
         }
     }
 
@@ -100,11 +98,7 @@ internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) 
 
     private fun checkAndDownloadSourceConfig() {
         analytics?.takeIf { it.currentConfiguration?.shouldVerifySdk == true }?.apply {
-            if (currentMillisGenerator().also {
-                println("current: $it")
-                } - (_lastSuccessfulDownloadTimeInMillis.get().also {
-                    println("last: $it")
-                }) >= MAX_CONFIG_DOWNLOAD_INTERVAL) {
+            if (currentMillisGenerator() - (_lastSuccessfulDownloadTimeInMillis.get()) >= MAX_CONFIG_DOWNLOAD_INTERVAL) {
                 analytics?.updateSourceConfig()
             }
         }
