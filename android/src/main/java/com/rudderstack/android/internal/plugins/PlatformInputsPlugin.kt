@@ -237,8 +237,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
                 (this.getSystemService(Context.WIFI_SERVICE) as? WifiManager)?.isWifiEnabled
             }catch (ex: Exception){
                 _analytics?.currentConfiguration?.logger?.error(log = "Cannot detect wifi. Wifi Permission not available")
-                false
-            }
+            }?:false
 
 
         // bluetooth
@@ -249,16 +248,15 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         val tm = getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
         val isCellularEnabled =
             if (tm != null && tm.simState == TelephonyManager.SIM_STATE_READY) {
-
                 Settings.Global.getInt(contentResolver, "mobile_data", 1) == 1
-            } else null
-        val networkMap = HashMap<String, String>()
+            } else false
+        val networkMap = HashMap<String, Any>()
         if (carrier != null) {
             networkMap["carrier"] = carrier
         }
-        networkMap["wifi"] = isWifiEnabled.toString()
-        networkMap["bluetooth"] = isBluetoothEnabled.toString()
-        networkMap["cellular"] = isCellularEnabled.toString()
+        networkMap["wifi"] = isWifiEnabled
+        networkMap["bluetooth"] = isBluetoothEnabled
+        networkMap["cellular"] = isCellularEnabled
         return networkMap
 
     }
