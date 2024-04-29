@@ -45,7 +45,6 @@ public class ConfigurationBuilderTest {
         assertEquals(RudderOptions.defaultOptions(), configuration.getOptions());
         assertEquals(Configuration.FLUSH_QUEUE_SIZE, configuration.getFlushQueueSize());
         assertEquals(Configuration.MAX_FLUSH_INTERVAL, configuration.getMaxFlushInterval());
-        assertFalse(configuration.isOptOut());
         assertFalse(configuration.getShouldVerifySdk());
         assertThat(configuration.getSdkVerifyRetryStrategy(),
                 Matchers.isA(RetryStrategy.ExponentialRetryStrategy.class));
@@ -61,7 +60,6 @@ public class ConfigurationBuilderTest {
         RudderOptions customOptions = new RudderOptions.Builder().build();
         int customFlushQueueSize = 100;
         long customMaxFlushInterval = 5000;
-        boolean customOptOut = true;
         boolean customShouldVerifySdk = true;
         RetryStrategy customRetryStrategy = RetryStrategy.exponential();
         String customDataPlaneUrl = "https://custom-data-plane-url.com";
@@ -75,7 +73,6 @@ public class ConfigurationBuilderTest {
                 .withOptions(customOptions)
                 .withFlushQueueSize(customFlushQueueSize)
                 .withMaxFlushInterval(customMaxFlushInterval)
-                .withOptOut(customOptOut)
                 .withShouldVerifySdk(customShouldVerifySdk)
                 .withSdkVerifyRetryStrategy(customRetryStrategy)
                 .withDataPlaneUrl(customDataPlaneUrl)
@@ -91,7 +88,6 @@ public class ConfigurationBuilderTest {
         assertEquals(customOptions, configuration.getOptions());
         assertEquals(customFlushQueueSize, configuration.getFlushQueueSize());
         assertEquals(customMaxFlushInterval, configuration.getMaxFlushInterval());
-        assertEquals(customOptOut, configuration.isOptOut());
         assertEquals(customShouldVerifySdk, configuration.getShouldVerifySdk());
         assertEquals(customRetryStrategy, configuration.getSdkVerifyRetryStrategy());
         assertEquals(customDataPlaneUrl, configuration.getDataPlaneUrl());

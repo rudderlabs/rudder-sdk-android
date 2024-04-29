@@ -32,7 +32,6 @@ public class ConfigurationBuilder {
     private RudderOptions options = RudderOptions.defaultOptions();
     private int flushQueueSize = FLUSH_QUEUE_SIZE;
     private long maxFlushInterval = MAX_FLUSH_INTERVAL;
-    private boolean isOptOut = false;
     private boolean shouldVerifySdk = false;
     private boolean gzipEnabled = true;
     private RetryStrategy sdkVerifyRetryStrategy = RetryStrategy.exponential();
@@ -58,15 +57,12 @@ public class ConfigurationBuilder {
         this.maxFlushInterval = maxFlushInterval;
         return this;
     }
-    public ConfigurationBuilder withOptOut(boolean isOptOut) {
-        this.isOptOut = isOptOut;
-        return this;
-    }
 
     public ConfigurationBuilder withShouldVerifySdk(boolean shouldVerifySdk) {
         this.shouldVerifySdk = shouldVerifySdk;
         return this;
     }
+
     public ConfigurationBuilder withGzipEnabled(boolean gzipEnabled) {
         this.gzipEnabled = gzipEnabled;
         return this;
@@ -109,7 +105,7 @@ public class ConfigurationBuilder {
     }
 
     public Configuration build() {
-        return Configuration.Companion.invoke(options, flushQueueSize, maxFlushInterval, isOptOut,
+        return Configuration.Companion.invoke(options, flushQueueSize, maxFlushInterval,
                 shouldVerifySdk, gzipEnabled, sdkVerifyRetryStrategy, dataPlaneUrl,
                 controlPlaneUrl, logger,
                 analyticsExecutor, networkExecutor, base64Generator);

@@ -21,7 +21,7 @@ class EventSizeFilterPluginTest {
     @get:Rule
     val mockkRule = MockKRule(this)
     private val eventSizeFilterPlugin = EventSizeFilterPlugin()
-    private val currentConfiguration = Configuration( isOptOut = false)
+    private val currentConfiguration = Configuration()
     private val jsonAdapter = GsonAdapter()
     @Test
     fun `given event size does not exceed the maximum size, then the next plugin in the chain should be called`() {

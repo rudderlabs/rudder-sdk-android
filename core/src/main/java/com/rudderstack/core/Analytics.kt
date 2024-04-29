@@ -31,7 +31,6 @@ import com.rudderstack.models.TrackMessage
 import com.rudderstack.models.TrackProperties
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 
-const val DEFAULTS_ANALYTICS_INSTANCE_NAME = "default"
 class Analytics private constructor(
     private val _delegate: AnalyticsDelegate,
 ) : Controller by _delegate {
@@ -52,7 +51,6 @@ class Analytics private constructor(
         writeKey: String,
         jsonAdapter: JsonAdapter,
         configuration: Configuration = Configuration.DEFAULT,
-        instanceName: String = DEFAULTS_ANALYTICS_INSTANCE_NAME,
         dataUploadService: DataUploadService? = null,
         configDownloadService: ConfigDownloadService? = null,
         storage: Storage? = null,
@@ -62,7 +60,7 @@ class Analytics private constructor(
         shutdownHook: (Analytics.() -> Unit)? = null
     ) : this(
         _delegate = AnalyticsDelegate( jsonAdapter,
-            configuration, storage?:BasicStorageImpl(), instanceName, dataUploadService ?:
+            configuration, storage?:BasicStorageImpl(), writeKey, dataUploadService ?:
             DataUploadServiceImpl(
                 writeKey, jsonAdapter
             ), configDownloadService ?: ConfigDownloadServiceImpl(

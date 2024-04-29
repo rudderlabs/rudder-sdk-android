@@ -306,6 +306,7 @@ public class RudderTraits {
      * @param name        String
      * @param phone       String
      * @param userName    String
+     * @param title       String
      */
     public RudderTraits(Address address, String age, String birthday, Company company, String createdAt, String description, String email, String firstName, String gender, String id, String lastName, String name, String phone, String title, String userName) {
         /*Application application = RudderClient.getApplication();

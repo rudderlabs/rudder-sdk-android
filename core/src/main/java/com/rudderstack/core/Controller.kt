@@ -68,10 +68,11 @@ interface Controller {
     val jsonAdapter: JsonAdapter
 
     /**
-     * The name of the instance
-     * In case of multiple instances, this name is used to differentiate between them
+     * The write key
+     * In case of multiple instances, this key is used to differentiate between them
      */
-    val instanceName: String
+    val writeKey: String
+
     fun addPlugin(vararg plugins: Plugin)
     /**
      * Custom plugins to be removed.

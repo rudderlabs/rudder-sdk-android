@@ -14,12 +14,13 @@
 
 package com.rudderstack.core.internal.plugins
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.Configuration
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.CentralPluginChain
-import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.TrackMessage
+import io.mockk.every
+import io.mockk.mockk
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.junit.Test
@@ -41,6 +42,8 @@ class GDPRPluginTest {
 
     @Test
     fun `test gdpr with opt out`() {
+        val analytics = mockk<Analytics>(relaxed = true)
+        every { analytics.storage.isOptedOut } returns true
         val testPluginForOptOut = Plugin {
             //should not be called
             assert(false)
@@ -49,8 +52,9 @@ class GDPRPluginTest {
         val optOutTestChain = CentralPluginChain(message, listOf(gdprPlugin, testPluginForOptOut)
             , originalMessage = message)
         //opted out
-        gdprPlugin.updateConfiguration(Configuration(
-            isOptOut = true))
+//        gdprPlugin.updateConfiguration(Configuration(
+//            isOptOut = true))
+        gdprPlugin.setup(analytics)
         //check for opt out
         val returnedMsg = optOutTestChain.proceed(message)
         assertThat(returnedMsg, Matchers.`is`(returnedMsg))
@@ -58,6 +62,9 @@ class GDPRPluginTest {
 
     @Test
     fun `test gdpr with opt in`() {
+        val analytics = mockk<Analytics>(relaxed = true)
+        every { analytics.storage.isOptedOut } returns false
+
         var isCalled = false
         val testPluginForOptIn = Plugin {
             //should be called
@@ -67,7 +74,7 @@ class GDPRPluginTest {
         val optInTestChain = CentralPluginChain(message, listOf(gdprPlugin, testPluginForOptIn),
             originalMessage = message)
         //opted out
-        gdprPlugin.updateConfiguration(Configuration(isOptOut = false))
+        gdprPlugin.setup(analytics)
         //check for opt out
         val returnedMsg = optInTestChain.proceed(message)
         assertThat(returnedMsg, Matchers.`is`(returnedMsg))

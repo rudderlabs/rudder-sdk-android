@@ -24,20 +24,20 @@ import java.util.concurrent.ConcurrentHashMap
  */
 private val store = ConcurrentHashMap<String, ConcurrentHashMap<String, Any?>>()
 fun Controller.store(identifier : String, value: Any){
-    val analyticsStorageMap = store[this.instanceName] ?: ConcurrentHashMap<String, Any?>().also {
-        store[instanceName] = it
+    val analyticsStorageMap = store[this.writeKey] ?: ConcurrentHashMap<String, Any?>().also {
+        store[writeKey] = it
     }
     analyticsStorageMap[identifier] = value
 }
 fun Controller.remove(identifier : String){
-    val analyticsStorageMap = store[this.instanceName] ?: return
+    val analyticsStorageMap = store[this.writeKey] ?: return
     analyticsStorageMap.remove(identifier)
 }
 fun <T> Controller.retrieve(identifier: String) : T?{
-    val analyticsStorageMap = store[this.instanceName] ?: return null
+    val analyticsStorageMap = store[this.writeKey] ?: return null
     return analyticsStorageMap[identifier] as? T
 }
 
 fun Controller.clearAll(){
-    store.remove(this.instanceName)
+    store.remove(this.writeKey)
 }

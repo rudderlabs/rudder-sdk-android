@@ -15,7 +15,6 @@
 package com.rudderstack.android.utilities
 
 import android.content.Context
-import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.storage.fileExists
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets

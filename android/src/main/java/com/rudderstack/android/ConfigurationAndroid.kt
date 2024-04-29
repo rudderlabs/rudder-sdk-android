@@ -54,7 +54,6 @@ interface ConfigurationAndroid : Configuration {
      * @param options
      * @param flushQueueSize
      * @param maxFlushInterval
-     * @param isOptOut
      * @param shouldVerifySdk
      * @param sdkVerifyRetryStrategy
      * @param dataPlaneUrl
@@ -89,7 +88,6 @@ interface ConfigurationAndroid : Configuration {
             options: RudderOptions = RudderOptions.defaultOptions(),
             flushQueueSize: Int = Defaults.DEFAULT_FLUSH_QUEUE_SIZE,
             maxFlushInterval: Long = Defaults.DEFAULT_MAX_FLUSH_INTERVAL,
-            isOptOut: Boolean = false,
             shouldVerifySdk: Boolean = Defaults.SHOULD_VERIFY_SDK,
             gzipEnabled: Boolean = Defaults.GZIP_ENABLED,
             sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
@@ -132,7 +130,6 @@ interface ConfigurationAndroid : Configuration {
             override val options: RudderOptions = options
             override val flushQueueSize: Int = flushQueueSize
             override val maxFlushInterval: Long = maxFlushInterval
-            override val isOptOut: Boolean = isOptOut
             override val shouldVerifySdk: Boolean = shouldVerifySdk
             override val gzipEnabled: Boolean = gzipEnabled
             override val sdkVerifyRetryStrategy: RetryStrategy = sdkVerifyRetryStrategy
@@ -180,7 +177,6 @@ interface ConfigurationAndroid : Configuration {
                 configuration.options,
                 configuration.flushQueueSize,
                 configuration.maxFlushInterval,
-                configuration.isOptOut,
                 configuration.shouldVerifySdk,
                 configuration.gzipEnabled,
                 configuration.sdkVerifyRetryStrategy,
@@ -207,7 +203,6 @@ interface ConfigurationAndroid : Configuration {
         options: RudderOptions,
         flushQueueSize: Int,
         maxFlushInterval: Long,
-        isOptOut: Boolean,
         shouldVerifySdk: Boolean,
         gzipEnabled: Boolean,
         sdkVerifyRetryStrategy: RetryStrategy,
@@ -222,7 +217,6 @@ interface ConfigurationAndroid : Configuration {
             options,
             flushQueueSize,
             maxFlushInterval,
-            isOptOut,
             shouldVerifySdk,
             gzipEnabled,
             sdkVerifyRetryStrategy,
@@ -240,7 +234,6 @@ interface ConfigurationAndroid : Configuration {
         options: RudderOptions = this.options,
         flushQueueSize: Int = this.flushQueueSize,
         maxFlushInterval: Long = this.maxFlushInterval,
-        isOptOut: Boolean = this.isOptOut,
         shouldVerifySdk: Boolean = this.shouldVerifySdk,
         gzipEnabled: Boolean = this.gzipEnabled,
         sdkVerifyRetryStrategy: RetryStrategy = this.sdkVerifyRetryStrategy,
@@ -271,7 +264,6 @@ interface ConfigurationAndroid : Configuration {
             options,
             flushQueueSize,
             maxFlushInterval,
-            isOptOut,
             shouldVerifySdk,
             gzipEnabled,
             sdkVerifyRetryStrategy,

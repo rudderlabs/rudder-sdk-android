@@ -1,6 +1,11 @@
 package com.rudderstack.android.sampleapp.analytics
 
-const val WRITE_KEY = "2CYw61Oy8Wsrkh0ZHf65QDLYpDJ"
-const val DATA_PLANE_URL = "https://rudderstaclpl.dataplane.dev.rudderlabs.com/v1/batch"
-const val CONTROL_PLANE_URL = "https://api.dev.rudderlabs.com"
-const val BASE_URL = "https://BASE_URL"
+import com.rudderstack.android.sampleapp.BuildConfig
+
+const val WRITE_KEY = BuildConfig.WRITE_KEY
+const val DATA_PLANE_URL = BuildConfig.DATA_PLANE_URL
+const val CONTROL_PLANE_URL = BuildConfig.CONTROL_PLANE_URL
+const val WRITE_KEY_SECONDARY = BuildConfig.WRITE_KEY_SECONDARY
+const val DATA_PLANE_URL_SECONDARY = BuildConfig.DATA_PLANE_URL_SECONDARY
+const val CONTROL_PLANE_URL_SECONDARY = BuildConfig.CONTROL_PLANE_URL_SECONDARY
+const val METRICS_BASE_URL = "BASE_URL"

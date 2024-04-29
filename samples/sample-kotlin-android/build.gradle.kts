@@ -1,7 +1,15 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-android")
+}
+
+val sampleRudderPropertiesFile: File = rootProject.file("${projectDir}/rudderstack.properties")
+val sampleRudderProperties = Properties().apply {
+    sampleRudderPropertiesFile.canRead().apply { load(FileInputStream(sampleRudderPropertiesFile)) }
 }
 
 android {
@@ -29,6 +37,31 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField(
+            "String", "WRITE_KEY",
+            sampleRudderProperties.getProperty("writeKey")
+        )
+        buildConfigField(
+            "String", "WRITE_KEY_SECONDARY",
+            sampleRudderProperties.getProperty("writeKeySecondary")
+        )
+        buildConfigField(
+            "String", "CONTROL_PLANE_URL",
+            sampleRudderProperties.getProperty("controlplaneUrl")
+        )
+        buildConfigField(
+            "String", "CONTROL_PLANE_URL_SECONDARY",
+            sampleRudderProperties.getProperty("controlplaneUrlSecondary")
+        )
+        buildConfigField(
+            "String", "DATA_PLANE_URL",
+            sampleRudderProperties.getProperty("dataplaneUrl")
+        )
+        buildConfigField(
+            "String", "DATA_PLANE_URL_SECONDARY",
+            sampleRudderProperties.getProperty("dataplaneUrlSecondary")
+        )
     }
 
     buildTypes {
@@ -36,8 +69,7 @@ android {
             isMinifyEnabled = false
             setProguardFiles(
                 listOf(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro"
+                    getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
                 )
             )
         }
@@ -47,8 +79,7 @@ android {
             isMinifyEnabled = false
             setProguardFiles(
                 listOf(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro"
+                    getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
                 )
             )
         }
@@ -123,7 +154,6 @@ dependencies {
 
 
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.4")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.4")

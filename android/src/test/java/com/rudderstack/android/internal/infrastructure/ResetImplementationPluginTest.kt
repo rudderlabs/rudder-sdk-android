@@ -5,7 +5,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.android.android.utils.TestExecutor
 import com.rudderstack.android.contextState
 import com.rudderstack.android.internal.states.ContextState
-import com.rudderstack.android.processNewContext
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
@@ -20,7 +19,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -34,7 +32,7 @@ class ResetImplementationPluginTest{
     fun setup(){
         analytics = generateTestAnalytics(mock (), Configuration(),
             storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(),
-                instanceName = "test_instance",
+                writeKey = "test_writeKey",
                 storageExecutor = TestExecutor()))
         analytics.associateState(ContextState())
     }
