@@ -16,7 +16,6 @@ package com.rudderstack.android.sync.internal
 
 import android.app.Application
 import android.content.Context
-import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.rudderstack.android.sync.WorkManagerAnalyticsFactory
@@ -39,23 +38,25 @@ internal class RudderSyncWorker(
         (applicationContext as? Application)?.let {
             val analyticsInstanceKey =
                 inputData.getString(WORKER_ANALYTICS_INSTANCE_KEY) ?: return Result.failure()
-            val weakSinkAnalytics = getAnalytics(analyticsInstanceKey)
-            if (weakSinkAnalytics?.isShutdown == true) {
-                weakSinkAnalytics.logger.warn(log = "Cannot do work. Analytics instance is " +
+            val weakSyncAnalytics = getAnalytics(analyticsInstanceKey)
+            if (weakSyncAnalytics?.isShutdown == true) {
+                weakSyncAnalytics.logger.warn(log = "Cannot do work. Analytics instance is " +
                                                     "already shutdown")
                 return Result.failure()
             }
-            val sinkAnalytics = (weakSinkAnalytics ?: createSinkAnalytics())
-            val success = sinkAnalytics?.blockingFlush()
-            sinkAnalytics?.logger?.debug(log = "Data upload through worker. success: $success")
-            if (weakSinkAnalytics == null) sinkAnalytics?.shutdown()
+            val syncAnalytics = (weakSyncAnalytics ?: createSyncAnalytics())
+            val success = syncAnalytics?.blockingFlush()
+            syncAnalytics?.logger?.debug(log = "Data upload through worker. success: $success")
+            if (weakSyncAnalytics == null) {
+                syncAnalytics?.shutdown()
+            }
 
             return if (success == true) Result.success() else Result.failure()
         }
         return Result.failure()
     }
 
-    private fun createSinkAnalytics(): Analytics? {
+    private fun createSyncAnalytics(): Analytics? {
         val analyticsFactoryClassName = inputData.getString(WORKER_ANALYTICS_FACTORY_KEY)
         return analyticsFactoryClassName?.let {
             val analyticsFactory = Class.forName(it).getDeclaredConstructor().newInstance() as WorkManagerAnalyticsFactory

@@ -22,21 +22,8 @@ object RudderAnalyticsUtils {
 
     fun initialize(application: Application, listener: InitializationListener? = null) {
         //wen add work manager support to this instance
-        _rudderAnalytics = createV1AnalyticsInstance(application, listener)
-        _rudderAnalyticsSecondary = createInstance(
-            writeKey = WRITE_KEY_SECONDARY,
-            initializationListener = { success, message ->
-                listener?.onAnalyticsInitialized(WRITE_KEY_SECONDARY, success, message)
-            },
-            configuration = ConfigurationAndroid(
-                application = application,
-                GsonAdapter(),
-                dataPlaneUrl = DATA_PLANE_URL_SECONDARY,
-                controlPlaneUrl = CONTROL_PLANE_URL_SECONDARY,
-                trackLifecycleEvents = true,
-                recordScreenViews = true,
-            )
-        )
+        _rudderAnalytics = createPrimaryAnalyticsInstanceWithWorkerSupport(application, listener)
+        _rudderAnalyticsSecondary = createSecondaryInstance(listener, application)
         _rudderReporter = DefaultRudderReporter(
             context = application, baseUrl = METRICS_BASE_URL, configuration = Configuration(
                 LibraryMetadata(
@@ -50,7 +37,25 @@ object RudderAnalyticsUtils {
         _rudderAnalytics?.initializeWorkManager()
     }
 
-    fun createV1AnalyticsInstance(application: Application, listener: InitializationListener? = null): Analytics {
+    private fun createSecondaryInstance(
+        listener: InitializationListener?,
+        application: Application
+    ) = createInstance(
+        writeKey = WRITE_KEY_SECONDARY,
+        initializationListener = { success, message ->
+            listener?.onAnalyticsInitialized(WRITE_KEY_SECONDARY, success, message)
+        },
+        configuration = ConfigurationAndroid(
+            application = application,
+            GsonAdapter(),
+            dataPlaneUrl = DATA_PLANE_URL_SECONDARY,
+            controlPlaneUrl = CONTROL_PLANE_URL_SECONDARY,
+            trackLifecycleEvents = true,
+            recordScreenViews = true,
+        )
+    )
+
+    fun createPrimaryAnalyticsInstanceWithWorkerSupport(application: Application, listener: InitializationListener? = null): Analytics {
         return createInstance(
             writeKey = WRITE_KEY,
             initializationListener = { success, message ->

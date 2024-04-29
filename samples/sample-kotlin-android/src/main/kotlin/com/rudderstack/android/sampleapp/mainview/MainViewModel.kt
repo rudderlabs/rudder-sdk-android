@@ -34,7 +34,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             override fun setup(analytics: Analytics) {
                 _writeKey = analytics.writeKey
             }
-            private var logsName: String = "Sample app"
+            private var logsName: String = "Sample app-$_writeKey"
 
             override fun intercept(chain: Plugin.Chain): Message {
                 val msg = chain.message()
