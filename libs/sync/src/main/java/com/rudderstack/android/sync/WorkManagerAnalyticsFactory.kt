@@ -13,7 +13,7 @@
  */
 
 package com.rudderstack.android.sync
-
+import com.rudderstack.android.sync.internal.RudderSyncWorker
 import android.app.Application
 import com.rudderstack.core.Analytics
 
