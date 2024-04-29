@@ -92,7 +92,6 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
                 mapOf(
                     "Content-Type" to "application/json",
                     "Authorization" to String.format(Locale.US, "Basic %s", encodedWriteKey),
-                    /**/
                 ), null, batchBody, "v1/batch", String::class.java, gzipEnabled
             ) {
                 callback.invoke(it)
@@ -117,12 +116,7 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
             webService.get()?.post(
                 mapOf(
                     "Content-Type" to "application/json",
-                    "Authorization" to String.format(Locale.US, "Basic %s", encodedWriteKey)/*,
-                "anonymousId" to (ConfigurationsState.value?.anonymousId?.let {
-                    base64Generator.generateBase64(
-                        it
-                    )
-                } ?: encodedWriteKey)*/
+                    "Authorization" to String.format(Locale.US, "Basic %s", encodedWriteKey)
                 ), null, batchBody, "v1/batch",
                 String::class.java, isGzipEnabled = config.gzipEnabled
             )?.get()
