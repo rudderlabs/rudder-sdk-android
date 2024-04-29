@@ -3,7 +3,7 @@ package com.rudderstack.android.sampleapp.analytics
 import android.app.Application
 import com.rudderstack.android.BuildConfig
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.RudderAnalytics
+import com.rudderstack.android.createInstance
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.DefaultRudderReporter
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata

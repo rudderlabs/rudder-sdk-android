@@ -17,3 +17,6 @@ local.properties
 node_modules
 /.idea/
 */build
+
+# Local Rudderstack file properties
+rudderstack.properties

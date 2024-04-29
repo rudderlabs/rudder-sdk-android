@@ -30,6 +30,8 @@ interface AndroidStorage : Storage {
     val v1Traits: Map<String, Any?>?
     val v1ExternalIds: List<Map<String, String>>?
     val trackAutoSession: Boolean
+    val build: Int?
+    val versionName: String?
     /**
      * Platform specific implementation of caching context. This can be done locally too.
      *
@@ -55,4 +57,6 @@ interface AndroidStorage : Storage {
     fun resetV1OptOut()
     fun resetV1Traits()
     fun resetV1ExternalIds()
+    fun setBuild(build: Int)
+    fun setVersionName(versionName: String)
 }

@@ -335,6 +335,10 @@ class AndroidStorageImpl(
         }
     override val trackAutoSession: Boolean
         get() = preferenceManager?.trackAutoSession?: false
+    override val build: Int?
+        get() = preferenceManager?.build
+    override val versionName: String?
+        get() = preferenceManager?.versionName
 
     override fun setAnonymousId(anonymousId: String) {
         _anonymousId = anonymousId
@@ -382,6 +386,14 @@ class AndroidStorageImpl(
         preferenceManager?.resetV1ExternalIds()
     }
 
+    override fun setBuild(build: Int) {
+        preferenceManager?.saveBuild(build)
+    }
+
+    override fun setVersionName(versionName: String) {
+        preferenceManager?.saveVersionName(versionName)
+    }
+
     override val libraryName: String
         get() = BuildConfig.LIBRARY_PACKAGE_NAME
     override val libraryVersion: String
@@ -413,7 +425,6 @@ class AndroidStorageImpl(
     private fun importV1Data() {
         val oldDbName = "events.db"
         val oldDb = application.getDatabasePath(oldDbName)
-
     }
 
 }

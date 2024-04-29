@@ -8,7 +8,6 @@ import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.primaryA
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.secondaryAnalytics
 import com.rudderstack.android.utilities.endSession
 import com.rudderstack.android.utilities.startSession
-import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
 import com.rudderstack.models.GroupTraits
@@ -34,13 +33,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             override fun setup(analytics: Analytics) {
                 _writeKey = analytics.writeKey
             }
+            private var logsName: String = "Sample app"
 
             override fun intercept(chain: Plugin.Chain): Message {
                 val msg = chain.message()
                 _state.update { state ->
                     state.copy(
                         logDataList = state.logDataList + LogData(
-                            Date(), "from $_writeKey, msg: $msg"
+                            Date(), "from $logsName, msg: $msg"
                         )
                     )
                 }

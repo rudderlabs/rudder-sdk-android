@@ -17,6 +17,7 @@ package com.rudderstack.android
 
 import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
 import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
+import com.rudderstack.android.internal.infrastructure.AppInstallUpdateTrackerPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
 import com.rudderstack.android.internal.infrastructure.ResetImplementationPlugin
 import com.rudderstack.android.internal.plugins.ReinstatePlugin
@@ -41,7 +42,7 @@ import com.rudderstack.models.MessageContext
 //bt stuff
 //tv,
 //work manager
-fun RudderAnalytics(
+private fun RudderAnalytics(
     writeKey: String,
     configuration: ConfigurationAndroid,
     dataUploadService: DataUploadService? = null,
@@ -64,6 +65,36 @@ fun RudderAnalytics(
         }).apply {
         startup()
     }
+}
+
+@JvmOverloads
+fun createInstance(
+    writeKey: String,
+    configuration: ConfigurationAndroid,
+    dataUploadService: DataUploadService? = null,
+    configDownloadService: ConfigDownloadService? = null,
+    storage: AndroidStorage = AndroidStorageImpl(
+        configuration.application,
+        writeKey = writeKey,
+        useContentProvider = ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER
+    ),
+    initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
+): Analytics {
+    return AnalyticsRegistry.getInstance(writeKey)
+        ?: RudderAnalytics(
+            writeKey,
+            configuration,
+            dataUploadService,
+            configDownloadService,
+            storage,
+            initializationListener
+        ).also { analyticsInstance ->
+            AnalyticsRegistry.register(writeKey, analyticsInstance)
+        }
+}
+
+fun getInstance(writeKey: String): Analytics? {
+    return AnalyticsRegistry.getInstance(writeKey)
 }
 
 internal val Analytics.contextState: ContextState?
@@ -119,7 +150,6 @@ fun Analytics.setAnonymousId(anonymousId: String) {
 
 /**
  * Setting the [ConfigurationAndroid.userId] explicitly.
-
  *
  * @param userId String to be used as userId
  */
@@ -136,6 +166,7 @@ fun Analytics.setUserId(userId: String) {
 private val infrastructurePlugins
     get() = arrayOf(
         AnonymousIdHeaderPlugin(),
+        AppInstallUpdateTrackerPlugin(),
         LifecycleObserverPlugin(),
         ActivityBroadcasterPlugin(),
         ResetImplementationPlugin()
@@ -170,13 +201,16 @@ internal fun Analytics.processNewContext(
     contextState?.update(newContext)
 }
 
-fun Analytics.applyConfigurationAndroid(androidConfigurationScope: ConfigurationAndroid.() ->
-ConfigurationAndroid){
+fun Analytics.applyConfigurationAndroid(
+    androidConfigurationScope: ConfigurationAndroid.() ->
+    ConfigurationAndroid
+) {
     applyConfiguration {
         if (this is ConfigurationAndroid) androidConfigurationScope()
         else this
     }
 }
+
 val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
     get() = (currentConfiguration as? ConfigurationAndroid)
 
