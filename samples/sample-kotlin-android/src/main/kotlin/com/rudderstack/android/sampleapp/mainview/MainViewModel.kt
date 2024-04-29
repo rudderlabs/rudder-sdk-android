@@ -8,6 +8,7 @@ import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.primaryA
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.secondaryAnalytics
 import com.rudderstack.android.utilities.endSession
 import com.rudderstack.android.utilities.startSession
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
 import com.rudderstack.models.GroupTraits

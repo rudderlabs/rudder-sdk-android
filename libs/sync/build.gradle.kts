@@ -27,7 +27,6 @@ android {
 
     defaultConfig {
         minSdk = library["min_sdk"] as Int
-//        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
 
         //for code access

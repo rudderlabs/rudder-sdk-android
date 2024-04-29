@@ -43,6 +43,12 @@ abstract class WorkerManagerPlugin : InfrastructurePlugin {
         analyticsIdentifier = null
     }
 
+    /**
+     * Internal classes are not supported.
+     * This is because instantiating an inner class requires the parent class instance.
+     * It's not worth it to try finding an instance in Heap. Cause this approach might conflict
+     * with garbage collector
+     */
     abstract val workManagerAnalyticsFactoryClassName: Class<out WorkManagerAnalyticsFactory>
 
     override fun updateConfiguration(configuration: Configuration) {

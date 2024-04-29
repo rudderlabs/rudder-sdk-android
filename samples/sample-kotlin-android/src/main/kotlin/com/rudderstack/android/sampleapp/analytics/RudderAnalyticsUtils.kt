@@ -23,7 +23,7 @@ object RudderAnalyticsUtils {
     fun initialize(application: Application, listener: InitializationListener? = null) {
         //wen add work manager support to this instance
         _rudderAnalytics = createV1AnalyticsInstance(application, listener)
-        _rudderAnalyticsSecondary = RudderAnalytics(
+        _rudderAnalyticsSecondary = createInstance(
             writeKey = WRITE_KEY_SECONDARY,
             initializationListener = { success, message ->
                 listener?.onAnalyticsInitialized(WRITE_KEY_SECONDARY, success, message)
@@ -51,7 +51,7 @@ object RudderAnalyticsUtils {
     }
 
     fun createV1AnalyticsInstance(application: Application, listener: InitializationListener? = null): Analytics {
-        return RudderAnalytics(
+        return createInstance(
             writeKey = WRITE_KEY,
             initializationListener = { success, message ->
                 listener?.onAnalyticsInitialized(WRITE_KEY, success, message)

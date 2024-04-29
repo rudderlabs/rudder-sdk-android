@@ -30,7 +30,9 @@ import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.verify
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
@@ -67,18 +69,19 @@ class RudderSyncWorkerTest {
         every{analytics.logger} returns logger
         every{analytics.currentConfigurationAndroid} returns configuration
         every{analytics.currentConfiguration} returns configuration
-        every { analytics.instanceName } returns "test_analytics"
-        application.registerWorkManager(analytics, DummyAnalyticsFactory::class.java)
+        every { analytics.writeKey } returns "test_write_key"
+        every { analytics.shutdown() } just runs
+//        application.registerWorkManager(analytics, DummyAnalyticsFactory::class.java)
         executorService = Executors.newSingleThreadExecutor()
-
+        DummyAnalyticsFactory.analytics = analytics
     }
 
     @Test
     fun testRudderSyncWorker(){
         every{analytics.blockingFlush()} returns true
         every { analytics.isShutdown } returns false
-        val worker = TestWorkerBuilder.from(application, RudderSyncWorker::class.java,
-            executorService).setInputData(analytics.workerInputData(
+        val worker = TestWorkerBuilder<RudderSyncWorker>(application,executorService,
+            ).setInputData(analytics.workerInputData(
             DummyAnalyticsFactory::class.java
             )).build()
         val result = worker.doWork()
@@ -87,7 +90,10 @@ class RudderSyncWorkerTest {
             analytics.blockingFlush()
         }
     }
-    inner class DummyAnalyticsFactory: WorkManagerAnalyticsFactory {
+    class DummyAnalyticsFactory: WorkManagerAnalyticsFactory {
+        companion object{
+            lateinit var analytics: Analytics
+        }
         override fun createAnalytics(application: Application): Analytics {
             return analytics
         }

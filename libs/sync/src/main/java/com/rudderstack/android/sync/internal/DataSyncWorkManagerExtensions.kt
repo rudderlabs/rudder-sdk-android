@@ -38,8 +38,8 @@ import java.util.concurrent.TimeUnit
  * For multi-process support, the following dependency is expected
  * Implementation "androidx.work:work-multiprocess:2.5.x"
  */
-private const val WORK_MANAGER_TAG = "rudder_sink"
-private const val WORK_NAME = "rudder_sink_work"
+private const val WORK_MANAGER_TAG = "rudder_sync"
+private const val WORK_NAME = "rudder_sync_work"
 private const val REPEAT_INTERVAL_IN_MINS = 15L
 private var analyticsRefMap = ConcurrentHashMap<String, WeakReference<Analytics>>()
 
@@ -52,7 +52,7 @@ private val constraints by lazy {
     Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 }
 
-private fun Analytics.sinkWorker(
+private fun Analytics.syncWorker(
     workManagerAnalyticsFactoryClassName: Class<out WorkManagerAnalyticsFactory>
 ) = PeriodicWorkRequestBuilder<RudderSyncWorker>(
     REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES
@@ -92,13 +92,15 @@ internal fun Application.registerWorkManager(
         RemoteWorkManager.getInstance(this).enqueueUniquePeriodicWork(
             analytics.generateKeyForLabel(WORK_NAME),
             ExistingPeriodicWorkPolicy.KEEP,
-            analytics.sinkWorker(workManagerAnalyticsFactoryClass)
+            analytics.syncWorker(workManagerAnalyticsFactoryClass)
         )
-    } else WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-        analytics.generateKeyForLabel(WORK_NAME),
-        ExistingPeriodicWorkPolicy.KEEP,
-        analytics.sinkWorker(workManagerAnalyticsFactoryClass)
-    )
+    } else {
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            analytics.generateKeyForLabel(WORK_NAME),
+            ExistingPeriodicWorkPolicy.KEEP,
+            analytics.syncWorker(workManagerAnalyticsFactoryClass)
+        )
+    }
 
 }
 

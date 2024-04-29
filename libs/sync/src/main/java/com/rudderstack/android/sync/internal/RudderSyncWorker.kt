@@ -58,7 +58,7 @@ internal class RudderSyncWorker(
     private fun createSinkAnalytics(): Analytics? {
         val analyticsFactoryClassName = inputData.getString(WORKER_ANALYTICS_FACTORY_KEY)
         return analyticsFactoryClassName?.let {
-            val analyticsFactory = Class.forName(it).newInstance() as WorkManagerAnalyticsFactory
+            val analyticsFactory = Class.forName(it).getDeclaredConstructor().newInstance() as WorkManagerAnalyticsFactory
             analyticsFactory.createAnalytics(applicationContext as Application)
         }
 

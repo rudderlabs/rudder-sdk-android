@@ -14,7 +14,7 @@
 
 ext {
     versions = [
-            work                   : "2.7.0",
+            work                   : "2.9.0",
             gson                   : "2.8.8",
             jackson                : "2.12.4",
             jacksonKotlin          : "2.13.3",

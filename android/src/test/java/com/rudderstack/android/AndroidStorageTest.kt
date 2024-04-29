@@ -19,9 +19,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.android.utils.busyWait
-import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.android.utils.TestExecutor
-import com.rudderstack.android.android.utils.busyWait
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
