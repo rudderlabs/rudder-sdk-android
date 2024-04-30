@@ -6,20 +6,13 @@ import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.android.utils.busyWait
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
-import com.rudderstack.core.Configuration
-import com.rudderstack.core.Logger
-import com.rudderstack.core.RudderUtils
-import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
-import com.rudderstack.models.Message
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.models.TrackProperties
-import com.rudderstack.moshirudderadapter.MoshiAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.vagabond.testcommon.Verification
 import com.vagabond.testcommon.assertArgument
 import com.vagabond.testcommon.generateTestAnalytics
 import io.mockk.mockk
@@ -28,7 +21,6 @@ import junit.framework.TestSuite
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.aMapWithSize
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.any
 import org.hamcrest.Matchers.hasEntry
 import org.hamcrest.Matchers.hasProperty
 import org.hamcrest.Matchers.`is`
@@ -39,21 +31,20 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
-import org.mockito.ArgumentMatchers
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 abstract class LifecycleObserverPluginTest {
     private lateinit var analytics: Analytics
-    private lateinit var storage: AndroidStorage
-    private lateinit var configurationAndroid: ConfigurationAndroid
+    private lateinit var mockStorage: AndroidStorage
+    private lateinit var mockConfigurationAndroid: ConfigurationAndroid
     private lateinit var mockControlPlane : ConfigDownloadService
     abstract val jsonAdapter: JsonAdapter
 
     @Before
     fun setup() {
-        configurationAndroid = mock<ConfigurationAndroid>()
+        mockConfigurationAndroid = mock<ConfigurationAndroid>()
         val listeners = mutableListOf<ConfigDownloadService.Listener>()
         mockControlPlane = mock()
         whenever(mockControlPlane.addListener(any<ConfigDownloadService.Listener>(), any<Int>())).then {
@@ -65,16 +56,16 @@ abstract class LifecycleObserverPluginTest {
             listeners.forEach { it.onDownloaded(true) }
             cb(true, RudderServerConfig(), null)
         }
-        whenever(configurationAndroid.jsonAdapter).thenReturn(jsonAdapter)
-        whenever(configurationAndroid.trackLifecycleEvents).thenReturn(true)
-        whenever(configurationAndroid.recordScreenViews).thenReturn(true)
-        whenever(configurationAndroid.analyticsExecutor).thenReturn(TestExecutor())
-        whenever(configurationAndroid.shouldVerifySdk).thenReturn(false)
-        whenever(configurationAndroid.logger).thenReturn(KotlinLogger)
-        whenever(configurationAndroid.copy()).thenReturn(configurationAndroid)
-        storage = mock<AndroidStorage>()
-        whenever(storage.versionName).thenReturn("1.0")
-        analytics = generateTestAnalytics(configurationAndroid, storage = storage, configDownloadService = mockControlPlane)
+        whenever(mockConfigurationAndroid.jsonAdapter).thenReturn(jsonAdapter)
+        whenever(mockConfigurationAndroid.trackLifecycleEvents).thenReturn(true)
+        whenever(mockConfigurationAndroid.recordScreenViews).thenReturn(true)
+        whenever(mockConfigurationAndroid.analyticsExecutor).thenReturn(TestExecutor())
+        whenever(mockConfigurationAndroid.shouldVerifySdk).thenReturn(false)
+        whenever(mockConfigurationAndroid.logger).thenReturn(KotlinLogger)
+        whenever(mockConfigurationAndroid.copy()).thenReturn(mockConfigurationAndroid)
+        mockStorage = mock<AndroidStorage>()
+        whenever(mockStorage.versionName).thenReturn("1.0")
+        analytics = generateTestAnalytics(mockConfigurationAndroid, storage = mockStorage, configDownloadService = mockControlPlane)
     }
 
     @After
@@ -95,7 +86,7 @@ abstract class LifecycleObserverPluginTest {
     }
 
     @Test
-    fun `test when app foregrounded from_background should be true and contain version first time`() {
+    fun `test when app foregrounded first time from_background should be false and contain version`() {
         val plugin = LifecycleObserverPlugin()
         plugin.setup(analytics)
         plugin.onAppForegrounded()
@@ -120,7 +111,7 @@ abstract class LifecycleObserverPluginTest {
     }
 
     @Test
-    fun `test when app foregrounded from_background should be false and not contain version second time`() {
+    fun `test when app foregrounded second time from_background should be true and not contain version`() {
         val plugin = LifecycleObserverPlugin()
         plugin.setup(analytics)
         plugin.onAppForegrounded()
@@ -171,7 +162,7 @@ abstract class LifecycleObserverPluginTest {
         val plugin = LifecycleObserverPlugin(getTime)
         plugin.setup(analytics)
         plugin.onAppForegrounded()
-        whenever(configurationAndroid.shouldVerifySdk).thenReturn(true)
+        whenever(mockConfigurationAndroid.shouldVerifySdk).thenReturn(true)
         plugin.onAppForegrounded() // after 90 minutes stimulated
         org.mockito.kotlin.verify(mockControlPlane).download(any())
         plugin.shutdown()

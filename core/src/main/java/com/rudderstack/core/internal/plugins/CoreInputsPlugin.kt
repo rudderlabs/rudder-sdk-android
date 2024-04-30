@@ -5,8 +5,12 @@ import com.rudderstack.core.Plugin
 import com.rudderstack.core.Storage
 import com.rudderstack.models.Message
 
-object CoreInputsPlugin : Plugin{
-    private const val LIBRARY_KEY = "library"
+private const val LIBRARY_KEY = "library"
+
+/**
+ * Plugin to add the library details to context object of payload.
+ */
+class CoreInputsPlugin : Plugin{
     private val Storage.libraryContextPair
         get() = LIBRARY_KEY to mapOf("name" to libraryName, "version" to libraryVersion)
     private var storage: Storage?= null

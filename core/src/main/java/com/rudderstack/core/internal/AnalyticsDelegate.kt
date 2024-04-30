@@ -155,6 +155,7 @@ internal class AnalyticsDelegate(
     private val storagePlugin = StoragePlugin()
     private val wakeupActionPlugin = WakeupActionPlugin()
     private val eventFilteringPlugin = EventFilteringPlugin()
+    private val coreInputsPlugin = CoreInputsPlugin()
 //        destConfigState = DestinationConfigState
 
     private val destinationConfigurationPlugin = DestinationConfigurationPlugin()
@@ -591,7 +592,7 @@ internal class AnalyticsDelegate(
     private fun initializeMessagePlugins() {
         // check if opted out
         _internalPreMessagePlugins = _internalPreMessagePlugins + gdprPlugin
-        _internalPreMessagePlugins = _internalPreMessagePlugins + CoreInputsPlugin
+        _internalPreMessagePlugins = _internalPreMessagePlugins + coreInputsPlugin
         _internalPostCustomPlugins = _internalPostCustomPlugins + eventSizeFilterPlugin
         // rudder option plugin followed by extract state plugin should be added by lifecycle
         // add defaults to message
