@@ -209,20 +209,6 @@ internal fun Analytics.processNewContext(
     androidStorage.cacheContext(newContext)
     contextState?.update(newContext)
 }
-
-fun Analytics.applyConfigurationAndroid(
-    androidConfigurationScope: ConfigurationAndroid.() ->
-    ConfigurationAndroid
-) {
-    applyConfiguration {
-        if (this is ConfigurationAndroid) androidConfigurationScope()
-        else this
-    }
-}
-
-val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
-    get() = (currentConfiguration as? ConfigurationAndroid)
-
 private fun Analytics.onShutdown() {
     shutdownSessionManagement()
 }

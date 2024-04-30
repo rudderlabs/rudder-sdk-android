@@ -26,6 +26,7 @@ import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,13 +35,32 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(
-    RobolectricTestRunner::class)
-@Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])class RudderAnalyticsTest {
+    RobolectricTestRunner::class
+)
+@Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])
+class RudderAnalyticsTest {
     val writeKey = "writeKey"
+    private lateinit var analytics: Analytics
+    private lateinit var analytics2: Analytics
+    val writeKey2 = "writeKey2"
+
 
     @Before
     fun setUp() {
         AnalyticsRegistry.clear()
+        analytics = createInstance(
+            writeKey, mock(),
+            ApplicationProvider.getApplicationContext()
+        )
+
+        analytics2 = createInstance(writeKey2, mock(), ApplicationProvider.getApplicationContext())
+
+    }
+
+    @After
+    fun destroy() {
+        analytics.shutdown()
+        analytics2.shutdown()
     }
 
     @Test
@@ -52,34 +72,21 @@ import org.robolectric.annotation.Config
 
         analytics.setAnonymousId("anon_id")
         MatcherAssert.assertThat(
-            analytics.currentConfigurationAndroid, allOf(Matchers.isA(ConfigurationAndroid::class.java),
+            analytics.currentConfigurationAndroid, allOf(
+                Matchers.isA(ConfigurationAndroid::class.java),
                 Matchers.hasProperty("anonymousId", Matchers.equalTo("anon_id"))
-        ))
+            )
+        )
     }
 
     @Test
     fun `when writeKey and configuration is passed, then createInstance should return Analytics instance`() {
-        val analytics = createInstance(writeKey, ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
-            JacksonAdapter()
-        ))
 
         MatcherAssert.assertThat(analytics, Matchers.isA(Analytics::class.java))
     }
 
     @Test
     fun `when multiple instances are created with different writeKeys, then the instances should be different`() {
-        val writeKey2 = "writeKey2"
-        val analytics = createInstance(writeKey, ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
-            JacksonAdapter()
-        ))
-
-        val analytics2 = createInstance(writeKey2, ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
-            JacksonAdapter()
-        ))
-
         MatcherAssert.assertThat(analytics, Matchers.isA(Analytics::class.java))
         MatcherAssert.assertThat(analytics2, Matchers.isA(Analytics::class.java))
         assert(analytics != analytics2)
@@ -87,44 +94,25 @@ import org.robolectric.annotation.Config
 
     @Test
     fun `given instance is already created with the writeKey, when createInstance is called with same write key, then the previous instance should be returned`() {
-        val analytics = createInstance(writeKey, ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
-            JacksonAdapter()
-        ))
-
-        val analytics2 = createInstance(writeKey, ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
-            JacksonAdapter()
-        ))
+        val dupeAnalytics = createInstance(
+            writeKey, mock(),
+            ApplicationProvider.getApplicationContext()
+        )
 
         MatcherAssert.assertThat(analytics, Matchers.isA(Analytics::class.java))
-        MatcherAssert.assertThat(analytics2, Matchers.isA(Analytics::class.java))
-        assert(analytics == analytics2)
+        MatcherAssert.assertThat(dupeAnalytics, Matchers.isA(Analytics::class.java))
+        assert(analytics === dupeAnalytics)
     }
 
     @Test
     fun `given instance is already created with the writeKey, when getInstance is called with that write key, then the Analytics instance should be returned`() {
-        val analytics = createInstance(writeKey, ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
-            JacksonAdapter()
-        ))
-
         val result = AnalyticsRegistry.getInstance(writeKey)
         assert(result == analytics)
+
     }
 
     @Test
     fun `given multiple instances are already created with different writeKeys, when getInstance is called with those write keys, then the Analytics instances should be returned`() {
-        val writeKey2 = "writeKey2"
-        val analytics = createInstance(writeKey, ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
-            JacksonAdapter()
-        ))
-
-        val analytics2 = createInstance(writeKey2, ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
-            JacksonAdapter()
-        ))
 
         val result1 = AnalyticsRegistry.getInstance(writeKey)
         val result2 = AnalyticsRegistry.getInstance(writeKey2)

@@ -97,7 +97,7 @@ internal fun Analytics.startAutoSessionIfNeeded() : Boolean {
 
 internal fun Analytics.initializeSessionManagement(savedSessionId: Long? = null,
         lastActiveTimestamp: Long? = null) {
-    if (isAutoTrackingDisabledInNewSession()) {
+    if (isAutoTrackingChangedToDisabledInNewSession()) {
         discardAnyPreviousSession()
         return
     }
@@ -111,14 +111,13 @@ internal fun Analytics.initializeSessionManagement(savedSessionId: Long? = null,
             )
         )
     }
-    val isNewSessionStarted = startAutoSessionIfNeeded()
-    if (!isNewSessionStarted) {
-        updateSessionLastActiveTimestamp()
-    }
+    startAutoSessionIfNeeded()
+    updateSessionLastActiveTimestamp()
+
     listenToSessionChanges()
 }
 
-private fun Analytics.isAutoTrackingDisabledInNewSession() =
+private fun Analytics.isAutoTrackingChangedToDisabledInNewSession() =
     ((currentConfigurationAndroid?.trackAutoSession != true)
             && androidStorage.trackAutoSession)
 

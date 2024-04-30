@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.android.utils.busyWait
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.initialConfigurationAndroid
 import com.rudderstack.android.internal.states.UserSessionState
@@ -258,12 +259,11 @@ class SessionUtilsTest {
             ApplicationProvider.getApplicationContext(),
             shouldVerifySdk = false,
 
-            trackLifecycleEvents = true,
             trackAutoSession = true,
             sessionTimeoutMillis = 0L
         )
         val sessionId = 1234567890L
-        val lastActiveTimestamp = System.currentTimeMillis() - mockConfig.sessionTimeoutMillis
+        val lastActiveTimestamp = System.currentTimeMillis()
         userSessionState?.update(
             UserSession(
                 sessionId = sessionId, isActive = true, lastActiveTimestamp = lastActiveTimestamp
@@ -272,6 +272,7 @@ class SessionUtilsTest {
         analytics.applyConfiguration {
             mockConfig
         }
+        busyWait(1)
         // When
         analytics.startAutoSessionIfNeeded()
 
@@ -453,6 +454,7 @@ class SessionUtilsTest {
             mockConfiguration = newConfig,
             storage = mockStorage
         )
+        busyWait(1)
         // When
         analytics.initializeSessionManagement(mockStorage.sessionId, mockStorage.lastActiveTimestamp)
         // Verify that sessionState is updated

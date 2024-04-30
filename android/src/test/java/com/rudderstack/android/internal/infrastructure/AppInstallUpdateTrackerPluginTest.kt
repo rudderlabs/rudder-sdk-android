@@ -56,12 +56,12 @@ class AppInstallUpdateTrackerPluginTest {
             storageExecutor = TestExecutor(),
         )
         val mockConfig = ConfigurationAndroid(
-            application, jsonAdapter,
+            application,
             shouldVerifySdk = false,
             analyticsExecutor = TestExecutor(),
             trackLifecycleEvents = trackLifecycleEvents,
         )
-        return generateTestAnalytics(mockConfig, storage = this.storage)
+        return generateTestAnalytics(jsonAdapter, mockConfig, storage = this.storage)
     }
 
     /**
