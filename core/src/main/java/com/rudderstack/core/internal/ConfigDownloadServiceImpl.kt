@@ -94,11 +94,18 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
     }
 
     override fun addListener(listener: ConfigDownloadService.Listener, replay: Int) {
-        val replayAccepted = replay.coerceAtLeast(0)
-        for (i in (downloadSequence.size - replayAccepted).coerceAtLeast(0) until downloadSequence.size) {
+        val replayCount = replay.coerceAtLeast(0)
+        replayConfigDownloadHistory(replayCount, listener)
+        listeners += listener
+    }
+
+    private fun replayConfigDownloadHistory(
+        replayCount: Int,
+        listener: ConfigDownloadService.Listener
+    ) {
+        for (i in (downloadSequence.size - replayCount).coerceAtLeast(0) until downloadSequence.size) {
             listener.onDownloaded(downloadSequence[i])
         }
-        listeners += listener
     }
 
     override fun removeListener(listener: ConfigDownloadService.Listener) {
