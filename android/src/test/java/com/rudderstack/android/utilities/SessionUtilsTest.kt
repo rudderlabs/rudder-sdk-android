@@ -1,12 +1,10 @@
 package com.rudderstack.android.utilities
 
-import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.SESSION_TIMEOUT
 import com.rudderstack.android.android.utils.busyWait
-import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.initialConfigurationAndroid
 import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.core.Analytics
@@ -41,12 +39,13 @@ class SessionUtilsTest {
     private lateinit var mockStorage: AndroidStorage
     private val userSessionState: UserSessionState?
         get() = analytics.retrieveState()
+
     @Before
     fun setup() {
         mockStorage = mock<AndroidStorage>()
-        analytics = generateTestAnalytics( mock(),
-            mockConfiguration = ConfigurationAndroid(
-                ApplicationProvider.getApplicationContext(),
+        analytics = generateTestAnalytics(
+            mock(),
+            ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext()).copy(
                 shouldVerifySdk = false,
                 trackLifecycleEvents = true,
                 trackAutoSession = true
@@ -79,7 +78,7 @@ class SessionUtilsTest {
         val sessionId = 1234567890L
         analytics.startSession(sessionId)
         MatcherAssert.assertThat(
-            (analytics.currentConfigurationAndroid)?.trackAutoSession,
+            (analytics.currentConfiguration as ConfigurationAndroid)?.trackAutoSession,
             `is`(false)
         )
         val session = userSessionState?.value
@@ -111,9 +110,7 @@ class SessionUtilsTest {
         // Given
         val invalidSessionId = 123456789L
         val logger = mock<Logger>()
-
-        val mockConfig = ConfigurationAndroid(
-            application = ApplicationProvider.getApplicationContext(),
+        val mockConfig = ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext()).copy(
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
@@ -159,7 +156,7 @@ class SessionUtilsTest {
         MatcherAssert.assertThat(sessionAfterEnd?.sessionStart, `is`(false))
         //should update trackAutoSession to false
         MatcherAssert.assertThat(
-            analytics.currentConfigurationAndroid?.trackAutoSession,
+            (analytics.currentConfiguration as ConfigurationAndroid).trackAutoSession,
             `is`(false)
         )
 
@@ -168,8 +165,7 @@ class SessionUtilsTest {
     @Test
     fun `test startSessionIfNeeded with a new session`() {
         // Given
-        val mockConfig = ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
+        val mockConfig = ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext()).copy(
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true
@@ -193,8 +189,7 @@ class SessionUtilsTest {
     @Test
     fun `test startSessionIfNeeded not updating session when session is ongoing`() {
         // Given
-        val mockConfig = ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
+        val mockConfig = ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext()).copy(
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
@@ -224,11 +219,10 @@ class SessionUtilsTest {
     @Test
     fun `test startSessionIfNeeded with an expired session`() {
 // Given
-        val mockConfig = ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
+        val mockConfig = ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext()).copy(
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
-            trackAutoSession = true
+            trackAutoSession = true,
         )
         val sessionId = 1234567890L
         val lastActiveTimestamp = System.currentTimeMillis() - mockConfig.sessionTimeoutMillis
@@ -255,10 +249,8 @@ class SessionUtilsTest {
     @Test
     fun `test startSessionIfNeeded with an expired session and sessionTimeoutMillis is 0`() {
         // Given
-        val mockConfig = ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
+        val mockConfig = ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext()).copy(
             shouldVerifySdk = false,
-
             trackAutoSession = true,
             sessionTimeoutMillis = 0L
         )
@@ -292,8 +284,7 @@ class SessionUtilsTest {
         val lastActiveTimestamp = defaultLastActiveTimestamp
         whenever(mockStorage.sessionId).thenReturn(sessionId)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(lastActiveTimestamp)
-        val mockConfig = ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
+        val mockConfig = ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext()).copy(
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
@@ -318,11 +309,10 @@ class SessionUtilsTest {
         // Given
         val sessionId = 1234567890L
         val lastActiveTimestamp =
-            defaultLastActiveTimestamp - ConfigurationAndroid.Defaults.SESSION_TIMEOUT - 1L //expired session
+            defaultLastActiveTimestamp - SESSION_TIMEOUT - 1L //expired session
         whenever(mockStorage.sessionId).thenReturn(sessionId)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(lastActiveTimestamp)
-        val mockConfig = ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
+        val mockConfig = ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext()).copy(
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
@@ -350,8 +340,7 @@ class SessionUtilsTest {
         // Given
         whenever(mockStorage.sessionId).thenReturn(null)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(null)
-        val mockConfig = ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
+        val mockConfig = ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext()).copy(
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
@@ -373,8 +362,7 @@ class SessionUtilsTest {
 // Given
         whenever(mockStorage.sessionId).thenReturn(null)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(null)
-        val mockConfig = ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
+        val mockConfig = ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext()).copy(
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
@@ -409,7 +397,7 @@ class SessionUtilsTest {
     }
 
     @Test
-    fun `test manual session continued across reinitialize if trackAutoSession is false`(){
+    fun `test manual session continued across reinitialize if trackAutoSession is false`() {
         analytics.shutdown()
         // Given
         val sessionId = 1234567890L
@@ -418,9 +406,12 @@ class SessionUtilsTest {
         whenever(mockStorage.trackAutoSession).thenReturn(false)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(lastActiveTimestamp)
         whenever(mockStorage.sessionId).thenReturn(sessionId)
-        val newConfig = ApplicationProvider.getApplicationContext<Application>()
-            .initialConfigurationAndroid(mockStorage).copy(sessionTimeoutMillis = sessionTimeout,
-                shouldVerifySdk = false)
+        val newConfig = ConfigurationAndroid.create(
+            application = ApplicationProvider.getApplicationContext(),
+            storage = mockStorage
+        ).copy(
+            shouldVerifySdk = false,
+        )
         analytics = generateTestAnalytics(
             mock<JsonAdapter>(),
             mockConfiguration = newConfig,
@@ -434,8 +425,9 @@ class SessionUtilsTest {
         MatcherAssert.assertThat(session?.lastActiveTimestamp, not(lastActiveTimestamp)) //should change
         MatcherAssert.assertThat(session?.isActive, `is`(true))
     }
+
     @Test
-    fun `test manual session continued if trackAutoSession is true and timeout not reached`(){
+    fun `test manual session continued if trackAutoSession is true and timeout not reached`() {
         analytics.shutdown()
         // Given
         val sessionId = 1234567890L
@@ -444,11 +436,15 @@ class SessionUtilsTest {
         whenever(mockStorage.trackAutoSession).thenReturn(false)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(lastActiveTimestamp)
         whenever(mockStorage.sessionId).thenReturn(sessionId)
-        val newConfig = ApplicationProvider.getApplicationContext<Application>()
-            .initialConfigurationAndroid(mockStorage).copy(sessionTimeoutMillis = sessionTimeout,
-                trackAutoSession = true,
-                trackLifecycleEvents = true,
-                shouldVerifySdk = false)
+        val newConfig = ConfigurationAndroid.create(
+            application = ApplicationProvider.getApplicationContext(),
+            storage = mockStorage
+        ).copy(
+            sessionTimeoutMillis = sessionTimeout,
+            trackAutoSession = true,
+            trackLifecycleEvents = true,
+            shouldVerifySdk = false
+        )
         analytics = generateTestAnalytics(
             mock<JsonAdapter>(),
             mockConfiguration = newConfig,
@@ -474,13 +470,15 @@ class SessionUtilsTest {
         whenever(mockStorage.trackAutoSession).thenReturn(false)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(lastActiveTimestamp)
         whenever(mockStorage.sessionId).thenReturn(sessionId)
-        val newConfig = ApplicationProvider.getApplicationContext<Application>()
-            .initialConfigurationAndroid(mockStorage).copy(
-                sessionTimeoutMillis = sessionTimeout,
-                trackLifecycleEvents = true,
-                trackAutoSession = true,
-                shouldVerifySdk = false
-            )
+        val newConfig = ConfigurationAndroid.create(
+            application = ApplicationProvider.getApplicationContext(),
+            storage = mockStorage
+        ).copy(
+            sessionTimeoutMillis = sessionTimeout,
+            trackAutoSession = true,
+            trackLifecycleEvents = true,
+            shouldVerifySdk = false
+        )
         analytics = generateTestAnalytics(
             mock<JsonAdapter>(), mockConfiguration = newConfig, storage = mockStorage
         )

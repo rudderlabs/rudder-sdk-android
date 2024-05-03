@@ -26,8 +26,8 @@ import android.provider.Settings
 import android.telephony.TelephonyManager
 import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.AndroidUtils.isTv
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.LifecycleListenerPlugin
-import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.optAdd
@@ -46,13 +46,14 @@ import java.util.concurrent.atomic.AtomicReference
  *
  */
 private const val CHANNEL = "mobile"
+
 internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     //if true collects advertising id automatically
     private val jsonAdapter
         get() = _analytics?.jsonAdapter
 
     private val application
-        get() = _analytics?.currentConfigurationAndroid?.application
+        get() = (_analytics?.currentConfiguration as ConfigurationAndroid).application
 
     private var autoCollectAdvertisingId = false
         set(value) {
@@ -68,7 +69,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     private var _deviceToken: String? = null
 
     private var _analytics: Analytics? = null
-    private val _currentActivity : AtomicReference<Activity?> = AtomicReference()
+    private val _currentActivity: AtomicReference<Activity?> = AtomicReference()
     private val currentActivity: Activity?
         get() = _currentActivity.get()
 
@@ -83,8 +84,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     override fun setup(analytics: Analytics) {
         super.setup(analytics)
         _analytics = analytics
-        autoCollectAdvertisingId =
-            analytics.currentConfigurationAndroid?.autoCollectAdvertId ?: false
+        autoCollectAdvertisingId = (analytics.currentConfiguration as ConfigurationAndroid).autoCollectAdvertId
     }
 
     /**
@@ -106,7 +106,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     }
 
     private fun Application.collectAdvertisingId() {
-        _analytics?.currentConfigurationAndroid?.advertisingIdFetchExecutor?.submit {
+        (_analytics?.currentConfiguration as ConfigurationAndroid).advertisingIdFetchExecutor?.submit {
             val adId = getGooglePlayServicesAdvertisingID() ?: getAmazonFireAdvertisingID()
             if (adId != null) {
                 synchronized(this) {
@@ -123,7 +123,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         val advertisingInfo =
             Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient")
                 .getMethod("getAdvertisingIdInfo", Context::class.java).invoke(null, this)
-            ?: return null
+                ?: return null
         val isLimitAdTrackingEnabled =
             advertisingInfo.javaClass.getMethod("isLimitAdTrackingEnabled")
                 .invoke(advertisingInfo) as? Boolean
@@ -147,9 +147,10 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             contentResolver, "advertising_id"
         )
     }
+
     private var _defaultAndroidContext: MessageContext? = null
     private fun Application.defaultAndroidContext(): MessageContext {
-        return synchronized(this) { _defaultAndroidContext }?: generateDefaultAndroidContext ()
+        return synchronized(this) { _defaultAndroidContext } ?: generateDefaultAndroidContext()
     }
 
     private fun Application.generateDefaultAndroidContext() = mapOf<String, Any?>(
@@ -258,7 +259,8 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             return jsonAdapter?.writeToJson(networkMap, RudderTypeAdapter {})
         } catch (ex: java.lang.Exception) {
             _analytics?.currentConfiguration?.logger?.error(
-                log = "Error getting network info", throwable = ex)
+                log = "Error getting network info", throwable = ex
+            )
         }
         return null
     }
@@ -277,7 +279,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         super.setCurrentActivity(activity)
         _currentActivity.set(activity)
         //we generate the default context here because we need the activity to get the screen info
-        application?.generateDefaultAndroidContext()
+        application.generateDefaultAndroidContext()
     }
 
     override fun onShutDown() {

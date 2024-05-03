@@ -17,13 +17,12 @@ package com.rudderstack.core.internal.plugins
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.BaseDestinationPlugin
 import com.rudderstack.core.BasicStorageImpl
-import com.rudderstack.core.Configuration
+import com.rudderstack.core.ConfigurationImpl
 import com.rudderstack.core.DestinationConfig
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.core.internal.states.DestinationConfigState
-import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.TrackMessage
 import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert.assertThat
@@ -67,12 +66,12 @@ class WakeupActionPluginTest {
     @Before
     fun setup() {
         analytics = generateTestAnalytics(
-            mock(),
-            Configuration(
-                shouldVerifySdk = false), storage = storage
+            jsonAdapter = mock(),
+            mockConfiguration = ConfigurationImpl(shouldVerifySdk = false), storage = storage
         )
         wakeupActionPlugin.setup(analytics)
     }
+
     private val destinationConfigState
         get() = analytics.retrieveState<DestinationConfigState>()
 

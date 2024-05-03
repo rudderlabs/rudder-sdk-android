@@ -16,6 +16,7 @@ package com.rudderstack.core.internal
 
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
+import com.rudderstack.core.ConfigurationImpl
 import com.rudderstack.core.DummyWebService
 import com.rudderstack.core.RetryStrategy
 import com.rudderstack.core.writeKey
@@ -47,7 +48,7 @@ abstract class ConfigDownloadServiceImplTest {
 
     @Before
     fun setup() {
-        val config = Configuration()
+        val config = ConfigurationImpl()
         analytics = generateTestAnalytics(jsonAdapter, config)
         dummyWebService.nextBody =
             RudderServerConfig(source = RudderServerConfig.RudderServerConfigSource())
@@ -81,13 +82,7 @@ abstract class ConfigDownloadServiceImplTest {
         dummyWebService.nextStatusCode = 400
         dummyWebService.nextBody = null
         dummyWebService.nextErrorBody = "Bad Request"
-        analytics.currentConfiguration?.copy(
-            sdkVerifyRetryStrategy = RetryStrategy.exponential(1)
-        )?.let {
-            configDownloadServiceImpl.updateConfiguration(
-                it
-            )
-        }
+        analytics.currentConfiguration?.let { configDownloadServiceImpl.updateConfiguration(it) }
         configDownloadServiceImpl.download(callback = { success, rudderServerConfig, lastErrorMsg ->
             assertThat(success, `is`(false))
             assertThat(lastErrorMsg, notNullValue())

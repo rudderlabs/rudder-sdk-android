@@ -14,14 +14,10 @@
 
 package com.rudderstack.android.internal.plugins
 
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.contextState
-import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.Configuration
-import com.rudderstack.core.State
 import com.rudderstack.core.MissingPropertiesException
 import com.rudderstack.core.minusWrtKeys
 import com.rudderstack.models.*
@@ -41,7 +37,7 @@ import com.rudderstack.models.*
  *
  */
 internal class FillDefaultsPlugin : Plugin {
-    companion object{
+    companion object {
         private const val CHANNEL = "android"
     }
 
@@ -50,6 +46,7 @@ internal class FillDefaultsPlugin : Plugin {
         super.setup(analytics)
         _analytics = analytics
     }
+
     /**
      * Fill default details for [Message]
      * If message contains context, this will replace the ones present
@@ -57,12 +54,12 @@ internal class FillDefaultsPlugin : Plugin {
      */
     @Throws(MissingPropertiesException::class)
     private inline fun <reified T : Message> T.withDefaults(): T {
-        val anonId = this.anonymousId ?: _analytics?.currentConfigurationAndroid?.anonymousId
+        val anonId = this.anonymousId ?: (_analytics?.currentConfiguration as ConfigurationAndroid).anonymousId
         println("anonId: $anonId, analytics: $_analytics")
-        val userId = this.userId ?: _analytics?.currentConfigurationAndroid?.userId
+        val userId = this.userId ?: (_analytics?.currentConfiguration as ConfigurationAndroid).userId
         if (anonId == null && userId == null) {
             val ex = MissingPropertiesException("Either Anonymous Id or User Id must be present");
-            _analytics?.currentConfigurationAndroid?.logger?.error(
+            (_analytics?.currentConfiguration as ConfigurationAndroid).logger.error(
                 log = "Missing both anonymous Id and user Id. Use settings to update " + "anonymous id in Analytics constructor",
                 throwable = ex
             )
@@ -73,7 +70,7 @@ internal class FillDefaultsPlugin : Plugin {
         return (this.copy(context = (
                 // in case of alias we purposefully remove traits from context
                 _analytics?.contextState?.value?.let {
-                    if (this is AliasMessage && this.userId != _analytics?.currentConfigurationAndroid?.userId) it.updateWith(
+                    if (this is AliasMessage && this.userId != (_analytics?.currentConfiguration as ConfigurationAndroid).userId) it.updateWith(
                         traits = mapOf()
                     ) else it
                 } selectiveReplace context),

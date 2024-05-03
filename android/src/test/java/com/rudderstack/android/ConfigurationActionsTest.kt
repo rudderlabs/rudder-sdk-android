@@ -14,14 +14,14 @@ import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29])
-class ConfigurationActionsTest{
+class ConfigurationActionsTest {
 
     @Test
-    fun `test initial configuration is generated from storage`(){
+    fun `test initial configuration is generated from storage`() {
         val storage = mock<AndroidStorage>()
         whenever(storage.trackAutoSession).thenReturn(true)
         val application = ApplicationProvider.getApplicationContext<Application>()
-        val initialConfiguration = application.initialConfigurationAndroid(storage)
+        val initialConfiguration = ConfigurationAndroid.create(application = application, storage = storage)
         assertThat(initialConfiguration.trackAutoSession, Matchers.`is`(true))
     }
 

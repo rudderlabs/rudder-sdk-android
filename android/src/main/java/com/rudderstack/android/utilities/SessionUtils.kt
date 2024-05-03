@@ -16,7 +16,6 @@ package com.rudderstack.android.utilities
 
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.androidStorage
-import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.holder.retrieveState
@@ -32,8 +31,9 @@ private val defaultSessionId
 private const val SESSION_ID_MIN_LENGTH = 10
 internal val defaultLastActiveTimestamp
     get() = System.currentTimeMillis()
-internal val Analytics.userSessionState : UserSessionState?
+internal val Analytics.userSessionState: UserSessionState?
     get() = retrieveState()
+
 @JvmOverloads
 fun Analytics.startSession(
     sessionId: Long = defaultSessionId
@@ -45,7 +45,7 @@ fun Analytics.startSession(
         )
         return
     }
-    if (currentConfigurationAndroid?.trackAutoSession == true) {
+    if ((currentConfiguration as ConfigurationAndroid).trackAutoSession) {
         applyConfiguration {
             if (this is ConfigurationAndroid) copy(
                 trackAutoSession = false
@@ -71,8 +71,8 @@ fun Analytics.endSession() {
 }
 
 
-internal fun Analytics.startAutoSessionIfNeeded() : Boolean {
-    if (currentConfigurationAndroid?.trackAutoSession != true) return false
+internal fun Analytics.startAutoSessionIfNeeded(): Boolean {
+    if (!(currentConfiguration as ConfigurationAndroid).trackAutoSession) return false
 
     val currentSession = userSessionState?.value
     if (currentSession == null) {
@@ -86,8 +86,7 @@ internal fun Analytics.startAutoSessionIfNeeded() : Boolean {
     val timeDifference: Long = synchronized(this) {
         abs(System.currentTimeMillis() - currentSession.lastActiveTimestamp)
     }
-    if (timeDifference >= (currentConfigurationAndroid?.sessionTimeoutMillis?.coerceAtLeast(0L)
-                           ?: 0)
+    if (timeDifference >= ((currentConfiguration as ConfigurationAndroid).sessionTimeoutMillis.coerceAtLeast(0L) ?: 0)
     ) {
         refreshSessionUpdate()
         return true
@@ -95,8 +94,10 @@ internal fun Analytics.startAutoSessionIfNeeded() : Boolean {
     return false
 }
 
-internal fun Analytics.initializeSessionManagement(savedSessionId: Long? = null,
-        lastActiveTimestamp: Long? = null) {
+internal fun Analytics.initializeSessionManagement(
+    savedSessionId: Long? = null,
+    lastActiveTimestamp: Long? = null
+) {
     if (isAutoTrackingChangedToDisabledInNewSession()) {
         discardAnyPreviousSession()
         return
@@ -118,17 +119,16 @@ internal fun Analytics.initializeSessionManagement(savedSessionId: Long? = null,
 }
 
 private fun Analytics.isAutoTrackingChangedToDisabledInNewSession() =
-    ((currentConfigurationAndroid?.trackAutoSession != true)
-            && androidStorage.trackAutoSession)
+    (!(currentConfiguration as ConfigurationAndroid).trackAutoSession && androidStorage.trackAutoSession)
 
 private fun Analytics.updateSessionLastActiveTimestamp() {
     userSessionState?.apply {
         value?.let {
             update(
-            it.copy(
-                lastActiveTimestamp = defaultLastActiveTimestamp
+                it.copy(
+                    lastActiveTimestamp = defaultLastActiveTimestamp
+                )
             )
-        )
         }
 
     }

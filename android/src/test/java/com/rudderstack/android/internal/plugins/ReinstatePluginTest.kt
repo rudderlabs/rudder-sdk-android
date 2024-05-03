@@ -43,7 +43,6 @@ class ReinstatePluginTest {
     private lateinit var config: RudderServerConfig
     private lateinit var androidStorage: AndroidStorage
     private lateinit var mockControlPlane: ConfigDownloadService
-
     private lateinit var configurationAndroid: ConfigurationAndroid
     private lateinit var plugin: ReinstatePlugin
     private lateinit var dummyMessage: Message
@@ -71,11 +70,12 @@ class ReinstatePluginTest {
                 "testSourceId", isSourceEnabled = true
             )
         )
-        configurationAndroid = ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext()
-        )
-        analytics = generateTestAnalytics(mock<JsonAdapter>(),
-            configurationAndroid, storage = androidStorage, configDownloadService = mockControlPlane
+        configurationAndroid = ConfigurationAndroid(ApplicationProvider.getApplicationContext())
+        analytics = generateTestAnalytics(
+            jsonAdapter = mock<JsonAdapter>(),
+            mockConfiguration = configurationAndroid,
+            storage = androidStorage,
+            configDownloadService = mockControlPlane
         )
 
         `when`(chain.originalMessage).thenReturn(dummyMessage)
@@ -125,8 +125,10 @@ class ReinstatePluginTest {
         val storage = mock<AndroidStorage>()
         whenever(storage.anonymousId).thenReturn("testAnonymousId")
         analytics = generateTestAnalytics(
-            mock(),
-            configurationAndroid, storage = storage, configDownloadService = mockControlPlane
+            jsonAdapter = mock(),
+            mockConfiguration = configurationAndroid,
+            storage = storage,
+            configDownloadService = mockControlPlane
         )
         plugin.setup(analytics)
         plugin.updateConfiguration(configurationAndroid)
@@ -143,8 +145,11 @@ class ReinstatePluginTest {
         plugin = ReinstatePlugin()
         val storage = mock<AndroidStorage>()
         whenever(storage.userId).thenReturn("userId")
-        analytics = generateTestAnalytics( mock(),
-            configurationAndroid, storage = storage, configDownloadService = mockControlPlane
+        analytics = generateTestAnalytics(
+            jsonAdapter = mock(),
+            mockConfiguration = configurationAndroid,
+            storage = storage,
+            configDownloadService = mockControlPlane
         )
         plugin.setup(analytics)
         plugin.updateConfiguration(configurationAndroid)

@@ -14,8 +14,8 @@
 
 package com.rudderstack.android.internal.infrastructure
 
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.LifecycleListenerPlugin
-import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.InfrastructurePlugin
@@ -81,12 +81,12 @@ class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
     }
 
     override fun onScreenChange(name: String, arguments: Map<String, Any>?) {
-        val activityName = currentActivityName?:""
+        val activityName = currentActivityName ?: ""
         withRecordScreenViews {
             analytics?.screen {
                 screenName(activityName)
                 this.category(name)
-                this.screenProperties{
+                this.screenProperties {
                     add(arguments ?: mapOf())
                 }
             }
@@ -94,20 +94,22 @@ class LifecycleObserverPlugin : InfrastructurePlugin, LifecycleListenerPlugin {
     }
 
     private fun withTrackLifeCycle(body: () -> Unit) {
-        if (analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true) {
-            body()
-        }
-    }
-    private fun withRecordScreenViews(body: () -> Unit) {
-        if (analytics?.currentConfigurationAndroid?.recordScreenViews == true) {
-            body()
-        }
-    }
-    private fun withTrackLifeCycleAndRecordScreenViews(body: () -> Unit) {
-        if (analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true
-            && analytics?.currentConfigurationAndroid?.recordScreenViews == true) {
+        if ((analytics?.currentConfiguration as ConfigurationAndroid).trackLifecycleEvents) {
             body()
         }
     }
 
+    private fun withRecordScreenViews(body: () -> Unit) {
+        if ((analytics?.currentConfiguration as ConfigurationAndroid).recordScreenViews) {
+            body()
+        }
+    }
+
+    private fun withTrackLifeCycleAndRecordScreenViews(body: () -> Unit) {
+        if ((analytics?.currentConfiguration as ConfigurationAndroid).trackLifecycleEvents
+            && (analytics?.currentConfiguration as ConfigurationAndroid).recordScreenViews
+        ) {
+            body()
+        }
+    }
 }

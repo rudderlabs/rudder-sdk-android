@@ -15,6 +15,7 @@
 package com.rudderstack.core.internal
 
 import com.rudderstack.core.Configuration
+import com.rudderstack.core.ConfigurationImpl
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.dataPlaneUrl
 import com.rudderstack.core.internal.states.ConfigurationsState
@@ -94,23 +95,22 @@ abstract class DataServiceUploadImplTest {
                     any()
                 )
             }.doAnswer {
-                    val callback = it.arguments[6] as (HttpResponse<String>) -> Unit
-                    callback(HttpResponse(200, "OK", null))
-                }
+                val callback = it.arguments[6] as (HttpResponse<String>) -> Unit
+                callback(HttpResponse(200, "OK", null))
+            }
 
         }
         dataServiceImpl = DataUploadServiceImpl(
             writeKey, jsonAdapter, dummyWebService
         )
-        val configuration =
-            Configuration(dataPlaneUrl = dataPlaneUrl, base64Generator = {
-                Base64.getEncoder().encodeToString(
-                    String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8"))
-                )
-            })
+        val configuration = ConfigurationImpl(dataPlaneUrl = dataPlaneUrl, base64Generator = {
+            Base64.getEncoder().encodeToString(
+                String.format(Locale.US, "%s:", it).toByteArray(charset("UTF-8"))
+            )
+        })
         dataServiceImpl.updateConfiguration(configuration)
 //        val isComplete = AtomicBoolean(false)
-        val argCaptors = argumentCaptor<Map<String,String>, String, String, Class<String>, Boolean>(
+        val argCaptors = argumentCaptor<Map<String, String>, String, String, Class<String>, Boolean>(
 //            Map::class, //headers
 //            String::class,//body
 //            String::class,//endpoint
@@ -130,8 +130,12 @@ abstract class DataServiceUploadImplTest {
             anyOrNull()
         )
         val encodedWriteKey = configuration.base64Generator?.generateBase64(writeKey)
-        assertThat(argCaptors.component1().lastValue, allOf(hasEntry("Content-Type", "application/json"),
-            hasEntry("Authorization", String.format(Locale.US, "Basic %s", encodedWriteKey))))
+        assertThat(
+            argCaptors.component1().lastValue, allOf(
+                hasEntry("Content-Type", "application/json"),
+                hasEntry("Authorization", String.format(Locale.US, "Basic %s", encodedWriteKey))
+            )
+        )
         assertThat(argCaptors.component2().lastValue, not(emptyString()))
         assertThat(argCaptors.component3().lastValue, equalTo("v1/batch"))
         assertThat(argCaptors.component4().lastValue, equalTo(String::class.java))
@@ -140,7 +144,7 @@ abstract class DataServiceUploadImplTest {
 
     @Test
     fun testUploadFailure() {
-        val dummyWebService = mock<WebService>{
+        val dummyWebService = mock<WebService> {
             on {
                 post(
                     anyMap(),

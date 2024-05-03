@@ -14,6 +14,8 @@
 
 package com.rudderstack.core.compat;
 
+import static com.rudderstack.core.ConfigurationImplKt.FLUSH_QUEUE_SIZE;
+import static com.rudderstack.core.ConfigurationImplKt.MAX_FLUSH_INTERVAL;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -43,8 +45,8 @@ public class ConfigurationBuilderTest {
 
         assertNotNull(configuration);
         assertEquals(RudderOptions.defaultOptions(), configuration.getOptions());
-        assertEquals(Configuration.FLUSH_QUEUE_SIZE, configuration.getFlushQueueSize());
-        assertEquals(Configuration.MAX_FLUSH_INTERVAL, configuration.getMaxFlushInterval());
+        assertEquals(FLUSH_QUEUE_SIZE, configuration.getFlushQueueSize());
+        assertEquals(MAX_FLUSH_INTERVAL, configuration.getMaxFlushInterval());
         assertFalse(configuration.getShouldVerifySdk());
         assertThat(configuration.getSdkVerifyRetryStrategy(),
                 Matchers.isA(RetryStrategy.ExponentialRetryStrategy.class));

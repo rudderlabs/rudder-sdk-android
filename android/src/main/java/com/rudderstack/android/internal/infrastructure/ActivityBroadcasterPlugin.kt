@@ -18,7 +18,7 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import com.rudderstack.android.LifecycleListenerPlugin
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.InfrastructurePlugin
 import java.util.concurrent.atomic.AtomicInteger
@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger
 internal class ActivityBroadcasterPlugin(
 ) : InfrastructurePlugin {
     private val application: Application?
-        get() = analytics?.currentConfigurationAndroid?.application
+        get() = (analytics?.currentConfiguration as ConfigurationAndroid).application
     private var analytics: Analytics? = null
     private val activityCount = AtomicInteger()
     private val lifecycleCallback by lazy {
@@ -40,11 +40,10 @@ internal class ActivityBroadcasterPlugin(
 
             override fun onActivityStarted(activity: Activity) {
                 incrementActivityCount()
-                if (analytics?.currentConfigurationAndroid?.recordScreenViews == true) {
+                if ((analytics?.currentConfiguration as ConfigurationAndroid).recordScreenViews) {
                     broadcastActivityStart(activity)
                 }
-                if(analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true  &&
-                    activityCount.get() == 1) {
+                if ((analytics?.currentConfiguration as ConfigurationAndroid).trackLifecycleEvents && activityCount.get() == 1) {
                     broadCastApplicationStart()
                 }
             }
@@ -58,9 +57,9 @@ internal class ActivityBroadcasterPlugin(
             }
 
             override fun onActivityStopped(activity: Activity) {
-                if (analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true) {
+                if ((analytics?.currentConfiguration as ConfigurationAndroid).trackLifecycleEvents) {
                     decrementActivityCount()
-                    if(activityCount.get() == 0) {
+                    if (activityCount.get() == 0) {
                         broadCastApplicationStop()
                     }
                 }
@@ -101,7 +100,6 @@ internal class ActivityBroadcasterPlugin(
     }
 
 
-
     private fun broadCastApplicationStart() {
         analytics?.applyInfrastructureClosure {
             if (this is LifecycleListenerPlugin) {
@@ -133,7 +131,7 @@ internal class ActivityBroadcasterPlugin(
 
     override fun setup(analytics: Analytics) {
         this.analytics = analytics
-        if (analytics.currentConfigurationAndroid?.trackLifecycleEvents == true) {
+        if ((analytics?.currentConfiguration as ConfigurationAndroid).trackLifecycleEvents) {
 
             application?.registerActivityLifecycleCallbacks(lifecycleCallback)
         }

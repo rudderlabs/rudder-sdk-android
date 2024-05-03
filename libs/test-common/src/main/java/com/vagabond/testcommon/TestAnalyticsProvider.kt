@@ -13,22 +13,23 @@
  */
 
 @file:JvmName("TestAnalyticsProvider")
+
 package com.vagabond.testcommon
 
-import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
+import com.vagabond.testcommon.utils.TestExecutor
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
+import com.rudderstack.core.ConfigurationImpl
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.models.Message
-import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 
 private const val DUMMY_WRITE_KEY = "DUMMY_WRITE_KEY"
-private var currentTestPlugin : Plugin? = null
+private var currentTestPlugin: Plugin? = null
 private var inputs = listOf<Message>()
 private val inputVerifyPlugin = Plugin { chain ->
     chain.proceed(chain.message().also {
@@ -37,45 +38,55 @@ private val inputVerifyPlugin = Plugin { chain ->
 }
 
 fun generateTestAnalytics(jsonAdapter: JsonAdapter): Analytics {
-    return generateTestAnalytics(jsonAdapter,Configuration(
-        shouldVerifySdk = false))
-}
-fun generateTestAnalytics(jsonAdapter: JsonAdapter, mockConfiguration: Configuration,
-                          configDownloadService: ConfigDownloadService =
-                              MockConfigDownloadService(),
-                          storage: Storage = VerificationStorage(),
-                          dataUploadService: DataUploadService = TestDataUploadService(),
-                          ): Analytics {
-    val testingConfig = mockConfiguration.copy(
-        logger = KotlinLogger,
-        analyticsExecutor = TestExecutor()
+    return generateTestAnalytics(
+        jsonAdapter = jsonAdapter,
+        mockConfiguration = ConfigurationImpl(shouldVerifySdk = false)
     )
+}
+
+fun generateTestAnalytics(
+    jsonAdapter: JsonAdapter,
+    mockConfiguration: Configuration,
+    configDownloadService: ConfigDownloadService = MockConfigDownloadService(),
+    storage: Storage = VerificationStorage(),
+    dataUploadService: DataUploadService = TestDataUploadService(),
+): Analytics {
     return Analytics(
-        DUMMY_WRITE_KEY,jsonAdapter, testingConfig, dataUploadService = dataUploadService,
-        configDownloadService = configDownloadService, storage = storage
+        writeKey = DUMMY_WRITE_KEY,
+        jsonAdapter = jsonAdapter,
+        configuration = mockConfiguration,
+        dataUploadService = dataUploadService,
+        configDownloadService = configDownloadService,
+        storage = storage
     ).also {
         it.addPlugin(inputVerifyPlugin)
     }
 }
-fun Analytics.testPlugin(pluginUnderTest : Plugin) {
+
+fun Analytics.testPlugin(pluginUnderTest: Plugin) {
     currentTestPlugin = pluginUnderTest
     addPlugin(pluginUnderTest)
 }
-fun Analytics.assertArguments(verification : Verification<List<Message>,List<Message>>) {
+
+fun Analytics.assertArguments(verification: Verification<List<Message>, List<Message>>) {
     busyWait(100)
-    verification.assert(inputs.toList(), storage.getDataSync() ?:
-    emptyList())
+    verification.assert(
+        inputs.toList(), storage.getDataSync() ?: emptyList()
+    )
 }
-fun Analytics.assertArgument(verification: Verification<Message?, Message?>){
+
+fun Analytics.assertArgument(verification: Verification<Message?, Message?>) {
     busyWait(100)
     verification.assert(inputs.lastOrNull(), storage.getDataSync().lastOrNull())
 }
+
 private fun busyWait(millis: Long) {
     val start = System.currentTimeMillis()
     while (System.currentTimeMillis() - start < millis) {
         // busy wait
     }
 }
-fun interface Verification<IN,OUT> {
-    fun assert(input : IN, output : OUT)
+
+fun interface Verification<IN, OUT> {
+    fun assert(input: IN, output: OUT)
 }

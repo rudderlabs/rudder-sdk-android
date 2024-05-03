@@ -23,7 +23,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.multiprocess.RemoteWorkManager
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.core.Analytics
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
@@ -48,15 +48,20 @@ internal val Application.sinkAnalytics
 private val constraints by lazy {
     Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 }
-private fun sinkWorker(workManagerAnalyticsFactoryClassName: Class<out
-WorkManagerAnalyticsFactory>) =
+
+private fun sinkWorker(
+    workManagerAnalyticsFactoryClassName: Class<out
+    WorkManagerAnalyticsFactory>
+) =
     PeriodicWorkRequestBuilder<RudderSyncWorker>(
         REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES
     ).setInitialDelay(REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES).setConstraints(constraints)
-        .setInputData(Data.Builder().putString(
-            RudderSyncWorker.WORKER_ANALYTICS_FACTORY_KEY,
-            workManagerAnalyticsFactoryClassName.name
-        ).build())
+        .setInputData(
+            Data.Builder().putString(
+                RudderSyncWorker.WORKER_ANALYTICS_FACTORY_KEY,
+                workManagerAnalyticsFactoryClassName.name
+            ).build()
+        )
         .addTag(WORK_MANAGER_TAG).build()
 
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<block flush works after shutdown>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -69,16 +74,16 @@ internal fun Application.registerWorkManager(
 
     Configuration.Builder().also {
         // if process name is available, this is a multi-process app
-        analytics.currentConfigurationAndroid?.defaultProcessName?.apply {
+        (analytics.currentConfiguration as ConfigurationAndroid).defaultProcessName?.apply {
             it.setDefaultProcessName(this)
         }
-        analytics.currentConfigurationAndroid?.networkExecutor?.apply {
+        (analytics.currentConfiguration as ConfigurationAndroid).networkExecutor?.apply {
             it.setExecutor(this)
         }
     }.let {
-            WorkManager.initialize(this, it.build())
-        }
-    if (analytics.currentConfigurationAndroid?.multiProcessEnabled == true) {
+        WorkManager.initialize(this, it.build())
+    }
+    if ((analytics.currentConfiguration as ConfigurationAndroid).multiProcessEnabled) {
         RemoteWorkManager.getInstance(this).enqueueUniquePeriodicWork(
             WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE, sinkWorker(workManagerAnalyticsFactoryClass)
         )
@@ -87,6 +92,7 @@ internal fun Application.registerWorkManager(
     )
 
 }
+
 internal fun Application.unregisterWorkManager() {
     analyticsRef?.clear()
     analyticsRef = null

@@ -14,11 +14,12 @@
 
 package com.rudderstack.core.compat;
 
-import static com.rudderstack.core.Configuration.FLUSH_QUEUE_SIZE;
-import static com.rudderstack.core.Configuration.MAX_FLUSH_INTERVAL;
+import static com.rudderstack.core.ConfigurationImplKt.FLUSH_QUEUE_SIZE;
+import static com.rudderstack.core.ConfigurationImplKt.MAX_FLUSH_INTERVAL;
 
 import com.rudderstack.core.Base64Generator;
 import com.rudderstack.core.Configuration;
+import com.rudderstack.core.ConfigurationImpl;
 import com.rudderstack.core.Logger;
 import com.rudderstack.core.RetryStrategy;
 import com.rudderstack.core.RudderOptions;
@@ -35,8 +36,8 @@ public class ConfigurationBuilder {
     private boolean shouldVerifySdk = false;
     private boolean gzipEnabled = true;
     private RetryStrategy sdkVerifyRetryStrategy = RetryStrategy.exponential();
-    private String dataPlaneUrl = null; //defaults to https://hosted.rudderlabs.com
-    private String controlPlaneUrl = null; //defaults to https://api.rudderlabs.com
+    private String dataPlaneUrl = "https://hosted.rudderlabs.com";
+    private String controlPlaneUrl = "https://api.rudderstack.com/";
     private Logger logger = KotlinLogger.INSTANCE;
     private ExecutorService analyticsExecutor = Executors.newSingleThreadExecutor();
     private ExecutorService networkExecutor = Executors.newCachedThreadPool();
@@ -105,9 +106,6 @@ public class ConfigurationBuilder {
     }
 
     public Configuration build() {
-        return Configuration.Companion.invoke(options, flushQueueSize, maxFlushInterval,
-                shouldVerifySdk, gzipEnabled, sdkVerifyRetryStrategy, dataPlaneUrl,
-                controlPlaneUrl, logger,
-                analyticsExecutor, networkExecutor, base64Generator);
+        return new ConfigurationImpl(options, flushQueueSize, maxFlushInterval, shouldVerifySdk, gzipEnabled, sdkVerifyRetryStrategy, dataPlaneUrl, controlPlaneUrl, logger, analyticsExecutor, networkExecutor, base64Generator);
     }
 }

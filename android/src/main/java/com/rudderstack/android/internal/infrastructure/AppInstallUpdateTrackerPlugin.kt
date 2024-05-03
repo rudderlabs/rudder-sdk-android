@@ -2,8 +2,8 @@ package com.rudderstack.android.internal.infrastructure
 
 import android.content.pm.PackageManager
 import android.os.Build
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.androidStorage
-import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.models.AppVersion
 import com.rudderstack.core.Analytics
@@ -29,7 +29,7 @@ class AppInstallUpdateTrackerPlugin : InfrastructurePlugin {
         this.analytics = analytics
         this.appVersion = getAppVersion(analytics)
         storeVersionNameAndBuild(analytics.androidStorage)
-        if (this.analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true) {
+        if ((this.analytics?.currentConfiguration as ConfigurationAndroid).trackLifecycleEvents) {
             trackApplicationStatus()
         }
     }
@@ -41,8 +41,8 @@ class AppInstallUpdateTrackerPlugin : InfrastructurePlugin {
         var currentVersionName: String? = null
 
         try {
-            val packageName = analytics.currentConfigurationAndroid?.application?.packageName
-            val packageManager: PackageManager? = analytics.currentConfigurationAndroid?.application?.packageManager
+            val packageName = (analytics.currentConfiguration as ConfigurationAndroid).application.packageName
+            val packageManager: PackageManager? = (analytics.currentConfiguration as ConfigurationAndroid).application.packageManager
             val packageInfo = packageName?.let {
                 packageManager?.getPackageInfo(it, 0)
             }

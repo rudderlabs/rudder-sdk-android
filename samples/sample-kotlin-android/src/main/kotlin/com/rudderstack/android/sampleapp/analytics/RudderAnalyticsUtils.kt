@@ -22,43 +22,36 @@ object RudderAnalyticsUtils {
     private var _rudderReporter: RudderReporter? = null
 
     fun initialize(application: Application, listener: InitializationListener? = null) {
-        _rudderAnalytics = createInstance(writeKey = WRITE_KEY,
+        _rudderAnalytics = createInstance(
+            writeKey = WRITE_KEY,
             application = application,
             jsonAdapter = GsonAdapter(),
 
             initializationListener = { success, message ->
                 listener?.onAnalyticsInitialized(PRIMARY_INSTANCE_NAME, success, message)
             },
-            configurationInitializer = {
-//                dataPlaneUrl = DATA_PLANE_URL,
-//                controlPlaneUrl = CONTROL_PLANE_URL,
-//                recordScreenViews = true,
-                copy(
-                    trackAutoSession = true,
-                    dataPlaneUrl = DATA_PLANE_URL,
-                    controlPlaneUrl = CONTROL_PLANE_URL,
-                    recordScreenViews = true,
-                )
-            })
-        _rudderAnalyticsSecondary = createInstance(writeKey = WRITE_KEY,
+            configuration = ConfigurationAndroid(application).copy(
+                trackAutoSession = true,
+                dataPlaneUrl = DATA_PLANE_URL,
+                controlPlaneUrl = CONTROL_PLANE_URL,
+                recordScreenViews = true,
+            )
+        )
+        _rudderAnalyticsSecondary = createInstance(
+            writeKey = WRITE_KEY,
             application = application,
             jsonAdapter = GsonAdapter(),
 
             initializationListener = { success, message ->
                 listener?.onAnalyticsInitialized(SECONDARY_INSTANCE_NAME, success, message)
             },
-            configurationInitializer = {
-//                dataPlaneUrl = DATA_PLANE_URL,
-//                controlPlaneUrl = CONTROL_PLANE_URL,
-//                recordScreenViews = true,
-                copy(
-                    trackAutoSession = true,
-                    dataPlaneUrl = DATA_PLANE_URL_SECONDARY,
-                    controlPlaneUrl = CONTROL_PLANE_URL_SECONDARY,
-                    recordScreenViews = true,
-                    trackLifecycleEvents = true,
-                    )
-            })
+            configuration = ConfigurationAndroid(application).copy(
+                trackAutoSession = true,
+                dataPlaneUrl = DATA_PLANE_URL,
+                controlPlaneUrl = CONTROL_PLANE_URL,
+                recordScreenViews = true,
+            )
+        )
         _rudderReporter = DefaultRudderReporter(
             context = application, baseUrl = METRICS_BASE_URL, configuration = Configuration(
                 LibraryMetadata(

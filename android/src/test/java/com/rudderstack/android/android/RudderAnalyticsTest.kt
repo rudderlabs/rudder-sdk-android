@@ -19,10 +19,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.android.AnalyticsRegistry
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.createInstance
-import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.setAnonymousId
 import com.rudderstack.core.Analytics
-import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
@@ -49,11 +47,17 @@ class RudderAnalyticsTest {
     fun setUp() {
         AnalyticsRegistry.clear()
         analytics = createInstance(
-            writeKey, mock(),
-            ApplicationProvider.getApplicationContext()
+            writeKey = writeKey,
+            jsonAdapter = mock(),
+            application = ApplicationProvider.getApplicationContext(),
+            configuration = ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext())
         )
-
-        analytics2 = createInstance(writeKey2, mock(), ApplicationProvider.getApplicationContext())
+        analytics2 = createInstance(
+            writeKey = writeKey2,
+            jsonAdapter = mock(),
+            application = ApplicationProvider.getApplicationContext(),
+            configuration = ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext())
+        )
 
     }
 
@@ -65,14 +69,17 @@ class RudderAnalyticsTest {
 
     @Test
     fun `test put anonymous id`() {
-        val analytics = createInstance("testKey", mock(), ApplicationProvider.getApplicationContext
-            (), configurationInitializer = {
-            copy(anonymousId = "anon_id")
-        })
-
+        val analytics = createInstance(
+            writeKey = "testKey",
+            jsonAdapter = mock(),
+            application = ApplicationProvider.getApplicationContext(),
+            configuration = ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext()).copy(
+                anonymousId = "anon_id"
+            )
+        )
         analytics.setAnonymousId("anon_id")
         MatcherAssert.assertThat(
-            analytics.currentConfigurationAndroid, allOf(
+            analytics.currentConfiguration, allOf(
                 Matchers.isA(ConfigurationAndroid::class.java),
                 Matchers.hasProperty("anonymousId", Matchers.equalTo("anon_id"))
             )
@@ -95,10 +102,11 @@ class RudderAnalyticsTest {
     @Test
     fun `given instance is already created with the writeKey, when createInstance is called with same write key, then the previous instance should be returned`() {
         val dupeAnalytics = createInstance(
-            writeKey, mock(),
-            ApplicationProvider.getApplicationContext()
+            writeKey = writeKey,
+            jsonAdapter = mock(),
+            application = ApplicationProvider.getApplicationContext(),
+            configuration = ConfigurationAndroid.create(application = ApplicationProvider.getApplicationContext())
         )
-
         MatcherAssert.assertThat(analytics, Matchers.isA(Analytics::class.java))
         MatcherAssert.assertThat(dupeAnalytics, Matchers.isA(Analytics::class.java))
         assert(analytics === dupeAnalytics)

@@ -48,19 +48,19 @@ private fun RudderAnalytics(
     writeKey: String,
     jsonAdapter: JsonAdapter,
     application: Application,
-    configurationInitializer: ConfigurationAndroid.() -> ConfigurationAndroid = { this },
-    dataUploadService: DataUploadService? = null,
-    configDownloadService: ConfigDownloadService? = null,
     storage: AndroidStorage = AndroidStorageImpl(
         application,
         writeKey = writeKey,
-        useContentProvider = ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER
+        useContentProvider = USE_CONTENT_PROVIDER
     ),
-    initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
+    configuration: ConfigurationAndroid = ConfigurationAndroid.create(application, storage),
+    initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
+    dataUploadService: DataUploadService? = null,
+    configDownloadService: ConfigDownloadService? = null,
 ): Analytics {
     return Analytics(writeKey,
         jsonAdapter,
-        configurationInitializer(application.initialConfigurationAndroid(storage)),
+        configuration,
         dataUploadService,
         configDownloadService,
         storage,
@@ -77,26 +77,26 @@ fun createInstance(
     writeKey: String,
     jsonAdapter: JsonAdapter,
     application: Application,
-    configurationInitializer: ConfigurationAndroid.() -> ConfigurationAndroid = { this },
-    dataUploadService: DataUploadService? = null,
-    configDownloadService: ConfigDownloadService? = null,
     storage: AndroidStorage = AndroidStorageImpl(
         application,
         writeKey = writeKey,
-        useContentProvider = ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER
+        useContentProvider = USE_CONTENT_PROVIDER
     ),
-    initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
+    configuration: ConfigurationAndroid,
+    initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
+    dataUploadService: DataUploadService? = null,
+    configDownloadService: ConfigDownloadService? = null,
 ): Analytics {
     return AnalyticsRegistry.getInstance(writeKey)
         ?: RudderAnalytics(
             writeKey,
             jsonAdapter,
             application,
-            configurationInitializer,
+            storage,
+            configuration,
+            initializationListener,
             dataUploadService,
             configDownloadService,
-            storage,
-            initializationListener
         ).also { analyticsInstance ->
             AnalyticsRegistry.register(writeKey, analyticsInstance)
         }
@@ -192,7 +192,6 @@ private fun Analytics.startup() {
 }
 
 
-
 private fun Analytics.associateStates() {
     associateState(ContextState())
     associateState(UserSessionState())
@@ -209,6 +208,7 @@ internal fun Analytics.processNewContext(
     androidStorage.cacheContext(newContext)
     contextState?.update(newContext)
 }
+
 private fun Analytics.onShutdown() {
     shutdownSessionManagement()
 }

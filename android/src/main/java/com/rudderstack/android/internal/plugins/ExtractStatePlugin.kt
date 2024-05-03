@@ -16,8 +16,6 @@ package com.rudderstack.android.internal.plugins
 
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.contextState
-import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.processNewContext
 import com.rudderstack.android.setUserId
 import com.rudderstack.core.Analytics
@@ -61,8 +59,8 @@ internal class ExtractStatePlugin : Plugin {
             val newUserId = getUserId(message)
 
             _analytics?.logger?.debug(log = "New user id detected: $newUserId")
-            val prevId = _analytics?.currentConfigurationAndroid?.let {
-                it.userId ?: it.anonymousId
+            val prevId = (_analytics?.currentConfiguration as ConfigurationAndroid).let { configuration ->
+                configuration.userId ?: configuration.anonymousId
             } ?: ""
             // in case of identify, the stored traits (if any) are replaced by the ones provided
             // if user id is different. else traits are added to it
@@ -73,11 +71,13 @@ internal class ExtractStatePlugin : Plugin {
                         prevId, newUserId, it
                     )
                 }
+
                 is IdentifyMessage -> {
-                    if(newUserId != prevId) {
+                    if (newUserId != prevId) {
                         replaceContext(it)
                     } else appendContext(it)
                 }
+
                 else -> {}
             }
             message.also {
@@ -90,13 +90,12 @@ internal class ExtractStatePlugin : Plugin {
     }
 
     private fun appendContext(messageContext: MessageContext) {
-        _analytics?.processNewContext(  messageContext optAdd _analytics?.contextState?.value)
+        _analytics?.processNewContext(messageContext optAdd _analytics?.contextState?.value)
     }
 
     private fun replaceContext(messageContext: MessageContext) {
         _analytics?.processNewContext(messageContext)
     }
-
 
 
     /**
@@ -111,14 +110,14 @@ internal class ExtractStatePlugin : Plugin {
      *
      */
     private fun getUserId(message: Message): String? {
-        return  message.context?.let {
+        return message.context?.let {
             (it[KeyConstants.CONTEXT_USER_ID_KEY]
-             ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY))
-             ?: (it[KeyConstants.CONTEXT_USER_ID_KEY_ALIAS])
-             ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY_ALIAS))
-             ?: (it[KeyConstants.CONTEXT_ID_KEY])
-             ?: (it.traits?.get(KeyConstants.CONTEXT_ID_KEY)))?.toString()
-        }?:message.userId
+                ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY))
+                ?: (it[KeyConstants.CONTEXT_USER_ID_KEY_ALIAS])
+                ?: (it.traits?.get(KeyConstants.CONTEXT_USER_ID_KEY_ALIAS))
+                ?: (it[KeyConstants.CONTEXT_ID_KEY])
+                ?: (it.traits?.get(KeyConstants.CONTEXT_ID_KEY)))?.toString()
+        } ?: message.userId
     }
 
     private fun AliasMessage.updateNewAndPrevUserId(

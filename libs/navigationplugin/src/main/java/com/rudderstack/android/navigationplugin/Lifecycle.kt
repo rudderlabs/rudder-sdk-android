@@ -14,7 +14,7 @@
 package com.rudderstack.android.navigationplugin
 
 import androidx.navigation.NavController
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.navigationplugin.internal.NavControllerState
 import com.rudderstack.android.navigationplugin.internal.NavigationPlugin
 import com.rudderstack.core.Analytics
@@ -64,11 +64,11 @@ private var navigationPlugin: NavigationPlugin? = null
  * @param navController : [NavController] to be tracked
  */
 fun Analytics.trackLifecycle(navController: NavController) {
-    if(currentConfigurationAndroid?.recordScreenViews != true ||
-        currentConfigurationAndroid?.trackLifecycleEvents != true) return
+    if (!(currentConfiguration as ConfigurationAndroid).recordScreenViews || !(currentConfiguration as ConfigurationAndroid).trackLifecycleEvents
+    ) return
 
     navControllerState.update(
-        navControllerState.value?.plus(navController)?: setOf(navController)
+        navControllerState.value?.plus(navController) ?: setOf(navController)
     )
     if (navigationPlugin == null) {
         navigationPlugin = NavigationPlugin(navControllerState).also {

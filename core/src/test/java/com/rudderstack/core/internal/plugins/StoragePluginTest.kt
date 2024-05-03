@@ -16,6 +16,7 @@ package com.rudderstack.core.internal.plugins
 
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
+import com.rudderstack.core.ConfigurationImpl
 import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
@@ -48,13 +49,16 @@ class StoragePluginTest {
     )
     private lateinit var analytics: Analytics
     private lateinit var storage: Storage
+
     @Before
     fun setup() {
         storage = VerificationStorage()
-        analytics = generateTestAnalytics(mock(),
-            mockConfiguration = Configuration(shouldVerifySdk = false), storage = storage
+        analytics = generateTestAnalytics(
+            jsonAdapter = mock(),
+            mockConfiguration = ConfigurationImpl(shouldVerifySdk = false), storage = storage
         )
     }
+
     @After
     fun tearDown() {
         analytics.shutdown()

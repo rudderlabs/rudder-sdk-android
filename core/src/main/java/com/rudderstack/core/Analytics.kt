@@ -50,7 +50,7 @@ class Analytics private constructor(
     constructor(
         writeKey: String,
         jsonAdapter: JsonAdapter,
-        configuration: Configuration = Configuration.DEFAULT,
+        configuration: Configuration = ConfigurationImpl(),
         dataUploadService: DataUploadService? = null,
         configDownloadService: ConfigDownloadService? = null,
         storage: Storage? = null,
@@ -59,14 +59,20 @@ class Analytics private constructor(
         //optional called if shutdown is called
         shutdownHook: (Analytics.() -> Unit)? = null
     ) : this(
-        _delegate = AnalyticsDelegate( jsonAdapter,
-            configuration, storage?:BasicStorageImpl(), writeKey, dataUploadService ?:
-            DataUploadServiceImpl(
+        _delegate = AnalyticsDelegate(
+            jsonAdapter = jsonAdapter,
+            configuration = configuration,
+            storage = storage ?: BasicStorageImpl(),
+            writeKey = writeKey,
+            dataUploadService = dataUploadService ?: DataUploadServiceImpl(
                 writeKey, jsonAdapter
-            ), configDownloadService ?: ConfigDownloadServiceImpl(
-                writeKey, jsonAdapter
-            ), initializationListener, shutdownHook
-
+            ),
+            configDownloadService = configDownloadService ?: ConfigDownloadServiceImpl(
+                writeKey = writeKey,
+                jsonAdapter = jsonAdapter
+            ),
+            initializationListener,
+            shutdownHook
         )
     )
 
@@ -250,14 +256,16 @@ class Analytics private constructor(
     ) {
         val completeTraits = mapOf("userId" to newId)
         alias(
-            AliasMessage.create(timestamp = RudderUtils.timeStamp,
+            AliasMessage.create(
+                timestamp = RudderUtils.timeStamp,
                 anonymousId = anonymousId,
-                previousId=previousId,
+                previousId = previousId,
                 destinationProps = destinationProps,
                 externalIds = externalIds,
                 customContextMap = customContextMap,
 
-                userId = newId, traits = completeTraits),
+                userId = newId, traits = completeTraits
+            ),
             options
         )
     }
@@ -285,7 +293,7 @@ class Analytics private constructor(
         externalIds: List<Map<String, String>>? = null,
         customContextMap: Map<String, Any>? = null,
 
-    ) {
+        ) {
         group(
             GroupMessage.create(
                 timestamp = RudderUtils.timeStamp,

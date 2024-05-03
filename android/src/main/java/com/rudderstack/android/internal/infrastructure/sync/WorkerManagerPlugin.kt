@@ -15,16 +15,16 @@
 package com.rudderstack.android.internal.infrastructure.sync
 
 import android.app.Application
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.InfrastructurePlugin
 
 abstract class WorkerManagerPlugin : InfrastructurePlugin {
-    private var application: Application?= null
+    private var application: Application? = null
     override fun setup(analytics: Analytics) {
-        val currentConfig = analytics.currentConfigurationAndroid
-        if (currentConfig?.isPeriodicFlushEnabled != true) {
+        val currentConfig = analytics.currentConfiguration as ConfigurationAndroid
+        if (!currentConfig.isPeriodicFlushEnabled) {
             return
         }
         currentConfig.apply {
@@ -34,6 +34,7 @@ abstract class WorkerManagerPlugin : InfrastructurePlugin {
             )
         }
     }
+
     override fun shutdown() {
         application?.unregisterWorkManager()
     }

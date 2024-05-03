@@ -31,8 +31,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 class SessionPluginTest {
-    //    protected abstract val jsonAdapter: JsonAdapter
-//    private lateinit var analytics: Analytics
     private lateinit var sessionPlugin: SessionPlugin
     private lateinit var analytics: Analytics
 
@@ -43,14 +41,17 @@ class SessionPluginTest {
         sessionPlugin.setup(analytics)
         analytics.associateState(UserSessionState())
     }
+
     @After
     fun tearDown() {
         sessionPlugin.onShutDown()
         analytics.removeState<UserSessionState>()
         analytics.shutdown()
     }
+
     private val userSessionState
         get() = analytics.retrieveState<UserSessionState>()
+
     @Test
     fun `test intercept with valid session and null context sessionStart true`() {
         val timestamp = RudderUtils.timeStamp
@@ -134,12 +135,19 @@ class SessionPluginTest {
             )
         )
     }
+
     @Test
     fun `test intercept with valid session and valid context sessionStart false`() {
         val timestamp = RudderUtils.timeStamp
-        val message = TrackMessage.create("testEvent", timestamp,
-            traits = mapOf("trait1" to "value1"), externalIds = listOf(mapOf("externalId1" to
-                    "value1")), customContextMap = mapOf("customContext1" to "value1"))
+        val message = TrackMessage.create(
+            "testEvent", timestamp,
+            traits = mapOf("trait1" to "value1"), externalIds = listOf(
+                mapOf(
+                    "externalId1" to
+                            "value1"
+                )
+            ), customContextMap = mapOf("customContext1" to "value1")
+        )
         val mockChain = mock<Plugin.Chain>()
         whenever(mockChain.message()).thenReturn(message)
         val sessionTimestamp = defaultLastActiveTimestamp
@@ -181,12 +189,19 @@ class SessionPluginTest {
             )
         )
     }
+
     @Test
     fun `test intercept with valid session and valid context sessionStart true`() {
         val timestamp = RudderUtils.timeStamp
-        val message = TrackMessage.create("testEvent", timestamp,
-            traits = mapOf("trait1" to "value1"), externalIds = listOf(mapOf("externalId1" to
-                    "value1")), customContextMap = mapOf("customContext1" to "value1"))
+        val message = TrackMessage.create(
+            "testEvent", timestamp,
+            traits = mapOf("trait1" to "value1"), externalIds = listOf(
+                mapOf(
+                    "externalId1" to
+                            "value1"
+                )
+            ), customContextMap = mapOf("customContext1" to "value1")
+        )
         val mockChain = mock<Plugin.Chain>()
         whenever(mockChain.message()).thenReturn(message)
         val sessionTimestamp = defaultLastActiveTimestamp
@@ -228,6 +243,7 @@ class SessionPluginTest {
             )
         )
     }
+
     @Test
     fun `test intercept with inactive session and null context`() {
         val timestamp = RudderUtils.timeStamp
@@ -270,12 +286,19 @@ class SessionPluginTest {
             )
         )
     }
+
     @Test
     fun `test intercept with inactive session and valid context`() {
         val timestamp = RudderUtils.timeStamp
-        val message = TrackMessage.create("testEvent", timestamp,
-            traits = mapOf("trait1" to "value1"), externalIds = listOf(mapOf("externalId1" to
-                    "value1")), customContextMap = mapOf("customContext1" to "value1"))
+        val message = TrackMessage.create(
+            "testEvent", timestamp,
+            traits = mapOf("trait1" to "value1"), externalIds = listOf(
+                mapOf(
+                    "externalId1" to
+                            "value1"
+                )
+            ), customContextMap = mapOf("customContext1" to "value1")
+        )
         val mockChain = mock<Plugin.Chain>()
         whenever(mockChain.message()).thenReturn(message)
         userSessionState?.update(

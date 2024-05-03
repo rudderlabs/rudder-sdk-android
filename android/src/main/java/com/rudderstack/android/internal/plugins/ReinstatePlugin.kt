@@ -18,9 +18,7 @@ import android.content.Context
 import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.androidStorage
-import com.rudderstack.android.applyConfigurationAndroid
 import com.rudderstack.android.contextState
-import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.processNewContext
 import com.rudderstack.android.setAnonymousId
 import com.rudderstack.android.utilities.initializeSessionManagement
@@ -54,7 +52,7 @@ class ReinstatePlugin : Plugin {
     private val isReinstated = AtomicBoolean(false)
     private val stackedChainsTillReinstate = LinkedBlockingQueue<Plugin.Chain>()
     override fun intercept(chain: Plugin.Chain): Message {
-        if(!isReinstated.get()){
+        if (!isReinstated.get()) {
             stackedChainsTillReinstate.add(chain)
             return chain.message()
         }
@@ -63,7 +61,7 @@ class ReinstatePlugin : Plugin {
     }
 
     private fun processStackedMessages() {
-        if(!isReinstated.get()) return
+        if (!isReinstated.get()) return
         synchronized(this) {
             while (stackedChainsTillReinstate.isNotEmpty()) {
                 val stackedChain = stackedChainsTillReinstate.poll() ?: continue
@@ -89,13 +87,13 @@ class ReinstatePlugin : Plugin {
 
     private fun reinstate() {
         if (isReinstated.get()) return
-        val config = _analytics?.currentConfigurationAndroid ?: return
+        val config = _analytics?.currentConfiguration as ConfigurationAndroid
         if (isV2DataAvailable()) {
             isReinstated.set(true)
             reinstateV2FromCache(config)
             return
         }
-        if (!config.shouldVerifySdk){
+        if (!config.shouldVerifySdk) {
             defaults(config)
             isReinstated.set(true)
             return
@@ -108,8 +106,10 @@ class ReinstatePlugin : Plugin {
 
     private fun defaults(configurationAndroid: ConfigurationAndroid) {
         _analytics?.setAnonymousId(AndroidUtils.getDeviceId(configurationAndroid.application))
-        _analytics?.initializeSessionManagement(_analytics?.androidStorage?.sessionId,
-            _analytics?.androidStorage?.lastActiveTimestamp)
+        _analytics?.initializeSessionManagement(
+            _analytics?.androidStorage?.sessionId,
+            _analytics?.androidStorage?.lastActiveTimestamp
+        )
     }
 
     private fun reinstateV2FromCache(configurationAndroid: ConfigurationAndroid) {
@@ -118,11 +118,8 @@ class ReinstatePlugin : Plugin {
             configurationAndroid.application
         )
         val context = _analytics?.androidStorage?.context
-        _analytics?.applyConfigurationAndroid {
-            copy(
-                anonymousId = anonId, userId = userId
-            )
-        }
+
+       (_analytics?.currentConfiguration as ConfigurationAndroid).copy(anonymousId = anonId, userId = userId)
         _analytics?.processNewContext(context ?: createContext())
         _analytics?.initializeSessionManagement(
             _analytics?.androidStorage?.sessionId, _analytics?.androidStorage?.lastActiveTimestamp
@@ -131,21 +128,22 @@ class ReinstatePlugin : Plugin {
 
     private fun isV2DataAvailable(): Boolean {
         return !_analytics?.androidStorage?.anonymousId.isNullOrEmpty() ||
-               !_analytics?.androidStorage?.userId.isNullOrEmpty() ||
-               !_analytics?.contextState?.value.isNullOrEmpty()
+                !_analytics?.androidStorage?.userId.isNullOrEmpty() ||
+                !_analytics?.contextState?.value.isNullOrEmpty()
     }
 
     override fun onShutDown() {
         _analytics = null
         this.sourceId = null
     }
+
     private fun migrateV1DataIfAvailable(
         context: Context, sourceId: String, configurationAndroid: ConfigurationAndroid
     ) {
         configurationAndroid.analyticsExecutor.execute {
             val isV1DataAvailable =
                 context.isV1SavedServerConfigContainsSourceId(RUDDER_SERVER_FILE_NAME_V1, sourceId)
-            if(!isV1DataAvailable) return@execute
+            if (!isV1DataAvailable) return@execute
             // migrate user id/ anon id
             _analytics?.setUserIdFromV1()
             _analytics?.migrateAnonymousIdFromV1()

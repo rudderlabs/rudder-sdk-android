@@ -18,6 +18,7 @@ import com.rudderstack.core.Analytics;
 import com.rudderstack.core.BasicStorageImpl;
 import com.rudderstack.core.ConfigDownloadService;
 import com.rudderstack.core.Configuration;
+import com.rudderstack.core.ConfigurationImpl;
 import com.rudderstack.core.DataUploadService;
 import com.rudderstack.core.Storage;
 import com.rudderstack.core.internal.ConfigDownloadServiceImpl;
@@ -32,7 +33,7 @@ public class AnalyticsBuilderCompat {
     private final String writeKey;
     private final JsonAdapter jsonAdapter;
 
-    private Configuration configuration = Configuration.getDEFAULT();
+    private Configuration configuration = new ConfigurationImpl();
     private Storage storage = new BasicStorageImpl();
     private DataUploadService dataUploadService = null;
     private ConfigDownloadService configDownloadService = null;
@@ -71,6 +72,7 @@ public class AnalyticsBuilderCompat {
         };
         return this;
     }
+
     public AnalyticsBuilderCompat withStorage(Storage storage) {
         this.storage = storage;
         return this;

@@ -15,6 +15,8 @@
 package com.rudderstack.android.compat;
 
 
+import static com.rudderstack.android.ConfigurationAndroidKt.USE_CONTENT_PROVIDER;
+
 import android.app.Application;
 
 import androidx.annotation.NonNull;
@@ -48,7 +50,7 @@ public final class RudderAnalyticsBuilderCompat {
 
     public RudderAnalyticsBuilderCompat(@NonNull String writeKey,
                                         @NonNull Application application,
-                                        @NonNull JsonAdapter jsonAdapter){
+                                        @NonNull JsonAdapter jsonAdapter) {
         this.writeKey = writeKey;
         this.application = application;
         this.jsonAdapter = jsonAdapter;
@@ -77,7 +79,7 @@ public final class RudderAnalyticsBuilderCompat {
     public Analytics build() {
         if (this.storage == null) {
             this.storage = new AndroidStorageImpl(application,
-                    ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER,
+                    USE_CONTENT_PROVIDER,
                     writeKey,
                     Executors.newSingleThreadExecutor());
         }
@@ -85,18 +87,16 @@ public final class RudderAnalyticsBuilderCompat {
                 writeKey,
                 jsonAdapter,
                 application,
-                configurationAndroid ->
-                        initialConfigurationGenerator == null ? configurationAndroid :
-                                initialConfigurationGenerator.generate(configurationAndroid),
-                dataUploadService,
-                configDownloadService,
                 storage,
+                ConfigurationAndroid.create(application, storage),
                 (success, message) -> {
                     if (initializationListener != null) {
                         initializationListener.onInitialized(success, message);
                     }
                     return Unit.INSTANCE;
-                }
+                },
+                dataUploadService,
+                configDownloadService
         );
     }
 
@@ -113,5 +113,4 @@ public final class RudderAnalyticsBuilderCompat {
     public interface InitialConfigurationGenerator {
         ConfigurationAndroid generate(ConfigurationAndroid initialConfiguration);
     }
-
 }

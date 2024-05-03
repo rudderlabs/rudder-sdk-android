@@ -15,18 +15,15 @@
 package com.rudderstack.android.android.internal.plugins
 
 import android.os.Build
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.android.utils.TestExecutor
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.states.ContextState
-import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.retrieveState
-import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.*
 import com.vagabond.testcommon.Verification
 import com.vagabond.testcommon.assertArgument
@@ -38,17 +35,15 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.MockitoAnnotations
-import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 
 @RunWith(
-    RobolectricTestRunner::class)
-    @Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])
+    RobolectricTestRunner::class
+)
+@Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])
 class FillDefaultsPluginTest {
 
     //    private val commonContext = mapOf(
@@ -75,6 +70,7 @@ class FillDefaultsPluginTest {
         fillDefaultsPlugin.setup(analytics)
         fillDefaultsPlugin.updateConfiguration(mockConfig)
     }
+
     @After
     fun destroy() {
         analytics.shutdown()

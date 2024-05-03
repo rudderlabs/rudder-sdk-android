@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.ruddermetricsreporterandroid.utils
+package com.vagabond.testcommon.utils
 
 import java.util.concurrent.AbstractExecutorService
 import java.util.concurrent.TimeUnit

@@ -16,15 +16,15 @@ package com.vagabond.testcommon
 
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
-import com.rudderstack.core.RetryStrategy
 import com.rudderstack.models.RudderServerConfig
 
-class MockConfigDownloadService(val mockConfigDownloadSuccess: Boolean = true,
-                                val mockLastErrorMsg: String? = null,
-                                val mockConfig: RudderServerConfig = RudderServerConfig(
-                                    source = RudderServerConfig.RudderServerConfigSource(),
-                                )) : ConfigDownloadService {
-
+class MockConfigDownloadService(
+    private val mockConfigDownloadSuccess: Boolean = true,
+    private val mockLastErrorMsg: String? = null,
+    private val mockConfig: RudderServerConfig = RudderServerConfig(
+        source = RudderServerConfig.RudderServerConfigSource(),
+    )
+) : ConfigDownloadService {
 
     override fun download(callback: (success: Boolean, RudderServerConfig?, lastErrorMsg: String?) -> Unit) {
         callback(mockConfigDownloadSuccess, mockConfig, mockLastErrorMsg)
@@ -36,5 +36,4 @@ class MockConfigDownloadService(val mockConfigDownloadSuccess: Boolean = true,
 
     override fun shutdown() {
     }
-
 }

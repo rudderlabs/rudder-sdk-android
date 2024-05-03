@@ -16,6 +16,7 @@ package com.rudderstack.core.flushpolicy
 
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
+import com.rudderstack.core.ConfigurationImpl
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.Storage
 import com.rudderstack.core.busyWait
@@ -52,8 +53,9 @@ class CountBasedFlushPolicyTest {
         Mockito.`when`(mockUploadService.uploadSync(any<List<Message>>(), anyOrNull())).thenReturn(
             mockedResponse
         )
-        analytics = generateTestAnalytics(mock(),
-            Configuration( shouldVerifySdk = false),
+        analytics = generateTestAnalytics(
+            mock(),
+            ConfigurationImpl(shouldVerifySdk = false),
             dataUploadService = mockUploadService
         )
         flushPolicy = CountBasedFlushPolicy()

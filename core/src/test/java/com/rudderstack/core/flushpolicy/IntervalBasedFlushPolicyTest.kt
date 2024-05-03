@@ -16,6 +16,7 @@ package com.rudderstack.core.flushpolicy
 
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
+import com.rudderstack.core.ConfigurationImpl
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.busyWait
 import com.rudderstack.models.Message
@@ -52,8 +53,9 @@ class IntervalBasedFlushPolicyTest {
         Mockito.`when`(mockUploadService.uploadSync(any<List<Message>>(), anyOrNull())).thenReturn(
             mockedResponse
         )
-        analytics = generateTestAnalytics(mock(),
-            Configuration( shouldVerifySdk = false),
+        analytics = generateTestAnalytics(
+            jsonAdapter = mock(),
+            mockConfiguration = ConfigurationImpl(shouldVerifySdk = false),
             dataUploadService = mockUploadService
         )
         flushPolicy = IntervalBasedFlushPolicy()
@@ -85,6 +87,7 @@ class IntervalBasedFlushPolicyTest {
         busyWait(150L)
         assertThat(flushCalledCount.get(), Matchers.equalTo(1))
     }
+
     @Test
     fun testReschedule() {
         val config = mock<Configuration>()

@@ -2,7 +2,7 @@ package com.rudderstack.android.sampleapp.mainview
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.rudderstack.android.applyConfigurationAndroid
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.primaryAnalytics
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.secondaryAnalytics
@@ -120,16 +120,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             AnalyticsState.EnableAutoTracking -> {
-                primaryAnalytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = true)
-                }
+                (primaryAnalytics.currentConfiguration as ConfigurationAndroid).copy(trackAutoSession = true)
                 "Auto tracking enabled"
             }
 
             AnalyticsState.DisableAutoTracking -> {
-                primaryAnalytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = false)
-                }
+                (primaryAnalytics.currentConfiguration as ConfigurationAndroid).copy(trackAutoSession = false)
                 "Auto tracking disabled"
             }
 
@@ -142,6 +138,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 primaryAnalytics.endSession()
                 "Session Ended"
             }
+
             AnalyticsState.ShutDownAnalyticsSecondary -> {
                 secondaryAnalytics.shutdown()
                 "Rudder Analytics is shutting down. Init again if needed. This might take a second"
@@ -199,16 +196,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             AnalyticsState.EnableAutoTrackingSecondary -> {
-                secondaryAnalytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = true)
-                }
+                (secondaryAnalytics.currentConfiguration as ConfigurationAndroid).copy(trackAutoSession = true)
                 "Auto tracking enabled"
             }
 
             AnalyticsState.DisableAutoTrackingSecondary -> {
-                secondaryAnalytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = false)
-                }
+                (secondaryAnalytics.currentConfiguration as ConfigurationAndroid).copy(trackAutoSession = false)
                 "Auto tracking disabled"
             }
 
@@ -221,12 +214,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 secondaryAnalytics.endSession()
                 "Session Ended"
             }
+
             AnalyticsState.SendError -> {
                 _rudderReporter?.errorClient?.leaveBreadcrumb("Error BC")
                 _rudderReporter?.errorClient?.addMetadata("Error MD", "md_key", "md_value")
                 _rudderReporter?.errorClient?.notify(Exception("Non Fatal Exception"))
                 "Sending an error"
             }
+
             else -> "What's this?"
         }
         if (log.isNotEmpty()) addLogData(LogData(Date(), log))

@@ -17,8 +17,8 @@ package com.rudderstack.android.navigationplugin.internal
 import android.os.Bundle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.LifecycleListenerPlugin
-import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.InfrastructurePlugin
 import com.rudderstack.core.State
@@ -28,13 +28,13 @@ internal class NavigationPlugin(private val navControllerState: State<Collection
     private var analytics: Analytics? = null
     private var currentNavControllers: Collection<NavController>? = null
     private val currentConfig
-    get() = analytics?.currentConfigurationAndroid
+        get() = analytics?.currentConfiguration as ConfigurationAndroid
 
     override fun setup(analytics: Analytics) {
         this.analytics = analytics
-        if (currentConfig?.trackLifecycleEvents == true
-            && currentConfig?.recordScreenViews == true)
+        if (currentConfig.trackLifecycleEvents && currentConfig.recordScreenViews) {
             subscribeToNavControllerState()
+        }
     }
 
     private fun subscribeToNavControllerState() {
@@ -93,13 +93,13 @@ internal class NavigationPlugin(private val navControllerState: State<Collection
     }
 
     private fun trackComposableScreenView(destination: NavDestination, arguments: Bundle?) {
-        if(currentConfig?.trackLifecycleEvents != true || currentConfig?.recordScreenViews != true) return
+        if (currentConfig?.trackLifecycleEvents != true || currentConfig?.recordScreenViews != true) return
         val argumentKeys = destination.arguments.keys
         val screenName = destination.route?.let {
             if (argumentKeys.isEmpty()) it
             else {
                 val argumentsIndex = it.indexOf('/')
-                if (argumentsIndex == -1)  it
+                if (argumentsIndex == -1) it
                 else it.substring(0, argumentsIndex)
             }
         }.toString()
@@ -107,7 +107,7 @@ internal class NavigationPlugin(private val navControllerState: State<Collection
     }
 
     private fun trackFragmentScreenView(destination: NavDestination, arguments: Bundle?) {
-        if(currentConfig?.trackLifecycleEvents != true || currentConfig?.recordScreenViews != true) return
+        if (currentConfig?.trackLifecycleEvents != true || currentConfig?.recordScreenViews != true) return
         val screenName = destination.label.toString()
         val properties = getProperties(arguments, destination.arguments.keys)
         broadcastScreenChange(screenName, properties)
@@ -116,8 +116,8 @@ internal class NavigationPlugin(private val navControllerState: State<Collection
     private fun getProperties(
         arguments: Bundle?, argumentKeys: Set<String>
     ): Map<String, Any> = arguments?.let { bundle ->
-            argumentKeys.associateWith { bundle.get(it) }
-        }?.filter { it.value != null }?.mapValues { it.value!! } ?: mapOf()
+        argumentKeys.associateWith { bundle.get(it) }
+    }?.filter { it.value != null }?.mapValues { it.value!! } ?: mapOf()
 
     private fun broadcastScreenChange(
         screenName: String, properties: Map<String, Any>?

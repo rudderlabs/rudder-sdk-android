@@ -2,6 +2,7 @@ package com.rudderstack.core.internal.plugins
 
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
+import com.rudderstack.core.ConfigurationImpl
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.RudderUtils.MAX_EVENT_SIZE
@@ -21,7 +22,7 @@ class EventSizeFilterPluginTest {
     @get:Rule
     val mockkRule = MockKRule(this)
     private val eventSizeFilterPlugin = EventSizeFilterPlugin()
-    private val currentConfiguration = Configuration()
+    private val currentConfiguration = ConfigurationImpl()
     private val jsonAdapter = GsonAdapter()
     @Test
     fun `given event size does not exceed the maximum size, then the next plugin in the chain should be called`() {
