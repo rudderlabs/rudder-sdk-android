@@ -80,7 +80,7 @@ internal class MessageEntity(val message: Message,
         ): MessageEntity {
             val type = values[ColumnNames.type] as String
             val classOfMessage = getClassBasedOnType(type)
-            val message = jsonAdapter.readJson(values["message"] as String, classOfMessage)
+            val message = jsonAdapter.readJson(values[ColumnNames.message] as String, classOfMessage)
             return MessageEntity(
                 message ?: TrackMessage.create("NA", RudderUtils.timeStamp),
                 jsonAdapter
