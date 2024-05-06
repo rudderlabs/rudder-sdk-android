@@ -30,4 +30,18 @@ interface ConfigDownloadService : InfrastructurePlugin {
     fun download(
         callback: (success: Boolean, RudderServerConfig?, lastErrorMsg: String?) -> Unit
     )
+
+    /**
+     * These listeners are attached with an optional replay argument.
+     * replay specifies how many old events will be broadcasted to the listener.
+     * Making it 0 will make the listener listen to only future downloads.
+     *
+     */
+    fun addListener(listener: Listener, replay: Int)
+    fun removeListener(listener: Listener)
+
+    @FunctionalInterface
+    fun interface Listener{
+        fun onDownloaded(success: Boolean)
+    }
 }

@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.android
+package com.rudderstack.android
 
 import org.junit.Test
 
