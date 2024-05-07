@@ -112,6 +112,7 @@ internal class RudderPreferenceManager(application: Application,
     fun saveTrackAutoSession(trackAutoSession: Boolean) {
         preferences.edit().putBoolean(RUDDER_TRACK_AUTO_SESSION_KEY.key, trackAutoSession).apply()
     }
+
     internal val trackAutoSession: Boolean
         get() =  preferences.getBoolean(RUDDER_TRACK_AUTO_SESSION_KEY, false)
 
