@@ -179,11 +179,6 @@ internal class ReinstatePlugin : InfrastructurePlugin {
         }
     }
 
-    private fun shouldMigrateContext(): Boolean {
-        val context = _analytics?.contextState?.value ?: return false
-        return context.isEmpty() || context.traits.isNullOrEmpty()
-    }
-
     override fun shutdown() {
         _analytics = null
         this.sourceId = null
