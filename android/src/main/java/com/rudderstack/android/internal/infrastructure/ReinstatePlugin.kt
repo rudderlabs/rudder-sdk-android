@@ -135,7 +135,6 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     private fun migrateV1DataIfAvailable(
         context: Context, sourceId: String, configurationAndroid: ConfigurationAndroid
     ) {
-//        configurationAndroid.analyticsExecutor.execute {
             val isV1DataAvailable =
                 context.isV1SavedServerConfigContainsSourceId(RUDDER_SERVER_FILE_NAME_V1, sourceId)
             if(!isV1DataAvailable) return
@@ -143,15 +142,12 @@ internal class ReinstatePlugin : InfrastructurePlugin {
             _analytics?.setUserIdFromV1()
             _analytics?.migrateAnonymousIdFromV1()
             _analytics?.migrateOptOutFromV1()
-//            if (shouldMigrateContext()) {
                 _analytics?.migrateContextFromV1()
-//            }
             _analytics?.androidStorage?.migrateV1StorageToV2Sync()
 
             _analytics?.initializeSessionManagement(
                 _analytics?.androidStorage?.v1SessionId, _analytics?.androidStorage?.v1LastActiveTimestamp
             )
-//        }
     }
 
     private fun Analytics.setUserIdFromV1() {
