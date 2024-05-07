@@ -17,6 +17,7 @@ package com.rudderstack.android.storage
 import android.content.ContentValues
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
@@ -24,8 +25,8 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.google.gson.annotations.SerializedName
-import com.rudderstack.android.android.utils.TestExecutor
-import com.rudderstack.android.android.utils.busyWait
+import com.rudderstack.android.utils.TestExecutor
+import com.rudderstack.android.utils.busyWait
 import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.RudderDatabase
 import com.rudderstack.android.repository.annotation.RudderEntity
@@ -41,6 +42,7 @@ import com.rudderstack.models.android.RudderOSInfo
 import com.rudderstack.models.android.RudderScreenInfo
 import com.rudderstack.models.android.RudderTraits
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.squareup.moshi.Json
 import junit.framework.TestSuite
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
@@ -508,7 +510,7 @@ data class V1Message(
     val context: RudderContext? = null,
     val type: String? = null,
     val action: String? = null,
-    @SerializedName("originalTimestamp") val timestamp: String? = RudderUtils.timeStamp,
+    @SerializedName("originalTimestamp") @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") val timestamp: String? = RudderUtils.timeStamp,
     val anonymousId: String? = null,
     val userId: String? = null,
     val event: String? = null,

@@ -32,9 +32,9 @@ abstract class MessageParseTest {
     companion object {
         private const val TRACK_JSON =
             "{\n" +
-                "  \"type\": \"Track\",\n" +
+                "  \"type\": \"track\",\n" +
                 "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-                "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+                "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
                 "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
                 "  \"userId\": \"debanjanchatterjee\",\n" +
                 "  \"context\": null,\n" +
@@ -48,9 +48,9 @@ abstract class MessageParseTest {
                 "  }\n" +
                 "}"
         private const val ALIAS_JSON = "{\n" +
-            "  \"type\": \"Alias\",\n" +
+            "  \"type\": \"alias\",\n" +
             "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-            "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+            "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
             "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
             "  \"userId\": \"debanjanchatterjee\",\n" +
             "  \"context\": null,\n" +
@@ -62,9 +62,9 @@ abstract class MessageParseTest {
             "}"
 
         private const val GROUP_JSON = "{\n" +
-            "  \"type\": \"Group\",\n" +
+            "  \"type\": \"group\",\n" +
             "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-            "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+            "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
             "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
             "  \"userId\": \"debanjanchatterjee\",\n" +
             "  \"context\": null,\n" +
@@ -79,9 +79,9 @@ abstract class MessageParseTest {
             "  }\n" +
             "}"
         private const val SCREEN_JSON = "{\n" +
-            "  \"type\": \"Screen\",\n" +
+            "  \"type\": \"screen\",\n" +
             "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-            "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+            "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
             "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
             "  \"userId\": \"debanjanchatterjee\",\n" +
             "  \"context\": null,\n" +
@@ -97,9 +97,9 @@ abstract class MessageParseTest {
             "}"
 
         private const val PAGE_JSON = "{\n" +
-            "  \"type\": \"Page\",\n" +
+            "  \"type\": \"page\",\n" +
             "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-            "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+            "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
             "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
             "  \"userId\": \"debanjanchatterjee\",\n" +
             "  \"context\": null,\n" +
@@ -114,9 +114,9 @@ abstract class MessageParseTest {
             "  \"category\": \"some_category\"\n" +
             "}"
         private const val IDENTIFY_JSON = "{\n" +
-            "  \"type\": \"Identify\",\n" +
+            "  \"type\": \"identify\",\n" +
             "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-            "  \"timestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+            "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
             "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
             "  \"userId\": \"debanjanchatterjee\",\n" +
             "  \"context\": null,\n" +

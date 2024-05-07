@@ -64,7 +64,7 @@ sealed class Message(
 
     // format - yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
     // @Expose
-    @SerializedName("originalTimestamp") @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") val timestamp: String,
+    @SerializedName("originalTimestamp") @field:JsonProperty("originalTimestamp") @get:JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") val timestamp: String,
 
     // @Expose
     @SerializedName("destinationProps") @JsonProperty("destinationProps") @Json(name = "destinationProps") val destinationProps: MessageDestinationProps? = null,
@@ -242,7 +242,7 @@ class AliasMessage internal constructor(
     @JsonProperty("context") @Json(name = "context") context: MessageContext? = null,
     @JsonProperty("anonymousId") @Json(name = "anonymousId") anonymousId: String?,
     @JsonProperty("userId") @Json(name = "userId") userId: String? = null,
-    @JsonProperty("timestamp") @Json(name = "timestamp") timestamp: String,
+    @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") timestamp: String,
 
     @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
     @SerializedName("previousId") @JsonProperty("previousId") @Json(name = "previousId") var previousId: String? = null,
@@ -322,7 +322,7 @@ class GroupMessage internal constructor(
     @JsonProperty("context") @Json(name = "context") context: MessageContext? = null,
     @JsonProperty("anonymousId") @Json(name = "anonymousId") anonymousId: String?,
     @JsonProperty("userId") @Json(name = "userId") userId: String? = null,
-    @JsonProperty("timestamp") @Json(name = "timestamp") timestamp: String,
+    @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") timestamp: String,
 
     @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
     /**
@@ -411,7 +411,7 @@ class PageMessage internal constructor(
     @JsonProperty("context") @Json(name = "context") context: MessageContext? = null,
     @JsonProperty("anonymousId") @Json(name = "anonymousId") anonymousId: String?,
     @JsonProperty("userId") @Json(name = "userId") userId: String? = null,
-    @JsonProperty("timestamp") @Json(name = "timestamp") timestamp: String,
+    @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") timestamp: String,
 
     @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
     /**
@@ -500,7 +500,7 @@ class ScreenMessage internal constructor(
     @JsonProperty("context") @Json(name = "context") context: MessageContext? = null,
     @JsonProperty("anonymousId") @Json(name = "anonymousId") anonymousId: String?,
     @JsonProperty("userId") @Json(name = "userId") userId: String? = null,
-    @JsonProperty("timestamp") @Json(name = "timestamp") timestamp: String,
+    @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") timestamp: String,
 
     @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
 
@@ -593,7 +593,8 @@ class TrackMessage internal constructor(
     @JsonProperty("context") @Json(name = "context") context: MessageContext? = null,
     @JsonProperty("anonymousId") @Json(name = "anonymousId") anonymousId: String?,
     @JsonProperty("userId") @Json(name = "userId") userId: String? = null,
-    @JsonProperty("timestamp") @Json(name = "timestamp") timestamp: String,
+    @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp")
+    timestamp: String,
     /*channel: String? = null,*/
     @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
     /**
@@ -688,7 +689,7 @@ class IdentifyMessage internal constructor(
     @JsonProperty("context") @Json(name = "context") context: MessageContext? = null,
     @JsonProperty("anonymousId") @Json(name = "anonymousId") anonymousId: String?,
     @JsonProperty("userId") @Json(name = "userId") userId: String? = null,
-    @JsonProperty("timestamp") @Json(name = "timestamp") timestamp: String,
+    @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") timestamp: String,
 
     @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
     /**
