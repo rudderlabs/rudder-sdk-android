@@ -15,11 +15,12 @@
 package com.rudderstack.android.storage
 
 import android.content.ContentValues
+import com.rudderstack.android.internal.STATUS_NEW
+import com.rudderstack.android.internal.maskWith
 import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
 import com.rudderstack.android.storage.MessageEntity.Companion.TABLE_NAME
-import com.rudderstack.core.RudderUtils
 import com.rudderstack.models.AliasMessage
 import com.rudderstack.models.GroupMessage
 import com.rudderstack.models.IdentifyMessage
@@ -41,6 +42,7 @@ import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
         RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.message),
         RudderField(RudderField.Type.INTEGER, MessageEntity.ColumnNames.updatedAt, isIndex = true),
         RudderField(RudderField.Type.TEXT, MessageEntity.ColumnNames.type),
+        RudderField(RudderField.Type.INTEGER, MessageEntity.ColumnNames.status),
     ]
 )
 internal class MessageEntity(val message: Message,
@@ -51,8 +53,15 @@ internal class MessageEntity(val message: Message,
         internal const val message = "message"
         internal const val updatedAt = "updated"
         internal const val type = "type"
+        internal const val status = "status"
     }
+    val status: Int
+        get() = _status
+    private var _status: Int = STATUS_NEW
 
+    fun maskWithDmtStatus(dmtStatus: Int){
+        _status = _status.maskWith(dmtStatus)
+    }
 
     override fun generateContentValues(): ContentValues {
         return ContentValues().also {
@@ -64,6 +73,7 @@ internal class MessageEntity(val message: Message,
             )
             it.put(ColumnNames.updatedAt, updatedAt?: System.currentTimeMillis())
             it.put(ColumnNames.type, message.getType().value)
+            it.put(ColumnNames.status, _status)
         }
     }
 
@@ -77,14 +87,19 @@ internal class MessageEntity(val message: Message,
         private const val BACKLASHES_INVERTED_COMMA = "\\\\'"
         internal fun create(
             values: Map<String, Any?>, jsonAdapter: JsonAdapter
-        ): MessageEntity {
+        ): MessageEntity? {
             val type = values[ColumnNames.type] as String
             val classOfMessage = getClassBasedOnType(type)
             val message = jsonAdapter.readJson(values[ColumnNames.message] as String, classOfMessage)
+            val status = values[ColumnNames.status] as? Int
             return MessageEntity(
-                message ?: TrackMessage.create("NA", RudderUtils.timeStamp),
+                message ?: return null,
                 jsonAdapter
-            )
+            ).also {entity ->
+                status?.let {
+                    entity.maskWithDmtStatus(it)
+                }
+            }
         }
 
         private fun getClassBasedOnType(type: String): Class<out Message> {

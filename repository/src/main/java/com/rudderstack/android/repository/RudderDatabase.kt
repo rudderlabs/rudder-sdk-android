@@ -44,7 +44,7 @@ private const val USE_CONTENT_PROVIDER_DEFAULT = false
  * @constructor
  *
  *
- * @param executorService
+ * @param providedExecutorService
  * @param databaseCreatedCallback Can be used to prefill db on create
  */
 class RudderDatabase(private val context: Context,
@@ -52,7 +52,7 @@ class RudderDatabase(private val context: Context,
                      private val entityFactory: EntityFactory,
                      private val useContentProvider: Boolean = USE_CONTENT_PROVIDER_DEFAULT,
                      private val databaseVersion: Int = 1,
-                     executorService: ExecutorService? = null,
+                     providedExecutorService: ExecutorService? = null,
                      private val databaseCreatedCallback: ((SQLiteDatabase?) -> Unit)? = null,
                      private var databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int,
                                                          newVersion:
@@ -60,7 +60,15 @@ class RudderDatabase(private val context: Context,
 
 
 
-    private val commonExecutor: ExecutorService
+    private val commonExecutor: ExecutorService =
+        providedExecutorService.takeIf { it?.isShutdown == false } ?: ThreadPoolExecutor(
+            0,
+            Int.MAX_VALUE,
+            60L,
+            TimeUnit.SECONDS,
+            SynchronousQueue(),
+            ThreadPoolExecutor.DiscardPolicy(),
+        )
     private var sqliteOpenHelper: SQLiteOpenHelper?= null
     private var database: SQLiteDatabase? = null
     private var registeredDaoList: MutableMap<Class<out Entity>, Dao<out Entity>> =
@@ -74,14 +82,6 @@ class RudderDatabase(private val context: Context,
     ) -> Unit,
             >()
     init {
-        commonExecutor = executorService.takeIf { it?.isShutdown == false } ?: ThreadPoolExecutor(
-            0,
-            Int.MAX_VALUE,
-            60L,
-            TimeUnit.SECONDS,
-            SynchronousQueue(),
-            ThreadPoolExecutor.DiscardPolicy(),
-        )
         synchronized(this) {
             dbDetailsListeners.forEach {
                 it.invoke(
@@ -210,10 +210,12 @@ class RudderDatabase(private val context: Context,
         sqliteOpenHelper?.apply {
             // synchronizing on database allows other database users to synchronize on the same
             synchronized(this) {
-                sqliteOpenHelper?.close()
-                sqliteOpenHelper = null
+                close()
                 database = null
             }
+        }?:run {
+            database?.close()
+            database = null
         }
         if(useContentProvider){
             EntityContentProvider.releaseDatabase(databaseName)

@@ -12,13 +12,12 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.internal.plugins
+package com.rudderstack.android.internal.infrastructure
 
 import android.content.Context
 import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.androidStorage
-import com.rudderstack.android.applyConfigurationAndroid
 import com.rudderstack.android.contextState
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.processNewContext
@@ -85,21 +84,24 @@ internal class ReinstatePlugin : InfrastructurePlugin {
 
     private fun reinstate() {
         if (_isReinstated.get()) return
-        val config = _analytics?.currentConfigurationAndroid ?: return
-        if (isV2DataAvailable()) {
-            setReinstated(true)
-            reinstateV2FromCache()
-            return
-        }
-        fillDefaults()
-        if (!config.shouldVerifySdk){
-            setReinstated(true)
-            return
-        }
-        val sourceId = this.sourceId ?: return
+        synchronized(this) {
+            val config = _analytics?.currentConfigurationAndroid ?: return
+            if (isV2DataAvailable()) {
+                setReinstated(true)
+                reinstateV2FromCache()
+                return
+            }
+            if (!config.shouldVerifySdk) {
+                setReinstated(true)
+                fillDefaults()
+                return
+            }
+            val sourceId = this.sourceId ?: return
 
-        migrateV1DataIfAvailable(config.application, sourceId, config)
-        setReinstated(true)
+            migrateV1DataIfAvailable(config.application, sourceId, config)
+
+            setReinstated(true)
+        }
     }
 
     private fun fillDefaults() {
@@ -133,34 +135,34 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     private fun migrateV1DataIfAvailable(
         context: Context, sourceId: String, configurationAndroid: ConfigurationAndroid
     ) {
-        configurationAndroid.analyticsExecutor.execute {
+//        configurationAndroid.analyticsExecutor.execute {
             val isV1DataAvailable =
                 context.isV1SavedServerConfigContainsSourceId(RUDDER_SERVER_FILE_NAME_V1, sourceId)
-            if(!isV1DataAvailable) return@execute
+            if(!isV1DataAvailable) return
             // migrate user id/ anon id
             _analytics?.setUserIdFromV1()
             _analytics?.migrateAnonymousIdFromV1()
             _analytics?.migrateOptOutFromV1()
-            if (shouldMigrateContext()) {
+//            if (shouldMigrateContext()) {
                 _analytics?.migrateContextFromV1()
-            }
+//            }
             _analytics?.androidStorage?.migrateV1StorageToV2Sync()
 
             _analytics?.initializeSessionManagement(
                 _analytics?.androidStorage?.v1SessionId, _analytics?.androidStorage?.v1LastActiveTimestamp
             )
-        }
+//        }
     }
 
     private fun Analytics.setUserIdFromV1() {
         val traits = androidStorage.v1Traits
         val userId = traits?.get("userId") as? String ?: traits?.get("id") as? String
         if (userId.isNullOrEmpty() || !this.androidStorage.userId.isNullOrEmpty()) return
-        _analytics?.identify(userId)
+        _analytics?.setUserId(userId)
     }
 
     private fun Analytics.migrateAnonymousIdFromV1() {
-        androidStorage.v1AnonymousId?.let { _analytics?.setAnonymousId(it) }
+        (androidStorage.v1AnonymousId?:AndroidUtils.getDeviceId()).let { _analytics?.setAnonymousId(it) }
         androidStorage.resetV1AnonymousId()
     }
 

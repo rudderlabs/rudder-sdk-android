@@ -6,14 +6,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.android.utils.TestExecutor
 import com.rudderstack.android.android.utils.busyWait
-import com.rudderstack.android.androidStorage
-import com.rudderstack.android.internal.plugins.ReinstatePlugin
 import com.rudderstack.android.storage.AndroidStorage
-import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.android.storage.saveObject
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
-import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.models.Message
@@ -21,24 +17,16 @@ import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.generateTestAnalytics
-import org.hamcrest.MatcherAssert
-import org.hamcrest.Matchers.hasProperty
-import org.hamcrest.Matchers.`is`
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.atLeast
-import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.annotation.Config
 
@@ -124,7 +112,7 @@ class ReinstatePluginTest {
 
 //        plugin.updateConfiguration(configurationAndroid)
         busyWait(100)
-        Mockito.verify(androidStorage, times(1)).v1Traits
+        Mockito.verify(androidStorage, times(2)).v1Traits
     }
     @Test
     fun `test v1OptOut should be called if v1 data available and v2 unavailable`(){

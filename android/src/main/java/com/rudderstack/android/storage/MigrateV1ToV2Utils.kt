@@ -16,30 +16,24 @@ package com.rudderstack.android.storage
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
-import android.util.Log
+import com.rudderstack.android.internal.STATUS_CLOUD_MODE_DONE
+import com.rudderstack.android.internal.STATUS_DEVICE_MODE_DONE
+import com.rudderstack.android.internal.STATUS_NEW
+import com.rudderstack.android.internal.isCloudModeDone
 import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.EntityFactory
 import com.rudderstack.android.repository.RudderDatabase
 import com.rudderstack.core.Logger
 import com.rudderstack.models.AliasMessage
 import com.rudderstack.models.GroupMessage
-import com.rudderstack.models.GroupTraits
 import com.rudderstack.models.IdentifyMessage
-import com.rudderstack.models.IdentifyProperties
 import com.rudderstack.models.Message
-import com.rudderstack.models.MessageDestinationProps
 import com.rudderstack.models.MessageIntegrations
 import com.rudderstack.models.ScreenMessage
-import com.rudderstack.models.ScreenProperties
 import com.rudderstack.models.TrackMessage
-import com.rudderstack.models.TrackProperties
-import com.rudderstack.models.customContexts
-import com.rudderstack.models.externalIds
-import com.rudderstack.models.traits
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import java.util.concurrent.ExecutorService
-import kotlin.math.log
 
 private const val V1_DATABASE_NAME = "rl_persistence.db"
 private val synchronizeOn = Any()
@@ -53,7 +47,7 @@ private val synchronizeOn = Any()
  * @param executorService Passed to V1 database to perform operations, will be shutdown post
  * migration
  */
-internal fun migrateV1MessagesToV2Database(
+fun migrateV1MessagesToV2Database(
     context: Context,
     v2Database: RudderDatabase,
     jsonAdapter: JsonAdapter,
@@ -62,10 +56,7 @@ internal fun migrateV1MessagesToV2Database(
 ) {
     logger?.info(log = "Migrating V1 messages to V2 database")
     synchronized(synchronizeOn) {
-        val db = SQLiteDatabase.openDatabase(context.getDatabasePath(V1_DATABASE_NAME).absolutePath, null,
-            SQLiteDatabase.OPEN_READONLY)
-        val prevVersion = db.version
-        db.close()
+        val prevVersion = findPreviousVersion(context)
         logger?.debug(log = "Migrating from version: $prevVersion")
         val v1Database = RudderDatabase(
             context,
@@ -73,10 +64,18 @@ internal fun migrateV1MessagesToV2Database(
             V1EntityFactory(jsonAdapter),
             false,
             prevVersion,
-            executorService = executorService
+            providedExecutorService = executorService
         )
         val v1MessagesDao = v1Database.getDao<MessageEntity>(MessageEntity::class.java)
-        val v1Messages = v1MessagesDao.getAllSync()?.takeIf { it.isNotEmpty() } ?: return
+        val v1Messages = v1MessagesDao.getAllSync()?.filterNot {
+            it.status.isCloudModeDone()
+        }?.takeIf {
+                it.isNotEmpty()
+            } ?: run {
+            v1Database.delete()
+            v1Database.shutDown()
+            return
+        }
         with(v2Database.getDao(MessageEntity::class.java)) {
             logger?.info(log = "Migrating ${v1Messages.size} messages")
             v1Messages.insertSync()
@@ -86,14 +85,24 @@ internal fun migrateV1MessagesToV2Database(
     }
 }
 
+private fun findPreviousVersion(context: Context): Int {
+    val db = SQLiteDatabase.openDatabase(
+        context.getDatabasePath(V1_DATABASE_NAME).absolutePath, null,
+        SQLiteDatabase.OPEN_READONLY
+    )
+    val prevVersion = db.version
+    db.close()
+    return prevVersion
+}
+
 private const val V1_MESSAGE_ID_COL = "id"
 private const val V1_STATUS_COL = "status"
 
 //status values for database version 2 =. Check createSchema documentation for details.
-private const val V1_STATUS_CLOUD_MODE_DONE = 2
-private const val V1_STATUS_DEVICE_MODE_DONE = 1
-private const val V1_STATUS_ALL_DONE = 3
-private const val V1_STATUS_NEW = 0
+internal const val V1_STATUS_CLOUD_MODE_DONE = 2
+internal const val V1_STATUS_DEVICE_MODE_DONE = 1
+internal const val V1_STATUS_ALL_DONE = 3
+internal const val V1_STATUS_NEW = 0
 
 // This column purpose is to identify if an event is dumped to device mode destinations without transformations or not.
 private const val V1_DM_PROCESSED_COL = "dm_processed"
@@ -110,21 +119,23 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
             MessageEntity::class.java -> {
                 val message = values[MESSAGE_COL] as String
                 val updatedAt = values[UPDATED_COL] as Long
+
+                val status = when (values[V1_STATUS_COL].toString().toIntOrNull()) {
+                    V1_STATUS_CLOUD_MODE_DONE -> STATUS_CLOUD_MODE_DONE
+                    V1_STATUS_DEVICE_MODE_DONE -> STATUS_DEVICE_MODE_DONE
+                    V1_STATUS_ALL_DONE -> STATUS_CLOUD_MODE_DONE or STATUS_DEVICE_MODE_DONE
+                    else -> STATUS_NEW
+                }
                 //TODO - DMT
-                /*val status = when (values[V1_STATUS_COL] as Int) {
-                    V1_STATUS_CLOUD_MODE_DONE -> MessageEntity.Status.CLOUD_MODE_DONE
-                    V1_STATUS_DEVICE_MODE_DONE -> MessageEntity.Status.DEVICE_MODE_DONE
-                    V1_STATUS_ALL_DONE -> MessageEntity.Status.ALL_DONE
-                    V1_STATUS_NEW -> MessageEntity.Status.NEW
-                    else -> MessageEntity.Status.NEW
-                }*//*val dmProcessed = when (values[V1_DM_PROCESSED_COL] as Int) {
+                /*val dmProcessed = when (values[V1_DM_PROCESSED_COL] as Int) {
                     V1_DM_PROCESSED_PENDING -> false
                     V1_DM_PROCESSED_DONE -> true
                     else -> false
                 }*/
                 MessageEntity(
                     deserializeV1EntityToMessage(message) ?: return null, jsonAdapter, updatedAt
-                ) as T
+                ).also {
+                    it.maskWithDmtStatus(status) } as T
             }
 
             else -> null
@@ -134,7 +145,7 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
     private fun deserializeV1EntityToMessage(v1EventJson: String): Message? {
         val v1EventMap =
             jsonAdapter.readJson(v1EventJson, object : RudderTypeAdapter<Map<String, Any?>>() {})
-            ?: return null
+                ?: return null
 
 
         val type = v1EventMap["type"] as? String ?: return null
@@ -161,7 +172,6 @@ class V1EntityFactory(private val jsonAdapter: JsonAdapter) : EntityFactory {
 
     object V1MessageType {
         internal const val TRACK = "track"
-        internal const val PAGE = "page"
         internal const val SCREEN = "screen"
         internal const val IDENTIFY = "identify"
         internal const val ALIAS = "alias"

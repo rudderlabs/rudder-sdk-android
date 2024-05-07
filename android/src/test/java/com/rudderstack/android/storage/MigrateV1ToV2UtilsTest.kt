@@ -47,6 +47,7 @@ import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.greaterThanOrEqualTo
 import org.hamcrest.Matchers.hasProperty
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
@@ -61,7 +62,7 @@ import java.util.UUID
 @Config(sdk = [29])
 abstract class MigrateV1ToV2UtilsTest {
     abstract val jsonAdapter: JsonAdapter
-    fun v1Entity1(type: String) = V1Entity(
+    private fun v1Entity1(type: String) = V1Entity(
         V1Message(
             messageId = "messageId1",
             channel = "mobile",
@@ -128,7 +129,7 @@ abstract class MigrateV1ToV2UtilsTest {
             ApplicationProvider.getApplicationContext(),
             databaseName = "rl_persistence-default.db",
             entityFactory = RudderEntityFactory(jsonAdapter),
-            executorService = TestExecutor()
+            providedExecutorService = TestExecutor()
         )
         busyWait(100)
     }
@@ -145,7 +146,7 @@ abstract class MigrateV1ToV2UtilsTest {
             ApplicationProvider.getApplicationContext(),
             databaseName = "rl_persistence.db",
             entityFactory = V1EntityFactory(jsonAdapter),
-            executorService = TestExecutor()
+            providedExecutorService = TestExecutor()
         )
         busyWait(50)
         var v1Dao = v1Database.getDao(V1Entity::class.java)
@@ -168,7 +169,7 @@ abstract class MigrateV1ToV2UtilsTest {
             ApplicationProvider.getApplicationContext(),
             databaseName = "rl_persistence.db",
             entityFactory = V1EntityFactory(jsonAdapter),
-            executorService = TestExecutor()
+            providedExecutorService = TestExecutor()
         )
         busyWait(50)
         v1Dao = v1Database.getDao(V1Entity::class.java)
@@ -214,7 +215,7 @@ abstract class MigrateV1ToV2UtilsTest {
             ApplicationProvider.getApplicationContext(),
             databaseName = "rl_persistence.db",
             entityFactory = V1EntityFactory(jsonAdapter),
-            executorService = TestExecutor()
+            providedExecutorService = TestExecutor()
         )
         busyWait(50)
         var v1Dao = v1Database.getDao(V1Entity::class.java)
@@ -236,7 +237,7 @@ abstract class MigrateV1ToV2UtilsTest {
             ApplicationProvider.getApplicationContext(),
             databaseName = "rl_persistence.db",
             entityFactory = V1EntityFactory(jsonAdapter),
-            executorService = TestExecutor()
+            providedExecutorService = TestExecutor()
         )
         busyWait(50)
         v1Dao = v1Database.getDao(V1Entity::class.java)
@@ -282,7 +283,7 @@ abstract class MigrateV1ToV2UtilsTest {
             ApplicationProvider.getApplicationContext(),
             databaseName = "rl_persistence.db",
             entityFactory = V1EntityFactory(jsonAdapter),
-            executorService = TestExecutor()
+            providedExecutorService = TestExecutor()
         )
         busyWait(50)
         var v1Dao = v1Database.getDao(V1Entity::class.java)
@@ -304,7 +305,7 @@ abstract class MigrateV1ToV2UtilsTest {
             ApplicationProvider.getApplicationContext(),
             databaseName = "rl_persistence.db",
             entityFactory = V1EntityFactory(jsonAdapter),
-            executorService = TestExecutor()
+            providedExecutorService = TestExecutor()
         )
         busyWait(50)
         v1Dao = v1Database.getDao(V1Entity::class.java)
@@ -350,7 +351,7 @@ abstract class MigrateV1ToV2UtilsTest {
             ApplicationProvider.getApplicationContext(),
             databaseName = "rl_persistence.db",
             entityFactory = V1EntityFactory(jsonAdapter),
-            executorService = TestExecutor()
+            providedExecutorService = TestExecutor()
         )
         busyWait(50)
         var v1Dao = v1Database.getDao(V1Entity::class.java)
@@ -372,7 +373,7 @@ abstract class MigrateV1ToV2UtilsTest {
             ApplicationProvider.getApplicationContext(),
             databaseName = "rl_persistence.db",
             entityFactory = V1EntityFactory(jsonAdapter),
-            executorService = TestExecutor()
+            providedExecutorService = TestExecutor()
         )
         busyWait(50)
         v1Dao = v1Database.getDao(V1Entity::class.java)
@@ -409,6 +410,45 @@ abstract class MigrateV1ToV2UtilsTest {
             )
         )
     }
+    @Test
+    fun testCloudModeEventsFilteredWhenCloudModeDoneV1ToV2() {
+
+        var v1Database = RudderDatabase(
+            ApplicationProvider.getApplicationContext(),
+            databaseName = "rl_persistence.db",
+            entityFactory = V1EntityFactory(jsonAdapter),
+            providedExecutorService = TestExecutor()
+        )
+        busyWait(50)
+        var v1Dao = v1Database.getDao(V1Entity::class.java)
+        val v1Entity1 = v1Entity1("screen")
+        v1Entity1.status = V1_STATUS_CLOUD_MODE_DONE
+        with(v1Dao) {
+            listOf(v1Entity1).insertSync()
+        }
+        v1Database.shutDown()
+
+        migrateV1MessagesToV2Database(
+            ApplicationProvider.getApplicationContext(),
+            v2Database,
+            jsonAdapter,
+            executorService = TestExecutor()
+        )
+        //assert that v1 database is empty
+        v1Database = RudderDatabase(
+            ApplicationProvider.getApplicationContext(),
+            databaseName = "rl_persistence.db",
+            entityFactory = V1EntityFactory(jsonAdapter),
+            providedExecutorService = TestExecutor()
+        )
+        busyWait(50)
+        v1Dao = v1Database.getDao(V1Entity::class.java)
+        MatcherAssert.assertThat(v1Dao.getAllSync()?.size, Matchers.equalTo(0))
+        v1Database.shutDown()
+        val v2Dao = v2Database.getDao(MessageEntity::class.java)
+        val v2Entities = v2Dao.getAllSync()
+        MatcherAssert.assertThat(v2Entities?.size ?: -1, `is`(0))
+    }
 
     @RudderEntity(
         tableName = "events", fields = arrayOf(
@@ -435,6 +475,7 @@ abstract class MigrateV1ToV2UtilsTest {
             const val STATUS_COL: String = "status"
             const val DM_PROCESSED_COL = "dm_processed"
         }
+        var status = V1_STATUS_NEW
 
         private val gsonAdapter = GsonAdapter(
             GsonBuilder().registerTypeAdapter(RudderTraits::class.java, RudderTraitsTypeAdapter())
@@ -450,7 +491,7 @@ abstract class MigrateV1ToV2UtilsTest {
                     messageJson,
                 )
                 it.put(ColumnNames.UPDATED_COL, System.currentTimeMillis())
-                it.put(ColumnNames.STATUS_COL, 0)
+                it.put(ColumnNames.STATUS_COL, status)
                 it.put(ColumnNames.DM_PROCESSED_COL, 1)
             }
         }
@@ -529,6 +570,8 @@ class RudderTraitsTypeAdapter : JsonSerializer<RudderTraits?> {
             null
         }
     }
+
+
 }
 
 @RunWith(AndroidJUnit4::class)

@@ -1,7 +1,6 @@
 package com.rudderstack.android.storage
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.rudderstack.android.android.AndroidStorageTest
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
@@ -43,7 +42,7 @@ abstract class MessageEntityTest {
         val regainedEntity = MessageEntity.create(contentValues.keySet().associateWith {
             contentValues.getAsString(it)
         }, jsonAdapter)
-        MatcherAssert.assertThat(regainedEntity.message, Matchers.allOf(
+        MatcherAssert.assertThat(regainedEntity?.message, Matchers.allOf(
             Matchers.notNullValue(),
             Matchers.instanceOf(TrackMessage::class.java),
             Matchers.hasProperty("eventName", Matchers.equalTo("testEvent")),
@@ -76,7 +75,7 @@ Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinatio
         val regainedEntity = MessageEntity.create(contentValues.keySet().associateWith {
             contentValues.getAsString(it)
         }, jsonAdapter)
-        MatcherAssert.assertThat(regainedEntity.message, Matchers.allOf(
+        MatcherAssert.assertThat(regainedEntity?.message, Matchers.allOf(
             Matchers.notNullValue(),
             Matchers.instanceOf(GroupMessage::class.java),
             Matchers.hasProperty("groupId", Matchers.equalTo(testMessage.groupId)),
@@ -107,7 +106,7 @@ Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinatio
         val regainedEntity = MessageEntity.create(contentValues.keySet().associateWith {
             contentValues.getAsString(it)
         }, jsonAdapter)
-        MatcherAssert.assertThat(regainedEntity.message, Matchers.allOf(
+        MatcherAssert.assertThat(regainedEntity?.message, Matchers.allOf(
             Matchers.notNullValue(),
             Matchers.instanceOf(IdentifyMessage::class.java),
             Matchers.hasProperty("anonymousId", Matchers.equalTo(testMessage.anonymousId)),
@@ -139,7 +138,7 @@ Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinatio
         val regainedEntity = MessageEntity.create(contentValues.keySet().associateWith {
             contentValues.getAsString(it)
         }, jsonAdapter)
-        MatcherAssert.assertThat(regainedEntity.message, Matchers.allOf(
+        MatcherAssert.assertThat(regainedEntity?.message, Matchers.allOf(
             Matchers.notNullValue(),
             Matchers.instanceOf(ScreenMessage::class.java),
             Matchers.hasProperty("anonymousId", Matchers.equalTo(testMessage.anonymousId)),

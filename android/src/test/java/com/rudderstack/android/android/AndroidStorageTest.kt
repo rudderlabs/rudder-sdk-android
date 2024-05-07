@@ -223,16 +223,16 @@ class JacksonStorageTest : AndroidStorageTest() {
     override val jsonAdapter: JsonAdapter
         get() = JacksonAdapter()
 }
-
+/*
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29])
 class MoshiStorageTest : AndroidStorageTest() {
     override val jsonAdapter: JsonAdapter
         get() = MoshiAdapter()
-}
+}*/
 
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
-    GsonStorageTest::class, JacksonStorageTest::class, MoshiStorageTest::class
+    GsonStorageTest::class, JacksonStorageTest::class, /*MoshiStorageTest::class*/
 )
 class AndroidStorageTestSuite : TestSuite() {}

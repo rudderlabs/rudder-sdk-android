@@ -32,7 +32,6 @@ import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import java.util.LinkedList
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 class AndroidStorageImpl(
@@ -114,7 +113,7 @@ class AndroidStorageImpl(
             RudderEntityFactory(analytics.currentConfiguration?.jsonAdapter),
             useContentProvider,
             DB_VERSION,
-            executorService = storageExecutor
+            providedExecutorService = storageExecutor
         )
         messageDao = rudderDatabase?.getDao(MessageEntity::class.java, storageExecutor)
         messageDao?.addDataChangeListener(_messageDataListener)

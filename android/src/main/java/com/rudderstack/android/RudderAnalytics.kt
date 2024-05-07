@@ -23,7 +23,7 @@ import com.rudderstack.android.internal.infrastructure.ResetImplementationPlugin
 import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.plugins.PlatformInputsPlugin
-import com.rudderstack.android.internal.plugins.ReinstatePlugin
+import com.rudderstack.android.internal.infrastructure.ReinstatePlugin
 import com.rudderstack.android.internal.plugins.SessionPlugin
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.internal.states.UserSessionState
