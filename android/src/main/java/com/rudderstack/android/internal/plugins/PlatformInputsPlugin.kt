@@ -36,6 +36,7 @@ import com.rudderstack.models.MessageContext
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.math.log
 
 /**
  * Sets the context specific to Android
@@ -46,6 +47,7 @@ import java.util.concurrent.atomic.AtomicReference
  *
  */
 private const val CHANNEL = "mobile"
+
 internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     //if true collects advertising id automatically
     private val jsonAdapter
@@ -68,15 +70,16 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     private var _deviceToken: String? = null
 
     private var _analytics: Analytics? = null
-    private val _currentActivity : AtomicReference<Activity?> = AtomicReference()
+    private val _currentActivity: AtomicReference<Activity?> = AtomicReference()
     private val currentActivity: Activity?
         get() = _currentActivity.get()
 
     override fun intercept(chain: Plugin.Chain): Message {
         val msg = chain.message()
-        val newMsg = msg.copy(context = msg.context optAdd application?.defaultAndroidContext()).also {
-            it.channel = CHANNEL
-        }
+        val newMsg =
+            msg.copy(context = msg.context optAdd application?.defaultAndroidContext()).also {
+                it.channel = CHANNEL
+            }
         return chain.proceed(newMsg)
     }
 
@@ -92,6 +95,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
      *
      * @param advertisingId
      */
+
     internal fun setAdvertisingId(advertisingId: String) {
         autoCollectAdvertisingId = false
         synchronized(this) {
@@ -123,7 +127,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         val advertisingInfo =
             Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient")
                 .getMethod("getAdvertisingIdInfo", Context::class.java).invoke(null, this)
-            ?: return null
+                ?: return null
         val isLimitAdTrackingEnabled =
             advertisingInfo.javaClass.getMethod("isLimitAdTrackingEnabled")
                 .invoke(advertisingInfo) as? Boolean
@@ -147,9 +151,10 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             contentResolver, "advertising_id"
         )
     }
+
     private var _defaultAndroidContext: MessageContext? = null
     private fun Application.defaultAndroidContext(): MessageContext {
-        return synchronized(this) { _defaultAndroidContext }?: generateDefaultAndroidContext ()
+        return synchronized(this) { _defaultAndroidContext } ?: generateDefaultAndroidContext()
     }
 
     private fun Application.generateDefaultAndroidContext() = mapOf<String, Any?>(
@@ -167,7 +172,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         }
     }
 
-    private fun Application.getAppDetails(): String? {
+    private fun Application.getAppDetails(): Any? {
         try {
             val packageName = packageName
             val packageManager = packageManager
@@ -179,38 +184,35 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
                 "build" to build,
                 "namespace" to packageName,
                 "version" to packageInfo.versionName
-            ).let {
-                jsonAdapter?.writeToJson(it, RudderTypeAdapter {})
-            }
+            )
         } catch (ex: PackageManager.NameNotFoundException) {
-            _analytics?.currentConfiguration?.logger?.error(log = "Package Name Not Found", throwable = ex)
+            _analytics?.currentConfiguration?.logger?.error(
+                log = "Package Name Not Found",
+                throwable = ex
+            )
         }
         return null
     }
 
-    private fun getOsInfo(): String? {
-        return mapOf("name" to "Android", "version" to Build.VERSION.RELEASE).let {
-            jsonAdapter?.writeToJson(it, RudderTypeAdapter {})
-        }
+    private fun getOsInfo(): Any? {
+        return mapOf("name" to "Android", "version" to Build.VERSION.RELEASE)
     }
 
-    private fun Application.getScreenInfo(): String? {
+    private fun Application.getScreenInfo(): Any? {
         return currentActivity?.resources?.displayMetrics?.let {
             mapOf(
                 "density" to it.densityDpi,
                 "height" to it.heightPixels,
                 "width" to it.widthPixels
-            ).let {
-                jsonAdapter?.writeToJson(it, RudderTypeAdapter {})
-            }
+            )
         }
 
     }
 
 
-    private fun Application.getDeviceInfo(): String? {
+    private fun Application.getDeviceInfo(): Any? {
         return ((mapOf(
-            "id" to AndroidUtils.getDeviceId(this),
+            "id" to AndroidUtils.getDeviceId(),
             "manufacturer" to Build.MANUFACTURER,
             "model" to Build.MODEL,
             "name" to Build.DEVICE,
@@ -218,49 +220,45 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             "adTrackingEnabled" to autoCollectAdvertisingId
         ) optAdd (if (_deviceToken != null) mapOf("token" to _deviceToken) else null)) optAdd if (_advertisingId != null) mapOf(
             "advertisingId" to _advertisingId
-        ) else null).let {
-            jsonAdapter?.writeToJson(it, RudderTypeAdapter {})
-
-        }
+        ) else null)
     }
 
-    private fun Application.getRudderNetwork(): String? {
-        try {
-            // carrier name
-            val carrier = if (!isTv()) {
-                val telephonyManager =
-                    getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
-                if (telephonyManager != null) telephonyManager.networkOperatorName else "NA"
-            } else null
+    private fun Application.getRudderNetwork(): Map<String, Any> {
+        // carrier name
+        val carrier = if (!isTv()) {
+            val telephonyManager =
+                getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+            if (telephonyManager != null) telephonyManager.networkOperatorName else "NA"
+        } else null
 
-            // wifi enabled
-            val isWifiEnabled =
+        // wifi enabled
+        val isWifiEnabled =
+            try {
                 (this.getSystemService(Context.WIFI_SERVICE) as? WifiManager)?.isWifiEnabled
+            }catch (ex: Exception){
+                _analytics?.currentConfiguration?.logger?.error(log = "Cannot detect wifi. Wifi Permission not available")
+            }?:false
 
-            // bluetooth
-            val isBluetoothEnabled =
-                BluetoothAdapter.getDefaultAdapter()?.state == BluetoothAdapter.STATE_ON
 
-            // cellular status
-            val tm = getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
-            val isCellularEnabled =
-                if (tm != null && tm.simState == TelephonyManager.SIM_STATE_READY) {
+        // bluetooth
+        val isBluetoothEnabled =
+            BluetoothAdapter.getDefaultAdapter()?.state == BluetoothAdapter.STATE_ON
 
-                    Settings.Global.getInt(contentResolver, "mobile_data", 1) == 1
-                } else null
-            val networkMap = HashMap<String, String>()
-            if (carrier != null) {
-                networkMap["carrier"] = carrier
-            }
-            networkMap["wifi"] = isWifiEnabled.toString()
-            networkMap["bluetooth"] = isBluetoothEnabled.toString()
-            networkMap["cellular"] = isCellularEnabled.toString()
-            return jsonAdapter?.writeToJson(networkMap, RudderTypeAdapter {})
-        } catch (ex: java.lang.Exception) {
-            _analytics?.currentConfiguration?.logger?.error(
-                log = "Error getting network info", throwable = ex)
+        // cellular status
+        val tm = getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+        val isCellularEnabled =
+            if (tm != null && tm.simState == TelephonyManager.SIM_STATE_READY) {
+                Settings.Global.getInt(contentResolver, "mobile_data", 1) == 1
+            } else false
+        val networkMap = HashMap<String, Any>()
+        if (carrier != null) {
+            networkMap["carrier"] = carrier
         }
-        return null
+        networkMap["wifi"] = isWifiEnabled
+        networkMap["bluetooth"] = isBluetoothEnabled
+        networkMap["cellular"] = isCellularEnabled
+        return networkMap
+
     }
 
     private val userAgent
@@ -269,6 +267,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         get() = Locale.getDefault().language + "-" + Locale.getDefault().country
     private val timeZone
         get() = TimeZone.getDefault().id
+
     override fun onAppBackgrounded() {
         _currentActivity.set(null)
     }

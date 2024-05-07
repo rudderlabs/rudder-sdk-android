@@ -131,18 +131,18 @@ internal class AnalyticsDelegate(
     //message callbacks
     private var _callbacks = setOf<Callback>()
 
-    private var _destinationPlugins: List<DestinationPlugin<*>> = listOf()
+    private var _destinationPlugins: List<DestinationPlugin<*>> = mutableListOf()
 
     //added before local message plugins
-    private var _internalPreMessagePlugins: List<Plugin> = listOf()
+    private var _internalPreMessagePlugins: List<Plugin> = mutableListOf()
 
 
-    private var _customPlugins: List<Plugin> = listOf()
+    private var _customPlugins: List<Plugin> = mutableListOf()
 
     private var _infrastructurePlugins: List<InfrastructurePlugin> = mutableListOf()
 
     //added after custom plugins
-    private var _internalPostCustomPlugins: List<Plugin> = listOf()
+    private var _internalPostCustomPlugins: List<Plugin> = mutableListOf()
 
     //Timeline plugins are associated throughout the lifecycle of SDK.
     private val _allTimelinePlugins
@@ -247,7 +247,7 @@ internal class AnalyticsDelegate(
             if (plugins.isEmpty()) return
             plugins.forEach {
                 if (it is DestinationPlugin<*>) {
-                    _destinationPlugins = _destinationPlugins + it
+                    _destinationPlugins +=  it
                     val newDestinationConfig =
                         currentDestinationConfigurationState?.value?.withIntegration(
                             it.name, it.isReady
@@ -591,9 +591,9 @@ internal class AnalyticsDelegate(
      */
     private fun initializeMessagePlugins() {
         // check if opted out
-        _internalPreMessagePlugins = _internalPreMessagePlugins + gdprPlugin
-        _internalPreMessagePlugins = _internalPreMessagePlugins + coreInputsPlugin
-        _internalPostCustomPlugins = _internalPostCustomPlugins + eventSizeFilterPlugin
+        _internalPreMessagePlugins += gdprPlugin
+        _internalPreMessagePlugins += coreInputsPlugin
+        _internalPostCustomPlugins += eventSizeFilterPlugin
         // rudder option plugin followed by extract state plugin should be added by lifecycle
         // add defaults to message
 //        _internalPrePlugins = _internalPrePlugins + anonymousIdPlugin
@@ -602,10 +602,10 @@ internal class AnalyticsDelegate(
 //        _internalPostMessagePlugins = _internalPostMessagePlugins + fillDefaultsPlugin
 //        _internalPostMessagePlugins = _internalPostMessagePlugins + extractStatePlugin
 
-        _internalPostCustomPlugins = _internalPostCustomPlugins + destinationConfigurationPlugin
-        _internalPostCustomPlugins = _internalPostCustomPlugins + wakeupActionPlugin
-        _internalPostCustomPlugins = _internalPostCustomPlugins + eventFilteringPlugin
-        _internalPostCustomPlugins = _internalPostCustomPlugins + storagePlugin
+        _internalPostCustomPlugins += destinationConfigurationPlugin
+        _internalPostCustomPlugins += wakeupActionPlugin
+        _internalPostCustomPlugins += eventFilteringPlugin
+        _internalPostCustomPlugins += storagePlugin
 
     }
 

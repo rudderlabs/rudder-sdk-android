@@ -31,6 +31,20 @@ interface InfrastructurePlugin {
     fun updateRudderServerConfig(serverConfig: RudderServerConfig){
         //optional method
     }
+
+    /**
+     * Pause the proceedings if applicable, for example data upload service can halt the upload
+     */
+    fun pause(){
+        //optional-method
+    }
+
+    /**
+     * Resume the proceedings had the plugin been paused
+     */
+    fun resume(){
+        //optional-method
+    }
     fun reset() {
         //optional method
     }

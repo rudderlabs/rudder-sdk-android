@@ -113,7 +113,7 @@ class CustomEntityRudderDatabaseTest {
             "testDb",
             ModelEntityFactory(),
             false,
-            executorService = TestExecutor(),
+            providedExecutorService = TestExecutor(),
         )
     }
 
