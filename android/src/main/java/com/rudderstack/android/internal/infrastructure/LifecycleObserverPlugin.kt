@@ -111,7 +111,7 @@ internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) 
 
     override fun onActivityStarted(activityName: String) {
         currentActivityName = activityName
-        withTrackLifeCycleAndRecordScreenViews {
+        withRecordScreenViews {
             analytics?.screen {
                 screenName(activityName)
             }
@@ -146,13 +146,4 @@ internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) 
             body()
         }
     }
-
-    private fun withTrackLifeCycleAndRecordScreenViews(body: () -> Unit) {
-        if (analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true
-            && analytics?.currentConfigurationAndroid?.recordScreenViews == true
-        ) {
-            body()
-        }
-    }
-
 }
