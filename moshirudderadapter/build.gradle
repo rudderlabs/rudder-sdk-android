@@ -35,7 +35,7 @@ apply from : "$projectDir/../dependencies.gradle"
 
 dependencies {
 
-    implementation(project(path: ":rudderjsonadapter", configuration: 'default'))
+    implementation(project(path: ":rudderjsonadapter"))
     api deps.moshi.kotlin
     api deps.moshi.core
     //test

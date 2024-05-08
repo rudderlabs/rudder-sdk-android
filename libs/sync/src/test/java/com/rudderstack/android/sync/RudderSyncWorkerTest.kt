@@ -12,49 +12,23 @@
  * permissions and limitations under the License.
  */
 
-<<<<<<<< HEAD:libs/sync/src/test/java/com/rudderstack/android/sync/RudderSyncWorkerTest.kt
 package com.rudderstack.android.sync
-========
-package com.rudderstack.android
->>>>>>>> feat/android:android/src/test/java/com/rudderstack/android/RudderSyncWorkerTest.kt
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.ListenableWorker
 import androidx.work.testing.TestWorkerBuilder
-<<<<<<<< HEAD:libs/sync/src/test/java/com/rudderstack/android/sync/RudderSyncWorkerTest.kt
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.sync.internal.RudderSyncWorker
 import com.rudderstack.android.sync.internal.registerWorkManager
 import com.rudderstack.android.sync.internal.workerInputData
 import com.rudderstack.android.sync.utils.TestLogger
-========
 import com.rudderstack.android.utils.TestLogger
 import com.rudderstack.android.internal.infrastructure.sync.RudderSyncWorker
 import com.rudderstack.android.internal.infrastructure.sync.WorkManagerAnalyticsFactory
 import com.rudderstack.android.internal.infrastructure.sync.registerWorkManager
->>>>>>>> feat/android:android/src/test/java/com/rudderstack/android/RudderSyncWorkerTest.kt
-import com.rudderstack.core.Analytics
-import io.mockk.MockKAnnotations
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import io.mockk.just
-import io.mockk.mockk
-import io.mockk.runs
-import io.mockk.verify
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-
-import org.robolectric.annotation.Config
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29])

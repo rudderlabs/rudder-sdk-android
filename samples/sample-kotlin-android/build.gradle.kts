@@ -90,6 +90,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
+        javaParameters = true
     }
     java {
         toolchain {
@@ -110,11 +111,11 @@ android {
     buildFeatures {
         buildConfig = true
     }
-    packagingOptions {
+/*    packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
-    }
+    }*/
 }
 
 dependencies {
@@ -149,7 +150,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":models"))
     implementation(project(":web"))
-    implementation(project(":rudderjsonadapter"))
+//    implementation(project(":rudderjsonadapter"))
     implementation(project(":rudderreporter"))
     implementation(project(":libs:sync"))
     implementation(project(":libs:navigationplugin"))

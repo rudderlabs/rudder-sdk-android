@@ -22,6 +22,8 @@ import com.rudderstack.android.sync.WorkManagerAnalyticsFactory
 import com.rudderstack.core.Analytics
 
 
+internal const val WORKER_ANALYTICS_FACTORY_KEY = "WORKER_ANALYTICS_FACTORY_KEY"
+internal const val WORKER_ANALYTICS_INSTANCE_KEY = "WORKER_ANALYTICS_INSTANCE_KEY"
 /**
  * Syncs the data at an interval with rudder server
  *
@@ -29,11 +31,6 @@ import com.rudderstack.core.Analytics
 internal class RudderSyncWorker(
     appContext: Context, workerParams: WorkerParameters
 ) : Worker(appContext, workerParams) {
-    companion object {
-        internal const val WORKER_ANALYTICS_FACTORY_KEY = "WORKER_ANALYTICS_FACTORY_KEY"
-        internal const val WORKER_ANALYTICS_INSTANCE_KEY = "WORKER_ANALYTICS_INSTANCE_KEY"
-    }
-
     override fun doWork(): Result {
         (applicationContext as? Application)?.let {
             val analyticsInstanceKey =

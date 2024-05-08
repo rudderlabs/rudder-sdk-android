@@ -65,8 +65,8 @@ private fun Analytics.syncWorker(
 internal fun Analytics.workerInputData(workManagerAnalyticsFactoryClassName: Class<out
 WorkManagerAnalyticsFactory>) =
     Data.Builder().putString(
-        RudderSyncWorker.WORKER_ANALYTICS_FACTORY_KEY, workManagerAnalyticsFactoryClassName.name
-    ).putString(RudderSyncWorker.WORKER_ANALYTICS_INSTANCE_KEY, writeKey).build()
+        WORKER_ANALYTICS_FACTORY_KEY, workManagerAnalyticsFactoryClassName.name
+    ).putString(WORKER_ANALYTICS_INSTANCE_KEY, writeKey).build()
 
 internal fun Application.registerWorkManager(
     analytics: Analytics, workManagerAnalyticsFactoryClass: Class<out WorkManagerAnalyticsFactory>
