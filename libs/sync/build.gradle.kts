@@ -23,10 +23,10 @@ val library: HashMap<String, String> by extra
 val projects: HashMap<String, String> by extra
 
 android {
-    compileSdk = library["target_sdk"] as Int
+    compileSdk = library["target_sdk"].toString().toInt()
 
     defaultConfig {
-        minSdk = library["min_sdk"] as Int
+        minSdk = library["min_sdk"].toString().toInt()
         consumerProguardFiles("consumer-rules.pro")
 
         //for code access
@@ -89,3 +89,7 @@ dependencies {
 tasks.withType(type = org.jetbrains.kotlin.gradle.tasks.KaptGenerateStubs::class) {
     kotlinOptions.jvmTarget = "1.8"
 }
+
+apply(from = "${project.projectDir.parentFile.parent}/gradle/artifacts-aar.gradle")
+apply(from = "${project.projectDir.parentFile.parent}/gradle/mvn-publish.gradle")
+apply(from = "${project.projectDir.parentFile.parent}/gradle/codecov.gradle")

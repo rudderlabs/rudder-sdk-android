@@ -63,3 +63,6 @@ dependencies {
 tasks.withType(type = org.jetbrains.kotlin.gradle.tasks.KaptGenerateStubs::class) {
     kotlinOptions.jvmTarget = "17"
 }
+apply(from = "${project.projectDir.parentFile.parent}/gradle/artifacts-aar.gradle")
+apply(from = "${project.projectDir.parentFile.parent}/gradle/mvn-publish.gradle")
+apply(from = "${project.projectDir.parentFile.parent}/gradle/codecov.gradle")

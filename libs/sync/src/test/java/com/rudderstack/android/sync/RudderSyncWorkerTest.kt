@@ -22,13 +22,26 @@ import androidx.work.testing.TestWorkerBuilder
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.sync.internal.RudderSyncWorker
-import com.rudderstack.android.sync.internal.registerWorkManager
 import com.rudderstack.android.sync.internal.workerInputData
 import com.rudderstack.android.sync.utils.TestLogger
-import com.rudderstack.android.utils.TestLogger
-import com.rudderstack.android.internal.infrastructure.sync.RudderSyncWorker
-import com.rudderstack.android.internal.infrastructure.sync.WorkManagerAnalyticsFactory
-import com.rudderstack.android.internal.infrastructure.sync.registerWorkManager
+import com.rudderstack.core.Analytics
+import io.mockk.MockKAnnotations
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.runs
+import io.mockk.verify
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29])
@@ -45,7 +58,6 @@ class RudderSyncWorkerTest {
     @Before
     fun setup(){
         MockKAnnotations.init()
-//        MockitoAnnotations.openMocks(this)
         application = ApplicationProvider.getApplicationContext()
         val logger = TestLogger()
         every{configuration.defaultProcessName} returns null
@@ -56,7 +68,6 @@ class RudderSyncWorkerTest {
         every{analytics.currentConfiguration} returns configuration
         every { analytics.writeKey } returns "test_write_key"
         every { analytics.shutdown() } just runs
-//        application.registerWorkManager(analytics, DummyAnalyticsFactory::class.java)
         executorService = Executors.newSingleThreadExecutor()
         DummyAnalyticsFactory.analytics = analytics
     }

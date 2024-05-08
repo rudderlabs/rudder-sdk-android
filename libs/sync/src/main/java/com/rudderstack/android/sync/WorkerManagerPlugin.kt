@@ -29,6 +29,9 @@ abstract class WorkerManagerPlugin : InfrastructurePlugin {
         analyticsIdentifier = analytics.writeKey
         val currentConfig = analytics.currentConfigurationAndroid
         if (currentConfig?.isPeriodicFlushEnabled != true) {
+            currentConfig?.logger?.error(
+                log = "Halting Worker manager plugin initialization since isPeriodicFlushEnabled configuration is false"
+            )
             return
         }
         currentConfig.apply {
@@ -50,9 +53,5 @@ abstract class WorkerManagerPlugin : InfrastructurePlugin {
      * with garbage collector
      */
     abstract val workManagerAnalyticsFactoryClassName: Class<out WorkManagerAnalyticsFactory>
-
-    override fun updateConfiguration(configuration: Configuration) {
-        // no -op
-    }
 
 }

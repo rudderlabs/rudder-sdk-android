@@ -55,18 +55,21 @@ private val constraints by lazy {
 private fun Analytics.syncWorker(
     workManagerAnalyticsFactoryClassName: Class<out WorkManagerAnalyticsFactory>
 ) = PeriodicWorkRequestBuilder<RudderSyncWorker>(
-    REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES
-).setInitialDelay(REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES).setConstraints(constraints)
+    REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES)
+    .setInitialDelay(REPEAT_INTERVAL_IN_MINS, TimeUnit.MINUTES)
+    .setConstraints(constraints)
     .setInputData(
-        workerInputData(workManagerAnalyticsFactoryClassName)
-    ).addTag(generateKeyForLabel(WORK_MANAGER_TAG)).build()
+        workerInputData(workManagerAnalyticsFactoryClassName))
+    .addTag(generateKeyForLabel(WORK_MANAGER_TAG)).build()
 
 @VisibleForTesting
 internal fun Analytics.workerInputData(workManagerAnalyticsFactoryClassName: Class<out
 WorkManagerAnalyticsFactory>) =
-    Data.Builder().putString(
-        WORKER_ANALYTICS_FACTORY_KEY, workManagerAnalyticsFactoryClassName.name
-    ).putString(WORKER_ANALYTICS_INSTANCE_KEY, writeKey).build()
+    Data.Builder()
+        .putString(
+        WORKER_ANALYTICS_FACTORY_KEY, workManagerAnalyticsFactoryClassName.name)
+        .putString(WORKER_ANALYTICS_INSTANCE_KEY, writeKey)
+        .build()
 
 internal fun Application.registerWorkManager(
     analytics: Analytics, workManagerAnalyticsFactoryClass: Class<out WorkManagerAnalyticsFactory>
