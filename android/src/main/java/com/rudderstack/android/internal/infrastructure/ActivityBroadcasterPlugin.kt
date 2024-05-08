@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 internal class ActivityBroadcasterPlugin(
 ) : InfrastructurePlugin {
+
     private val application: Application?
         get() = analytics?.currentConfigurationAndroid?.application
     private var analytics: Analytics? = null
@@ -43,8 +44,9 @@ internal class ActivityBroadcasterPlugin(
                 if (analytics?.currentConfigurationAndroid?.recordScreenViews == true) {
                     broadcastActivityStart(activity)
                 }
-                if(analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true  &&
-                    activityCount.get() == 1) {
+                if (analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true &&
+                    activityCount.get() == 1
+                ) {
                     broadCastApplicationStart()
                 }
             }
@@ -60,7 +62,7 @@ internal class ActivityBroadcasterPlugin(
             override fun onActivityStopped(activity: Activity) {
                 if (analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true) {
                     decrementActivityCount()
-                    if(activityCount.get() == 0) {
+                    if (activityCount.get() == 0) {
                         broadCastApplicationStop()
                     }
                 }
@@ -73,7 +75,6 @@ internal class ActivityBroadcasterPlugin(
             override fun onActivityDestroyed(activity: Activity) {
                 //nothing to implement
             }
-
         }
     }
 
@@ -99,8 +100,6 @@ internal class ActivityBroadcasterPlugin(
     private fun incrementActivityCount() {
         activityCount.incrementAndGet()
     }
-
-
 
     private fun broadCastApplicationStart() {
         analytics?.applyInfrastructureClosure {
@@ -133,14 +132,10 @@ internal class ActivityBroadcasterPlugin(
 
     override fun setup(analytics: Analytics) {
         this.analytics = analytics
-        if (analytics.currentConfigurationAndroid?.trackLifecycleEvents == true) {
-
-            application?.registerActivityLifecycleCallbacks(lifecycleCallback)
-        }
+        application?.registerActivityLifecycleCallbacks(lifecycleCallback)
     }
 
     override fun shutdown() {
         application?.unregisterActivityLifecycleCallbacks(lifecycleCallback)
     }
-
 }
