@@ -14,10 +14,8 @@
 
 package com.rudderstack.android.internal.plugins
 
-import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.contextState
 import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.processNewContext
 import com.rudderstack.android.setUserId
 import com.rudderstack.core.Analytics
@@ -52,7 +50,12 @@ internal class ExtractStatePlugin : Plugin {
         //save and update traits
         //update userId
         //save and update external ids
-        (message.context ?: return message).let {
+        (message.context ?: return message).let{
+            if(it.traits?.get("anonymousId") == null)
+                _analytics?.currentConfigurationAndroid?.anonymousId.let { anonId ->
+                    it.updateWith(traits = it.traits optAdd ("anonymousId" to anonId))
+                }else it
+        }.let {
 
             //alias and identify messages are expected to contain user id.
             //We check in context as well as context.traits with either keys "userId" and "id"
@@ -66,27 +69,34 @@ internal class ExtractStatePlugin : Plugin {
             } ?: ""
             // in case of identify, the stored traits (if any) are replaced by the ones provided
             // if user id is different. else traits are added to it
-            when (message) {
+            val msg = when (message) {
                 is AliasMessage -> {
                     // in case of alias, we change the user id in traits
-                    message.updateNewAndPrevUserId(
-                        prevId, newUserId, it
-                    )
+                    newUserId?.let { newId-> updateNewAndPrevUserIdInContext(
+                        newId, it
+                    )}?.let {
+                        replaceContext(it)
+                        message.copy(context = it, userId = newUserId, previousId = prevId)
+                    }
                 }
                 is IdentifyMessage -> {
                     if(newUserId != prevId) {
                         replaceContext(it)
                     } else appendContext(it)
+                    message
                 }
-                else -> {}
-            }
-            message.also {
+                else -> {
+                    message
+                }
+            }?:message
+            msg.also {
                 newUserId?.let { id ->
                     _analytics?.setUserId(id)
                 }
             }
+            return chain.proceed(msg)
+
         }
-        return chain.proceed(message)
     }
 
     private fun appendContext(messageContext: MessageContext) {
@@ -121,21 +131,19 @@ internal class ExtractStatePlugin : Plugin {
         }?:message.userId
     }
 
-    private fun AliasMessage.updateNewAndPrevUserId(
-        previousId: String, newUserId: String?, messageContext: MessageContext
-    ): AliasMessage {
-        val newTraits = newUserId?.let { newId ->
-            mapOf(
-                KeyConstants.CONTEXT_ID_KEY to newId, KeyConstants.CONTEXT_USER_ID_KEY to newId
-            ) optAdd messageContext.traits
-        }
+    private fun updateNewAndPrevUserIdInContext(
+        newUserId: String, messageContext: MessageContext
+    ): MessageContext {
+        val newTraits =
+            messageContext.traits optAdd  mapOf(
+                KeyConstants.CONTEXT_ID_KEY to newUserId, KeyConstants.CONTEXT_USER_ID_KEY to newUserId
+            )
+
         //also in case of alias, user id in context should also change, given it's
         // present there
         return messageContext.updateWith(
             traits = newTraits
-        ).let {
-            this.copy(context = it, userId = newUserId, previousId = previousId)
-        }
+        )
     }
 
     object KeyConstants {

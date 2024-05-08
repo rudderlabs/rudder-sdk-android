@@ -33,7 +33,8 @@ class ResetImplementationPluginTest{
         analytics = generateTestAnalytics(Configuration(jsonAdapter = mock (),),
             storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(),
                 writeKey = "test_writeKey",
-                storageExecutor = TestExecutor()))
+                storageExecutor = TestExecutor()
+            ))
         analytics.associateState(ContextState())
     }
     @After

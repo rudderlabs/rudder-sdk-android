@@ -25,6 +25,7 @@ import com.rudderstack.web.WebServiceFactory
 import java.net.HttpURLConnection
 import java.net.http.HttpRequest
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 internal class DataUploadServiceImpl @JvmOverloads constructor(
@@ -36,11 +37,12 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
     private val currentConfigurationAtomic = AtomicReference<Configuration?>()
     private var headers = mutableMapOf<String, String>()
 
+    private val _isPaused = AtomicBoolean(false)
     private val currentConfiguration
         get() = currentConfigurationAtomic.get()
 
     private val interceptor = HttpInterceptor {
-        if(headers.isNotEmpty()) {
+        if (headers.isNotEmpty()) {
             synchronized(this) {
                 headers.forEach { (key, value) ->
                     it.setRequestProperty(key, value)
@@ -72,6 +74,11 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
         extraInfo: Map<String, String>?,
         callback: (response: HttpResponse<out Any>) -> Unit
     ) {
+        if (_isPaused.get()) {
+            callback(HttpResponse(-1, null, "Upload Service is Paused", null))
+            return
+        }
+
         currentConfiguration?.apply {
             if (networkExecutor.isShutdown || networkExecutor.isTerminated) return
             val batchBody = mapOf<String, Any>(
@@ -81,9 +88,12 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
             }.let {
                 jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String, Any>>() {})
             }
-            webService.get()?.post(mapOf("Content-Type" to "application/json",
-                "Authorization" to String.format(Locale.US, "Basic %s", encodedWriteKey),
-                /**/), null, batchBody, "v1/batch", String::class.java, gzipEnabled) {
+            webService.get()?.post(
+                mapOf(
+                    "Content-Type" to "application/json",
+                    "Authorization" to String.format(Locale.US, "Basic %s", encodedWriteKey),
+                ), null, batchBody, "v1/batch", String::class.java, gzipEnabled
+            ) {
                 callback.invoke(it)
             }
         }
@@ -92,23 +102,24 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
     override fun uploadSync(
         data: List<Message>, extraInfo: Map<String, String>?
     ): HttpResponse<out Any>? {
+        if (_isPaused.get()) return null
         return currentConfiguration?.let { config ->
             val batchBody = mapOf<String, Any>(
                 "sentAt" to RudderUtils.timeStamp, "batch" to data
             ).let {
                 if (extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
             }.let {
-                config.jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String, Any>>()
-                {})
+                config.jsonAdapter.writeToJson(
+                    it,
+                    object : RudderTypeAdapter<Map<String, Any>>() {})
             }
-            webService.get()?.post(mapOf("Content-Type" to "application/json",
-                "Authorization" to String.format(Locale.US, "Basic %s", encodedWriteKey)/*,
-                "anonymousId" to (ConfigurationsState.value?.anonymousId?.let {
-                    base64Generator.generateBase64(
-                        it
-                    )
-                } ?: encodedWriteKey)*/), null, batchBody, "v1/batch",
-                String::class.java, isGzipEnabled = config.gzipEnabled )?.get()
+            webService.get()?.post(
+                mapOf(
+                    "Content-Type" to "application/json",
+                    "Authorization" to String.format(Locale.US, "Basic %s", encodedWriteKey)
+                ), null, batchBody, "v1/batch",
+                String::class.java, isGzipEnabled = config.gzipEnabled
+            )?.get()
         }
     }
 
@@ -120,6 +131,15 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
         encodedWriteKey.set(configuration.base64Generator.generateBase64(writeKey))
         configuration.initializeWebService()
         currentConfigurationAtomic.set(configuration)
+    }
+
+    override fun pause() {
+        _isPaused.set(true)
+    }
+
+    override fun resume() {
+        _isPaused.set(false)
+
     }
 
     override fun shutdown() {

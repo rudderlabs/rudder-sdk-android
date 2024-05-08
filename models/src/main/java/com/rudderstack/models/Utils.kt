@@ -45,12 +45,7 @@ fun createContext(
  * @return updated context
  */
 fun MessageContext.updateWith(newContext: MessageContext): MessageContext {
-    return createContext(newContext.traits.takeIf { !it.isNullOrEmpty() }?: this.traits,
-        newContext.externalIds.takeIf { !it.isNullOrEmpty() }?: this.externalIds,
-        newContext.customContexts.takeIf { !it.isNullOrEmpty() }?: this.customContexts,
-        (newContext.keys - keys).associateWith{
-            newContext[it]
-        }.filterValues { it != null })
+    return this optAdd newContext.filterValues { it != null  }
 }
 
 fun MessageContext.updateWith(

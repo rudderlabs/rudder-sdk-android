@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.android.utils.TestExecutor

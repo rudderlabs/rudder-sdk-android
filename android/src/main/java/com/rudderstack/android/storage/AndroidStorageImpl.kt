@@ -32,7 +32,6 @@ import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import java.util.LinkedList
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 class AndroidStorageImpl(
@@ -74,14 +73,6 @@ class AndroidStorageImpl(
     //we update this once on init and then on data change listener
     private val _dataCount = AtomicLong()
 
-    private var _optOut: AtomicBoolean = AtomicBoolean(false)
-        set(newValue) {
-            val oldValue = field.get()
-            if (oldValue != newValue.get()) {
-                preferenceManager?.saveOptStatus(newValue.get())
-            }
-            field = newValue
-        }
     private val _optOutTime = AtomicLong(0L)
     private val _optInTime = AtomicLong(System.currentTimeMillis())
 
@@ -119,10 +110,10 @@ class AndroidStorageImpl(
         rudderDatabase = RudderDatabase(
             application,
             dbName,
-            RudderEntityFactory(analytics),
+            RudderEntityFactory(analytics.currentConfiguration?.jsonAdapter),
             useContentProvider,
             DB_VERSION,
-            executorService = storageExecutor
+            providedExecutorService = storageExecutor
         )
         messageDao = rudderDatabase?.getDao(MessageEntity::class.java, storageExecutor)
         messageDao?.addDataChangeListener(_messageDataListener)
@@ -159,7 +150,10 @@ class AndroidStorageImpl(
                         messageDao?.delete(
                             "${MessageEntity.ColumnNames.messageId} IN (" +
                                     //COMMAND FOR SELECTING FIRST $excessMessages to be removed from DB
-                                    "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${MessageEntity.TABLE_NAME} " + "ORDER BY ${MessageEntity.ColumnNames.timestamp} LIMIT $excessMessages)",
+                                    "SELECT ${MessageEntity.ColumnNames.messageId} FROM ${
+                                        MessageEntity
+                                            .TABLE_NAME
+                                    } " + "ORDER BY ${MessageEntity.ColumnNames.updatedAt} LIMIT $excessMessages)",
                             null
                         ) {
                             //check messages exceed storage cap
@@ -213,7 +207,10 @@ class AndroidStorageImpl(
     }
 
     override fun getData(offset: Int, callback: (List<Message>) -> Unit) {
-        messageDao?.runGetQuery(limit = "$offset,$_maxFetchLimit") {
+        messageDao?.runGetQuery(
+            limit = "$offset,$_maxFetchLimit",
+            orderBy = MessageEntity.ColumnNames.updatedAt
+        ) {
             callback.invoke(it.map { it.message })
         }
     }
@@ -224,7 +221,8 @@ class AndroidStorageImpl(
 
     override fun getDataSync(offset: Int): List<Message> {
         return messageDao?.runGetQuerySync(
-            null, null, null, null, "$offset,$_maxFetchLimit"
+            null, null, null, MessageEntity.ColumnNames.updatedAt,
+            "$offset,$_maxFetchLimit"
         )?.map {
             it.message
         } ?: listOf()
@@ -259,7 +257,7 @@ class AndroidStorageImpl(
         }
 
     override fun saveOptOut(optOut: Boolean) {
-        _optOut = AtomicBoolean(optOut)
+        preferenceManager?.saveOptStatus(optOut)
         if (optOut) {
             _optOutTime.set(System.currentTimeMillis())
         } else {
@@ -294,7 +292,7 @@ class AndroidStorageImpl(
     override val startupQueue: List<Message>
         get() = startupQ
     override val isOptedOut: Boolean
-        get() = _optOut.get()
+        get() = preferenceManager?.optStatus?:false
     override val optOutTime: Long
         get() = _optOutTime.get()
     override val optInTime: Long
@@ -386,6 +384,11 @@ class AndroidStorageImpl(
         preferenceManager?.resetV1ExternalIds()
     }
 
+    override fun migrateV1StorageToV2Sync() {
+        migrateV1MessagesToV2Database(application, rudderDatabase?:return,
+            jsonAdapter?:return, logger)
+    }
+
     override fun setBuild(build: Int) {
         preferenceManager?.saveBuild(build)
     }
@@ -406,7 +409,6 @@ class AndroidStorageImpl(
     override fun setup(analytics: Analytics) {
         initDb(analytics)
         preferenceManager = RudderPreferenceManager(application, writeKey)
-        _optOut = AtomicBoolean(preferenceManager?.optStatus ?: false)
     }
 
     private val Iterable<Message>.entities
@@ -422,9 +424,5 @@ class AndroidStorageImpl(
         )
     }
 
-    private fun importV1Data() {
-        val oldDbName = "events.db"
-        val oldDb = application.getDatabasePath(oldDbName)
-    }
 
 }

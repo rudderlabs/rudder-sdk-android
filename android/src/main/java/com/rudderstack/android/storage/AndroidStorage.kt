@@ -59,4 +59,5 @@ interface AndroidStorage : Storage {
     fun resetV1ExternalIds()
     fun setBuild(build: Int)
     fun setVersionName(versionName: String)
+    fun migrateV1StorageToV2Sync()
 }

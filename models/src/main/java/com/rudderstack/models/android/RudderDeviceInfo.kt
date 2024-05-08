@@ -5,16 +5,6 @@ import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.Json
 
 class RudderDeviceInfo(
-    /*RudderDeviceInfo(String advertisingId, String token) {
-        this.deviceId = Utils.getDeviceId(RudderClient.getApplication());
-        if (advertisingId != null && !advertisingId.isEmpty()) {
-            this.advertisingId = advertisingId;
-            this.adTrackingEnabled = true;
-        }
-        if (token != null && !token.isEmpty()) {
-            this.token = token;
-        }
-    }*/
     @SerializedName("id")
     @JsonProperty("id")
     @Json(name = "id")

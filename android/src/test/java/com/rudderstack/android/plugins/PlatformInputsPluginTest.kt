@@ -91,17 +91,14 @@ class PlatformInputsPluginTest {
             hasEntry("timezone", (TimeZone.getDefault().id))
         ),)
         assertThat(
-            jsonAdapter.readJson(verifyMsg!!.context!!["app"] as String, object :
-                RudderTypeAdapter<Map<String, Any>>(){}), `is`(mapOf("name" to AndroidContextPluginTestApplication.PACKAGE_NAME,
+            verifyMsg.context!!["app"], `is`(mapOf("name" to AndroidContextPluginTestApplication.PACKAGE_NAME,
                 "build" to "1", "namespace" to AndroidContextPluginTestApplication.PACKAGE_NAME,
                 "version" to "1.0")))
         assertThat(
-            jsonAdapter.readJson(verifyMsg!!.context!!["os"] as String, object :
-                RudderTypeAdapter<Map<String, String>>(){}), `is`( allOf (aMapWithSize(2), hasEntry
+            verifyMsg.context!!["os"] as Map<*, *>, `is`( allOf (aMapWithSize(2), hasEntry
                 ("name", "Android"), hasKey("version"))))
         assertThat(
-            jsonAdapter.readJson(verifyMsg!!.context!!["device"] as String, object :
-                RudderTypeAdapter<Map<String, Any>>(){}), `is`(allOf(
+            verifyMsg.context!!["device"] as Map<*,*>, `is`(allOf(
                 hasKey("id"),
                 hasKey("manufacturer"),
                 hasKey("model"),
@@ -110,8 +107,7 @@ class PlatformInputsPluginTest {
                 hasKey("adTrackingEnabled"),
             )))
         assertThat(
-            jsonAdapter.readJson(verifyMsg!!.context!!["network"] as String, object :
-                RudderTypeAdapter<Map<String, Any>>(){}), `is`(allOf(
+            verifyMsg.context!!["network"] as Map<*,*>, `is`(allOf(
 //                hasKey("carrier"),
                 hasKey("bluetooth"),
                 hasKey("cellular"),
@@ -135,8 +131,7 @@ class PlatformInputsPluginTest {
         }
         val verifyMsg = platformInputsPlugin.intercept(mockChain)
         assertThat(
-            jsonAdapter.readJson(verifyMsg.context!!["device"] as String, object :
-                RudderTypeAdapter<Map<String, Any>>(){}), hasEntry("advertisingId", "testAdvertisingId")
+            verifyMsg.context!!["device"] as Map<*, *>, hasEntry("advertisingId", "testAdvertisingId")
         )
     }
     @Test
@@ -171,8 +166,7 @@ class PlatformInputsPluginTest {
         }
         val verifyMsg = platformInputsPlugin.intercept(mockChain)
         assertThat(
-            jsonAdapter.readJson(verifyMsg!!.context!!["device"] as String, object :
-                RudderTypeAdapter<Map<String, Any>>(){}), hasEntry("token", "testDeviceToken")
+            verifyMsg!!.context!!["device"] as Map<*,*>, hasEntry("token", "testDeviceToken")
         )
     }
 

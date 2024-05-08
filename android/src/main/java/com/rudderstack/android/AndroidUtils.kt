@@ -39,7 +39,7 @@ import java.util.*
 
 
 internal object AndroidUtils {
-    fun getDeviceId(application: Application): String {
+    fun getDeviceId(): String {
 
 //        val androidId =
 //            Settings.System.getString(application.contentResolver, Settings.Secure.ANDROID_ID)
@@ -108,7 +108,7 @@ internal object AndroidUtils {
         deviceToken: String,
         collectDeviceId: Boolean
     ): RudderDeviceInfo {
-        val deviceId = if (collectDeviceId) getDeviceId(this) else null
+        val deviceId = if (collectDeviceId) AndroidUtils.getDeviceId() else null
         return RudderDeviceInfo(
             deviceId = deviceId,
             manufacturer = Build.MANUFACTURER,

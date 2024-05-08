@@ -18,8 +18,8 @@ android {
     val patchVersion = 0
     val libraryVersionName = "${majorVersion}.${minVersion}.${patchVersion}"
     val libraryVersionCode = majorVersion * 1000 + minVersion * 100 + patchVersion
-    val javaVersion = JavaVersion.VERSION_19
-    val jvm = 19
+    val javaVersion = JavaVersion.VERSION_17
+    val jvm = 17
     val composeCompilerVersion = "1.4.8"
     val androidCompileSdkVersion = 34
     val androidMinSdkVersion = 26
@@ -89,7 +89,7 @@ android {
         targetCompatibility = javaVersion
     }
     kotlinOptions {
-        jvmTarget = "19"
+        jvmTarget = "17"
     }
     java {
         toolchain {

@@ -41,9 +41,6 @@ import com.rudderstack.models.*
  *
  */
 internal class FillDefaultsPlugin : Plugin {
-    companion object{
-        private const val CHANNEL = "android"
-    }
 
     private var _analytics: Analytics? = null
     override fun setup(analytics: Analytics) {
@@ -58,7 +55,6 @@ internal class FillDefaultsPlugin : Plugin {
     @Throws(MissingPropertiesException::class)
     private inline fun <reified T : Message> T.withDefaults(): T {
         val anonId = this.anonymousId ?: _analytics?.currentConfigurationAndroid?.anonymousId
-        println("anonId: $anonId, analytics: $_analytics")
         val userId = this.userId ?: _analytics?.currentConfigurationAndroid?.userId
         if (anonId == null && userId == null) {
             val ex = MissingPropertiesException("Either Anonymous Id or User Id must be present");
@@ -78,13 +74,11 @@ internal class FillDefaultsPlugin : Plugin {
                     ) else it
                 } selectiveReplace context),
             anonymousId = anonId,
-            userId = userId) as T).also { it.channel = CHANNEL }
+            userId = userId) as T)
     }
 
     private infix fun MessageContext?.selectiveReplace(context: MessageContext?): MessageContext? {
         if (this == null) return context else if (context == null) return this
-
-
         return this.updateWith(context)
     }
 
