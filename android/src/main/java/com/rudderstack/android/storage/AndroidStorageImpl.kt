@@ -110,7 +110,7 @@ class AndroidStorageImpl(
         rudderDatabase = RudderDatabase(
             application,
             dbName,
-            RudderEntityFactory(analytics.currentConfiguration?.jsonAdapter),
+            RudderEntityFactory(analytics.jsonAdapter),
             useContentProvider,
             DB_VERSION,
             providedExecutorService = storageExecutor

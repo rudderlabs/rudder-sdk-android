@@ -4,11 +4,11 @@ import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.android.utils.busyWait
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.initialConfigurationAndroid
 import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.android.storage.AndroidStorage
+import com.rudderstack.android.utils.busyWait
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Logger
 import com.rudderstack.core.holder.associateState
@@ -303,7 +303,7 @@ class SessionUtilsTest {
         }
         // When
         analytics.initializeSessionManagement(mockStorage.sessionId, mockStorage.lastActiveTimestamp)
-
+        busyWait(1)
         // Then
         // Verify that SessionState is not updated
         val session = userSessionState?.value

@@ -56,7 +56,7 @@ abstract class LifecycleObserverPluginTest {
             listeners.forEach { it.onDownloaded(true) }
             cb(true, RudderServerConfig(), null)
         }
-        whenever(mockConfigurationAndroid.jsonAdapter).thenReturn(jsonAdapter)
+//        whenever(mockConfigurationAndroid.jsonAdapter).thenReturn(jsonAdapter)
         whenever(mockConfigurationAndroid.trackLifecycleEvents).thenReturn(true)
         whenever(mockConfigurationAndroid.recordScreenViews).thenReturn(true)
         whenever(mockConfigurationAndroid.analyticsExecutor).thenReturn(TestExecutor())
@@ -65,7 +65,7 @@ abstract class LifecycleObserverPluginTest {
         whenever(mockConfigurationAndroid.copy()).thenReturn(mockConfigurationAndroid)
         mockStorage = mock<AndroidStorage>()
         whenever(mockStorage.versionName).thenReturn("1.0")
-        analytics = generateTestAnalytics(mockConfigurationAndroid, storage = mockStorage, configDownloadService = mockControlPlane)
+        analytics = generateTestAnalytics(jsonAdapter = mock(), mockConfigurationAndroid, storage = mockStorage, configDownloadService = mockControlPlane)
     }
 
     @After
