@@ -12,8 +12,8 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.android.internal.infrastructure.sync
-
+package com.rudderstack.android.sync
+import com.rudderstack.android.sync.internal.RudderSyncWorker
 import android.app.Application
 import com.rudderstack.core.Analytics
 

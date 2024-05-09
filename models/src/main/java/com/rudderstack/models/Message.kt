@@ -77,7 +77,12 @@ sealed class Message(
     @SerializedName("messageId")
     @JsonProperty("messageId")
     @Json(name = "messageId")
-    val messageId: String = _messageId ?: UUID.randomUUID().toString()
+    val messageId: String = _messageId ?: String.format(
+        Locale.US,
+        "%d-%s",
+        System.currentTimeMillis(),
+        UUID.randomUUID().toString(),
+    )
 
     // ugly hack for moshi
     // https://github.com/square/moshi/issues/609#issuecomment-798805367
@@ -666,7 +671,7 @@ class TrackMessage internal constructor(
         destinationProps,
         eventName,
         properties,
-//        _messageId = this.messageId,
+        _messageId = this.messageId,
     )
 
     override fun toString(): String {
