@@ -42,7 +42,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     public ConfigurationAndroidBuilder(Application application) {
         super();
         this.application = application;
-        anonymousId = AndroidUtils.INSTANCE.getDeviceId(application);
+        anonymousId = AndroidUtils.INSTANCE.getDeviceId();
     }
     public ConfigurationBuilder withAnonymousId(String anonymousId) {
         this.anonymousId = anonymousId;

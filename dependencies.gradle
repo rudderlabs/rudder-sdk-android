@@ -14,7 +14,7 @@
 
 ext {
     versions = [
-            work                   : "2.7.0",
+            work                   : "2.9.0",
             gson                   : "2.8.8",
             jackson                : "2.12.4",
             jacksonKotlin          : "2.13.3",
@@ -29,7 +29,7 @@ ext {
             mockk                  : "1.13.3",
             junit                  : "4.+",
             awaitility             : "4.1.0",
-            robolectric            : "4.10.3",
+            robolectric            : "4.12.1",
             jsonAssert             : "1.5.0",
             mockito_kotlin         : "4.0.0",
             mockito_inline         : "4.7.0",

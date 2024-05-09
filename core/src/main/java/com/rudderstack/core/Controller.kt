@@ -55,6 +55,11 @@ interface Controller {
     fun optOut(optOut : Boolean)
 
     /**
+     * Intended to be called by other Rudderstack Modules. Not meant for standard SDK usage.
+     */
+    fun updateSourceConfig()
+
+    /**
      * Is opted out from analytics
      */
     val isOptedOut : Boolean

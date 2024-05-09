@@ -21,10 +21,10 @@ import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
 import com.rudderstack.android.internal.infrastructure.AppInstallUpdateTrackerPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
 import com.rudderstack.android.internal.infrastructure.ResetImplementationPlugin
-import com.rudderstack.android.internal.plugins.ReinstatePlugin
 import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.plugins.PlatformInputsPlugin
+import com.rudderstack.android.internal.infrastructure.ReinstatePlugin
 import com.rudderstack.android.internal.plugins.SessionPlugin
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.internal.states.UserSessionState
@@ -38,6 +38,9 @@ import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.models.MessageContext
 import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.models.createContext
+import com.rudderstack.models.traits
+import com.rudderstack.models.updateWith
 
 //device info and stuff
 //multi process
@@ -155,6 +158,11 @@ fun Analytics.setAnonymousId(anonymousId: String) {
         )
         else this
     }
+    val anonymousIdPair = ("anonymousId" to anonymousId)
+    val newContext = contextState?.value?.let {
+        it.updateWith(traits = (it.traits?: mapOf()) + anonymousIdPair)
+    }?: createContext(traits = mapOf(anonymousIdPair))
+    processNewContext(newContext)
 }
 
 /**
@@ -174,6 +182,7 @@ fun Analytics.setUserId(userId: String) {
 
 private val infrastructurePlugins
     get() = arrayOf(
+        ReinstatePlugin(),
         AnonymousIdHeaderPlugin(),
         AppInstallUpdateTrackerPlugin(),
         LifecycleObserverPlugin(),
@@ -182,7 +191,7 @@ private val infrastructurePlugins
     )
 private val messagePlugins
     get() = listOf(
-        ReinstatePlugin(), PlatformInputsPlugin(), ExtractStatePlugin(), FillDefaultsPlugin(),
+        ExtractStatePlugin(), FillDefaultsPlugin(), PlatformInputsPlugin(),
         SessionPlugin()
     )
 
@@ -192,10 +201,16 @@ private fun Analytics.startup() {
 }
 
 
-
 private fun Analytics.associateStates() {
     associateState(ContextState())
+    attachSavedContextIfAvailable()
     associateState(UserSessionState())
+}
+
+private fun Analytics.attachSavedContextIfAvailable() {
+    androidStorage.context?.let {
+        processNewContext(it)
+    }
 }
 
 private fun Analytics.addPlugins() {

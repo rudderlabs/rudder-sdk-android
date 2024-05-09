@@ -49,7 +49,7 @@ fun generateTestAnalytics(jsonAdapter: JsonAdapter, mockConfiguration: Configura
     val testingConfig = mockConfiguration.copy(
         logger = KotlinLogger,
         analyticsExecutor = TestExecutor()
-    )
+    )?:mockConfiguration // this is if a mock configuration is passed
     return Analytics(
         DUMMY_WRITE_KEY,jsonAdapter, testingConfig, dataUploadService = dataUploadService,
         configDownloadService = configDownloadService, storage = storage

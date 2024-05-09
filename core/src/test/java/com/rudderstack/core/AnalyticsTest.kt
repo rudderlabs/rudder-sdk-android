@@ -78,7 +78,6 @@ abstract class AnalyticsTest {
 
     @Before
     fun setup() {
-        println("Setup called")
         mockedControlPlane = mock(ConfigDownloadService::class.java).also {
             `when`(it.download(any())).then {
 
@@ -94,7 +93,6 @@ abstract class AnalyticsTest {
         mockedDataUploadService.let {
 
             whenever(it.upload(any(), any(), any())).then {
-//            storage.deleteMessages(data)
                 it.getArgument<(response: HttpResponse<out Any>) -> Unit>(2).invoke(
                     mockedResponse
                 )
@@ -212,7 +210,7 @@ abstract class AnalyticsTest {
                     hasProperty("userId", `is`("user_id")),
                     hasProperty(
                         "context", allOf(
-                            aMapWithSize<String, Any>(3), hasEntry(
+                            hasEntry(
                                 equalTo("traits"), allOf(
                                     notNullValue(),
                                     aMapWithSize(3),

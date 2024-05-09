@@ -18,8 +18,8 @@ android {
     val patchVersion = 0
     val libraryVersionName = "${majorVersion}.${minVersion}.${patchVersion}"
     val libraryVersionCode = majorVersion * 1000 + minVersion * 100 + patchVersion
-    val javaVersion = JavaVersion.VERSION_19
-    val jvm = 19
+    val javaVersion = JavaVersion.VERSION_17
+    val jvm = 17
     val composeCompilerVersion = "1.4.8"
     val androidCompileSdkVersion = 34
     val androidMinSdkVersion = 26
@@ -89,7 +89,8 @@ android {
         targetCompatibility = javaVersion
     }
     kotlinOptions {
-        jvmTarget = "19"
+        jvmTarget = "17"
+        javaParameters = true
     }
     java {
         toolchain {
@@ -109,11 +110,6 @@ android {
 
     buildFeatures {
         buildConfig = true
-    }
-    packagingOptions {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
     }
 }
 
@@ -149,8 +145,9 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":models"))
     implementation(project(":web"))
-    implementation(project(":rudderjsonadapter"))
     implementation(project(":rudderreporter"))
+    implementation(project(":libs:sync"))
+    implementation(project(":libs:navigationplugin"))
 
 
     testImplementation("junit:junit:4.13.2")

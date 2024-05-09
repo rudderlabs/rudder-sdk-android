@@ -145,9 +145,7 @@ interface ConfigurationAndroid : Configuration {
         operator fun invoke(
             configuration: Configuration,
             application: Application,
-            anonymousId: String = AndroidUtils.getDeviceId(
-                application
-            ),
+            anonymousId: String = AndroidUtils.getDeviceId(),
             userId: String? = null,
             trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
 

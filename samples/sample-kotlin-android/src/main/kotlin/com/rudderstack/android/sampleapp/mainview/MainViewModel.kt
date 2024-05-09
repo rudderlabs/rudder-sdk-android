@@ -8,6 +8,7 @@ import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.primaryA
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.secondaryAnalytics
 import com.rudderstack.android.utilities.endSession
 import com.rudderstack.android.utilities.startSession
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOptions
 import com.rudderstack.models.GroupTraits
@@ -29,7 +30,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _loggingInterceptor by lazy {
         object : Plugin {
-            private var logsName: String = "Sample app"
+            private var _writeKey: String? = null
+            override fun setup(analytics: Analytics) {
+                _writeKey = analytics.writeKey
+            }
+            private var logsName: String = "Sample app-$_writeKey"
 
             override fun intercept(chain: Plugin.Chain): Message {
                 val msg = chain.message()

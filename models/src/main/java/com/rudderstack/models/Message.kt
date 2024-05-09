@@ -17,6 +17,7 @@ package com.rudderstack.models
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.annotations.SerializedName
 import com.rudderstack.models.Message.EventType
@@ -37,6 +38,7 @@ typealias MessageDestinationProps = Map<String, Map<*, *>>
 typealias GroupTraits = Map<String, Any>
 
 @JsonIgnoreProperties("type\$models")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 sealed class Message(
 
     /**
@@ -45,46 +47,27 @@ sealed class Message(
      */
     @SerializedName("type")
     // @Expose
-    @param:JsonProperty("type")
-    @field:JsonProperty("type")
-    @get:JsonProperty("type")
-    @Json(name = "type")
-    internal var type: EventType,
+    @param:JsonProperty("type") @field:JsonProperty("type") @get:JsonProperty("type") @Json(name = "type") internal var type: EventType,
 
     // @Expose
     // convert to json to put any object as value
-    @SerializedName("context")
-    @JsonProperty("context")
-    @Json(name = "context")
-    val context: MessageContext? = null,
+    @SerializedName("context") @JsonProperty("context") @Json(name = "context") val context: MessageContext? = null,
 
     // @Expose
-    @SerializedName("anonymousId")
-    @JsonProperty("anonymousId")
-    @Json(name = "anonymousId")
-    var anonymousId: String?,
+    @SerializedName("anonymousId") @JsonProperty("anonymousId") @Json(name = "anonymousId") var anonymousId: String?,
 
     /**
      * @return User ID for the event
      */
     // @Expose
-    @SerializedName("userId")
-    @JsonProperty("userId")
-    @Json(name = "userId")
-    var userId: String? = null,
+    @SerializedName("userId") @JsonProperty("userId") @Json(name = "userId") var userId: String? = null,
 
     // format - yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
     // @Expose
-    @SerializedName("timestamp")
-    @JsonProperty("timestamp")
-    @Json(name = "timestamp")
-    val timestamp: String,
+    @SerializedName("originalTimestamp") @field:JsonProperty("originalTimestamp") @get:JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") val timestamp: String,
 
     // @Expose
-    @SerializedName("destinationProps")
-    @JsonProperty("destinationProps")
-    @Json(name = "destinationProps")
-    val destinationProps: MessageDestinationProps? = null,
+    @SerializedName("destinationProps") @JsonProperty("destinationProps") @Json(name = "destinationProps") val destinationProps: MessageDestinationProps? = null,
 
 //    @Transient
     _messageId: String? = null,
@@ -94,15 +77,24 @@ sealed class Message(
     @SerializedName("messageId")
     @JsonProperty("messageId")
     @Json(name = "messageId")
-    val messageId: String = _messageId ?: UUID.randomUUID().toString()
+    val messageId: String = _messageId ?: String.format(
+        Locale.US,
+        "%d-%s",
+        System.currentTimeMillis(),
+        UUID.randomUUID().toString(),
+    )
 
     // ugly hack for moshi
     // https://github.com/square/moshi/issues/609#issuecomment-798805367
     @Json(name = "channel")
     @JsonProperty("channel")
     @SerializedName("channel")
-    var channel: String = _channel ?: "server"
-        get() = field
+    var channel: String = _channel?: "server"
+        set(value) {
+            field = value
+        }
+        get() = field?: "server" // required for gson, cause it might set the property null
+    // through reflection
 
     @JsonIgnore
     fun getType() = type
@@ -131,6 +123,7 @@ sealed class Message(
             destinationProps,
             previousId,
         )
+
         is GroupMessage -> copy(
             context,
             anonymousId,
@@ -140,6 +133,7 @@ sealed class Message(
             groupId,
             traits,
         )
+
         is IdentifyMessage -> copy(
             context,
             anonymousId,
@@ -148,6 +142,7 @@ sealed class Message(
             destinationProps,
             properties,
         )
+
         is PageMessage -> copy(
             context,
             anonymousId,
@@ -158,16 +153,16 @@ sealed class Message(
             properties,
             category,
         )
+
         is ScreenMessage -> copy(
             context,
             anonymousId,
             userId,
             timestamp,
             destinationProps,
-            name,
-            category,
-            properties,
+            properties = properties,
         )
+
         is TrackMessage -> copy(
             context,
             anonymousId,
@@ -179,75 +174,59 @@ sealed class Message(
         )
     }.also {
         it.integrations = integrations
+        it.channel = channel
     }
 
     enum class EventType(val value: String) {
-        @SerializedName("Alias")
-        @JsonProperty("Alias")
-        @Json(name = "Alias")
-        ALIAS("Alias"),
+        @SerializedName("alias")
+        @JsonProperty("alias")
+        @Json(name = "alias")
+        ALIAS("alias"),
 
-        @SerializedName("Group")
-        @JsonProperty("Group")
-        @Json(name = "Group")
-        GROUP("Group"),
+        @SerializedName("group")
+        @JsonProperty("group")
+        @Json(name = "group")
+        GROUP("group"),
 
-        @SerializedName("Page")
-        @JsonProperty("Page")
-        @Json(name = "Page")
-        PAGE("Page"),
+        @SerializedName("page")
+        @JsonProperty("page")
+        @Json(name = "page")
+        PAGE("page"),
 
-        @SerializedName("Screen")
-        @JsonProperty("Screen")
-        @Json(name = "Screen")
-        SCREEN("Screen"),
+        @SerializedName("screen")
+        @JsonProperty("screen")
+        @Json(name = "screen")
+        SCREEN("screen"),
 
-        @SerializedName("Track")
-        @JsonProperty("Track")
-        @Json(name = "Track")
-        TRACK("Track"),
+        @SerializedName("track")
+        @JsonProperty("track")
+        @Json(name = "track")
+        TRACK("track"),
 
-        @SerializedName("Identify")
-        @JsonProperty("Identify")
-        @Json(name = "Identify")
-        IDENTIFY("Identify"),
-        ;
+        @SerializedName("identify")
+        @JsonProperty("identify")
+        @Json(name = "identify")
+        IDENTIFY("identify"), ;
 
         companion object {
-            fun fromValue(value: String) = when (value) {
-                "Alias" -> EventType.ALIAS
-                "Group" -> EventType.GROUP
-                "Page" -> EventType.PAGE
-                "Screen" -> EventType.SCREEN
-                "Track" -> EventType.TRACK
-                "Identify" -> EventType.IDENTIFY
+            fun fromValue(value: String) = when (value.lowercase()) {
+                "alias" -> EventType.ALIAS
+                "group" -> EventType.GROUP
+                "page" -> EventType.PAGE
+                "screen" -> EventType.SCREEN
+                "track" -> EventType.TRACK
+                "identify" -> EventType.IDENTIFY
                 else -> throw IllegalArgumentException("Wrong value for event type")
             }
         }
     }
 
     override fun toString(): String {
-        return "type = $type, " +
-            "messageId = $messageId, " +
-            "context = $context, " +
-            "anonymousId = $anonymousId, " +
-            "userId = $userId, " +
-            "timestamp = $timestamp, " +
-            "destinationProps = $destinationProps, " +
-            "integrations = $integrations, " +
-            "channel = $channel"
+        return "type = $type, " + "messageId = $messageId, " + "context = $context, " + "anonymousId = $anonymousId, " + "userId = $userId, " + "timestamp = $timestamp, " + "destinationProps = $destinationProps, " + "integrations = $integrations, " + "channel = $channel"
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is Message && other.type === this.type &&
-            other.messageId == this.messageId &&
-            other.context == this.context &&
-            other.anonymousId == this.anonymousId &&
-            other.userId == this.userId &&
-            other.timestamp == this.timestamp &&
-            other.destinationProps == this.destinationProps &&
-            other.integrations == this.integrations &&
-            other.channel == this.channel
+        return other is Message && other.type === this.type && other.messageId == this.messageId && other.context == this.context && other.anonymousId == this.anonymousId && other.userId == this.userId && other.timestamp == this.timestamp && other.destinationProps == this.destinationProps && other.integrations == this.integrations && other.channel == this.channel
     }
 
     override fun hashCode(): Int {
@@ -265,26 +244,15 @@ sealed class Message(
 
 class AliasMessage internal constructor(
 
-    @JsonProperty("context")
-    @Json(name = "context")
-    context: MessageContext? = null,
-    @JsonProperty("anonymousId")
-    @Json(name = "anonymousId")
-    anonymousId: String?,
-    @JsonProperty("userId")
-    @Json(name = "userId")
-    userId: String? = null,
-    @JsonProperty("timestamp")
-    @Json(name = "timestamp")
-    timestamp: String,
+    @JsonProperty("context") @Json(name = "context") context: MessageContext? = null,
+    @JsonProperty("anonymousId") @Json(name = "anonymousId") anonymousId: String?,
+    @JsonProperty("userId") @Json(name = "userId") userId: String? = null,
+    @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") timestamp: String,
 
-    @JsonProperty("destinationProps")
-    @Json(name = "destinationProps")
-    destinationProps: MessageDestinationProps? = null,
-    @SerializedName("previousId")
-    @JsonProperty("previousId")
-    @Json(name = "previousId")
-    var previousId: String? = null,
+    @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
+    @SerializedName("previousId") @JsonProperty("previousId") @Json(name = "previousId") var previousId: String? = null,
+    @JsonProperty("not_applicable", required = false) // work-around to ignore value param
+    // jackson serialisation
     _messageId: String? = null,
 ) : Message(
     EventType.ALIAS,
@@ -296,7 +264,8 @@ class AliasMessage internal constructor(
     _messageId,
 ) {
     companion object {
-        @JvmStatic fun create(
+        @JvmStatic
+        fun create(
             timestamp: String,
 
             anonymousId: String? = null,
@@ -309,7 +278,7 @@ class AliasMessage internal constructor(
             customContextMap: Map<String, Any>? = null,
             _messageId: String? = null,
 
-        ) = AliasMessage(
+            ) = AliasMessage(
             createContext(traits, externalIds, customContextMap),
             anonymousId,
             userId,
@@ -329,7 +298,7 @@ class AliasMessage internal constructor(
         destinationProps: MessageDestinationProps? = this.destinationProps,
         previousId: String? = this.previousId,
 
-    ) = AliasMessage(
+        ) = AliasMessage(
         context,
         anonymousId,
         userId,
@@ -340,14 +309,11 @@ class AliasMessage internal constructor(
     )
 
     override fun toString(): String {
-        return "${super.toString()}, " +
-            "previousId = $previousId"
+        return "${super.toString()}, " + "previousId = $previousId"
     }
 
     override fun equals(other: Any?): Boolean {
-        return super.equals(other) &&
-            other is AliasMessage &&
-            other.previousId == previousId
+        return super.equals(other) && other is AliasMessage && other.previousId == previousId
     }
 
     override fun hashCode(): Int {
@@ -358,37 +324,23 @@ class AliasMessage internal constructor(
 @JsonIgnoreProperties(ignoreUnknown = true)
 class GroupMessage internal constructor(
 
-    @JsonProperty("context")
-    @Json(name = "context")
-    context: MessageContext? = null,
-    @JsonProperty("anonymousId")
-    @Json(name = "anonymousId")
-    anonymousId: String?,
-    @JsonProperty("userId")
-    @Json(name = "userId")
-    userId: String? = null,
-    @JsonProperty("timestamp")
-    @Json(name = "timestamp")
-    timestamp: String,
+    @JsonProperty("context") @Json(name = "context") context: MessageContext? = null,
+    @JsonProperty("anonymousId") @Json(name = "anonymousId") anonymousId: String?,
+    @JsonProperty("userId") @Json(name = "userId") userId: String? = null,
+    @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") timestamp: String,
 
-    @JsonProperty("destinationProps")
-    @Json(name = "destinationProps")
-    destinationProps: MessageDestinationProps? = null,
+    @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
     /**
      * @return Group ID for the event
      */
-    @SerializedName("groupId")
-    @JsonProperty("groupId")
-    @Json(name = "groupId")
-    var groupId: String? = null,
+    @SerializedName("groupId") @JsonProperty("groupId") @Json(name = "groupId") var groupId: String? = null,
 
-    @SerializedName("traits")
-    @JsonProperty("traits")
-    @Json(name = "traits")
-    val traits: GroupTraits? = null,
+    @SerializedName("traits") @JsonProperty("traits") @Json(name = "traits") val traits: GroupTraits? = null,
+    @JsonProperty("not_applicable", required = false) // work-around to ignore value param
+    // jackson serialisation
     _messageId: String? = null,
 
-) : Message(
+    ) : Message(
     EventType.GROUP,
     context,
     anonymousId,
@@ -398,7 +350,8 @@ class GroupMessage internal constructor(
     _messageId,
 ) {
     companion object {
-        @JvmStatic fun create(
+        @JvmStatic
+        fun create(
             anonymousId: String? = null,
             userId: String? = null,
             timestamp: String,
@@ -444,16 +397,11 @@ class GroupMessage internal constructor(
     )
 
     override fun toString(): String {
-        return "${super.toString()}, " +
-            "groupId = $groupId, " +
-            "traits = $traits"
+        return "${super.toString()}, " + "groupId = $groupId, " + "traits = $traits"
     }
 
     override fun equals(other: Any?): Boolean {
-        return super.equals(other) &&
-            other is GroupMessage &&
-            other.groupId == groupId &&
-            other.traits == traits
+        return super.equals(other) && other is GroupMessage && other.groupId == groupId && other.traits == traits
     }
 
     override fun hashCode(): Int {
@@ -465,32 +413,19 @@ class GroupMessage internal constructor(
 
 class PageMessage internal constructor(
 
-    @JsonProperty("context")
-    @Json(name = "context")
-    context: MessageContext? = null,
-    @JsonProperty("anonymousId")
-    @Json(name = "anonymousId")
-    anonymousId: String?,
-    @JsonProperty("userId")
-    @Json(name = "userId")
-    userId: String? = null,
-    @JsonProperty("timestamp")
-    @Json(name = "timestamp")
-    timestamp: String,
+    @JsonProperty("context") @Json(name = "context") context: MessageContext? = null,
+    @JsonProperty("anonymousId") @Json(name = "anonymousId") anonymousId: String?,
+    @JsonProperty("userId") @Json(name = "userId") userId: String? = null,
+    @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") timestamp: String,
 
-    @JsonProperty("destinationProps")
-    @Json(name = "destinationProps")
-    destinationProps: MessageDestinationProps? = null,
+    @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
     /**
      * @return Name of the event tracked
      */
 
-    @SerializedName("event")
-    @get:JsonProperty("event")
-    @field:JsonProperty("event")
-    @param:JsonProperty("event")
-    @Json(name = "event")
-    var name: String? = null,
+    @SerializedName("event") @get:JsonProperty("event") @field:JsonProperty("event") @param:JsonProperty(
+        "event"
+    ) @Json(name = "event") var name: String? = null,
 
     /**
      * Get the properties back as set to the event
@@ -498,15 +433,11 @@ class PageMessage internal constructor(
      * @return Map of String-Object
      */
 
-    @SerializedName("properties")
-    @JsonProperty("properties")
-    @Json(name = "properties")
-    val properties: PageProperties? = null,
+    @SerializedName("properties") @JsonProperty("properties") @Json(name = "properties") val properties: PageProperties? = null,
 
-    @SerializedName("category")
-    @JsonProperty("category")
-    @Json(name = "category")
-    val category: String? = null,
+    @SerializedName("category") @JsonProperty("category") @Json(name = "category") val category: String? = null,
+    @JsonProperty("not_applicable", required = false) // work-around to ignore value param
+    // jackson serialisation
     _messageId: String? = null,
 ) : Message(
     EventType.PAGE,
@@ -518,7 +449,8 @@ class PageMessage internal constructor(
     _messageId,
 ) {
     companion object {
-        @JvmStatic fun create(
+        @JvmStatic
+        fun create(
             anonymousId: String? = null,
             userId: String? = null,
             timestamp: String,
@@ -547,24 +479,17 @@ class PageMessage internal constructor(
         properties: PageProperties? = this.properties,
         category: String? = this.category,
 
-    ) = PageMessage(
+        ) = PageMessage(
         context, anonymousId, userId, timestamp, destinationProps, name, properties,
         category, _messageId = this.messageId,
     )
 
     override fun toString(): String {
-        return "${super.toString()}, " +
-            "name = $name, " +
-            "properties = $properties, " +
-            "category = $category"
+        return "${super.toString()}, " + "name = $name, " + "properties = $properties, " + "category = $category"
     }
 
     override fun equals(other: Any?): Boolean {
-        return super.equals(other) &&
-            other is PageMessage &&
-            other.name == name &&
-            other.properties == properties &&
-            other.category == category
+        return super.equals(other) && other is PageMessage && other.name == name && other.properties == properties && other.category == category
     }
 
     override fun hashCode(): Int {
@@ -577,35 +502,12 @@ class PageMessage internal constructor(
 
 class ScreenMessage internal constructor(
 
-    @JsonProperty("context")
-    @Json(name = "context")
-    context: MessageContext? = null,
-    @JsonProperty("anonymousId")
-    @Json(name = "anonymousId")
-    anonymousId: String?,
-    @JsonProperty("userId")
-    @Json(name = "userId")
-    userId: String? = null,
-    @JsonProperty("timestamp")
-    @Json(name = "timestamp")
-    timestamp: String,
+    @JsonProperty("context") @Json(name = "context") context: MessageContext? = null,
+    @JsonProperty("anonymousId") @Json(name = "anonymousId") anonymousId: String?,
+    @JsonProperty("userId") @Json(name = "userId") userId: String? = null,
+    @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") timestamp: String,
 
-    @JsonProperty("destinationProps")
-    @Json(name = "destinationProps")
-    destinationProps: MessageDestinationProps? = null,
-
-    @JsonProperty("category")
-    @Json(name = "category")
-    val category: String?,
-    /**
-     * @return Name of the event tracked
-     */
-    @SerializedName("event")
-    @get:JsonProperty("event")
-    @field:JsonProperty("event")
-    @param:JsonProperty("event")
-    @Json(name = "event")
-    var name: String? = null,
+    @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
 
     /**
      * Get the properties back as set to the event
@@ -613,13 +515,12 @@ class ScreenMessage internal constructor(
      * @return Map of String-Object
      */
 
-    @SerializedName("properties")
-    @JsonProperty("properties")
-    @Json(name = "properties")
-    val properties: ScreenProperties? = null,
+    @SerializedName("properties") @JsonProperty("properties") @Json(name = "properties") val properties: ScreenProperties? = null,
+    @JsonProperty("not_applicable", required = false) // work-around to ignore value param
+    // jackson serialisation
     _messageId: String? = null,
 
-) : Message(
+    ) : Message(
     EventType.SCREEN,
     context,
     anonymousId,
@@ -629,7 +530,8 @@ class ScreenMessage internal constructor(
     _messageId,
 ) {
     companion object {
-        @JvmStatic fun create(
+        @JvmStatic
+        fun create(
 
             timestamp: String,
             anonymousId: String? = null,
@@ -646,8 +548,13 @@ class ScreenMessage internal constructor(
             _messageId: String? = null,
         ) = ScreenMessage(
             createContext(traits, externalIds, customContextMap),
-            anonymousId, userId, timestamp, destinationProps, category, name,
-            properties, _messageId,
+            anonymousId, userId, timestamp, destinationProps,
+            (properties ?: ScreenProperties()).let {
+                if (name != null) it.plus("name" to name) else it
+            }.let {
+                if (category != null) it.plus("category" to category) else it
+            },
+            _messageId,
         )
     }
 
@@ -656,33 +563,30 @@ class ScreenMessage internal constructor(
         anonymousId: String? = this.anonymousId,
         userId: String? = this.userId,
         timestamp: String = this.timestamp,
-
         destinationProps: MessageDestinationProps? = this.destinationProps,
-        name: String? = this.name,
-        category: String? = this.category,
+        name: String? = this.properties?.get("name") as String?,
+        category: String? = this.properties?.get("category") as String?,
         properties: ScreenProperties? = this.properties,
 
-    ) = ScreenMessage(
-        context, anonymousId, userId, timestamp, destinationProps, category, name,
-        properties, _messageId = this.messageId,
+        ) = ScreenMessage(
+        context, anonymousId, userId, timestamp, destinationProps,
+        (properties ?: ScreenProperties()).let {
+            if (name != null) it.plus("name" to name) else it
+        }.let {
+            if (category != null) it.plus("category" to category) else it
+        }, _messageId = this.messageId,
     )
 
     override fun toString(): String {
-        return "${super.toString()}, " +
-            "name = $name, " +
-            "properties = $properties"
+        return "${super.toString()}, " +  "properties = $properties"
     }
 
     override fun equals(other: Any?): Boolean {
-        return super.equals(other) &&
-            other is ScreenMessage &&
-            other.name == name &&
-            other.properties == properties
+        return super.equals(other) && other is ScreenMessage && other.properties == properties
     }
 
     override fun hashCode(): Int {
         var result = super.hashCode()
-        result = 31 * result + (name?.hashCode() ?: 0)
         result = 31 * result + (properties?.hashCode() ?: 0)
         return result
     }
@@ -691,42 +595,31 @@ class ScreenMessage internal constructor(
 @JsonIgnoreProperties(ignoreUnknown = true, allowSetters = true)
 class TrackMessage internal constructor(
 
-    @JsonProperty("context")
-    @Json(name = "context")
-    context: MessageContext? = null,
-    @JsonProperty("anonymousId")
-    @Json(name = "anonymousId")
-    anonymousId: String?,
-    @JsonProperty("userId")
-    @Json(name = "userId")
-    userId: String? = null,
-    @JsonProperty("timestamp")
-    @Json(name = "timestamp")
+    @JsonProperty("context") @Json(name = "context") context: MessageContext? = null,
+    @JsonProperty("anonymousId") @Json(name = "anonymousId") anonymousId: String?,
+    @JsonProperty("userId") @Json(name = "userId") userId: String? = null,
+    @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp")
     timestamp: String,
     /*channel: String? = null,*/
-    @JsonProperty("destinationProps")
-    @Json(name = "destinationProps")
-    destinationProps: MessageDestinationProps? = null,
+    @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
     /**
      * @return Name of the event tracked
      */
 
-    @SerializedName("event")
-    @field:JsonProperty("event")
-    @param:JsonProperty("event")
-    @get:JsonProperty("event")
-    @Json(name = "event")
-    val eventName: String? = null,
+    @SerializedName("event") @field:JsonProperty("event") @param:JsonProperty("event") @get:JsonProperty(
+        "event"
+    ) @Json(name = "event") val eventName: String? = null,
     /**
      * Get the properties back as set to the event
      * Always convert objects to it's json equivalent before setting it as values
      * @return Map of String-Object
      */
 
-    @SerializedName("properties")
-    @JsonProperty("properties")
-    @Json(name = "properties")
-    val properties: TrackProperties? = null,
+    @SerializedName("properties") @field:JsonProperty("properties") @param:JsonProperty("properties") @get:JsonProperty(
+        "properties"
+    ) @Json(name = "properties") val properties: TrackProperties? = null,
+    @JsonProperty("not_applicable", required = false) // work-around to ignore value param
+    // jackson serialisation
     _messageId: String? = null,
 ) : Message(
     EventType.TRACK,
@@ -738,7 +631,8 @@ class TrackMessage internal constructor(
     _messageId,
 ) {
     companion object {
-        @JvmStatic fun create(
+        @JvmStatic
+        fun create(
             eventName: String?,
             timestamp: String,
             properties: TrackProperties? = null,
@@ -781,16 +675,11 @@ class TrackMessage internal constructor(
     )
 
     override fun toString(): String {
-        return "${super.toString()}, " +
-            "eventName = $eventName, " +
-            "properties = $properties"
+        return "${super.toString()}, " + "eventName = $eventName, " + "properties = $properties"
     }
 
     override fun equals(other: Any?): Boolean {
-        return super.equals(other) &&
-            other is TrackMessage &&
-            other.eventName == eventName &&
-            other.properties == properties
+        return super.equals(other) && other is TrackMessage && other.eventName == eventName && other.properties == properties
     }
 
     override fun hashCode(): Int {
@@ -802,31 +691,20 @@ class TrackMessage internal constructor(
 
 class IdentifyMessage internal constructor(
 
-    @JsonProperty("context")
-    @Json(name = "context")
-    context: MessageContext? = null,
-    @JsonProperty("anonymousId")
-    @Json(name = "anonymousId")
-    anonymousId: String?,
-    @JsonProperty("userId")
-    @Json(name = "userId")
-    userId: String? = null,
-    @JsonProperty("timestamp")
-    @Json(name = "timestamp")
-    timestamp: String,
+    @JsonProperty("context") @Json(name = "context") context: MessageContext? = null,
+    @JsonProperty("anonymousId") @Json(name = "anonymousId") anonymousId: String?,
+    @JsonProperty("userId") @Json(name = "userId") userId: String? = null,
+    @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") timestamp: String,
 
-    @JsonProperty("destinationProps")
-    @Json(name = "destinationProps")
-    destinationProps: MessageDestinationProps? = null,
+    @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
     /**
      * Get the properties back as set to the event
      * Always convert objects to it's json equivalent before setting it as values
      */
 
-    @SerializedName("properties")
-    @JsonProperty("properties")
-    @Json(name = "properties")
-    val properties: IdentifyProperties? = null,
+    @SerializedName("properties") @JsonProperty("properties") @Json(name = "properties") val properties: IdentifyProperties? = null,
+    @JsonProperty("not_applicable", required = false) // work-around to ignore value param
+    // jackson serialisation
     _messageId: String? = null,
 ) : Message(
     EventType.IDENTIFY,
@@ -839,7 +717,8 @@ class IdentifyMessage internal constructor(
 ) {
 
     companion object {
-        @JvmStatic fun create(
+        @JvmStatic
+        fun create(
             anonymousId: String? = null,
             userId: String? = null,
             timestamp: String,
@@ -868,7 +747,7 @@ class IdentifyMessage internal constructor(
         destinationProps: MessageDestinationProps? = this.destinationProps,
         properties: IdentifyProperties? = this.properties,
 
-    ) = IdentifyMessage(
+        ) = IdentifyMessage(
         context,
         anonymousId,
         userId,
@@ -879,14 +758,11 @@ class IdentifyMessage internal constructor(
     )
 
     override fun toString(): String {
-        return "${super.toString()}, " +
-            "properties = $properties"
+        return "${super.toString()}, " + "properties = $properties"
     }
 
     override fun equals(other: Any?): Boolean {
-        return super.equals(other) &&
-            other is IdentifyMessage &&
-            other.properties == properties
+        return super.equals(other) && other is IdentifyMessage && other.properties == properties
     }
 
     override fun hashCode(): Int {
@@ -896,18 +772,24 @@ class IdentifyMessage internal constructor(
 // verbose methods
 // verbose methods
 
-fun TrackProperties(vararg keyPropertyPair: Pair<String, Any>): TrackProperties = mapOf(*keyPropertyPair)
+fun TrackProperties(vararg keyPropertyPair: Pair<String, Any>): TrackProperties =
+    mapOf(*keyPropertyPair)
 
 // fun PageProperties(vararg keyPropertyPair: Pair<String, Any>) : PageProperties = mapOf(*keyPropertyPair)
 
-fun ScreenProperties(vararg keyPropertyPair: Pair<String, Any>): ScreenProperties = mapOf(*keyPropertyPair)
+fun ScreenProperties(vararg keyPropertyPair: Pair<String, Any>): ScreenProperties =
+    mapOf(*keyPropertyPair)
 
-fun IdentifyProperties(vararg keyPropertyPair: Pair<String, Any>): IdentifyProperties = mapOf(*keyPropertyPair)
+fun IdentifyProperties(vararg keyPropertyPair: Pair<String, Any>): IdentifyProperties =
+    mapOf(*keyPropertyPair)
 
-fun MessageIntegrations(vararg keyPropertyPair: Pair<String, Boolean>): MessageIntegrations = mapOf(*keyPropertyPair)
+fun MessageIntegrations(vararg keyPropertyPair: Pair<String, Boolean>): MessageIntegrations =
+    mapOf(*keyPropertyPair)
 
-fun MessageDestinationProps(vararg keyPropertyPair: Pair<String, Map<*, *>>): MessageDestinationProps = mapOf(*keyPropertyPair)
+fun MessageDestinationProps(vararg keyPropertyPair: Pair<String, Map<*, *>>): MessageDestinationProps =
+    mapOf(*keyPropertyPair)
 
-fun IdentifyTraits(vararg keyPropertyPair: Pair<String, Any?>): IdentifyTraits = mapOf(*keyPropertyPair)
+fun IdentifyTraits(vararg keyPropertyPair: Pair<String, Any?>): IdentifyTraits =
+    mapOf(*keyPropertyPair)
 
 fun GroupTraits(vararg keyPropertyPair: Pair<String, Any>): GroupTraits = mapOf(*keyPropertyPair)

@@ -47,7 +47,7 @@ class RudderDatabaseTest {
             "testDb",
             TestEntityFactory,
             false,
-            executorService = TestExecutor(),
+            providedExecutorService = TestExecutor(),
         )
     }
 
@@ -263,14 +263,14 @@ class RudderDatabaseTest {
             "testDb1",
             TestEntityFactory,
             false,
-            executorService = TestExecutor(),
+            providedExecutorService = TestExecutor(),
         )
         val database2 = RudderDatabase(
             ApplicationProvider.getApplicationContext(),
             "testDb2",
             TestEntityFactory,
             false,
-            executorService = TestExecutor(),
+            providedExecutorService = TestExecutor(),
         )
         val sampleDao1 = database1.getDao(SampleEntity::class.java)
         val sampleDao2 = database2.getDao(SampleEntity::class.java)

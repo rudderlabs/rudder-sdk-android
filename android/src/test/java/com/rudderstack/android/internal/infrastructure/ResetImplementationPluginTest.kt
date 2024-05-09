@@ -2,7 +2,7 @@ package com.rudderstack.android.internal.infrastructure
 
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
-import com.rudderstack.android.android.utils.TestExecutor
+import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.android.contextState
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.storage.AndroidStorageImpl
@@ -33,7 +33,8 @@ class ResetImplementationPluginTest{
         analytics = generateTestAnalytics(mock (), Configuration(),
             storage = AndroidStorageImpl(ApplicationProvider.getApplicationContext(),
                 writeKey = "test_writeKey",
-                storageExecutor = TestExecutor()))
+                storageExecutor = TestExecutor()
+            ))
         analytics.associateState(ContextState())
     }
     @After
