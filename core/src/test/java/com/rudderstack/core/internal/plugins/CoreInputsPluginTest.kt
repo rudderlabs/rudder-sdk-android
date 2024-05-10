@@ -6,6 +6,7 @@ import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.Storage
 import com.rudderstack.models.TrackMessage
+import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -33,7 +34,7 @@ class CoreInputsPluginTest{
         whenever(storage.libraryVersion) doReturn "1.0"
 //        `when`(storage.libraryName).thenReturn("MyLibrary")
 //        `when`(storage.libraryVersion).thenReturn("1.0")
-        analytics = generateTestAnalytics(mock<Configuration>(), storage = storage)
+        analytics = generateTestAnalytics(mock<JsonAdapter>(),mock(), storage = storage)
     }
     @After
     fun shutdown(){

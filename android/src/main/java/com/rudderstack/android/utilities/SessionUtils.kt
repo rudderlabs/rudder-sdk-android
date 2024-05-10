@@ -16,6 +16,7 @@ package com.rudderstack.android.utilities
 
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.androidStorage
+import com.rudderstack.android.applyConfigurationAndroid
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.core.Analytics
@@ -46,11 +47,8 @@ fun Analytics.startSession(
         return
     }
     if (currentConfigurationAndroid?.trackAutoSession == true) {
-        applyConfiguration {
-            if (this is ConfigurationAndroid) copy(
-                trackAutoSession = false
-            )
-            else this
+        applyConfigurationAndroid {
+            trackAutoSession = false
         }
     }
     updateSessionStart(sessionId)
@@ -61,11 +59,8 @@ private fun isSessionIdValid(sessionId: Long): Boolean {
 }
 
 fun Analytics.endSession() {
-    applyConfiguration {
-        if (this is ConfigurationAndroid) copy(
-            trackAutoSession = false
-        )
-        else this
+    applyConfigurationAndroid {
+        trackAutoSession = false
     }
     updateSessionEnd()
 }

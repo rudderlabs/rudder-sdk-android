@@ -1,6 +1,6 @@
 /*
  * Creator Debanjan Chatterjee on 10/10/22, 528 PM Last modified 10/10/22, 528 PM
- * Copyright All rights reserved Ⓒ 2022 http//rudderstack.com
+ * Copyright All rights reserved 2022 http//rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -18,19 +18,24 @@ package com.rudderstack.android.compat;
 import android.app.Application;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.rudderstack.android.ConfigurationAndroid;
+import com.rudderstack.android.ConfigurationAndroidInitializationScope;
+import com.rudderstack.android.ConfigurationAndroidScope;
 import com.rudderstack.android.RudderAnalytics;
 import com.rudderstack.android.storage.AndroidStorage;
 import com.rudderstack.android.storage.AndroidStorageImpl;
 import com.rudderstack.core.Analytics;
 import com.rudderstack.core.ConfigDownloadService;
+import com.rudderstack.core.ConfigurationScope;
 import com.rudderstack.core.DataUploadService;
 import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import java.util.concurrent.Executors;
 
 import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 
 /**
  * To be used by java projects
@@ -38,13 +43,13 @@ import kotlin.Unit;
 public final class RudderAnalyticsBuilderCompat {
     private final Application application;
     private final JsonAdapter jsonAdapter;
-    private @NonNull String writeKey;
+    private final @NonNull String writeKey;
     private DataUploadService dataUploadService = null;
     private ConfigDownloadService configDownloadService = null;
     private InitializationListener initializationListener = null;
     private AndroidStorage storage;
-    private InitialConfigurationGenerator initialConfigurationGenerator;
-
+    @Nullable
+    private ConfigurationAndroidInitializationScopeCompat configurationAndroidInitializationScopeCompat = null;
 
     public RudderAnalyticsBuilderCompat(@NonNull String writeKey,
                                         @NonNull Application application,
@@ -69,8 +74,8 @@ public final class RudderAnalyticsBuilderCompat {
         return this;
     }
 
-    public RudderAnalyticsBuilderCompat withConfigurationInitializer(InitialConfigurationGenerator initialConfigurationGenerator) {
-        this.initialConfigurationGenerator = initialConfigurationGenerator;
+    public RudderAnalyticsBuilderCompat withConfigurationInitializer(ConfigurationAndroidInitializationScopeCompat configurationAndroidInitializationScopeCompat) {
+        this.configurationAndroidInitializationScopeCompat = configurationAndroidInitializationScopeCompat;
         return this;
     }
 
@@ -84,10 +89,12 @@ public final class RudderAnalyticsBuilderCompat {
         return RudderAnalytics.createInstance(
                 writeKey,
                 jsonAdapter,
-                application,
-                configurationAndroid ->
-                        initialConfigurationGenerator == null ? configurationAndroid :
-                                initialConfigurationGenerator.generate(configurationAndroid),
+                application, configurationAndroidScope -> {
+                    if(configurationAndroidInitializationScopeCompat != null){
+                        configurationAndroidInitializationScopeCompat.apply(configurationAndroidScope);
+                    }
+                    return Unit.INSTANCE;
+                },
                 dataUploadService,
                 configDownloadService,
                 storage,
@@ -108,10 +115,8 @@ public final class RudderAnalyticsBuilderCompat {
         this.storage = storage;
         return this;
     }
-
     @FunctionalInterface
-    public interface InitialConfigurationGenerator {
-        ConfigurationAndroid generate(ConfigurationAndroid initialConfiguration);
+    public interface ConfigurationAndroidInitializationScopeCompat{
+        void apply(ConfigurationAndroidInitializationScope scope);
     }
-
 }

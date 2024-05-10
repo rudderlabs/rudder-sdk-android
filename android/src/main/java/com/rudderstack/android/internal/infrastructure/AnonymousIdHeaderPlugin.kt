@@ -39,7 +39,7 @@ internal class AnonymousIdHeaderPlugin : InfrastructurePlugin{
         if(configuration !is ConfigurationAndroid) return
         val anonId = configuration.anonymousId?: AndroidUtils.getDeviceId().also {
                 _analytics?.applyConfigurationAndroid {
-                    copy(anonymousId = it)
+                    anonymousId = it
                 }
         }
             dataUploadService?.addHeaders(mapOf("Anonymous-Id" to anonId))

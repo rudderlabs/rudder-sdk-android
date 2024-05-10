@@ -51,7 +51,7 @@ private fun RudderAnalytics(
     writeKey: String,
     jsonAdapter: JsonAdapter,
     application: Application,
-    configurationInitializer: ConfigurationAndroid.() -> ConfigurationAndroid = { this },
+    configurationScope: (ConfigurationAndroidInitializationScope.() -> Unit)?= null,
     dataUploadService: DataUploadService? = null,
     configDownloadService: ConfigDownloadService? = null,
     storage: AndroidStorage = AndroidStorageImpl(
@@ -63,7 +63,13 @@ private fun RudderAnalytics(
 ): Analytics {
     return Analytics(writeKey,
         jsonAdapter,
-        configurationInitializer(application.initialConfigurationAndroid(storage)),
+        application.initialConfigurationAndroid(storage).let{
+            if(configurationScope == null) it
+            else ConfigurationAndroidInitializationScope(it).let {
+                it.configurationScope()
+                it.build()
+            }
+        },
         dataUploadService,
         configDownloadService,
         storage,
@@ -80,7 +86,7 @@ fun createInstance(
     writeKey: String,
     jsonAdapter: JsonAdapter,
     application: Application,
-    configurationInitializer: ConfigurationAndroid.() -> ConfigurationAndroid = { this },
+    configurationInitializer: (ConfigurationAndroidInitializationScope.() -> Unit)?= null,
     dataUploadService: DataUploadService? = null,
     configDownloadService: ConfigDownloadService? = null,
     storage: AndroidStorage = AndroidStorageImpl(
@@ -135,7 +141,7 @@ fun Analytics.putAdvertisingId(advertisingId: String) {
  * @param deviceToken Push Token from FCM
  */
 fun Analytics.putDeviceToken(deviceToken: String) {
-    applyConfiguration {
+    applyConfiguration{
         if (this is ConfigurationAndroid) copy(
             deviceToken = deviceToken
         )
@@ -152,11 +158,8 @@ fun Analytics.putDeviceToken(deviceToken: String) {
  */
 fun Analytics.setAnonymousId(anonymousId: String) {
     androidStorage.setAnonymousId(anonymousId)
-    applyConfiguration {
-        if (this is ConfigurationAndroid) copy(
-            anonymousId = anonymousId
-        )
-        else this
+    applyConfigurationAndroid {
+        this.anonymousId = anonymousId
     }
     val anonymousIdPair = ("anonymousId" to anonymousId)
     val newContext = contextState?.value?.let {

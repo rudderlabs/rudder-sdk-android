@@ -17,8 +17,6 @@ package com.rudderstack.android
 import android.app.Application
 import androidx.annotation.RestrictTo
 import com.rudderstack.android.internal.AndroidLogger
-import com.rudderstack.android.storage.AndroidStorage
-import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Base64Generator
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Logger
@@ -50,7 +48,6 @@ interface ConfigurationAndroid : Configuration {
      * @constructor
      * TODO
      *
-     * @param jsonAdapter
      * @param options
      * @param flushQueueSize
      * @param maxFlushInterval
@@ -145,7 +142,7 @@ interface ConfigurationAndroid : Configuration {
         operator fun invoke(
             configuration: Configuration,
             application: Application,
-            anonymousId: String = AndroidUtils.getDeviceId(),
+            anonymousId: String? = null,
             userId: String? = null,
             trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
 

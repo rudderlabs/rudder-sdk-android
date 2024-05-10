@@ -17,14 +17,14 @@ package com.rudderstack.android
 import android.app.Application
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.Storage
+import com.rudderstack.core.ConfigurationScope
 
-fun Analytics.applyConfigurationAndroid(androidConfigurationScope: ConfigurationAndroid.() ->
-ConfigurationAndroid){
-    applyConfiguration {
-        if (this is ConfigurationAndroid) androidConfigurationScope()
-        else this
-    }
+fun Analytics.applyConfigurationAndroid(scope: ConfigurationAndroidScope.() ->
+Unit){
+    currentConfigurationAndroid?.let {
+        val configurationAndroidScope = ConfigurationAndroidScope(it)
+        applyConfigurationInternal(configurationAndroidScope, scope)
+    }?:currentConfiguration?.logger?.error(log = "No Configuration found!!")
 }
 val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
     get() = (currentConfiguration as? ConfigurationAndroid)

@@ -29,7 +29,12 @@ interface Controller {
      * @param configurationScope Update the current configuration with this scope to
      * return the updated configuration
      */
-    fun applyConfiguration(configurationScope: Configuration.() -> Configuration)
+    fun applyConfiguration(configurationScope: ConfigurationScope.() -> Unit)
+
+    /**
+     * For internal usage.
+     */
+    fun <T:ConfigurationScope> applyConfigurationInternal(scopedConfig: T, scope: T.() -> Unit)
 
     /**
      * Applies a closure method to all available Plugins

@@ -18,6 +18,7 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.Callback
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
+import com.rudderstack.core.ConfigurationScope
 import com.rudderstack.core.Controller
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.DestinationConfig
@@ -210,13 +211,20 @@ internal class AnalyticsDelegate(
     }
 
 
-    override fun applyConfiguration(configurationScope: Configuration.() -> Configuration) {
+    override fun applyConfiguration(configurationScope: ConfigurationScope.() -> Unit) {
         currentConfiguration?.let {
-            val newConfiguration = configurationScope(it)
-            currentConfigurationState?.update(newConfiguration)
-
+            val scoped = ConfigurationScope(it)
+            applyConfigurationInternal(scoped, configurationScope)
         }?: logger.error(log = "Configuration not updated, since current configuration is null")
 
+    }
+
+    override fun <T : ConfigurationScope> applyConfigurationInternal(
+        scopedConfig: T,
+        scope: T.() -> Unit
+    ) {
+        scopedConfig.scope()
+        currentConfigurationState?.update(scopedConfig.build())
     }
 
     override fun applyMessageClosure(closure: Plugin.() -> Unit) {
@@ -341,7 +349,6 @@ internal class AnalyticsDelegate(
                 message, generatePluginsWithOptions(options)
             )
             lcc.process()
-
         }
     }
 

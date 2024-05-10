@@ -45,10 +45,15 @@ class RudderAnalyticsTest {
         AnalyticsRegistry.clear()
         analytics = createInstance(
             writeKey, mock(),
-            ApplicationProvider.getApplicationContext()
+            ApplicationProvider.getApplicationContext(),
+            {
+                trackLifecycleEvents = false
+            }
         )
 
-        analytics2 = createInstance(writeKey2, mock(), ApplicationProvider.getApplicationContext())
+        analytics2 = createInstance(writeKey2, mock(), ApplicationProvider.getApplicationContext(),{
+            trackLifecycleEvents = false
+        })
 
     }
 
@@ -62,7 +67,8 @@ class RudderAnalyticsTest {
     fun `test put anonymous id`() {
         val analytics = createInstance("testKey", mock(), ApplicationProvider.getApplicationContext
             (), configurationInitializer = {
-            copy(anonymousId = "anon_id")
+            anonymousId = "anon_id"
+            trackLifecycleEvents = false
         })
 
         analytics.setAnonymousId("anon_id")
@@ -72,6 +78,7 @@ class RudderAnalyticsTest {
                 Matchers.hasProperty("anonymousId", Matchers.equalTo("anon_id"))
             )
         )
+        analytics.shutdown()
     }
 
     @Test
@@ -91,19 +98,21 @@ class RudderAnalyticsTest {
     fun `given instance is already created with the writeKey, when createInstance is called with same write key, then the previous instance should be returned`() {
         val dupeAnalytics = createInstance(
             writeKey, mock(),
-            ApplicationProvider.getApplicationContext()
+            ApplicationProvider.getApplicationContext(),{
+                trackLifecycleEvents = false
+            }
         )
 
         MatcherAssert.assertThat(analytics, Matchers.isA(Analytics::class.java))
         MatcherAssert.assertThat(dupeAnalytics, Matchers.isA(Analytics::class.java))
         assert(analytics === dupeAnalytics)
+        dupeAnalytics.shutdown()
     }
 
     @Test
     fun `given instance is already created with the writeKey, when getInstance is called with that write key, then the Analytics instance should be returned`() {
         val result = AnalyticsRegistry.getInstance(writeKey)
         assert(result == analytics)
-
     }
 
     @Test

@@ -221,7 +221,7 @@ class RudderDatabase(private val context: Context,
             EntityContentProvider.releaseDatabase(databaseName)
         }
         sqliteOpenHelper = null
-        commonExecutor.shutdown()
+        commonExecutor.shutdownNow()
         dbDetailsListeners = emptyList()
         databaseUpgradeCallback = null
     }

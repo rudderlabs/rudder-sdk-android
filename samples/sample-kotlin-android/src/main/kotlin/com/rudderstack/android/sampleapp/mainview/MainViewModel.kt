@@ -126,14 +126,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             AnalyticsState.EnableAutoTracking -> {
                 primaryAnalytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = true)
+                trackAutoSession = true
                 }
                 "Auto tracking enabled"
             }
 
             AnalyticsState.DisableAutoTracking -> {
                 primaryAnalytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = false)
+                    trackAutoSession = false
                 }
                 "Auto tracking disabled"
             }
@@ -205,14 +205,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             AnalyticsState.EnableAutoTrackingSecondary -> {
                 secondaryAnalytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = true)
+                    trackAutoSession = true
                 }
                 "Auto tracking enabled"
             }
 
             AnalyticsState.DisableAutoTrackingSecondary -> {
                 secondaryAnalytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = false)
+                    trackAutoSession = false
                 }
                 "Auto tracking disabled"
             }

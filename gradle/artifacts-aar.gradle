@@ -6,7 +6,7 @@ task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
 }
 
-task javadoc(type: Javadoc, dependsOn: 'assembleRelease') {
+/*task javadoc(type: Javadoc, dependsOn: 'assembleRelease') {
     failOnError false
     configurations.implementation.setCanBeResolved(true)
 
@@ -19,16 +19,16 @@ task javadoc(type: Javadoc, dependsOn: 'assembleRelease') {
             owner.classpath += variant.javaCompile.classpath
         }
     }
-}
+}*/
 
 // build a jar with javadoc
-task javadocJar(type: Jar, dependsOn: javadoc) {
+/*task javadocJar(type: Jar, dependsOn: javadoc) {
     archiveClassifier.set('javadoc')
     from javadoc.destinationDir
-}
+}*/
 
 // Attach Javadocs and Sources jar
 artifacts {
     archives sourcesJar
-    archives javadocJar
+//    archives javadocJar
 }

@@ -42,6 +42,24 @@ public class ConfigurationBuilder {
     private ExecutorService networkExecutor = Executors.newCachedThreadPool();
     private Base64Generator base64Generator = RudderUtils.INSTANCE.getDefaultBase64Generator();
 
+    public ConfigurationBuilder() {
+    }
+
+    public ConfigurationBuilder(Configuration configuration) {
+        options = configuration.getOptions();
+        flushQueueSize = configuration.getFlushQueueSize();
+        maxFlushInterval = configuration.getMaxFlushInterval();
+        shouldVerifySdk = configuration.getShouldVerifySdk();
+        gzipEnabled = configuration.getGzipEnabled();
+        sdkVerifyRetryStrategy = configuration.getSdkVerifyRetryStrategy();
+        dataPlaneUrl = configuration.getDataPlaneUrl();
+        controlPlaneUrl = configuration.getControlPlaneUrl();
+        logger = configuration.getLogger();
+        analyticsExecutor = configuration.getAnalyticsExecutor();
+        networkExecutor = configuration.getNetworkExecutor();
+        base64Generator = configuration.getBase64Generator();
+    }
+
     public ConfigurationBuilder withOptions(RudderOptions options) {
         this.options = options;
         return this;

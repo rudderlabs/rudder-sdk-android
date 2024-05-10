@@ -123,7 +123,7 @@ abstract class ConfigDownloadServiceImplTest {
         })
         while (!isComplete.get()){}
         isComplete.set(false)
-        configDownloadServiceImpl.updateConfiguration(Configuration(jsonAdapter, sdkVerifyRetryStrategy = RetryStrategy.exponential(0)))
+        configDownloadServiceImpl.updateConfiguration(Configuration(sdkVerifyRetryStrategy = RetryStrategy.exponential(0)))
         dummyWebService.nextStatusCode = 400
         configDownloadServiceImpl.download(callback = { success, rudderServerConfig, lastErrorMsg ->
             isComplete.set(true)

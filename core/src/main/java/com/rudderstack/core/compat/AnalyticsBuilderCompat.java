@@ -1,6 +1,6 @@
 /*
  * Creator: Debanjan Chatterjee on 13/10/22, 12:29 PM Last modified: 13/10/22, 12:29 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Copyright: All rights reserved 2022 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -18,6 +18,7 @@ import com.rudderstack.core.Analytics;
 import com.rudderstack.core.BasicStorageImpl;
 import com.rudderstack.core.ConfigDownloadService;
 import com.rudderstack.core.Configuration;
+import com.rudderstack.core.ConfigurationScope;
 import com.rudderstack.core.DataUploadService;
 import com.rudderstack.core.Storage;
 import com.rudderstack.core.internal.ConfigDownloadServiceImpl;
@@ -76,6 +77,11 @@ public class AnalyticsBuilderCompat {
         return this;
     }
 
+    public AnalyticsBuilderCompat withConfiguration(Configuration configuration){
+        this.configuration = configuration;
+        return this;
+    }
+
     public Analytics build() {
         return new Analytics(writeKey, jsonAdapter, configuration,
                 dataUploadService == null ? new DataUploadServiceImpl(
@@ -95,4 +101,5 @@ public class AnalyticsBuilderCompat {
     public interface InitializationListener {
         void onInitialized(boolean success, String message);
     }
+
 }
