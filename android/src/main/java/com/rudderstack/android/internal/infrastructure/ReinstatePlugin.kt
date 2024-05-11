@@ -14,14 +14,11 @@
 
 package com.rudderstack.android.internal.infrastructure
 
-import android.content.Context
-import com.rudderstack.android.AndroidUtils
-import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.androidStorage
 import com.rudderstack.android.contextState
 import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.processNewContext
-import com.rudderstack.android.setAnonymousId
 import com.rudderstack.android.setUserId
 import com.rudderstack.android.utilities.initializeSessionManagement
 import com.rudderstack.android.utilities.isV1SavedServerConfigContainsSourceId
@@ -29,9 +26,11 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.InfrastructurePlugin
+import com.rudderstack.core.holder.associateState
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.models.createContext
 import com.rudderstack.models.traits
+import com.rudderstack.models.updateWith
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -47,20 +46,21 @@ import java.util.concurrent.atomic.AtomicBoolean
 private const val RUDDER_SERVER_FILE_NAME_V1 = "RudderServerConfig"
 
 internal class ReinstatePlugin : InfrastructurePlugin {
+
     private var _analytics: Analytics? = null
     private var sourceId: String? = null
     private val _isReinstated = AtomicBoolean(false)
-    private fun setReinstated(isReinstated: Boolean){
+    private fun setReinstated(isReinstated: Boolean) {
         synchronized(_isReinstated) {
             _isReinstated.set(isReinstated)
-            if (isReinstated){
+            if (isReinstated) {
                 _analytics?.applyInfrastructureClosure {
-                    if(this is DataUploadService)
+                    if (this is DataUploadService)
                         this.resume()
                 }
-            }else{
+            } else {
                 _analytics?.applyInfrastructureClosure {
-                    if(this is DataUploadService)
+                    if (this is DataUploadService)
                         this.pause()
                 }
             }
@@ -98,21 +98,34 @@ internal class ReinstatePlugin : InfrastructurePlugin {
             }
             val sourceId = this.sourceId ?: return
 
-            migrateV1DataIfAvailable(config.application, sourceId, config)
-
+            val isV1DataAvailable =
+                config.application.isV1SavedServerConfigContainsSourceId(RUDDER_SERVER_FILE_NAME_V1, sourceId)
+            if (isV1DataAvailable) {
+                migrateV1Data()
+            } else {
+                fillDefaults()
+            }
+            addHeaderForDataUploadService()
+            _analytics?.setAnonymousIdInContext()
             setReinstated(true)
         }
     }
 
+    private fun addHeaderForDataUploadService() {
+        _analytics?.androidStorage?.anonymousId?.let { anonymousId ->
+            _analytics?.dataUploadService?.addHeaders(mapOf("Anonymous-Id" to anonymousId))
+        }
+    }
+
     private fun fillDefaults() {
-        _analytics?.setAnonymousId(AndroidUtils.getDeviceId())
-        _analytics?.initializeSessionManagement(_analytics?.androidStorage?.sessionId,
-            _analytics?.androidStorage?.lastActiveTimestamp)
+        _analytics?.initializeSessionManagement(
+            _analytics?.androidStorage?.sessionId,
+            _analytics?.androidStorage?.lastActiveTimestamp
+        )
     }
 
     private fun reinstateV2FromCache() {
         val userId = _analytics?.androidStorage?.userId
-        val anonId = _analytics?.androidStorage?.anonymousId ?: AndroidUtils.getDeviceId()
         val context = _analytics?.androidStorage?.context
         context?.let {
             _analytics?.processNewContext(context)
@@ -120,34 +133,27 @@ internal class ReinstatePlugin : InfrastructurePlugin {
         userId?.let {
             _analytics?.setUserId(it)
         }
-        _analytics?.setAnonymousId(anonId)
         _analytics?.initializeSessionManagement(
             _analytics?.androidStorage?.sessionId, _analytics?.androidStorage?.lastActiveTimestamp
         )
     }
 
     private fun isV2DataAvailable(): Boolean {
-        return !_analytics?.androidStorage?.anonymousId.isNullOrEmpty() ||
-               !_analytics?.androidStorage?.userId.isNullOrEmpty() ||
-               !_analytics?.contextState?.value.isNullOrEmpty()
+        return !_analytics?.androidStorage?.userId.isNullOrEmpty() ||
+                !_analytics?.contextState?.value.isNullOrEmpty()
     }
 
-    private fun migrateV1DataIfAvailable(
-        context: Context, sourceId: String, configurationAndroid: ConfigurationAndroid
-    ) {
-            val isV1DataAvailable =
-                context.isV1SavedServerConfigContainsSourceId(RUDDER_SERVER_FILE_NAME_V1, sourceId)
-            if(!isV1DataAvailable) return
-            // migrate user id/ anon id
-            _analytics?.setUserIdFromV1()
-            _analytics?.migrateAnonymousIdFromV1()
-            _analytics?.migrateOptOutFromV1()
-                _analytics?.migrateContextFromV1()
-            _analytics?.androidStorage?.migrateV1StorageToV2Sync()
+    private fun migrateV1Data() {
+        // migrate user id/ anon id
+        _analytics?.setUserIdFromV1()
+        _analytics?.migrateAnonymousIdFromV1()
+        _analytics?.migrateOptOutFromV1()
+        _analytics?.migrateContextFromV1()
+        _analytics?.androidStorage?.migrateV1StorageToV2Sync()
 
-            _analytics?.initializeSessionManagement(
-                _analytics?.androidStorage?.v1SessionId, _analytics?.androidStorage?.v1LastActiveTimestamp
-            )
+        _analytics?.initializeSessionManagement(
+            _analytics?.androidStorage?.v1SessionId, _analytics?.androidStorage?.v1LastActiveTimestamp
+        )
     }
 
     private fun Analytics.setUserIdFromV1() {
@@ -158,8 +164,14 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     }
 
     private fun Analytics.migrateAnonymousIdFromV1() {
-        (androidStorage.v1AnonymousId?:AndroidUtils.getDeviceId()).let { _analytics?.setAnonymousId(it) }
+        updateAnonymousId()
         androidStorage.resetV1AnonymousId()
+    }
+
+    private fun updateAnonymousId() {
+        _analytics?.androidStorage?.v1AnonymousId?.let { newAnonymousId ->
+            _analytics?.androidStorage?.setAnonymousId(newAnonymousId)
+        }
     }
 
     private fun Analytics.migrateOptOutFromV1() {
@@ -176,6 +188,19 @@ internal class ReinstatePlugin : InfrastructurePlugin {
             processNewContext(it)
             androidStorage.resetV1Traits()
             androidStorage.resetV1ExternalIds()
+        }
+    }
+
+    private fun Analytics.setAnonymousIdInContext() {
+        if (contextState?.value == null) {
+            associateState(ContextState())
+        }
+        androidStorage.anonymousId?.let { anonymousId ->
+            val anonymousIdPair = ("anonymousId" to anonymousId)
+            val newContext = contextState?.value?.let {
+                it.updateWith(traits = (it.traits ?: mapOf()) + anonymousIdPair)
+            } ?: createContext(traits = mapOf(anonymousIdPair))
+            processNewContext(newContext)
         }
     }
 

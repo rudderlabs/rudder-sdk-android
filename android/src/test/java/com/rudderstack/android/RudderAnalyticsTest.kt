@@ -38,20 +38,6 @@ import org.robolectric.annotation.Config
     }
 
     @Test
-    fun `test put anonymous id`() {
-        val analytics = createInstance("testKey", ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
-            JacksonAdapter()
-        ))
-
-        analytics.setAnonymousId("anon_id")
-        MatcherAssert.assertThat(
-            analytics.currentConfigurationAndroid, allOf(Matchers.isA(ConfigurationAndroid::class.java),
-                Matchers.hasProperty("anonymousId", Matchers.equalTo("anon_id"))
-        ))
-    }
-
-    @Test
     fun `when writeKey and configuration is passed, then createInstance should return Analytics instance`() {
         val analytics = createInstance(writeKey, ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),

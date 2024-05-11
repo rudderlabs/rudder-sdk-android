@@ -16,8 +16,8 @@
 package com.rudderstack.android
 
 import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
-import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
 import com.rudderstack.android.internal.infrastructure.AppInstallUpdateTrackerPlugin
+import com.rudderstack.android.internal.infrastructure.CreateAnonymousIdPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
 import com.rudderstack.android.internal.infrastructure.ResetImplementationPlugin
 import com.rudderstack.android.internal.plugins.ExtractStatePlugin
@@ -135,28 +135,6 @@ fun Analytics.putDeviceToken(deviceToken: String) {
 }
 
 /**
- * Anonymous id to be used for all consecutive calls.
- * Anonymous id is mostly used for messages sent prior to user identification or in case of
- * anonymous usage.
- *
- * @param anonymousId String to be used as anonymousId
- */
-fun Analytics.setAnonymousId(anonymousId: String) {
-    androidStorage.setAnonymousId(anonymousId)
-    applyConfiguration {
-        if (this is ConfigurationAndroid) copy(
-            anonymousId = anonymousId
-        )
-        else this
-    }
-    val anonymousIdPair = ("anonymousId" to anonymousId)
-    val newContext = contextState?.value?.let {
-        it.updateWith(traits = (it.traits?: mapOf()) + anonymousIdPair)
-    }?: createContext(traits = mapOf(anonymousIdPair))
-    processNewContext(newContext)
-}
-
-/**
  * Setting the [ConfigurationAndroid.userId] explicitly.
  *
  * @param userId String to be used as userId
@@ -173,8 +151,8 @@ fun Analytics.setUserId(userId: String) {
 
 private val infrastructurePlugins
     get() = arrayOf(
+        CreateAnonymousIdPlugin(),
         ReinstatePlugin(),
-        AnonymousIdHeaderPlugin(),
         AppInstallUpdateTrackerPlugin(),
         LifecycleObserverPlugin(),
         ActivityBroadcasterPlugin(),

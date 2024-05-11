@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.internal.plugins
 
+import com.rudderstack.android.androidStorage
 import com.rudderstack.android.contextState
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.internal.states.ContextState
@@ -54,7 +55,7 @@ internal class FillDefaultsPlugin : Plugin {
      */
     @Throws(MissingPropertiesException::class)
     private inline fun <reified T : Message> T.withDefaults(): T {
-        val anonId = this.anonymousId ?: _analytics?.currentConfigurationAndroid?.anonymousId
+        val anonId = this.anonymousId ?: _analytics?.androidStorage?.anonymousId
         val userId = this.userId ?: _analytics?.currentConfigurationAndroid?.userId
         if (anonId == null && userId == null) {
             val ex = MissingPropertiesException("Either Anonymous Id or User Id must be present");

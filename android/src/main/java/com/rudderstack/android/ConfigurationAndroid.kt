@@ -35,7 +35,6 @@ interface ConfigurationAndroid : Configuration {
      * TODO write documentation
      *
      * @property application
-     * @property anonymousId
      * @property userId
      * @property trackLifecycleEvents
      * @property recordScreenViews
@@ -64,7 +63,6 @@ interface ConfigurationAndroid : Configuration {
      * @param base64Generator
      */
     val application: Application
-    val anonymousId: String?
     val userId: String?
     val trackLifecycleEvents: Boolean
     val recordScreenViews: Boolean
@@ -84,7 +82,6 @@ interface ConfigurationAndroid : Configuration {
         operator fun invoke(
             application: Application,
             jsonAdapter: JsonAdapter,
-            anonymousId: String?= null,
             userId: String? = null,
             options: RudderOptions = RudderOptions.defaultOptions(),
             flushQueueSize: Int = Defaults.DEFAULT_FLUSH_QUEUE_SIZE,
@@ -115,7 +112,6 @@ interface ConfigurationAndroid : Configuration {
 //    val contextAddOns: Map<String, Any>? = null // will be added by default to each message
         ) : ConfigurationAndroid = object : ConfigurationAndroid{
             override val application: Application = application
-            override val anonymousId: String? = anonymousId
             override val userId: String? = userId
             override val trackLifecycleEvents: Boolean = trackLifecycleEvents
             override val recordScreenViews: Boolean = recordScreenViews
@@ -147,7 +143,6 @@ interface ConfigurationAndroid : Configuration {
         operator fun invoke(
             configuration: Configuration,
             application: Application,
-            anonymousId: String = AndroidUtils.getDeviceId(),
             userId: String? = null,
             trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
 
@@ -173,7 +168,6 @@ interface ConfigurationAndroid : Configuration {
             invoke(
                 application,
                 configuration.jsonAdapter,
-                anonymousId,
                 userId,
                 configuration.options,
                 configuration.flushQueueSize,
@@ -248,7 +242,6 @@ interface ConfigurationAndroid : Configuration {
         networkExecutor: ExecutorService = this.networkExecutor,
         advertisingIdFetchExecutor : ExecutorService? = this.advertisingIdFetchExecutor,
         base64Generator: Base64Generator = this.base64Generator,
-        anonymousId: String? = this.anonymousId,
         userId: String? = this.userId,
         advertisingId: String? = this.advertisingId,
         deviceToken: String? = this.deviceToken,
@@ -258,7 +251,6 @@ interface ConfigurationAndroid : Configuration {
         return ConfigurationAndroid(
             application,
             jsonAdapter,
-            anonymousId,
             userId,
             options,
             flushQueueSize,

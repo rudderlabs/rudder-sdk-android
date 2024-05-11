@@ -101,7 +101,6 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     public ConfigurationAndroid build() {
         return ConfigurationAndroid.Companion.invoke(super.build(),
                 application,
-                anonymousId,
                 userId,
                 trackLifecycleEvents,
                 recordScreenViews,
