@@ -51,16 +51,17 @@ object RudderAnalyticsUtils {
 //                dataPlaneUrl = DATA_PLANE_URL,
 //                controlPlaneUrl = CONTROL_PLANE_URL,
 //                recordScreenViews = true,
-            copy(
-                trackAutoSession = true,
-                dataPlaneUrl = DATA_PLANE_URL_SECONDARY,
-                controlPlaneUrl = CONTROL_PLANE_URL_SECONDARY,
-                recordScreenViews = true,
-                trackLifecycleEvents = true,
-            )
+            trackAutoSession = true
+            dataPlaneUrl = DATA_PLANE_URL_SECONDARY
+            controlPlaneUrl = CONTROL_PLANE_URL_SECONDARY
+            recordScreenViews = true
+            trackLifecycleEvents = true
         })
 
-    fun createPrimaryAnalyticsInstanceWithWorkerSupport(application: Application, listener: InitializationListener? = null): Analytics {
+    fun createPrimaryAnalyticsInstanceWithWorkerSupport(
+        application: Application,
+        listener: InitializationListener? = null
+    ): Analytics {
         return createInstance(writeKey = WRITE_KEY,
             application = application,
             jsonAdapter = GsonAdapter(),
@@ -72,14 +73,14 @@ object RudderAnalyticsUtils {
 //                dataPlaneUrl = DATA_PLANE_URL,
 //                controlPlaneUrl = CONTROL_PLANE_URL,
 //                recordScreenViews = true,
-                copy(
-                    trackAutoSession = true,
-                    dataPlaneUrl = DATA_PLANE_URL,
-                    controlPlaneUrl = CONTROL_PLANE_URL,
-                    recordScreenViews = true,
-                )
+                trackAutoSession = true
+                dataPlaneUrl = DATA_PLANE_URL
+                controlPlaneUrl = CONTROL_PLANE_URL
+                recordScreenViews = true
+
             })
     }
+
     private fun Analytics.initializeWorkManager() {
         addInfrastructurePlugin(SampleWorkManagerPlugin())
     }
