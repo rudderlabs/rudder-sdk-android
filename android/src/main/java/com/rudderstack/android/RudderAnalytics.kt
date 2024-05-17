@@ -70,6 +70,7 @@ private fun RudderAnalytics(
     }
 }
 
+private const val DEFAULT_INSTANCE = "default_instance"
 @JvmOverloads
 fun createInstance(
     writeKey: String,
@@ -83,7 +84,7 @@ fun createInstance(
     ),
     initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
 ): Analytics {
-    return AnalyticsRegistry.getInstance(writeKey)
+    return AnalyticsRegistry.getInstance(DEFAULT_INSTANCE)
         ?: RudderAnalytics(
             writeKey,
             configuration,
@@ -92,7 +93,7 @@ fun createInstance(
             storage,
             initializationListener
         ).also { analyticsInstance ->
-            AnalyticsRegistry.register(writeKey, analyticsInstance)
+            AnalyticsRegistry.register(DEFAULT_INSTANCE, analyticsInstance)
         }
 }
 
