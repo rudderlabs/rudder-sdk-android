@@ -97,10 +97,6 @@ fun getInstance(
         }
 }
 
-fun getInstance(writeKey: String): Analytics? {
-    return AnalyticsRegistry.getInstance(writeKey)
-}
-
 internal val Analytics.contextState: ContextState?
     get() = retrieveState<ContextState>()
 val Analytics.androidStorage: AndroidStorage
