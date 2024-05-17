@@ -151,7 +151,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _rudderReporter?.errorClient?.notify(Exception("Non Fatal Exception"))
                 "Sending an error"
             }
-            else -> "What's this?"
         }
         if (log.isNotEmpty()) addLogData(LogData(Date(), log))
     }
