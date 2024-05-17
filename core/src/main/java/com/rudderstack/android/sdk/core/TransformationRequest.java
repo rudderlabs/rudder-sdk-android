@@ -5,9 +5,10 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class TransformationRequest {
+    @SerializedName(value="batch")
     final List<TransformationRequestEvent> batch;
 
-    public TransformationRequest(List<TransformationRequestEvent> batch) {
+    TransformationRequest(List<TransformationRequestEvent> batch) {
         this.batch = batch;
     }
 

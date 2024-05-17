@@ -22,9 +22,9 @@
 
 # These rules should be kept as part of the reporter module, as the fields of Entities are getting removed
 # this deals with `There should be at least one field in @Entity`
--keep class com.rudderstack.android.ruddermetricsreporterandroid.models.LabelEntity { *; }
--keep class com.rudderstack.android.ruddermetricsreporterandroid.models.MetricEntity { *; }
--keep class com.rudderstack.android.ruddermetricsreporterandroid.models.ErrorEntity { *; }
+#-keep class com.rudderstack.android.ruddermetricsreporterandroid.models.LabelEntity { *; }
+#-keep class com.rudderstack.android.ruddermetricsreporterandroid.models.MetricEntity { *; }
+#-keep class com.rudderstack.android.ruddermetricsreporterandroid.models.ErrorEntity { *; }
 
 # Required for the usage off TypeToken class in Utils.converToMap, Utils.convertToList
 -keep class com.google.gson.reflect.TypeToken { *; }
@@ -34,16 +34,16 @@
 -keep class com.google.gson.internal.LinkedTreeMap { *; }
 -keep class * implements java.io.Serializable { *; }
 
--keep class com.rudderstack.rudderjsonadapter.RudderTypeAdapter { *; }
--keep class * extends com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+#-keep class com.rudderstack.rudderjsonadapter.RudderTypeAdapter { *; }
+#-keep class * extends com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 
 # Required to ensure the DefaultPersistenceProviderFactory is not removed by Proguard and works as expected
 # even when the customer is not using encryption feature.
--dontwarn net.sqlcipher.Cursor
--dontwarn net.sqlcipher.database.SQLiteDatabase$CursorFactory
--dontwarn net.sqlcipher.database.SQLiteDatabase
--dontwarn net.sqlcipher.database.SQLiteOpenHelper
--keep class com.rudderstack.android.sdk.core.persistence.DefaultPersistenceProviderFactory { *; }
+#-dontwarn net.sqlcipher.Cursor
+#-dontwarn net.sqlcipher.database.SQLiteDatabase$CursorFactory
+#-dontwarn net.sqlcipher.database.SQLiteDatabase
+#-dontwarn net.sqlcipher.database.SQLiteOpenHelper
+#-keep class com.rudderstack.android.sdk.core.persistence.DefaultPersistenceProviderFactory { *; }
 
 # Required for the usage of annotations across reporter and web modules
 -dontwarn com.fasterxml.jackson.annotation.JsonIgnore
@@ -60,5 +60,5 @@
 -keep class com.rudderstack.android.integrations.amplitude.AmplitudeDestinationConfig { *; }
 
 # Required for DMT
--keep class com.rudderstack.android.sdk.core.TransformationResponse { *; }
--keep class com.rudderstack.android.sdk.core.TransformationResponseDeserializer { *; }
+#-keep class com.rudderstack.android.sdk.core.TransformationResponse { *; }
+#-keep class com.rudderstack.android.sdk.core.TransformationResponseDeserializer { *; }
