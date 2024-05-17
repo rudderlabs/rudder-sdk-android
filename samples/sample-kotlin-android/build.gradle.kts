@@ -43,24 +43,12 @@ android {
             sampleRudderProperties.getProperty("writeKey")
         )
         buildConfigField(
-            "String", "WRITE_KEY_SECONDARY",
-            sampleRudderProperties.getProperty("writeKeySecondary")
-        )
-        buildConfigField(
             "String", "CONTROL_PLANE_URL",
             sampleRudderProperties.getProperty("controlplaneUrl")
         )
         buildConfigField(
-            "String", "CONTROL_PLANE_URL_SECONDARY",
-            sampleRudderProperties.getProperty("controlplaneUrlSecondary")
-        )
-        buildConfigField(
             "String", "DATA_PLANE_URL",
             sampleRudderProperties.getProperty("dataplaneUrl")
-        )
-        buildConfigField(
-            "String", "DATA_PLANE_URL_SECONDARY",
-            sampleRudderProperties.getProperty("dataplaneUrlSecondary")
         )
     }
 

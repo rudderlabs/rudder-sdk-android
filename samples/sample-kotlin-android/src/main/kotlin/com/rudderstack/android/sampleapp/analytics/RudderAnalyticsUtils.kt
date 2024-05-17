@@ -17,13 +17,11 @@ object RudderAnalyticsUtils {
 
 
     private var _rudderAnalytics: Analytics? = null
-    private var _rudderAnalyticsSecondary: Analytics? = null
     private var _rudderReporter: RudderReporter? = null
 
     fun initialize(application: Application, listener: InitializationListener? = null) {
         //wen add work manager support to this instance
-        _rudderAnalytics = createPrimaryAnalyticsInstanceWithWorkerSupport(application, listener)
-        _rudderAnalyticsSecondary = createSecondaryInstance(listener, application)
+        _rudderAnalytics = createAnalyticsInstanceWithWorkerSupport(application, listener)
         _rudderReporter = DefaultRudderReporter(
             context = application, baseUrl = METRICS_BASE_URL, configuration = Configuration(
                 LibraryMetadata(
@@ -37,25 +35,7 @@ object RudderAnalyticsUtils {
         _rudderAnalytics?.initializeWorkManager()
     }
 
-    private fun createSecondaryInstance(
-        listener: InitializationListener?,
-        application: Application
-    ) = getInstance(
-        writeKey = WRITE_KEY_SECONDARY,
-        initializationListener = { success, message ->
-            listener?.onAnalyticsInitialized(WRITE_KEY_SECONDARY, success, message)
-        },
-        configuration = ConfigurationAndroid(
-            application = application,
-            GsonAdapter(),
-            dataPlaneUrl = DATA_PLANE_URL_SECONDARY,
-            controlPlaneUrl = CONTROL_PLANE_URL_SECONDARY,
-            trackLifecycleEvents = true,
-            recordScreenViews = true,
-        )
-    )
-
-    fun createPrimaryAnalyticsInstanceWithWorkerSupport(application: Application, listener: InitializationListener? = null): Analytics {
+    fun createAnalyticsInstanceWithWorkerSupport(application: Application, listener: InitializationListener? = null): Analytics {
         return getInstance(
             writeKey = WRITE_KEY,
             initializationListener = { success, message ->
@@ -81,12 +61,6 @@ object RudderAnalyticsUtils {
         get() = _rudderAnalytics ?: throw IllegalStateException(
             "Rudder Analytics Primary not " + "initialized"
         )
-
-    val secondaryAnalytics: Analytics
-        get() = _rudderAnalyticsSecondary ?: throw IllegalStateException(
-            "Rudder Analytics " + "Secondary" + " not initialized"
-        )
-
 
     fun getReporter(): RudderReporter? {
         return _rudderReporter

@@ -21,6 +21,6 @@ import com.rudderstack.core.Analytics
 
 class SampleWorkManagerAnalyticsFactory : WorkManagerAnalyticsFactory {
     override fun createAnalytics(application: Application): Analytics {
-        return RudderAnalyticsUtils.createPrimaryAnalyticsInstanceWithWorkerSupport(application)
+        return RudderAnalyticsUtils.createAnalyticsInstanceWithWorkerSupport(application)
     }
 }

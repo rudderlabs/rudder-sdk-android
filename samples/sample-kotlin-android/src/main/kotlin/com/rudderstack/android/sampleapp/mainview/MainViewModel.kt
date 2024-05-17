@@ -5,7 +5,6 @@ import androidx.lifecycle.AndroidViewModel
 import com.rudderstack.android.applyConfigurationAndroid
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.primaryAnalytics
-import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.secondaryAnalytics
 import com.rudderstack.android.utilities.endSession
 import com.rudderstack.android.utilities.startSession
 import com.rudderstack.core.Analytics
@@ -54,7 +53,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         primaryAnalytics.addPlugin(_loggingInterceptor)
-        secondaryAnalytics.addPlugin(_loggingInterceptor)
     }
 
     internal fun onEventClicked(analytics: AnalyticsState) {
@@ -145,85 +143,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             AnalyticsState.EndSession -> {
                 primaryAnalytics.endSession()
-                "Session Ended"
-            }
-            AnalyticsState.ShutDownAnalyticsSecondary -> {
-                secondaryAnalytics.shutdown()
-                "Rudder Analytics is shutting down. Init again if needed. This might take a second"
-            }
-
-            AnalyticsState.TrackEventSecondary -> {
-                secondaryAnalytics.track(
-                    eventName = "Track at ${Date()}",
-                    trackProperties = TrackProperties("key1" to "prop1", "key2" to "prop2"),
-                    options = RudderOptions.Builder().withIntegrations(mapOf("firebase" to false))
-                        .withExternalIds(
-                            listOf(mapOf("fb_id" to "1234"))
-                        ).build()
-                )
-                "Track message sent"
-            }
-
-            AnalyticsState.IdentifyEventSecondary -> {
-                secondaryAnalytics.identify(
-                    userId = "some_user_id", traits = IdentifyTraits("trait1" to "some_trait")
-                )
-                "Identify called"
-            }
-
-            AnalyticsState.AliasEventSecondary -> {
-                secondaryAnalytics.alias(newId = "user_new_id")
-                "Alias called"
-            }
-
-            AnalyticsState.GroupEventSecondary -> {
-                secondaryAnalytics.group(
-                    groupId = "group_id",
-                    groupTraits = GroupTraits("g_t1" to "t-1", "g_t2" to "t-2"),
-                )
-                "Group called"
-            }
-
-            AnalyticsState.ScreenEventSecondary -> {
-                secondaryAnalytics.screen(
-                    screenName = "some_screen",
-                    category = "some_category",
-                    screenProperties = ScreenProperties()
-                )
-                "Screen called"
-            }
-
-            AnalyticsState.OptInAnalyticsSecondary -> {
-                secondaryAnalytics.optOut(primaryAnalytics.isOptedOut)
-                "OPT ${if (primaryAnalytics.isOptedOut) "out" else "in"} pressed"
-            }
-
-            AnalyticsState.ForceFlushSecondary -> {
-                secondaryAnalytics.flush()
-                "Forcing a flush"
-            }
-
-            AnalyticsState.EnableAutoTrackingSecondary -> {
-                secondaryAnalytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = true)
-                }
-                "Auto tracking enabled"
-            }
-
-            AnalyticsState.DisableAutoTrackingSecondary -> {
-                secondaryAnalytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = false)
-                }
-                "Auto tracking disabled"
-            }
-
-            AnalyticsState.StartManualSessionSecondary -> {
-                secondaryAnalytics.startSession()
-                "Manual Session Started"
-            }
-
-            AnalyticsState.EndSessionSecondary -> {
-                secondaryAnalytics.endSession()
                 "Session Ended"
             }
             AnalyticsState.SendError -> {
