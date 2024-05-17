@@ -3,7 +3,7 @@ package com.rudderstack.android.sampleapp.analytics
 import android.app.Application
 import com.rudderstack.android.BuildConfig
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.createInstance
+import com.rudderstack.android.getInstance
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.DefaultRudderReporter
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
@@ -40,7 +40,7 @@ object RudderAnalyticsUtils {
     private fun createSecondaryInstance(
         listener: InitializationListener?,
         application: Application
-    ) = createInstance(
+    ) = getInstance(
         writeKey = WRITE_KEY_SECONDARY,
         initializationListener = { success, message ->
             listener?.onAnalyticsInitialized(WRITE_KEY_SECONDARY, success, message)
@@ -56,7 +56,7 @@ object RudderAnalyticsUtils {
     )
 
     fun createPrimaryAnalyticsInstanceWithWorkerSupport(application: Application, listener: InitializationListener? = null): Analytics {
-        return createInstance(
+        return getInstance(
             writeKey = WRITE_KEY,
             initializationListener = { success, message ->
                 listener?.onAnalyticsInitialized(WRITE_KEY, success, message)

@@ -72,7 +72,7 @@ private fun RudderAnalytics(
 
 private const val DEFAULT_INSTANCE = "default_instance"
 @JvmOverloads
-fun createInstance(
+fun getInstance(
     writeKey: String,
     configuration: ConfigurationAndroid,
     dataUploadService: DataUploadService? = null,

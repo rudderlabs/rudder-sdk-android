@@ -39,7 +39,7 @@ import org.robolectric.annotation.Config
 
     @Test
     fun `test put anonymous id`() {
-        val analytics = createInstance("testKey", ConfigurationAndroid(
+        val analytics = getInstance("testKey", ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
             JacksonAdapter()
         ))
@@ -53,7 +53,7 @@ import org.robolectric.annotation.Config
 
     @Test
     fun `when writeKey and configuration is passed, then createInstance should return Analytics instance`() {
-        val analytics = createInstance(writeKey, ConfigurationAndroid(
+        val analytics = getInstance(writeKey, ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
             JacksonAdapter()
         ))
@@ -64,12 +64,12 @@ import org.robolectric.annotation.Config
     @Test
     fun `when multiple instances are created with different writeKeys, then the instances should be different`() {
         val writeKey2 = "writeKey2"
-        val analytics = createInstance(writeKey, ConfigurationAndroid(
+        val analytics = getInstance(writeKey, ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
             JacksonAdapter()
         ))
 
-        val analytics2 = createInstance(writeKey2, ConfigurationAndroid(
+        val analytics2 = getInstance(writeKey2, ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
             JacksonAdapter()
         ))
@@ -81,12 +81,12 @@ import org.robolectric.annotation.Config
 
     @Test
     fun `given instance is already created with the writeKey, when createInstance is called with same write key, then the previous instance should be returned`() {
-        val analytics = createInstance(writeKey, ConfigurationAndroid(
+        val analytics = getInstance(writeKey, ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
             JacksonAdapter()
         ))
 
-        val analytics2 = createInstance(writeKey, ConfigurationAndroid(
+        val analytics2 = getInstance(writeKey, ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
             JacksonAdapter()
         ))
@@ -98,7 +98,7 @@ import org.robolectric.annotation.Config
 
     @Test
     fun `given instance is already created with the writeKey, when getInstance is called with that write key, then the Analytics instance should be returned`() {
-        val analytics = createInstance(writeKey, ConfigurationAndroid(
+        val analytics = getInstance(writeKey, ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
             JacksonAdapter()
         ))
@@ -110,12 +110,12 @@ import org.robolectric.annotation.Config
     @Test
     fun `given multiple instances are already created with different writeKeys, when getInstance is called with those write keys, then the Analytics instances should be returned`() {
         val writeKey2 = "writeKey2"
-        val analytics = createInstance(writeKey, ConfigurationAndroid(
+        val analytics = getInstance(writeKey, ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
             JacksonAdapter()
         ))
 
-        val analytics2 = createInstance(writeKey2, ConfigurationAndroid(
+        val analytics2 = getInstance(writeKey2, ConfigurationAndroid(
             ApplicationProvider.getApplicationContext(),
             JacksonAdapter()
         ))
