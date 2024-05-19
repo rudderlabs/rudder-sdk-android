@@ -22,6 +22,10 @@ import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.Test
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 
 open class RudderServerConfigParseTest {
     protected var jsonAdapter: JsonAdapter = JacksonAdapter()
@@ -419,7 +423,7 @@ open class RudderServerConfigParseTest {
     }
 
     @Test
-    fun testDeserialization() {
+    fun testJsonDeserialization() {
         // deserialize
         val rta = object : RudderTypeAdapter<RudderServerConfig>() {}
         val res = jsonAdapter.readJson<RudderServerConfig>(testJson, rta)
@@ -441,7 +445,7 @@ open class RudderServerConfigParseTest {
     }
 
     @Test
-    fun testDeserialization2() {
+    fun testJsonDeserialization2() {
         // deserialize
         val rta = object : RudderTypeAdapter<RudderServerConfig>() {}
         val res = jsonAdapter.readJson<RudderServerConfig>(testJson2, rta)
@@ -467,6 +471,67 @@ open class RudderServerConfigParseTest {
                 `is`(true),
             ),
         )
+    }
+
+    @Test
+    fun testObjectSerializationDeserialization(){
+        val objectToSave = RudderServerConfig(true,
+            RudderServerConfig.RudderServerConfigSource(
+                "sourceId", "sourceName", true,
+                "2020-02-26T09:17:52.231Z",
+                listOf(
+                    RudderServerConfig.RudderServerDestination(
+                        "d_id", "d_name", true,
+                        "2021-02-26T09:17:52.231Z",
+                        RudderServerConfig.RudderServerDestinationDefinition(
+                            "d_d_name", "d_disp_name", "2022-02-26T09:17:52.231Z"
+                        ), mapOf(
+                            "config" to "config_v"
+                        ), true
+                    )
+                )
+            ))
+        val baos = ByteArrayOutputStream()
+        val oos = ObjectOutputStream(baos).also {  it.writeObject(objectToSave)}
+        val savedBytes = baos.toByteArray()
+        oos.close()
+        val bais = ByteArrayInputStream(savedBytes)
+        val ois = ObjectInputStream(bais)
+        val savedObject = ois.readObject()
+        ois.close()
+        assertThat(savedObject, allOf(
+            isA(RudderServerConfig::class.java),
+            hasProperty("hosted", `is`(true)),
+            hasProperty("source", allOf(
+                isA<RudderServerConfig.RudderServerConfigSource>(RudderServerConfig.RudderServerConfigSource::class.java),
+                hasProperty("sourceId", `is`("sourceId")),
+                hasProperty("sourceName", `is`("sourceName")),
+                hasProperty("sourceEnabled", `is`(true)),
+                hasProperty("updatedAt", `is`("2020-02-26T09:17:52.231Z")),
+                hasProperty("destinations", allOf<List<RudderServerConfig.RudderServerDestination>>(
+                    iterableWithSize(1),
+                    hasItem<RudderServerConfig.RudderServerDestination>(
+                        allOf(
+                            hasProperty("destinationId", `is`("d_id")),
+                            hasProperty("destinationName", `is`("d_name")),
+                            hasProperty("destinationEnabled", `is`(true)),
+                            hasProperty("areTransformationsConnected", `is`(true)),
+                            hasProperty("updatedAt", `is`("2021-02-26T09:17:52.231Z")),
+                            hasProperty("destinationConfig", allOf<Map<String,Any>>(
+                                aMapWithSize(1),
+                                hasEntry("config", "config_v")
+                            )),
+                            hasProperty("destinationDefinition", allOf<RudderServerConfig.RudderServerDestinationDefinition>(
+                                isA(RudderServerConfig.RudderServerDestinationDefinition::class.java),
+                                hasProperty("definitionName", `is`("d_d_name")),
+                                hasProperty("displayName", `is`("d_disp_name")),
+                                hasProperty("updatedAt", `is`("2022-02-26T09:17:52.231Z")),
+                            ))
+                        )
+                    )
+                ))
+            ))
+        ))
     }
 }
 class RudderServerConfigParseTestJackson : RudderServerConfigParseTest() {
