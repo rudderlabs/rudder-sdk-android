@@ -12,11 +12,9 @@ import android.os.BadParcelableException;
 import android.os.Build;
 import android.text.TextUtils;
 
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderLogger;
-import com.rudderstack.android.sdk.core.RudderMessage;
 import com.rudderstack.android.sdk.core.gson.RudderGson;
 
 import java.io.File;
@@ -26,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -200,7 +197,8 @@ public class Utils {
     public static String getReferrer(Activity activity) {
         // If devices running on SDK versions greater than equal to 22
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-            return activity.getReferrer().toString();
+            Uri referrer = activity.getReferrer();
+            return referrer != null ? referrer.toString() : null;
         }
         // If devices running on SDK versions greater than equal to 19
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
