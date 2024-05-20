@@ -39,6 +39,7 @@
 -keep class com.rudderstack.android.sdk.core.persistence.DefaultPersistenceProviderFactory { *; }
 
 # Required for Device Mode Transformations
+-keep class com.rudderstack.android.sdk.core.TransformationRequest { *; }
 -keep class com.rudderstack.android.sdk.core.TransformationResponse { *; }
 -keep class com.rudderstack.android.sdk.core.TransformationResponseDeserializer { *; }
 
