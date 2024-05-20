@@ -1,6 +1,7 @@
 package com.rudderstack.android
 
 import androidx.annotation.VisibleForTesting
+import com.rudderstack.core.utilities.FutureUse
 import com.rudderstack.core.Analytics
 import java.util.concurrent.ConcurrentHashMap
 
@@ -56,7 +57,3 @@ internal object AnalyticsRegistry {
         writeKeyToInstance.clear()
     }
 }
-
-@Retention(AnnotationRetention.SOURCE)
-@Target(AnnotationTarget.CLASS)
-annotation class FutureUse(val info: String)
