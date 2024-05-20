@@ -65,9 +65,9 @@ public final class RudderAnalyticsBuilderCompat  {
         return RudderAnalytics.getInstance(
                 writeKey,
                 configuration,
+                storage,
                 dataUploadService,
                 configDownloadService,
-                storage,
                 (success, message) -> {
                     if (initializationListener != null) {
                         initializationListener.onInitialized(success, message);
