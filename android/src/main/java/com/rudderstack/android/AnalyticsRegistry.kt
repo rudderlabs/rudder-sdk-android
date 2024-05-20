@@ -18,6 +18,8 @@ import java.util.concurrent.ConcurrentHashMap
  * Note: The class is marked as internal, indicating that it is intended for use within the same module and should not be accessed
  * from outside the module.
  */
+
+@FutureUse("This class will be utilized when multiple instances are implemented.")
 internal object AnalyticsRegistry {
 
     private val writeKeyToInstance: ConcurrentHashMap<String, Analytics> = ConcurrentHashMap()
@@ -54,3 +56,7 @@ internal object AnalyticsRegistry {
         writeKeyToInstance.clear()
     }
 }
+
+@Retention(AnnotationRetention.SOURCE)
+@Target(AnnotationTarget.CLASS)
+annotation class FutureUse(val info: String)
