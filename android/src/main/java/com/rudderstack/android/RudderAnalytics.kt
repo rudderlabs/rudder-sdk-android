@@ -1,6 +1,8 @@
 package com.rudderstack.android
 
 import com.rudderstack.android.storage.AndroidStorageImpl
+import com.rudderstack.android.utilities.onShutdown
+import com.rudderstack.android.utilities.startup
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.DataUploadService

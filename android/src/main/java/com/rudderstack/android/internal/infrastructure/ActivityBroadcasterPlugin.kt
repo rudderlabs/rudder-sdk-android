@@ -18,7 +18,7 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import com.rudderstack.android.LifecycleListenerPlugin
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.InfrastructurePlugin
 import java.util.concurrent.atomic.AtomicInteger

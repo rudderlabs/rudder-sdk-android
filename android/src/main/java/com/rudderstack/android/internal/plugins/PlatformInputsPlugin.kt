@@ -27,16 +27,14 @@ import android.telephony.TelephonyManager
 import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.AndroidUtils.isTv
 import com.rudderstack.android.LifecycleListenerPlugin
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.optAdd
 import com.rudderstack.models.Message
 import com.rudderstack.models.MessageContext
-import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.math.log
 
 /**
  * Sets the context specific to Android

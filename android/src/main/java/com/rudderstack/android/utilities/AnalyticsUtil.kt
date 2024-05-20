@@ -1,7 +1,8 @@
 @file:JvmName("AnalyticsUtil") @file:Suppress("FunctionName")
 
-package com.rudderstack.android
+package com.rudderstack.android.utilities
 
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
 import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
 import com.rudderstack.android.internal.infrastructure.AppInstallUpdateTrackerPlugin
@@ -15,7 +16,6 @@ import com.rudderstack.android.internal.plugins.SessionPlugin
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.android.storage.AndroidStorage
-import com.rudderstack.android.utilities.shutdownSessionManagement
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.retrieveState

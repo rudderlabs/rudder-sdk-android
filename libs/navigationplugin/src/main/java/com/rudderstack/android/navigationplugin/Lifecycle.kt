@@ -14,7 +14,7 @@
 package com.rudderstack.android.navigationplugin
 
 import androidx.navigation.NavController
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.android.navigationplugin.internal.NavControllerState
 import com.rudderstack.android.navigationplugin.internal.NavigationPlugin
 import com.rudderstack.core.Analytics

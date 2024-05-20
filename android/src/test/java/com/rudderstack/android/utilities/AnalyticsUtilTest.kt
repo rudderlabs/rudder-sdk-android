@@ -1,7 +1,9 @@
-package com.rudderstack.android
+package com.rudderstack.android.utilities
 
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
+import com.rudderstack.android.AnalyticsRegistry
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.RudderAnalytics.Companion.getInstance
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import org.hamcrest.MatcherAssert
@@ -24,15 +26,19 @@ class AnalyticsUtilTest {
 
     @Test
     fun `given writeKey and configuration are passed, when anonymousId id is set, then assert that configuration has this anonymousId set as a property`() {
-        val analytics = getInstance("testKey", ConfigurationAndroid(
-            ApplicationProvider.getApplicationContext(),
-            JacksonAdapter()
-        ))
+        val analytics = getInstance(
+            "testKey", ConfigurationAndroid(
+                ApplicationProvider.getApplicationContext(),
+                JacksonAdapter()
+            )
+        )
 
         analytics.setAnonymousId("anon_id")
         MatcherAssert.assertThat(
-            analytics.currentConfigurationAndroid, allOf(Matchers.isA(ConfigurationAndroid::class.java),
+            analytics.currentConfigurationAndroid, allOf(
+                Matchers.isA(ConfigurationAndroid::class.java),
                 Matchers.hasProperty("anonymousId", Matchers.equalTo("anon_id"))
-        ))
+            )
+        )
     }
 }

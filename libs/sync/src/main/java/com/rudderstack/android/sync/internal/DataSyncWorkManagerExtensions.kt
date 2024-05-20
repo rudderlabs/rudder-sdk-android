@@ -24,7 +24,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.multiprocess.RemoteWorkManager
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.android.sync.WorkManagerAnalyticsFactory
 import com.rudderstack.core.Analytics
 import java.lang.ref.WeakReference
