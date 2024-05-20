@@ -1,6 +1,7 @@
 package com.rudderstack.android.sdk.core.persistence;
 
 import android.app.Application;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 
 import androidx.annotation.NonNull;
@@ -9,8 +10,8 @@ import androidx.annotation.Nullable;
 import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderLogger;
 
-import net.sqlcipher.Cursor;
-import net.sqlcipher.database.SQLiteDatabase;
+
+import net.zetetic.database.sqlcipher.SQLiteDatabase;
 
 import java.io.File;
 import java.util.Collections;
@@ -20,7 +21,6 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
 
     private final Application application;
     private final ProviderParams params;
-
 
     DefaultPersistenceProvider(Application application, ProviderParams params) {
         this.application = application;
@@ -88,7 +88,7 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
 
     private boolean checkIfEncryptionIsValid(File encryptedDbPath) {
         try (SQLiteDatabase database = SQLiteDatabase.openDatabase(encryptedDbPath.getAbsolutePath(),
-                params.encryptionKey, null, SQLiteDatabase.OPEN_READWRITE)) {
+                params.encryptionKey, null, SQLiteDatabase.OPEN_READWRITE, null)) {
             Cursor cursor = database.rawQuery("PRAGMA cipher_version", null);
             cursor.close();
             return true;
@@ -118,12 +118,12 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
 
     private void createDefaultDatabase() {
         File databasePath = application.getDatabasePath(params.dbName);
-        SQLiteDatabase database = SQLiteDatabase.openOrCreateDatabase(databasePath.getAbsolutePath(), "", null);
+        SQLiteDatabase database = SQLiteDatabase.openOrCreateDatabase(databasePath.getAbsolutePath(), "",null, null);
         database.close();
     }
 
     private void initCipheredDatabase() {
-        SQLiteDatabase.loadLibs(application);
+        System.loadLibrary("sqlcipher");
     }
 
     private void deleteEncryptedDb() {
@@ -140,7 +140,7 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
 
         File encryptedDb = application.getDatabasePath(params.encryptedDbName);
         String encryptedPath = encryptedDb.getAbsolutePath();
-        SQLiteDatabase database = SQLiteDatabase.openDatabase(encryptedPath, params.encryptionKey, null, SQLiteDatabase.OPEN_READWRITE);
+        SQLiteDatabase database = SQLiteDatabase.openDatabase(encryptedPath, params.encryptionKey, null, SQLiteDatabase.OPEN_READWRITE, null);
         //will throw exception if encryption key is invalid
         database.isDatabaseIntegrityOk();
         database.rawExecSQL(String.format("ATTACH DATABASE '%s' AS rl_persistence KEY ''",
@@ -163,11 +163,11 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
                 ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_MIGRATE_TO_ENCRYPT
         ));
 
-        SQLiteDatabase database = SQLiteDatabase.openOrCreateDatabase(encryptedDbPath.getAbsolutePath(), params.encryptionKey, null);
+        SQLiteDatabase database = SQLiteDatabase.openOrCreateDatabase(encryptedDbPath.getAbsolutePath(), params.encryptionKey,null, null);
         database.close();
         File decryptedDb = application.getDatabasePath(params.dbName);
         String decryptedPath = decryptedDb.getAbsolutePath();
-        database = SQLiteDatabase.openDatabase(decryptedPath, "", null, SQLiteDatabase.OPEN_READWRITE);
+        database = SQLiteDatabase.openDatabase(decryptedPath, "", null, SQLiteDatabase.OPEN_READWRITE, null);
         database.rawExecSQL(String.format("ATTACH DATABASE '%s' AS rl_persistence_encrypted KEY '%s'",
                 encryptedDbPath.getAbsolutePath(), params.encryptionKey));
         database.rawExecSQL("select sqlcipher_export('rl_persistence_encrypted')");

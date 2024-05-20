@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.23.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.22.0...v1.23.0) (2024-05-20)
+
+
+### Features
+
+* migrate from sqlcipher legacy to latest version ([#419](https://github.com/rudderlabs/rudder-sdk-android/issues/419)) ([a739a78](https://github.com/rudderlabs/rudder-sdk-android/commit/a739a789fddcd5afec0a8fc9fceaa1fd1d1bd8ab))
+
+
+### Bug Fixes
+
+* check if the referrer is not null before casting it to a string ([#425](https://github.com/rudderlabs/rudder-sdk-android/issues/425)) ([3b58967](https://github.com/rudderlabs/rudder-sdk-android/commit/3b58967202adfb37efb4cb2c9374885986c927de))
+* key "batch" was being obfuscated due to proguard ([#423](https://github.com/rudderlabs/rudder-sdk-android/issues/423)) ([eaa282c](https://github.com/rudderlabs/rudder-sdk-android/commit/eaa282c4c0f95dc02e02ce2ca0b16bfed5ee5e41))
+
 ## [1.22.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.21.3...v1.22.0) (2024-03-19)
 
 
