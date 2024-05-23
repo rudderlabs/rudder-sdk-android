@@ -25,21 +25,30 @@ compileKotlin {
     kotlinOptions.jvmTarget = "17"
     kotlinOptions.javaParameters = true
 }
+
+apply from : "$projectDir/../dependencies.gradle"
 compileTestKotlin {
     kotlinOptions.jvmTarget = "17"
     kotlinOptions.javaParameters = true
 }
-apply from : "$projectDir/../dependencies.gradle"
 
 
 dependencies {
 
     implementation(project(path: ":rudderjsonadapter"))
-    api deps.jackson
-    api deps.jacksonKotlin
 
+    //test
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation(project(path: ':moshirudderadapter', configuration: 'default'))
+    testImplementation(project(path: ':gsonrudderadapter', configuration: 'default'))
+    testImplementation(project(path: ':jacksonrudderadapter', configuration: 'default'))
+    testImplementation deps.moshi.kotlin
+    testImplementation deps.moshi.core
+    testImplementation deps.gson
+    testImplementation deps.jackson
     testImplementation deps.hamcrest
-    testImplementation 'junit:junit:4.+'
+    testImplementation deps.mockito
+    testImplementation deps.awaitility
 }
 apply from: rootProject.file('gradle/artifacts-jar.gradle')
 apply from: rootProject.file('gradle/mvn-publish.gradle')
