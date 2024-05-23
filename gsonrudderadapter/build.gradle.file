@@ -1,5 +1,5 @@
 /*
- * Creator: Debanjan Chatterjee on 18/10/21, 12:09 PM Last modified: 18/10/21, 12:09 PM
+ * Creator: Debanjan Chatterjee on 30/09/21, 11:41 PM Last modified: 30/09/21, 11:39 PM
  * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -16,7 +16,6 @@ plugins {
     id 'java-library'
     id 'kotlin'
 }
-
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
@@ -32,27 +31,15 @@ compileTestKotlin {
 
 apply from : "$projectDir/../dependencies.gradle"
 
+
+
 dependencies {
-//    api project(path: ':repository')
-    api project(path: ':rudderjsonadapter')
-    api project(path: ':models')
-    api project(path: ':web')
 
+    implementation(project(path: ":rudderjsonadapter"))
+    api deps.gson
 
-//    api(project(":web"))
-//    implementation(project(":rudderjsonadapter"))
-//    implementation(project(":repository"))
-    testImplementation 'junit:junit:4.+'
     testImplementation deps.hamcrest
-    testImplementation deps.mockito
-    testImplementation deps.mockito_kotlin
-    testImplementation deps.awaitility
-    testImplementation deps.mockk
-
-    testImplementation(project(path: ':moshirudderadapter'))
-    testImplementation(project(path: projects.test_common))
-    testImplementation(project(path: ':gsonrudderadapter'))
-    testImplementation(project(path: ':jacksonrudderadapter'))
+    testImplementation 'junit:junit:4.+'
 }
 apply from: "$projectDir/../gradle/artifacts-jar.gradle"
 apply from: "$projectDir/../gradle/mvn-publish.gradle"
