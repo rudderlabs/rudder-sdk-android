@@ -51,10 +51,6 @@
 -keepclassmembers class com.rudderstack.android.sdk.core.RudderTraits { java.util.Map extras; }
 
 # Required for DBEncryption feature using SQLCipher
--keep class net.sqlcipher.** { *; }
--keep class net.sqlcipher.database.* { *; }
-
-# Suppress warnings for SQLCipher classes
 -dontwarn net.zetetic.database.DatabaseErrorHandler
 -dontwarn net.zetetic.database.sqlcipher.SQLiteDatabase$CursorFactory
 -dontwarn net.zetetic.database.sqlcipher.SQLiteDatabase
