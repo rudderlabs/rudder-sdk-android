@@ -21,8 +21,8 @@
 #-renamesourcefileattribute SourceFile
 
 # Required for the usage off TypeToken class in Utils.converToMap, Utils.convertToList
-#-keep class com.google.gson.reflect.TypeToken { *; }
-#-keep class * extends com.google.gson.reflect.TypeToken
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
 
 # Required for the serialization of SourceConfig once it is downloaded.
 -keep class com.google.gson.internal.LinkedTreeMap { *; }
@@ -31,28 +31,32 @@
 -keep class * extends com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 
 # Required to ensure the DefaultPersistenceProviderFactory is not removed by Proguard
-#-keep class com.rudderstack.android.sdk.core.persistence.DefaultPersistenceProviderFactory { *; }
+-keep class com.rudderstack.android.sdk.core.persistence.DefaultPersistenceProviderFactory { *; }
 
 # Required for Device Mode Transformations
-#-keep class com.rudderstack.android.sdk.core.TransformationRequest { *; }
-#-keep class com.rudderstack.android.sdk.core.TransformationResponse { *; }
-#-keep class com.rudderstack.android.sdk.core.TransformationResponseDeserializer { *; }
+-keep class com.rudderstack.android.sdk.core.TransformationRequest { *; }
+-keep class com.rudderstack.android.sdk.core.TransformationResponse { *; }
+-keep class com.rudderstack.android.sdk.core.TransformationResponseDeserializer { *; }
 
 # to make sure that serialized name annotations in model classes are not removed by the Proguard full mode.
-#-keepclassmembers,allowobfuscation class * {
-#  @com.google.gson.annotations.SerializedName <fields>;
-#}
+-keepclassmembers,allowobfuscation class * {
+  @com.google.gson.annotations.SerializedName <fields>;
+}
 
 # Required for proper serialization of the custom traits and custom context
-#-keep class * implements com.google.gson.JsonSerializer { *; }
+-keep class * implements com.google.gson.JsonSerializer { *; }
 
 # to make sure that the customContextMap, custom traits are sent in the proper format
-#-keepclassmembers class com.rudderstack.android.sdk.core.RudderContext { java.util.Map customContextMap; }
-#-keepclassmembers class com.rudderstack.android.sdk.core.RudderTraits { java.util.Map extras; }
+-keepclassmembers class com.rudderstack.android.sdk.core.RudderContext { java.util.Map customContextMap; }
+-keepclassmembers class com.rudderstack.android.sdk.core.RudderTraits { java.util.Map extras; }
 
 # Required for DBEncryption feature using SQLCipher
-#-dontwarn net.zetetic.database.DatabaseErrorHandler
-#-dontwarn net.zetetic.database.sqlcipher.SQLiteDatabase$CursorFactory
-#-dontwarn net.zetetic.database.sqlcipher.SQLiteDatabase
-#-dontwarn net.zetetic.database.sqlcipher.SQLiteDatabaseHook
-#-dontwarn net.zetetic.database.sqlcipher.SQLiteOpenHelper
+-keep class net.sqlcipher.** { *; }
+-keep class net.sqlcipher.database.* { *; }
+
+# Suppress warnings for SQLCipher classes
+-dontwarn net.zetetic.database.DatabaseErrorHandler
+-dontwarn net.zetetic.database.sqlcipher.SQLiteDatabase$CursorFactory
+-dontwarn net.zetetic.database.sqlcipher.SQLiteDatabase
+-dontwarn net.zetetic.database.sqlcipher.SQLiteDatabaseHook
+-dontwarn net.zetetic.database.sqlcipher.SQLiteOpenHelper
