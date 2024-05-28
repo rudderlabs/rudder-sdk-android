@@ -17,12 +17,12 @@ package com.rudderstack.android.internal.infrastructure
 import android.content.Context
 import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.androidStorage
-import com.rudderstack.android.contextState
-import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.processNewContext
-import com.rudderstack.android.setAnonymousId
-import com.rudderstack.android.setUserId
+import com.rudderstack.android.utilities.androidStorage
+import com.rudderstack.android.utilities.contextState
+import com.rudderstack.android.utilities.currentConfigurationAndroid
+import com.rudderstack.android.utilities.processNewContext
+import com.rudderstack.android.utilities.setAnonymousId
+import com.rudderstack.android.utilities.setUserId
 import com.rudderstack.android.utilities.initializeSessionManagement
 import com.rudderstack.android.utilities.isV1SavedServerConfigContainsSourceId
 import com.rudderstack.core.Analytics
@@ -31,7 +31,6 @@ import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.InfrastructurePlugin
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.models.createContext
-import com.rudderstack.models.traits
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**

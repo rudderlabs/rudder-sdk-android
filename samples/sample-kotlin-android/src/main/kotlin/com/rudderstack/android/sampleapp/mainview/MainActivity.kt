@@ -102,8 +102,15 @@ class MainActivity : ComponentActivity() {
                 .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Primary Analytics", modifier = Modifier.padding(2.dp).align(Alignment
-                .CenterHorizontally), )
+            Text(
+                text = "Singleton Analytics",
+                modifier = Modifier
+                    .padding(2.dp)
+                    .align(
+                        Alignment
+                            .CenterHorizontally
+                    ),
+            )
             CreateRowOfApis(
                 names = arrayOf(
                     AnalyticsState.ShutDownAnalytics,
@@ -112,9 +119,11 @@ class MainActivity : ComponentActivity() {
                 ), weight = .5f, viewModel = viewModel
             )
             CreateRowOfApis(
-                names = arrayOf(AnalyticsState.AliasEvent,
+                names = arrayOf(
+                    AnalyticsState.AliasEvent,
                     AnalyticsState.TrackEvent,
-                    AnalyticsState.ScreenEvent),
+                    AnalyticsState.ScreenEvent
+                ),
                 weight = .3f,
                 viewModel = viewModel
             )
@@ -133,50 +142,11 @@ class MainActivity : ComponentActivity() {
                 weight = .5f,
                 viewModel = viewModel
             )
-            Text(text = "Secondary Analytics", modifier = Modifier.padding(8.dp).align(Alignment
-                .CenterHorizontally), )
-            Spacer(modifier = Modifier.height(2.dp))
             CreateRowOfApis(
                 names = arrayOf(
-                    AnalyticsState.ShutDownAnalyticsSecondary,
-                    AnalyticsState.ForceFlushSecondary,
-                    AnalyticsState.OptInAnalyticsSecondary
-                ), weight = .3f, viewModel = viewModel
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            CreateRowOfApis(
-                names = arrayOf(AnalyticsState.AliasEventSecondary,
-                    AnalyticsState.TrackEventSecondary,
-                    AnalyticsState.ScreenEventSecondary),
-                weight = .3f,
-                viewModel = viewModel
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            CreateRowOfApis(
-                names = arrayOf(AnalyticsState.IdentifyEventSecondary, AnalyticsState
-                    .GroupEventSecondary),
-                weight = .5f,
-                viewModel = viewModel
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-
-            CreateRowOfApis(
-                names = arrayOf(AnalyticsState.StartManualSessionSecondary, AnalyticsState
-                    .EndSessionSecondary),
-                weight = .5f,
-                viewModel = viewModel
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            CreateRowOfApis(
-                names = arrayOf(AnalyticsState.EnableAutoTrackingSecondary, AnalyticsState
-                    .DisableAutoTrackingSecondary),
-                weight = .5f,
-                viewModel = viewModel
-            )
-            CreateRowOfApis(
-                names = arrayOf(AnalyticsState.SendError,
+                    AnalyticsState.SendError,
                     AnalyticsState.ClearAnalytics,
-                    ),
+                ),
                 weight = .5f,
                 viewModel = viewModel
             )

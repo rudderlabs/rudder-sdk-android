@@ -18,7 +18,7 @@ import android.os.Bundle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import com.rudderstack.android.LifecycleListenerPlugin
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.InfrastructurePlugin
 import com.rudderstack.core.State

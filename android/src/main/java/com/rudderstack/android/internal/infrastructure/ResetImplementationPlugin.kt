@@ -14,16 +14,11 @@
 
 package com.rudderstack.android.internal.infrastructure
 
-import com.rudderstack.android.contextState
-import com.rudderstack.android.internal.states.ContextState
-import com.rudderstack.android.processNewContext
+import com.rudderstack.android.utilities.contextState
+import com.rudderstack.android.utilities.processNewContext
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.InfrastructurePlugin
-import com.rudderstack.models.MessageContext
 import com.rudderstack.models.createContext
-import com.rudderstack.models.customContexts
-import com.rudderstack.models.externalIds
-import com.rudderstack.models.traits
 import com.rudderstack.models.updateWith
 
 class ResetImplementationPlugin : InfrastructurePlugin {

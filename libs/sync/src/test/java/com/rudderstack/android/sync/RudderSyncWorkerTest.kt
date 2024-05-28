@@ -20,7 +20,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.ListenableWorker
 import androidx.work.testing.TestWorkerBuilder
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.android.sync.internal.RudderSyncWorker
 import com.rudderstack.android.sync.internal.workerInputData
 import com.rudderstack.android.sync.utils.TestLogger

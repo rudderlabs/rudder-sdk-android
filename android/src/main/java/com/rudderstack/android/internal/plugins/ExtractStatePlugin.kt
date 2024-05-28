@@ -14,10 +14,10 @@
 
 package com.rudderstack.android.internal.plugins
 
-import com.rudderstack.android.contextState
-import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.processNewContext
-import com.rudderstack.android.setUserId
+import com.rudderstack.android.utilities.contextState
+import com.rudderstack.android.utilities.currentConfigurationAndroid
+import com.rudderstack.android.utilities.processNewContext
+import com.rudderstack.android.utilities.setUserId
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.optAdd

@@ -16,8 +16,8 @@ package com.rudderstack.android.internal.infrastructure
 
 import android.os.SystemClock
 import com.rudderstack.android.LifecycleListenerPlugin
-import com.rudderstack.android.androidStorage
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.utilities.androidStorage
+import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration

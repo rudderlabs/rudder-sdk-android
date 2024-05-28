@@ -14,14 +14,10 @@
 
 package com.rudderstack.android.internal.plugins
 
-import com.rudderstack.android.contextState
-import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.internal.states.ContextState
+import com.rudderstack.android.utilities.contextState
+import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.Configuration
-import com.rudderstack.core.State
 import com.rudderstack.core.MissingPropertiesException
 import com.rudderstack.core.minusWrtKeys
 import com.rudderstack.models.*
