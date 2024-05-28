@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.23.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.23.0...v1.23.1) (2024-05-28)
+
+
+### Bug Fixes
+
+* add missing proguard rules for the sqlcipher dependency ([#432](https://github.com/rudderlabs/rudder-sdk-android/issues/432)) ([98cacc1](https://github.com/rudderlabs/rudder-sdk-android/commit/98cacc13b61b931de2e3efa687b38faf8ac48d50))
+
 ## [1.23.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.22.0...v1.23.0) (2024-05-20)
 
 
