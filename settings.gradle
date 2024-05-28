@@ -27,7 +27,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Rudder-Android-Libs"
-//include ':app'
 include ':core'
 include ':android'
 include ':web'
