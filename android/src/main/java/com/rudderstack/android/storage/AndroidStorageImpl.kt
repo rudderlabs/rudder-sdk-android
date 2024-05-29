@@ -389,6 +389,13 @@ class AndroidStorageImpl(
             jsonAdapter?:return, logger)
     }
 
+    override fun migrateV1StorageToV2(callback: () -> Unit) {
+        storageExecutor.execute {
+            migrateV1StorageToV2Sync()
+            callback()
+        }
+    }
+
     override fun setBuild(build: Int) {
         preferenceManager?.saveBuild(build)
     }

@@ -60,4 +60,5 @@ interface AndroidStorage : Storage {
     fun setBuild(build: Int)
     fun setVersionName(versionName: String)
     fun migrateV1StorageToV2Sync()
+    fun migrateV1StorageToV2(callback: () -> Unit)
 }

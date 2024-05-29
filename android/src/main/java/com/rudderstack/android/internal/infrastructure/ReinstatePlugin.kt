@@ -47,8 +47,8 @@ private const val RUDDER_SERVER_FILE_NAME_V1 = "RudderServerConfig"
 
 internal class ReinstatePlugin : InfrastructurePlugin {
     private var _analytics: Analytics? = null
-    private var sourceId: String? = null
     private val _isReinstated = AtomicBoolean(false)
+    private val _isDbBeingMigrated = AtomicBoolean(false)
     private fun setReinstated(isReinstated: Boolean){
         synchronized(_isReinstated) {
             _isReinstated.set(isReinstated)
@@ -69,37 +69,20 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     override fun setup(analytics: Analytics) {
         _analytics = analytics
         setReinstated(false)
-    }
-
-    override fun updateRudderServerConfig(config: RudderServerConfig) {
-        val sourceId = config.source?.sourceId ?: return
-        this.sourceId = sourceId
-        reinstate()
-    }
-
-    override fun updateConfiguration(configuration: Configuration) {
         reinstate()
     }
 
     private fun reinstate() {
-        if (_isReinstated.get()) return
         synchronized(this) {
-            val config = _analytics?.currentConfigurationAndroid ?: return
             if (isV2DataAvailable()) {
-                setReinstated(true)
                 reinstateV2FromCache()
                 return
             }
-            if (!config.shouldVerifySdk) {
-                setReinstated(true)
+            migrateV1DataIfAvailable()
+            if (_analytics?.currentConfigurationAndroid?.anonymousId == null) {
                 fillDefaults()
                 return
             }
-            val sourceId = this.sourceId ?: return
-
-            migrateV1DataIfAvailable(config.application, sourceId, config)
-
-            setReinstated(true)
         }
     }
 
@@ -131,22 +114,20 @@ internal class ReinstatePlugin : InfrastructurePlugin {
                !_analytics?.contextState?.value.isNullOrEmpty()
     }
 
-    private fun migrateV1DataIfAvailable(
-        context: Context, sourceId: String, configurationAndroid: ConfigurationAndroid
-    ) {
-            val isV1DataAvailable =
-                context.isV1SavedServerConfigContainsSourceId(RUDDER_SERVER_FILE_NAME_V1, sourceId)
-            if(!isV1DataAvailable) return
+    private fun migrateV1DataIfAvailable() {
             // migrate user id/ anon id
             _analytics?.setUserIdFromV1()
             _analytics?.migrateAnonymousIdFromV1()
             _analytics?.migrateOptOutFromV1()
-                _analytics?.migrateContextFromV1()
-            _analytics?.androidStorage?.migrateV1StorageToV2Sync()
-
+            _analytics?.migrateContextFromV1()
             _analytics?.initializeSessionManagement(
                 _analytics?.androidStorage?.v1SessionId, _analytics?.androidStorage?.v1LastActiveTimestamp
             )
+        if(_isDbBeingMigrated.compareAndSet(false, true)) {
+            _analytics?.androidStorage?.migrateV1StorageToV2 {
+                setReinstated(true)
+            }
+        }
     }
 
     private fun Analytics.setUserIdFromV1() {
@@ -180,7 +161,6 @@ internal class ReinstatePlugin : InfrastructurePlugin {
 
     override fun shutdown() {
         _analytics = null
-        this.sourceId = null
     }
 
 }

@@ -95,7 +95,7 @@ class ReinstatePluginTest {
 
 //        plugin.updateConfiguration(configurationAndroid)
         busyWait(100)
-        Mockito.verify(androidStorage, times(1)).migrateV1StorageToV2Sync()
+        Mockito.verify(androidStorage, times(1)).migrateV1StorageToV2(any())
 
 
     }
