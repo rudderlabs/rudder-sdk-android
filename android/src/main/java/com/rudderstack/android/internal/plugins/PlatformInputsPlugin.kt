@@ -24,11 +24,15 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.provider.Settings
 import android.telephony.TelephonyManager
+import androidx.annotation.VisibleForTesting
 import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.AndroidUtils.isTv
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.LifecycleListenerPlugin
+import com.rudderstack.android.utilities.applyConfigurationAndroid
 import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.Configuration
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.optAdd
 import com.rudderstack.models.Message
@@ -39,18 +43,14 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * Sets the context specific to Android
  *
- * @property application The application is needed to generate the required values
- * @constructor
- * Initiates the values
- *
+ * @constructor Initiates the values
+ * @property application The application is needed to generate the required
+ *     values
  */
 private const val CHANNEL = "mobile"
 
 internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     //if true collects advertising id automatically
-    private val jsonAdapter
-        get() = _analytics?.currentConfiguration?.jsonAdapter
-
     private val application
         get() = _analytics?.currentConfigurationAndroid?.application
 
@@ -88,12 +88,23 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             analytics.currentConfigurationAndroid?.autoCollectAdvertId ?: false
     }
 
+    override fun updateConfiguration(configuration: Configuration) {
+        if (configuration !is ConfigurationAndroid) return
+        if(autoCollectAdvertisingId != configuration.autoCollectAdvertId)
+            autoCollectAdvertisingId = configuration.autoCollectAdvertId
+        synchronized(this) {
+            if (_advertisingId != configuration.advertisingId)
+                _advertisingId = configuration.advertisingId
+        }
+    }
+
     /**
      * Overriding advertising id, will disable auto collection if it's on
      *
      * @param advertisingId
      */
 
+    @VisibleForTesting
     internal fun setAdvertisingId(advertisingId: String) {
         autoCollectAdvertisingId = false
         synchronized(this) {
@@ -111,8 +122,8 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         _analytics?.currentConfigurationAndroid?.advertisingIdFetchExecutor?.submit {
             val adId = getGooglePlayServicesAdvertisingID() ?: getAmazonFireAdvertisingID()
             if (adId != null) {
-                synchronized(this) {
-                    _advertisingId = adId
+                _analytics?.applyConfigurationAndroid {
+                    copy(advertisingId = adId)
                 }
             }
         }
@@ -233,9 +244,9 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         val isWifiEnabled =
             try {
                 (this.getSystemService(Context.WIFI_SERVICE) as? WifiManager)?.isWifiEnabled
-            }catch (ex: Exception){
+            } catch (ex: Exception) {
                 _analytics?.currentConfiguration?.logger?.error(log = "Cannot detect wifi. Wifi Permission not available")
-            }?:false
+            } ?: false
 
 
         // bluetooth

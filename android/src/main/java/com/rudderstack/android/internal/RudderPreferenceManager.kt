@@ -34,6 +34,8 @@ private const val RUDDER_PERIODIC_WORK_REQUEST_ID_KEY = "rl_periodic_work_reques
 private const val RUDDER_SESSION_ID_KEY = "rl_session_id_key"
 private const val RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY =
     "rl_last_event_timestamp_key"
+private const val RUDDER_ADVERTISING_ID_KEY = "rl_advertising_id_key"
+
 private const val RUDDER_APPLICATION_VERSION_KEY = "rl_application_version_key"
 private const val RUDDER_APPLICATION_BUILD_KEY = "rl_application_build_key"
 internal class RudderPreferenceManager(application: Application,
@@ -63,6 +65,12 @@ internal class RudderPreferenceManager(application: Application,
 
     fun saveTraits(traitsJson: String?) {
         preferences.edit().putString(RUDDER_TRAITS_KEY.key, traitsJson).apply()
+    }
+    val advertisingId: String?
+        get() = preferences.getString(RUDDER_ADVERTISING_ID_KEY.key, null)
+
+    fun saveAdvertisingId(advertisingId: String?) {
+        preferences.edit().putString(RUDDER_ADVERTISING_ID_KEY.key, advertisingId).apply()
     }
 
     val buildVersionCode: Int
@@ -192,4 +200,11 @@ internal class RudderPreferenceManager(application: Application,
 
     val build: Int
         get() = preferences.getInt(RUDDER_APPLICATION_BUILD_KEY, -1)
+
+    val v1AdvertisingId: String?
+        get() = preferences.getString(RUDDER_ADVERTISING_ID_KEY, null)
+
+    fun resetV1AdvertisingId() {
+        preferences.edit().remove(RUDDER_ADVERTISING_ID_KEY).apply()
+    }
 }

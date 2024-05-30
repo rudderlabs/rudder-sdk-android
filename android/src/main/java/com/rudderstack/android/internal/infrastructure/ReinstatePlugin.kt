@@ -34,32 +34,29 @@ import com.rudderstack.models.createContext
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * This plugin is used to reinstate the cache data in V2 SDK.
- * In case no cached data preset for v2, we check if the sourceId is present in the V1 cached
- * server config, then the data is migrated to V2 SDK
- * Servers the following purposes:
- * Reinstate anonymous id, or create new one if absent
- * Reinstate user id
- * Initialise session management for the user
- * Reinstate traits and external ids
+ * This plugin is used to reinstate the cache data in V2 SDK. In case no
+ * cached data preset for v2, we check if the sourceId is present in the V1
+ * cached server config, then the data is migrated to V2 SDK Servers the
+ * following purposes: Reinstate anonymous id, or create new one if absent
+ * Reinstate user id Initialise session management for the user Reinstate
+ * traits and external ids
  */
-private const val RUDDER_SERVER_FILE_NAME_V1 = "RudderServerConfig"
 
 internal class ReinstatePlugin : InfrastructurePlugin {
     private var _analytics: Analytics? = null
     private val _isReinstated = AtomicBoolean(false)
     private val _isDbBeingMigrated = AtomicBoolean(false)
-    private fun setReinstated(isReinstated: Boolean){
+    private fun setReinstated(isReinstated: Boolean) {
         synchronized(_isReinstated) {
             _isReinstated.set(isReinstated)
-            if (isReinstated){
+            if (isReinstated) {
                 _analytics?.applyInfrastructureClosure {
-                    if(this is DataUploadService)
+                    if (this is DataUploadService)
                         this.resume()
                 }
-            }else{
+            } else {
                 _analytics?.applyInfrastructureClosure {
-                    if(this is DataUploadService)
+                    if (this is DataUploadService)
                         this.pause()
                 }
             }
@@ -88,8 +85,10 @@ internal class ReinstatePlugin : InfrastructurePlugin {
 
     private fun fillDefaults() {
         _analytics?.setAnonymousId(AndroidUtils.getDeviceId())
-        _analytics?.initializeSessionManagement(_analytics?.androidStorage?.sessionId,
-            _analytics?.androidStorage?.lastActiveTimestamp)
+        _analytics?.initializeSessionManagement(
+            _analytics?.androidStorage?.sessionId,
+            _analytics?.androidStorage?.lastActiveTimestamp
+        )
     }
 
     private fun reinstateV2FromCache() {
@@ -110,20 +109,22 @@ internal class ReinstatePlugin : InfrastructurePlugin {
 
     private fun isV2DataAvailable(): Boolean {
         return !_analytics?.androidStorage?.anonymousId.isNullOrEmpty() ||
-               !_analytics?.androidStorage?.userId.isNullOrEmpty() ||
-               !_analytics?.contextState?.value.isNullOrEmpty()
+                !_analytics?.androidStorage?.userId.isNullOrEmpty() ||
+                !_analytics?.contextState?.value.isNullOrEmpty()
     }
 
     private fun migrateV1DataIfAvailable() {
-            // migrate user id/ anon id
-            _analytics?.setUserIdFromV1()
-            _analytics?.migrateAnonymousIdFromV1()
-            _analytics?.migrateOptOutFromV1()
-            _analytics?.migrateContextFromV1()
-            _analytics?.initializeSessionManagement(
-                _analytics?.androidStorage?.v1SessionId, _analytics?.androidStorage?.v1LastActiveTimestamp
-            )
-        if(_isDbBeingMigrated.compareAndSet(false, true)) {
+        // migrate user id/ anon id
+        _analytics?.setUserIdFromV1()
+        _analytics?.migrateAnonymousIdFromV1()
+        _analytics?.migrateOptOutFromV1()
+        _analytics?.migrateContextFromV1()
+        _analytics?.migrateV1AdvertisingId()
+        _analytics?.initializeSessionManagement(
+            _analytics?.androidStorage?.v1SessionId,
+            _analytics?.androidStorage?.v1LastActiveTimestamp
+        )
+        if (_isDbBeingMigrated.compareAndSet(false, true)) {
             _analytics?.androidStorage?.migrateV1StorageToV2 {
                 setReinstated(true)
             }
@@ -138,8 +139,14 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     }
 
     private fun Analytics.migrateAnonymousIdFromV1() {
-        (androidStorage.v1AnonymousId?:AndroidUtils.getDeviceId()).let { _analytics?.setAnonymousId(it) }
+        (androidStorage.v1AnonymousId
+            ?: AndroidUtils.getDeviceId()).let { _analytics?.setAnonymousId(it) }
         androidStorage.resetV1AnonymousId()
+    }
+
+    private fun Analytics.migrateV1AdvertisingId() {
+        androidStorage.v1AdvertisingId?.let { androidStorage.saveAdvertisingId(it) }
+        androidStorage.resetV1AdvertisingId()
     }
 
     private fun Analytics.migrateOptOutFromV1() {

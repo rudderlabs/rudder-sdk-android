@@ -18,7 +18,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.util.Log
 import java.io.File
+import java.lang.Exception
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -203,6 +205,7 @@ class RudderDatabase(private val context: Context,
     }
 
     fun shutDown() {
+        Log.e("tu premi", "dao", Exception("gandu"))
         registeredDaoList.iterator().forEach {
             it.value.setDatabase(null)
         }

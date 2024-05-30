@@ -536,7 +536,6 @@ internal class AnalyticsDelegate(
                 false, "Config download service not set or " + "configuration not available"
             )
             logger.error(log = "Config Download Service Not Set or Configuration not available")
-            println("shutdown called from $this")
             shutdown()
             return
         }
@@ -563,7 +562,6 @@ internal class AnalyticsDelegate(
                         initializationListener?.invoke(
                             false, "Downloading failed, Shutting down $lastErrorMsg"
                         )
-                        println("shutdown called from $this")
                         //log lastErrorMsg or isSourceEnabled
                         shutdown()
                     }

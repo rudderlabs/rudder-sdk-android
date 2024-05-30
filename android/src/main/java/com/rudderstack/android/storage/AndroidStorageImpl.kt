@@ -317,6 +317,8 @@ class AndroidStorageImpl(
         get() = preferenceManager?.sessionId?.takeIf { it > -1L }
     override val lastActiveTimestamp: Long?
         get() = preferenceManager?.lastActiveTimestamp?.takeIf { it > -1L }
+    override val advertisingId: String?
+        get() = preferenceManager?.advertisingId
     override val v1AnonymousId: String?
         get() = preferenceManager?.v1AnonymousId
     override val v1SessionId: Long?
@@ -331,6 +333,8 @@ class AndroidStorageImpl(
         get() = preferenceManager?.v1ExternalIdsJson?.let {
             jsonAdapter?.readJson(it, object : RudderTypeAdapter<List<Map<String, String>>>() {})
         }
+    override val v1AdvertisingId: String?
+        get() = preferenceManager?.v1AdvertisingId
     override val trackAutoSession: Boolean
         get() = preferenceManager?.trackAutoSession?: false
     override val build: Int?
@@ -360,6 +364,10 @@ class AndroidStorageImpl(
         preferenceManager?.saveLastActiveTimestamp(timestamp)
     }
 
+    override fun saveAdvertisingId(advertisingId: String) {
+        preferenceManager?.saveAdvertisingId(advertisingId)
+    }
+
     override fun clearSessionId() {
         preferenceManager?.clearSessionId()
     }
@@ -384,15 +392,18 @@ class AndroidStorageImpl(
         preferenceManager?.resetV1ExternalIds()
     }
 
-    override fun migrateV1StorageToV2Sync() {
-        migrateV1MessagesToV2Database(application, rudderDatabase?:return,
-            jsonAdapter?:return, logger)
+    override fun resetV1AdvertisingId() {
+        preferenceManager?.resetV1AdvertisingId()
     }
 
-    override fun migrateV1StorageToV2(callback: () -> Unit) {
+    override fun migrateV1StorageToV2Sync(): Boolean {
+        return migrateV1MessagesToV2Database(application, rudderDatabase?:return false,
+            jsonAdapter?:return false, logger)
+    }
+
+    override fun migrateV1StorageToV2(callback: (Boolean) -> Unit) {
         storageExecutor.execute {
-            migrateV1StorageToV2Sync()
-            callback()
+            callback(migrateV1StorageToV2Sync())
         }
     }
 

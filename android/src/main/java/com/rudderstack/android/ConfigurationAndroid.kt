@@ -251,6 +251,7 @@ interface ConfigurationAndroid : Configuration {
         anonymousId: String? = this.anonymousId,
         userId: String? = this.userId,
         advertisingId: String? = this.advertisingId,
+        autoCollectAdvertId: Boolean = this.autoCollectAdvertId,
         deviceToken: String? = this.deviceToken,
         trackAutoSession: Boolean = this.trackAutoSession,
         sessionTimeoutMillis: Long = this.sessionTimeoutMillis
@@ -298,7 +299,7 @@ interface ConfigurationAndroid : Configuration {
         const val TRACK_LIFECYCLE_EVENTS = true
         const val RECORD_SCREEN_VIEWS = true
         const val IS_PERIODIC_FLUSH_ENABLED = false
-        const val AUTO_COLLECT_ADVERT_ID = true
+        const val AUTO_COLLECT_ADVERT_ID = false
         const val MULTI_PROCESS_ENABLED = false
         val DEFAULT_PROCESS_NAME: String? = null
         const val USE_CONTENT_PROVIDER = false

@@ -24,11 +24,13 @@ interface AndroidStorage : Storage {
     val userId: String?
     val sessionId: Long?
     val lastActiveTimestamp: Long?
+    val advertisingId: String?
     val v1AnonymousId: String?
     val v1SessionId: Long?
     val v1LastActiveTimestamp: Long?
     val v1Traits: Map<String, Any?>?
     val v1ExternalIds: List<Map<String, String>>?
+    val v1AdvertisingId: String?
     val trackAutoSession: Boolean
     val build: Int?
     val versionName: String?
@@ -50,15 +52,28 @@ interface AndroidStorage : Storage {
     fun setSessionId(sessionId: Long)
     fun setTrackAutoSession(trackAutoSession : Boolean)
     fun saveLastActiveTimestamp(timestamp: Long)
-
+    fun saveAdvertisingId(advertisingId: String)
     fun clearSessionId()
     fun clearLastActiveTimestamp()
     fun resetV1AnonymousId()
     fun resetV1OptOut()
     fun resetV1Traits()
     fun resetV1ExternalIds()
+    fun resetV1AdvertisingId()
     fun setBuild(build: Int)
     fun setVersionName(versionName: String)
-    fun migrateV1StorageToV2Sync()
-    fun migrateV1StorageToV2(callback: () -> Unit)
+
+    /**
+     * Migrate the v1 database to current v2 database
+     *
+     * @return true if v1 database exists else false
+     */
+    fun migrateV1StorageToV2Sync() : Boolean
+
+    /**
+     * Migrate the v1 database to current v2 database on a separate executor
+     *
+     * @param callback Callback with true if v1 database exists else false
+     */
+    fun migrateV1StorageToV2(callback: (Boolean) -> Unit)
 }
