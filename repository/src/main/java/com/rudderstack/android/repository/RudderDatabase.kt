@@ -205,7 +205,6 @@ class RudderDatabase(private val context: Context,
     }
 
     fun shutDown() {
-        Log.e("tu premi", "dao", Exception("gandu"))
         registeredDaoList.iterator().forEach {
             it.value.setDatabase(null)
         }
