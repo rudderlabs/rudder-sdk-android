@@ -67,7 +67,7 @@ open class RudderServerConfigParseTest {
     }
 
     @Test
-    fun testObjectSerializationDeserialization() {
+    fun `given a  rudderServerConfig object, when serializing, then the operation completes successfully`()  {
         val objectToSave = provideRudderServerConfig()
 
         val baos = ByteArrayOutputStream()
