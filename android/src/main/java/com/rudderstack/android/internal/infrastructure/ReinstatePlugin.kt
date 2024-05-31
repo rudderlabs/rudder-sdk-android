@@ -25,6 +25,7 @@ import com.rudderstack.android.utilities.setAnonymousId
 import com.rudderstack.android.utilities.setUserId
 import com.rudderstack.android.utilities.initializeSessionManagement
 import com.rudderstack.android.utilities.isV1SavedServerConfigContainsSourceId
+import com.rudderstack.android.utilities.startup
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.DataUploadService
@@ -124,6 +125,7 @@ internal class ReinstatePlugin : InfrastructurePlugin {
             _analytics?.androidStorage?.v1SessionId,
             _analytics?.androidStorage?.v1LastActiveTimestamp
         )
+        _analytics?.migrateV1Build()
         if (_isDbBeingMigrated.compareAndSet(false, true)) {
             _analytics?.androidStorage?.migrateV1StorageToV2 {
                 setReinstated(true)
@@ -142,6 +144,12 @@ internal class ReinstatePlugin : InfrastructurePlugin {
         (androidStorage.v1AnonymousId
             ?: AndroidUtils.getDeviceId()).let { _analytics?.setAnonymousId(it) }
         androidStorage.resetV1AnonymousId()
+    }
+    private fun Analytics.migrateV1Build() {
+        androidStorage.v1Build?.let {
+            androidStorage.setBuild(it)
+        }
+        androidStorage.resetV1Build()
     }
 
     private fun Analytics.migrateV1AdvertisingId() {

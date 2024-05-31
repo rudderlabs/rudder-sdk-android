@@ -339,6 +339,8 @@ class AndroidStorageImpl(
         get() = preferenceManager?.trackAutoSession?: false
     override val build: Int?
         get() = preferenceManager?.build
+    override val v1Build: Int?
+        get() = preferenceManager?.v1Build
     override val versionName: String?
         get() = preferenceManager?.versionName
 
@@ -394,6 +396,10 @@ class AndroidStorageImpl(
 
     override fun resetV1AdvertisingId() {
         preferenceManager?.resetV1AdvertisingId()
+    }
+
+    override fun resetV1Build() {
+        preferenceManager?.resetV1Build()
     }
 
     override fun migrateV1StorageToV2Sync(): Boolean {
