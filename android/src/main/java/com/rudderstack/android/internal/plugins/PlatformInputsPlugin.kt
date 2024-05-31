@@ -64,7 +64,17 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
                 _advertisingId = null
             }
         }
+    private var collectDeviceId = false
+        set(value) {
+            if (field == value) return
+            field = value
+            if (value) application?.collectDeviceId()
+            else synchronized(this) {
+                _deviceId = null
+            }
+        }
 
+    private var _deviceId: String?= null
     private var _advertisingId: String? = null
     private var _deviceToken: String? = null
 
@@ -87,6 +97,9 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         _analytics = analytics
         autoCollectAdvertisingId =
             analytics.currentConfigurationAndroid?.autoCollectAdvertId ?: false
+        analytics.currentConfigurationAndroid?.also {
+            collectDeviceId = it.collectDeviceId
+        }
     }
 
     override fun updateConfiguration(configuration: Configuration) {
@@ -97,6 +110,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             if (_advertisingId != configuration.advertisingId)
                 _advertisingId = configuration.advertisingId
         }
+        collectDeviceId = configuration.collectDeviceId
     }
 
     /**
@@ -127,6 +141,11 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
                     copy(advertisingId = adId)
                 }
             }
+        }
+    }
+    private fun Application.collectDeviceId(){
+        synchronized(this@PlatformInputsPlugin){
+            _deviceId = getDeviceId(this)
         }
     }
 
@@ -221,7 +240,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
 
     private fun Application.getDeviceInfo(): Any? {
         return ((mapOf(
-            "id" to getDeviceId(this),
+            "id" to _deviceId,
             "manufacturer" to Build.MANUFACTURER,
             "model" to Build.MODEL,
             "name" to Build.DEVICE,

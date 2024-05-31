@@ -71,6 +71,7 @@ interface ConfigurationAndroid : Configuration {
     val defaultProcessName: String?
     val advertisingId: String?
     val deviceToken: String?
+    val collectDeviceId : Boolean
     val advertisingIdFetchExecutor : ExecutorService?
     //session
     val trackAutoSession: Boolean
@@ -102,6 +103,7 @@ interface ConfigurationAndroid : Configuration {
             logger: Logger = AndroidLogger,
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
+            collectDeviceId: Boolean = Defaults.COLLECT_DEVICE_ID,
             advertisingIdFetchExecutor : ExecutorService? = null,
             base64Generator: Base64Generator = AndroidUtils.defaultBase64Generator(),
             trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
@@ -138,7 +140,7 @@ interface ConfigurationAndroid : Configuration {
             override val analyticsExecutor: ExecutorService = analyticsExecutor
             override val networkExecutor: ExecutorService = networkExecutor
             override val base64Generator: Base64Generator = base64Generator
-
+            override val collectDeviceId: Boolean = collectDeviceId
         }
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         operator fun invoke(
@@ -161,7 +163,7 @@ interface ConfigurationAndroid : Configuration {
             advertisingId: String? = null,
 
             deviceToken: String? = null,
-
+            collectDeviceId: Boolean = Defaults.COLLECT_DEVICE_ID,
 
             advertisingIdFetchExecutor: ExecutorService? = null,
             trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
@@ -191,6 +193,7 @@ interface ConfigurationAndroid : Configuration {
                 configuration.logger,
                 configuration.analyticsExecutor,
                 configuration.networkExecutor,
+                collectDeviceId,
                 advertisingIdFetchExecutor,
                 configuration.base64Generator,
                 trackAutoSession,
@@ -277,6 +280,7 @@ interface ConfigurationAndroid : Configuration {
             logger,
             analyticsExecutor,
             networkExecutor,
+            collectDeviceId,
             advertisingIdFetchExecutor,
             base64Generator,
             trackAutoSession,
@@ -289,6 +293,7 @@ interface ConfigurationAndroid : Configuration {
     }
 
     object Defaults{
+        const val COLLECT_DEVICE_ID: Boolean = true
         const val DEFAULT_ANDROID_DATAPLANE_URL = "https://hosted.rudderlabs.com"
         const val DEFAULT_ANDROID_CONTROLPLANE_URL = "https://api.rudderlabs.com"
         const val GZIP_ENABLED: Boolean = true
