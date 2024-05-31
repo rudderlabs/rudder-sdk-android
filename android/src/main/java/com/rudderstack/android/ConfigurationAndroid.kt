@@ -17,14 +17,11 @@ package com.rudderstack.android
 import android.app.Application
 import androidx.annotation.RestrictTo
 import com.rudderstack.android.internal.AndroidLogger
-import com.rudderstack.android.storage.AndroidStorage
-import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Base64Generator
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Logger
 import com.rudderstack.core.RetryStrategy
 import com.rudderstack.core.RudderOptions
-import com.rudderstack.core.Storage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -147,7 +144,7 @@ interface ConfigurationAndroid : Configuration {
         operator fun invoke(
             configuration: Configuration,
             application: Application,
-            anonymousId: String = AndroidUtils.getDeviceId(),
+            anonymousId: String = AndroidUtils.generateAnonymousId(),
             userId: String? = null,
             trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
 

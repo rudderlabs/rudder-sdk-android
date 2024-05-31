@@ -43,7 +43,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     public ConfigurationAndroidBuilder(Application application, JsonAdapter jsonAdapter) {
         super(jsonAdapter);
         this.application = application;
-        anonymousId = AndroidUtils.INSTANCE.getDeviceId();
+        anonymousId = AndroidUtils.INSTANCE.generateAnonymousId();
     }
     public ConfigurationBuilder withAnonymousId(String anonymousId) {
         this.anonymousId = anonymousId;

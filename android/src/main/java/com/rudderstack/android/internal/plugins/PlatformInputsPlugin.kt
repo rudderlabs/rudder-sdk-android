@@ -26,6 +26,7 @@ import android.provider.Settings
 import android.telephony.TelephonyManager
 import androidx.annotation.VisibleForTesting
 import com.rudderstack.android.AndroidUtils
+import com.rudderstack.android.AndroidUtils.getDeviceId
 import com.rudderstack.android.AndroidUtils.isTv
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.LifecycleListenerPlugin
@@ -90,7 +91,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
 
     override fun updateConfiguration(configuration: Configuration) {
         if (configuration !is ConfigurationAndroid) return
-        if(autoCollectAdvertisingId != configuration.autoCollectAdvertId)
+        if (autoCollectAdvertisingId != configuration.autoCollectAdvertId)
             autoCollectAdvertisingId = configuration.autoCollectAdvertId
         synchronized(this) {
             if (_advertisingId != configuration.advertisingId)
@@ -218,10 +219,9 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
 
     }
 
-
     private fun Application.getDeviceInfo(): Any? {
         return ((mapOf(
-            "id" to AndroidUtils.getDeviceId(),
+            "id" to getDeviceId(this),
             "manufacturer" to Build.MANUFACTURER,
             "model" to Build.MODEL,
             "name" to Build.DEVICE,
