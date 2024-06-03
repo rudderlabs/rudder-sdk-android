@@ -179,6 +179,8 @@ internal class RudderPreferenceManager(application: Application,
         get() =  preferencesV1.getLong(RUDDER_SESSION_ID_KEY, -1)
     internal val v1Build: Int
         get() = preferencesV1.getInt(RUDDER_APPLICATION_BUILD_KEY, -1)
+    internal val v1VersionName: String?
+        get() = preferencesV1.getString(RUDDER_APPLICATION_BUILD_KEY, null)
     fun saveOptStatus(optStatus: Boolean) {
         preferences.edit().putBoolean(RUDDER_OPT_STATUS_KEY.key, optStatus).apply()
     }
@@ -205,6 +207,15 @@ internal class RudderPreferenceManager(application: Application,
 
     fun resetV1AdvertisingId() {
         preferencesV1.edit().remove(RUDDER_ADVERTISING_ID_KEY).apply()
+    }
+    fun resetV1SessionId() {
+        preferencesV1.edit().remove(RUDDER_SESSION_ID_KEY).apply()
+    }
+    fun resetV1LastActiveTimestamp() {
+        preferencesV1.edit().remove(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY).apply()
+    }
+    fun resetV1VersionName(){
+        preferencesV1.edit().remove(RUDDER_APPLICATION_VERSION_KEY).apply()
     }
 
     fun resetV1Build() {

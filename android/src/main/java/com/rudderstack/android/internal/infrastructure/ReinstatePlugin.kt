@@ -36,7 +36,6 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Reinstate user id Initialise session management for the user Reinstate
  * traits and external ids
  */
-
 internal class ReinstatePlugin : InfrastructurePlugin {
     private var _analytics: Analytics? = null
     private val _isReinstated = AtomicBoolean(false)
@@ -119,7 +118,9 @@ internal class ReinstatePlugin : InfrastructurePlugin {
             _analytics?.androidStorage?.v1SessionId,
             _analytics?.androidStorage?.v1LastActiveTimestamp
         )
+        _analytics?.resetV1SessionValues()
         _analytics?.migrateV1Build()
+        _analytics?.migrateV1Version()
         if (_isDbBeingMigrated.compareAndSet(false, true)) {
             _analytics?.androidStorage?.migrateV1StorageToV2 {
                 setReinstated(true)
@@ -145,9 +146,21 @@ internal class ReinstatePlugin : InfrastructurePlugin {
         }
         androidStorage.resetV1Build()
     }
+    private fun Analytics.resetV1SessionValues() {
+        androidStorage.resetV1SessionId()
+        androidStorage.resetV1SessionLastActiveTimestamp()
+    }
+    private fun Analytics.migrateV1Version() {
+        androidStorage.v1VersionName?.let {
+            androidStorage.setVersionName(it)
+        }
+        androidStorage.resetV1Version()
+    }
 
     private fun Analytics.migrateV1AdvertisingId() {
-        androidStorage.v1AdvertisingId?.let { androidStorage.saveAdvertisingId(it) }
+        androidStorage.v1AdvertisingId?.let {
+            androidStorage.saveAdvertisingId(it)
+        }
         androidStorage.resetV1AdvertisingId()
     }
 

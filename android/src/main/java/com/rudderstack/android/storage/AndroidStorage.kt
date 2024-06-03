@@ -35,6 +35,7 @@ interface AndroidStorage : Storage {
     val build: Int?
     val v1Build: Int?
     val versionName: String?
+    val v1VersionName: String?
     /**
      * Platform specific implementation of caching context. This can be done locally too.
      *
@@ -63,6 +64,9 @@ interface AndroidStorage : Storage {
     fun resetV1AdvertisingId()
 
     fun resetV1Build()
+    fun resetV1Version()
+    fun resetV1SessionId()
+    fun resetV1SessionLastActiveTimestamp()
     fun setBuild(build: Int)
     fun setVersionName(versionName: String)
 

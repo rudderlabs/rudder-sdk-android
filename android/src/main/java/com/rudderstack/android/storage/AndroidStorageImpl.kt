@@ -343,6 +343,8 @@ class AndroidStorageImpl(
         get() = preferenceManager?.v1Build
     override val versionName: String?
         get() = preferenceManager?.versionName
+    override val v1VersionName: String?
+        get() = preferenceManager?.v1VersionName
 
     override fun setAnonymousId(anonymousId: String) {
         _anonymousId = anonymousId
@@ -400,6 +402,18 @@ class AndroidStorageImpl(
 
     override fun resetV1Build() {
         preferenceManager?.resetV1Build()
+    }
+
+    override fun resetV1Version() {
+        preferenceManager?.resetV1VersionName()
+    }
+
+    override fun resetV1SessionId() {
+        preferenceManager?.resetV1SessionId()
+    }
+
+    override fun resetV1SessionLastActiveTimestamp() {
+        preferenceManager?.resetV1LastActiveTimestamp()
     }
 
     override fun migrateV1StorageToV2Sync(): Boolean {
