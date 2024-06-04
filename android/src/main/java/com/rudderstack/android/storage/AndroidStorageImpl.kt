@@ -427,6 +427,12 @@ class AndroidStorageImpl(
         }
     }
 
+    override fun deleteV1SharedPreferencesFile() {
+        storageExecutor?.execute {
+            preferenceManager?.deleteV1PreferencesFile()
+        }
+    }
+
     override fun setBuild(build: Int) {
         preferenceManager?.saveBuild(build)
     }
@@ -461,6 +467,4 @@ class AndroidStorageImpl(
             HashMap(this), application, contextFileName, logger
         )
     }
-
-
 }

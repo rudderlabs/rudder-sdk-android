@@ -34,8 +34,8 @@ import java.util.*
 
 
 internal object AndroidUtils {
-    fun generateAnonymousId(): String {
-        return UUID.randomUUID().toString()
+    fun generateAnonymousId(isCollectDeviceId: Boolean, application: Application): String {
+        return if(! isCollectDeviceId) UUID.randomUUID().toString() else getDeviceId(application)
     }
     internal fun getDeviceId(application: Application): String = run {
 
@@ -103,7 +103,7 @@ internal object AndroidUtils {
         deviceToken: String,
         collectDeviceId: Boolean
     ): RudderDeviceInfo {
-        val deviceId = if (collectDeviceId) AndroidUtils.generateAnonymousId() else null
+        val deviceId = if (collectDeviceId) getDeviceId(this) else null
         return RudderDeviceInfo(
             deviceId = deviceId,
             manufacturer = Build.MANUFACTURER,

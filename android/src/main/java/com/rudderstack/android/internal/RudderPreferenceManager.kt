@@ -16,7 +16,10 @@ package com.rudderstack.android.internal
 
 import android.app.Application
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import android.os.Build
+import java.io.File
 
 // keys
 private const val RUDDER_PREFS = "rl_prefs"
@@ -38,7 +41,7 @@ private const val RUDDER_ADVERTISING_ID_KEY = "rl_advertising_id_key"
 
 private const val RUDDER_APPLICATION_VERSION_KEY = "rl_application_version_key"
 private const val RUDDER_APPLICATION_BUILD_KEY = "rl_application_build_key"
-internal class RudderPreferenceManager(application: Application,
+internal class RudderPreferenceManager(private val application: Application,
     private val writeKey: String) {
 
     private val String.key: String
@@ -180,7 +183,7 @@ internal class RudderPreferenceManager(application: Application,
     internal val v1Build: Int
         get() = preferencesV1.getInt(RUDDER_APPLICATION_BUILD_KEY, -1)
     internal val v1VersionName: String?
-        get() = preferencesV1.getString(RUDDER_APPLICATION_BUILD_KEY, null)
+        get() = preferencesV1.getString(RUDDER_APPLICATION_VERSION_KEY, null)
     fun saveOptStatus(optStatus: Boolean) {
         preferences.edit().putBoolean(RUDDER_OPT_STATUS_KEY.key, optStatus).apply()
     }
@@ -220,5 +223,15 @@ internal class RudderPreferenceManager(application: Application,
 
     fun resetV1Build() {
         preferencesV1.edit().remove(RUDDER_APPLICATION_BUILD_KEY).apply()
+    }
+
+    fun deleteV1PreferencesFile(): Boolean{
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            return application.deleteSharedPreferences(RUDDER_PREFS)
+        } else {
+            application.getSharedPreferences(RUDDER_PREFS, MODE_PRIVATE).edit().clear().apply()
+            val dir = File(application.applicationInfo.dataDir, "shared_prefs")
+            return File(dir, "$RUDDER_PREFS.xml").delete()
+        }
     }
 }

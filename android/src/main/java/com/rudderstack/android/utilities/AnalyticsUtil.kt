@@ -103,7 +103,6 @@ fun Analytics.setUserId(userId: String) {
 private val infrastructurePlugins = arrayOf(
     ReinstatePlugin(),
     AnonymousIdHeaderPlugin(),
-    LifecycleObserverPlugin(),
     ActivityBroadcasterPlugin(),
     ResetImplementationPlugin()
 )
@@ -113,7 +112,8 @@ private val messagePlugins = listOf(
     FillDefaultsPlugin(),
     PlatformInputsPlugin(),
     SessionPlugin(),
-    AppInstallUpdateTrackerPlugin()
+    AppInstallUpdateTrackerPlugin(),
+    LifecycleObserverPlugin(),
     )
 
 internal fun Analytics.startup() {

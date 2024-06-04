@@ -83,4 +83,6 @@ interface AndroidStorage : Storage {
      * @param callback Callback with true if v1 database exists else false
      */
     fun migrateV1StorageToV2(callback: (Boolean) -> Unit)
+
+    fun deleteV1SharedPreferencesFile()
 }
