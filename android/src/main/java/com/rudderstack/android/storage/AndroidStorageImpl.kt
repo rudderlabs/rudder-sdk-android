@@ -16,6 +16,7 @@ package com.rudderstack.android.storage
 
 import android.app.Application
 import android.os.Build
+import android.util.Log
 import com.rudderstack.android.BuildConfig
 import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.repository.Dao
@@ -34,6 +35,12 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
 
+private const val DB_VERSION = 1
+private const val SERVER_CONFIG_FILE_NAME = "RudderServerConfig"
+
+private const val CONTEXT_FILE_NAME = "pref_context"
+private const val V1_RUDDER_FLUSH_CONFIG_FILE_NAME = "RudderFlushConfig"
+
 class AndroidStorageImpl(
     private val application: Application,
     private val useContentProvider: Boolean = false,
@@ -46,15 +53,6 @@ class AndroidStorageImpl(
     private var jsonAdapter: JsonAdapter? = null
 
     private var preferenceManager: RudderPreferenceManager? = null
-
-    companion object {
-
-        private const val DB_VERSION = 1
-        private const val SERVER_CONFIG_FILE_NAME = "RudderServerConfig"
-
-        private const val CONTEXT_FILE_NAME = "pref_context"
-
-    }
 
     private val serverConfigFileName
         get() = "$SERVER_CONFIG_FILE_NAME-{$writeKey}"
@@ -115,7 +113,9 @@ class AndroidStorageImpl(
             DB_VERSION,
             providedExecutorService = storageExecutor
         )
-        messageDao = rudderDatabase?.getDao(MessageEntity::class.java, storageExecutor)
+        messageDao = rudderDatabase?.getDao(MessageEntity::class.java, storageExecutor).also {
+            Log.e("issue","messageDao created for v2: $it")
+        }
         messageDao?.addDataChangeListener(_messageDataListener)
 
     }
@@ -417,6 +417,7 @@ class AndroidStorageImpl(
     }
 
     override fun migrateV1StorageToV2Sync(): Boolean {
+        Log.e("issue","calling migrate on db: $rudderDatabase")
         return migrateV1MessagesToV2Database(application, rudderDatabase?:return false,
             jsonAdapter?:return false, logger)
     }
@@ -428,8 +429,15 @@ class AndroidStorageImpl(
     }
 
     override fun deleteV1SharedPreferencesFile() {
-        storageExecutor?.execute {
+        storageExecutor.execute {
             preferenceManager?.deleteV1PreferencesFile()
+        }
+    }
+
+    override fun deleteV1ConfigFiles() {
+        storageExecutor.execute {
+            deleteFile(application, SERVER_CONFIG_FILE_NAME)
+            deleteFile(application, V1_RUDDER_FLUSH_CONFIG_FILE_NAME)
         }
     }
 

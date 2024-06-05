@@ -86,3 +86,12 @@ internal fun fileExists(context: Context, filename: String): Boolean {
     val file = context.getFileStreamPath(filename)
     return file != null && file.exists()
 }
+
+internal fun deleteFile(context: Context, fileName: String): Boolean {
+    try {
+        val file = context.deleteFile(fileName)
+        return true
+    }catch (ex: Exception){
+        return false
+    }
+}

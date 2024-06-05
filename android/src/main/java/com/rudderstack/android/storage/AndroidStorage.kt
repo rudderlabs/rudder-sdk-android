@@ -85,4 +85,5 @@ interface AndroidStorage : Storage {
     fun migrateV1StorageToV2(callback: (Boolean) -> Unit)
 
     fun deleteV1SharedPreferencesFile()
+    fun deleteV1ConfigFiles()
 }
