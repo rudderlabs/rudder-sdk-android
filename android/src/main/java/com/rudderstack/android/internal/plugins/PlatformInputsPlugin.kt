@@ -25,6 +25,7 @@ import android.os.Build
 import android.provider.Settings
 import android.telephony.TelephonyManager
 import com.rudderstack.android.AndroidUtils
+import com.rudderstack.android.AndroidUtils.isOnClassPath
 import com.rudderstack.android.AndroidUtils.isTv
 import com.rudderstack.android.LifecycleListenerPlugin
 import com.rudderstack.android.utilities.currentConfigurationAndroid
@@ -39,10 +40,9 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * Sets the context specific to Android
  *
- * @property application The application is needed to generate the required values
- * @constructor
- * Initiates the values
- *
+ * @constructor Initiates the values
+ * @property application The application is needed to generate the required
+ *     values
  */
 private const val CHANNEL = "mobile"
 
@@ -108,8 +108,24 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     }
 
     private fun Application.collectAdvertisingId() {
+        if(!isOnClassPath("com.google.android.gms.ads.identifier.AdvertisingIdClient")){
+            _analytics?.currentConfiguration?.logger?.debug(log = "Not collecting advertising ID because "
+                    + "com.google.android.gms.ads.identifier.AdvertisingIdClient "
+                    + "was not found on the classpath."
+            )
+            return
+        }
         _analytics?.currentConfigurationAndroid?.advertisingIdFetchExecutor?.submit {
-            val adId = getGooglePlayServicesAdvertisingID() ?: getAmazonFireAdvertisingID()
+            val adId = try {
+                getGooglePlayServicesAdvertisingID()
+            } catch (ex: Exception) {
+                _analytics?.currentConfiguration?.logger?.error(log = "Error collecting play services ad id", throwable = ex)
+                null
+            } ?: try { getAmazonFireAdvertisingID() } catch (ex: Exception){
+                _analytics?.currentConfiguration?.logger?.error(log = "Error collecting amazon fire ad id", throwable = ex)
+                null
+            }
+            _analytics?.currentConfiguration?.logger?.info(log = "Ad id collected is $adId")
             if (adId != null) {
                 synchronized(this) {
                     _advertisingId = adId
@@ -279,6 +295,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
 
     override fun onShutDown() {
         super.onShutDown()
+        _analytics?.currentConfigurationAndroid?.advertisingIdFetchExecutor?.shutdownNow()
         _analytics = null
     }
 

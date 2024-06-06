@@ -105,7 +105,7 @@ interface ConfigurationAndroid : Configuration {
             logger: Logger = AndroidLogger,
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
-            advertisingIdFetchExecutor : ExecutorService? = null,
+            advertisingIdFetchExecutor : ExecutorService? = Executors.newCachedThreadPool(),
             base64Generator: Base64Generator = AndroidUtils.defaultBase64Generator(),
             trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
             sessionTimeoutMillis: Long = Defaults.SESSION_TIMEOUT
