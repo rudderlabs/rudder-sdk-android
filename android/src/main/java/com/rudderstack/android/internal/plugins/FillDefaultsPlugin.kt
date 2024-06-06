@@ -61,14 +61,20 @@ internal class FillDefaultsPlugin : Plugin {
             throw ex
         }
         //copying top level context to message context
-
-        return (this.copy(context = (
+        val newContext = (
                 // in case of alias we purposefully remove traits from context
                 _analytics?.contextState?.value?.let {
                     if (this is AliasMessage && this.userId != _analytics?.currentConfigurationAndroid?.userId) it.updateWith(
                         traits = mapOf()
                     ) else it
-                } selectiveReplace context),
+                } selectiveReplace context)?.let {
+                    if (this !is IdentifyMessage){
+                        // external ids is only supported for identify calls
+                        it.withExternalIdsRemoved()
+                    }else it
+        }
+
+        return (this.copy(context = newContext,
             anonymousId = anonId,
             userId = userId) as T)
     }
