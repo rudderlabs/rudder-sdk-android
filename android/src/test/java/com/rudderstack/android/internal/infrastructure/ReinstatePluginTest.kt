@@ -118,7 +118,7 @@ class ReinstatePluginTest {
 
 //        plugin.updateConfiguration(configurationAndroid)
         busyWait(100)
-        Mockito.verify(androidStorage, times(2)).v1Traits
+        Mockito.verify(androidStorage, times(3)).v1Traits
     }
     @Test
     fun `test v1OptOut should be called if v1 data available and v2 unavailable`(){
