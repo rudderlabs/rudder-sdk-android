@@ -10,6 +10,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter
 import com.rudderstack.android.sampleapp.analytics.workmanger.SampleWorkManagerPlugin
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.Logger
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 
@@ -38,7 +39,8 @@ object RudderAnalyticsUtils {
                 controlPlaneUrl = CONTROL_PLANE_URL,
                 trackLifecycleEvents = true,
                 recordScreenViews = true,
-                isPeriodicFlushEnabled = true
+                isPeriodicFlushEnabled = true,
+                logLevel = Logger.LogLevel.DEBUG,
             )
         )
         _rudderReporter = DefaultRudderReporter(

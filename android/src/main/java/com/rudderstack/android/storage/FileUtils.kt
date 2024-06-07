@@ -33,7 +33,10 @@ import java.io.Serializable
  * @return
  */
 internal fun <T : Serializable> saveObject(
-    obj: T, context: Context, fileName: String, logger: Logger? = AndroidLogger
+    obj: T,
+    context: Context,
+    fileName: String,
+    logger: Logger? = AndroidLogger(Logger.LogLevel.NONE)
 ): Boolean {
     try {
         val fos: FileOutputStream = context.openFileOutput(
@@ -62,7 +65,7 @@ internal fun <T : Serializable> saveObject(
  * @return
  */
 internal fun <T : Serializable> getObject(
-    context: Context, fileName: String, logger: Logger? = AndroidLogger
+    context: Context, fileName: String, logger: Logger? = AndroidLogger(Logger.LogLevel.NONE)
 ): T? {
     try {
         val file = context.getFileStreamPath(fileName)
@@ -82,6 +85,7 @@ internal fun <T : Serializable> getObject(
     }
     return null
 }
+
 internal fun fileExists(context: Context, filename: String): Boolean {
     val file = context.getFileStreamPath(filename)
     return file != null && file.exists()
