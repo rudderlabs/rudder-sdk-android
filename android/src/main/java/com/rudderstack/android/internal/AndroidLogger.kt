@@ -22,7 +22,7 @@ import com.rudderstack.core.Logger
  *
  */
 internal object AndroidLogger : Logger {
-    private var logLevel: Logger.LogLevel = Logger.LogLevel.INFO
+    private var logLevel: Logger.LogLevel = Logger.LogLevel.NONE
         @Synchronized set
         @Synchronized get
 
