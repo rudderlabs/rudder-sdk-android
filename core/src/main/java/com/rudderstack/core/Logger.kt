@@ -45,8 +45,8 @@ interface Logger {
      * @property level priority for each type
      */
     enum class LogLevel(internal val level: Int){
-        Info(0),
-        Debug(1),
+        Debug(0),
+        Info(1),
         Warn(2),
         Error(3),
         None(4),
