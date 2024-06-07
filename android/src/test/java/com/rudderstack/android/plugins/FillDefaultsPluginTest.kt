@@ -126,18 +126,9 @@ class FillDefaultsPluginTest {
                     hasEntry("custom_name", "c_name"),
                 )
             )
+            // track messages shouldn't contain external ids
             assertThat(
-                output?.context?.externalIds, allOf(
-                    notNullValue(), iterableWithSize(2), everyItem(
-                        aMapWithSize(1)
-                    ), containsInAnyOrder(
-                        mapOf(
-                            "amp_id" to "amp_id"
-                        ), mapOf(
-                            "some_id" to "s_id"
-                        )
-                    )
-                )
+                output?.context?.externalIds, anyOf(nullValue(), emptyIterable<Map<String,String>>())
             )
         })
 
