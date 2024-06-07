@@ -34,5 +34,5 @@ class TestLogger : Logger {
     }
 
     override val level: Logger.LogLevel
-        get() = Logger.LogLevel.Error
+        get() = Logger.LogLevel.ERROR
 }

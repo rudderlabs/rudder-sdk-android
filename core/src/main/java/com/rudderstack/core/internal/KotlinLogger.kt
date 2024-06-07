@@ -18,7 +18,7 @@ import com.rudderstack.core.Logger
 
 object KotlinLogger : Logger {
 
-    private var logLevel = Logger.LogLevel.Info
+    private var logLevel = Logger.LogLevel.INFO
         @Synchronized set
         @Synchronized get
 
@@ -27,25 +27,25 @@ object KotlinLogger : Logger {
     }
 
     override fun info(tag: String, log: String) {
-        log(Logger.LogLevel.Info) {
+        log(Logger.LogLevel.INFO) {
             println("$tag-info : $log")
         }
     }
 
     override fun debug(tag: String, log: String) {
-        log(Logger.LogLevel.Debug) {
+        log(Logger.LogLevel.DEBUG) {
             println("$tag-debug : $log")
         }
     }
 
     override fun warn(tag: String, log: String) {
-        log(Logger.LogLevel.Warn) {
+        log(Logger.LogLevel.WARN) {
             println("$tag-warn : $log")
         }
     }
 
     override fun error(tag: String, log: String, throwable: Throwable?) {
-        log(Logger.LogLevel.Error) {
+        log(Logger.LogLevel.ERROR) {
             println("$tag-error : $log")
         }
     }

@@ -45,11 +45,11 @@ interface Logger {
      * @property level priority for each type
      */
     enum class LogLevel(internal val level: Int){
-        Debug(0),
-        Info(1),
-        Warn(2),
-        Error(3),
-        None(4),
+        DEBUG(0),
+        INFO(1),
+        WARN(2),
+        ERROR(3),
+        NONE(4),
     }
     val level: LogLevel
 
@@ -75,6 +75,6 @@ interface Logger {
         }
 
         override val level: LogLevel
-            get() = LogLevel.None
+            get() = LogLevel.NONE
     }
 }

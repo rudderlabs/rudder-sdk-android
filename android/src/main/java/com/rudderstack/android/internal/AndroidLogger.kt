@@ -22,7 +22,7 @@ import com.rudderstack.core.Logger
  *
  */
 internal object AndroidLogger : Logger {
-    private var logLevel: Logger.LogLevel = Logger.LogLevel.Info
+    private var logLevel: Logger.LogLevel = Logger.LogLevel.INFO
         @Synchronized set
         @Synchronized get
 
@@ -31,22 +31,22 @@ internal object AndroidLogger : Logger {
     }
 
     override fun info(tag: String, log: String) {
-        if (Logger.LogLevel.Info >= logLevel)
+        if (Logger.LogLevel.INFO >= logLevel)
             Log.i(tag, log)
     }
 
     override fun debug(tag: String, log: String) {
-        if (Logger.LogLevel.Debug >= logLevel)
+        if (Logger.LogLevel.DEBUG >= logLevel)
             Log.d(tag, log)
     }
 
     override fun warn(tag: String, log: String) {
-        if (Logger.LogLevel.Warn >= logLevel)
+        if (Logger.LogLevel.WARN >= logLevel)
             Log.w(tag, log)
     }
 
     override fun error(tag: String, log: String, throwable: Throwable?) {
-        if (Logger.LogLevel.Error >= logLevel)
+        if (Logger.LogLevel.ERROR >= logLevel)
             Log.e(tag, log, throwable)
     }
 
