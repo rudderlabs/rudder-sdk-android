@@ -113,9 +113,7 @@ class AndroidStorageImpl(
             DB_VERSION,
             providedExecutorService = storageExecutor
         )
-        messageDao = rudderDatabase?.getDao(MessageEntity::class.java, storageExecutor).also {
-            Log.e("issue","messageDao created for v2: $it")
-        }
+        messageDao = rudderDatabase?.getDao(MessageEntity::class.java, storageExecutor)
         messageDao?.addDataChangeListener(_messageDataListener)
 
     }
@@ -417,7 +415,6 @@ class AndroidStorageImpl(
     }
 
     override fun migrateV1StorageToV2Sync(): Boolean {
-        Log.e("issue","calling migrate on db: $rudderDatabase")
         return migrateV1MessagesToV2Database(application, rudderDatabase?:return false,
             jsonAdapter?:return false, logger)
     }
