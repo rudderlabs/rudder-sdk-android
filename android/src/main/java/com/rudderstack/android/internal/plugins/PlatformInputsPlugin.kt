@@ -245,7 +245,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             "model" to Build.MODEL,
             "name" to Build.DEVICE,
             "type" to "Android",
-            "adTrackingEnabled" to !_deviceId.isNullOrEmpty()
+            "adTrackingEnabled" to !_advertisingId.isNullOrEmpty()
         ) optAdd (if (_deviceToken != null) mapOf("token" to _deviceToken) else null)) optAdd if (_advertisingId != null) mapOf(
             "advertisingId" to _advertisingId
         ) else null)
