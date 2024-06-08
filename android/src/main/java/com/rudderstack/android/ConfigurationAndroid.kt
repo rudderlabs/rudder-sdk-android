@@ -159,7 +159,7 @@ interface ConfigurationAndroid : Configuration {
             defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
             advertisingId: String? = null,
             deviceToken: String? = null,
-            logLevel: Logger.LogLevel = Logger.LogLevel.NONE,
+            logLevel: Logger.LogLevel,
             logger: Logger = AndroidLogger(logLevel),
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
