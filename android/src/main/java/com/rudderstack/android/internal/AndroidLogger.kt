@@ -21,8 +21,8 @@ import com.rudderstack.core.Logger
  * Logger implementation specifically for android.
  *
  */
-class AndroidLogger(level: Logger.LogLevel) : Logger {
-    private var logLevel: Logger.LogLevel = level
+class AndroidLogger(initialLogLevel: Logger.LogLevel = Logger.LogLevel.NONE) : Logger {
+    private var logLevel: Logger.LogLevel = initialLogLevel
         @Synchronized set
         @Synchronized get
 
