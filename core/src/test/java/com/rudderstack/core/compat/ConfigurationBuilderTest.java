@@ -69,7 +69,6 @@ public class ConfigurationBuilderTest {
         RetryStrategy customRetryStrategy = RetryStrategy.exponential();
         String customDataPlaneUrl = "https://custom-data-plane-url.com";
         String customControlPlaneUrl = "https://custom-control-plane-url.com";
-        Logger customLogger = mock(Logger.class);
         Storage customStorage = mock(Storage.class);
         ExecutorService customAnalyticsExecutor = Executors.newFixedThreadPool(2);
         ExecutorService customNetworkExecutor = Executors.newFixedThreadPool(3);
@@ -83,7 +82,6 @@ public class ConfigurationBuilderTest {
                 .withSdkVerifyRetryStrategy(customRetryStrategy)
                 .withDataPlaneUrl(customDataPlaneUrl)
                 .withControlPlaneUrl(customControlPlaneUrl)
-                .withLogger(customLogger)
                 .withAnalyticsExecutor(customAnalyticsExecutor)
                 .withNetworkExecutor(customNetworkExecutor)
                 .withBase64Generator(customBase64Generator);
@@ -99,7 +97,6 @@ public class ConfigurationBuilderTest {
         assertEquals(customRetryStrategy, configuration.getSdkVerifyRetryStrategy());
         assertEquals(customDataPlaneUrl, configuration.getDataPlaneUrl());
         assertEquals(customControlPlaneUrl, configuration.getControlPlaneUrl());
-        assertEquals(customLogger, configuration.getLogger());
         assertEquals(customAnalyticsExecutor, configuration.getAnalyticsExecutor());
         assertEquals(customNetworkExecutor, configuration.getNetworkExecutor());
         assertEquals(customBase64Generator, configuration.getBase64Generator());
