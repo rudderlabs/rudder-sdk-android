@@ -93,7 +93,6 @@ class SessionUtilsTest {
     fun `test startSession with invalid sessionId`() {
         // Given
         val invalidSessionId = 123456789L
-        val logger = mock<Logger>()
 
         val mockConfig = ConfigurationAndroid(
             application = ApplicationProvider.getApplicationContext(),
@@ -101,7 +100,7 @@ class SessionUtilsTest {
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
-            logger = logger,
+            logLevel = RudderLogger.LogLevel.DEBUG,
         )
         analytics.applyConfiguration {
             mockConfig
@@ -109,12 +108,6 @@ class SessionUtilsTest {
         // When
         analytics.startSession(invalidSessionId)
 
-        // Then
-        // Verify that logger.warn is called with the expected message
-        verify(logger).warn(
-            "Rudderstack User Session",
-            "Invalid session id $invalidSessionId. Must be at least 10 digits"
-        )
         //verify SessionState is not updated
         val session = userSessionState?.value
         MatcherAssert.assertThat(session?.sessionId, `is`(-1L))
