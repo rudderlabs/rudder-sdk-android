@@ -105,5 +105,18 @@ public class ConfigurationBuilderTest {
         assertEquals(customBase64Generator, configuration.getBase64Generator());
     }
 
+    @Test
+    public void when_logLevel_DEBUG_is_passed_then_assert_that_configuration_has_this_logLevel_set_as_a_property() {
+        JsonAdapter mockJsonAdapter = mock(JsonAdapter.class);
+
+        ConfigurationBuilder configurationBuilder = new ConfigurationBuilder(mockJsonAdapter)
+                .withLogLevel(Logger.LogLevel.DEBUG);
+
+        Configuration configuration = configurationBuilder.build();
+
+        assertNotNull(configuration);
+        assertEquals(Logger.LogLevel.DEBUG, configuration.getLogger().getLevel());
+    }
+
     // Add more test cases as needed for edge cases, validation, etc.
 }
