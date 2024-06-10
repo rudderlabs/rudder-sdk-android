@@ -55,10 +55,9 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
 
     private var autoCollectAdvertisingId = false
         set(value) {
-            if (field == value) return
             field = value
-            if (value) application?.collectAdvertisingId()
-            else synchronized(this) {
+            if (value && _advertisingId.isNullOrEmpty()) application?.collectAdvertisingId()
+            else if(!value) synchronized(this) {
                 _advertisingId = null
             }
         }
@@ -99,16 +98,17 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     override fun updateConfiguration(configuration: Configuration) {
         if (configuration !is ConfigurationAndroid) return
         configuration.updateAdvertisingValues()
+        _defaultAndroidContext = null
     }
 
     private fun ConfigurationAndroid.updateAdvertisingValues() {
-        autoCollectAdvertisingId = autoCollectAdvertId
         if(!advertisingId.isNullOrEmpty()) {
             synchronized(this) {
                 if (_advertisingId != advertisingId)
                     _advertisingId = advertisingId
             }
         }
+        autoCollectAdvertisingId = autoCollectAdvertId
         _collectDeviceId = collectDeviceId
     }
 
@@ -302,8 +302,8 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     }
 
     override fun setCurrentActivity(activity: Activity?) {
-        super.setCurrentActivity(activity)
         _currentActivity.set(activity)
+        _defaultAndroidContext = null
         //we generate the default context here because we need the activity to get the screen info
         application?.generateDefaultAndroidContext()
     }

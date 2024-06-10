@@ -38,7 +38,8 @@ object RudderAnalyticsUtils {
                 controlPlaneUrl = CONTROL_PLANE_URL,
                 trackLifecycleEvents = true,
                 recordScreenViews = true,
-                isPeriodicFlushEnabled = true
+                isPeriodicFlushEnabled = true,
+                autoCollectAdvertId = true
             )
         )
         _rudderReporter = DefaultRudderReporter(
