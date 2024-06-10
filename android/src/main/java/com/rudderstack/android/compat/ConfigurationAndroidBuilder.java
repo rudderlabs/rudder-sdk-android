@@ -18,8 +18,10 @@ import android.app.Application;
 
 import com.rudderstack.android.AndroidUtils;
 import com.rudderstack.android.ConfigurationAndroid;
+import com.rudderstack.android.internal.AndroidLogger;
 import com.rudderstack.core.compat.ConfigurationBuilder;
 import com.rudderstack.rudderjsonadapter.JsonAdapter;
+import com.rudderstack.core.Logger;
 
 import java.util.concurrent.ExecutorService;
 
@@ -39,6 +41,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     private ExecutorService advertisingIdFetchExecutor = null;
     private boolean trackAutoSession = ConfigurationAndroid.Defaults.AUTO_SESSION_TRACKING;
     private long sessionTimeoutMillis = ConfigurationAndroid.Defaults.SESSION_TIMEOUT;
+    private Logger logger = new AndroidLogger(Logger.LogLevel.NONE);
 
     public ConfigurationAndroidBuilder(Application application, JsonAdapter jsonAdapter) {
         super(jsonAdapter);
@@ -97,6 +100,10 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
         this.sessionTimeoutMillis = sessionTimeoutMillis;
         return this;
     }
+    public ConfigurationBuilder withLogLevel(Logger.LogLevel logLevel) {
+        this.logger = new AndroidLogger(logLevel);
+        return this;
+    }
     @Override
     public ConfigurationAndroid build() {
         return ConfigurationAndroid.Companion.invoke(super.build(),
@@ -111,6 +118,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
                 defaultProcessName,
                 advertisingId,
                 deviceToken,
+                logger,
                 advertisingIdFetchExecutor,
                 trackAutoSession,
                 sessionTimeoutMillis
