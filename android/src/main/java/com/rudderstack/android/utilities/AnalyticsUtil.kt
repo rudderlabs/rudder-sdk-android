@@ -41,8 +41,8 @@ val Analytics.androidStorage: AndroidStorage
 fun Analytics.putAdvertisingId(advertisingId: String) {
     applyConfiguration {
         if (this is ConfigurationAndroid) copy(
-            autoCollectAdvertId = false,
-            advertisingId = advertisingId
+            autoCollectAdvertId = autoCollectAdvertId && advertisingId.isEmpty(),
+            advertisingId = advertisingId.takeUnless { it.isEmpty() }?: this.advertisingId
         )
         else this
     }

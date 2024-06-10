@@ -68,11 +68,13 @@ internal class ReinstatePlugin : InfrastructurePlugin {
         synchronized(this) {
             if (isV2DataAvailable()) {
                 reinstateV2FromCache()
+                setReinstated(true)
                 return
             }
             migrateV1DataIfAvailable()
             if (_analytics?.currentConfigurationAndroid?.anonymousId == null) {
                 _analytics?.currentConfigurationAndroid?.fillDefaults()
+                setReinstated(true)
                 return
             }
         }

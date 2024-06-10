@@ -72,7 +72,7 @@ interface ConfigurationAndroid : Configuration {
     val advertisingId: String?
     val deviceToken: String?
     val collectDeviceId : Boolean
-    val advertisingIdFetchExecutor : ExecutorService?
+    val advertisingIdFetchExecutor : ExecutorService
     //session
     val trackAutoSession: Boolean
     val sessionTimeoutMillis: Long
@@ -104,7 +104,7 @@ interface ConfigurationAndroid : Configuration {
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             collectDeviceId: Boolean = Defaults.COLLECT_DEVICE_ID,
-            advertisingIdFetchExecutor : ExecutorService? = null,
+            advertisingIdFetchExecutor : ExecutorService = Executors.newCachedThreadPool(),
             base64Generator: Base64Generator = AndroidUtils.defaultBase64Generator(),
             trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
             sessionTimeoutMillis: Long = Defaults.SESSION_TIMEOUT
@@ -124,7 +124,7 @@ interface ConfigurationAndroid : Configuration {
             override val defaultProcessName: String? = defaultProcessName
             override val advertisingId: String? = advertisingId
             override val deviceToken: String? = deviceToken
-            override val advertisingIdFetchExecutor : ExecutorService? = advertisingIdFetchExecutor
+            override val advertisingIdFetchExecutor : ExecutorService = advertisingIdFetchExecutor
             override val trackAutoSession: Boolean = trackAutoSession
             override val sessionTimeoutMillis: Long = sessionTimeoutMillis
             override val jsonAdapter: JsonAdapter = jsonAdapter
@@ -165,7 +165,7 @@ interface ConfigurationAndroid : Configuration {
             deviceToken: String? = null,
             collectDeviceId: Boolean = Defaults.COLLECT_DEVICE_ID,
 
-            advertisingIdFetchExecutor: ExecutorService? = null,
+            advertisingIdFetchExecutor: ExecutorService = Executors.newCachedThreadPool(),
             trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
             sessionTimeoutMillis: Long = Defaults.SESSION_TIMEOUT
         ): ConfigurationAndroid=
@@ -228,7 +228,6 @@ interface ConfigurationAndroid : Configuration {
             logger,
             analyticsExecutor,
             networkExecutor,
-            advertisingIdFetchExecutor,
             base64Generator,
         )
     }
@@ -246,7 +245,6 @@ interface ConfigurationAndroid : Configuration {
         logger: Logger = this.logger,
         analyticsExecutor: ExecutorService = this.analyticsExecutor,
         networkExecutor: ExecutorService = this.networkExecutor,
-        advertisingIdFetchExecutor : ExecutorService? = this.advertisingIdFetchExecutor,
         base64Generator: Base64Generator = this.base64Generator,
         anonymousId: String? = this.anonymousId,
         userId: String? = this.userId,

@@ -25,7 +25,6 @@ import android.os.Build
 import android.provider.Settings
 import android.telephony.TelephonyManager
 import androidx.annotation.VisibleForTesting
-import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.AndroidUtils.getDeviceId
 import com.rudderstack.android.AndroidUtils.isTv
 import com.rudderstack.android.ConfigurationAndroid
@@ -45,8 +44,7 @@ import java.util.concurrent.atomic.AtomicReference
  * Sets the context specific to Android
  *
  * @constructor Initiates the values
- * @property application The application is needed to generate the required
- *     values
+ *
  */
 private const val CHANNEL = "mobile"
 
@@ -57,14 +55,13 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
 
     private var autoCollectAdvertisingId = false
         set(value) {
-            if (field == value) return
             field = value
-            if (value) application?.collectAdvertisingId()
-            else synchronized(this) {
+            if (value && _advertisingId.isNullOrEmpty()) application?.collectAdvertisingId()
+            else if(!value) synchronized(this) {
                 _advertisingId = null
             }
         }
-    private var collectDeviceId = false
+    private var _collectDeviceId = false
         set(value) {
             if (field == value) return
             field = value
@@ -74,7 +71,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             }
         }
 
-    private var _deviceId: String?= null
+    private var _deviceId: String? = null
     private var _advertisingId: String? = null
     private var _deviceToken: String? = null
 
@@ -95,22 +92,24 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     override fun setup(analytics: Analytics) {
         super.setup(analytics)
         _analytics = analytics
-        autoCollectAdvertisingId =
-            analytics.currentConfigurationAndroid?.autoCollectAdvertId ?: false
-        analytics.currentConfigurationAndroid?.also {
-            collectDeviceId = it.collectDeviceId
-        }
+        analytics.currentConfigurationAndroid?.updateAdvertisingValues()
     }
 
     override fun updateConfiguration(configuration: Configuration) {
         if (configuration !is ConfigurationAndroid) return
-        if (autoCollectAdvertisingId != configuration.autoCollectAdvertId)
-            autoCollectAdvertisingId = configuration.autoCollectAdvertId
-        synchronized(this) {
-            if (_advertisingId != configuration.advertisingId)
-                _advertisingId = configuration.advertisingId
+        configuration.updateAdvertisingValues()
+        _defaultAndroidContext = null
+    }
+
+    private fun ConfigurationAndroid.updateAdvertisingValues() {
+        if(!advertisingId.isNullOrEmpty()) {
+            synchronized(this) {
+                if (_advertisingId != advertisingId)
+                    _advertisingId = advertisingId
+            }
         }
-        collectDeviceId = configuration.collectDeviceId
+        autoCollectAdvertisingId = autoCollectAdvertId
+        _collectDeviceId = collectDeviceId
     }
 
     /**
@@ -143,8 +142,9 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             }
         }
     }
-    private fun Application.collectDeviceId(){
-        synchronized(this@PlatformInputsPlugin){
+
+    private fun Application.collectDeviceId() {
+        synchronized(this@PlatformInputsPlugin) {
             _deviceId = getDeviceId(this)
         }
     }
@@ -245,7 +245,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             "model" to Build.MODEL,
             "name" to Build.DEVICE,
             "type" to "Android",
-            "adTrackingEnabled" to autoCollectAdvertisingId
+            "adTrackingEnabled" to !_advertisingId.isNullOrEmpty()
         ) optAdd (if (_deviceToken != null) mapOf("token" to _deviceToken) else null)) optAdd if (_advertisingId != null) mapOf(
             "advertisingId" to _advertisingId
         ) else null)
@@ -262,10 +262,11 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         // wifi enabled
         val isWifiEnabled =
             try {
-                (this.getSystemService(Context.WIFI_SERVICE) as? WifiManager)?.isWifiEnabled
+                (this.getSystemService(Context.WIFI_SERVICE) as? WifiManager)?.isWifiEnabled?:false
             } catch (ex: Exception) {
                 _analytics?.currentConfiguration?.logger?.error(log = "Cannot detect wifi. Wifi Permission not available")
-            } ?: false
+                false
+            }
 
 
         // bluetooth
@@ -301,8 +302,8 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     }
 
     override fun setCurrentActivity(activity: Activity?) {
-        super.setCurrentActivity(activity)
         _currentActivity.set(activity)
+        _defaultAndroidContext = null
         //we generate the default context here because we need the activity to get the screen info
         application?.generateDefaultAndroidContext()
     }
