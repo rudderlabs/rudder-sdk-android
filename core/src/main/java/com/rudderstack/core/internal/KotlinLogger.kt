@@ -27,34 +27,25 @@ object KotlinLogger : Logger {
     }
 
     override fun info(tag: String, log: String) {
-        log(Logger.LogLevel.INFO) {
+        if (Logger.LogLevel.INFO >= logLevel)
             println("$tag-info : $log")
-        }
     }
 
     override fun debug(tag: String, log: String) {
-        log(Logger.LogLevel.DEBUG) {
+        if (Logger.LogLevel.DEBUG >= logLevel)
             println("$tag-debug : $log")
-        }
     }
 
     override fun warn(tag: String, log: String) {
-        log(Logger.LogLevel.WARN) {
+        if (Logger.LogLevel.WARN >= logLevel)
             println("$tag-warn : $log")
-        }
     }
 
     override fun error(tag: String, log: String, throwable: Throwable?) {
-        log(Logger.LogLevel.ERROR) {
+        if (Logger.LogLevel.ERROR >= logLevel)
             println("$tag-error : $log")
-        }
     }
 
     override val level: Logger.LogLevel
         get() = logLevel
-
-    private fun log(logLevel: Logger.LogLevel, log : () -> Unit){
-        if(logLevel.level >= this.logLevel.level)
-            log.invoke()
-    }
 }
