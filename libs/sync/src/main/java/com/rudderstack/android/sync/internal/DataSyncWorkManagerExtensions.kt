@@ -74,9 +74,9 @@ WorkManagerAnalyticsFactory>) =
 internal fun Application.registerWorkManager(
     analytics: Analytics, workManagerAnalyticsFactoryClass: Class<out WorkManagerAnalyticsFactory>
 ) {
-    analytics.logger.debug(log = "Initializing work manager")
+    analytics.rudderLogger.debug(log = "Initializing work manager")
     if (getAnalytics(analytics.writeKey)?.takeUnless { it.isShutdown } != null) {
-        analytics.logger.debug(log = "Work manager already initialized")
+        analytics.rudderLogger.debug(log = "Work manager already initialized")
         return
     }
 

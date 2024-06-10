@@ -19,7 +19,7 @@ package com.rudderstack.core
  * Contains methods for different scenarios
  *
  */
-interface Logger {
+interface RudderLogger {
     companion object{
         const val DEFAULT_TAG = "Rudder-Analytics"
     }
@@ -53,7 +53,7 @@ interface Logger {
     }
     val level: LogLevel
 
-    object Noob : Logger{
+    object Noob : RudderLogger{
         override fun activate(level: LogLevel) {
             // do nothing
         }

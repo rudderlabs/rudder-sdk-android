@@ -14,8 +14,6 @@
 
 package com.rudderstack.core
 
-import com.rudderstack.core.RetryStrategy.CancellableJob
-import com.rudderstack.core.internal.states.ConfigurationsState
 import java.lang.ref.WeakReference
 import java.util.concurrent.Future
 import java.util.concurrent.ScheduledThreadPoolExecutor
@@ -101,7 +99,7 @@ fun interface RetryStrategy {
             private var lastFuture: WeakReference<Future<*>>? = null
             private val _isDone = AtomicBoolean(false)
             private val logger
-                get() = analytics.currentConfiguration?.logger
+                get() = analytics.currentConfiguration?.rudderLogger
             val isDone: Boolean
                 get() = _isDone.get()
             fun start() {

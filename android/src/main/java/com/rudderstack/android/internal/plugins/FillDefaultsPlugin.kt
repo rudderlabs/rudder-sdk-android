@@ -54,7 +54,7 @@ internal class FillDefaultsPlugin : Plugin {
         val userId = this.userId ?: _analytics?.currentConfigurationAndroid?.userId
         if (anonId == null && userId == null) {
             val ex = MissingPropertiesException("Either Anonymous Id or User Id must be present");
-            _analytics?.currentConfigurationAndroid?.logger?.error(
+            _analytics?.currentConfigurationAndroid?.rudderLogger?.error(
                 log = "Missing both anonymous Id and user Id. Use settings to update " + "anonymous id in Analytics constructor",
                 throwable = ex
             )

@@ -14,38 +14,38 @@
 
 package com.rudderstack.core.internal
 
-import com.rudderstack.core.Logger
+import com.rudderstack.core.RudderLogger
 
-class KotlinLogger(initialLogLevel: Logger.LogLevel = Logger.LogLevel.NONE) : Logger {
+class KotlinLogger(initialLogLevel: RudderLogger.LogLevel = RudderLogger.LogLevel.NONE) : RudderLogger {
 
     private var logLevel = initialLogLevel
         @Synchronized set
         @Synchronized get
 
-    override fun activate(level: Logger.LogLevel) {
+    override fun activate(level: RudderLogger.LogLevel) {
         logLevel = level
     }
 
     override fun info(tag: String, log: String) {
-        if (Logger.LogLevel.INFO >= logLevel)
+        if (RudderLogger.LogLevel.INFO >= logLevel)
             println("$tag-info : $log")
     }
 
     override fun debug(tag: String, log: String) {
-        if (Logger.LogLevel.DEBUG >= logLevel)
+        if (RudderLogger.LogLevel.DEBUG >= logLevel)
             println("$tag-debug : $log")
     }
 
     override fun warn(tag: String, log: String) {
-        if (Logger.LogLevel.WARN >= logLevel)
+        if (RudderLogger.LogLevel.WARN >= logLevel)
             println("$tag-warn : $log")
     }
 
     override fun error(tag: String, log: String, throwable: Throwable?) {
-        if (Logger.LogLevel.ERROR >= logLevel)
+        if (RudderLogger.LogLevel.ERROR >= logLevel)
             println("$tag-error : $log")
     }
 
-    override val level: Logger.LogLevel
+    override val level: RudderLogger.LogLevel
         get() = logLevel
 }

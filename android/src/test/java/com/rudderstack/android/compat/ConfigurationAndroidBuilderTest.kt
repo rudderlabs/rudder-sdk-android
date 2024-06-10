@@ -2,7 +2,7 @@ package com.rudderstack.android.compat
 
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
-import com.rudderstack.core.Logger
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
@@ -19,10 +19,10 @@ class ConfigurationAndroidBuilderTest {
         val configurationAndroidBuilder =
             ConfigurationAndroidBuilder(ApplicationProvider.getApplicationContext(), JacksonAdapter())
                 .withDataPlaneUrl("https://rudderstack.com")
-                .withLogLevel(Logger.LogLevel.DEBUG)
+                .withLogLevel(RudderLogger.LogLevel.DEBUG)
                 .build()
 
-        assertEquals(configurationAndroidBuilder.logger.level, Logger.LogLevel.DEBUG)
+        assertEquals(configurationAndroidBuilder.rudderLogger.level, RudderLogger.LogLevel.DEBUG)
     }
 
     @Test
@@ -32,6 +32,6 @@ class ConfigurationAndroidBuilderTest {
                 .withDataPlaneUrl("https://rudderstack.com")
                 .build()
 
-        assertEquals(configurationAndroidBuilder.logger.level, Logger.LogLevel.NONE)
+        assertEquals(configurationAndroidBuilder.rudderLogger.level, RudderLogger.LogLevel.NONE)
     }
 }

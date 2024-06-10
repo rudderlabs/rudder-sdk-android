@@ -23,7 +23,7 @@ import static org.mockito.Mockito.mock;
 
 import com.rudderstack.core.Base64Generator;
 import com.rudderstack.core.Configuration;
-import com.rudderstack.core.Logger;
+import com.rudderstack.core.RudderLogger;
 import com.rudderstack.core.RetryStrategy;
 import com.rudderstack.core.RudderOptions;
 import com.rudderstack.core.Storage;
@@ -53,7 +53,7 @@ public class ConfigurationBuilderTest {
         assertThat(configuration.getSdkVerifyRetryStrategy(),
                 Matchers.isA(RetryStrategy.ExponentialRetryStrategy.class));
         assertThat(configuration.getDataPlaneUrl(), equalTo("https://hosted.rudderlabs.com"));
-        assertNotNull(configuration.getLogger());
+        assertNotNull(configuration.getRudderLogger());
         assertNotNull(configuration.getAnalyticsExecutor());
         assertNotNull(configuration.getNetworkExecutor());
         assertNotNull(configuration.getBase64Generator());
@@ -107,12 +107,12 @@ public class ConfigurationBuilderTest {
         JsonAdapter mockJsonAdapter = mock(JsonAdapter.class);
 
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder(mockJsonAdapter)
-                .withLogLevel(Logger.LogLevel.DEBUG);
+                .withLogLevel(RudderLogger.LogLevel.DEBUG);
 
         Configuration configuration = configurationBuilder.build();
 
         assertNotNull(configuration);
-        assertEquals(Logger.LogLevel.DEBUG, configuration.getLogger().getLevel());
+        assertEquals(RudderLogger.LogLevel.DEBUG, configuration.getRudderLogger().getLevel());
     }
 
     // Add more test cases as needed for edge cases, validation, etc.

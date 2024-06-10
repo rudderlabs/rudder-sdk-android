@@ -154,9 +154,9 @@ interface Controller {
     val isShutdown : Boolean
 
     /**
-     * The logger set upfront or default [Logger]
+     * The logger set upfront or default [RudderLogger]
      */
-    val logger : Logger
+    val rudderLogger : RudderLogger
 
     /**
      * clears the storage of all data

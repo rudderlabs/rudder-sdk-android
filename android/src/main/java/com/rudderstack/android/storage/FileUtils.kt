@@ -16,7 +16,7 @@ package com.rudderstack.android.storage
 
 import android.content.Context
 import com.rudderstack.android.internal.AndroidLogger
-import com.rudderstack.core.Logger
+import com.rudderstack.core.RudderLogger
 import java.io.FileOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
@@ -36,7 +36,7 @@ internal fun <T : Serializable> saveObject(
     obj: T,
     context: Context,
     fileName: String,
-    logger: Logger? = AndroidLogger(Logger.LogLevel.NONE)
+    rudderLogger: RudderLogger? = AndroidLogger(RudderLogger.LogLevel.NONE)
 ): Boolean {
     try {
         val fos: FileOutputStream = context.openFileOutput(
@@ -48,7 +48,7 @@ internal fun <T : Serializable> saveObject(
         fos.close()
         return true
     } catch (e: Exception) {
-        logger?.error(
+        rudderLogger?.error(
             log = "save object: Exception while saving Object to File", throwable = e
         )
         e.printStackTrace()
@@ -65,7 +65,7 @@ internal fun <T : Serializable> saveObject(
  * @return
  */
 internal fun <T : Serializable> getObject(
-    context: Context, fileName: String, logger: Logger? = AndroidLogger(Logger.LogLevel.NONE)
+    context: Context, fileName: String, rudderLogger: RudderLogger? = AndroidLogger(RudderLogger.LogLevel.NONE)
 ): T? {
     try {
         val file = context.getFileStreamPath(fileName)
@@ -78,7 +78,7 @@ internal fun <T : Serializable> getObject(
             return obj
         }
     } catch (e: Exception) {
-        logger?.error(
+        rudderLogger?.error(
             log = "getObject: Failed to read Object from File", throwable = e
         )
         e.printStackTrace()

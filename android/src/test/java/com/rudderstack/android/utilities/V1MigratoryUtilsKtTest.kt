@@ -4,7 +4,7 @@ import android.app.Application
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.android.storage.saveObject
-import com.rudderstack.core.Logger
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.internal.KotlinLogger
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
@@ -27,7 +27,7 @@ class V1MigratoryUtilsKtTest{
     fun `test wrong sourceId exists`(){
         val fileName = "file_name"
         //create a file
-        saveObject("dummy", context, fileName, KotlinLogger(Logger.LogLevel.NONE))
+        saveObject("dummy", context, fileName, KotlinLogger(RudderLogger.LogLevel.NONE))
         val isSourceIdExist = context.isV1SavedServerConfigContainsSourceId(fileName, "new_source_id")
         assertThat(isSourceIdExist, Matchers.`is`(false))
     }
@@ -37,7 +37,7 @@ class V1MigratoryUtilsKtTest{
         val sourceId = "i_am_source_id"
         val fileName = "file_name"
         //create a file
-        saveObject("my source id is $sourceId", context, fileName, KotlinLogger(Logger.LogLevel.NONE))
+        saveObject("my source id is $sourceId", context, fileName, KotlinLogger(RudderLogger.LogLevel.NONE))
         val isSourceIdExist = context.isV1SavedServerConfigContainsSourceId(fileName, sourceId)
         assertThat(isSourceIdExist, Matchers.`is`(true))
     }

@@ -20,12 +20,11 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.DataUploadService
-import com.rudderstack.core.Logger
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.models.Message
-import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 
 private const val DUMMY_WRITE_KEY = "DUMMY_WRITE_KEY"
@@ -48,7 +47,7 @@ fun generateTestAnalytics(mockConfiguration: Configuration,
                           dataUploadService: DataUploadService = TestDataUploadService(),
                           ): Analytics {
     val testingConfig = mockConfiguration.copy(
-        logger = KotlinLogger(Logger.LogLevel.NONE),
+        rudderLogger = KotlinLogger(RudderLogger.LogLevel.NONE),
         analyticsExecutor = TestExecutor()
     )?:mockConfiguration // this is if a mock configuration is passed
     return Analytics(

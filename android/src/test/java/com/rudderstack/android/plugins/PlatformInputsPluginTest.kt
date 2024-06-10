@@ -23,13 +23,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.internal.plugins.PlatformInputsPlugin
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.Logger
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
@@ -65,7 +64,7 @@ class PlatformInputsPluginTest {
         platformInputsPlugin = PlatformInputsPlugin()
         analytics = generateTestAnalytics(ConfigurationAndroid(app,
             jsonAdapter, shouldVerifySdk = false,
-            logLevel = Logger.LogLevel.DEBUG,
+            logLevel = RudderLogger.LogLevel.DEBUG,
             ))
         platformInputsPlugin.setup(analytics)
     }

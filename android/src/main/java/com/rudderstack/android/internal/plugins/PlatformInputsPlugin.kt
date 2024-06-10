@@ -130,7 +130,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             advertisingInfo.javaClass.getMethod("isLimitAdTrackingEnabled")
                 .invoke(advertisingInfo) as? Boolean
         if (isLimitAdTrackingEnabled == true) {
-            _analytics?.logger?.debug(log = "Not collecting advertising ID because isLimitAdTrackingEnabled (Google Play Services) is true.")
+            _analytics?.rudderLogger?.debug(log = "Not collecting advertising ID because isLimitAdTrackingEnabled (Google Play Services) is true.")
             return null
         }
         return advertisingInfo.javaClass.getMethod("getId").invoke(advertisingInfo) as? String
@@ -142,7 +142,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         val contentResolver: ContentResolver = contentResolver
         val limitAdTracking = Settings.Secure.getInt(contentResolver, "limit_ad_tracking") != 0
         if (limitAdTracking) {
-            _analytics?.logger?.debug(log = "Not collecting advertising ID because limit_ad_tracking (Amazon Fire OS) is true.")
+            _analytics?.rudderLogger?.debug(log = "Not collecting advertising ID because limit_ad_tracking (Amazon Fire OS) is true.")
             return null
         }
         return Settings.Secure.getString(
@@ -184,7 +184,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
                 "version" to packageInfo.versionName
             )
         } catch (ex: PackageManager.NameNotFoundException) {
-            _analytics?.currentConfiguration?.logger?.error(
+            _analytics?.currentConfiguration?.rudderLogger?.error(
                 log = "Package Name Not Found",
                 throwable = ex
             )
@@ -234,7 +234,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             try {
                 (this.getSystemService(Context.WIFI_SERVICE) as? WifiManager)?.isWifiEnabled
             }catch (ex: Exception){
-                _analytics?.currentConfiguration?.logger?.error(log = "Cannot detect wifi. Wifi Permission not available")
+                _analytics?.currentConfiguration?.rudderLogger?.error(log = "Cannot detect wifi. Wifi Permission not available")
             }?:false
 
 

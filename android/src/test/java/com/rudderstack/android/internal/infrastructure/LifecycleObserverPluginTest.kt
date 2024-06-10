@@ -6,7 +6,7 @@ import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.android.utils.busyWait
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
-import com.rudderstack.core.Logger
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
@@ -62,7 +62,7 @@ abstract class LifecycleObserverPluginTest {
         whenever(mockConfigurationAndroid.recordScreenViews).thenReturn(true)
         whenever(mockConfigurationAndroid.analyticsExecutor).thenReturn(TestExecutor())
         whenever(mockConfigurationAndroid.shouldVerifySdk).thenReturn(false)
-        whenever(mockConfigurationAndroid.logger).thenReturn(KotlinLogger(Logger.LogLevel.NONE))
+        whenever(mockConfigurationAndroid.rudderLogger).thenReturn(KotlinLogger(RudderLogger.LogLevel.NONE))
         whenever(mockConfigurationAndroid.copy()).thenReturn(mockConfigurationAndroid)
         mockStorage = mock<AndroidStorage>()
         whenever(mockStorage.versionName).thenReturn("1.0")
