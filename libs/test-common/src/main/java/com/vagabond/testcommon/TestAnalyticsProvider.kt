@@ -20,7 +20,6 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.DataUploadService
-import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.KotlinLogger
