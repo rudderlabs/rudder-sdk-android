@@ -62,7 +62,7 @@ abstract class LifecycleObserverPluginTest {
         whenever(mockConfigurationAndroid.recordScreenViews).thenReturn(true)
         whenever(mockConfigurationAndroid.analyticsExecutor).thenReturn(TestExecutor())
         whenever(mockConfigurationAndroid.shouldVerifySdk).thenReturn(false)
-        whenever(mockConfigurationAndroid.rudderLogger).thenReturn(KotlinLogger(RudderLogger.LogLevel.NONE))
+        whenever(mockConfigurationAndroid.rudderLogger).thenReturn(KotlinLogger())
         whenever(mockConfigurationAndroid.copy()).thenReturn(mockConfigurationAndroid)
         mockStorage = mock<AndroidStorage>()
         whenever(mockStorage.versionName).thenReturn("1.0")

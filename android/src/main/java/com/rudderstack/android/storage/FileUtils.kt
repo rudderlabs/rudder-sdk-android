@@ -36,7 +36,7 @@ internal fun <T : Serializable> saveObject(
     obj: T,
     context: Context,
     fileName: String,
-    rudderLogger: RudderLogger? = AndroidLogger(RudderLogger.LogLevel.NONE)
+    rudderLogger: RudderLogger? = AndroidLogger()
 ): Boolean {
     try {
         val fos: FileOutputStream = context.openFileOutput(
@@ -65,7 +65,7 @@ internal fun <T : Serializable> saveObject(
  * @return
  */
 internal fun <T : Serializable> getObject(
-    context: Context, fileName: String, rudderLogger: RudderLogger? = AndroidLogger(RudderLogger.LogLevel.NONE)
+    context: Context, fileName: String, rudderLogger: RudderLogger? = AndroidLogger()
 ): T? {
     try {
         val file = context.getFileStreamPath(fileName)

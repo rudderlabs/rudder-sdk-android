@@ -39,7 +39,7 @@ public class ConfigurationBuilder {
     private RetryStrategy sdkVerifyRetryStrategy = RetryStrategy.exponential();
     private String dataPlaneUrl = null; //defaults to https://hosted.rudderlabs.com
     private String controlPlaneUrl = null; //defaults to https://api.rudderlabs.com
-    private RudderLogger rudderLogger = new KotlinLogger(RudderLogger.LogLevel.NONE);
+    private RudderLogger rudderLogger = new KotlinLogger();
     private ExecutorService analyticsExecutor = Executors.newSingleThreadExecutor();
     private ExecutorService networkExecutor = Executors.newCachedThreadPool();
     private Base64Generator base64Generator = RudderUtils.INSTANCE.getDefaultBase64Generator();

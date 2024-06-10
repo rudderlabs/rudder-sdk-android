@@ -41,7 +41,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     private ExecutorService advertisingIdFetchExecutor = null;
     private boolean trackAutoSession = ConfigurationAndroid.Defaults.AUTO_SESSION_TRACKING;
     private long sessionTimeoutMillis = ConfigurationAndroid.Defaults.SESSION_TIMEOUT;
-    private RudderLogger rudderLogger = new AndroidLogger(RudderLogger.LogLevel.NONE);
+    private RudderLogger rudderLogger = new AndroidLogger();
 
     public ConfigurationAndroidBuilder(Application application, JsonAdapter jsonAdapter) {
         super(jsonAdapter);

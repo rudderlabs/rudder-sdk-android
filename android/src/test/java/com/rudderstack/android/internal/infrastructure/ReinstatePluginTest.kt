@@ -91,7 +91,7 @@ class ReinstatePluginTest {
         whenever(androidStorage.v1ExternalIds).thenReturn(listOf())
         whenever(androidStorage.v1OptOut).thenReturn(false)
 
-        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger(RudderLogger.LogLevel.NONE))
+        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger())
         plugin.updateRudderServerConfig(config)
 
 //        plugin.updateConfiguration(configurationAndroid)
@@ -108,7 +108,7 @@ class ReinstatePluginTest {
         whenever(androidStorage.v1ExternalIds).thenReturn(listOf())
         whenever(androidStorage.v1OptOut).thenReturn(false)
 
-        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger(RudderLogger.LogLevel.NONE))
+        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger())
         plugin.updateRudderServerConfig(config)
 
 //        plugin.updateConfiguration(configurationAndroid)
@@ -123,7 +123,7 @@ class ReinstatePluginTest {
         whenever(androidStorage.v1ExternalIds).thenReturn(listOf())
         whenever(androidStorage.v1OptOut).thenReturn(false)
 
-        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger(RudderLogger.LogLevel.NONE))
+        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger())
         plugin.updateRudderServerConfig(config)
 
 //        plugin.updateConfiguration(configurationAndroid)
@@ -151,7 +151,7 @@ class ReinstatePluginTest {
         whenever(androidStorage.v1Traits).thenReturn(mapOf())
         whenever(androidStorage.v1ExternalIds).thenReturn(listOf())
         whenever(androidStorage.v1OptOut).thenReturn(false)
-        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger(RudderLogger.LogLevel.NONE))
+        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger())
         plugin.updateRudderServerConfig(config)
 
 //        plugin.updateConfiguration(configurationAndroid)

@@ -27,7 +27,7 @@ class V1MigratoryUtilsKtTest{
     fun `test wrong sourceId exists`(){
         val fileName = "file_name"
         //create a file
-        saveObject("dummy", context, fileName, KotlinLogger(RudderLogger.LogLevel.NONE))
+        saveObject("dummy", context, fileName, KotlinLogger())
         val isSourceIdExist = context.isV1SavedServerConfigContainsSourceId(fileName, "new_source_id")
         assertThat(isSourceIdExist, Matchers.`is`(false))
     }
@@ -37,7 +37,7 @@ class V1MigratoryUtilsKtTest{
         val sourceId = "i_am_source_id"
         val fileName = "file_name"
         //create a file
-        saveObject("my source id is $sourceId", context, fileName, KotlinLogger(RudderLogger.LogLevel.NONE))
+        saveObject("my source id is $sourceId", context, fileName, KotlinLogger())
         val isSourceIdExist = context.isV1SavedServerConfigContainsSourceId(fileName, sourceId)
         assertThat(isSourceIdExist, Matchers.`is`(true))
     }

@@ -47,7 +47,7 @@ fun generateTestAnalytics(mockConfiguration: Configuration,
                           dataUploadService: DataUploadService = TestDataUploadService(),
                           ): Analytics {
     val testingConfig = mockConfiguration.copy(
-        rudderLogger = KotlinLogger(RudderLogger.LogLevel.NONE),
+        rudderLogger = KotlinLogger(),
         analyticsExecutor = TestExecutor()
     )?:mockConfiguration // this is if a mock configuration is passed
     return Analytics(

@@ -158,7 +158,7 @@ interface ConfigurationAndroid : Configuration {
             defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
             advertisingId: String? = null,
             deviceToken: String? = null,
-            rudderLogger: RudderLogger = AndroidLogger(Defaults.LOG_LEVEL),
+            rudderLogger: RudderLogger = AndroidLogger(),
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             advertisingIdFetchExecutor: ExecutorService? = null,
@@ -215,7 +215,7 @@ interface ConfigurationAndroid : Configuration {
             defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
             advertisingId: String? = null,
             deviceToken: String? = null,
-            rudderLogger: RudderLogger = AndroidLogger(Defaults.LOG_LEVEL),
+            rudderLogger: RudderLogger = AndroidLogger(),
             advertisingIdFetchExecutor: ExecutorService? = null,
             trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
             sessionTimeoutMillis: Long = Defaults.SESSION_TIMEOUT
