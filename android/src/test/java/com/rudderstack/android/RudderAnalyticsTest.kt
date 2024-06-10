@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.android.RudderAnalytics.Companion.getInstance
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.Logger
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
@@ -22,7 +23,8 @@ class RudderAnalyticsTest {
         val analytics = getInstance(
             writeKey, ConfigurationAndroid(
                 ApplicationProvider.getApplicationContext(),
-                JacksonAdapter()
+                JacksonAdapter(),
+                logLevel = Logger.LogLevel.DEBUG,
             )
         )
 
@@ -35,14 +37,16 @@ class RudderAnalyticsTest {
         val analytics = getInstance(
             writeKey, ConfigurationAndroid(
                 ApplicationProvider.getApplicationContext(),
-                JacksonAdapter()
+                JacksonAdapter(),
+                logLevel = Logger.LogLevel.DEBUG,
             )
         )
 
         val analytics2 = getInstance(
             writeKey2, ConfigurationAndroid(
                 ApplicationProvider.getApplicationContext(),
-                JacksonAdapter()
+                JacksonAdapter(),
+                logLevel = Logger.LogLevel.DEBUG,
             )
         )
 
@@ -56,14 +60,16 @@ class RudderAnalyticsTest {
         val analytics = getInstance(
             writeKey, ConfigurationAndroid(
                 ApplicationProvider.getApplicationContext(),
-                JacksonAdapter()
+                JacksonAdapter(),
+                logLevel = Logger.LogLevel.DEBUG,
             )
         )
 
         val analytics2 = getInstance(
             writeKey, ConfigurationAndroid(
                 ApplicationProvider.getApplicationContext(),
-                JacksonAdapter()
+                JacksonAdapter(),
+                logLevel = Logger.LogLevel.DEBUG,
             )
         )
 

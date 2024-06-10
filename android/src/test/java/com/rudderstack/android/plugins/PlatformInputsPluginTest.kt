@@ -23,6 +23,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.internal.plugins.PlatformInputsPlugin
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
@@ -63,7 +64,9 @@ class PlatformInputsPluginTest {
         val app = getApplicationContext<AndroidContextPluginTestApplication>()
         platformInputsPlugin = PlatformInputsPlugin()
         analytics = generateTestAnalytics(ConfigurationAndroid(app,
-            jsonAdapter, shouldVerifySdk = false))
+            jsonAdapter, shouldVerifySdk = false,
+            logLevel = Logger.LogLevel.DEBUG,
+            ))
         platformInputsPlugin.setup(analytics)
     }
     @After

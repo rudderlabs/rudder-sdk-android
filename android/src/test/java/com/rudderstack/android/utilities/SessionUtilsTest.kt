@@ -47,7 +47,8 @@ class SessionUtilsTest {
                 mock(),
                 shouldVerifySdk = false,
                 trackLifecycleEvents = true,
-                trackAutoSession = true
+                trackAutoSession = true,
+                logLevel = Logger.LogLevel.DEBUG,
             ),
             storage = mockStorage
         )
@@ -172,7 +173,8 @@ class SessionUtilsTest {
             JacksonAdapter(),
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
-            trackAutoSession = true
+            trackAutoSession = true,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         userSessionState?.update(UserSession())
         analytics.applyConfiguration {
@@ -199,7 +201,8 @@ class SessionUtilsTest {
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
-            sessionTimeoutMillis = 10000L
+            sessionTimeoutMillis = 10000L,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         val sessionId = 1234567890L
         val lastActiveTimestamp = defaultLastActiveTimestamp
@@ -230,7 +233,8 @@ class SessionUtilsTest {
             mock<JsonAdapter>(),
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
-            trackAutoSession = true
+            trackAutoSession = true,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         val sessionId = 1234567890L
         val lastActiveTimestamp = System.currentTimeMillis() - mockConfig.sessionTimeoutMillis
@@ -264,7 +268,8 @@ class SessionUtilsTest {
 
             trackLifecycleEvents = true,
             trackAutoSession = true,
-            sessionTimeoutMillis = 0L
+            sessionTimeoutMillis = 0L,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         val sessionId = 1234567890L
         val lastActiveTimestamp = System.currentTimeMillis() - mockConfig.sessionTimeoutMillis
@@ -301,6 +306,7 @@ class SessionUtilsTest {
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         analytics.applyConfiguration {
             mockConfig
@@ -330,6 +336,7 @@ class SessionUtilsTest {
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         analytics.applyConfiguration {
             mockConfig
@@ -360,6 +367,7 @@ class SessionUtilsTest {
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         analytics.applyConfiguration {
             mockConfig
@@ -384,6 +392,7 @@ class SessionUtilsTest {
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         analytics.shutdown()
         analytics = generateTestAnalytics(

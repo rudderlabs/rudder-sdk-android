@@ -8,6 +8,7 @@ import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.Logger
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
@@ -60,6 +61,7 @@ class AppInstallUpdateTrackerPluginTest {
             shouldVerifySdk = false,
             analyticsExecutor = TestExecutor(),
             trackLifecycleEvents = trackLifecycleEvents,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         return generateTestAnalytics(mockConfig, storage = this.storage)
     }

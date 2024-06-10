@@ -10,6 +10,7 @@ import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.saveObject
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
+import com.rudderstack.core.Logger
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.models.Message
@@ -65,7 +66,8 @@ class ReinstatePluginTest {
         )
         configurationAndroid = ConfigurationAndroid(
             context, mock<JsonAdapter>(), shouldVerifySdk = true,
-            analyticsExecutor = TestExecutor()
+            analyticsExecutor = TestExecutor(),
+            logLevel = Logger.LogLevel.DEBUG,
         )
         analytics = generateTestAnalytics(
             configurationAndroid, storage = androidStorage, configDownloadService = mockControlPlane

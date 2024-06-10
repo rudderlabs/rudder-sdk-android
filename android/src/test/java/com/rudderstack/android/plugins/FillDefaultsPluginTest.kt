@@ -21,6 +21,7 @@ import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.Logger
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.retrieveState
@@ -64,6 +65,7 @@ class FillDefaultsPluginTest {
             userId = "user_id",
             shouldVerifySdk = false,
             analyticsExecutor = TestExecutor(),
+            logLevel = Logger.LogLevel.DEBUG,
         )
         analytics = generateTestAnalytics(mockConfig)
         analytics.associateState(ContextState())
