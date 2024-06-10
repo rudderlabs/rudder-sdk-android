@@ -67,7 +67,9 @@ fun Analytics.putDeviceToken(deviceToken: String) {
  *
  * @param anonymousId String to be used as anonymousId
  */
-fun Analytics.setAnonymousId(anonymousId: String) {
+
+// By changing to `internal` we are restricting the user from calling this API
+internal fun Analytics.setAnonymousId(anonymousId: String) {
     androidStorage.setAnonymousId(anonymousId)
     applyConfiguration {
         if (this is ConfigurationAndroid) copy(
