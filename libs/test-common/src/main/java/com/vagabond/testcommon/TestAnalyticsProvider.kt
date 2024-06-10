@@ -20,6 +20,7 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.DataUploadService
+import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.KotlinLogger
@@ -47,7 +48,7 @@ fun generateTestAnalytics(mockConfiguration: Configuration,
                           dataUploadService: DataUploadService = TestDataUploadService(),
                           ): Analytics {
     val testingConfig = mockConfiguration.copy(
-        logger = KotlinLogger,
+        logger = KotlinLogger(Logger.LogLevel.NONE),
         analyticsExecutor = TestExecutor()
     )?:mockConfiguration // this is if a mock configuration is passed
     return Analytics(
