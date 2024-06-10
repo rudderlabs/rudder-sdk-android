@@ -2,6 +2,7 @@ package com.rudderstack.android
 
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.android.utilities.onShutdown
+import com.rudderstack.android.utilities.setAnonymousId
 import com.rudderstack.android.utilities.startup
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
@@ -16,6 +17,8 @@ import com.rudderstack.core.Storage
 class RudderAnalytics private constructor() {
 
     companion object {
+
+        private var anonymousId: String? = null
 
         @Volatile
         private var instance: Analytics? = null
@@ -45,18 +48,39 @@ class RudderAnalytics private constructor() {
             configDownloadService: ConfigDownloadService? = null,
             initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
         ) = instance ?: synchronized(this) {
-            instance ?: Analytics(
-                writeKey = writeKey,
-                configuration = configuration,
-                dataUploadService = dataUploadService,
-                configDownloadService = configDownloadService,
-                storage = storage,
-                initializationListener = initializationListener,
-                shutdownHook = { onShutdown() }
-            ).apply {
-                startup()
-            }.also {
-                instance = it
+            if (instance != null) {
+                instance
+            } else {
+                // Similarly we can configure all other values that we like e.g., deviceToken, advertisingId etc
+                var updatedConfiguration = configuration.copy()
+                this.anonymousId?.let {
+                    updatedConfiguration = configuration.copy(anonymousId = it)
+                }
+                Analytics(
+                    writeKey = writeKey,
+                    configuration = updatedConfiguration,
+                    dataUploadService = dataUploadService,
+                    configDownloadService = configDownloadService,
+                    storage = storage,
+                    initializationListener = initializationListener,
+                    shutdownHook = { onShutdown() }
+                ).apply {
+                    startup()
+                }.also {
+                    instance = it
+                    this.anonymousId?.let { manualAnonymousId ->
+                        instance?.setAnonymousId(manualAnonymousId)
+                    }
+                }
+            }
+        }
+
+        // User can call this method before SDK init
+        fun setAnonymousId(anonymousId: String) {
+            if (instance == null) {
+                this.anonymousId = anonymousId
+            } else {
+                instance?.setAnonymousId(anonymousId)
             }
         }
     }

@@ -3,6 +3,7 @@ package com.rudderstack.android.sampleapp.analytics
 import android.app.Application
 import com.rudderstack.android.BuildConfig
 import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.RudderAnalytics
 import com.rudderstack.android.RudderAnalytics.Companion.getInstance
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.DefaultRudderReporter
@@ -26,6 +27,7 @@ object RudderAnalyticsUtils {
 
     fun initialize(application: Application, listener: InitializationListener? = null) {
         //wen add work manager support to this instance
+        RudderAnalytics.setAnonymousId("sample-anonymous-id")
         _rudderAnalytics = getInstance(
             writeKey = WRITE_KEY,
             initializationListener = { success, message ->
@@ -41,6 +43,7 @@ object RudderAnalyticsUtils {
                 isPeriodicFlushEnabled = true
             )
         )
+//        RudderAnalytics.setAnonymousId("sample-anonymous-id")
         _rudderReporter = DefaultRudderReporter(
             context = application, baseUrl = METRICS_BASE_URL, configuration = Configuration(
                 LibraryMetadata(
