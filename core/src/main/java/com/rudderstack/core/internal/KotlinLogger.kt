@@ -16,9 +16,9 @@ package com.rudderstack.core.internal
 
 import com.rudderstack.core.Logger
 
-object KotlinLogger : Logger {
+class KotlinLogger(initialLogLevel: Logger.LogLevel = Logger.LogLevel.NONE) : Logger {
 
-    private var logLevel = Logger.LogLevel.NONE
+    private var logLevel = initialLogLevel
         @Synchronized set
         @Synchronized get
 

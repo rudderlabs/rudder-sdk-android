@@ -69,7 +69,7 @@ interface Configuration {
             sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
             dataPlaneUrl: String? = null, //defaults to https://hosted.rudderlabs.com
             controlPlaneUrl: String? = null, //defaults to https://api.rudderlabs.com/
-            logger: Logger = KotlinLogger,
+            logger: Logger = KotlinLogger(Logger.LogLevel.NONE),
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             base64Generator: Base64Generator = RudderUtils.defaultBase64Generator,

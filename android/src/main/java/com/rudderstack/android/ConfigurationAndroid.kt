@@ -100,7 +100,7 @@ interface ConfigurationAndroid : Configuration {
             defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
             advertisingId: String? = null,
             deviceToken: String? = null,
-            logLevel: Logger.LogLevel = Logger.LogLevel.NONE,
+            logLevel: Logger.LogLevel = Defaults.LOG_LEVEL,
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             advertisingIdFetchExecutor: ExecutorService? = null,
@@ -158,7 +158,7 @@ interface ConfigurationAndroid : Configuration {
             defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
             advertisingId: String? = null,
             deviceToken: String? = null,
-            logger: Logger = AndroidLogger(Logger.LogLevel.NONE),
+            logger: Logger = AndroidLogger(Defaults.LOG_LEVEL),
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             advertisingIdFetchExecutor: ExecutorService? = null,
@@ -208,22 +208,14 @@ interface ConfigurationAndroid : Configuration {
             anonymousId: String = AndroidUtils.getDeviceId(),
             userId: String? = null,
             trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
-
             recordScreenViews: Boolean = Defaults.RECORD_SCREEN_VIEWS,
-
             isPeriodicFlushEnabled: Boolean = Defaults.IS_PERIODIC_FLUSH_ENABLED,
-
             autoCollectAdvertId: Boolean = Defaults.AUTO_COLLECT_ADVERT_ID,
-
             multiProcessEnabled: Boolean = Defaults.MULTI_PROCESS_ENABLED,
-
             defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
-
             advertisingId: String? = null,
-
             deviceToken: String? = null,
-
-
+            logger: Logger = AndroidLogger(Defaults.LOG_LEVEL),
             advertisingIdFetchExecutor: ExecutorService? = null,
             trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
             sessionTimeoutMillis: Long = Defaults.SESSION_TIMEOUT
@@ -249,7 +241,7 @@ interface ConfigurationAndroid : Configuration {
                 defaultProcessName,
                 advertisingId,
                 deviceToken,
-                configuration.logger,
+                logger,
                 configuration.analyticsExecutor,
                 configuration.networkExecutor,
                 advertisingIdFetchExecutor,
@@ -365,5 +357,6 @@ interface ConfigurationAndroid : Configuration {
         const val DEFAULT_MAX_FLUSH_INTERVAL = 10 * 1000L
         const val SESSION_TIMEOUT: Long = 300000
         const val AUTO_SESSION_TRACKING = true
+        val LOG_LEVEL = Logger.LogLevel.NONE
     }
 }
