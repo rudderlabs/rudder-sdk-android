@@ -18,6 +18,11 @@ android {
     val composeCompilerVersion = RudderstackBuildConfig.Kotlin.COMPILER_EXTENSION_VERSION
     val androidCompileSdkVersion = RudderstackBuildConfig.Android.COMPILE_SDK
     val androidMinSdkVersion = 26
+    val majorVersion = 0
+    val minVersion = 1
+    val patchVersion = 0
+    val libraryVersionName = "${majorVersion}.${minVersion}.${patchVersion}"
+    val libraryVersionCode = majorVersion * 1000 + minVersion * 100 + patchVersion
 
     compileSdk = androidCompileSdkVersion
 
@@ -25,6 +30,8 @@ android {
         applicationId = "com.rudderstack.android.sampleapp"
         minSdk = androidMinSdkVersion
         targetSdk = androidCompileSdkVersion
+        versionCode = libraryVersionCode
+        versionName = libraryVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
