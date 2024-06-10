@@ -135,6 +135,7 @@ internal class ReinstatePlugin : InfrastructurePlugin {
             }
         }
         _analytics?.androidStorage?.deleteV1SharedPreferencesFile()
+        _analytics?.androidStorage?.deleteV1ConfigFiles()
     }
 
     private fun Analytics.setUserIdFromV1() {
