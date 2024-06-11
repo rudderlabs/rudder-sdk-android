@@ -100,7 +100,7 @@ interface ConfigurationAndroid : Configuration {
             defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
             advertisingId: String? = null,
             deviceToken: String? = null,
-            logLevel: RudderLogger.LogLevel = Defaults.LOG_LEVEL,
+            logLevel: RudderLogger.LogLevel = RudderLogger.DEFAULT_LOG_LEVEL,
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             advertisingIdFetchExecutor: ExecutorService? = null,
@@ -357,6 +357,5 @@ interface ConfigurationAndroid : Configuration {
         const val DEFAULT_MAX_FLUSH_INTERVAL = 10 * 1000L
         const val SESSION_TIMEOUT: Long = 300000
         const val AUTO_SESSION_TRACKING = true
-        val LOG_LEVEL = RudderLogger.LogLevel.NONE
     }
 }
