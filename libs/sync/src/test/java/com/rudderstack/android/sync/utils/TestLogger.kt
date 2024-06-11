@@ -34,5 +34,5 @@ class TestLogger : RudderLogger {
     }
 
     override val level: RudderLogger.LogLevel
-        get() = RudderLogger.LogLevel.ERROR
+        get() = RudderLogger.LogLevel.DEBUG
 }
