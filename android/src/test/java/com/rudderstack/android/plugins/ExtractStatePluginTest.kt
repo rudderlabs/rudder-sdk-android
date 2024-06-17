@@ -54,7 +54,6 @@ class ExtractStatePluginTest {
     @Mock
     private lateinit var chain: Plugin.Chain
 
-//    private var context: MessageContext = mapOf()
 
 
     @Before
@@ -90,7 +89,6 @@ class ExtractStatePluginTest {
         plugin.intercept(chain)
         val messageCaptor = argumentCaptor<IdentifyMessage>()
         verify(chain).proceed(messageCaptor.capture())
-        println("118,${messageCaptor.allValues}")
         val capturedMessage = messageCaptor.lastValue
         MatcherAssert.assertThat(capturedMessage.context?.traits?.get("anonymousId"), Matchers.notNullValue())
     }

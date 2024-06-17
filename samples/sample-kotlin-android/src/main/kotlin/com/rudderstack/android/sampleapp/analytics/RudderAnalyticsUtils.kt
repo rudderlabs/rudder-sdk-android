@@ -34,8 +34,6 @@ object RudderAnalyticsUtils {
             configuration = ConfigurationAndroid(
                 application = application,
                 GsonAdapter(),
-//                options = RudderOptions.Builder()
-//                    .withExternalIds(listOf(mapOf("key_ext" to "val_ext"))).build(),
                 dataPlaneUrl = DATA_PLANE_URL,
                 controlPlaneUrl = CONTROL_PLANE_URL,
                 trackLifecycleEvents = true,

@@ -32,8 +32,6 @@ val MessageContext.externalIds: List<Map<String, String>>?
  */
 val MessageContext.customContexts: Map<String, Any>?
     get() = get(Constants.CUSTOM_CONTEXT_MAP_ID) as? Map<String, Any>?
-//val MessageContext.contextAddOns
-//    get() =
 fun MessageContext.withExternalIdsRemoved() = this - Constants.EXTERNAL_ID
 
 /**
