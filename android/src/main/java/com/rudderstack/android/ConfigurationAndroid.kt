@@ -17,14 +17,11 @@ package com.rudderstack.android
 import android.app.Application
 import androidx.annotation.RestrictTo
 import com.rudderstack.android.internal.AndroidLogger
-import com.rudderstack.android.storage.AndroidStorage
-import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Base64Generator
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Logger
 import com.rudderstack.core.RetryStrategy
-import com.rudderstack.core.RudderOptions
-import com.rudderstack.core.Storage
+import com.rudderstack.core.RudderOption
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -86,7 +83,7 @@ interface ConfigurationAndroid : Configuration {
             jsonAdapter: JsonAdapter,
             anonymousId: String?= null,
             userId: String? = null,
-            options: RudderOptions = RudderOptions.defaultOptions(),
+            options: RudderOption = RudderOption(),
             flushQueueSize: Int = Defaults.DEFAULT_FLUSH_QUEUE_SIZE,
             maxFlushInterval: Long = Defaults.DEFAULT_MAX_FLUSH_INTERVAL,
             shouldVerifySdk: Boolean = Defaults.SHOULD_VERIFY_SDK,
@@ -129,7 +126,7 @@ interface ConfigurationAndroid : Configuration {
             override val trackAutoSession: Boolean = trackAutoSession
             override val sessionTimeoutMillis: Long = sessionTimeoutMillis
             override val jsonAdapter: JsonAdapter = jsonAdapter
-            override val options: RudderOptions = options
+            override val options: RudderOption = options
             override val flushQueueSize: Int = flushQueueSize
             override val maxFlushInterval: Long = maxFlushInterval
             override val shouldVerifySdk: Boolean = shouldVerifySdk
@@ -202,7 +199,7 @@ interface ConfigurationAndroid : Configuration {
 
     override fun copy(
         jsonAdapter: JsonAdapter,
-        options: RudderOptions,
+        options: RudderOption,
         flushQueueSize: Int,
         maxFlushInterval: Long,
         shouldVerifySdk: Boolean,
@@ -235,7 +232,7 @@ interface ConfigurationAndroid : Configuration {
 
     fun copy(
         jsonAdapter: JsonAdapter = this.jsonAdapter,
-        options: RudderOptions = this.options,
+        options: RudderOption = this.options,
         flushQueueSize: Int = this.flushQueueSize,
         maxFlushInterval: Long = this.maxFlushInterval,
         shouldVerifySdk: Boolean = this.shouldVerifySdk,

@@ -105,7 +105,7 @@ class FillDefaultsPluginTest {
 //        val chain = CentralPluginChain(message, listOf(fillDefaultsPlugin))
         analytics.testPlugin(fillDefaultsPlugin)
         analytics.track(message)
-        analytics.assertArgument(Verification<Message?, Message?> { input, output ->
+        analytics.assertArgument { input, output ->
             //check for expected values
             assertThat(output?.anonymousId, allOf(notNullValue(), `is`("anon_id")))
             assertThat(output?.userId, allOf(notNullValue(), `is`("user_id")))
@@ -126,11 +126,15 @@ class FillDefaultsPluginTest {
                     hasEntry("custom_name", "c_name"),
                 )
             )
-            // track messages shouldn't contain external ids
+            // track messages shouldn't contain external ids sent inside it.
+            // but it should have the context values
             assertThat(
-                output?.context?.externalIds, anyOf(nullValue(), emptyIterable<Map<String,String>>())
+                output?.context?.externalIds,
+                containsInAnyOrder(mapOf("braze_id" to "b_id"),
+                    mapOf("amp_id" to "a_id"))
+
             )
-        })
+        }
 
     }
 }
