@@ -40,7 +40,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal class ReinstatePlugin : InfrastructurePlugin {
     private var _analytics: Analytics? = null
     private val _isReinstated = AtomicBoolean(false)
-    private val _isDbBeingMigrated = AtomicBoolean(false)
     private fun setReinstated(isReinstated: Boolean) {
         synchronized(_isReinstated) {
             _isReinstated.set(isReinstated)
@@ -65,18 +64,16 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     }
 
     private fun reinstate() {
-        synchronized(this) {
-            if (isV2DataAvailable()) {
-                reinstateV2FromCache()
-                setReinstated(true)
-                return
-            }
-            migrateV1DataIfAvailable()
-            if (_analytics?.currentConfigurationAndroid?.anonymousId == null) {
-                _analytics?.currentConfigurationAndroid?.fillDefaults()
-                setReinstated(true)
-                return
-            }
+        if (isV2DataAvailable()) {
+            reinstateV2FromCache()
+            setReinstated(true)
+            return
+        }
+        migrateV1DataIfAvailable()
+        if (_analytics?.currentConfigurationAndroid?.anonymousId == null) {
+            _analytics?.currentConfigurationAndroid?.fillDefaults()
+            setReinstated(true)
+            return
         }
     }
 
@@ -129,15 +126,17 @@ internal class ReinstatePlugin : InfrastructurePlugin {
             _analytics?.androidStorage?.v1LastActiveTimestamp
         )
         _analytics?.resetV1SessionValues()
-        _analytics?.migrateV1Build()
-        _analytics?.migrateV1Version()
-        if (_isDbBeingMigrated.compareAndSet(false, true)) {
-            _analytics?.androidStorage?.migrateV1StorageToV2 {
-                setReinstated(true)
-            }
+        _analytics?.migrateV1LifecycleProperties()
+        _analytics?.androidStorage?.migrateV1StorageToV2 {
+            setReinstated(true)
         }
         _analytics?.androidStorage?.deleteV1SharedPreferencesFile()
         _analytics?.androidStorage?.deleteV1ConfigFiles()
+    }
+
+    private fun Analytics.migrateV1LifecycleProperties() {
+        migrateV1Build()
+        migrateV1Version()
     }
 
     private fun Analytics.setUserIdFromV1() {

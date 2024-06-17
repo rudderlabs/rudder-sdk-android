@@ -99,7 +99,6 @@ class ReinstatePluginTest {
         saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger)
         plugin.updateRudderServerConfig(config)
 
-//        plugin.updateConfiguration(configurationAndroid)
         busyWait(100)
         Mockito.verify(androidStorage, times(1)).migrateV1StorageToV2(any())
 
@@ -116,7 +115,6 @@ class ReinstatePluginTest {
         saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger)
         plugin.updateRudderServerConfig(config)
 
-//        plugin.updateConfiguration(configurationAndroid)
         busyWait(100)
         Mockito.verify(androidStorage, times(3)).v1Traits
     }
@@ -131,22 +129,10 @@ class ReinstatePluginTest {
         saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger)
         plugin.updateRudderServerConfig(config)
 
-//        plugin.updateConfiguration(configurationAndroid)
         busyWait(100)
         Mockito.verify(androidStorage, times(1)).v1OptOut
     }
 
-    /** _analytics?.setUserIdFromV1()
-    _analytics?.migrateAnonymousIdFromV1()
-    _analytics?.migrateOptOutFromV1()
-    _analytics?.migrateContextFromV1()
-    _analytics?.migrateV1AdvertisingId()
-    _analytics?.initializeSessionManagement(
-    _analytics?.androidStorage?.v1SessionId,
-    _analytics?.androidStorage?.v1LastActiveTimestamp
-    )
-    _analytics?.migrateV1Build()
-    _analytics?.migrateV1Version()*/
     @Test
     fun `test anonymous id should be migrated if v1 data available and v2 unavailable`(){
         busyWait(100)
@@ -192,7 +178,6 @@ class ReinstatePluginTest {
 
         plugin.updateRudderServerConfig(config)
 
-//        plugin.updateConfiguration(configurationAndroid)
         busyWait(100)
         Mockito.verify(androidStorage, never()).migrateV1StorageToV2Sync()
     }
@@ -206,7 +191,6 @@ class ReinstatePluginTest {
         saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger)
         plugin.updateRudderServerConfig(config)
 
-//        plugin.updateConfiguration(configurationAndroid)
         busyWait(100)
         Mockito.verify(androidStorage, never()).migrateV1StorageToV2Sync()
     }
