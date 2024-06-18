@@ -16,7 +16,10 @@ package com.rudderstack.android.internal
 
 import android.app.Application
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import android.os.Build
+import java.io.File
 
 // keys
 private const val RUDDER_PREFS = "rl_prefs"
@@ -34,20 +37,20 @@ private const val RUDDER_PERIODIC_WORK_REQUEST_ID_KEY = "rl_periodic_work_reques
 private const val RUDDER_SESSION_ID_KEY = "rl_session_id_key"
 private const val RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY =
     "rl_last_event_timestamp_key"
+private const val RUDDER_ADVERTISING_ID_KEY = "rl_advertising_id_key"
+
 private const val RUDDER_APPLICATION_VERSION_KEY = "rl_application_version_key"
 private const val RUDDER_APPLICATION_BUILD_KEY = "rl_application_build_key"
-internal class RudderPreferenceManager(application: Application,
+internal class RudderPreferenceManager(private val application: Application,
     private val writeKey: String) {
 
     private val String.key: String
         get() = "$this-$writeKey"
 
-    private lateinit var preferences: SharedPreferences
-    private lateinit var preferencesV1: SharedPreferences
-    init {
-        preferences = application.getSharedPreferences(RUDDER_PREFS.key, Context.MODE_PRIVATE)
-        preferencesV1 = application.getSharedPreferences(RUDDER_PREFS, Context.MODE_PRIVATE)
-    }
+    private var preferences: SharedPreferences =
+        application.getSharedPreferences(RUDDER_PREFS.key, Context.MODE_PRIVATE)
+    private var preferencesV1: SharedPreferences =
+        application.getSharedPreferences(RUDDER_PREFS, Context.MODE_PRIVATE)
     val lastUpdatedTime: Long
         get() = preferences.getLong(RUDDER_SERVER_CONFIG_LAST_UPDATE_KEY.key,
             -1)
@@ -63,6 +66,12 @@ internal class RudderPreferenceManager(application: Application,
 
     fun saveTraits(traitsJson: String?) {
         preferences.edit().putString(RUDDER_TRAITS_KEY.key, traitsJson).apply()
+    }
+    val advertisingId: String?
+        get() = preferences.getString(RUDDER_ADVERTISING_ID_KEY.key, null)
+
+    fun saveAdvertisingId(advertisingId: String?) {
+        preferences.edit().putString(RUDDER_ADVERTISING_ID_KEY.key, advertisingId).apply()
     }
 
     val buildVersionCode: Int
@@ -171,7 +180,10 @@ internal class RudderPreferenceManager(application: Application,
 
     internal val v1SessionId : Long
         get() =  preferencesV1.getLong(RUDDER_SESSION_ID_KEY, -1)
-
+    internal val v1Build: Int
+        get() = preferencesV1.getInt(RUDDER_APPLICATION_BUILD_KEY, -1)
+    internal val v1VersionName: String?
+        get() = preferencesV1.getString(RUDDER_APPLICATION_VERSION_KEY, null)
     fun saveOptStatus(optStatus: Boolean) {
         preferences.edit().putBoolean(RUDDER_OPT_STATUS_KEY.key, optStatus).apply()
     }
@@ -180,16 +192,46 @@ internal class RudderPreferenceManager(application: Application,
         get() = preferences.getBoolean(RUDDER_OPT_STATUS_KEY.key, false)
 
     fun saveVersionName(versionName: String) {
-        preferences.edit().putString(RUDDER_APPLICATION_VERSION_KEY, versionName).apply()
+        preferences.edit().putString(RUDDER_APPLICATION_VERSION_KEY.key, versionName).apply()
     }
 
     val versionName: String?
-        get() = preferences.getString(RUDDER_APPLICATION_VERSION_KEY, null)
+        get() = preferences.getString(RUDDER_APPLICATION_VERSION_KEY.key, null)
 
     fun saveBuild(build: Int) {
-        preferences.edit().putInt(RUDDER_APPLICATION_BUILD_KEY, build).apply()
+        preferences.edit().putInt(RUDDER_APPLICATION_BUILD_KEY.key, build).apply()
     }
 
     val build: Int
-        get() = preferences.getInt(RUDDER_APPLICATION_BUILD_KEY, -1)
+        get() = preferences.getInt(RUDDER_APPLICATION_BUILD_KEY.key, -1)
+
+    val v1AdvertisingId: String?
+        get() = preferencesV1.getString(RUDDER_ADVERTISING_ID_KEY, null)
+
+    fun resetV1AdvertisingId() {
+        preferencesV1.edit().remove(RUDDER_ADVERTISING_ID_KEY).apply()
+    }
+    fun resetV1SessionId() {
+        preferencesV1.edit().remove(RUDDER_SESSION_ID_KEY).apply()
+    }
+    fun resetV1LastActiveTimestamp() {
+        preferencesV1.edit().remove(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY).apply()
+    }
+    fun resetV1VersionName(){
+        preferencesV1.edit().remove(RUDDER_APPLICATION_VERSION_KEY).apply()
+    }
+
+    fun resetV1Build() {
+        preferencesV1.edit().remove(RUDDER_APPLICATION_BUILD_KEY).apply()
+    }
+
+    fun deleteV1PreferencesFile(): Boolean{
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            return application.deleteSharedPreferences(RUDDER_PREFS)
+        } else {
+            application.getSharedPreferences(RUDDER_PREFS, MODE_PRIVATE).edit().clear().apply()
+            val dir = File(application.applicationInfo.dataDir, "shared_prefs")
+            return File(dir, "$RUDDER_PREFS.xml").delete()
+        }
+    }
 }

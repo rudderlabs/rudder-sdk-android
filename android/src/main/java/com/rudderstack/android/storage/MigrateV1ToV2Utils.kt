@@ -16,6 +16,7 @@ package com.rudderstack.android.storage
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
 import com.rudderstack.android.internal.STATUS_CLOUD_MODE_DONE
 import com.rudderstack.android.internal.STATUS_DEVICE_MODE_DONE
 import com.rudderstack.android.internal.STATUS_NEW
@@ -53,10 +54,10 @@ fun migrateV1MessagesToV2Database(
     jsonAdapter: JsonAdapter,
     logger: Logger? = null,
     executorService: ExecutorService? = null
-) {
+) : Boolean{
     logger?.info(log = "Migrating V1 messages to V2 database")
     synchronized(synchronizeOn) {
-        val prevVersion = findPreviousVersion(context)
+        val prevVersion = findPreviousVersion(context).takeIf { it > 0 }?:return false
         logger?.debug(log = "Migrating from version: $prevVersion")
         val v1Database = RudderDatabase(
             context,
@@ -74,7 +75,7 @@ fun migrateV1MessagesToV2Database(
             } ?: run {
             v1Database.delete()
             v1Database.shutDown()
-            return
+            return true
         }
         with(v2Database.getDao(MessageEntity::class.java)) {
             logger?.info(log = "Migrating ${v1Messages.size} messages")
@@ -83,16 +84,21 @@ fun migrateV1MessagesToV2Database(
         v1Database.delete()
         v1Database.shutDown()
     }
+    return true
 }
 
 private fun findPreviousVersion(context: Context): Int {
-    val db = SQLiteDatabase.openDatabase(
-        context.getDatabasePath(V1_DATABASE_NAME).absolutePath, null,
-        SQLiteDatabase.OPEN_READONLY
-    )
-    val prevVersion = db.version
-    db.close()
-    return prevVersion
+    return try {
+        val db = SQLiteDatabase.openDatabase(
+            context.getDatabasePath(V1_DATABASE_NAME).absolutePath, null,
+            SQLiteDatabase.OPEN_READONLY
+        )
+        val prevVersion = db.version
+        db.close()
+        prevVersion
+    }catch (ex: SQLiteException){
+        -1
+    }
 }
 
 private const val V1_MESSAGE_ID_COL = "id"

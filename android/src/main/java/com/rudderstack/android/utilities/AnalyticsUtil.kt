@@ -33,21 +33,24 @@ val Analytics.androidStorage: AndroidStorage
     get() = (storage as AndroidStorage)
 
 /**
- * Set the AdvertisingId yourself. If set, SDK will not capture idfa automatically
+ * Set the AdvertisingId yourself. If set, SDK will not capture idfa
+ * automatically
  *
  * @param advertisingId IDFA for the device
  */
 fun Analytics.putAdvertisingId(advertisingId: String) {
     applyConfiguration {
         if (this is ConfigurationAndroid) copy(
-            advertisingId = advertisingId
+            autoCollectAdvertId = autoCollectAdvertId && advertisingId.isEmpty(),
+            advertisingId = advertisingId.takeUnless { it.isEmpty() }?: this.advertisingId
         )
         else this
     }
 }
 
 /**
- * Set the push token for the device to be passed to the downstream destinations
+ * Set the push token for the device to be passed to the downstream
+ * destinations
  *
  * @param deviceToken Push Token from FCM
  */
@@ -61,8 +64,8 @@ fun Analytics.putDeviceToken(deviceToken: String) {
 }
 
 /**
- * Anonymous id to be used for all consecutive calls.
- * Anonymous id is mostly used for messages sent prior to user identification or in case of
+ * Anonymous id to be used for all consecutive calls. Anonymous id is
+ * mostly used for messages sent prior to user identification or in case of
  * anonymous usage.
  *
  * @param anonymousId String to be used as anonymousId
@@ -100,8 +103,6 @@ fun Analytics.setUserId(userId: String) {
 private val infrastructurePlugins = arrayOf(
     ReinstatePlugin(),
     AnonymousIdHeaderPlugin(),
-    AppInstallUpdateTrackerPlugin(),
-    LifecycleObserverPlugin(),
     ActivityBroadcasterPlugin(),
     ResetImplementationPlugin()
 )
@@ -110,12 +111,14 @@ private val messagePlugins = listOf(
     ExtractStatePlugin(),
     FillDefaultsPlugin(),
     PlatformInputsPlugin(),
-    SessionPlugin()
-)
+    SessionPlugin(),
+    AppInstallUpdateTrackerPlugin(),
+    LifecycleObserverPlugin(),
+    )
 
 internal fun Analytics.startup() {
-    addPlugins()
     associateStates()
+    addPlugins()
 }
 
 

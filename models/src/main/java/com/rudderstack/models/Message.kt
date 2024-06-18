@@ -22,7 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.annotations.SerializedName
 import com.rudderstack.models.Message.EventType
 import com.squareup.moshi.Json
-import java.util.*
+import java.util.Locale
+import java.util.UUID
 
 typealias MessageContext = Map<String, Any?>
 typealias PageProperties = Map<String, Any>
@@ -56,15 +57,15 @@ sealed class Message(
     // @Expose
     @SerializedName("anonymousId") @JsonProperty("anonymousId") @Json(name = "anonymousId") var anonymousId: String?,
 
-    /**
-     * @return User ID for the event
-     */
+    /** @return User ID for the event */
     // @Expose
     @SerializedName("userId") @JsonProperty("userId") @Json(name = "userId") var userId: String? = null,
 
     // format - yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
     // @Expose
-    @SerializedName("originalTimestamp") @field:JsonProperty("originalTimestamp") @get:JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") val timestamp: String,
+    @SerializedName("originalTimestamp") @field:JsonProperty("originalTimestamp") @get:JsonProperty(
+        "originalTimestamp"
+    ) @Json(name = "originalTimestamp") val timestamp: String,
 
     // @Expose
     @SerializedName("destinationProps") @JsonProperty("destinationProps") @Json(name = "destinationProps") val destinationProps: MessageDestinationProps? = null,
@@ -89,20 +90,20 @@ sealed class Message(
     @Json(name = "channel")
     @JsonProperty("channel")
     @SerializedName("channel")
-    var channel: String = _channel?: "server"
+    var channel: String = _channel ?: "server"
         set(value) {
             field = value
         }
-        get() = field?: "server" // required for gson, cause it might set the property null
+        get() = field ?: "server" // required for gson, cause it might set the property null
     // through reflection
 
     @JsonIgnore
     fun getType() = type
 
     /**
-     * For internal use. Any value set over here will be overwritten internally.
-     * For setting custom configuration for integrations for a particular message,
-     * use RudderOptions
+     * For internal use. Any value set over here will be overwritten
+     * internally. For setting custom configuration for integrations for a
+     * particular message, use RudderOptions
      */
     // @Expose
     @SerializedName("integrations")
@@ -339,9 +340,7 @@ class GroupMessage internal constructor(
     @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") timestamp: String,
 
     @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
-    /**
-     * @return Group ID for the event
-     */
+    /** @return Group ID for the event */
     @SerializedName("groupId") @JsonProperty("groupId") @Json(name = "groupId") var groupId: String? = null,
 
     @SerializedName("traits") @JsonProperty("traits") @Json(name = "traits") val traits: GroupTraits? = null,
@@ -428,17 +427,16 @@ class PageMessage internal constructor(
     @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") timestamp: String,
 
     @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
-    /**
-     * @return Name of the event tracked
-     */
+    /** @return Name of the event tracked */
 
     @SerializedName("event") @get:JsonProperty("event") @field:JsonProperty("event") @param:JsonProperty(
         "event"
     ) @Json(name = "event") var name: String? = null,
 
     /**
-     * Get the properties back as set to the event
-     * Always convert objects to it's json equivalent before setting it as values
+     * Get the properties back as set to the event Always convert objects to
+     * it's json equivalent before setting it as values
+     *
      * @return Map of String-Object
      */
 
@@ -519,8 +517,9 @@ class ScreenMessage internal constructor(
     @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
 
     /**
-     * Get the properties back as set to the event
-     * Always convert objects to it's json equivalent before setting it as values
+     * Get the properties back as set to the event Always convert objects to
+     * it's json equivalent before setting it as values
+     *
      * @return Map of String-Object
      */
 
@@ -583,11 +582,12 @@ class ScreenMessage internal constructor(
             if (name != null) it.plus("name" to name) else it
         }.let {
             if (category != null) it.plus("category" to category) else it
-        }, _messageId = this.messageId,
+        },
+        _messageId = this.messageId,
     )
 
     override fun toString(): String {
-        return "${super.toString()}, " +  "properties = $properties"
+        return "${super.toString()}, " + "properties = $properties"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -611,16 +611,15 @@ class TrackMessage internal constructor(
     timestamp: String,
     /*channel: String? = null,*/
     @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
-    /**
-     * @return Name of the event tracked
-     */
+    /** @return Name of the event tracked */
 
     @SerializedName("event") @field:JsonProperty("event") @param:JsonProperty("event") @get:JsonProperty(
         "event"
     ) @Json(name = "event") val eventName: String? = null,
     /**
-     * Get the properties back as set to the event
-     * Always convert objects to it's json equivalent before setting it as values
+     * Get the properties back as set to the event Always convert objects to
+     * it's json equivalent before setting it as values
+     *
      * @return Map of String-Object
      */
 
@@ -707,8 +706,8 @@ class IdentifyMessage internal constructor(
 
     @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
     /**
-     * Get the properties back as set to the event
-     * Always convert objects to it's json equivalent before setting it as values
+     * Get the properties back as set to the event Always convert objects to
+     * it's json equivalent before setting it as values
      */
 
     @SerializedName("properties") @JsonProperty("properties") @Json(name = "properties") val properties: IdentifyProperties? = null,
