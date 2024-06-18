@@ -13,16 +13,16 @@ val sampleRudderProperties = Properties().apply {
 }
 
 android {
+    val javaVersion = RudderstackBuildConfig.Build.JAVA_VERSION
+    val jvm = 17
+    val composeCompilerVersion = RudderstackBuildConfig.Kotlin.COMPILER_EXTENSION_VERSION
+    val androidCompileSdkVersion = RudderstackBuildConfig.Android.COMPILE_SDK
+    val androidMinSdkVersion = 26
     val majorVersion = 0
     val minVersion = 1
     val patchVersion = 0
     val libraryVersionName = "${majorVersion}.${minVersion}.${patchVersion}"
     val libraryVersionCode = majorVersion * 1000 + minVersion * 100 + patchVersion
-    val javaVersion = JavaVersion.VERSION_17
-    val jvm = 17
-    val composeCompilerVersion = "1.4.8"
-    val androidCompileSdkVersion = 34
-    val androidMinSdkVersion = 26
 
     compileSdk = androidCompileSdkVersion
 
@@ -77,7 +77,7 @@ android {
         targetCompatibility = javaVersion
     }
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = RudderstackBuildConfig.Build.JVM_TARGET
         javaParameters = true
     }
     java {
@@ -86,62 +86,44 @@ android {
         }
     }
     buildFeatures {
-        compose = true
+        buildFeatures {
+            compose = true
+        }
+        composeOptions {
+            kotlinCompilerExtensionVersion = composeCompilerVersion
+        }
+        tasks.withType<Test> {
+            useJUnitPlatform()
+        }
+        namespace = "com.rudderstack.android.sampleapp"
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = composeCompilerVersion
+
+    dependencies {
+        implementation("com.google.android.material:material:1.12.0")
+        //compose
+        implementation("androidx.compose.ui:ui:1.6.7")
+        implementation("androidx.compose.ui:ui-tooling-preview:1.6.7")
+        implementation("androidx.compose.ui:ui-tooling:1.6.7")
+        implementation("androidx.compose.foundation:foundation:1.6.7")
+        // Material Design
+        implementation("androidx.compose.material:material:1.6.7")
+        // Integration with activities
+        implementation("androidx.activity:activity-compose:1.9.0")
+        // Integration with ViewModels
+        implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+        // adding play services to generate advertising id
+        implementation("com.google.android.gms:play-services-ads:22.1.0")
+
+        implementation(project(":android"))
+        implementation(project(":moshirudderadapter"))
+        implementation(project(":gsonrudderadapter"))
+        implementation(project(":jacksonrudderadapter"))
+        implementation(project(":repository"))
+        implementation(project(":core"))
+        implementation(project(":models"))
+        implementation(project(":web"))
+        implementation(project(":rudderreporter"))
+        implementation(project(":libs:sync"))
+        implementation(project(":libs:navigationplugin"))
     }
-    tasks.withType<Test> {
-        useJUnitPlatform()
-    }
-    namespace = "com.rudderstack.android.sampleapp"
-
-    buildFeatures {
-        buildConfig = true
-    }
-}
-
-dependencies {
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
-    //compose
-    implementation("androidx.compose.ui:ui:1.4.3")
-    // Tooling support (Previews, etc.)
-    implementation("androidx.compose.ui:ui-tooling:1.4.3")
-    // Foundation (Border, Background, Box, Image, Scroll, shapes, animations, etc.)
-    implementation("androidx.compose.foundation:foundation:1.4.3")
-    // Material Design
-    implementation("androidx.compose.material:material:1.4.3")
-    // Material design icons
-    implementation("androidx.compose.material:material-icons-core:1.4.3")
-    implementation("androidx.compose.material:material-icons-extended:1.4.3")
-    // Integration with activities
-    implementation("androidx.activity:activity-compose:1.8.2")
-    // Integration with ViewModels
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
-    // Integration with observables
-    implementation("androidx.compose.runtime:runtime-livedata:1.4.3")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.4.3")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-    // adding play services to generate advertising id
-    implementation("com.google.android.gms:play-services-ads:22.1.0")
-
-    implementation(project(":android"))
-    implementation(project(":moshirudderadapter"))
-    implementation(project(":gsonrudderadapter"))
-    implementation(project(":jacksonrudderadapter"))
-    implementation(project(":repository"))
-    implementation(project(":core"))
-    implementation(project(":models"))
-    implementation(project(":web"))
-    implementation(project(":rudderreporter"))
-    implementation(project(":libs:sync"))
-    implementation(project(":libs:navigationplugin"))
-
-
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.4")
 }
