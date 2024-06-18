@@ -39,10 +39,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 internal class ReinstatePlugin : InfrastructurePlugin {
     private var _analytics: Analytics? = null
-    private val _isReinstated = AtomicBoolean(false)
     private fun setReinstated(isReinstated: Boolean) {
-        synchronized(_isReinstated) {
-            _isReinstated.set(isReinstated)
+        synchronized(this) {
             if (isReinstated) {
                 _analytics?.applyInfrastructureClosure {
                     if (this is DataUploadService)
