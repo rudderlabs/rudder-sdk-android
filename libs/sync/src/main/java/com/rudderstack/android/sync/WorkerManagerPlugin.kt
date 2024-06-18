@@ -15,11 +15,10 @@
 package com.rudderstack.android.sync
 
 import android.app.Application
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.android.sync.internal.registerWorkManager
 import com.rudderstack.android.sync.internal.unregisterWorkManager
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.Configuration
 import com.rudderstack.core.InfrastructurePlugin
 
 abstract class WorkerManagerPlugin : InfrastructurePlugin {

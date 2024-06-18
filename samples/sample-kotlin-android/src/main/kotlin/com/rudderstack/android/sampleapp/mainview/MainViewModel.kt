@@ -2,15 +2,14 @@ package com.rudderstack.android.sampleapp.mainview
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.rudderstack.android.applyConfigurationAndroid
+import com.rudderstack.android.utilities.applyConfigurationAndroid
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils
-import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.primaryAnalytics
-import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.secondaryAnalytics
+import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.analytics
 import com.rudderstack.android.utilities.endSession
 import com.rudderstack.android.utilities.startSession
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.RudderOptions
+import com.rudderstack.core.RudderOption
 import com.rudderstack.models.GroupTraits
 import com.rudderstack.models.IdentifyTraits
 import com.rudderstack.models.Message
@@ -26,7 +25,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _state = MutableStateFlow(MainViewModelState())
     val state = _state.asStateFlow()
 
-    private var _rudderReporter = RudderAnalyticsUtils.getReporter()
+    private var _rudderReporter = RudderAnalyticsUtils.reporter
 
     private val _loggingInterceptor by lazy {
         object : Plugin {
@@ -53,43 +52,46 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     init {
-        primaryAnalytics.addPlugin(_loggingInterceptor)
-        secondaryAnalytics.addPlugin(_loggingInterceptor)
+        analytics.addPlugin(_loggingInterceptor)
     }
+    private var extCount = 1
 
     internal fun onEventClicked(analytics: AnalyticsState) {
         val log = when (analytics) {
             AnalyticsState.ShutDownAnalytics -> {
-                primaryAnalytics.shutdown()
+                RudderAnalyticsUtils.analytics.shutdown()
                 "Rudder Analytics is shutting down. Init again if needed. This might take a second"
             }
 
             AnalyticsState.TrackEvent -> {
-                primaryAnalytics.track(
+                RudderAnalyticsUtils.analytics.track(
                     eventName = "Track at ${Date()}",
                     trackProperties = TrackProperties("key1" to "prop1", "key2" to "prop2"),
-                    options = RudderOptions.Builder().withIntegrations(mapOf("firebase" to false))
-                        .withExternalIds(
-                            listOf(mapOf("fb_id" to "1234"))
-                        ).build()
+                    options = RudderOption().putIntegration("firebase", false)
+                        .putExternalId(
+                            "fb_id","1234"
+                        )
                 )
                 "Track message sent"
             }
 
             AnalyticsState.IdentifyEvent -> {
-                primaryAnalytics.identify(
-                    userId = "some_user_id", traits = IdentifyTraits("trait1" to "some_trait")
+                RudderAnalyticsUtils.analytics.identify(
+                    userId = "some_user_id", traits = IdentifyTraits("trait1" to "some_trait"),
+                    options = RudderOption().putExternalId("test_ext_id_key_$extCount", "test_val_$extCount")
+
                 )
+                ++ extCount
                 "Identify called"
             }
 
             AnalyticsState.AliasEvent -> {
-                primaryAnalytics.alias(newId = "user_new_id")
+                RudderAnalyticsUtils.analytics.alias(newId = "user_new_id")
                 "Alias called"
             }
 
             AnalyticsState.GroupEvent -> {
-                primaryAnalytics.group(
+                RudderAnalyticsUtils.analytics.group(
                     groupId = "group_id",
                     groupTraits = GroupTraits("g_t1" to "t-1", "g_t2" to "t-2"),
                 )
@@ -97,7 +99,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             AnalyticsState.ScreenEvent -> {
-                primaryAnalytics.screen(
+                RudderAnalyticsUtils.analytics.screen(
                     screenName = "some_screen",
                     category = "some_category",
                     screenProperties = ScreenProperties()
@@ -115,115 +117,36 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             AnalyticsState.OptInAnalytics -> {
-                primaryAnalytics.optOut(primaryAnalytics.isOptedOut)
-                "OPT ${if (primaryAnalytics.isOptedOut) "out" else "in"} pressed"
+                RudderAnalyticsUtils.analytics.optOut(RudderAnalyticsUtils.analytics.isOptedOut)
+                "OPT ${if (RudderAnalyticsUtils.analytics.isOptedOut) "out" else "in"} pressed"
             }
 
             AnalyticsState.ForceFlush -> {
-                primaryAnalytics.flush()
+                RudderAnalyticsUtils.analytics.flush()
                 "Forcing a flush"
             }
 
             AnalyticsState.EnableAutoTracking -> {
-                primaryAnalytics.applyConfigurationAndroid {
+                RudderAnalyticsUtils.analytics.applyConfigurationAndroid {
                     copy(trackAutoSession = true)
                 }
                 "Auto tracking enabled"
             }
 
             AnalyticsState.DisableAutoTracking -> {
-                primaryAnalytics.applyConfigurationAndroid {
+                RudderAnalyticsUtils.analytics.applyConfigurationAndroid {
                     copy(trackAutoSession = false)
                 }
                 "Auto tracking disabled"
             }
 
             AnalyticsState.StartManualSession -> {
-                primaryAnalytics.startSession()
+                RudderAnalyticsUtils.analytics.startSession()
                 "Manual Session Started"
             }
 
             AnalyticsState.EndSession -> {
-                primaryAnalytics.endSession()
-                "Session Ended"
-            }
-            AnalyticsState.ShutDownAnalyticsSecondary -> {
-                secondaryAnalytics.shutdown()
-                "Rudder Analytics is shutting down. Init again if needed. This might take a second"
-            }
-
-            AnalyticsState.TrackEventSecondary -> {
-                secondaryAnalytics.track(
-                    eventName = "Track at ${Date()}",
-                    trackProperties = TrackProperties("key1" to "prop1", "key2" to "prop2"),
-                    options = RudderOptions.Builder().withIntegrations(mapOf("firebase" to false))
-                        .withExternalIds(
-                            listOf(mapOf("fb_id" to "1234"))
-                        ).build()
-                )
-                "Track message sent"
-            }
-
-            AnalyticsState.IdentifyEventSecondary -> {
-                secondaryAnalytics.identify(
-                    userId = "some_user_id", traits = IdentifyTraits("trait1" to "some_trait")
-                )
-                "Identify called"
-            }
-
-            AnalyticsState.AliasEventSecondary -> {
-                secondaryAnalytics.alias(newId = "user_new_id")
-                "Alias called"
-            }
-
-            AnalyticsState.GroupEventSecondary -> {
-                secondaryAnalytics.group(
-                    groupId = "group_id",
-                    groupTraits = GroupTraits("g_t1" to "t-1", "g_t2" to "t-2"),
-                )
-                "Group called"
-            }
-
-            AnalyticsState.ScreenEventSecondary -> {
-                secondaryAnalytics.screen(
-                    screenName = "some_screen",
-                    category = "some_category",
-                    screenProperties = ScreenProperties()
-                )
-                "Screen called"
-            }
-
-            AnalyticsState.OptInAnalyticsSecondary -> {
-                secondaryAnalytics.optOut(primaryAnalytics.isOptedOut)
-                "OPT ${if (primaryAnalytics.isOptedOut) "out" else "in"} pressed"
-            }
-
-            AnalyticsState.ForceFlushSecondary -> {
-                secondaryAnalytics.flush()
-                "Forcing a flush"
-            }
-
-            AnalyticsState.EnableAutoTrackingSecondary -> {
-                secondaryAnalytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = true)
-                }
-                "Auto tracking enabled"
-            }
-
-            AnalyticsState.DisableAutoTrackingSecondary -> {
-                secondaryAnalytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = false)
-                }
-                "Auto tracking disabled"
-            }
-
-            AnalyticsState.StartManualSessionSecondary -> {
-                secondaryAnalytics.startSession()
-                "Manual Session Started"
-            }
-
-            AnalyticsState.EndSessionSecondary -> {
-                secondaryAnalytics.endSession()
+                RudderAnalyticsUtils.analytics.endSession()
                 "Session Ended"
             }
             AnalyticsState.SendError -> {
@@ -232,7 +155,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _rudderReporter?.errorClient?.notify(Exception("Non Fatal Exception"))
                 "Sending an error"
             }
-            else -> "What's this?"
         }
         if (log.isNotEmpty()) addLogData(LogData(Date(), log))
     }
@@ -246,7 +168,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     override fun onCleared() {
-        primaryAnalytics.removePlugin(_loggingInterceptor)
+        analytics.removePlugin(_loggingInterceptor)
         super.onCleared()
     }
 }

@@ -59,7 +59,7 @@ class RudderOptionPluginTest {
             return@Plugin it.proceed(it.message())
         }
         val chain = CentralPluginChain(message, listOf(
-            RudderOptionPlugin(RudderOptions.defaultOptions()),assertPlugin, dest1, dest2, dest3
+            RudderOptionPlugin(RudderOption()),assertPlugin, dest1, dest2, dest3
         ), originalMessage = message)
         chain.proceed(message)
     }
@@ -76,9 +76,9 @@ class RudderOptionPluginTest {
             return@Plugin it.proceed(it.message())
         }
         val chain = CentralPluginChain(message, listOf(
-            RudderOptionPlugin(RudderOptions.Builder()
-                .withIntegrations(mapOf("All" to false))
-                .build()),assertPlugin, dest1, dest2, dest3
+            RudderOptionPlugin(RudderOption()
+                .putIntegration("All", false)
+                ),assertPlugin, dest1, dest2, dest3
         ), originalMessage = message)
         chain.proceed(message)
     }
@@ -96,9 +96,10 @@ class RudderOptionPluginTest {
             return@Plugin it.proceed(it.message())
         }
         val chain = CentralPluginChain(message, listOf(
-            RudderOptionPlugin(RudderOptions.Builder()
-                .withIntegrations(mapOf("dest-2" to false,"dest-3" to false))
-                .build()),assertPlugin, dest1, dest2, dest3
+            RudderOptionPlugin(RudderOption()
+                .putIntegration("dest-2",false)
+                .putIntegration("dest-3", false))
+            ,assertPlugin, dest1, dest2, dest3
         ), originalMessage = message)
         chain.proceed(message)
     }
@@ -116,9 +117,11 @@ class RudderOptionPluginTest {
             return@Plugin it.proceed(it.message())
         }
         val chain = CentralPluginChain(message, listOf(
-            RudderOptionPlugin(RudderOptions.Builder()
-                .withIntegrations(mapOf("All" to false, "dest-2" to true,"dest-3" to false))
-                .build()),assertPlugin, dest1, dest2, dest3
+            RudderOptionPlugin(RudderOption()
+                .putIntegration("All", false)
+                .putIntegration( "dest-2", true)
+                .putIntegration("dest-3",false))
+                ,assertPlugin, dest1, dest2, dest3
         ), originalMessage = message)
         chain.proceed(message)
     }

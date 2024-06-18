@@ -23,18 +23,5 @@ sealed class AnalyticsState(val eventName: String) {
     object EnableAutoTracking : AnalyticsState("Enable Auto Tracking")
     object DisableAutoTracking : AnalyticsState("Disable Auto Tracking")
     object ForceFlush : AnalyticsState("Force Flush")
-
-    object ShutDownAnalyticsSecondary : AnalyticsState("ShutDown Secondary")
-    object TrackEventSecondary : AnalyticsState("Track Secondary")
-    object IdentifyEventSecondary : AnalyticsState("Identify Secondary")
-    object AliasEventSecondary : AnalyticsState("Alias Secondary")
-    object GroupEventSecondary : AnalyticsState("Group Secondary")
-    object ScreenEventSecondary : AnalyticsState("Screen Secondary")
-    object OptInAnalyticsSecondary : AnalyticsState("Opt In/Out Secondary")
-    object StartManualSessionSecondary : AnalyticsState("start manual session Secondary")
-    object EndSessionSecondary : AnalyticsState("End Session Secondary")
-    object EnableAutoTrackingSecondary : AnalyticsState("Enable Auto Tracking Secondary")
-    object DisableAutoTrackingSecondary : AnalyticsState("Disable Auto Tracking Secondary")
-    object ForceFlushSecondary : AnalyticsState("Force Flush Secondary")
     object SendError : AnalyticsState("Send Error")
 }

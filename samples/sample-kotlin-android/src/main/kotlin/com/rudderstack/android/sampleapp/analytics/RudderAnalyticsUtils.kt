@@ -3,7 +3,7 @@ package com.rudderstack.android.sampleapp.analytics
 import android.app.Application
 import com.rudderstack.android.BuildConfig
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.createInstance
+import com.rudderstack.android.RudderAnalytics.Companion.getInstance
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.DefaultRudderReporter
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
@@ -15,48 +15,18 @@ import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 
 object RudderAnalyticsUtils {
 
-
     private var _rudderAnalytics: Analytics? = null
-    private var _rudderAnalyticsSecondary: Analytics? = null
+    val analytics: Analytics
+        get() = _rudderAnalytics ?: throw IllegalStateException(
+            "Rudder Analytics Primary not " + "initialized"
+        )
+
     private var _rudderReporter: RudderReporter? = null
+    val reporter: RudderReporter? get() = _rudderReporter
 
     fun initialize(application: Application, listener: InitializationListener? = null) {
         //wen add work manager support to this instance
-        _rudderAnalytics = createPrimaryAnalyticsInstanceWithWorkerSupport(application, listener)
-        _rudderAnalyticsSecondary = createSecondaryInstance(listener, application)
-        _rudderReporter = DefaultRudderReporter(
-            context = application, baseUrl = METRICS_BASE_URL, configuration = Configuration(
-                LibraryMetadata(
-                    name = "android",
-                    sdkVersion = BuildConfig.LIBRARY_PACKAGE_NAME,
-                    versionCode = BuildConfig.LIBRARY_VERSION_NAME,
-                    writeKey = WRITE_KEY
-                )
-            ), JacksonAdapter()
-        )
-        _rudderAnalytics?.initializeWorkManager()
-    }
-
-    private fun createSecondaryInstance(
-        listener: InitializationListener?,
-        application: Application
-    ) = createInstance(
-        writeKey = WRITE_KEY_SECONDARY,
-        initializationListener = { success, message ->
-            listener?.onAnalyticsInitialized(WRITE_KEY_SECONDARY, success, message)
-        },
-        configuration = ConfigurationAndroid(
-            application = application,
-            GsonAdapter(),
-            dataPlaneUrl = DATA_PLANE_URL_SECONDARY,
-            controlPlaneUrl = CONTROL_PLANE_URL_SECONDARY,
-            trackLifecycleEvents = true,
-            recordScreenViews = true,
-        )
-    )
-
-    fun createPrimaryAnalyticsInstanceWithWorkerSupport(application: Application, listener: InitializationListener? = null): Analytics {
-        return createInstance(
+        _rudderAnalytics = getInstance(
             writeKey = WRITE_KEY,
             initializationListener = { success, message ->
                 listener?.onAnalyticsInitialized(WRITE_KEY, success, message)
@@ -68,28 +38,21 @@ object RudderAnalyticsUtils {
                 controlPlaneUrl = CONTROL_PLANE_URL,
                 trackLifecycleEvents = true,
                 recordScreenViews = true,
-                isPeriodicFlushEnabled = true
-
+                isPeriodicFlushEnabled = true,
+                autoCollectAdvertId = true
             )
         )
-    }
-    private fun Analytics.initializeWorkManager() {
-        addInfrastructurePlugin(SampleWorkManagerPlugin())
-    }
-
-    val primaryAnalytics: Analytics
-        get() = _rudderAnalytics ?: throw IllegalStateException(
-            "Rudder Analytics Primary not " + "initialized"
+        _rudderReporter = DefaultRudderReporter(
+            context = application, baseUrl = METRICS_BASE_URL, configuration = Configuration(
+                LibraryMetadata(
+                    name = "android",
+                    sdkVersion = BuildConfig.LIBRARY_PACKAGE_NAME,
+                    versionCode = BuildConfig.LIBRARY_VERSION_NAME,
+                    writeKey = WRITE_KEY
+                )
+            ), JacksonAdapter()
         )
-
-    val secondaryAnalytics: Analytics
-        get() = _rudderAnalyticsSecondary ?: throw IllegalStateException(
-            "Rudder Analytics " + "Secondary" + " not initialized"
-        )
-
-
-    fun getReporter(): RudderReporter? {
-        return _rudderReporter
+        _rudderAnalytics?.addInfrastructurePlugin(SampleWorkManagerPlugin())
     }
 
     fun interface InitializationListener {

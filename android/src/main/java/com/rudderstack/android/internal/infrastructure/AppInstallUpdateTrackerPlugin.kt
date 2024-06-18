@@ -2,8 +2,8 @@ package com.rudderstack.android.internal.infrastructure
 
 import android.content.pm.PackageManager
 import android.os.Build
-import com.rudderstack.android.androidStorage
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.utilities.androidStorage
+import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.models.AppVersion
 import com.rudderstack.core.Analytics

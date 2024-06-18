@@ -101,10 +101,10 @@ interface Controller {
      * the ones in options will replace those of message.
      *
      * @param message A [Message] object up for submission
-     * @param options Individual [RudderOptions] for this message. Only applicable for this message
+     * @param options Individual [RudderOption] for this message. Only applicable for this message
      * @param lifecycleController LifeCycleController related to this message, null for default implementation
      */
-    fun processMessage(message: Message, options: RudderOptions?, lifecycleController: LifecycleController? = null)
+    fun processMessage(message: Message, options: RudderOption?, lifecycleController: LifecycleController? = null)
 
     /**
      * Add a [Callback] for getting notified when a message is processed

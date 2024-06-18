@@ -43,24 +43,12 @@ android {
             sampleRudderProperties.getProperty("writeKey")
         )
         buildConfigField(
-            "String", "WRITE_KEY_SECONDARY",
-            sampleRudderProperties.getProperty("writeKeySecondary")
-        )
-        buildConfigField(
             "String", "CONTROL_PLANE_URL",
             sampleRudderProperties.getProperty("controlplaneUrl")
         )
         buildConfigField(
-            "String", "CONTROL_PLANE_URL_SECONDARY",
-            sampleRudderProperties.getProperty("controlplaneUrlSecondary")
-        )
-        buildConfigField(
             "String", "DATA_PLANE_URL",
             sampleRudderProperties.getProperty("dataplaneUrl")
-        )
-        buildConfigField(
-            "String", "DATA_PLANE_URL_SECONDARY",
-            sampleRudderProperties.getProperty("dataplaneUrlSecondary")
         )
     }
 
@@ -123,6 +111,8 @@ android {
         implementation("androidx.activity:activity-compose:1.9.0")
         // Integration with ViewModels
         implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+        // adding play services to generate advertising id
+        implementation("com.google.android.gms:play-services-ads:22.1.0")
 
         implementation(project(":android"))
         implementation(project(":moshirudderadapter"))
