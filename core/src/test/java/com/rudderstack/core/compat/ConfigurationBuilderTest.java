@@ -25,7 +25,7 @@ import com.rudderstack.core.Base64Generator;
 import com.rudderstack.core.Configuration;
 import com.rudderstack.core.Logger;
 import com.rudderstack.core.RetryStrategy;
-import com.rudderstack.core.RudderOptions;
+import com.rudderstack.core.RudderOption;
 import com.rudderstack.core.Storage;
 import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
@@ -46,7 +46,7 @@ public class ConfigurationBuilderTest {
 
         assertNotNull(configuration);
         assertEquals(mockJsonAdapter, configuration.getJsonAdapter());
-        assertEquals(RudderOptions.defaultOptions(), configuration.getOptions());
+        assertEquals(new RudderOption(), configuration.getOptions());
         assertEquals(Configuration.FLUSH_QUEUE_SIZE, configuration.getFlushQueueSize());
         assertEquals(Configuration.MAX_FLUSH_INTERVAL, configuration.getMaxFlushInterval());
         assertFalse(configuration.getShouldVerifySdk());
@@ -62,7 +62,7 @@ public class ConfigurationBuilderTest {
     @Test
     public void buildConfigurationWithCustomValues() {
         JsonAdapter mockJsonAdapter = mock(JsonAdapter.class);
-        RudderOptions customOptions = new RudderOptions.Builder().build();
+        RudderOption customOptions = new RudderOption();
         int customFlushQueueSize = 100;
         long customMaxFlushInterval = 5000;
         boolean customShouldVerifySdk = true;

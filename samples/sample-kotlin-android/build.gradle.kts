@@ -124,6 +124,8 @@ dependencies {
     implementation("androidx.compose.runtime:runtime-livedata:1.4.3")
     implementation("androidx.compose.ui:ui-tooling-preview:1.4.3")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+    // adding play services to generate advertising id
+    implementation("com.google.android.gms:play-services-ads:22.1.0")
 
     implementation(project(":android"))
     implementation(project(":moshirudderadapter"))

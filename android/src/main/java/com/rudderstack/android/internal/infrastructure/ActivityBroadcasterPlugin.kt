@@ -23,10 +23,7 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.InfrastructurePlugin
 import java.util.concurrent.atomic.AtomicInteger
 
-/**
- * Tracks the Activities in the application and broadcasts the same
- *
- */
+/** Tracks the Activities in the application and broadcasts the same */
 internal class ActivityBroadcasterPlugin(
 ) : InfrastructurePlugin {
     private val application: Application?
@@ -40,11 +37,8 @@ internal class ActivityBroadcasterPlugin(
 
             override fun onActivityStarted(activity: Activity) {
                 incrementActivityCount()
-                if (analytics?.currentConfigurationAndroid?.recordScreenViews == true) {
-                    broadcastActivityStart(activity)
-                }
-                if(analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true  &&
-                    activityCount.get() == 1) {
+                broadcastActivityStart(activity)
+                if (activityCount.get() == 1) {
                     broadCastApplicationStart()
                 }
             }
@@ -60,7 +54,7 @@ internal class ActivityBroadcasterPlugin(
             override fun onActivityStopped(activity: Activity) {
                 if (analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true) {
                     decrementActivityCount()
-                    if(activityCount.get() == 0) {
+                    if (activityCount.get() == 0) {
                         broadCastApplicationStop()
                     }
                 }
@@ -99,7 +93,6 @@ internal class ActivityBroadcasterPlugin(
     private fun incrementActivityCount() {
         activityCount.incrementAndGet()
     }
-
 
 
     private fun broadCastApplicationStart() {

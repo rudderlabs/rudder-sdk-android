@@ -26,6 +26,8 @@ import android.provider.Settings
 import android.telephony.TelephonyManager
 import androidx.annotation.VisibleForTesting
 import com.rudderstack.android.AndroidUtils.getDeviceId
+import com.rudderstack.android.AndroidUtils
+import com.rudderstack.android.AndroidUtils.isOnClassPath
 import com.rudderstack.android.AndroidUtils.isTv
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.LifecycleListenerPlugin
@@ -133,8 +135,24 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     }
 
     private fun Application.collectAdvertisingId() {
+        if(!isOnClassPath("com.google.android.gms.ads.identifier.AdvertisingIdClient")){
+            _analytics?.currentConfiguration?.logger?.debug(log = "Not collecting advertising ID because "
+                    + "com.google.android.gms.ads.identifier.AdvertisingIdClient "
+                    + "was not found on the classpath."
+            )
+            return
+        }
         _analytics?.currentConfigurationAndroid?.advertisingIdFetchExecutor?.submit {
-            val adId = getGooglePlayServicesAdvertisingID() ?: getAmazonFireAdvertisingID()
+            val adId = try {
+                getGooglePlayServicesAdvertisingID()
+            } catch (ex: Exception) {
+                _analytics?.currentConfiguration?.logger?.error(log = "Error collecting play services ad id", throwable = ex)
+                null
+            } ?: try { getAmazonFireAdvertisingID() } catch (ex: Exception){
+                _analytics?.currentConfiguration?.logger?.error(log = "Error collecting amazon fire ad id", throwable = ex)
+                null
+            }
+            _analytics?.currentConfiguration?.logger?.info(log = "Ad id collected is $adId")
             if (adId != null) {
                 _analytics?.applyConfigurationAndroid {
                     copy(advertisingId = adId)
@@ -310,6 +328,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
 
     override fun onShutDown() {
         super.onShutDown()
+        _analytics?.currentConfigurationAndroid?.advertisingIdFetchExecutor?.shutdownNow()
         _analytics = null
     }
 

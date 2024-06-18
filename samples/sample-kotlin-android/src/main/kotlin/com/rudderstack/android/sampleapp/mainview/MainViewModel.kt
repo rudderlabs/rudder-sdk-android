@@ -9,7 +9,7 @@ import com.rudderstack.android.utilities.endSession
 import com.rudderstack.android.utilities.startSession
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.RudderOptions
+import com.rudderstack.core.RudderOption
 import com.rudderstack.models.GroupTraits
 import com.rudderstack.models.IdentifyTraits
 import com.rudderstack.models.Message
@@ -54,6 +54,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     init {
         analytics.addPlugin(_loggingInterceptor)
     }
+    private var extCount = 1
 
     internal fun onEventClicked(analytics: AnalyticsState) {
         val log = when (analytics) {
@@ -66,18 +67,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 RudderAnalyticsUtils.analytics.track(
                     eventName = "Track at ${Date()}",
                     trackProperties = TrackProperties("key1" to "prop1", "key2" to "prop2"),
-                    options = RudderOptions.Builder().withIntegrations(mapOf("firebase" to false))
-                        .withExternalIds(
-                            listOf(mapOf("fb_id" to "1234"))
-                        ).build()
+                    options = RudderOption().putIntegration("firebase", false)
+                        .putExternalId(
+                            "fb_id","1234"
+                        )
                 )
                 "Track message sent"
             }
 
             AnalyticsState.IdentifyEvent -> {
                 RudderAnalyticsUtils.analytics.identify(
-                    userId = "some_user_id", traits = IdentifyTraits("trait1" to "some_trait")
+                    userId = "some_user_id", traits = IdentifyTraits("trait1" to "some_trait"),
+                    options = RudderOption().putExternalId("test_ext_id_key_$extCount", "test_val_$extCount")
+
                 )
+                ++ extCount
                 "Identify called"
             }
 

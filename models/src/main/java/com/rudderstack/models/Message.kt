@@ -111,6 +111,15 @@ sealed class Message(
     @Json(name = "integrations")
     var integrations: MessageIntegrations? = null
 
+    /**
+     * For internal usage. This variable will return null when called.
+     * Setting this variable will make no difference as this value will be overridden while
+     * syncing the data with server.
+     */
+    @SerializedName("sentAt")
+    @JsonProperty("sentAt")
+    @Json(name = "sentAt")
+    var sentAt: String?= null
     open fun copy(
         context: MessageContext? = this.context,
         anonymousId: String? = this.anonymousId,

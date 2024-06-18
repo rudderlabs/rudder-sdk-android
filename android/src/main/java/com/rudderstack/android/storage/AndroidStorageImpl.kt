@@ -88,18 +88,20 @@ class AndroidStorageImpl(
 
     //message table listener
     private val _messageDataListener = object : Dao.DataChangeListener<MessageEntity> {
-        override fun onDataInserted(inserted: List<MessageEntity>, allData: List<MessageEntity>) {
-            onDataChange(allData.size.toLong())
+        override fun onDataInserted(inserted: List<MessageEntity>) {
+            onDataChange()
         }
 
-        override fun onDataDeleted(deleted: List<MessageEntity>, allData: List<MessageEntity>) {
-            onDataChange(allData.size.toLong())
+        override fun onDataDeleted(deleted: List<MessageEntity>) {
+            onDataChange()
         }
 
-        private fun onDataChange(dataSize: Long) {
-            _dataCount.set(dataSize)
-            _storageListeners.forEach {
-                it.onDataChange()
+        private fun onDataChange() {
+            messageDao?.getCount {
+                _dataCount.set(it)
+                _storageListeners.forEach {
+                    it.onDataChange()
+                }
             }
         }
     }

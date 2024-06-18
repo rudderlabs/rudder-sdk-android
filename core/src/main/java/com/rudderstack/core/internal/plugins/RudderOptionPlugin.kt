@@ -17,7 +17,7 @@ package com.rudderstack.core.internal.plugins
 import com.rudderstack.models.*
 import com.rudderstack.core.DestinationPlugin
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.RudderOptions
+import com.rudderstack.core.RudderOption
 import com.rudderstack.core.minusWrtKeys
 
 /**
@@ -29,11 +29,11 @@ import com.rudderstack.core.minusWrtKeys
  * that integration will be dumped and not used.
  * Likewise if "All" is set to false but a particular integration is set to true, we use it.
  *
- * In case of [MessageContext] values of [Message.context] and [RudderOptions] are merged together.
+ * In case of [MessageContext] values of [Message.context] and [RudderOption] are merged together.
  *
  * @param options
  */
-internal class RudderOptionPlugin(private val options: RudderOptions) : Plugin {
+internal class RudderOptionPlugin(private val options: RudderOption) : Plugin {
 
     override fun intercept(chain: Plugin.Chain): Message {
         val msg = chain.message().let { oldMsg ->
@@ -78,7 +78,7 @@ internal class RudderOptionPlugin(private val options: RudderOptions) : Plugin {
 
     }
 
-    private fun Message.updateContext(options: RudderOptions): MessageContext? {
+    private fun Message.updateContext(options: RudderOption): MessageContext? {
         //external ids can be present in both message or options.
         //save concatenated external ids, if present with both message and options
         val messageExternalIds = context?.externalIds
