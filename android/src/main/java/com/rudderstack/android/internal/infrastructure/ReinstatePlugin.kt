@@ -120,18 +120,23 @@ internal class ReinstatePlugin : InfrastructurePlugin {
         _analytics?.migrateAnonymousIdFromV1()
         _analytics?.migrateOptOutFromV1()
         _analytics?.migrateContextFromV1()
-        _analytics?.migrateV1AdvertisingId()
-        _analytics?.initializeSessionManagement(
-            _analytics?.androidStorage?.v1SessionId,
-            _analytics?.androidStorage?.v1LastActiveTimestamp
-        )
-        _analytics?.resetV1SessionValues()
+        //we do not store v1 advertising id
+        _analytics?.androidStorage?.resetV1AdvertisingId()
+        _analytics?.migrateSession()
         _analytics?.migrateV1LifecycleProperties()
         _analytics?.androidStorage?.migrateV1StorageToV2 {
             setReinstated(true)
         }
         _analytics?.androidStorage?.deleteV1SharedPreferencesFile()
         _analytics?.androidStorage?.deleteV1ConfigFiles()
+    }
+
+    private fun Analytics.migrateSession() {
+        initializeSessionManagement(
+            androidStorage.v1SessionId,
+            androidStorage.v1LastActiveTimestamp
+        )
+        resetV1SessionValues()
     }
 
     private fun Analytics.migrateV1LifecycleProperties() {
@@ -152,7 +157,10 @@ internal class ReinstatePlugin : InfrastructurePlugin {
                 ?: getV1AnonymousIdFromTraits()
                 ?: AndroidUtils.generateAnonymousId(
                     collectDeviceId, application
-                )).let { _analytics?.setAnonymousId(it) }
+                )).let {
+                logger.error(log = "Unable to migrate anonymousId from V1. Generating new anonymousId")
+                _analytics?.setAnonymousId(it)
+            }
             androidStorage.resetV1AnonymousId()
         }
     }
@@ -181,12 +189,6 @@ internal class ReinstatePlugin : InfrastructurePlugin {
         androidStorage.resetV1Version()
     }
 
-    private fun Analytics.migrateV1AdvertisingId() {
-        androidStorage.v1AdvertisingId?.let {
-            androidStorage.saveAdvertisingId(it)
-        }
-        androidStorage.resetV1AdvertisingId()
-    }
 
     private fun Analytics.migrateOptOutFromV1() {
         val optOut = androidStorage.v1OptOut
