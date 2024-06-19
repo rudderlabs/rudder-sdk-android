@@ -141,10 +141,10 @@ class ReinstatePluginTest {
         Mockito.verify(androidStorage, times(1)).resetV1AnonymousId()
     }
     @Test
-    fun `test advertising id should be migrated if v1 data available and v2 unavailable`(){
+    fun `test advertising id should not be migrated if v1 data available and v2 unavailable`(){
         busyWait(100)
-        Mockito.verify(androidStorage, times(1)).v1AdvertisingId
-        Mockito.verify(androidStorage, times(1)).saveAdvertisingId(eq("v1AdId"))
+        Mockito.verify(androidStorage, times(0)).v1AdvertisingId
+        Mockito.verify(androidStorage, times(0)).saveAdvertisingId(eq("v1AdId"))
         Mockito.verify(androidStorage, times(1)).resetV1AdvertisingId()
     }
     @Test
