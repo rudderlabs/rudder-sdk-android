@@ -38,7 +38,7 @@ fun Analytics.startSession(
 ) {
     endSession()
     if (!isSessionIdValid(sessionId)) {
-        currentConfiguration?.logger?.warn(
+        currentConfiguration?.rudderLogger?.warn(
             "Rudderstack User Session", "Invalid session id $sessionId. Must be at least 10 digits"
         )
         return

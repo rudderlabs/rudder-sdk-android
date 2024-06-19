@@ -14,10 +14,10 @@
 
 package com.rudderstack.android.sync.utils
 
-import com.rudderstack.core.Logger
+import com.rudderstack.core.RudderLogger
 
-class TestLogger : Logger {
-    override fun activate(level: Logger.LogLevel) {
+class TestLogger : RudderLogger {
+    override fun activate(level: RudderLogger.LogLevel) {
 
     }
 
@@ -33,6 +33,6 @@ class TestLogger : Logger {
     override fun error(tag: String, log: String, throwable: Throwable?) {
     }
 
-    override val level: Logger.LogLevel
-        get() = Logger.LogLevel.Error
+    override val level: RudderLogger.LogLevel
+        get() = RudderLogger.LogLevel.DEBUG
 }

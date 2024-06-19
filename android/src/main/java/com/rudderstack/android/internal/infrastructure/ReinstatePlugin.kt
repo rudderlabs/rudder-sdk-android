@@ -156,7 +156,7 @@ internal class ReinstatePlugin : InfrastructurePlugin {
                 ?: AndroidUtils.generateAnonymousId(
                     collectDeviceId, application
                 )).let {
-                logger.error(log = "Unable to migrate anonymousId from V1. Generating new anonymousId")
+                rudderLogger.error(log = "Unable to migrate anonymousId from V1. Generating new anonymousId")
                 _analytics?.setAnonymousId(it)
             }
             androidStorage.resetV1AnonymousId()

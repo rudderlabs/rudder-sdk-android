@@ -136,7 +136,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
 
     private fun Application.collectAdvertisingId() {
         if(!isOnClassPath("com.google.android.gms.ads.identifier.AdvertisingIdClient")){
-            _analytics?.currentConfiguration?.logger?.debug(log = "Not collecting advertising ID because "
+            _analytics?.currentConfiguration?.rudderLogger?.debug(log = "Not collecting advertising ID because "
                     + "com.google.android.gms.ads.identifier.AdvertisingIdClient "
                     + "was not found on the classpath."
             )
@@ -146,13 +146,13 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             val adId = try {
                 getGooglePlayServicesAdvertisingID()
             } catch (ex: Exception) {
-                _analytics?.currentConfiguration?.logger?.error(log = "Error collecting play services ad id", throwable = ex)
+                _analytics?.currentConfiguration?.rudderLogger?.error(log = "Error collecting play services ad id", throwable = ex)
                 null
             } ?: try { getAmazonFireAdvertisingID() } catch (ex: Exception){
-                _analytics?.currentConfiguration?.logger?.error(log = "Error collecting amazon fire ad id", throwable = ex)
+                _analytics?.currentConfiguration?.rudderLogger?.error(log = "Error collecting amazon fire ad id", throwable = ex)
                 null
             }
-            _analytics?.currentConfiguration?.logger?.info(log = "Ad id collected is $adId")
+            _analytics?.currentConfiguration?.rudderLogger?.info(log = "Ad id collected is $adId")
             if (adId != null) {
                 _analytics?.applyConfigurationAndroid {
                     copy(advertisingId = adId)
@@ -179,7 +179,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             advertisingInfo.javaClass.getMethod("isLimitAdTrackingEnabled")
                 .invoke(advertisingInfo) as? Boolean
         if (isLimitAdTrackingEnabled == true) {
-            _analytics?.logger?.debug(log = "Not collecting advertising ID because isLimitAdTrackingEnabled (Google Play Services) is true.")
+            _analytics?.rudderLogger?.debug(log = "Not collecting advertising ID because isLimitAdTrackingEnabled (Google Play Services) is true.")
             return null
         }
         return advertisingInfo.javaClass.getMethod("getId").invoke(advertisingInfo) as? String
@@ -191,7 +191,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         val contentResolver: ContentResolver = contentResolver
         val limitAdTracking = Settings.Secure.getInt(contentResolver, "limit_ad_tracking") != 0
         if (limitAdTracking) {
-            _analytics?.logger?.debug(log = "Not collecting advertising ID because limit_ad_tracking (Amazon Fire OS) is true.")
+            _analytics?.rudderLogger?.debug(log = "Not collecting advertising ID because limit_ad_tracking (Amazon Fire OS) is true.")
             return null
         }
         return Settings.Secure.getString(
@@ -233,7 +233,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
                 "version" to packageInfo.versionName
             )
         } catch (ex: PackageManager.NameNotFoundException) {
-            _analytics?.currentConfiguration?.logger?.error(
+            _analytics?.currentConfiguration?.rudderLogger?.error(
                 log = "Package Name Not Found",
                 throwable = ex
             )
@@ -282,7 +282,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
             try {
                 (this.getSystemService(Context.WIFI_SERVICE) as? WifiManager)?.isWifiEnabled?:false
             } catch (ex: Exception) {
-                _analytics?.currentConfiguration?.logger?.error(log = "Cannot detect wifi. Wifi Permission not available")
+                _analytics?.currentConfiguration?.rudderLogger?.error(log = "Cannot detect wifi. Wifi Permission not available")
                 false
             }
 

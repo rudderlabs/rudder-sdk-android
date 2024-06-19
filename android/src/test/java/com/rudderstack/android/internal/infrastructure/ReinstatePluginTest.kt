@@ -10,6 +10,7 @@ import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.saveObject
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.models.Message
@@ -18,7 +19,6 @@ import com.rudderstack.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.generateTestAnalytics
 import org.junit.After
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -67,7 +67,8 @@ class ReinstatePluginTest {
         )
         configurationAndroid = ConfigurationAndroid(
             context, mock<JsonAdapter>(), shouldVerifySdk = true,
-            analyticsExecutor = TestExecutor()
+            analyticsExecutor = TestExecutor(),
+            logLevel = RudderLogger.LogLevel.DEBUG,
         )
         analytics = createAnalyticsInstance()
         `when`(androidStorage.v1VersionName).thenReturn("1.0")
@@ -96,7 +97,7 @@ class ReinstatePluginTest {
         whenever(androidStorage.v1ExternalIds).thenReturn(listOf())
         whenever(androidStorage.v1OptOut).thenReturn(false)
 
-        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger)
+        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger())
         plugin.updateRudderServerConfig(config)
 
         busyWait(100)
@@ -112,7 +113,7 @@ class ReinstatePluginTest {
         whenever(androidStorage.v1ExternalIds).thenReturn(listOf())
         whenever(androidStorage.v1OptOut).thenReturn(false)
 
-        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger)
+        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger())
         plugin.updateRudderServerConfig(config)
 
         busyWait(100)
@@ -126,7 +127,7 @@ class ReinstatePluginTest {
         whenever(androidStorage.v1ExternalIds).thenReturn(listOf())
         whenever(androidStorage.v1OptOut).thenReturn(false)
 
-        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger)
+        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger())
         plugin.updateRudderServerConfig(config)
 
         busyWait(100)
@@ -140,10 +141,10 @@ class ReinstatePluginTest {
         Mockito.verify(androidStorage, times(1)).resetV1AnonymousId()
     }
     @Test
-    fun `test advertising id should be migrated if v1 data available and v2 unavailable`(){
+    fun `test advertising id should not be migrated if v1 data available and v2 unavailable`(){
         busyWait(100)
-        Mockito.verify(androidStorage, times(1)).v1AdvertisingId
-        Mockito.verify(androidStorage, times(1)).saveAdvertisingId(eq("v1AdId"))
+        Mockito.verify(androidStorage, times(0)).v1AdvertisingId
+        Mockito.verify(androidStorage, times(0)).saveAdvertisingId(eq("v1AdId"))
         Mockito.verify(androidStorage, times(1)).resetV1AdvertisingId()
     }
     @Test
@@ -188,7 +189,7 @@ class ReinstatePluginTest {
         whenever(androidStorage.v1Traits).thenReturn(mapOf())
         whenever(androidStorage.v1ExternalIds).thenReturn(listOf())
         whenever(androidStorage.v1OptOut).thenReturn(false)
-        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger)
+        saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger())
         plugin.updateRudderServerConfig(config)
 
         busyWait(100)

@@ -18,10 +18,13 @@ import android.app.Application;
 
 import com.rudderstack.android.AndroidUtils;
 import com.rudderstack.android.ConfigurationAndroid;
+import com.rudderstack.android.internal.AndroidLogger;
 import com.rudderstack.core.compat.ConfigurationBuilder;
 import com.rudderstack.rudderjsonadapter.JsonAdapter;
+import com.rudderstack.core.RudderLogger;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 //Java compatible Builder for [ConfigurationAndroid]
 public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
@@ -37,9 +40,10 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     private String advertisingId = null;
     private String deviceToken = null;
     private boolean collectDeviceId = ConfigurationAndroid.Defaults.COLLECT_DEVICE_ID;
-    private ExecutorService advertisingIdFetchExecutor = null;
+    private ExecutorService advertisingIdFetchExecutor = Executors.newCachedThreadPool();
     private boolean trackAutoSession = ConfigurationAndroid.Defaults.AUTO_SESSION_TRACKING;
     private long sessionTimeoutMillis = ConfigurationAndroid.Defaults.SESSION_TIMEOUT;
+    private RudderLogger rudderLogger = new AndroidLogger();
 
     public ConfigurationAndroidBuilder(Application application, JsonAdapter jsonAdapter) {
         super(jsonAdapter);
@@ -99,6 +103,11 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
         return this;
     }
 
+    public ConfigurationBuilder withLogLevel(RudderLogger.LogLevel logLevel) {
+        this.rudderLogger = new AndroidLogger(logLevel);
+        return this;
+    }
+
     public ConfigurationBuilder withCollectDeviceId(boolean collectDeviceId) {
         this.collectDeviceId = collectDeviceId;
         return this;
@@ -118,6 +127,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
                 defaultProcessName,
                 advertisingId,
                 deviceToken,
+                rudderLogger,
                 collectDeviceId,
                 advertisingIdFetchExecutor,
                 trackAutoSession,

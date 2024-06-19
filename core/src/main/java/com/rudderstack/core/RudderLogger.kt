@@ -19,9 +19,10 @@ package com.rudderstack.core
  * Contains methods for different scenarios
  *
  */
-interface Logger {
-    companion object{
+interface RudderLogger {
+    companion object {
         const val DEFAULT_TAG = "Rudder-Analytics"
+        val DEFAULT_LOG_LEVEL = LogLevel.NONE
     }
 
     /**
@@ -29,31 +30,32 @@ interface Logger {
      *
      * @param level should log anything greater or equal to that level. See [LogLevel]
      */
-    fun activate (level : LogLevel)
+    fun activate(level: LogLevel)
 
-    fun info(tag : String = DEFAULT_TAG, log: String)
+    fun info(tag: String = DEFAULT_TAG, log: String)
 
-    fun debug(tag : String = DEFAULT_TAG, log: String)
+    fun debug(tag: String = DEFAULT_TAG, log: String)
 
-    fun warn(tag : String = DEFAULT_TAG, log: String)
+    fun warn(tag: String = DEFAULT_TAG, log: String)
 
-    fun error(tag : String = DEFAULT_TAG, log: String, throwable : Throwable? = null)
+    fun error(tag: String = DEFAULT_TAG, log: String, throwable: Throwable? = null)
 
     /**
      * Level based on priority. Higher the number, greater the priority
      *
      * @property level priority for each type
      */
-    enum class LogLevel(internal val level: Int){
-        Info(0),
-        Debug(1),
-        Warn(2),
-        Error(3),
-        None(4),
+    enum class LogLevel {
+        DEBUG,
+        INFO,
+        WARN,
+        ERROR,
+        NONE,
     }
+
     val level: LogLevel
 
-    object Noob : Logger{
+    object Noob : RudderLogger {
         override fun activate(level: LogLevel) {
             // do nothing
         }
@@ -75,6 +77,6 @@ interface Logger {
         }
 
         override val level: LogLevel
-            get() = LogLevel.None
+            get() = DEFAULT_LOG_LEVEL
     }
 }

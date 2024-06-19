@@ -37,13 +37,13 @@ internal class RudderSyncWorker(
                 inputData.getString(WORKER_ANALYTICS_INSTANCE_KEY) ?: return Result.failure()
             val weakSyncAnalytics = getAnalytics(analyticsInstanceKey)
             if (weakSyncAnalytics?.isShutdown == true) {
-                weakSyncAnalytics.logger.warn(log = "Cannot do work. Analytics instance is " +
+                weakSyncAnalytics.rudderLogger.warn(log = "Cannot do work. Analytics instance is " +
                                                     "already shutdown")
                 return Result.failure()
             }
             val syncAnalytics = (weakSyncAnalytics ?: createSyncAnalytics())
             val success = syncAnalytics?.blockingFlush()
-            syncAnalytics?.logger?.debug(log = "Data upload through worker. success: $success")
+            syncAnalytics?.rudderLogger?.debug(log = "Data upload through worker. success: $success")
             if (weakSyncAnalytics == null) {
                 syncAnalytics?.shutdown()
             }
