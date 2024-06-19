@@ -41,7 +41,6 @@ object RudderAnalyticsUtils {
                 recordScreenViews = true,
                 isPeriodicFlushEnabled = true,
                 logLevel = RudderLogger.LogLevel.DEBUG,
-                isPeriodicFlushEnabled = true,
                 autoCollectAdvertId = true,
             )
         )
