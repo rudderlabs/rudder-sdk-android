@@ -1,8 +1,6 @@
 package com.rudderstack.models
 
-import org.hamcrest.MatcherAssert
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.hasEntry
 import org.hamcrest.Matchers.hasItems
@@ -81,18 +79,31 @@ class MessageUtilsTest {
 
     @Test
     fun `optAdd with overlapping externalIds`() {
-        val context1: MessageContext = createContext(
-            externalIds = listOf(mapOf("id1" to "value1"))
+        val savedContext: MessageContext = createContext(
+            externalIds = listOf(
+                mapOf("type" to "brazeExternalID", "id" to "braze-1234"),
+                mapOf("type" to "amplitudeExternalID", "id" to "amp-5678"),
+                mapOf("type" to "adobeExternalID", "id" to "fire-67890"),
+            )
         )
-        val context2: MessageContext = createContext(
-            externalIds = listOf(mapOf("id2" to "value2"), mapOf("id1" to "value3"))
+        val currentEventContext: MessageContext = createContext(
+            externalIds = listOf(
+                mapOf("type" to "brazeExternalID", "id" to "braze-67890-override"),
+                mapOf("type" to "amplitudeExternalID", "id" to "amp-5678-override"),
+                mapOf("type" to "firebaseExternalID", "id" to "fire-67890"),
+            )
         )
 
-        val result = context1 optAddContext context2
+        val result = currentEventContext optAddContext savedContext
 
         assertThat(
             result?.externalIds,
-            hasItems(mapOf("id1" to "value1"), mapOf("id2" to "value2"), mapOf("id2" to "value2"))
+            hasItems(
+                mapOf("type" to "brazeExternalID", "id" to "braze-67890-override"),
+                mapOf("type" to "amplitudeExternalID", "id" to "amp-5678-override"),
+                mapOf("type" to "adobeExternalID", "id" to "fire-67890"),
+                mapOf("type" to "firebaseExternalID", "id" to "fire-67890"),
+            )
         )
     }
 
