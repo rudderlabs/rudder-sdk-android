@@ -26,7 +26,6 @@ import java.util.Locale
 import java.util.UUID
 
 typealias MessageContext = Map<String, Any?>
-typealias PageProperties = Map<String, Any>
 typealias ScreenProperties = Map<String, Any>
 typealias TrackProperties = Map<String, Any>
 typealias IdentifyTraits = Map<String, Any?>
@@ -119,7 +118,7 @@ sealed class Message(
     @SerializedName("sentAt")
     @JsonProperty("sentAt")
     @Json(name = "sentAt")
-    var sentAt: String?= null
+    var sentAt: String? = null
     open fun copy(
         context: MessageContext? = this.context,
         anonymousId: String? = this.anonymousId,
@@ -151,17 +150,6 @@ sealed class Message(
             timestamp,
             destinationProps,
             properties,
-        )
-
-        is PageMessage -> copy(
-            context,
-            anonymousId,
-            userId,
-            timestamp,
-            destinationProps,
-            name,
-            properties,
-            category,
         )
 
         is ScreenMessage -> copy(
@@ -198,11 +186,6 @@ sealed class Message(
         @Json(name = "group")
         GROUP("group"),
 
-        @SerializedName("page")
-        @JsonProperty("page")
-        @Json(name = "page")
-        PAGE("page"),
-
         @SerializedName("screen")
         @JsonProperty("screen")
         @Json(name = "screen")
@@ -222,7 +205,6 @@ sealed class Message(
             fun fromValue(value: String) = when (value.lowercase()) {
                 "alias" -> EventType.ALIAS
                 "group" -> EventType.GROUP
-                "page" -> EventType.PAGE
                 "screen" -> EventType.SCREEN
                 "track" -> EventType.TRACK
                 "identify" -> EventType.IDENTIFY
@@ -415,94 +397,6 @@ class GroupMessage internal constructor(
     override fun hashCode(): Int {
         var result = groupId?.hashCode() ?: 0
         result = 31 * result + (traits?.hashCode() ?: 0)
-        return result
-    }
-}
-
-class PageMessage internal constructor(
-
-    @JsonProperty("context") @Json(name = "context") context: MessageContext? = null,
-    @JsonProperty("anonymousId") @Json(name = "anonymousId") anonymousId: String?,
-    @JsonProperty("userId") @Json(name = "userId") userId: String? = null,
-    @JsonProperty("originalTimestamp") @Json(name = "originalTimestamp") timestamp: String,
-
-    @JsonProperty("destinationProps") @Json(name = "destinationProps") destinationProps: MessageDestinationProps? = null,
-    /** @return Name of the event tracked */
-
-    @SerializedName("event") @get:JsonProperty("event") @field:JsonProperty("event") @param:JsonProperty(
-        "event"
-    ) @Json(name = "event") var name: String? = null,
-
-    /**
-     * Get the properties back as set to the event Always convert objects to
-     * it's json equivalent before setting it as values
-     *
-     * @return Map of String-Object
-     */
-
-    @SerializedName("properties") @JsonProperty("properties") @Json(name = "properties") val properties: PageProperties? = null,
-
-    @SerializedName("category") @JsonProperty("category") @Json(name = "category") val category: String? = null,
-    @JsonProperty("not_applicable", required = false) // work-around to ignore value param
-    // jackson serialisation
-    _messageId: String? = null,
-) : Message(
-    EventType.PAGE,
-    context,
-    anonymousId,
-    userId,
-    timestamp,
-    destinationProps,
-    _messageId,
-) {
-    companion object {
-        @JvmStatic
-        fun create(
-            anonymousId: String? = null,
-            userId: String? = null,
-            timestamp: String,
-            destinationProps: MessageDestinationProps? = null,
-            name: String? = null,
-            properties: PageProperties? = null,
-            category: String? = null,
-            traits: Map<String, Any?>? = null,
-            externalIds: List<Map<String, String>>? = null,
-            customContextMap: Map<String, Any>? = null,
-            _messageId: String? = null,
-        ) = PageMessage(
-            createContext(traits, externalIds, customContextMap),
-            anonymousId, userId, timestamp, destinationProps, name, properties,
-            category, _messageId,
-        )
-    }
-
-    fun copy(
-        context: MessageContext? = this.context,
-        anonymousId: String? = this.anonymousId,
-        userId: String? = this.userId,
-        timestamp: String = this.timestamp,
-        destinationProps: MessageDestinationProps? = this.destinationProps,
-        name: String? = this.name,
-        properties: PageProperties? = this.properties,
-        category: String? = this.category,
-
-        ) = PageMessage(
-        context, anonymousId, userId, timestamp, destinationProps, name, properties,
-        category, _messageId = this.messageId,
-    )
-
-    override fun toString(): String {
-        return "${super.toString()}, " + "name = $name, " + "properties = $properties, " + "category = $category"
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return super.equals(other) && other is PageMessage && other.name == name && other.properties == properties && other.category == category
-    }
-
-    override fun hashCode(): Int {
-        var result = name?.hashCode() ?: 0
-        result = 31 * result + (properties?.hashCode() ?: 0)
-        result = 31 * result + (category?.hashCode() ?: 0)
         return result
     }
 }
@@ -782,8 +676,6 @@ class IdentifyMessage internal constructor(
 
 fun TrackProperties(vararg keyPropertyPair: Pair<String, Any>): TrackProperties =
     mapOf(*keyPropertyPair)
-
-// fun PageProperties(vararg keyPropertyPair: Pair<String, Any>) : PageProperties = mapOf(*keyPropertyPair)
 
 fun ScreenProperties(vararg keyPropertyPair: Pair<String, Any>): ScreenProperties =
     mapOf(*keyPropertyPair)

@@ -25,7 +25,6 @@ import com.rudderstack.models.AliasMessage
 import com.rudderstack.models.GroupMessage
 import com.rudderstack.models.IdentifyMessage
 import com.rudderstack.models.Message
-import com.rudderstack.models.PageMessage
 import com.rudderstack.models.ScreenMessage
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
@@ -45,9 +44,11 @@ import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
         RudderField(RudderField.Type.INTEGER, MessageEntity.ColumnNames.status),
     ]
 )
-internal class MessageEntity(val message: Message,
-                             private val jsonAdapter: JsonAdapter,
-    private val updatedAt: Long? = null) : Entity {
+internal class MessageEntity(
+    val message: Message,
+    private val jsonAdapter: JsonAdapter,
+    private val updatedAt: Long? = null
+) : Entity {
     object ColumnNames {
         internal const val messageId = "id"
         internal const val message = "message"
@@ -55,11 +56,12 @@ internal class MessageEntity(val message: Message,
         internal const val type = "type"
         internal const val status = "status"
     }
+
     val status: Int
         get() = _status
     private var _status: Int = STATUS_NEW
 
-    fun maskWithDmtStatus(dmtStatus: Int){
+    fun maskWithDmtStatus(dmtStatus: Int) {
         _status = _status.maskWith(dmtStatus)
     }
 
@@ -71,7 +73,7 @@ internal class MessageEntity(val message: Message,
                 jsonAdapter.writeToJson(message, RudderTypeAdapter<Message> {})
                     ?.replace("'", BACKLASHES_INVERTED_COMMA)
             )
-            it.put(ColumnNames.updatedAt, updatedAt?: System.currentTimeMillis())
+            it.put(ColumnNames.updatedAt, updatedAt ?: System.currentTimeMillis())
             it.put(ColumnNames.type, message.getType().value)
             it.put(ColumnNames.status, _status)
         }
@@ -95,7 +97,7 @@ internal class MessageEntity(val message: Message,
             return MessageEntity(
                 message ?: return null,
                 jsonAdapter
-            ).also {entity ->
+            ).also { entity ->
                 status?.let {
                     entity.maskWithDmtStatus(it)
                 }
@@ -107,7 +109,6 @@ internal class MessageEntity(val message: Message,
                 Message.EventType.ALIAS.value -> AliasMessage::class.java
                 Message.EventType.GROUP.value -> GroupMessage::class.java
                 Message.EventType.IDENTIFY.value -> IdentifyMessage::class.java
-                Message.EventType.PAGE.value -> PageMessage::class.java
                 Message.EventType.SCREEN.value -> ScreenMessage::class.java
                 Message.EventType.TRACK.value -> TrackMessage::class.java
                 else -> Message::class.java
