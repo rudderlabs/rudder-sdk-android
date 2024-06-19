@@ -23,7 +23,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
@@ -68,14 +70,18 @@ class ReinstatePluginTest {
             analyticsExecutor = TestExecutor(),
             logLevel = RudderLogger.LogLevel.DEBUG,
         )
-        analytics = generateTestAnalytics(
-            configurationAndroid, storage = androidStorage, configDownloadService = mockControlPlane
-        )
+        analytics = createAnalyticsInstance()
+        `when`(androidStorage.v1VersionName).thenReturn("1.0")
+        `when`(androidStorage.v1AdvertisingId).thenReturn("v1AdId")
 
 
         plugin = ReinstatePlugin()
         plugin.setup(analytics)
     }
+
+    private fun createAnalyticsInstance() = generateTestAnalytics(
+        configurationAndroid, storage = androidStorage, configDownloadService = mockControlPlane
+    )
 
     @After
     fun tearDown() {
@@ -94,9 +100,8 @@ class ReinstatePluginTest {
         saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger())
         plugin.updateRudderServerConfig(config)
 
-//        plugin.updateConfiguration(configurationAndroid)
         busyWait(100)
-        Mockito.verify(androidStorage, times(1)).migrateV1StorageToV2Sync()
+        Mockito.verify(androidStorage, times(1)).migrateV1StorageToV2(any())
 
 
     }
@@ -111,9 +116,8 @@ class ReinstatePluginTest {
         saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger())
         plugin.updateRudderServerConfig(config)
 
-//        plugin.updateConfiguration(configurationAndroid)
         busyWait(100)
-        Mockito.verify(androidStorage, times(2)).v1Traits
+        Mockito.verify(androidStorage, times(3)).v1Traits
     }
     @Test
     fun `test v1OptOut should be called if v1 data available and v2 unavailable`(){
@@ -126,9 +130,44 @@ class ReinstatePluginTest {
         saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger())
         plugin.updateRudderServerConfig(config)
 
-//        plugin.updateConfiguration(configurationAndroid)
         busyWait(100)
         Mockito.verify(androidStorage, times(1)).v1OptOut
+    }
+
+    @Test
+    fun `test anonymous id should be migrated if v1 data available and v2 unavailable`(){
+        busyWait(100)
+        Mockito.verify(androidStorage, times(1)).v1AnonymousId
+        Mockito.verify(androidStorage, times(1)).resetV1AnonymousId()
+    }
+    @Test
+    fun `test advertising id should be migrated if v1 data available and v2 unavailable`(){
+        busyWait(100)
+        Mockito.verify(androidStorage, times(1)).v1AdvertisingId
+        Mockito.verify(androidStorage, times(1)).saveAdvertisingId(eq("v1AdId"))
+        Mockito.verify(androidStorage, times(1)).resetV1AdvertisingId()
+    }
+    @Test
+    fun `test session id should be migrated if v1 data available and v2 unavailable`(){
+        busyWait(100)
+        Mockito.verify(androidStorage, times(1)).v1SessionId
+        Mockito.verify(androidStorage, times(1)).resetV1SessionId()
+        Mockito.verify(androidStorage, times(1)).resetV1SessionLastActiveTimestamp()
+    }
+    @Test
+    fun `test build should be migrated if v1 data available and v2 unavailable`(){
+        busyWait(100)
+        Mockito.verify(androidStorage, times(1)).v1Build
+        Mockito.verify(androidStorage, times(1)).resetV1Build()
+        Mockito.verify(androidStorage, times(1)).setBuild(any())
+    }
+    @Test
+    fun `test version should be migrated if v1 data available and v2 unavailable`(){
+        busyWait(100)
+
+        Mockito.verify(androidStorage, times(1)).v1VersionName
+        Mockito.verify(androidStorage, times(1)).setVersionName(eq("1.0"))
+        Mockito.verify(androidStorage, times(1)).resetV1Version()
     }
     @Test
     fun `test migration should not be called if v1 data unavailable`(){
@@ -140,7 +179,6 @@ class ReinstatePluginTest {
 
         plugin.updateRudderServerConfig(config)
 
-//        plugin.updateConfiguration(configurationAndroid)
         busyWait(100)
         Mockito.verify(androidStorage, never()).migrateV1StorageToV2Sync()
     }
@@ -154,7 +192,6 @@ class ReinstatePluginTest {
         saveObject(TEST_SOURCE_ID, context, RUDDER_SERVER_FILE_NAME_V1, KotlinLogger())
         plugin.updateRudderServerConfig(config)
 
-//        plugin.updateConfiguration(configurationAndroid)
         busyWait(100)
         Mockito.verify(androidStorage, never()).migrateV1StorageToV2Sync()
     }

@@ -16,20 +16,16 @@ plugins {
     id("java-library")
     id("org.jetbrains.kotlin.jvm")
 }
-val dependencyPath = "${project.projectDir.parentFile.parent}/dependencies.gradle"
-apply(from = dependencyPath)
-val deps : HashMap<String, Any> by extra
-val library : HashMap<String, String> by extra
-val projects : HashMap<String, String> by extra
+
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = RudderstackBuildConfig.Build.JAVA_VERSION
+    targetCompatibility = RudderstackBuildConfig.Build.JAVA_VERSION
 }
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = RudderstackBuildConfig.Build.JVM_TARGET
     }
 }
 dependencies {
-    compileOnly(project(projects["core"].toString()))
+    compileOnly(project(":core"))
 }

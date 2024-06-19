@@ -37,7 +37,7 @@ internal class AnonymousIdHeaderPlugin : InfrastructurePlugin{
 
     override fun updateConfiguration(configuration: Configuration) {
         if(configuration !is ConfigurationAndroid) return
-        val anonId = configuration.anonymousId?: AndroidUtils.getDeviceId().also {
+        val anonId = configuration.anonymousId?: AndroidUtils.generateAnonymousId(configuration.collectDeviceId, configuration.application).also {
                 _analytics?.applyConfigurationAndroid {
                     copy(anonymousId = it)
                 }

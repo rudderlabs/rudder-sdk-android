@@ -22,6 +22,8 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.InfrastructurePlugin
+import com.rudderstack.core.Plugin
+import com.rudderstack.models.Message
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
@@ -29,8 +31,14 @@ const val EVENT_NAME_APPLICATION_OPENED = "Application Opened"
 const val EVENT_NAME_APPLICATION_STOPPED = "Application Backgrounded"
 private const val MAX_CONFIG_DOWNLOAD_INTERVAL = 90 * 60 * 1000 // 90 MINUTES
 
+/**
+ * We use a [Plugin] instead of [InfrastructurePlugin] as sending events from Infrastructure plugin might
+ * not ensure all plugins to be ready
+ *
+ * @property currentMillisGenerator
+ */
 internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) = { SystemClock.uptimeMillis() }) :
-    InfrastructurePlugin, LifecycleListenerPlugin {
+    Plugin, LifecycleListenerPlugin {
 
     private var _isFirstLaunch = AtomicBoolean(true)
 
@@ -68,6 +76,10 @@ internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) 
         }
     }
 
+    override fun intercept(chain: Plugin.Chain): Message {
+        return chain.proceed(chain.message())
+    }
+
     override fun setup(analytics: Analytics) {
         this.analytics = analytics
         analytics.applyInfrastructureClosure {
@@ -77,7 +89,7 @@ internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) 
         }
     }
 
-    override fun shutdown() {
+    override fun onShutDown() {
         _lastSuccessfulDownloadTimeInMillis.set(0)
         analytics?.applyInfrastructureClosure {
             if (this is ConfigDownloadService) {

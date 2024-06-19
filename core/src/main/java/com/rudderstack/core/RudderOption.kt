@@ -25,60 +25,43 @@ package com.rudderstack.core
  * message will be delivered to all destinations added to Analytics.
  * @property customContexts Custom context elements that are going to be sent with message
  */
-class RudderOptions private constructor(
-    val externalIds: List<Map<String, String>>,
-    val integrations: Map<String, Boolean>,
-    val customContexts: Map<String, Any>,
+class RudderOption{
+    val integrations: Map<String, Boolean>
+        get() = _integrations
+    private val _integrations = mutableMapOf<String,Boolean>()
+    val customContexts: Map<String, Any>
+        get() = _customContexts
+    private val _customContexts = mutableMapOf<String, Any>()
 
-    ) {
-    companion object{
-        /**
-         * Default options
-         *
-         */
-        @JvmStatic
-        fun defaultOptions(): RudderOptions = RudderOptions(listOf(), mapOf(), mapOf())
+    val externalIds: List<Map<String, String>>
+        get() = _externalIds
+    private val _externalIds= mutableListOf<Map<String, String>>()
+
+    fun putExternalId(type: String, id: String): RudderOption {
+        _externalIds.add(
+            mapOf("type" to type,
+                "id" to id)
+        )
+        return this
+    }
+    fun putIntegration(destinationKey: String, enabled: Boolean): RudderOption {
+        _integrations[destinationKey] = enabled
+        return this
     }
 
-    /**
-     * Creates a new builder from this object.
-     *
-     */
-    fun newBuilder(): Builder {
-        return Builder().withExternalIds(externalIds).withIntegrations(integrations)
-            .withCustomContexts(customContexts)
+    fun putIntegration(destination: BaseDestinationPlugin<*>, enabled: Boolean): RudderOption {
+        _integrations[destination.name] = enabled
+        return this
     }
 
-    /**
-     * Builder for RudderOption
-     *
-     */
-    class Builder {
-        private var _externalIds: List<Map<String, String>> = listOf()
-        private var _integrations: Map<String, Boolean> = mapOf()
-        private var _customContexts: Map<String, Any> = mapOf()
-
-
-        fun withExternalIds(externalIds: List<Map<String, String>>): Builder {
-            this._externalIds = externalIds
-            return this
-        }
-
-        fun withIntegrations(integrations: Map<String, Boolean>): Builder {
-            this._integrations = integrations
-            return this
-        }
-
-        fun withCustomContexts(customContexts: Map<String, Any>): Builder {
-            this._customContexts = customContexts
-            return this
-        }
-
-        fun build() = RudderOptions(_externalIds, _integrations, _customContexts)
+    fun putCustomContext(key: String, context: Map<String?, Any?>): RudderOption {
+        _customContexts[key] = context
+        return this
     }
+
 
     override fun equals(other: Any?): Boolean {
-        return other is RudderOptions &&
+        return other is RudderOption &&
                 other.externalIds == this.externalIds &&
                 other.integrations == this.integrations &&
                 other.customContexts == this.customContexts

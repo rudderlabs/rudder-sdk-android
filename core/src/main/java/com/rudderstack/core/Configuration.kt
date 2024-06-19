@@ -27,7 +27,7 @@ import java.util.concurrent.Executors
  *  trackLifecycleEvents = true)
  * ```
  *
- * @property options Global [RudderOptions] for all plugins
+ * @property options Global [RudderOption] for all plugins
  * @property flushQueueSize Max elements to be stored before a flush. Once it passes this threshold,
  * flush is triggered
  * @property maxFlushInterval Max time (in millis) to wait for a flush, even if the queue size hasn't
@@ -37,7 +37,7 @@ import java.util.concurrent.Executors
  */
 interface Configuration {
     val jsonAdapter: JsonAdapter
-    val options: RudderOptions
+    val options: RudderOption
     val flushQueueSize: Int
     val maxFlushInterval: Long
     // changing the value post source config download has no effect
@@ -61,7 +61,7 @@ interface Configuration {
         const val MAX_FLUSH_INTERVAL = 10 * 1000L //10 seconds
         operator fun invoke(
             jsonAdapter: JsonAdapter,
-            options: RudderOptions = RudderOptions.defaultOptions(),
+            options: RudderOption = RudderOption(),
             flushQueueSize: Int = FLUSH_QUEUE_SIZE,
             maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
             shouldVerifySdk: Boolean = false,
@@ -75,7 +75,7 @@ interface Configuration {
             base64Generator: Base64Generator = RudderUtils.defaultBase64Generator,
         ) = object : Configuration {
             override val jsonAdapter: JsonAdapter = jsonAdapter
-            override val options: RudderOptions = options
+            override val options: RudderOption = options
             override val flushQueueSize: Int = flushQueueSize
             override val maxFlushInterval: Long = maxFlushInterval
             override val shouldVerifySdk: Boolean = shouldVerifySdk
@@ -91,7 +91,7 @@ interface Configuration {
     }
     fun copy(
         jsonAdapter: JsonAdapter = this.jsonAdapter,
-        options: RudderOptions = this.options,
+        options: RudderOption = this.options,
         flushQueueSize: Int = this.flushQueueSize,
         maxFlushInterval: Long = this.maxFlushInterval,
         shouldVerifySdk: Boolean = this.shouldVerifySdk,
