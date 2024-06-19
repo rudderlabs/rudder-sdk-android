@@ -38,6 +38,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     private String defaultProcessName = ConfigurationAndroid.Defaults.INSTANCE.getDEFAULT_PROCESS_NAME();
     private String advertisingId = null;
     private String deviceToken = null;
+    private boolean collectDeviceId = ConfigurationAndroid.Defaults.COLLECT_DEVICE_ID;
     private ExecutorService advertisingIdFetchExecutor = null;
     private boolean trackAutoSession = ConfigurationAndroid.Defaults.AUTO_SESSION_TRACKING;
     private long sessionTimeoutMillis = ConfigurationAndroid.Defaults.SESSION_TIMEOUT;
@@ -45,7 +46,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     ConfigurationAndroidBuilder(Application application) {
         super();
         this.application = application;
-        anonymousId = AndroidUtils.INSTANCE.getDeviceId();
+        anonymousId = AndroidUtils.INSTANCE.generateAnonymousId(collectDeviceId, application);
     }
 
     public ConfigurationAndroidBuilder(ConfigurationAndroid configurationAndroid) {
@@ -130,6 +131,12 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
         return this;
     }
 
+
+    public ConfigurationBuilder withCollectDeviceId(boolean collectDeviceId) {
+        this.collectDeviceId = collectDeviceId;
+        return this;
+    }
+
     @Override
     public ConfigurationAndroid build() {
         return ConfigurationAndroid.Companion.invoke(super.build(),
@@ -144,6 +151,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
                 defaultProcessName,
                 advertisingId,
                 deviceToken,
+                collectDeviceId,
                 advertisingIdFetchExecutor,
                 trackAutoSession,
                 sessionTimeoutMillis

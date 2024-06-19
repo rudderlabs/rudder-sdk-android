@@ -57,6 +57,10 @@ public final class RudderAnalyticsBuilderCompat {
         this.writeKey = writeKey;
         this.application = application;
         this.jsonAdapter = jsonAdapter;
+        this.storage = new AndroidStorageImpl(application,
+                ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER,
+                writeKey,
+                Executors.newSingleThreadExecutor());
     }
 
     public RudderAnalyticsBuilderCompat withDataUploadService(DataUploadService dataUploadService) {
@@ -80,13 +84,7 @@ public final class RudderAnalyticsBuilderCompat {
     }
 
     public Analytics build() {
-        if (this.storage == null) {
-            this.storage = new AndroidStorageImpl(application,
-                    ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER,
-                    writeKey,
-                    Executors.newSingleThreadExecutor());
-        }
-        return RudderAnalytics.createInstance(
+        return RudderAnalytics.getInstance(
                 writeKey,
                 jsonAdapter,
                 application, configurationAndroidScope -> {

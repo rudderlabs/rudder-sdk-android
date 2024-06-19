@@ -83,13 +83,7 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
 
         currentConfiguration?.apply {
             if (networkExecutor.isShutdown || networkExecutor.isTerminated) return
-            val batchBody = mapOf<String, Any>(
-                "sentAt" to RudderUtils.timeStamp, "batch" to data
-            ).let {
-                if (extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
-            }.let {
-                jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String, Any>>() {})
-            }
+            val batchBody = createBatchBody(data, extraInfo)
             webService.get()?.post(
                 mapOf(
                     "Content-Type" to "application/json",
@@ -101,19 +95,14 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
         }
     }
 
+
+
     override fun uploadSync(
         data: List<Message>, extraInfo: Map<String, String>?
     ): HttpResponse<out Any>? {
         if (_isPaused.get()) return null
         return currentConfiguration?.let { config ->
-            val batchBody = mapOf<String, Any>(
-                "sentAt" to RudderUtils.timeStamp, "batch" to data
-            ).let {
-                if (extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
-            }.let {
-                jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String, Any>>()
-                {})
-            }
+            val batchBody = config.createBatchBody(data, extraInfo)
             webService.get()?.post(
                 mapOf(
                     "Content-Type" to "application/json",
@@ -123,7 +112,22 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
             )?.get()
         }
     }
-
+    private fun Configuration.createBatchBody(
+        data: List<Message>,
+        extraInfo: Map<String, String>?
+    ) : String?{
+        val sentAt = RudderUtils.timeStamp
+        return mapOf<String, Any>(
+            "sentAt" to sentAt, "batch" to data.map {
+                it.sentAt = sentAt
+                it
+            }
+        ).let {
+            if (extraInfo.isNullOrEmpty()) it else it + extraInfo //adding extra info data
+        }.let {
+            jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String, Any>>() {})
+        }
+    }
     override fun setup(analytics: Analytics) {
         //no-op
     }

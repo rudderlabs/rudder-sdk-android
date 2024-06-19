@@ -45,7 +45,7 @@ fun createContext(
  * @return updated context
  */
 fun MessageContext.updateWith(newContext: MessageContext): MessageContext {
-    return this optAdd newContext.filterValues { it != null  }
+    return (this optAdd newContext.filterValues { it != null }) ?: mapOf()
 }
 
 fun MessageContext.updateWith(
@@ -54,19 +54,19 @@ fun MessageContext.updateWith(
     customContextMap: Map<String, Any?>? = null,
     contextAddOns: Map<String, Any?>? = null,
 ): MessageContext {
-    return this optAdd
+    return (this optAdd
         traits?.let { (Constants.TRAITS_ID to it) } optAdd
         externalIds?.let { (Constants.EXTERNAL_ID to it) } optAdd
         customContextMap?.let { (Constants.CUSTOM_CONTEXT_MAP_ID to it) } optAdd
-        contextAddOns
+        contextAddOns)?: mapOf()
 }
 
-private infix fun<K, V> Map<K, V>.optAdd(pair: Pair<K, V>?): Map<K, V> {
+internal infix fun<K, V> Map<K, V>.optAdd(pair: Pair<K, V>?): Map<K, V> {
     return pair?.let {
         this + it
     } ?: this
 }
-private infix fun<K, V> Map<K, V>.optAdd(map: Map<K, V>?): Map<K, V> {
+internal infix fun<K, V> Map<K, V>.optAdd(map: Map<K, V>?): Map<K, V> {
     return map?.let {
         this + it
     } ?: this

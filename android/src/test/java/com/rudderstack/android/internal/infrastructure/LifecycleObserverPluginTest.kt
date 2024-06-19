@@ -82,7 +82,7 @@ abstract class LifecycleObserverPluginTest {
         lifecycleObserverPlugin.onAppBackgrounded()
 
         verify { analytics.flush() }
-        lifecycleObserverPlugin.shutdown()
+        lifecycleObserverPlugin.onShutDown()
     }
 
     @Test
@@ -106,7 +106,7 @@ abstract class LifecycleObserverPluginTest {
                 )
             )
         }
-        plugin.shutdown()
+        plugin.onShutDown()
 
     }
 
@@ -132,7 +132,7 @@ abstract class LifecycleObserverPluginTest {
                 )
             )
         }
-        plugin.shutdown()
+        plugin.onShutDown()
     }
 
     @Test
@@ -149,7 +149,7 @@ abstract class LifecycleObserverPluginTest {
                 )
             )
         }
-        plugin.shutdown()
+        plugin.onShutDown()
     }
     @Test
     fun `test when elapsed time more than 90 minutes update source config is called`() {
@@ -165,7 +165,7 @@ abstract class LifecycleObserverPluginTest {
         whenever(mockConfigurationAndroid.shouldVerifySdk).thenReturn(true)
         plugin.onAppForegrounded() // after 90 minutes stimulated
         org.mockito.kotlin.verify(mockControlPlane).download(any())
-        plugin.shutdown()
+        plugin.onShutDown()
 
     }
 }

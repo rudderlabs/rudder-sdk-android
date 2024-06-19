@@ -21,35 +21,30 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.provider.Settings
-import android.provider.Settings.Secure
 import android.text.TextUtils
 import android.util.Base64
 import android.util.DisplayMetrics
 import android.view.WindowManager
 import com.rudderstack.core.Base64Generator
 import com.rudderstack.models.android.RudderApp
-import com.rudderstack.models.android.RudderContext
 import com.rudderstack.models.android.RudderDeviceInfo
-import com.rudderstack.models.android.RudderNetwork
-import com.rudderstack.models.android.RudderOSInfo
 import com.rudderstack.models.android.RudderScreenInfo
-import com.rudderstack.models.android.RudderTraits
 import java.io.UnsupportedEncodingException
 import java.util.*
 
 
 internal object AndroidUtils {
-    fun getDeviceId(): String {
+    fun generateAnonymousId(isCollectDeviceId: Boolean, application: Application): String {
+        return if(! isCollectDeviceId) UUID.randomUUID().toString() else getDeviceId(application)
+    }
+    internal fun getDeviceId(application: Application): String = run {
 
-//        val androidId =
-//            Settings.System.getString(application.contentResolver, Settings.Secure.ANDROID_ID)
-//        if (!TextUtils.isEmpty(androidId) && "9774d56d682e549c" != androidId && "unknown" != androidId && "000000000000000" != androidId) {
-//            return androidId
-//        }
-
-
-        // If this still fails, generate random identifier that does not persist across installations
-        return UUID.randomUUID().toString()
+        val androidId =
+            Settings.System.getString(application.contentResolver, Settings.Secure.ANDROID_ID)
+        if (!TextUtils.isEmpty(androidId) && "9774d56d682e549c" != androidId && "unknown" != androidId && "000000000000000" != androidId) {
+            return androidId
+        }
+        androidId?: UUID.randomUUID().toString()
     }
 
     fun getWriteKeyFromStrings(context: Context): String? {
@@ -108,7 +103,7 @@ internal object AndroidUtils {
         deviceToken: String,
         collectDeviceId: Boolean
     ): RudderDeviceInfo {
-        val deviceId = if (collectDeviceId) AndroidUtils.getDeviceId() else null
+        val deviceId = if (collectDeviceId) getDeviceId(this) else null
         return RudderDeviceInfo(
             deviceId = deviceId,
             manufacturer = Build.MANUFACTURER,

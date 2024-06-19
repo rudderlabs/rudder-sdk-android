@@ -90,28 +90,24 @@ class Analytics private constructor(
      * @param message
      * @param options
      */
-    fun track(message: TrackMessage, options: RudderOptions? = null) {
+    fun track(message: TrackMessage, options: RudderOption? = null) {
         processMessage(message, options)
     }
 
     @JvmOverloads
     fun track(
         eventName: String,
-        options: RudderOptions? = null,
+        options: RudderOption? = null,
         userId: String? = null,
         anonymousId: String? = null,
         trackProperties: TrackProperties? = null,
         traits: Map<String, Any?>? = null,
-        externalIds: List<Map<String, String>>? = null,
-        customContextMap: Map<String, Any>? = null,
         destinationProps: MessageDestinationProps? = null,
     ) {
         track(
             TrackMessage.create(
                 anonymousId = anonymousId,
                 traits = traits,
-                externalIds = externalIds,
-                customContextMap = customContextMap,
                 destinationProps = destinationProps,
                 timestamp = RudderUtils.timeStamp,
                 eventName = eventName,
@@ -160,7 +156,7 @@ class Analytics private constructor(
         track(trackScope.message, trackScope.options)
     }
 
-    fun screen(message: ScreenMessage, options: RudderOptions? = null) {
+    fun screen(message: ScreenMessage, options: RudderOption? = null) {
         processMessage(message, options)
     }
 
@@ -168,22 +164,18 @@ class Analytics private constructor(
     fun screen(
         screenName: String,
         category: String? = null,
-        options: RudderOptions? = null,
+        options: RudderOption? = null,
         screenProperties: ScreenProperties,
         anonymousId: String? = null,
         userId: String? = null,
         destinationProps: MessageDestinationProps? = null,
         traits: Map<String, Any?>? = null,
-        externalIds: List<Map<String, String>>? = null,
-        customContextMap: Map<String, Any>? = null,
     ) {
         screen(
             ScreenMessage.create(
                 userId = userId,
                 anonymousId = anonymousId,
                 destinationProps = destinationProps,
-                externalIds = externalIds,
-                customContextMap = customContextMap,
                 traits = traits,
                 timestamp = RudderUtils.timeStamp,
                 category = category,
@@ -199,7 +191,7 @@ class Analytics private constructor(
         screen(screenScope.message, screenScope.options)
     }
 
-    fun identify(message: IdentifyMessage, options: RudderOptions? = null) {
+    fun identify(message: IdentifyMessage, options: RudderOption? = null) {
         processMessage(message, options)
     }
 
@@ -207,11 +199,9 @@ class Analytics private constructor(
     fun identify(
         userId: String, traits: IdentifyTraits? = null,
         anonymousId: String? = null,
-        options: RudderOptions? = null,
+        options: RudderOption? = null,
         properties: IdentifyProperties? = null,
         destinationProps: MessageDestinationProps? = null,
-        externalIds: List<Map<String, String>>? = null,
-        customContextMap: Map<String, Any>? = null,
     ) {
         val completeTraits = mapOf("userId" to userId) optAdd traits
         identify(
@@ -222,8 +212,6 @@ class Analytics private constructor(
                 timestamp = RudderUtils.timeStamp,
                 traits = completeTraits,
                 properties = properties,
-                externalIds = externalIds,
-                customContextMap = customContextMap
             ), options
         )
     }
@@ -234,7 +222,7 @@ class Analytics private constructor(
         identify(identifyScope.message, identifyScope.options)
     }
 
-    fun alias(message: AliasMessage, options: RudderOptions? = null) {
+    fun alias(message: AliasMessage, options: RudderOption? = null) {
         processMessage(message, options)
     }
 
@@ -242,11 +230,9 @@ class Analytics private constructor(
     fun alias(
         newId: String,
         anonymousId: String? = null,
-        options: RudderOptions? = null,
+        options: RudderOption? = null,
         destinationProps: MessageDestinationProps? = null,
         previousId: String? = null,
-        externalIds: List<Map<String, String>>? = null,
-        customContextMap: Map<String, Any>? = null,
     ) {
         val completeTraits = mapOf("userId" to newId)
         alias(
@@ -254,9 +240,6 @@ class Analytics private constructor(
                 anonymousId = anonymousId,
                 previousId=previousId,
                 destinationProps = destinationProps,
-                externalIds = externalIds,
-                customContextMap = customContextMap,
-
                 userId = newId, traits = completeTraits),
             options
         )
@@ -268,23 +251,18 @@ class Analytics private constructor(
         alias(aliasScope.message, aliasScope.options)
     }
 
-    fun group(message: GroupMessage, options: RudderOptions? = null) {
+    fun group(message: GroupMessage, options: RudderOption? = null) {
         processMessage(message, options)
     }
 
     @JvmOverloads
     fun group(
         groupId: String?,
-        options: RudderOptions? = null,
+        options: RudderOption? = null,
         userId: String? = null,
         anonymousId: String? = null,
         groupTraits: GroupTraits?,
-
         destinationProps: MessageDestinationProps? = null,
-
-        externalIds: List<Map<String, String>>? = null,
-        customContextMap: Map<String, Any>? = null,
-
     ) {
         group(
             GroupMessage.create(
@@ -294,8 +272,6 @@ class Analytics private constructor(
                 groupTraits = groupTraits,
                 anonymousId = anonymousId,
                 destinationProps = destinationProps,
-                externalIds = externalIds,
-                customContextMap = customContextMap
             ), options
         )
     }

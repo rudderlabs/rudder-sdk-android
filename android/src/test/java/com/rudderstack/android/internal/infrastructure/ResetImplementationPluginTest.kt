@@ -3,7 +3,7 @@ package com.rudderstack.android.internal.infrastructure
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.android.utils.TestExecutor
-import com.rudderstack.android.contextState
+import com.rudderstack.android.utilities.contextState
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics

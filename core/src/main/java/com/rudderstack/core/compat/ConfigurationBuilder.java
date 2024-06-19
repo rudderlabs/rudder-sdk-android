@@ -21,7 +21,7 @@ import com.rudderstack.core.Base64Generator;
 import com.rudderstack.core.Configuration;
 import com.rudderstack.core.Logger;
 import com.rudderstack.core.RetryStrategy;
-import com.rudderstack.core.RudderOptions;
+import com.rudderstack.core.RudderOption;
 import com.rudderstack.core.RudderUtils;
 import com.rudderstack.core.internal.KotlinLogger;
 
@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ConfigurationBuilder {
-    private RudderOptions options = RudderOptions.defaultOptions();
+    private RudderOption options = new RudderOption();
     private int flushQueueSize = FLUSH_QUEUE_SIZE;
     private long maxFlushInterval = MAX_FLUSH_INTERVAL;
     private boolean shouldVerifySdk = false;
@@ -60,7 +60,7 @@ public class ConfigurationBuilder {
         base64Generator = configuration.getBase64Generator();
     }
 
-    public ConfigurationBuilder withOptions(RudderOptions options) {
+    public ConfigurationBuilder withOptions(RudderOption options) {
         this.options = options;
         return this;
     }

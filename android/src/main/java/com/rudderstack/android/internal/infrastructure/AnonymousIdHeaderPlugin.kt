@@ -16,7 +16,7 @@ package com.rudderstack.android.internal.infrastructure
 
 import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.applyConfigurationAndroid
+import com.rudderstack.android.utilities.applyConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.DataUploadService
@@ -37,7 +37,7 @@ internal class AnonymousIdHeaderPlugin : InfrastructurePlugin{
 
     override fun updateConfiguration(configuration: Configuration) {
         if(configuration !is ConfigurationAndroid) return
-        val anonId = configuration.anonymousId?: AndroidUtils.getDeviceId().also {
+        val anonId = configuration.anonymousId?: AndroidUtils.generateAnonymousId(configuration.collectDeviceId, configuration.application).also {
                 _analytics?.applyConfigurationAndroid {
                     anonymousId = it
                 }

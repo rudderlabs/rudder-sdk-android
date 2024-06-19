@@ -21,8 +21,7 @@ import com.rudderstack.core.Base64Generator
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Logger
 import com.rudderstack.core.RetryStrategy
-import com.rudderstack.core.RudderOptions
-import com.rudderstack.core.Storage
+import com.rudderstack.core.RudderOption
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -71,7 +70,8 @@ interface ConfigurationAndroid : Configuration {
     val defaultProcessName: String?
     val advertisingId: String?
     val deviceToken: String?
-    val advertisingIdFetchExecutor : ExecutorService?
+    val collectDeviceId : Boolean
+    val advertisingIdFetchExecutor : ExecutorService
     //session
     val trackAutoSession: Boolean
     val sessionTimeoutMillis: Long
@@ -82,7 +82,7 @@ interface ConfigurationAndroid : Configuration {
             application: Application,
             anonymousId: String?= null,
             userId: String? = null,
-            options: RudderOptions = RudderOptions.defaultOptions(),
+            options: RudderOption = RudderOption(),
             flushQueueSize: Int = Defaults.DEFAULT_FLUSH_QUEUE_SIZE,
             maxFlushInterval: Long = Defaults.DEFAULT_MAX_FLUSH_INTERVAL,
             shouldVerifySdk: Boolean = Defaults.SHOULD_VERIFY_SDK,
@@ -101,7 +101,8 @@ interface ConfigurationAndroid : Configuration {
             logger: Logger = AndroidLogger,
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
-            advertisingIdFetchExecutor : ExecutorService? = null,
+            collectDeviceId: Boolean = Defaults.COLLECT_DEVICE_ID,
+            advertisingIdFetchExecutor : ExecutorService = Executors.newCachedThreadPool(),
             base64Generator: Base64Generator = AndroidUtils.defaultBase64Generator(),
             trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
             sessionTimeoutMillis: Long = Defaults.SESSION_TIMEOUT
@@ -121,10 +122,10 @@ interface ConfigurationAndroid : Configuration {
             override val defaultProcessName: String? = defaultProcessName
             override val advertisingId: String? = advertisingId
             override val deviceToken: String? = deviceToken
-            override val advertisingIdFetchExecutor : ExecutorService? = advertisingIdFetchExecutor
+            override val advertisingIdFetchExecutor : ExecutorService = advertisingIdFetchExecutor
             override val trackAutoSession: Boolean = trackAutoSession
             override val sessionTimeoutMillis: Long = sessionTimeoutMillis
-            override val options: RudderOptions = options
+            override val options: RudderOption = options
             override val flushQueueSize: Int = flushQueueSize
             override val maxFlushInterval: Long = maxFlushInterval
             override val shouldVerifySdk: Boolean = shouldVerifySdk
@@ -136,13 +137,13 @@ interface ConfigurationAndroid : Configuration {
             override val analyticsExecutor: ExecutorService = analyticsExecutor
             override val networkExecutor: ExecutorService = networkExecutor
             override val base64Generator: Base64Generator = base64Generator
-
+            override val collectDeviceId: Boolean = collectDeviceId
         }
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         operator fun invoke(
             configuration: Configuration,
             application: Application,
-            anonymousId: String? = null,
+            anonymousId: String = AndroidUtils.generateAnonymousId(Defaults.COLLECT_DEVICE_ID, application),
             userId: String? = null,
             trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
 
@@ -159,9 +160,9 @@ interface ConfigurationAndroid : Configuration {
             advertisingId: String? = null,
 
             deviceToken: String? = null,
+            collectDeviceId: Boolean = Defaults.COLLECT_DEVICE_ID,
 
-
-            advertisingIdFetchExecutor: ExecutorService? = null,
+            advertisingIdFetchExecutor: ExecutorService = Executors.newCachedThreadPool(),
             trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
             sessionTimeoutMillis: Long = Defaults.SESSION_TIMEOUT
         ): ConfigurationAndroid=
@@ -188,6 +189,7 @@ interface ConfigurationAndroid : Configuration {
                 configuration.logger,
                 configuration.analyticsExecutor,
                 configuration.networkExecutor,
+                collectDeviceId,
                 advertisingIdFetchExecutor,
                 configuration.base64Generator,
                 trackAutoSession,
@@ -195,7 +197,7 @@ interface ConfigurationAndroid : Configuration {
     }
 
     override fun copy(
-        options: RudderOptions,
+        options: RudderOption,
         flushQueueSize: Int,
         maxFlushInterval: Long,
         shouldVerifySdk: Boolean,
@@ -220,13 +222,12 @@ interface ConfigurationAndroid : Configuration {
             logger,
             analyticsExecutor,
             networkExecutor,
-            advertisingIdFetchExecutor,
             base64Generator,
         )
     }
 
     fun copy(
-        options: RudderOptions = this.options,
+        options: RudderOption = this.options,
         flushQueueSize: Int = this.flushQueueSize,
         maxFlushInterval: Long = this.maxFlushInterval,
         shouldVerifySdk: Boolean = this.shouldVerifySdk,
@@ -237,7 +238,6 @@ interface ConfigurationAndroid : Configuration {
         logger: Logger = this.logger,
         analyticsExecutor: ExecutorService = this.analyticsExecutor,
         networkExecutor: ExecutorService = this.networkExecutor,
-        advertisingIdFetchExecutor : ExecutorService? = this.advertisingIdFetchExecutor,
         base64Generator: Base64Generator = this.base64Generator,
         anonymousId: String? = this.anonymousId,
         userId: String? = this.userId,
@@ -275,6 +275,7 @@ interface ConfigurationAndroid : Configuration {
             logger,
             analyticsExecutor,
             networkExecutor,
+            collectDeviceId,
             advertisingIdFetchExecutor,
             base64Generator,
             trackAutoSession,
@@ -287,6 +288,7 @@ interface ConfigurationAndroid : Configuration {
     }
 
     object Defaults{
+        const val COLLECT_DEVICE_ID: Boolean = true
         const val DEFAULT_ANDROID_DATAPLANE_URL = "https://hosted.rudderlabs.com"
         const val DEFAULT_ANDROID_CONTROLPLANE_URL = "https://api.rudderlabs.com"
         const val GZIP_ENABLED: Boolean = true
@@ -294,7 +296,7 @@ interface ConfigurationAndroid : Configuration {
         const val TRACK_LIFECYCLE_EVENTS = true
         const val RECORD_SCREEN_VIEWS = true
         const val IS_PERIODIC_FLUSH_ENABLED = false
-        const val AUTO_COLLECT_ADVERT_ID = true
+        const val AUTO_COLLECT_ADVERT_ID = false
         const val MULTI_PROCESS_ENABLED = false
         val DEFAULT_PROCESS_NAME: String? = null
         const val USE_CONTENT_PROVIDER = false

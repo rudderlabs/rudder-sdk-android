@@ -27,7 +27,7 @@ import com.rudderstack.core.InfrastructurePlugin
 import com.rudderstack.core.LifecycleController
 import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.RudderOptions
+import com.rudderstack.core.RudderOption
 import com.rudderstack.core.RudderUtils.getUTF8Length
 import com.rudderstack.core.RudderUtils.MAX_BATCH_SIZE
 import com.rudderstack.core.Storage
@@ -338,7 +338,7 @@ internal class AnalyticsDelegate(
 
 
     override fun processMessage(
-        message: Message, options: RudderOptions?, lifecycleController: LifecycleController?
+        message: Message, options: RudderOption?, lifecycleController: LifecycleController?
     ) {
         if (isShutdown) {
             logger.warn(log = "Analytics has shut down, ignoring message $message")
@@ -352,14 +352,14 @@ internal class AnalyticsDelegate(
         }
     }
 
-    private fun generatePluginsWithOptions(options: RudderOptions?): List<Plugin> {
+    private fun generatePluginsWithOptions(options: RudderOption?): List<Plugin> {
         return synchronized(PLUGIN_LOCK) {
             _internalPreMessagePlugins + (options ?: currentConfiguration?.options
-                                          ?: RudderOptions.defaultOptions()).createPlugin() + _customPlugins + _internalPostCustomPlugins + _destinationPlugins
+                                          ?: RudderOption()).createPlugin() + _customPlugins + _internalPostCustomPlugins + _destinationPlugins
         }.toList()
     }
 
-    private fun RudderOptions.createPlugin(): Plugin {
+    private fun RudderOption.createPlugin(): Plugin {
         return RudderOptionPlugin(
             this
         ).also {
@@ -554,7 +554,6 @@ internal class AnalyticsDelegate(
                 false, "Config download service not set or " + "configuration not available"
             )
             logger.error(log = "Config Download Service Not Set or Configuration not available")
-            println("shutdown called from $this")
             shutdown()
             return
         }
@@ -581,7 +580,6 @@ internal class AnalyticsDelegate(
                         initializationListener?.invoke(
                             false, "Downloading failed, Shutting down $lastErrorMsg"
                         )
-                        println("shutdown called from $this")
                         //log lastErrorMsg or isSourceEnabled
                         shutdown()
                     }

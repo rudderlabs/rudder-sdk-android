@@ -95,7 +95,7 @@ class Dao<T : Entity>(
 
     fun List<T>.insert(
         conflictResolutionStrategy: ConflictResolutionStrategy = ConflictResolutionStrategy.CONFLICT_NONE,
-        insertCallback: ((rowIds: List<Long>) -> Unit)? = null,
+        insertCallback: ((rowIds: List<Long>) -> Unit)? = null
     ) {
         runTransactionOrDeferToCreation { db: SQLiteDatabase ->
             val (rowIds, _) = insertData(db, this, conflictResolutionStrategy)
@@ -160,9 +160,8 @@ class Dao<T : Entity>(
 
     private fun List<T>.notifyDelete(numberOfRows: Int) {
         if (_dataChangeListeners.isNotEmpty()) {
-            val allData = getAllSync() ?: listOf()
             _dataChangeListeners.forEach {
-                it.onDataDeleted(this.subList(0, numberOfRows), allData)
+                it.onDataDeleted(this.subList(0, numberOfRows))
             }
         }
     }
@@ -219,7 +218,7 @@ class Dao<T : Entity>(
 
     val allData = getAllSync() ?: listOf()
     _dataChangeListeners.forEach {
-    it.onDataDeleted(this.subList(0,numberOfRowsDel), allData)
+    it.onDataDeleted(this.subList(0,numberOfRowsDel))
     }
      */
     /**
@@ -337,7 +336,7 @@ class Dao<T : Entity>(
         orderBy: String? = null,
         limit: String? = null,
         offset: String? = null,
-        callback: (List<T>) -> Unit,
+        callback: (List<T>) -> Unit
     ) {
         runTransactionOrDeferToCreation { _: SQLiteDatabase ->
             callback.invoke(
@@ -358,7 +357,7 @@ class Dao<T : Entity>(
         selectionArgs: Array<String>? = null,
         orderBy: String? = null,
         limit: String? = null,
-        offset: String? = null,
+        offset: String? = null
     ): List<T>? {
         awaitDbInitialization()
         return getItems(
@@ -375,7 +374,7 @@ class Dao<T : Entity>(
     fun getCount(
         selection: String? = null,
         selectionArgs: Array<String>? = null,
-        callback: (Long) -> Unit,
+        callback: (Long) -> Unit
     ) {
         runTransactionOrDeferToCreation { db ->
             getCountSync(db, selection, selectionArgs).apply(callback)
@@ -385,38 +384,33 @@ class Dao<T : Entity>(
     private fun getCountSync(
         db: SQLiteDatabase,
         selection: String? = null,
-        selectionArgs: Array<String>? = null,
+        selectionArgs: Array<String>? = null
     ): Long {
         awaitDbInitialization()
-        return if (useContentProvider) {
-            (context.contentResolver.query(
-                entityContentProviderUri.build(),
-                arrayOf("count(*)"),
-                selection,
-                selectionArgs,
-                null,
-            )?.use { cursor ->
+        return if (useContentProvider) (context.contentResolver.query(
+            entityContentProviderUri.build(),
+            arrayOf("count(*)"), selection, selectionArgs, null
+        )
+            ?.use { cursor ->
                 cursor.moveToFirst()
                 cursor.getLong(0)
             } ?: -1L)
-        } else {
+        else
             synchronized(DB_LOCK) {
                 DatabaseUtils.queryNumEntries(
                     db,
                     tableName,
                     selection,
-                    selectionArgs,
+                    selectionArgs
                 )
-            }
         }
     }
 
     // create/update
 
     private fun insertData(
-        db: SQLiteDatabase,
-        items: List<T>,
-        conflictResolutionStrategy: ConflictResolutionStrategy,
+        db: SQLiteDatabase, items: List<T>,
+        conflictResolutionStrategy: ConflictResolutionStrategy
     ): Pair<List<Long>, List<T?>> {
         synchronized(DB_LOCK) {
             if (!db.isOpen) return emptyList<Long>() to emptyList()
@@ -478,9 +472,8 @@ class Dao<T : Entity>(
         }
 
         if (returnedItems.isNotEmpty() && _dataChangeListeners.isNotEmpty()) {
-            val allData = getAllSync() ?: listOf()
             _dataChangeListeners.forEach {
-                it.onDataInserted(returnedItems.filterNotNull(), allData)
+                it.onDataInserted(returnedItems.filterNotNull())
             }
         }
         return rowIds to returnedItems
@@ -843,13 +836,13 @@ class Dao<T : Entity>(
     }
 
     interface DataChangeListener<T : Any> {
-        fun onDataInserted(inserted: List<T>, allData: List<T>) {
+        fun onDataInserted(inserted: List<T>) {
             /**
              * Implementation can be ignored
              */
         }
 
-        fun onDataDeleted(deleted: List<T>, allData: List<T>) {
+        fun onDataDeleted(deleted: List<T>) {
             /**
              * Implementation can be ignored
              */

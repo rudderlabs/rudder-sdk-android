@@ -333,7 +333,6 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test with rudder option`() {
-        println("running test test with rudder option")
         //given
         analytics.shutdown()
         analytics = Analytics(
@@ -352,9 +351,10 @@ abstract class AnalyticsTest {
         while (analytics.retrieveState<DestinationConfigState>()?.value == null) {
         }
         busyWait(300L) // enough for server config to be downloaded
-        val rudderOptions = RudderOptions.Builder().withExternalIds(
-            listOf(mapOf("some_id" to "id"))
-        ).withIntegrations(mapOf("enabled-destination" to true, "All" to false)).build()
+        val rudderOption = RudderOption().putExternalId(
+            "some_type", "some_id"
+        ).putIntegration("enabled-destination", true)
+            .putIntegration("All", false)
 
         val dummyPlugin = mock(BaseDestinationPlugin::class.java)
         whenever(dummyPlugin.name).thenReturn("dummy")
@@ -369,7 +369,7 @@ abstract class AnalyticsTest {
             TrackMessage.create(eventName = "some", timestamp = RudderUtils.timeStamp)
         analytics.track(
             trackMessage, options =
-            rudderOptions
+            rudderOption
         )
         val waitUntil = AtomicBoolean(false)
         analytics.addCallback(object : Callback {
@@ -399,7 +399,14 @@ abstract class AnalyticsTest {
         )
         assertThat(
             msg.context?.externalIds, allOf(
-                notNullValue(), iterableWithSize(1), containsInAnyOrder(mapOf("some_id" to "id"))
+                notNullValue(), iterableWithSize(1), containsInAnyOrder(
+                    allOf(
+                        aMapWithSize(2),
+                        hasEntry("id", "some_id"),
+                        hasEntry("type","some_type")
+                    )
+
+                )
             )
         )
     }
@@ -767,19 +774,16 @@ abstract class AnalyticsTest {
             }
             userId("user_id")
             rudderOptions {
-                customContexts {
-                    +("cc1" to "cp1")
-                    +("cc2" to "cp2")
-                }
-                externalIds {
-                    +(mapOf("ext-1" to "ex1"))
-                    +(mapOf("ext-2" to "ex2"))
-                    +listOf(mapOf("ext-3" to "ex3"))
-                }
-                integrations {
-                    +("firebase" to true)
-                    +("amplitude" to false)
-                }
+                customContexts("cc1", mapOf("cc_1_1" to "ccv"))
+                customContexts("cc2", mapOf("cc_2_1" to "ccv2"))
+
+                externalId("ext-1", "ex1")
+                externalId("ext-2", "ex2")
+                externalId("ext-3", "ex3")
+
+                integration("firebase", true)
+                integration("amplitude", false)
+
             }
         }
         val timeStarted = System.currentTimeMillis()
