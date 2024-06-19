@@ -24,6 +24,7 @@ import com.rudderstack.rudderjsonadapter.JsonAdapter;
 import com.rudderstack.core.RudderLogger;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 //Java compatible Builder for [ConfigurationAndroid]
 public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
@@ -39,7 +40,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     private String advertisingId = null;
     private String deviceToken = null;
     private boolean collectDeviceId = ConfigurationAndroid.Defaults.COLLECT_DEVICE_ID;
-    private ExecutorService advertisingIdFetchExecutor = null;
+    private ExecutorService advertisingIdFetchExecutor = Executors.newCachedThreadPool();
     private boolean trackAutoSession = ConfigurationAndroid.Defaults.AUTO_SESSION_TRACKING;
     private long sessionTimeoutMillis = ConfigurationAndroid.Defaults.SESSION_TIMEOUT;
     private RudderLogger rudderLogger = new AndroidLogger();
