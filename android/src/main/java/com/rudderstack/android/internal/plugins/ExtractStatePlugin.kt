@@ -104,8 +104,8 @@ internal class ExtractStatePlugin : Plugin {
     }
 
     private fun appendContextForIdentify(messageContext: MessageContext) : MessageContext{
-       return _analytics?.contextState?.value?.let {
-           messageContext optAddContext it
+       return _analytics?.contextState?.value?.let { savedContext ->
+           messageContext optAddContext savedContext
        }?: messageContext
     }
 
