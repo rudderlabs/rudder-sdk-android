@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.android.RudderAnalytics.Companion.getInstance
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
@@ -28,6 +29,8 @@ class RudderAnalyticsTest {
             ApplicationProvider.getApplicationContext(),
             {
                 trackLifecycleEvents = false
+                logLevel = RudderLogger.LogLevel.DEBUG,
+
             }
         )
 
@@ -42,6 +45,7 @@ class RudderAnalyticsTest {
             ApplicationProvider.getApplicationContext(),
             {
                 trackLifecycleEvents = false
+                logLevel = RudderLogger.LogLevel.DEBUG,
             }
         )
 
@@ -50,6 +54,7 @@ class RudderAnalyticsTest {
             ApplicationProvider.getApplicationContext(),
             {
                 trackLifecycleEvents = false
+                logLevel = RudderLogger.LogLevel.DEBUG,
             }
         )
 
@@ -64,6 +69,7 @@ class RudderAnalyticsTest {
             writeKey, mock(),
             ApplicationProvider.getApplicationContext(),{
                 trackLifecycleEvents = false
+                logLevel = RudderLogger.LogLevel.DEBUG,
             }
         )
 
@@ -72,6 +78,8 @@ class RudderAnalyticsTest {
             ApplicationProvider.getApplicationContext(),
             {
                 trackLifecycleEvents = false
+                logLevel = RudderLogger.LogLevel.DEBUG,
+
             }
         )
 

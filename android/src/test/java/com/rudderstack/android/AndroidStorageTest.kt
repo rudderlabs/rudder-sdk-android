@@ -22,12 +22,12 @@ import com.rudderstack.android.utils.busyWait
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.Storage
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.TrackMessage
-import com.rudderstack.moshirudderadapter.MoshiAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.generateTestAnalytics
 import junit.framework.TestSuite
@@ -65,7 +65,8 @@ abstract class AndroidStorageTest {
         )
         mockConfig = ConfigurationAndroid(ApplicationProvider.getApplicationContext(),
              shouldVerifySdk = false, analyticsExecutor = TestExecutor(),
-            networkExecutor = TestExecutor(), flushQueueSize = 200, maxFlushInterval = 1000)
+            networkExecutor = TestExecutor(), flushQueueSize = 200, maxFlushInterval = 1000,
+            logLevel = RudderLogger.LogLevel.DEBUG)
         analytics = generateTestAnalytics(jsonAdapter, mockConfig, storage = storage,
             dataUploadService = mock(), configDownloadService = mock())
     }

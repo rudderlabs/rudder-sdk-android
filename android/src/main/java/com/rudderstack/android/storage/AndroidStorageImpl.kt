@@ -16,14 +16,13 @@ package com.rudderstack.android.storage
 
 import android.app.Application
 import android.os.Build
-import android.util.Log
 import com.rudderstack.android.BuildConfig
 import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.repository.Dao
 import com.rudderstack.android.repository.RudderDatabase
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
-import com.rudderstack.core.Logger
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.Storage
 import com.rudderstack.models.Message
 import com.rudderstack.models.MessageContext
@@ -48,7 +47,7 @@ class AndroidStorageImpl(
     private val storageExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 ) : AndroidStorage {
 
-    private var logger: Logger? = null
+    private var rudderLogger: RudderLogger? = null
     private val dbName get() = "rs_persistence_$writeKey"
     private var jsonAdapter: JsonAdapter? = null
 
@@ -123,7 +122,7 @@ class AndroidStorageImpl(
 
     override fun updateConfiguration(configuration: Configuration) {
         super.updateConfiguration(configuration)
-        logger = configuration.logger
+        rudderLogger = configuration.rudderLogger
     }
 
     override fun setStorageCapacity(storageCapacity: Int) {
@@ -234,7 +233,7 @@ class AndroidStorageImpl(
 
     override val context: MessageContext?
         get() = (if (_cachedContext == null) {
-            _cachedContext = getObject<HashMap<String, Any?>>(application, contextFileName, logger)
+            _cachedContext = getObject<HashMap<String, Any?>>(application, contextFileName, rudderLogger)
             _cachedContext
         } else _cachedContext)
 
@@ -244,7 +243,7 @@ class AndroidStorageImpl(
         synchronized(this) {
             _serverConfig = serverConfig
             saveObject(
-                serverConfig, context = application, serverConfigFileName, logger
+                serverConfig, context = application, serverConfigFileName, rudderLogger
             )
         }
     }
@@ -252,7 +251,7 @@ class AndroidStorageImpl(
     override val serverConfig: RudderServerConfig?
         get() = synchronized(this) {
             if (_serverConfig == null) _serverConfig =
-                getObject(application, serverConfigFileName, logger)
+                getObject(application, serverConfigFileName, rudderLogger)
             _serverConfig
         }
 
@@ -418,7 +417,7 @@ class AndroidStorageImpl(
 
     override fun migrateV1StorageToV2Sync(): Boolean {
         return migrateV1MessagesToV2Database(application, rudderDatabase?:return false,
-            jsonAdapter?:return false, logger)
+            jsonAdapter?:return false, rudderLogger)
     }
 
     override fun migrateV1StorageToV2(callback: (Boolean) -> Unit) {
@@ -471,7 +470,7 @@ class AndroidStorageImpl(
 
     private fun MessageContext.save() {
         saveObject(
-            HashMap(this), application, contextFileName, logger
+            HashMap(this), application, contextFileName, rudderLogger
         )
     }
 }

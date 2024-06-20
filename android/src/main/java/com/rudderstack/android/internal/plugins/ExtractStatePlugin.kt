@@ -64,7 +64,7 @@ internal class ExtractStatePlugin : Plugin {
             //aforementioned ids
             val newUserId = getUserId(message)
 
-            _analytics?.logger?.debug(log = "New user id detected: $newUserId")
+            _analytics?.rudderLogger?.debug(log = "New user id detected: $newUserId")
             val prevId = _analytics?.currentConfigurationAndroid?.let {
                 it.userId ?: it.anonymousId
             } ?: ""

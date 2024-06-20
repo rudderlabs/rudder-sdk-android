@@ -21,6 +21,7 @@ import com.rudderstack.android.internal.plugins.ExtractStatePlugin
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.models.AliasMessage
 import com.rudderstack.models.IdentifyMessage
@@ -62,8 +63,8 @@ class ExtractStatePluginTest {
         analytics = generateTestAnalytics(ConfigurationAndroid(ApplicationProvider.getApplicationContext(),
             mock<JsonAdapter>(),
             anonymousId = "anonymousId",
-            shouldVerifySdk = false),
-            storage = mock<AndroidStorage>())
+            shouldVerifySdk = false,
+            logLevel = RudderLogger.LogLevel.DEBUG), storage = mock<AndroidStorage>())
         plugin = ExtractStatePlugin()
         plugin.setup(analytics)
     }
