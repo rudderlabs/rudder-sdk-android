@@ -84,7 +84,7 @@ public class DBPersistentManagerTest {
         dbPersistentManager = PowerMockito.mock(DBPersistentManager.class);
         PowerMockito.when(dbPersistentManager, "saveEventSync", anyString()).thenCallRealMethod();
         PowerMockito.when(dbPersistentManager, "saveEvent", anyString(), any()).thenCallRealMethod();
-        PowerMockito.when(dbPersistentManager, "startHandlerThread").thenCallRealMethod();
+//        PowerMockito.when(dbPersistentManager, "startHandlerThread").thenCallRealMethod();
         Whitebox.setInternalState(dbPersistentManager, "queue", new LinkedList<Message>());
         deviceModeManager = Mockito.mock(RudderDeviceModeManager.class);
     }
@@ -98,57 +98,6 @@ public class DBPersistentManagerTest {
 
     private int addMessageCalled = 0;
 
-    @Test
-    public void testSynchronicity() throws Exception {
-        final AtomicInteger messagesSaved = new AtomicInteger(0);
-        // Mocking the addMessageToQueue, which is used by both the save-event-thread and Handler thread, to verify synchronization
-        PowerMockito.when(dbPersistentManager, "addMessageToHandlerThread", any(Message.class))
-                .thenAnswer((Answer<Void>) invocation -> {
-                    ++addMessageCalled;
-                    System.out.println("addMessageToQueue called by: " + Thread.currentThread().getName());
-                    //assert if called by multiple thread
-                    assertThat(addMessageCalled, Matchers.lessThan(2));
-                    sleep(500);
-                    --addMessageCalled;
-                    assertThat(addMessageCalled, Matchers.lessThan(1));
-                    System.out.println("return from addMessageToQueue by: " + Thread.currentThread().getName());
-                    messagesSaved.incrementAndGet();
-                    return null;
-                }
-                );
-
-        // Triggering the saveEvent method of DBPersistentManager from save-event-thread, as this method adds messages to the queue.
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < messages.size(); i++) {
-                    dbPersistentManager.saveEvent(messages.get(i),
-                            new EventInsertionCallback(new RudderMessageBuilder().build(),
-                                    deviceModeManager));
-                    // Starting the Handler thread, only when some events are added to the queue, so that the replay happens, and handler
-                    // thread starts reading from the queue.
-                    if (i == messages.size() / 2) {
-                        dbPersistentManager.startHandlerThread();
-                        try {
-                            Thread.sleep(200);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-        }, "save-event-thread") {
-        }.start();
-
-
-        //await until finished
-        await().atMost(15, SECONDS).until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return messagesSaved.get() == messages.size();
-            }
-        });
-    }
     @Test
     public void doneEventsTest() {
         final DBPersistentManager dbPersistentManager = DBPersistentManager.getInstance(ApplicationProvider

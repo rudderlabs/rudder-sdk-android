@@ -16,7 +16,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter;
 import com.rudderstack.android.sdk.core.persistence.DefaultPersistenceProviderFactory;
 import com.rudderstack.android.sdk.core.persistence.Persistence;
 import com.rudderstack.android.sdk.core.persistence.PersistenceProvider;
@@ -26,11 +25,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -43,7 +40,6 @@ import java.util.concurrent.Semaphore;
 class DBPersistentManager/* extends SQLiteOpenHelper*/ {
 
     public static final String DBPERSISTENT_MANAGER_CHECK_FOR_MIGRATIONS_TAG = "DBPersistentManager: checkForMigrations: ";
-    public static final Object QUEUE_LOCK = new Object();
     public static final ExecutorService executor = Executors.newSingleThreadExecutor();
     static final String EVENT = "EVENT";
 
@@ -100,8 +96,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
     //synchronizing database access
     private static final Object DB_LOCK = new Object();
     private static DBPersistentManager instance;
-    final Queue<Message> queue = new LinkedList<>();
-    DBInsertionHandlerThread dbInsertionHandlerThread;
+    private DBInsertionHandlerThread dbInsertionHandlerThread;
     private Persistence persistence;
 
     private DBPersistentManager(Application application,
@@ -195,13 +190,13 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
      * */
     void saveEvent(String messageJson, EventInsertionCallback callback) {
         Message msg = createOsMessageFromJson(messageJson, callback);
-        synchronized (DBPersistentManager.QUEUE_LOCK) {
-            if (dbInsertionHandlerThread == null) {
-                queue.add(msg);
-                return;
-            }
-            addMessageToHandlerThread(msg);
+        if (dbInsertionHandlerThread == null) {
+            // Need to perform db operations on a separate thread to support strict mode.
+            // saveEvent method is already called on an executor thread, so we can directly call DBInsertionHandlerThread
+            dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", persistence);
+            dbInsertionHandlerThread.start();
         }
+        dbInsertionHandlerThread.addMessage(msg);
     }
 
     private Message createOsMessageFromJson(String messageJson, EventInsertionCallback callback) {
@@ -211,13 +206,6 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         eventBundle.putString(EVENT, messageJson);
         msg.setData(eventBundle);
         return msg;
-    }
-
-    /*
-       Passes the input message to the Handler thread.
-     */
-    void addMessageToHandlerThread(Message msg) {
-        dbInsertionHandlerThread.addMessage(msg);
     }
 
     @VisibleForTesting
@@ -455,32 +443,6 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
 
         return count;
     }
-
-    /*
-       Starts the Handler thread, which is responsible for storing the messages in its internal queue, and
-       save them to the sqlite db sequentially.
-     */
-    void startHandlerThread() {
-        Runnable runnable = () -> {
-            try {
-                synchronized (DBPersistentManager.QUEUE_LOCK) {
-                    dbInsertionHandlerThread = new DBInsertionHandlerThread("db_insertion_thread", persistence);
-                    dbInsertionHandlerThread.start();
-                    for (Message msg : queue) {
-                        addMessageToHandlerThread(msg);
-                    }
-                }
-            } catch (SQLiteDatabaseCorruptException | ConcurrentModificationException |
-                     NullPointerException ex) {
-                RudderLogger.logError(ex);
-                ReportManager.reportError(ex);
-
-            }
-        };
-        // Need to perform db operations on a separate thread to support strict mode.
-        executor.execute(runnable);
-    }
-
 
     private boolean checkIfColumnExists(String newColumn) {
         String checkIfStatusExistsSqlString = "PRAGMA table_info(events)";
