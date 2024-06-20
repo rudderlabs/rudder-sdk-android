@@ -38,10 +38,10 @@ internal class ActivityBroadcasterPlugin(
 
             override fun onActivityStarted(activity: Activity) {
                 incrementActivityCount()
-                broadcastActivityStart(activity)
                 if (activityCount.get() == 1) {
                     broadCastApplicationStart()
                 }
+                broadcastActivityStart(activity)
             }
 
             override fun onActivityResumed(activity: Activity) {
