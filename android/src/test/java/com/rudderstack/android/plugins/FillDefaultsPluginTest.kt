@@ -21,6 +21,7 @@ import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.retrieveState
@@ -64,6 +65,7 @@ class FillDefaultsPluginTest {
             userId = "user_id",
             shouldVerifySdk = false,
             analyticsExecutor = TestExecutor(),
+            logLevel = RudderLogger.LogLevel.DEBUG,
         )
         analytics = generateTestAnalytics(mockConfig)
         analytics.associateState(ContextState())
@@ -105,7 +107,7 @@ class FillDefaultsPluginTest {
 //        val chain = CentralPluginChain(message, listOf(fillDefaultsPlugin))
         analytics.testPlugin(fillDefaultsPlugin)
         analytics.track(message)
-        analytics.assertArgument(Verification<Message?, Message?> { input, output ->
+        analytics.assertArgument { input, output ->
             //check for expected values
             assertThat(output?.anonymousId, allOf(notNullValue(), `is`("anon_id")))
             assertThat(output?.userId, allOf(notNullValue(), `is`("user_id")))
@@ -126,20 +128,15 @@ class FillDefaultsPluginTest {
                     hasEntry("custom_name", "c_name"),
                 )
             )
+            // track messages shouldn't contain external ids sent inside it.
+            // but it should have the context values
             assertThat(
-                output?.context?.externalIds, allOf(
-                    notNullValue(), iterableWithSize(2), everyItem(
-                        aMapWithSize(1)
-                    ), containsInAnyOrder(
-                        mapOf(
-                            "amp_id" to "amp_id"
-                        ), mapOf(
-                            "some_id" to "s_id"
-                        )
-                    )
-                )
+                output?.context?.externalIds,
+                containsInAnyOrder(mapOf("braze_id" to "b_id"),
+                    mapOf("amp_id" to "a_id"))
+
             )
-        })
+        }
 
     }
 }

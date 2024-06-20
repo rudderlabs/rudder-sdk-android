@@ -14,14 +14,10 @@
 
 package com.rudderstack.android.internal.plugins
 
-import com.rudderstack.android.contextState
-import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.internal.states.ContextState
+import com.rudderstack.android.utilities.contextState
+import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
-import com.rudderstack.core.Configuration
-import com.rudderstack.core.State
 import com.rudderstack.core.MissingPropertiesException
 import com.rudderstack.core.minusWrtKeys
 import com.rudderstack.models.*
@@ -58,21 +54,28 @@ internal class FillDefaultsPlugin : Plugin {
         val userId = this.userId ?: _analytics?.currentConfigurationAndroid?.userId
         if (anonId == null && userId == null) {
             val ex = MissingPropertiesException("Either Anonymous Id or User Id must be present");
-            _analytics?.currentConfigurationAndroid?.logger?.error(
+            _analytics?.currentConfigurationAndroid?.rudderLogger?.error(
                 log = "Missing both anonymous Id and user Id. Use settings to update " + "anonymous id in Analytics constructor",
                 throwable = ex
             )
             throw ex
         }
         //copying top level context to message context
-
-        return (this.copy(context = (
+        val newContext =
                 // in case of alias we purposefully remove traits from context
                 _analytics?.contextState?.value?.let {
                     if (this is AliasMessage && this.userId != _analytics?.currentConfigurationAndroid?.userId) it.updateWith(
                         traits = mapOf()
                     ) else it
-                } selectiveReplace context),
+                } selectiveReplace context.let {
+                    if (this !is IdentifyMessage) {
+                        // remove any external ids present in the message
+                        // this is in accordance to v1
+                        it?.withExternalIdsRemoved()
+                    } else it
+                }
+
+        return (this.copy(context = newContext,
             anonymousId = anonId,
             userId = userId) as T)
     }
@@ -80,28 +83,6 @@ internal class FillDefaultsPlugin : Plugin {
     private infix fun MessageContext?.selectiveReplace(context: MessageContext?): MessageContext? {
         if (this == null) return context else if (context == null) return this
         return this.updateWith(context)
-    }
-
-    private infix fun MessageContext?.optAdd(context: MessageContext?): MessageContext? {
-        //this gets priority
-        if (this == null) return context
-        else if (context == null) return this
-        val newTraits = context.traits?.let {
-            (it - (this.traits?.keys ?: setOf()).toSet()) optAdd this.traits
-        } ?: traits
-        val newCustomContexts = context.customContexts?.let {
-            (it - (this.customContexts?.keys ?: setOf()).toSet()) optAdd this.customContexts
-        } ?: customContexts
-        val newExternalIds = context.externalIds?.let {
-            (it minusWrtKeys (this.externalIds ?: listOf())) + it
-        } ?: externalIds
-
-        createContext(newTraits, newExternalIds, newCustomContexts).let {
-            //add the extra info from both contexts
-            val extraThisContext = this - it.keys
-            val extraOperandContext = context - it.keys
-            return it + extraThisContext + extraOperandContext
-        }
     }
 
     override fun intercept(chain: Plugin.Chain): Message {

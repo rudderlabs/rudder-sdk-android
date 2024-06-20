@@ -14,97 +14,182 @@
 
 package com.rudderstack.android.plugins
 
+import android.os.Build
+import androidx.test.core.app.ApplicationProvider
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.internal.plugins.ExtractStatePlugin
-import com.rudderstack.core.RudderOptions
+import com.rudderstack.android.storage.AndroidStorage
+import com.rudderstack.core.Analytics
+import com.rudderstack.core.Plugin
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.RudderUtils
-import com.rudderstack.core.BasicStorageImpl
+import com.rudderstack.models.AliasMessage
 import com.rudderstack.models.IdentifyMessage
+import com.rudderstack.models.TrackMessage
+import com.rudderstack.models.traits
+import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.vagabond.testcommon.generateTestAnalytics
+import org.hamcrest.MatcherAssert
+import org.hamcrest.Matchers
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.Mockito.*
+import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.mock
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
-/**
- * ExtractStatePlugin works for Identify and AliasMessage
- * Checking the storage validates the usage
- *
- */
-
+@RunWith(RobolectricTestRunner::class)
+@Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])
 class ExtractStatePluginTest {
 
-    @Test
-    fun `test identify with traits userId`(){
-        val storage = BasicStorageImpl( )
-        val options = RudderOptions.Builder().withExternalIds(listOf(mapOf(
-            "dest-1" to "dest-1-id"
-        ))).build()
-        val extractStatePlugin = ExtractStatePlugin()
-        val identifyMsg = IdentifyMessage.create(timestamp = RudderUtils.timeStamp,
-        traits = mapOf("userId" to "userId"));
-//        val centralPluginChain = CentralPluginChain(identifyMsg, listOf(RudderOptionPlugin(options),
-//            extractStatePlugin))
-//        centralPluginChain.proceed(identifyMsg)
+    private lateinit var plugin: ExtractStatePlugin
 
-        //TODO(add tests. currently we are not using core)
-//        assertThat(storage.traits, allOf(aMapWithSize(1),
-//        hasEntry("userId", "userId")))
-//        assertThat(storage.externalIds, iterableWithSize(1))
-//        assertThat(
-//            storage.externalIds!![0], allOf(aMapWithSize(1),
-//            hasEntry("dest-1", "dest-1-id")))
-    }
-    @Test
-    fun `test identify with both options and message external ids`(){
-        val storage = BasicStorageImpl( )
-        val options = RudderOptions.Builder().withExternalIds(listOf(mapOf(
-            "dest-1" to "dest-1-id"
-        ),mapOf(
-            "dest-2" to "dest-2-id"
-        )
-        )).build()
-        val extractStatePlugin = ExtractStatePlugin()
-        val identifyMsg = IdentifyMessage.create(timestamp = RudderUtils.timeStamp,
-        traits = mapOf("userId" to "userId"), externalIds = listOf(mapOf(
-                "dest-3" to "dest-3-id"
-            ), mapOf(
-                "dest-2" to "not-dest-2-id"
-            ) ))
-//        val centralPluginChain = CentralPluginChain(identifyMsg, listOf(RudderOptionPlugin(options),
-//            extractStatePlugin))
-//        centralPluginChain.proceed(identifyMsg)
-//        assertThat(storage.traits, allOf(aMapWithSize(1),
-//        hasEntry("userId", "userId")))
-//        assertThat(storage.externalIds, allOf(iterableWithSize(3),
-//        everyItem(
-//            aMapWithSize(1)
-//        ), containsInAnyOrder(
-//                mapOf(
-//                    "dest-1" to "dest-1-id"
-//                ),mapOf(
-//                    "dest-2" to "not-dest-2-id"
-//                ),
-//                mapOf(
-//                    "dest-3" to "dest-3-id"
-//                )
-//        )
-//        ))
-    }
-    @Test
-    fun `test identify with message external ids`(){
-        val storage = BasicStorageImpl( )
-        val options = RudderOptions.defaultOptions()
-        val extractStatePlugin = ExtractStatePlugin(
-        )
-        val identifyMsg = IdentifyMessage.create(timestamp = RudderUtils.timeStamp,
-        traits = mapOf("userId" to "userId"), externalIds = listOf(mapOf(
-                "dest-1" to "dest-1-id"
-            )))
-//        val centralPluginChain = CentralPluginChain(identifyMsg, listOf(RudderOptionPlugin(options),
-//            extractStatePlugin))
-//        centralPluginChain.proceed(identifyMsg)
+    private lateinit var analytics: Analytics
 
-//        assertThat(storage.traits, allOf(aMapWithSize(1),
-//        hasEntry("userId", "userId")))
-//        assertThat(storage.externalIds, iterableWithSize(1))
-//        assertThat(
-//            storage.externalIds!![0], allOf(aMapWithSize(1),
-//            hasEntry("dest-1", "dest-1-id")))
+    @Mock
+    private lateinit var chain: Plugin.Chain
+
+
+
+    @Before
+    fun setUp() {
+        MockitoAnnotations.openMocks(this);
+        analytics = generateTestAnalytics(ConfigurationAndroid(ApplicationProvider.getApplicationContext(),
+            mock<JsonAdapter>(),
+            anonymousId = "anonymousId",
+            shouldVerifySdk = false,
+            logLevel = RudderLogger.LogLevel.DEBUG), storage = mock<AndroidStorage>())
+        plugin = ExtractStatePlugin()
+        plugin.setup(analytics)
     }
+    @After
+    fun destroy(){
+        plugin.onShutDown()
+        analytics.shutdown()
+    }
+
+    @Test
+    fun `intercept should proceed if message is not IdentifyMessage or AliasMessage`() {
+        val message = TrackMessage.create("ev", RudderUtils.timeStamp)
+        `when`(chain.message()).thenReturn(message)
+        plugin.intercept(chain)
+        verify(chain).proceed(message)
+    }
+
+    @Test
+    fun `intercept should proceed with modified message for IdentifyMessage with anonymousId`() {
+        val identifyMessage = IdentifyMessage.create(traits = mapOf("anonymousId" to null, "userId" to "userId"), timestamp = RudderUtils.timeStamp)
+        `when`(chain.message()).thenReturn(identifyMessage)
+
+        plugin.intercept(chain)
+        val messageCaptor = argumentCaptor<IdentifyMessage>()
+        verify(chain).proceed(messageCaptor.capture())
+        val capturedMessage = messageCaptor.lastValue
+        MatcherAssert.assertThat(capturedMessage.context?.traits?.get("anonymousId"), Matchers.notNullValue())
+    }
+
+    @Test
+    fun `intercept should update context with new userId for AliasMessage`() {
+        val aliasMessage = AliasMessage.create(RudderUtils.timeStamp, userId = "newUserId")
+        `when`(chain.message()).thenReturn(aliasMessage)
+        plugin.intercept(chain)
+        val messageCaptor = argumentCaptor<AliasMessage>()
+
+        verify(chain).proceed(messageCaptor.capture())
+        val capturedMessage = messageCaptor.lastValue
+        assertEquals("newUserId", capturedMessage.userId)
+    }
+
+ /*   @Test
+    fun `getUserId should return userId from context`() {
+        `when`(message.context).thenReturn(context)
+        `when`(context["user_id"]).thenReturn("userId")
+
+        val userId = plugin.getUserId(message)
+        assertEquals("userId", userId)
+    }
+
+    @Test
+    fun `getUserId should return userId from context traits`() {
+        `when`(message.context).thenReturn(context)
+        `when`(context.traits).thenReturn(mapOf("user_id" to "userId"))
+
+        val userId = plugin.getUserId(message)
+        assertEquals("userId", userId)
+    }
+
+    @Test
+    fun `getUserId should return userId from message`() {
+        `when`(message.context).thenReturn(null)
+        `when`(message.userId).thenReturn("userId")
+
+        val userId = plugin.getUserId(message)
+        assertEquals("userId", userId)
+    }
+
+    @Test
+    fun `appendContext should merge context`() {
+        val contextState = mock(ContextState::class.java)
+        `when`(analytics.contextState).thenReturn(contextState)
+        `when`(contextState.value).thenReturn(context)
+        val newContext = mock(MessageContext::class.java)
+        `when`(context optAddContext context).thenReturn(newContext)
+
+        plugin.appendContext(context)
+
+        verify(analytics).processNewContext(newContext)
+    }
+
+    @Test
+    fun `replaceContext should replace context`() {
+        plugin.replaceContext(context)
+
+        verify(analytics).processNewContext(context)
+    }
+
+    @Test
+    fun `updateNewAndPrevUserIdInContext should update context with new userId`() {
+        val newContext = mock(MessageContext::class.java)
+        `when`(context.updateWith(any())).thenReturn(newContext)
+
+        val updatedContext = plugin.updateNewAndPrevUserIdInContext("newUserId", context)
+
+        assertEquals(newContext, updatedContext)
+    }
+*/
+   /* @Test
+    fun `intercept should handle IdentifyMessage with same userId`() {
+        val identifyMessage = mock(IdentifyMessage::class.java)
+        `when`(identifyMessage.context).thenReturn(context)
+        `when`(context.traits).thenReturn(mapOf("userId" to "userId"))
+        `when`(analytics.currentConfigurationAndroid?.userId).thenReturn("userId")
+        `when`(chain.message()).thenReturn(identifyMessage)
+        `when`(context.updateWith(any())).thenReturn(context)
+
+        plugin.intercept(chain)
+
+        verify(chain).proceed(identifyMessage)
+    }
+
+    @Test
+    fun `intercept should handle IdentifyMessage with different userId`() {
+        val identifyMessage = mock(IdentifyMessage::class.java)
+        `when`(identifyMessage.context).thenReturn(context)
+        `when`(context.traits).thenReturn(mapOf("userId" to "newUserId"))
+        `when`(analytics.currentConfigurationAndroid?.userId).thenReturn("oldUserId")
+        `when`(chain.message()).thenReturn(identifyMessage)
+        `when`(context.updateWith(any())).thenReturn(context)
+
+        plugin.intercept(chain)
+
+        verify(chain).proceed(messageCaptor.capture())
+        val capturedMessage = messageCaptor.value as IdentifyMessage
+        assertEquals("newUserId", capturedMessage.userId)
+    }*/
 }

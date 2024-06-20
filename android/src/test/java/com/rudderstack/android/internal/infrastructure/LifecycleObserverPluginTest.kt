@@ -6,6 +6,7 @@ import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.android.utils.busyWait
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
@@ -61,7 +62,7 @@ abstract class LifecycleObserverPluginTest {
         whenever(mockConfigurationAndroid.recordScreenViews).thenReturn(true)
         whenever(mockConfigurationAndroid.analyticsExecutor).thenReturn(TestExecutor())
         whenever(mockConfigurationAndroid.shouldVerifySdk).thenReturn(false)
-        whenever(mockConfigurationAndroid.logger).thenReturn(KotlinLogger)
+        whenever(mockConfigurationAndroid.rudderLogger).thenReturn(KotlinLogger())
         whenever(mockConfigurationAndroid.copy()).thenReturn(mockConfigurationAndroid)
         mockStorage = mock<AndroidStorage>()
         whenever(mockStorage.versionName).thenReturn("1.0")
@@ -82,7 +83,7 @@ abstract class LifecycleObserverPluginTest {
         lifecycleObserverPlugin.onAppBackgrounded()
 
         verify { analytics.flush() }
-        lifecycleObserverPlugin.shutdown()
+        lifecycleObserverPlugin.onShutDown()
     }
 
     @Test
@@ -106,7 +107,7 @@ abstract class LifecycleObserverPluginTest {
                 )
             )
         }
-        plugin.shutdown()
+        plugin.onShutDown()
 
     }
 
@@ -132,7 +133,7 @@ abstract class LifecycleObserverPluginTest {
                 )
             )
         }
-        plugin.shutdown()
+        plugin.onShutDown()
     }
 
     @Test
@@ -149,7 +150,7 @@ abstract class LifecycleObserverPluginTest {
                 )
             )
         }
-        plugin.shutdown()
+        plugin.onShutDown()
     }
     @Test
     fun `test when elapsed time more than 90 minutes update source config is called`() {
@@ -165,7 +166,7 @@ abstract class LifecycleObserverPluginTest {
         whenever(mockConfigurationAndroid.shouldVerifySdk).thenReturn(true)
         plugin.onAppForegrounded() // after 90 minutes stimulated
         org.mockito.kotlin.verify(mockControlPlane).download(any())
-        plugin.shutdown()
+        plugin.onShutDown()
 
     }
 }

@@ -3,29 +3,34 @@ package com.rudderstack.android.sampleapp.analytics
 import android.app.Application
 import com.rudderstack.android.BuildConfig
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.createInstance
+import com.rudderstack.android.RudderAnalytics.Companion.getInstance
 import com.rudderstack.android.ruddermetricsreporterandroid.Configuration
 import com.rudderstack.android.ruddermetricsreporterandroid.DefaultRudderReporter
 import com.rudderstack.android.ruddermetricsreporterandroid.LibraryMetadata
 import com.rudderstack.android.ruddermetricsreporterandroid.RudderReporter
+import com.rudderstack.android.sampleapp.analytics.workmanger.SampleWorkManagerPlugin
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 
 object RudderAnalyticsUtils {
 
-    private const val PRIMARY_INSTANCE_NAME = "primary"
-    private const val SECONDARY_INSTANCE_NAME = "secondary"
-
     private var _rudderAnalytics: Analytics? = null
-    private var _rudderAnalyticsSecondary: Analytics? = null
+    val analytics: Analytics
+        get() = _rudderAnalytics ?: throw IllegalStateException(
+            "Rudder Analytics Primary not " + "initialized"
+        )
+
     private var _rudderReporter: RudderReporter? = null
+    val reporter: RudderReporter? get() = _rudderReporter
 
     fun initialize(application: Application, listener: InitializationListener? = null) {
-        _rudderAnalytics = createInstance(
+        //wen add work manager support to this instance
+        _rudderAnalytics = getInstance(
             writeKey = WRITE_KEY,
             initializationListener = { success, message ->
-                listener?.onAnalyticsInitialized(PRIMARY_INSTANCE_NAME, success, message)
+                listener?.onAnalyticsInitialized(WRITE_KEY, success, message)
             },
             configuration = ConfigurationAndroid(
                 application = application,
@@ -34,20 +39,9 @@ object RudderAnalyticsUtils {
                 controlPlaneUrl = CONTROL_PLANE_URL,
                 trackLifecycleEvents = true,
                 recordScreenViews = true,
-            )
-        )
-        _rudderAnalyticsSecondary = createInstance(
-            writeKey = WRITE_KEY_SECONDARY,
-            initializationListener = { success, message ->
-                listener?.onAnalyticsInitialized(SECONDARY_INSTANCE_NAME, success, message)
-            },
-            configuration = ConfigurationAndroid(
-                application = application,
-                GsonAdapter(),
-                dataPlaneUrl = DATA_PLANE_URL_SECONDARY,
-                controlPlaneUrl = CONTROL_PLANE_URL_SECONDARY,
-                trackLifecycleEvents = true,
-                recordScreenViews = true,
+                isPeriodicFlushEnabled = true,
+                logLevel = RudderLogger.LogLevel.DEBUG,
+                autoCollectAdvertId = true,
             )
         )
         _rudderReporter = DefaultRudderReporter(
@@ -60,26 +54,12 @@ object RudderAnalyticsUtils {
                 )
             ), JacksonAdapter()
         )
-    }
-
-    val primaryAnalytics: Analytics
-        get() = _rudderAnalytics ?: throw IllegalStateException(
-            "Rudder Analytics Primary not " + "initialized"
-        )
-
-    val secondaryAnalytics: Analytics
-        get() = _rudderAnalyticsSecondary ?: throw IllegalStateException(
-            "Rudder Analytics " + "Secondary" + " not initialized"
-        )
-
-
-    fun getReporter(): RudderReporter? {
-        return _rudderReporter
+        _rudderAnalytics?.addInfrastructurePlugin(SampleWorkManagerPlugin())
     }
 
     fun interface InitializationListener {
 
-        fun onAnalyticsInitialized(instanceName: String, success: Boolean, message: String?)
+        fun onAnalyticsInitialized(writeKey: String, success: Boolean, message: String?)
     }
 
 }

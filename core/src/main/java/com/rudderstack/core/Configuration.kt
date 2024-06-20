@@ -27,7 +27,7 @@ import java.util.concurrent.Executors
  *  trackLifecycleEvents = true)
  * ```
  *
- * @property options Global [RudderOptions] for all plugins
+ * @property options Global [RudderOption] for all plugins
  * @property flushQueueSize Max elements to be stored before a flush. Once it passes this threshold,
  * flush is triggered
  * @property maxFlushInterval Max time (in millis) to wait for a flush, even if the queue size hasn't
@@ -37,7 +37,7 @@ import java.util.concurrent.Executors
  */
 interface Configuration {
     val jsonAdapter: JsonAdapter
-    val options: RudderOptions
+    val options: RudderOption
     val flushQueueSize: Int
     val maxFlushInterval: Long
     // changing the value post source config download has no effect
@@ -47,7 +47,7 @@ interface Configuration {
     val sdkVerifyRetryStrategy: RetryStrategy
     val dataPlaneUrl: String
     val controlPlaneUrl: String
-    val logger: Logger
+    val rudderLogger: RudderLogger
     val analyticsExecutor: ExecutorService
     val networkExecutor: ExecutorService
     val base64Generator: Base64Generator
@@ -61,7 +61,7 @@ interface Configuration {
         const val MAX_FLUSH_INTERVAL = 10 * 1000L //10 seconds
         operator fun invoke(
             jsonAdapter: JsonAdapter,
-            options: RudderOptions = RudderOptions.defaultOptions(),
+            options: RudderOption = RudderOption(),
             flushQueueSize: Int = FLUSH_QUEUE_SIZE,
             maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
             shouldVerifySdk: Boolean = false,
@@ -69,13 +69,13 @@ interface Configuration {
             sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
             dataPlaneUrl: String? = null, //defaults to https://hosted.rudderlabs.com
             controlPlaneUrl: String? = null, //defaults to https://api.rudderlabs.com/
-            logger: Logger = KotlinLogger,
+            rudderLogger: RudderLogger = KotlinLogger(),
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             base64Generator: Base64Generator = RudderUtils.defaultBase64Generator,
         ) = object : Configuration {
             override val jsonAdapter: JsonAdapter = jsonAdapter
-            override val options: RudderOptions = options
+            override val options: RudderOption = options
             override val flushQueueSize: Int = flushQueueSize
             override val maxFlushInterval: Long = maxFlushInterval
             override val shouldVerifySdk: Boolean = shouldVerifySdk
@@ -83,7 +83,7 @@ interface Configuration {
             override val sdkVerifyRetryStrategy: RetryStrategy = sdkVerifyRetryStrategy
             override val dataPlaneUrl: String = dataPlaneUrl?:"https://hosted.rudderlabs.com"
             override val controlPlaneUrl: String = controlPlaneUrl?:"https://api.rudderstack.com/"
-            override val logger: Logger = logger
+            override val rudderLogger: RudderLogger = rudderLogger
             override val analyticsExecutor: ExecutorService = analyticsExecutor
             override val networkExecutor: ExecutorService = networkExecutor
             override val base64Generator: Base64Generator = base64Generator
@@ -91,7 +91,7 @@ interface Configuration {
     }
     fun copy(
         jsonAdapter: JsonAdapter = this.jsonAdapter,
-        options: RudderOptions = this.options,
+        options: RudderOption = this.options,
         flushQueueSize: Int = this.flushQueueSize,
         maxFlushInterval: Long = this.maxFlushInterval,
         shouldVerifySdk: Boolean = this.shouldVerifySdk,
@@ -99,7 +99,7 @@ interface Configuration {
         sdkVerifyRetryStrategy: RetryStrategy = this.sdkVerifyRetryStrategy,
         dataPlaneUrl: String = this.dataPlaneUrl,
         controlPlaneUrl: String?= this.controlPlaneUrl,
-        logger: Logger = this.logger,
+        rudderLogger: RudderLogger = this.rudderLogger,
         analyticsExecutor: ExecutorService = this.analyticsExecutor,
         networkExecutor: ExecutorService = this.networkExecutor,
         base64Generator: Base64Generator = this.base64Generator,
@@ -113,7 +113,7 @@ interface Configuration {
         sdkVerifyRetryStrategy = sdkVerifyRetryStrategy,
         dataPlaneUrl = dataPlaneUrl,
         controlPlaneUrl = controlPlaneUrl,
-        logger = logger,
+        rudderLogger = rudderLogger,
         analyticsExecutor = analyticsExecutor,
         networkExecutor = networkExecutor,
         base64Generator = base64Generator,

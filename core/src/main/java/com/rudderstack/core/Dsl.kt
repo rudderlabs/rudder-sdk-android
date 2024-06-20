@@ -74,8 +74,6 @@ class ScreenScope internal constructor() : MessageScope<ScreenMessage>() {
     override val message: ScreenMessage
         get() = ScreenMessage.create(RudderUtils.timeStamp, name = screenName, category = category,
             anonymousId = anonymousId,
-            customContextMap = customContextMap,
-            externalIds = externalIds,
         properties = screenProperties, userId = userId, destinationProps = destinationProperties)
 
 }
@@ -94,8 +92,6 @@ class IdentifyScope internal constructor() : MessageScope<IdentifyMessage>() {
             anonymousId = anonymousId,
             timestamp = RudderUtils.timeStamp,
             traits = traits,
-            customContextMap = customContextMap,
-            externalIds = externalIds,
          destinationProps = destinationProperties)
 
 }
@@ -124,7 +120,6 @@ class AliasScope internal constructor() : MessageScope<AliasMessage>() {
             anonymousId = anonymousId,
             previousId = userId?:anonymousId, traits = traits, destinationProps =
     destinationProperties,
-            externalIds = externalIds, customContextMap = customContextMap
          )
 
 }
@@ -151,15 +146,14 @@ class GroupScope internal constructor() : MessageScope<GroupMessage>() {
         get() = GroupMessage.create(
             timestamp = RudderUtils.timeStamp, userId = userId,
             anonymousId = anonymousId,
-            groupId = groupId, groupTraits = traits, customContextMap = customContextMap,
-            externalIds = externalIds
+            groupId = groupId, groupTraits = traits
             , destinationProps = destinationProperties)
 
 }
 
 @MessageScopeDslMarker
 abstract class MessageScope<T : Message> internal constructor(/*private val analytics: Analytics*/) {
-    private var _options: RudderOptions? = null
+    private var _options: RudderOption? = null
     internal val options
         get() = _options
 
@@ -168,12 +162,10 @@ abstract class MessageScope<T : Message> internal constructor(/*private val anal
     get() = _destinationProperties
     protected var anonymousId: String? = null
     protected var userId: String? = null
-    protected var externalIds: List<Map<String, String>>? = null
-    protected var customContextMap: Map<String, Any>? = null
     fun rudderOptions(scope: RudderOptionsScope.() -> Unit) {
         val optionsScope = RudderOptionsScope()
         optionsScope.scope()
-        _options = optionsScope.rudderOptions
+        _options = optionsScope.rudderOption
     }
 
     fun destinationProperties(scope: MapScope<String, Map<*, *>>.() -> Unit){
@@ -197,16 +189,6 @@ abstract class MessageScope<T : Message> internal constructor(/*private val anal
     fun anonymousId(id: String){
         anonymousId = id
     }
-    fun externalIds(scope: CollectionsScope<Map<String, String>>.() -> Unit) {
-        val externalIdsScope = CollectionsScope(externalIds)
-        externalIdsScope.scope()
-        externalIds = externalIdsScope.collection?.toList()
-    }
-    fun customContexts(scope: MapScope<String, Any>.() -> Unit) {
-        val customContextsScope = MapScope(customContextMap)
-        customContextsScope.scope()
-        customContextMap = customContextsScope.map
-    }
     internal abstract val message: T
     /*internal fun send(){
         analytics.processMessage(message, options)
@@ -227,36 +209,25 @@ class StringScope internal constructor(){
 class RudderOptionsScope internal constructor() {
 
     //    private var rudderOptionsBuilder: RudderOptions.Builder = RudderOptions.Builder()
-    internal val rudderOptions: RudderOptions?
-        get() {
-            externalIds ?: integrations ?: customContexts ?: return null
-            return RudderOptions.Builder().also { builder ->
-                externalIds?.let { builder.withExternalIds(it) }
-                integrations?.let { builder.withIntegrations(it) }
-                customContexts?.let { builder.withCustomContexts(it) }
-            }.build()
-        }
-
-    private var externalIds: List<Map<String, String>>? = null
-    private var integrations: MessageIntegrations? = null
-    private var customContexts: Map<String, Any>? = null
-
-    fun externalIds(scope: CollectionsScope<Map<String, String>>.() -> Unit) {
-        val externalIdsScope = CollectionsScope(externalIds)
-        externalIdsScope.scope()
-        externalIds = externalIdsScope.collection?.toList()
+    internal val rudderOption: RudderOption
+        get() = _rudderOption
+    private val _rudderOption: RudderOption by lazy {
+        RudderOption()
+    }
+    fun externalId(type: String, id: String) {
+        _rudderOption.putExternalId(type, id)
     }
 
-    fun integrations(scope: MapScope<String, Boolean>.() -> Unit) {
-        val integrationsScope = MapScope(integrations)
-        integrationsScope.scope()
-        integrations = integrationsScope.map
+    fun integration(destinationKey: String, enabled: Boolean) {
+        _rudderOption.putIntegration(destinationKey, enabled)
     }
 
-    fun customContexts(scope: MapScope<String, Any>.() -> Unit) {
-        val customContextsScope = MapScope(customContexts)
-        customContextsScope.scope()
-        customContexts = customContextsScope.map
+    fun integration(destination: BaseDestinationPlugin<*>, enabled: Boolean) {
+        _rudderOption.putIntegration(destination, enabled)
+    }
+
+    fun customContexts(key: String, context: Map<String?, Any?>) {
+        _rudderOption.putCustomContext(key, context)
     }
 
 

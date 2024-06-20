@@ -2,12 +2,14 @@ package com.rudderstack.android.internal.infrastructure
 
 import android.content.pm.PackageManager
 import android.os.Build
-import com.rudderstack.android.androidStorage
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.utilities.androidStorage
+import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.models.AppVersion
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.InfrastructurePlugin
+import com.rudderstack.core.Plugin
+import com.rudderstack.models.Message
 
 private const val PREVIOUS_VERSION = "previous_version"
 private const val PREVIOUS_BUILD = "previous_build"
@@ -20,10 +22,21 @@ private const val EVENT_NAME_APPLICATION_UPDATED = "Application Updated"
 private const val DEFAULT_BUILD = -1
 private const val DEFAULT_VERSION_NAME = ""
 
-class AppInstallUpdateTrackerPlugin : InfrastructurePlugin {
+/**
+ * Plugin to check and send the application installed/updated events.
+ * However an [InfrastructurePlugin] is not suited for generating events on setup
+ * as [InfrastructurePlugin]s are initialized way before the [Analytics] object is ready to
+ * transmit events.
+ * Whereas [Plugin]s are setup after [InfrastructurePlugin]s and are capable to transmit events
+ * * */
+class AppInstallUpdateTrackerPlugin : Plugin {
 
     private var analytics: Analytics? = null
     private lateinit var appVersion: AppVersion
+    override fun intercept(chain: Plugin.Chain): Message {
+        // no change made to message
+        return chain.proceed(chain.message())
+    }
 
     override fun setup(analytics: Analytics) {
         this.analytics = analytics
@@ -54,7 +67,7 @@ class AppInstallUpdateTrackerPlugin : InfrastructurePlugin {
                 packageInfo?.versionCode
             }
         } catch (ex: PackageManager.NameNotFoundException) {
-            analytics.logger.error(log = "Failed to get app version info: ${ex.message}")
+            analytics.rudderLogger.error(log = "Failed to get app version info: ${ex.message}")
         }
 
         return AppVersion(
@@ -87,7 +100,7 @@ class AppInstallUpdateTrackerPlugin : InfrastructurePlugin {
     }
 
     private fun sendApplicationInstalledEvent() {
-        this.analytics?.logger?.debug(log = "Tracking Application Installed event")
+        this.analytics?.rudderLogger?.debug(log = "Tracking Application Installed event")
         val trackProperties = mutableMapOf<String, Any>()
         trackProperties[VERSION] = this.appVersion.currentVersionName
         trackProperties[BUILD] = this.appVersion.currentBuild
@@ -96,7 +109,7 @@ class AppInstallUpdateTrackerPlugin : InfrastructurePlugin {
     }
 
     private fun sendApplicationUpdatedEvent() {
-        this.analytics?.logger?.debug(log = "Tracking Application Updated event")
+        this.analytics?.rudderLogger?.debug(log = "Tracking Application Updated event")
         val trackProperties = mutableMapOf<String, Any>()
         trackProperties[PREVIOUS_VERSION] = this.appVersion.previousVersionName
         trackProperties[PREVIOUS_BUILD] = this.appVersion.previousBuild
@@ -115,7 +128,7 @@ class AppInstallUpdateTrackerPlugin : InfrastructurePlugin {
         }
     }
 
-    override fun shutdown() {
+    override fun onShutDown() {
         analytics = null
     }
 }

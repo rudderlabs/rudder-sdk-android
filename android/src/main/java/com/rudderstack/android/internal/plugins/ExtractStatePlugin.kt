@@ -14,10 +14,10 @@
 
 package com.rudderstack.android.internal.plugins
 
-import com.rudderstack.android.contextState
-import com.rudderstack.android.currentConfigurationAndroid
-import com.rudderstack.android.processNewContext
-import com.rudderstack.android.setUserId
+import com.rudderstack.android.utilities.contextState
+import com.rudderstack.android.utilities.currentConfigurationAndroid
+import com.rudderstack.android.utilities.processNewContext
+import com.rudderstack.android.utilities.setUserId
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.optAdd
@@ -25,6 +25,7 @@ import com.rudderstack.models.AliasMessage
 import com.rudderstack.models.IdentifyMessage
 import com.rudderstack.models.Message
 import com.rudderstack.models.MessageContext
+import com.rudderstack.models.optAddContext
 import com.rudderstack.models.traits
 import com.rudderstack.models.updateWith
 
@@ -63,7 +64,7 @@ internal class ExtractStatePlugin : Plugin {
             //aforementioned ids
             val newUserId = getUserId(message)
 
-            _analytics?.logger?.debug(log = "New user id detected: $newUserId")
+            _analytics?.rudderLogger?.debug(log = "New user id detected: $newUserId")
             val prevId = _analytics?.currentConfigurationAndroid?.let {
                 it.userId ?: it.anonymousId
             } ?: ""
@@ -80,10 +81,13 @@ internal class ExtractStatePlugin : Plugin {
                     }
                 }
                 is IdentifyMessage -> {
-                    if(newUserId != prevId) {
-                        replaceContext(it)
-                    } else appendContext(it)
-                    message
+                    val updatedContext = if(newUserId != prevId) {
+                        it
+                    } else {
+                        appendContextForIdentify(it)
+                    }
+                    replaceContext(updatedContext)
+                    message.copy(context = updatedContext)
                 }
                 else -> {
                     message
@@ -99,8 +103,10 @@ internal class ExtractStatePlugin : Plugin {
         }
     }
 
-    private fun appendContext(messageContext: MessageContext) {
-        _analytics?.processNewContext(  messageContext optAdd _analytics?.contextState?.value)
+    private fun appendContextForIdentify(messageContext: MessageContext) : MessageContext{
+       return _analytics?.contextState?.value?.let {
+           messageContext optAddContext it
+       }?: messageContext
     }
 
     private fun replaceContext(messageContext: MessageContext) {
@@ -150,7 +156,6 @@ internal class ExtractStatePlugin : Plugin {
         const val CONTEXT_USER_ID_KEY = "user_id"
         const val CONTEXT_USER_ID_KEY_ALIAS = "userId"
         const val CONTEXT_ID_KEY = "id"
-        const val CONTEXT_EXTERNAL_ID_KEY = "externalIds"
     }
 
 }

@@ -73,28 +73,28 @@ abstract class AnalyticsTest {
             ),
         )
     )
-    private lateinit var mockedControlPlane : ConfigDownloadService
-    private lateinit var mockedDataUploadService : DataUploadService
+    private lateinit var mockedControlPlane: ConfigDownloadService
+    private lateinit var mockedDataUploadService: DataUploadService
 
     @Before
     fun setup() {
-        println("Setup called")
         mockedControlPlane = mock(ConfigDownloadService::class.java).also {
             `when`(it.download(any())).then {
 
-                it.getArgument<(success: Boolean, RudderServerConfig?, lastErrorMsg: String?) -> Unit>(0)
+                it.getArgument<(success: Boolean, RudderServerConfig?, lastErrorMsg: String?) -> Unit>(
+                    0
+                )
                     .invoke(
                         true, mockServerConfig, null
                     )
             }
         }
-        mockedDataUploadService = mock (com.rudderstack.core.DataUploadService::class.java)
+        mockedDataUploadService = mock(com.rudderstack.core.DataUploadService::class.java)
         storage = BasicStorageImpl()
         val mockedResponse: HttpResponse<out Any> = HttpResponse(200, "OK", null)
         mockedDataUploadService.let {
 
             whenever(it.upload(any(), any(), any())).then {
-//            storage.deleteMessages(data)
                 it.getArgument<(response: HttpResponse<out Any>) -> Unit>(2).invoke(
                     mockedResponse
                 )
@@ -167,7 +167,7 @@ abstract class AnalyticsTest {
                 assertThat(success, `is`(false))
                 assertThat(message, `is`("Downloading failed, Shutting down some error"))
             }, configDownloadService = mockedControlPlane,
-            shutdownHook = {  isDone.set(true) }
+            shutdownHook = { isDone.set(true) }
         )
 
 
@@ -185,6 +185,7 @@ abstract class AnalyticsTest {
             any()
         )
     }
+
     @Test
     fun `test configuration has proper retry strategy`() {
         println("running test test configuration has proper retry strategy")
@@ -213,7 +214,7 @@ abstract class AnalyticsTest {
                     hasProperty("userId", `is`("user_id")),
                     hasProperty(
                         "context", allOf(
-                            aMapWithSize<String, Any>(3), hasEntry(
+                            hasEntry(
                                 equalTo("traits"), allOf(
                                     notNullValue(),
                                     aMapWithSize(3),
@@ -332,7 +333,6 @@ abstract class AnalyticsTest {
 
     @Test
     fun `test with rudder option`() {
-        println("running test test with rudder option")
         //given
         analytics.shutdown()
         analytics = Analytics(
@@ -347,11 +347,13 @@ abstract class AnalyticsTest {
             dataUploadService = mockedDataUploadService,
             configDownloadService = mockedControlPlane
         )
-        while(analytics.retrieveState<DestinationConfigState>()?.value == null){}
+        while (analytics.retrieveState<DestinationConfigState>()?.value == null) {
+        }
         busyWait(300L) // enough for server config to be downloaded
-        val rudderOptions = RudderOptions.Builder().withExternalIds(
-            listOf(mapOf("some_id" to "id"))
-        ).withIntegrations(mapOf("enabled-destination" to true, "All" to false)).build()
+        val rudderOption = RudderOption().putExternalId(
+            "some_type", "some_id"
+        ).putIntegration("enabled-destination", true)
+            .putIntegration("All", false)
 
         val dummyPlugin = mock(BaseDestinationPlugin::class.java)
         whenever(dummyPlugin.name).thenReturn("dummy")
@@ -362,11 +364,14 @@ abstract class AnalyticsTest {
         analytics.addPlugin(assertdestination, dummyPlugin)
 
         //when
-        val trackMessage = TrackMessage.create(eventName = "some", timestamp = RudderUtils.timeStamp)
-        analytics.track(trackMessage, options =
-        rudderOptions)
+        val trackMessage =
+            TrackMessage.create(eventName = "some", timestamp = RudderUtils.timeStamp)
+        analytics.track(
+            trackMessage, options =
+            rudderOption
+        )
         val waitUntil = AtomicBoolean(false)
-        analytics.addCallback(object : Callback{
+        analytics.addCallback(object : Callback {
             override fun success(message: Message?) {
                 waitUntil.set(message is TrackMessage && message.eventName == "some")
             }
@@ -375,7 +380,8 @@ abstract class AnalyticsTest {
                 waitUntil.set(message is TrackMessage && message.eventName == "some")
             }
         })
-        while(waitUntil.get().not()){}
+        while (waitUntil.get().not()) {
+        }
         busyWait(500L)
 
         //then
@@ -392,7 +398,14 @@ abstract class AnalyticsTest {
         )
         assertThat(
             msg.context?.externalIds, allOf(
-                notNullValue(), iterableWithSize(1), containsInAnyOrder(mapOf("some_id" to "id"))
+                notNullValue(), iterableWithSize(1), containsInAnyOrder(
+                    allOf(
+                        aMapWithSize(2),
+                        hasEntry("id", "some_id"),
+                        hasEntry("type","some_type")
+                    )
+
+                )
             )
         )
     }
@@ -422,13 +435,15 @@ abstract class AnalyticsTest {
                 flushQueueSize = 3
             )
         }
-        while(storage.getDataSync().isNotEmpty()){}
+        while (storage.getDataSync().isNotEmpty()) {
+        }
         busyWait(300)
         val listCaptor = argumentCaptor<List<Message>>()
         verify(mockedDataUploadService, atLeast(1)).uploadSync(listCaptor.capture(), anyOrNull())
         val allMsgsUploaded = listCaptor.allValues.flatten()
         assertThat(allMsgsUploaded, allOf(notNullValue(), iterableWithSize(4)))
     }
+
     @Test
     fun `test messages flushed when sent from different threads based on periodic timeout`() {
         println("running test test messages flushed when sent from different threads based on periodic timeout")
@@ -464,8 +479,8 @@ abstract class AnalyticsTest {
         }
         assertThat(analytics.currentConfiguration?.maxFlushInterval, `is`(100))
         val timeNow = System.currentTimeMillis()
-        while(storage.getDataSync().isNotEmpty()){
-            if(System.currentTimeMillis() - timeNow > 10000) break
+        while (storage.getDataSync().isNotEmpty()) {
+            if (System.currentTimeMillis() - timeNow > 10000) break
         }
         busyWait(200) // enough time for one flush
         val listCaptor = argumentCaptor<List<Message>>()
@@ -525,6 +540,7 @@ abstract class AnalyticsTest {
         verify(mockedDataUploadService, never()).uploadSync(anyList(), anyOrNull())
 //        assertThat(storage.getDataSync(), anyOf(nullValue(), iterableWithSize(0)))
     }
+
     @Test
     fun `test blocking flush`() {
         println("running test test blocking flush")
@@ -571,7 +587,8 @@ abstract class AnalyticsTest {
         for (i in events) {
             analytics.track(i)
         }
-        while ((analytics.storage.getDataSync().size) < totalMessages) {}
+        while ((analytics.storage.getDataSync().size) < totalMessages) {
+        }
 
         analytics.blockingFlush()
 
@@ -741,7 +758,7 @@ abstract class AnalyticsTest {
             it.proceed(it.message())
         }
         val waitUntil = AtomicBoolean(false)
-        analytics.addCallback(object : Callback{
+        analytics.addCallback(object : Callback {
             override fun success(message: Message?) {
                 analytics.removeCallback(this)
                 waitUntil.set(message is TrackMessage && message.eventName == "event")
@@ -765,23 +782,20 @@ abstract class AnalyticsTest {
             }
             userId("user_id")
             rudderOptions {
-                customContexts {
-                    +("cc1" to "cp1")
-                    +("cc2" to "cp2")
-                }
-                externalIds {
-                    +(mapOf("ext-1" to "ex1"))
-                    +(mapOf("ext-2" to "ex2"))
-                    +listOf(mapOf("ext-3" to "ex3"))
-                }
-                integrations {
-                    +("firebase" to true)
-                    +("amplitude" to false)
-                }
+                customContexts("cc1", mapOf("cc_1_1" to "ccv"))
+                customContexts("cc2", mapOf("cc_2_1" to "ccv2"))
+
+                externalId("ext-1", "ex1")
+                externalId("ext-2", "ex2")
+                externalId("ext-3", "ex3")
+
+                integration("firebase", true)
+                integration("amplitude", false)
+
             }
         }
         val timeStarted = System.currentTimeMillis()
-        while(waitUntil.get().not() && !isDone.get()){
+        while (waitUntil.get().not() && !isDone.get()) {
             if (System.currentTimeMillis() - timeStarted > 10000) {
                 assert(false)
                 break
@@ -880,7 +894,9 @@ abstract class AnalyticsTest {
      */
     private fun calculateNumberOfBatches(message: Message?, totalNumberOfMessages: Int): Int {
         val messageJSON = message?.let {
-            analytics.currentConfiguration?.jsonAdapter?.writeToJson(it, object : RudderTypeAdapter<Message>() {})
+            analytics.currentConfiguration?.jsonAdapter?.writeToJson(
+                it,
+                object : RudderTypeAdapter<Message>() {})
         } ?: return 0
 
         val individualMessageSize = messageJSON.getUTF8Length()

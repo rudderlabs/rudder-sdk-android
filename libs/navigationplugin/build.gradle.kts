@@ -44,12 +44,12 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = RudderstackBuildConfig.Build.JAVA_VERSION
+        targetCompatibility = RudderstackBuildConfig.Build.JAVA_VERSION
 
     }
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = RudderstackBuildConfig.Build.JAVA_VERSION.toString()
         javaParameters = true
     }
     namespace = "com.rudderstack.android.navigationplugin"
@@ -63,3 +63,6 @@ dependencies {
 tasks.withType(type = org.jetbrains.kotlin.gradle.tasks.KaptGenerateStubs::class) {
     kotlinOptions.jvmTarget = "17"
 }
+apply(from = "${project.projectDir.parentFile.parent}/gradle/artifacts-aar.gradle")
+apply(from = "${project.projectDir.parentFile.parent}/gradle/mvn-publish.gradle")
+apply(from = "${project.projectDir.parentFile.parent}/gradle/codecov.gradle")

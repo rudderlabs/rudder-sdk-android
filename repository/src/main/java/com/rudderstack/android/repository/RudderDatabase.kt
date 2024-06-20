@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit
  *  class to act as the Database helper
  */
 private const val USE_CONTENT_PROVIDER_DEFAULT = false
+
 @SuppressLint("StaticFieldLeak")
 /**
  *
@@ -47,17 +48,20 @@ private const val USE_CONTENT_PROVIDER_DEFAULT = false
  * @param providedExecutorService
  * @param databaseCreatedCallback Can be used to prefill db on create
  */
-class RudderDatabase(private val context: Context,
-                     internal val databaseName: String,
-                     private val entityFactory: EntityFactory,
-                     private val useContentProvider: Boolean = USE_CONTENT_PROVIDER_DEFAULT,
-                     private val databaseVersion: Int = 1,
-                     providedExecutorService: ExecutorService? = null,
-                     private val databaseCreatedCallback: ((SQLiteDatabase?) -> Unit)? = null,
-                     private var databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int,
-                                                         newVersion:
-                     Int) -> Unit)? = null,) {
-
+class RudderDatabase(
+    private val context: Context,
+    internal val databaseName: String,
+    private val entityFactory: EntityFactory,
+    private val useContentProvider: Boolean = USE_CONTENT_PROVIDER_DEFAULT,
+    private val databaseVersion: Int = 1,
+    providedExecutorService: ExecutorService? = null,
+    private val databaseCreatedCallback: ((SQLiteDatabase?) -> Unit)? = null,
+    private var databaseUpgradeCallback: ((
+        SQLiteDatabase?, oldVersion: Int,
+        newVersion:
+        Int
+    ) -> Unit)? = null,
+) {
 
 
     private val commonExecutor: ExecutorService =
@@ -69,7 +73,7 @@ class RudderDatabase(private val context: Context,
             SynchronousQueue(),
             ThreadPoolExecutor.DiscardPolicy(),
         )
-    private var sqliteOpenHelper: SQLiteOpenHelper?= null
+    private var sqliteOpenHelper: SQLiteOpenHelper? = null
     private var database: SQLiteDatabase? = null
     private var registeredDaoList: MutableMap<Class<out Entity>, Dao<out Entity>> =
         ConcurrentHashMap<Class<out Entity>, Dao<out Entity>>()
@@ -81,6 +85,7 @@ class RudderDatabase(private val context: Context,
         databaseUpgradeCallback: ((SQLiteDatabase?, oldVersion: Int, newVersion: Int) -> Unit)?,
     ) -> Unit,
             >()
+
     init {
         synchronized(this) {
             dbDetailsListeners.forEach {
@@ -93,14 +98,14 @@ class RudderDatabase(private val context: Context,
             }
             if (!useContentProvider) {
                 sqliteOpenHelper = initializeSqlOpenHelper(databaseCreatedCallback)
-            }else{
+            } else {
                 EntityContentProvider.registerDatabase(this)
             }
         }
     }
 
     private fun initializeSqlOpenHelper(databaseCreatedCallback: ((SQLiteDatabase?) -> Unit)?) =
-         object : SQLiteOpenHelper(context, databaseName, null, databaseVersion) {
+        object : SQLiteOpenHelper(context, databaseName, null, databaseVersion) {
             init {
                 commonExecutor.execute {
                     this@RudderDatabase.database = writableDatabase
@@ -136,7 +141,7 @@ class RudderDatabase(private val context: Context,
         entityClass: Class<T>,
         executorService: ExecutorService = commonExecutor,
 
-    ): Dao<T> {
+        ): Dao<T> {
         return registeredDaoList[entityClass]?.let {
             it as Dao<T>
         } ?: createNewDao(entityClass, executorService)
@@ -155,7 +160,7 @@ class RudderDatabase(private val context: Context,
         entityClass: Class<T>,
         executorService: ExecutorService,
 
-    ): Dao<T> = Dao<T>(
+        ): Dao<T> = Dao<T>(
         entityClass,
         useContentProvider,
         context
@@ -213,11 +218,11 @@ class RudderDatabase(private val context: Context,
                 close()
                 database = null
             }
-        }?:run {
+        } ?: run {
             database?.close()
             database = null
         }
-        if(useContentProvider){
+        if (useContentProvider) {
             EntityContentProvider.releaseDatabase(databaseName)
         }
         sqliteOpenHelper = null
@@ -231,7 +236,7 @@ class RudderDatabase(private val context: Context,
      *
      */
     fun delete() {
-        val file = sqliteOpenHelper?.readableDatabase?.path?.let { File(it) }?:return
+        val file = sqliteOpenHelper?.readableDatabase?.path?.let { File(it) } ?: return
         SQLiteDatabase.deleteDatabase(file)
     }
 }

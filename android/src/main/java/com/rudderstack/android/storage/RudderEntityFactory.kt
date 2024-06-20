@@ -14,10 +14,8 @@
 
 package com.rudderstack.android.storage
 
-import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.EntityFactory
-import com.rudderstack.core.Analytics
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 
 internal class RudderEntityFactory(private val jsonAdapter: JsonAdapter?) : EntityFactory {

@@ -62,12 +62,12 @@ public final class RudderAnalyticsBuilderCompat  {
     }
     public Analytics build() {
 
-        return RudderAnalytics.createInstance(
+        return RudderAnalytics.getInstance(
                 writeKey,
                 configuration,
+                storage,
                 dataUploadService,
                 configDownloadService,
-                storage,
                 (success, message) -> {
                     if (initializationListener != null) {
                         initializationListener.onInitialized(success, message);

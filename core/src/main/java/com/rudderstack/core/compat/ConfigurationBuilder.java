@@ -19,9 +19,9 @@ import static com.rudderstack.core.Configuration.MAX_FLUSH_INTERVAL;
 
 import com.rudderstack.core.Base64Generator;
 import com.rudderstack.core.Configuration;
-import com.rudderstack.core.Logger;
+import com.rudderstack.core.RudderLogger;
 import com.rudderstack.core.RetryStrategy;
-import com.rudderstack.core.RudderOptions;
+import com.rudderstack.core.RudderOption;
 import com.rudderstack.core.RudderUtils;
 import com.rudderstack.core.internal.KotlinLogger;
 import com.rudderstack.rudderjsonadapter.JsonAdapter;
@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
 
 public class ConfigurationBuilder {
     private JsonAdapter jsonAdapter;
-    private RudderOptions options = RudderOptions.defaultOptions();
+    private RudderOption options = new RudderOption();
     private int flushQueueSize = FLUSH_QUEUE_SIZE;
     private long maxFlushInterval = MAX_FLUSH_INTERVAL;
     private boolean shouldVerifySdk = false;
@@ -39,7 +39,7 @@ public class ConfigurationBuilder {
     private RetryStrategy sdkVerifyRetryStrategy = RetryStrategy.exponential();
     private String dataPlaneUrl = null; //defaults to https://hosted.rudderlabs.com
     private String controlPlaneUrl = null; //defaults to https://api.rudderlabs.com
-    private Logger logger = KotlinLogger.INSTANCE;
+    private RudderLogger rudderLogger = new KotlinLogger();
     private ExecutorService analyticsExecutor = Executors.newSingleThreadExecutor();
     private ExecutorService networkExecutor = Executors.newCachedThreadPool();
     private Base64Generator base64Generator = RudderUtils.INSTANCE.getDefaultBase64Generator();
@@ -48,7 +48,7 @@ public class ConfigurationBuilder {
         this.jsonAdapter = jsonAdapter;
     }
 
-    public ConfigurationBuilder withOptions(RudderOptions options) {
+    public ConfigurationBuilder withOptions(RudderOption options) {
         this.options = options;
         return this;
     }
@@ -89,11 +89,10 @@ public class ConfigurationBuilder {
         return this;
     }
 
-    public ConfigurationBuilder withLogger(Logger logger) {
-        this.logger = logger;
+    public ConfigurationBuilder withLogLevel(RudderLogger.LogLevel logLevel) {
+        this.rudderLogger = new KotlinLogger(logLevel);
         return this;
     }
-
 
     public ConfigurationBuilder withAnalyticsExecutor(ExecutorService analyticsExecutor) {
         this.analyticsExecutor = analyticsExecutor;
@@ -113,7 +112,7 @@ public class ConfigurationBuilder {
     public Configuration build() {
         return Configuration.Companion.invoke(jsonAdapter, options, flushQueueSize, maxFlushInterval,
                 shouldVerifySdk, gzipEnabled, sdkVerifyRetryStrategy, dataPlaneUrl,
-                controlPlaneUrl, logger,
+                controlPlaneUrl, rudderLogger,
                 analyticsExecutor, networkExecutor, base64Generator);
     }
 }

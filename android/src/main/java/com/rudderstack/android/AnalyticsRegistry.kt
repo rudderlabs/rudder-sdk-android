@@ -1,6 +1,7 @@
 package com.rudderstack.android
 
 import androidx.annotation.VisibleForTesting
+import com.rudderstack.core.utilities.FutureUse
 import com.rudderstack.core.Analytics
 import java.util.concurrent.ConcurrentHashMap
 
@@ -18,6 +19,8 @@ import java.util.concurrent.ConcurrentHashMap
  * Note: The class is marked as internal, indicating that it is intended for use within the same module and should not be accessed
  * from outside the module.
  */
+
+@FutureUse("This class will be utilized when multiple instances are implemented.")
 internal object AnalyticsRegistry {
 
     private val writeKeyToInstance: ConcurrentHashMap<String, Analytics> = ConcurrentHashMap()

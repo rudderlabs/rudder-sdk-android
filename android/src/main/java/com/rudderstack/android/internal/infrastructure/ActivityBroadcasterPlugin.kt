@@ -18,15 +18,12 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import com.rudderstack.android.LifecycleListenerPlugin
-import com.rudderstack.android.currentConfigurationAndroid
+import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.InfrastructurePlugin
 import java.util.concurrent.atomic.AtomicInteger
 
-/**
- * Tracks the Activities in the application and broadcasts the same
- *
- */
+/** Tracks the Activities in the application and broadcasts the same */
 internal class ActivityBroadcasterPlugin(
 ) : InfrastructurePlugin {
 
@@ -41,12 +38,8 @@ internal class ActivityBroadcasterPlugin(
 
             override fun onActivityStarted(activity: Activity) {
                 incrementActivityCount()
-                if (analytics?.currentConfigurationAndroid?.recordScreenViews == true) {
-                    broadcastActivityStart(activity)
-                }
-                if (analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true &&
-                    activityCount.get() == 1
-                ) {
+                broadcastActivityStart(activity)
+                if (activityCount.get() == 1) {
                     broadCastApplicationStart()
                 }
             }
@@ -100,6 +93,7 @@ internal class ActivityBroadcasterPlugin(
     private fun incrementActivityCount() {
         activityCount.incrementAndGet()
     }
+
 
     private fun broadCastApplicationStart() {
         analytics?.applyInfrastructureClosure {

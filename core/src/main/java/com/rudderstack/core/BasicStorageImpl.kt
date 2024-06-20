@@ -14,11 +14,8 @@
 
 package com.rudderstack.core
 
-import com.rudderstack.core.internal.AnalyticsDelegate
-import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.models.IdentifyTraits
 import com.rudderstack.models.Message
-import com.rudderstack.models.MessageContext
 import com.rudderstack.models.RudderServerConfig
 import java.io.*
 import java.lang.ref.WeakReference
@@ -41,7 +38,7 @@ class BasicStorageImpl @JvmOverloads constructor(
     private var configurationRef = AtomicReference<Configuration>(null)
 
     private val logger
-        get() = configurationRef.get()?.logger
+        get() = configurationRef.get()?.rudderLogger
     private var backPressureStrategy = Storage.BackPressureStrategy.Drop
 
     private var _storageCapacity = Storage.MAX_STORAGE_CAPACITY

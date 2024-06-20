@@ -22,7 +22,7 @@ import com.rudderstack.android.repository.Dao
 import com.rudderstack.android.repository.RudderDatabase
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
-import com.rudderstack.core.Logger
+import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.Storage
 import com.rudderstack.models.Message
 import com.rudderstack.models.MessageContext
@@ -34,6 +34,12 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
 
+private const val DB_VERSION = 1
+private const val SERVER_CONFIG_FILE_NAME = "RudderServerConfig"
+
+private const val CONTEXT_FILE_NAME = "pref_context"
+private const val V1_RUDDER_FLUSH_CONFIG_FILE_NAME = "RudderFlushConfig"
+
 class AndroidStorageImpl(
     private val application: Application,
     private val useContentProvider: Boolean = false,
@@ -41,20 +47,11 @@ class AndroidStorageImpl(
     private val storageExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 ) : AndroidStorage {
 
-    private var logger: Logger? = null
+    private var rudderLogger: RudderLogger? = null
     private val dbName get() = "rs_persistence_$writeKey"
     private var jsonAdapter: JsonAdapter? = null
 
     private var preferenceManager: RudderPreferenceManager? = null
-
-    companion object {
-
-        private const val DB_VERSION = 1
-        private const val SERVER_CONFIG_FILE_NAME = "RudderServerConfig"
-
-        private const val CONTEXT_FILE_NAME = "pref_context"
-
-    }
 
     private val serverConfigFileName
         get() = "$SERVER_CONFIG_FILE_NAME-{$writeKey}"
@@ -90,18 +87,20 @@ class AndroidStorageImpl(
 
     //message table listener
     private val _messageDataListener = object : Dao.DataChangeListener<MessageEntity> {
-        override fun onDataInserted(inserted: List<MessageEntity>, allData: List<MessageEntity>) {
-            onDataChange(allData.size.toLong())
+        override fun onDataInserted(inserted: List<MessageEntity>) {
+            onDataChange()
         }
 
-        override fun onDataDeleted(deleted: List<MessageEntity>, allData: List<MessageEntity>) {
-            onDataChange(allData.size.toLong())
+        override fun onDataDeleted(deleted: List<MessageEntity>) {
+            onDataChange()
         }
 
-        private fun onDataChange(dataSize: Long) {
-            _dataCount.set(dataSize)
-            _storageListeners.forEach {
-                it.onDataChange()
+        private fun onDataChange() {
+            messageDao?.getCount {
+                _dataCount.set(it)
+                _storageListeners.forEach {
+                    it.onDataChange()
+                }
             }
         }
     }
@@ -123,7 +122,7 @@ class AndroidStorageImpl(
     override fun updateConfiguration(configuration: Configuration) {
         super.updateConfiguration(configuration)
         jsonAdapter = configuration.jsonAdapter
-        logger = configuration.logger
+        rudderLogger = configuration.rudderLogger
     }
 
     override fun setStorageCapacity(storageCapacity: Int) {
@@ -234,7 +233,7 @@ class AndroidStorageImpl(
 
     override val context: MessageContext?
         get() = (if (_cachedContext == null) {
-            _cachedContext = getObject<HashMap<String, Any?>>(application, contextFileName, logger)
+            _cachedContext = getObject<HashMap<String, Any?>>(application, contextFileName, rudderLogger)
             _cachedContext
         } else _cachedContext)
 
@@ -244,7 +243,7 @@ class AndroidStorageImpl(
         synchronized(this) {
             _serverConfig = serverConfig
             saveObject(
-                serverConfig, context = application, serverConfigFileName, logger
+                serverConfig, context = application, serverConfigFileName, rudderLogger
             )
         }
     }
@@ -252,7 +251,7 @@ class AndroidStorageImpl(
     override val serverConfig: RudderServerConfig?
         get() = synchronized(this) {
             if (_serverConfig == null) _serverConfig =
-                getObject(application, serverConfigFileName, logger)
+                getObject(application, serverConfigFileName, rudderLogger)
             _serverConfig
         }
 
@@ -317,6 +316,8 @@ class AndroidStorageImpl(
         get() = preferenceManager?.sessionId?.takeIf { it > -1L }
     override val lastActiveTimestamp: Long?
         get() = preferenceManager?.lastActiveTimestamp?.takeIf { it > -1L }
+    override val advertisingId: String?
+        get() = preferenceManager?.advertisingId
     override val v1AnonymousId: String?
         get() = preferenceManager?.v1AnonymousId
     override val v1SessionId: Long?
@@ -331,12 +332,18 @@ class AndroidStorageImpl(
         get() = preferenceManager?.v1ExternalIdsJson?.let {
             jsonAdapter?.readJson(it, object : RudderTypeAdapter<List<Map<String, String>>>() {})
         }
+    override val v1AdvertisingId: String?
+        get() = preferenceManager?.v1AdvertisingId
     override val trackAutoSession: Boolean
         get() = preferenceManager?.trackAutoSession?: false
     override val build: Int?
         get() = preferenceManager?.build
+    override val v1Build: Int?
+        get() = preferenceManager?.v1Build
     override val versionName: String?
         get() = preferenceManager?.versionName
+    override val v1VersionName: String?
+        get() = preferenceManager?.v1VersionName
 
     override fun setAnonymousId(anonymousId: String) {
         _anonymousId = anonymousId
@@ -358,6 +365,10 @@ class AndroidStorageImpl(
 
     override fun saveLastActiveTimestamp(timestamp: Long) {
         preferenceManager?.saveLastActiveTimestamp(timestamp)
+    }
+
+    override fun saveAdvertisingId(advertisingId: String) {
+        preferenceManager?.saveAdvertisingId(advertisingId)
     }
 
     override fun clearSessionId() {
@@ -384,9 +395,48 @@ class AndroidStorageImpl(
         preferenceManager?.resetV1ExternalIds()
     }
 
-    override fun migrateV1StorageToV2Sync() {
-        migrateV1MessagesToV2Database(application, rudderDatabase?:return,
-            jsonAdapter?:return, logger)
+    override fun resetV1AdvertisingId() {
+        preferenceManager?.resetV1AdvertisingId()
+    }
+
+    override fun resetV1Build() {
+        preferenceManager?.resetV1Build()
+    }
+
+    override fun resetV1Version() {
+        preferenceManager?.resetV1VersionName()
+    }
+
+    override fun resetV1SessionId() {
+        preferenceManager?.resetV1SessionId()
+    }
+
+    override fun resetV1SessionLastActiveTimestamp() {
+        preferenceManager?.resetV1LastActiveTimestamp()
+    }
+
+    override fun migrateV1StorageToV2Sync(): Boolean {
+        return migrateV1MessagesToV2Database(application, rudderDatabase?:return false,
+            jsonAdapter?:return false, rudderLogger)
+    }
+
+    override fun migrateV1StorageToV2(callback: (Boolean) -> Unit) {
+        storageExecutor.execute {
+            callback(migrateV1StorageToV2Sync())
+        }
+    }
+
+    override fun deleteV1SharedPreferencesFile() {
+        storageExecutor.execute {
+            preferenceManager?.deleteV1PreferencesFile()
+        }
+    }
+
+    override fun deleteV1ConfigFiles() {
+        storageExecutor.execute {
+            deleteFile(application, SERVER_CONFIG_FILE_NAME)
+            deleteFile(application, V1_RUDDER_FLUSH_CONFIG_FILE_NAME)
+        }
     }
 
     override fun setBuild(build: Int) {
@@ -420,9 +470,7 @@ class AndroidStorageImpl(
 
     private fun MessageContext.save() {
         saveObject(
-            HashMap(this), application, contextFileName, logger
+            HashMap(this), application, contextFileName, rudderLogger
         )
     }
-
-
 }

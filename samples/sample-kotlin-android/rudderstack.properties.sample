@@ -7,7 +7,3 @@ writeKey=""
 controlplaneUrl=""
 dataplaneUrl=""
 
-# For a secondary Rudderstack instance, replace with your other Rudderstack values
-writeKeySecondary=""
-controlplaneUrlSecondary=""
-dataplaneUrlSecondary=""
