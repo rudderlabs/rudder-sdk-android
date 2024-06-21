@@ -83,7 +83,6 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     }
 
     private fun reinstateV2FromCache() {
-        val userId = _analytics?.androidStorage?.userId
         val anonId = _analytics?.androidStorage?.anonymousId
             ?: _analytics?.currentConfigurationAndroid?.let {
                 AndroidUtils.generateAnonymousId(
@@ -94,9 +93,6 @@ internal class ReinstatePlugin : InfrastructurePlugin {
         val context = _analytics?.androidStorage?.context
         context?.let {
             _analytics?.processNewContext(context)
-        }
-        userId?.let {
-            _analytics?.androidStorage?.setUserId(it)
         }
         if (anonId != null)
             _analytics?.setAnonymousId(anonId)
