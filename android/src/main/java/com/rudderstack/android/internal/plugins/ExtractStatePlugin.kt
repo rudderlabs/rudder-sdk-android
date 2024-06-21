@@ -18,7 +18,6 @@ import com.rudderstack.android.utilities.androidStorage
 import com.rudderstack.android.utilities.contextState
 import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.android.utilities.processNewContext
-import com.rudderstack.android.utilities.setUserId
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.optAdd
@@ -94,7 +93,7 @@ internal class ExtractStatePlugin : Plugin {
             }?:message
             msg.also {
                 newUserId?.let { id ->
-                    _analytics?.setUserId(id)
+                    _analytics?.androidStorage?.setUserId(id)
                 }
             }
             return chain.proceed(msg)
