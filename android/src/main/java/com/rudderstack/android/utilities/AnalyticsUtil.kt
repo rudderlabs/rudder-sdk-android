@@ -92,12 +92,6 @@ fun Analytics.setAnonymousId(anonymousId: String) {
  */
 fun Analytics.setUserId(userId: String) {
     androidStorage.setUserId(userId)
-    applyConfiguration {
-        if (this is ConfigurationAndroid) copy(
-            userId = userId
-        )
-        else this
-    }
 }
 
 private val infrastructurePlugins = arrayOf(
