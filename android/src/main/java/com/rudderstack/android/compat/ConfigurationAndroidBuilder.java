@@ -30,7 +30,6 @@ import java.util.concurrent.Executors;
 public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     private final Application application ;
     private String anonymousId;
-    private String userId = null;
     private Boolean trackLifecycleEvents = ConfigurationAndroid.Defaults.TRACK_LIFECYCLE_EVENTS;
     private Boolean recordScreenViews  = ConfigurationAndroid.Defaults.RECORD_SCREEN_VIEWS;
     private Boolean isPeriodicFlushEnabled  = ConfigurationAndroid.Defaults.IS_PERIODIC_FLUSH_ENABLED;
@@ -52,10 +51,6 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     }
     public ConfigurationBuilder withAnonymousId(String anonymousId) {
         this.anonymousId = anonymousId;
-        return this;
-    }
-    public ConfigurationBuilder withUserId(String userId) {
-        this.userId = userId;
         return this;
     }
     public ConfigurationBuilder withTrackLifecycleEvents(Boolean trackLifecycleEvents) {
@@ -118,7 +113,6 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
         return ConfigurationAndroid.Companion.invoke(super.build(),
                 application,
                 anonymousId,
-                userId,
                 trackLifecycleEvents,
                 recordScreenViews,
                 isPeriodicFlushEnabled,
