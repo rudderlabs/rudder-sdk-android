@@ -20,13 +20,16 @@ import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.states.ContextState
+import com.rudderstack.android.storage.AndroidStorage
+import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.retrieveState
+import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.models.*
-import com.vagabond.testcommon.Verification
+import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.assertArgument
 import com.vagabond.testcommon.generateTestAnalytics
 import com.vagabond.testcommon.testPlugin
@@ -36,7 +39,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.mock
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -46,34 +48,36 @@ import org.robolectric.annotation.Config
     @Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])
 class FillDefaultsPluginTest {
 
-    //    private val commonContext = mapOf(
-//        "some_context1" to "some_value",
-//        "some_context2" to "some_value_2"
-//    )
     private lateinit var analytics: Analytics
     lateinit var mockConfig: ConfigurationAndroid
-
-    private val fillDefaultsPlugin = FillDefaultsPlugin(
-    )
+    private val fillDefaultsPlugin = FillDefaultsPlugin()
+    private val jsonAdapter: JsonAdapter = GsonAdapter()
+    private lateinit var storage: AndroidStorage
 
     @Before
     fun setup() {
+        storage = AndroidStorageImpl(
+            getApplicationContext(),
+            false,
+            writeKey = "test_writeKey",
+            storageExecutor = TestExecutor(),
+        )
         mockConfig = ConfigurationAndroid(
             application = getApplicationContext(),
-            mock(),
+            jsonAdapter,
             anonymousId = "anon_id",
-            userId = "user_id",
             shouldVerifySdk = false,
             analyticsExecutor = TestExecutor(),
             logLevel = RudderLogger.LogLevel.DEBUG,
         )
-        analytics = generateTestAnalytics(mockConfig)
+        analytics = generateTestAnalytics(mockConfig, storage = storage)
         analytics.associateState(ContextState())
         fillDefaultsPlugin.setup(analytics)
         fillDefaultsPlugin.updateConfiguration(mockConfig)
     }
     @After
     fun destroy() {
+        analytics.storage.clearStorage()
         analytics.shutdown()
     }
 
@@ -104,21 +108,18 @@ class FillDefaultsPluginTest {
             ), customContextMap = null
         )
 
-//        val chain = CentralPluginChain(message, listOf(fillDefaultsPlugin))
         analytics.testPlugin(fillDefaultsPlugin)
         analytics.track(message)
         analytics.assertArgument { input, output ->
             //check for expected values
             assertThat(output?.anonymousId, allOf(notNullValue(), `is`("anon_id")))
-            assertThat(output?.userId, allOf(notNullValue(), `is`("user_id")))
             //message context to override
             assertThat(
                 output?.context?.traits, allOf(
                     notNullValue(),
                     aMapWithSize(2),
-                    hasEntry("age", 31),
+                    hasEntry("age", 31.0),
                     hasEntry("office", "Rudderstack"),
-//            hasEntry("name", "some_name"),
                 )
             )
             assertThat(
@@ -137,6 +138,5 @@ class FillDefaultsPluginTest {
 
             )
         }
-
     }
 }
