@@ -7,7 +7,7 @@ import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.RudderOption
 import java.util.concurrent.ExecutorService
 
-sealed class ConfigurationAndroidMinimalScope(protected val currentConfiguration: ConfigurationAndroid):
+sealed class ConfigurationAndroidMinimalScope(protected val currentConfiguration: ConfigurationAndroid) :
     ConfigurationScope(currentConfiguration) {
 
     var anonymousId: String? = currentConfiguration.anonymousId
@@ -18,7 +18,8 @@ sealed class ConfigurationAndroidMinimalScope(protected val currentConfiguration
     var sessionTimeoutMillis: Long = currentConfiguration.sessionTimeoutMillis
     var autoCollectAdvertisingId: Boolean = currentConfiguration.autoCollectAdvertId
 
-    override fun build(): ConfigurationAndroid = ConfigurationAndroid(super.build(),
+    override fun build(): ConfigurationAndroid = ConfigurationAndroid(
+        super.build(),
         application = currentConfiguration.application,
         anonymousId = anonymousId,
         userId = userId,
@@ -30,8 +31,12 @@ sealed class ConfigurationAndroidMinimalScope(protected val currentConfiguration
     )
 
 }
-class ConfigurationAndroidScope(configurationAndroid: ConfigurationAndroid) : ConfigurationAndroidMinimalScope(configurationAndroid)
-class ConfigurationAndroidInitializationScope(configurationAndroid: ConfigurationAndroid) : ConfigurationAndroidMinimalScope(configurationAndroid){
+
+class ConfigurationAndroidScope(configurationAndroid: ConfigurationAndroid) :
+    ConfigurationAndroidMinimalScope(configurationAndroid)
+
+class ConfigurationAndroidInitializationScope(configurationAndroid: ConfigurationAndroid) :
+    ConfigurationAndroidMinimalScope(configurationAndroid) {
     //These are yet to be supported.
     /*var multiProcessEnabled: Boolean = configurationAndroid.multiProcessEnabled
     var defaultProcessName: String? = configurationAndroid.defaultProcessName*/
@@ -43,19 +48,27 @@ class ConfigurationAndroidInitializationScope(configurationAndroid: Configuratio
     var isPeriodicFlushEnabled: Boolean = configurationAndroid.isPeriodicFlushEnabled
 
 
-
-    var advertisingIdFetchExecutor : ExecutorService = configurationAndroid.advertisingIdFetchExecutor
+    var advertisingIdFetchExecutor: ExecutorService =
+        configurationAndroid.advertisingIdFetchExecutor
 
 
     var logLevel = RudderLogger.DEFAULT_LOG_LEVEL
     override fun build(): ConfigurationAndroid {
-        return ConfigurationAndroid(super.build(),
+        return ConfigurationAndroid(
+            super.build(),
             currentConfiguration.application,
+            anonymousId = anonymousId,
+            userId = userId,
+            advertisingId = advertisingId,
+            deviceToken = deviceToken,
+            trackAutoSession = trackAutoSession,
+            sessionTimeoutMillis = sessionTimeoutMillis,
+            autoCollectAdvertId = autoCollectAdvertisingId,
             trackLifecycleEvents = trackLifecycleEvents,
-                    recordScreenViews = recordScreenViews,
-                    isPeriodicFlushEnabled = isPeriodicFlushEnabled,
-                    advertisingIdFetchExecutor = advertisingIdFetchExecutor,
-            )
+            recordScreenViews = recordScreenViews,
+            isPeriodicFlushEnabled = isPeriodicFlushEnabled,
+            advertisingIdFetchExecutor = advertisingIdFetchExecutor,
+        )
     }
 
 }
