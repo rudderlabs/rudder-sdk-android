@@ -23,8 +23,8 @@ import com.rudderstack.models.*
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
-import com.vagabond.testcommon.assertArgument
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.assertArgument
+import com.rudderstack.testcommon.generateTestAnalytics
 import junit.framework.TestSuite
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat

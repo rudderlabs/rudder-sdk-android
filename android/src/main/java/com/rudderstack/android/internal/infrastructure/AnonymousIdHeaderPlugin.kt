@@ -16,7 +16,7 @@ package com.rudderstack.android.internal.infrastructure
 
 import com.rudderstack.android.AndroidUtils
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.utilities.applyConfigurationAndroid
+import com.rudderstack.android.applyConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.DataUploadService

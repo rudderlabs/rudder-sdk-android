@@ -26,10 +26,10 @@ import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.models.*
-import com.vagabond.testcommon.Verification
-import com.vagabond.testcommon.assertArgument
-import com.vagabond.testcommon.generateTestAnalytics
-import com.vagabond.testcommon.testPlugin
+import com.rudderstack.testcommon.Verification
+import com.rudderstack.testcommon.assertArgument
+import com.rudderstack.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.testPlugin
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.After

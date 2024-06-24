@@ -3,6 +3,7 @@
 package com.rudderstack.android.utilities
 
 import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.applyConfigurationAndroid
 import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
 import com.rudderstack.android.internal.infrastructure.AnonymousIdHeaderPlugin
 import com.rudderstack.android.internal.infrastructure.AppInstallUpdateTrackerPlugin
@@ -39,12 +40,10 @@ val Analytics.androidStorage: AndroidStorage
  * @param advertisingId IDFA for the device
  */
 fun Analytics.putAdvertisingId(advertisingId: String) {
-    applyConfiguration {
-        if (this is ConfigurationAndroid) copy(
-            autoCollectAdvertId = autoCollectAdvertId && advertisingId.isEmpty(),
-            advertisingId = advertisingId.takeUnless { it.isEmpty() }?: this.advertisingId
-        )
-        else this
+    applyConfigurationAndroid {
+        this.autoCollectAdvertisingId = this.autoCollectAdvertisingId && advertisingId.isEmpty()
+        this.advertisingId = advertisingId.takeUnless { it.isEmpty() } ?: this.advertisingId
+
     }
 }
 
@@ -55,11 +54,9 @@ fun Analytics.putAdvertisingId(advertisingId: String) {
  * @param deviceToken Push Token from FCM
  */
 fun Analytics.putDeviceToken(deviceToken: String) {
-    applyConfiguration {
-        if (this is ConfigurationAndroid) copy(
-            deviceToken = deviceToken
-        )
-        else this
+    applyConfigurationAndroid {
+        this.deviceToken = deviceToken
+
     }
 }
 
@@ -72,11 +69,8 @@ fun Analytics.putDeviceToken(deviceToken: String) {
  */
 fun Analytics.setAnonymousId(anonymousId: String) {
     androidStorage.setAnonymousId(anonymousId)
-    applyConfiguration {
-        if (this is ConfigurationAndroid) copy(
-            anonymousId = anonymousId
-        )
-        else this
+    applyConfigurationAndroid {
+        this.anonymousId = anonymousId
     }
     val anonymousIdPair = ("anonymousId" to anonymousId)
     val newContext = contextState?.value?.let {
@@ -92,11 +86,8 @@ fun Analytics.setAnonymousId(anonymousId: String) {
  */
 fun Analytics.setUserId(userId: String) {
     androidStorage.setUserId(userId)
-    applyConfiguration {
-        if (this is ConfigurationAndroid) copy(
-            userId = userId
-        )
-        else this
+    applyConfigurationAndroid {
+        this.userId = userId
     }
 }
 
@@ -114,22 +105,11 @@ private val messagePlugins = listOf(
     SessionPlugin(),
     AppInstallUpdateTrackerPlugin(),
     LifecycleObserverPlugin(),
-    )
+)
 
 internal fun Analytics.startup() {
     associateStates()
     addPlugins()
-}
-
-
-fun Analytics.applyConfigurationAndroid(
-    androidConfigurationScope: ConfigurationAndroid.() ->
-    ConfigurationAndroid
-) {
-    applyConfiguration {
-        if (this is ConfigurationAndroid) androidConfigurationScope()
-        else this
-    }
 }
 
 internal fun Analytics.processNewContext(
@@ -142,6 +122,7 @@ internal fun Analytics.processNewContext(
 internal fun Analytics.onShutdown() {
     shutdownSessionManagement()
 }
+
 private fun Analytics.addPlugins() {
     addInfrastructurePlugin(*infrastructurePlugins)
     addPlugin(*messagePlugins.toTypedArray())

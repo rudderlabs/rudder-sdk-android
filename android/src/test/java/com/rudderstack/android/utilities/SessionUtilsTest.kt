@@ -5,6 +5,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.ConfigurationAndroid.Defaults.SESSION_TIMEOUT
+import com.rudderstack.android.ConfigurationAndroidInitializationScope
+import com.rudderstack.android.ConfigurationAndroidScope
 import com.rudderstack.android.applyConfigurationAndroid
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.initialConfigurationAndroid
@@ -18,7 +20,7 @@ import com.rudderstack.core.holder.removeState
 import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.models.android.UserSession
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.hasItem
@@ -100,7 +102,6 @@ class SessionUtilsTest {
 
         val mockConfig = ConfigurationAndroid(
             application = ApplicationProvider.getApplicationContext(),
-            mock<JsonAdapter>(),
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
@@ -108,9 +109,7 @@ class SessionUtilsTest {
 
         )
         analytics.applyConfigurationAndroid {
-            trackLifecycleEvents = true
             trackAutoSession = true
-            this.logger = logger
         }
         // When
         analytics.startSession(invalidSessionId)
@@ -154,9 +153,9 @@ class SessionUtilsTest {
         // Given
         userSessionState?.update(UserSession())
         analytics.applyConfigurationAndroid {
-            trackLifecycleEvents = true
+//            trackLifecycleEvents = true
             trackAutoSession = true
-            logLevel = RudderLogger.LogLevel.DEBUG,
+//            logLevel = RudderLogger.LogLevel.DEBUG
         }
         // When
         analytics.startAutoSessionIfNeeded()
@@ -181,10 +180,10 @@ class SessionUtilsTest {
             )
         )
         analytics.applyConfigurationAndroid {
-            trackLifecycleEvents = true
+//            trackLifecycleEvents = true
             trackAutoSession = true
             sessionTimeoutMillis = 10000L
-            logLevel = RudderLogger.LogLevel.DEBUG,
+//            logLevel = RudderLogger.LogLevel.DEBUG,
         }
         // When
         analytics.startAutoSessionIfNeeded()
@@ -210,7 +209,7 @@ class SessionUtilsTest {
         )
         analytics.applyConfigurationAndroid {
 
-            trackLifecycleEvents = true
+//            trackLifecycleEvents = true
             trackAutoSession = true
         }
         // When
@@ -238,7 +237,7 @@ class SessionUtilsTest {
         analytics.applyConfigurationAndroid {
             trackAutoSession = true
             sessionTimeoutMillis = 0L
-            logLevel = RudderLogger.LogLevel.DEBUG,
+//            logLevel = RudderLogger.LogLevel.DEBUG,
         }
         busyWait(1)
         // When
@@ -261,10 +260,7 @@ class SessionUtilsTest {
         whenever(mockStorage.sessionId).thenReturn(sessionId)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(lastActiveTimestamp)
         analytics.applyConfigurationAndroid {
-            trackLifecycleEvents = true
             trackAutoSession = true
-            logLevel = RudderLogger.LogLevel.DEBUG,
-
         }
         busyWait(1)
         // When
@@ -287,9 +283,7 @@ class SessionUtilsTest {
         whenever(mockStorage.sessionId).thenReturn(sessionId)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(lastActiveTimestamp)
         analytics.applyConfigurationAndroid {
-            trackLifecycleEvents = true
             trackAutoSession = true
-            logLevel = RudderLogger.LogLevel.DEBUG,
         }
         // When
         analytics.initializeSessionManagement(null, null)
@@ -312,10 +306,7 @@ class SessionUtilsTest {
         whenever(mockStorage.sessionId).thenReturn(null)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(null)
         analytics.applyConfigurationAndroid {
-            trackLifecycleEvents = true
             trackAutoSession = true
-            logLevel = RudderLogger.LogLevel.DEBUG,
-
         }
         // When
         analytics.initializeSessionManagement(null, null)
@@ -378,11 +369,14 @@ class SessionUtilsTest {
         whenever(mockStorage.lastActiveTimestamp).thenReturn(lastActiveTimestamp)
         whenever(mockStorage.sessionId).thenReturn(sessionId)
         val newConfig = ApplicationProvider.getApplicationContext<Application>()
-            .initialConfigurationAndroid(mockStorage).copy(sessionTimeoutMillis = sessionTimeout,
-                shouldVerifySdk = false)
+            .initialConfigurationAndroid(mockStorage).let {
+                ConfigurationAndroidInitializationScope(it).apply {
+                    sessionTimeoutMillis = sessionTimeout
+                }
+            }.build()
         analytics = generateTestAnalytics(
             mock<JsonAdapter>(),
-            mockConfiguration = newConfig,
+            newConfig,
             storage = mockStorage
         )
         // When
@@ -405,9 +399,9 @@ class SessionUtilsTest {
         whenever(mockStorage.sessionId).thenReturn(sessionId)
         val newConfig = ApplicationProvider.getApplicationContext<Application>()
             .initialConfigurationAndroid(mockStorage).copy(sessionTimeoutMillis = sessionTimeout,
-                trackAutoSession = true,
+                trackAutoSession = true/*,
                 trackLifecycleEvents = true,
-                shouldVerifySdk = false)
+                shouldVerifySdk = false*/)
         analytics = generateTestAnalytics(
             mock<JsonAdapter>(),
             mockConfiguration = newConfig,
@@ -433,16 +427,17 @@ class SessionUtilsTest {
         whenever(mockStorage.trackAutoSession).thenReturn(false)
         whenever(mockStorage.lastActiveTimestamp).thenReturn(lastActiveTimestamp)
         whenever(mockStorage.sessionId).thenReturn(sessionId)
-        val newConfig = ApplicationProvider.getApplicationContext<Application>()
-            .initialConfigurationAndroid(mockStorage).copy(
+        val newConfig: ConfigurationAndroid = ApplicationProvider.getApplicationContext<Application>()
+            .initialConfigurationAndroid(mockStorage, false).copy(
                 sessionTimeoutMillis = sessionTimeout,
-                trackLifecycleEvents = true,
+//                trackLifecycleEvents = true,
                 trackAutoSession = true,
-                shouldVerifySdk = false
             )
         analytics = generateTestAnalytics(
             mock<JsonAdapter>(), mockConfiguration = newConfig, storage = mockStorage
         )
+        busyWait(10)
+
         // When
         analytics.initializeSessionManagement(
             mockStorage.sessionId,

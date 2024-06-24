@@ -34,7 +34,7 @@ object RudderAnalyticsUtils {
             initializationListener = { success, message ->
                 listener?.onAnalyticsInitialized(WRITE_KEY, success, message)
             },
-            configurationInitializer = {
+            configurationScope = {
                 dataPlaneUrl = DATA_PLANE_URL
                 controlPlaneUrl = CONTROL_PLANE_URL
                 trackLifecycleEvents = true

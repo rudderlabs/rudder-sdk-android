@@ -1,62 +1,61 @@
 package com.rudderstack.android
 
+import com.rudderstack.android.internal.AndroidLogger
+import com.rudderstack.core.Base64Generator
 import com.rudderstack.core.ConfigurationScope
+import com.rudderstack.core.RudderLogger
+import com.rudderstack.core.RudderOption
 import java.util.concurrent.ExecutorService
 
-sealed class ConfigurationAndroidMinimalScope(configurationAndroid: ConfigurationAndroid) :
-    ConfigurationScope(configurationAndroid) {
-    protected val application = configurationAndroid.application
-    var anonymousId: String? = configurationAndroid.anonymousId
-    var userId: String? = configurationAndroid.userId
-    var trackLifecycleEvents: Boolean = configurationAndroid.trackLifecycleEvents
-    var recordScreenViews: Boolean = configurationAndroid.recordScreenViews
-    var isPeriodicFlushEnabled: Boolean = configurationAndroid.isPeriodicFlushEnabled
-    var autoCollectAdvertId: Boolean = configurationAndroid.autoCollectAdvertId
-    var advertisingId: String? = configurationAndroid.advertisingId
-    var deviceToken: String? = configurationAndroid.deviceToken
-    var advertisingIdFetchExecutor : ExecutorService? = configurationAndroid.advertisingIdFetchExecutor
-    var trackAutoSession: Boolean = configurationAndroid.trackAutoSession
-    var sessionTimeoutMillis: Long = configurationAndroid.sessionTimeoutMillis
+sealed class ConfigurationAndroidMinimalScope(protected val currentConfiguration: ConfigurationAndroid):
+    ConfigurationScope(currentConfiguration) {
 
+    var anonymousId: String? = currentConfiguration.anonymousId
+    var userId: String? = currentConfiguration.userId
+    var advertisingId: String? = currentConfiguration.advertisingId
+    var deviceToken: String? = currentConfiguration.deviceToken
+    var trackAutoSession: Boolean = currentConfiguration.trackAutoSession
+    var sessionTimeoutMillis: Long = currentConfiguration.sessionTimeoutMillis
+    var autoCollectAdvertisingId: Boolean = currentConfiguration.autoCollectAdvertId
+
+    override fun build(): ConfigurationAndroid = ConfigurationAndroid(super.build(),
+        application = currentConfiguration.application,
+        anonymousId = anonymousId,
+        userId = userId,
+        advertisingId = advertisingId,
+        deviceToken = deviceToken,
+        trackAutoSession = trackAutoSession,
+        sessionTimeoutMillis = sessionTimeoutMillis,
+        autoCollectAdvertId = autoCollectAdvertisingId
+    )
 
 }
-class ConfigurationAndroidScope(configurationAndroid: ConfigurationAndroid) : ConfigurationAndroidMinimalScope(configurationAndroid){
-    override fun build(): ConfigurationAndroid {
-        return ConfigurationAndroid.invoke(super.build(),
-            application,
-            anonymousId,
-            userId,
-            trackLifecycleEvents,
-            recordScreenViews,
-            isPeriodicFlushEnabled,
-            autoCollectAdvertId,
-            advertisingId = advertisingId,
-            deviceToken = deviceToken,
-            advertisingIdFetchExecutor = advertisingIdFetchExecutor,
-            trackAutoSession = trackAutoSession,
-            sessionTimeoutMillis = sessionTimeoutMillis)
-    }
-}
+class ConfigurationAndroidScope(configurationAndroid: ConfigurationAndroid) : ConfigurationAndroidMinimalScope(configurationAndroid)
 class ConfigurationAndroidInitializationScope(configurationAndroid: ConfigurationAndroid) : ConfigurationAndroidMinimalScope(configurationAndroid){
     //These are yet to be supported.
     /*var multiProcessEnabled: Boolean = configurationAndroid.multiProcessEnabled
     var defaultProcessName: String? = configurationAndroid.defaultProcessName*/
+
+    var trackLifecycleEvents: Boolean = configurationAndroid.trackLifecycleEvents
+
+    var recordScreenViews: Boolean = configurationAndroid.recordScreenViews
+
+    var isPeriodicFlushEnabled: Boolean = configurationAndroid.isPeriodicFlushEnabled
+
+
+
+    var advertisingIdFetchExecutor : ExecutorService = configurationAndroid.advertisingIdFetchExecutor
+
+
+    var logLevel = RudderLogger.DEFAULT_LOG_LEVEL
     override fun build(): ConfigurationAndroid {
-        return ConfigurationAndroid.invoke(super.build(),
-            application,
-            anonymousId,
-            userId,
-            trackLifecycleEvents,
-            recordScreenViews,
-            isPeriodicFlushEnabled,
-            autoCollectAdvertId,
-//            multiProcessEnabled = multiProcessEnabled, //yet to be supported
-//            defaultProcessName = defaultProcessName,
-            advertisingId = advertisingId,
-            deviceToken = deviceToken,
-            advertisingIdFetchExecutor = advertisingIdFetchExecutor,
-            trackAutoSession = trackAutoSession,
-            sessionTimeoutMillis = sessionTimeoutMillis)
+        return ConfigurationAndroid(super.build(),
+            currentConfiguration.application,
+            trackLifecycleEvents = trackLifecycleEvents,
+                    recordScreenViews = recordScreenViews,
+                    isPeriodicFlushEnabled = isPeriodicFlushEnabled,
+                    advertisingIdFetchExecutor = advertisingIdFetchExecutor,
+            )
     }
 
 }

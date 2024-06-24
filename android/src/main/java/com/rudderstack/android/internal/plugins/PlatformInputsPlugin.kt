@@ -31,7 +31,7 @@ import com.rudderstack.android.AndroidUtils.isOnClassPath
 import com.rudderstack.android.AndroidUtils.isTv
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.LifecycleListenerPlugin
-import com.rudderstack.android.utilities.applyConfigurationAndroid
+import com.rudderstack.android.applyConfigurationAndroid
 import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration

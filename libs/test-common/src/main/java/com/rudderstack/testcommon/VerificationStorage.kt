@@ -12,7 +12,7 @@
  * permissions and limitations under the License.
  */
 
-package com.vagabond.testcommon
+package com.rudderstack.testcommon
 
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Storage

@@ -14,7 +14,6 @@
 
 package com.rudderstack.android.utilities
 
-import com.rudderstack.android.androidStorage
 import com.rudderstack.android.applyConfigurationAndroid
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.internal.states.UserSessionState

@@ -15,6 +15,8 @@
 package com.rudderstack.android
 
 import android.app.Application
+import androidx.annotation.VisibleForTesting
+import com.rudderstack.android.internal.AndroidLogger
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigurationScope
@@ -24,12 +26,18 @@ Unit){
     currentConfigurationAndroid?.let {
         val configurationAndroidScope = ConfigurationAndroidScope(it)
         applyConfigurationInternal(configurationAndroidScope, scope)
-    }?:currentConfiguration?.logger?.error(log = "No Configuration found!!")
+    }?:currentConfiguration?.rudderLogger?.error(log = "No Configuration found!!")
 }
 val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
     get() = (currentConfiguration as? ConfigurationAndroid)
 
 internal fun Application.initialConfigurationAndroid(storage: AndroidStorage):
         ConfigurationAndroid {
-    return ConfigurationAndroid(application = this, trackAutoSession = storage.trackAutoSession)
+    return initialConfigurationAndroid(storage, true)
+}
+@VisibleForTesting
+internal fun Application.initialConfigurationAndroid(storage: AndroidStorage, shouldVerifySdk: Boolean):
+        ConfigurationAndroid {
+    return ConfigurationAndroid(application = this, trackAutoSession = storage.trackAutoSession,
+        rudderLogger = AndroidLogger(), shouldVerifySdk = shouldVerifySdk)
 }

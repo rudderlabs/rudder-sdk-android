@@ -12,7 +12,7 @@ import com.rudderstack.core.RudderLogger
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.junit.After

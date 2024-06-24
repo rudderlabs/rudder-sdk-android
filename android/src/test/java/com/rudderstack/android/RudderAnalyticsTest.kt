@@ -29,7 +29,7 @@ class RudderAnalyticsTest {
             ApplicationProvider.getApplicationContext(),
             {
                 trackLifecycleEvents = false
-                logLevel = RudderLogger.LogLevel.DEBUG,
+                logLevel = RudderLogger.LogLevel.DEBUG
 
             }
         )
@@ -45,7 +45,7 @@ class RudderAnalyticsTest {
             ApplicationProvider.getApplicationContext(),
             {
                 trackLifecycleEvents = false
-                logLevel = RudderLogger.LogLevel.DEBUG,
+                logLevel = RudderLogger.LogLevel.DEBUG
             }
         )
 
@@ -54,7 +54,7 @@ class RudderAnalyticsTest {
             ApplicationProvider.getApplicationContext(),
             {
                 trackLifecycleEvents = false
-                logLevel = RudderLogger.LogLevel.DEBUG,
+                logLevel = RudderLogger.LogLevel.DEBUG
             }
         )
 
@@ -69,7 +69,7 @@ class RudderAnalyticsTest {
             writeKey, mock(),
             ApplicationProvider.getApplicationContext(),{
                 trackLifecycleEvents = false
-                logLevel = RudderLogger.LogLevel.DEBUG,
+                logLevel = RudderLogger.LogLevel.DEBUG
             }
         )
 
@@ -78,7 +78,7 @@ class RudderAnalyticsTest {
             ApplicationProvider.getApplicationContext(),
             {
                 trackLifecycleEvents = false
-                logLevel = RudderLogger.LogLevel.DEBUG,
+                logLevel = RudderLogger.LogLevel.DEBUG
 
             }
         )

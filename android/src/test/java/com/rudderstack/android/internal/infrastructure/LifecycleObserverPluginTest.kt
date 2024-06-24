@@ -14,8 +14,8 @@ import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.models.TrackProperties
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.vagabond.testcommon.assertArgument
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.assertArgument
+import com.rudderstack.testcommon.generateTestAnalytics
 import io.mockk.mockk
 import io.mockk.verify
 import junit.framework.TestSuite
@@ -63,7 +63,7 @@ abstract class LifecycleObserverPluginTest {
         whenever(mockConfigurationAndroid.analyticsExecutor).thenReturn(TestExecutor())
         whenever(mockConfigurationAndroid.shouldVerifySdk).thenReturn(false)
         whenever(mockConfigurationAndroid.rudderLogger).thenReturn(KotlinLogger())
-        whenever(mockConfigurationAndroid.copy()).thenReturn(mockConfigurationAndroid)
+//        whenever(mockConfigurationAndroid.copy()).thenReturn(mockConfigurationAndroid)
         mockStorage = mock<AndroidStorage>()
         whenever(mockStorage.versionName).thenReturn("1.0")
         analytics = generateTestAnalytics(jsonAdapter = mock(), mockConfigurationAndroid, storage = mockStorage, configDownloadService = mockControlPlane)

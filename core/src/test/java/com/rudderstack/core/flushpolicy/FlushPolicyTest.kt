@@ -16,7 +16,7 @@ package com.rudderstack.core.flushpolicy
 
 import com.rudderstack.core.Analytics
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import org.junit.After
 import org.junit.Before
 import org.junit.Test

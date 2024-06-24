@@ -12,7 +12,7 @@ import com.rudderstack.models.Message
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.models.android.UserSession
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf

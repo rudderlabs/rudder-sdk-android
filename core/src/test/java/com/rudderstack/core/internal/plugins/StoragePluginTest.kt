@@ -20,8 +20,8 @@ import com.rudderstack.core.Storage
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.TrackMessage
-import com.vagabond.testcommon.VerificationStorage
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.VerificationStorage
+import com.rudderstack.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.contains

@@ -54,7 +54,7 @@ public class ConfigurationBuilder {
         sdkVerifyRetryStrategy = configuration.getSdkVerifyRetryStrategy();
         dataPlaneUrl = configuration.getDataPlaneUrl();
         controlPlaneUrl = configuration.getControlPlaneUrl();
-        logger = configuration.getLogger();
+        rudderLogger = configuration.getRudderLogger();
         analyticsExecutor = configuration.getAnalyticsExecutor();
         networkExecutor = configuration.getNetworkExecutor();
         base64Generator = configuration.getBase64Generator();

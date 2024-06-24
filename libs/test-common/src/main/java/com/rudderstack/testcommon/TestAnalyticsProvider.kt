@@ -13,7 +13,7 @@
  */
 
 @file:JvmName("TestAnalyticsProvider")
-package com.vagabond.testcommon
+package com.rudderstack.testcommon
 
 import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
 import com.rudderstack.core.Analytics

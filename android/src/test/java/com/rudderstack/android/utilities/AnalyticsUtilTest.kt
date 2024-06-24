@@ -28,11 +28,12 @@ class AnalyticsUtilTest {
     @Test
     fun `given writeKey and configuration are passed, when anonymousId id is set, then assert that configuration has this anonymousId set as a property`() {
         val analytics = getInstance(
-            "testKey", ConfigurationAndroid(
-                ApplicationProvider.getApplicationContext(),
-                JacksonAdapter(),
-                logLevel = RudderLogger.LogLevel.DEBUG,
-            )
+            "testKey",
+            JacksonAdapter(),
+            ApplicationProvider.getApplicationContext(),
+            {
+                logLevel = RudderLogger.LogLevel.DEBUG
+            }
         )
 
         analytics.setAnonymousId("anon_id")
