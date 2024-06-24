@@ -390,7 +390,7 @@ abstract class MigrateV1ToV2UtilsTest {
                 Matchers.notNullValue(),
                 hasProperty("messageId", Matchers.equalTo(v1Entity1.v1Message.messageId)),
                 hasProperty("channel", Matchers.equalTo(v1Entity1.v1Message.channel)),
-                not(hasProperty("eventName", Matchers.equalTo(v1Entity1.v1Message.event))),
+                hasProperty("eventName", Matchers.equalTo(v1Entity1.v1Message.event)),
                 hasProperty(
                     "type", Matchers.equalTo(
                         Message.EventType.fromValue(
