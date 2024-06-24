@@ -542,7 +542,7 @@ class ScreenMessage internal constructor(
     companion object {
         @JvmStatic
         fun create(
-            name: String? = null,
+            name: String,
             timestamp: String,
             anonymousId: String? = null,
             userId: String? = null,
