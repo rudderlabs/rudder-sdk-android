@@ -524,10 +524,12 @@ class ScreenMessage internal constructor(
      */
 
     @SerializedName("properties") @JsonProperty("properties") @Json(name = "properties") val properties: ScreenProperties? = null,
+    @SerializedName("event") @field:JsonProperty("event") @param:JsonProperty("event") @get:JsonProperty(
+        "event"
+    ) @Json(name = "event") val eventName: String? = null,
     @JsonProperty("not_applicable", required = false) // work-around to ignore value param
     // jackson serialisation
     _messageId: String? = null,
-
     ) : Message(
     EventType.SCREEN,
     context,
@@ -540,16 +542,13 @@ class ScreenMessage internal constructor(
     companion object {
         @JvmStatic
         fun create(
-
+            name: String? = null,
             timestamp: String,
             anonymousId: String? = null,
             userId: String? = null,
-
             destinationProps: MessageDestinationProps? = null,
-            name: String? = null,
             category: String? = null,
             properties: ScreenProperties? = null,
-
             traits: Map<String, Any?>? = null,
             externalIds: List<Map<String, String>>? = null,
             customContextMap: Map<String, Any>? = null,
@@ -562,6 +561,7 @@ class ScreenMessage internal constructor(
             }.let {
                 if (category != null) it.plus("category" to category) else it
             },
+            name,
             _messageId,
         )
     }
@@ -575,7 +575,7 @@ class ScreenMessage internal constructor(
         name: String? = this.properties?.get("name") as String?,
         category: String? = this.properties?.get("category") as String?,
         properties: ScreenProperties? = this.properties,
-
+        eventName: String? = this.eventName,
         ) = ScreenMessage(
         context, anonymousId, userId, timestamp, destinationProps,
         (properties ?: ScreenProperties()).let {
@@ -583,6 +583,7 @@ class ScreenMessage internal constructor(
         }.let {
             if (category != null) it.plus("category" to category) else it
         },
+        eventName,
         _messageId = this.messageId,
     )
 
