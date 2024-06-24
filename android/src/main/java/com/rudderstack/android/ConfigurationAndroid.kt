@@ -352,7 +352,7 @@ interface ConfigurationAndroid : Configuration {
         const val GZIP_ENABLED: Boolean = true
         const val SHOULD_VERIFY_SDK: Boolean = true
         const val TRACK_LIFECYCLE_EVENTS = true
-        const val RECORD_SCREEN_VIEWS = true
+        const val RECORD_SCREEN_VIEWS = false
         const val IS_PERIODIC_FLUSH_ENABLED = false
         const val AUTO_COLLECT_ADVERT_ID = false
         const val MULTI_PROCESS_ENABLED = false
