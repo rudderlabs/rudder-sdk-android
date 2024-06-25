@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.23.2](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.23.1...v1.23.2) (2024-06-25)
+
+
+### Bug Fixes
+
+* database crash issue ([#449](https://github.com/rudderlabs/rudder-sdk-android/issues/449)) ([9251b68](https://github.com/rudderlabs/rudder-sdk-android/commit/9251b6882162d61f6300f16d543bec9864a397cc))
+
 ### [1.23.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.23.0...v1.23.1) (2024-05-28)
 
 
