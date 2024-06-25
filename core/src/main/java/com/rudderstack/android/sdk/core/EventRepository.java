@@ -214,7 +214,6 @@ class EventRepository {
                 dbEncryption.getPersistenceProviderFactoryClassName(), dbEncryption.key);
         this.dbManager = DBPersistentManager.getInstance(application, dbManagerParams);
         dbManager.checkForMigrations();
-        dbManager.startHandlerThread();
     }
 
     private void initiatePreferenceManager(Application application) {
