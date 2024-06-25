@@ -67,7 +67,7 @@ internal class SessionPlugin : Plugin {
         message: Message, it: UserSession
     ): Message {
         val context = message.context
-        var newContext = context?.withSessionId(it.sessionId.toString())
+        var newContext = context?.withSessionId(it.sessionId)
         if (it.sessionStart) newContext = newContext?.withSessionStart(true)
 
         updateSessionState(it)

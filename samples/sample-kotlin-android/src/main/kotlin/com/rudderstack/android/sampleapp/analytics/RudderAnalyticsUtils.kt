@@ -40,8 +40,9 @@ object RudderAnalyticsUtils {
                 trackLifecycleEvents = true
                 recordScreenViews = true
                 isPeriodicFlushEnabled = true
-                autoCollectAdvertId = true
-                logLevel = RudderLogger.LogLevel.DEBUG,
+                autoCollectAdvertisingId = true
+                trackAutoSession = true
+                logLevel = RudderLogger.LogLevel.DEBUG
             }
         )
         _rudderReporter = DefaultRudderReporter(
