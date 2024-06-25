@@ -143,3 +143,5 @@ private fun Analytics.attachSavedContextIfAvailable() {
         processNewContext(it)
     }
 }
+
+fun String.Companion.empty(): String = ""
