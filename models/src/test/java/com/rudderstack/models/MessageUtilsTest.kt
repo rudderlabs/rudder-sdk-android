@@ -10,7 +10,7 @@ import org.junit.Test
 
 class MessageUtilsTest {
     @Test
-    fun `optAdd with both contexts null`() {
+    fun `given both the contexts are null, when optAddContext is called, then it should return null`() {
         val context1: MessageContext? = null
         val context2: MessageContext? = null
 
@@ -20,7 +20,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun `optAdd with first context null`() {
+    fun `given first context is null, when optAddContext is called, then it should return second context`() {
         val context1: MessageContext? = null
         val context2: MessageContext = mapOf("key" to "value")
 
@@ -30,7 +30,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun `optAdd with second context null`() {
+    fun `given second context is null, when optAddContext is called, then it should return first context`() {
         val context1: MessageContext = mapOf("key" to "value")
         val context2: MessageContext? = null
 
@@ -40,15 +40,16 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun `optAdd with overlapping traits`() {
+    fun `given there are overlapping keys in both contexts, when optAddContext is called, then it should return the merged context while prioritizing the key-value pair from the first context`() {
         val context1: MessageContext = createContext(
             mapOf("trait1" to "value1", "common" to "value1")
         )
         val context2: MessageContext = createContext(
             mapOf("trait2" to "value2", "common" to "value2")
         )
+
         val result = context1 optAddContext context2
-        println(result)
+
         assertThat(
             result?.traits, allOf(
                 hasEntry("trait1", "value1"),
@@ -59,7 +60,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun `optAdd with non-overlapping customContexts`() {
+    fun `given there are no overlapping keys in both contexts, when optAddContext is called, then it should return the merged context`() {
         val context1: MessageContext = mapOf(
             Constants.CUSTOM_CONTEXT_MAP_ID to mapOf("context1" to "value1")
         )
@@ -78,19 +79,19 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun `optAdd with overlapping externalIds`() {
-        val savedContext: MessageContext = createContext(
-            externalIds = listOf(
-                mapOf("type" to "brazeExternalID", "id" to "braze-1234"),
-                mapOf("type" to "amplitudeExternalID", "id" to "amp-5678"),
-                mapOf("type" to "adobeExternalID", "id" to "fire-67890"),
-            )
-        )
+    fun `given there are overlapping externalIds in both contexts, when optAddContext is called, then it should return the merged context while prioritizing the key-value pair from the first context`() {
         val currentEventContext: MessageContext = createContext(
             externalIds = listOf(
                 mapOf("type" to "brazeExternalID", "id" to "braze-67890-override"),
                 mapOf("type" to "amplitudeExternalID", "id" to "amp-5678-override"),
                 mapOf("type" to "firebaseExternalID", "id" to "fire-67890"),
+            )
+        )
+        val savedContext: MessageContext = createContext(
+            externalIds = listOf(
+                mapOf("type" to "brazeExternalID", "id" to "braze-1234"),
+                mapOf("type" to "amplitudeExternalID", "id" to "amp-5678"),
+                mapOf("type" to "adobeExternalID", "id" to "fire-67890"),
             )
         )
 
@@ -108,7 +109,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun `optAdd with extra keys`() {
+    fun `given there are overlapping extra keys in both contexts, when optAddContext is called, then it should return the merged context while prioritizing the key-value pair from the first context`() {
         val context1: MessageContext = mapOf("extra1" to "value1", "common" to "value1")
         val context2: MessageContext = mapOf("extra2" to "value2", "common" to "value2")
 
