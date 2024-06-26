@@ -27,7 +27,15 @@ sealed class ConfigurationAndroidMinimalScope(protected val currentConfiguration
         deviceToken = deviceToken,
         trackAutoSession = trackAutoSession,
         sessionTimeoutMillis = sessionTimeoutMillis,
-        autoCollectAdvertId = autoCollectAdvertisingId
+        autoCollectAdvertId = autoCollectAdvertisingId,
+        trackLifecycleEvents = currentConfiguration.trackLifecycleEvents,
+        recordScreenViews = currentConfiguration.recordScreenViews,
+        isPeriodicFlushEnabled = currentConfiguration.isPeriodicFlushEnabled,
+        multiProcessEnabled = currentConfiguration.multiProcessEnabled,
+        defaultProcessName = currentConfiguration.defaultProcessName,
+        rudderLogger = currentConfiguration.rudderLogger,
+        collectDeviceId = currentConfiguration.collectDeviceId,
+        advertisingIdFetchExecutor = currentConfiguration.advertisingIdFetchExecutor
     )
 
 }
@@ -54,9 +62,10 @@ class ConfigurationAndroidInitializationScope(configurationAndroid: Configuratio
 
     var logLevel = RudderLogger.DEFAULT_LOG_LEVEL
     override fun build(): ConfigurationAndroid {
+        currentConfiguration.rudderLogger.activate(logLevel)
         return ConfigurationAndroid(
-            super.build(),
-            currentConfiguration.application,
+            configuration = super.build(),
+            application = currentConfiguration.application,
             anonymousId = anonymousId,
             userId = userId,
             advertisingId = advertisingId,

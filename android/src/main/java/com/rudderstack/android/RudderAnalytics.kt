@@ -1,6 +1,7 @@
 package com.rudderstack.android
 
 import android.app.Application
+import android.util.Log
 import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
 import com.rudderstack.android.internal.infrastructure.AppInstallUpdateTrackerPlugin
 import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
@@ -72,6 +73,7 @@ class RudderAnalytics private constructor() {
                     if(configurationScope == null) it
                     else ConfigurationAndroidInitializationScope(it).let {
                         it.configurationScope()
+                        Log.e("omg tle", it.trackLifecycleEvents.toString())
                         it.build()
                     }
                 },

@@ -37,7 +37,7 @@ object RudderAnalyticsUtils {
             configurationScope = {
                 dataPlaneUrl = DATA_PLANE_URL
                 controlPlaneUrl = CONTROL_PLANE_URL
-                trackLifecycleEvents = true
+                trackLifecycleEvents = false
                 recordScreenViews = true
                 isPeriodicFlushEnabled = true
                 autoCollectAdvertisingId = true
