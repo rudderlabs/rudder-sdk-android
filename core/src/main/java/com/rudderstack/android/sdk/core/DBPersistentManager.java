@@ -432,8 +432,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             } else {
                 RudderLogger.logInfo("DBPersistentManager: getDBRecordCount: DB is empty");
             }
-        }
-        catch (SQLiteDatabaseCorruptException ex) {
+        } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
             ReportManager.reportError(ex);
         } finally {
@@ -512,6 +511,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             Thread.currentThread().interrupt();
         }
     }
+
     private void waitTillMigrationsAreDone() {
         if(migrationSemaphore.availablePermits() == 1 ){
             return;
