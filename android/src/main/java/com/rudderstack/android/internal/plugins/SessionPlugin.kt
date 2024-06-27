@@ -40,10 +40,9 @@ internal class SessionPlugin : Plugin {
 
     override fun updateConfiguration(configuration: Configuration) {
         if (configuration !is ConfigurationAndroid) return
-        if (currentConfiguration?.trackAutoSession == configuration.trackAutoSession
-            && currentConfiguration?.trackLifecycleEvents == configuration.trackLifecycleEvents) return
+        if (currentConfiguration?.trackAutoSession == configuration.trackAutoSession) return
         _analytics?.androidStorage?.setTrackAutoSession(configuration.trackAutoSession)
-        if( !configuration.trackAutoSession || !configuration.trackLifecycleEvents) {
+        if( !configuration.trackAutoSession) {
             _analytics?.updateSessionEnd()
             return
         }
