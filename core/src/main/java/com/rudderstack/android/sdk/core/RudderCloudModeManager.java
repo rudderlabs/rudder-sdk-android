@@ -10,6 +10,7 @@ import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -119,8 +120,16 @@ public class RudderCloudModeManager {
      * check if the number of events in the db crossed the dbCountThreshold then delete the older events which are in excess.
      */
     private void maintainDBThreshold() {
-        // get current record count from db
-        int recordCount = dbManager.getDBRecordCount();
+        int recordCount = 0;
+        try {
+            // get current record count from db
+            recordCount = dbManager.getDBRecordCount();
+        }
+        // Added RuntimeException in order to catch CursorWindowAllocationException (this requires API level 33 and above).
+        catch (RuntimeException ex) {
+            RudderLogger.logError("CloudModeManager: maintainDBThreshold: Exception while fetching count from DB due to: " + Arrays.toString(ex.getStackTrace()));
+            ReportManager.reportError(ex);
+        }
         RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: getPayloadFromMessages: DBRecordCount: %d", recordCount));
         // if record count exceeds threshold count, remove older events
         if (recordCount > config.getDbCountThreshold()) {

@@ -22,7 +22,6 @@ import com.rudderstack.android.sdk.core.persistence.PersistenceProvider;
 import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
@@ -434,15 +433,13 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
                 RudderLogger.logInfo("DBPersistentManager: getDBRecordCount: DB is empty");
             }
         }
-        // Added Runtime exception in order to catch SQLiteDatabaseCorruptException and CursorWindowAllocationException (this requires API level 33 and above).
         catch (SQLiteDatabaseCorruptException ex) {
-            RudderLogger.logError("DBPersistentManager: getDBRecordCount: Exception while fetching count from DB due to: " + Arrays.toString(ex.getStackTrace()));
+            RudderLogger.logError(ex);
             ReportManager.reportError(ex);
         } finally {
             if (cursor != null) {
                 // release cursor
                 cursor.close();
-                count = 0;
             }
         }
 
