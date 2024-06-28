@@ -1,11 +1,13 @@
 package com.rudderstack.core.internal.plugins
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils.MAX_EVENT_SIZE
 import com.rudderstack.core.RudderUtils.getUTF8Length
 import com.rudderstack.models.Message
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
+import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -14,8 +16,13 @@ import java.util.concurrent.atomic.AtomicReference
 class EventSizeFilterPlugin : Plugin {
 
     private val currentConfigurationAtomic = AtomicReference<Configuration?>()
+    private var _analyticsRef = WeakReference<Analytics>(null)
     private val currentConfiguration
         get() = currentConfigurationAtomic.get()
+
+    override fun setup(analytics: Analytics) {
+        _analyticsRef = WeakReference(analytics)
+    }
 
     override fun updateConfiguration(configuration: Configuration) {
         currentConfigurationAtomic.set(configuration)
@@ -24,7 +31,9 @@ class EventSizeFilterPlugin : Plugin {
     override fun intercept(chain: Plugin.Chain): Message {
         currentConfiguration?.let { config ->
             val messageJSON = chain.message().let {
-                config.jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Message>() {})
+                _analyticsRef.get()?.jsonAdapter?.writeToJson(it, object :
+                RudderTypeAdapter<Message>()
+                {})
             }
             val messageSize = messageJSON.toString().getUTF8Length()
             if (messageSize > MAX_EVENT_SIZE) {
@@ -33,5 +42,9 @@ class EventSizeFilterPlugin : Plugin {
             }
         }
         return chain.proceed(chain.message())
+    }
+
+    override fun onShutDown() {
+        _analyticsRef.clear()
     }
 }

@@ -19,7 +19,7 @@ import com.rudderstack.models.MessageContext
 private const val CONTEXT_SESSION_ID_KEY = "sessionId"
 private const val CONTEXT_SESSION_START_KEY = "sessionStart"
 
-internal fun MessageContext.withSessionId(sessionId: String): MessageContext {
+internal fun MessageContext.withSessionId(sessionId: Long): MessageContext {
     return this.with(CONTEXT_SESSION_ID_KEY to sessionId)
 }
 internal fun MessageContext.withSessionStart(sessionStart: Boolean): MessageContext {
@@ -28,7 +28,7 @@ internal fun MessageContext.withSessionStart(sessionStart: Boolean): MessageCont
 internal fun MessageContext.removeSessionContext(): MessageContext {
     return this.minus(listOf(CONTEXT_SESSION_ID_KEY, CONTEXT_SESSION_START_KEY))
 }
-internal val MessageContext.sessionId: String?
-    get() = this[CONTEXT_SESSION_ID_KEY] as? String
+internal val MessageContext.sessionId: Long?
+    get() = this[CONTEXT_SESSION_ID_KEY] as? Long
 internal val MessageContext.sessionStart: Boolean?
     get() = this[CONTEXT_SESSION_START_KEY] as? Boolean

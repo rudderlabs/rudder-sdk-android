@@ -1,5 +1,6 @@
 package com.rudderstack.android.compat
 
+import android.app.Application
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.core.RudderLogger
@@ -17,7 +18,7 @@ class ConfigurationAndroidBuilderTest {
     @Test
     fun `when logLevel DEBUG is passed, then assert that configuration has this logLevel set as a property`() {
         val configurationAndroidBuilder =
-            ConfigurationAndroidBuilder(ApplicationProvider.getApplicationContext(), JacksonAdapter())
+            ConfigurationAndroidBuilder(ApplicationProvider.getApplicationContext() as Application)
                 .withDataPlaneUrl("https://rudderstack.com")
                 .withLogLevel(RudderLogger.LogLevel.DEBUG)
                 .build()
@@ -28,7 +29,7 @@ class ConfigurationAndroidBuilderTest {
     @Test
     fun `when no logLevel is passed, then assert that configuration has logLevel set to NONE`() {
         val configurationAndroidBuilder =
-            ConfigurationAndroidBuilder(ApplicationProvider.getApplicationContext(), JacksonAdapter())
+            ConfigurationAndroidBuilder(ApplicationProvider.getApplicationContext() as Application)
                 .withDataPlaneUrl("https://rudderstack.com")
                 .build()
 

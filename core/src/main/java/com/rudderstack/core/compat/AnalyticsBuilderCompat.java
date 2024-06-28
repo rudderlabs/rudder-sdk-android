@@ -1,6 +1,6 @@
 /*
  * Creator: Debanjan Chatterjee on 13/10/22, 12:29 PM Last modified: 13/10/22, 12:29 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
+ * Copyright: All rights reserved 2022 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -18,10 +18,12 @@ import com.rudderstack.core.Analytics;
 import com.rudderstack.core.BasicStorageImpl;
 import com.rudderstack.core.ConfigDownloadService;
 import com.rudderstack.core.Configuration;
+import com.rudderstack.core.ConfigurationScope;
 import com.rudderstack.core.DataUploadService;
 import com.rudderstack.core.Storage;
 import com.rudderstack.core.internal.ConfigDownloadServiceImpl;
 import com.rudderstack.core.internal.DataUploadServiceImpl;
+import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
@@ -29,8 +31,9 @@ import kotlin.jvm.functions.Function2;
 
 public class AnalyticsBuilderCompat {
     private final String writeKey;
+    private final JsonAdapter jsonAdapter;
 
-    private final Configuration configuration;
+    private Configuration configuration = Configuration.getDEFAULT();
     private Storage storage = new BasicStorageImpl();
     private DataUploadService dataUploadService = null;
     private ConfigDownloadService configDownloadService = null;
@@ -38,9 +41,9 @@ public class AnalyticsBuilderCompat {
     private Function1<Analytics, Unit> shutdownHook = null;
     private Function2<Boolean, String, Unit> initializationListener;
 
-    public AnalyticsBuilderCompat(String writeKey, Configuration configuration) {
+    public AnalyticsBuilderCompat(String writeKey, JsonAdapter jsonAdapter) {
         this.writeKey = writeKey;
-        this.configuration = configuration;
+        this.jsonAdapter = jsonAdapter;
     }
 
     public AnalyticsBuilderCompat withDataUploadService(DataUploadService dataUploadService) {
@@ -74,11 +77,16 @@ public class AnalyticsBuilderCompat {
         return this;
     }
 
+    public AnalyticsBuilderCompat withConfiguration(Configuration configuration){
+        this.configuration = configuration;
+        return this;
+    }
+
     public Analytics build() {
-        return new Analytics(writeKey, configuration,
+        return new Analytics(writeKey, jsonAdapter, configuration,
                 dataUploadService == null ? new DataUploadServiceImpl(
-                        writeKey) : dataUploadService, configDownloadService == null ?
-                new ConfigDownloadServiceImpl(writeKey) : configDownloadService,
+                        writeKey, jsonAdapter) : dataUploadService, configDownloadService == null ?
+                new ConfigDownloadServiceImpl(writeKey, jsonAdapter) : configDownloadService,
                 storage,
                 initializationListener, shutdownHook
         );
@@ -93,4 +101,5 @@ public class AnalyticsBuilderCompat {
     public interface InitializationListener {
         void onInitialized(boolean success, String message);
     }
+
 }

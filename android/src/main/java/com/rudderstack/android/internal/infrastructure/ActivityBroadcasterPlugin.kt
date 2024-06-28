@@ -37,10 +37,11 @@ internal class ActivityBroadcasterPlugin(
 
             override fun onActivityStarted(activity: Activity) {
                 incrementActivityCount()
-                broadcastActivityStart(activity)
                 if (activityCount.get() == 1) {
-                    broadCastApplicationStart()
+                    broadCastApplicationForegrounded()
                 }
+                broadcastActivityStart(activity)
+
             }
 
             override fun onActivityResumed(activity: Activity) {
@@ -54,8 +55,9 @@ internal class ActivityBroadcasterPlugin(
             override fun onActivityStopped(activity: Activity) {
                 if (analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true) {
                     decrementActivityCount()
+                    broadcastActivityStop(activity)
                     if (activityCount.get() == 0) {
-                        broadCastApplicationStop()
+                        broadCastApplicationBackgrounded()
                     }
                 }
             }
@@ -85,6 +87,20 @@ internal class ActivityBroadcasterPlugin(
             }
         }
     }
+    private fun broadcastActivityStop(activity: Activity) {
+        analytics?.applyInfrastructureClosure {
+            if (this is LifecycleListenerPlugin) {
+                setCurrentActivity(null)
+                onActivityStopped(activity.localClassName)
+            }
+        }
+        analytics?.applyMessageClosure {
+            if (this is LifecycleListenerPlugin) {
+                setCurrentActivity(null)
+                onActivityStopped(activity.localClassName)
+            }
+        }
+    }
 
     private fun decrementActivityCount() {
         activityCount.decrementAndGet()
@@ -95,7 +111,7 @@ internal class ActivityBroadcasterPlugin(
     }
 
 
-    private fun broadCastApplicationStart() {
+    private fun broadCastApplicationForegrounded() {
         analytics?.applyInfrastructureClosure {
             if (this is LifecycleListenerPlugin) {
                 this.onAppForegrounded()
@@ -108,17 +124,15 @@ internal class ActivityBroadcasterPlugin(
         }
     }
 
-    private fun broadCastApplicationStop() {
+    private fun broadCastApplicationBackgrounded() {
         analytics?.applyInfrastructureClosure {
             if (this is LifecycleListenerPlugin) {
-                setCurrentActivity(null)
                 this.onAppBackgrounded()
             }
         }
         analytics?.applyMessageClosure {
 
             if (this is LifecycleListenerPlugin) {
-                setCurrentActivity(null)
                 this.onAppBackgrounded()
             }
         }

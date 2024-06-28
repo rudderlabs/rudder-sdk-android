@@ -555,14 +555,14 @@ class Dao<T : Entity>(
             )?.let {
                 it.lastPathSegment?.toLongOrNull()
             } ?: -1)
-        } else {
-            (database.openDatabase?.insertWithOnConflict(
+        } else if(database.isOpen){
+            (database.insertWithOnConflict(
                 tableName,
                 nullHackColumn,
                 contentValues,
                 conflictAlgorithm,
             ) ?: -1)
-        }
+        }else -1
     }
 
     // read

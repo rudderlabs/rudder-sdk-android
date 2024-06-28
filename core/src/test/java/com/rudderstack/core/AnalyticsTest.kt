@@ -23,8 +23,8 @@ import com.rudderstack.models.*
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
-import com.vagabond.testcommon.assertArgument
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.assertArgument
+import com.rudderstack.testcommon.generateTestAnalytics
 import junit.framework.TestSuite
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat
@@ -105,8 +105,8 @@ abstract class AnalyticsTest {
         }
         analytics = Analytics(
             writeKey,
+            jsonAdapter,
             Configuration(
-                jsonAdapter,
                 shouldVerifySdk = false
             ),
             storage = storage,
@@ -132,8 +132,8 @@ abstract class AnalyticsTest {
         analytics.shutdown()
         val isDone = AtomicBoolean(false)
         analytics = Analytics(
-            writeKey, Configuration(
-                jsonAdapter, shouldVerifySdk = true
+            writeKey, jsonAdapter, Configuration(
+                shouldVerifySdk = true
             ), initializationListener = { success, message ->
                 assertThat(success, `is`(true))
                 assertThat(message, nullValue())
@@ -159,8 +159,7 @@ abstract class AnalyticsTest {
             }
         }
         analytics = Analytics(
-            "some wrong write key", Configuration(
-                jsonAdapter,
+            "some wrong write key", jsonAdapter, Configuration(
                 sdkVerifyRetryStrategy = RetryStrategy.exponential(1),
                 shouldVerifySdk = true
             ), initializationListener = { success, message ->
@@ -192,8 +191,8 @@ abstract class AnalyticsTest {
         analytics.shutdown()
         val retryStrategy = mock<RetryStrategy>()
         analytics = Analytics(
-            writeKey, Configuration(
-                jsonAdapter, sdkVerifyRetryStrategy = retryStrategy, shouldVerifySdk = true
+            writeKey, jsonAdapter, Configuration(
+                sdkVerifyRetryStrategy = retryStrategy, shouldVerifySdk = true
             ), configDownloadService = mockedControlPlane
         )
         assertThat(analytics.currentConfiguration?.sdkVerifyRetryStrategy, `is`(retryStrategy))
@@ -203,7 +202,7 @@ abstract class AnalyticsTest {
     fun `test identify`() {
         println("running test test identify")
         analytics.shutdown()
-        analytics = generateTestAnalytics(Configuration(jsonAdapter))
+        analytics = generateTestAnalytics(jsonAdapter, Configuration())
         analytics.identify("user_id", mapOf("trait-1" to "t-1", "trait-2" to "t-2"))
         analytics.assertArgument { input, output ->
             println("Input: $input\nOutput: $output")
@@ -233,7 +232,7 @@ abstract class AnalyticsTest {
     fun `test track event`() {
         println("running test test track event")
         analytics.shutdown()
-        analytics = generateTestAnalytics(Configuration(jsonAdapter))
+        analytics = generateTestAnalytics(jsonAdapter, Configuration())
         analytics.track {
             event("event-1")
             userId("user_id")
@@ -267,7 +266,7 @@ abstract class AnalyticsTest {
     fun `test alias event`() {
         println("running test test alias event")
         analytics.shutdown()
-        analytics = generateTestAnalytics(Configuration(jsonAdapter))
+        analytics = generateTestAnalytics(jsonAdapter, Configuration())
         analytics.alias {
             userId("user_id")
             newId("new_id")
@@ -295,7 +294,8 @@ abstract class AnalyticsTest {
         println("running test test with later initialized destinations")
         analytics.shutdown()
         analytics = generateTestAnalytics(
-            Configuration(jsonAdapter, shouldVerifySdk = true), mockedControlPlane
+            jsonAdapter,
+            Configuration(shouldVerifySdk = true), mockedControlPlane
         )
         val laterInitDestPlugin = mock(DestinationPlugin::class.java)
         whenever(laterInitDestPlugin.name).thenReturn("enabled-destination")
@@ -337,8 +337,9 @@ abstract class AnalyticsTest {
         analytics.shutdown()
         analytics = Analytics(
             writeKey,
+            jsonAdapter,
             Configuration(
-                jsonAdapter, shouldVerifySdk = true
+                shouldVerifySdk = true
             ),
             storage = storage,
             initializationListener = { success, message ->
@@ -415,9 +416,8 @@ abstract class AnalyticsTest {
     fun `test messages flushed when sent from different threads based on flushQ size`() {
         println("running test test messages flushed when sent from different threads based on flushQ size")
         analytics.applyConfiguration {
-            copy(
-                flushQueueSize = 300, maxFlushInterval = 10_000
-            )
+            flushQueueSize = 300
+            maxFlushInterval = 10_000
         }
 
         (1..2).map {
@@ -431,9 +431,7 @@ abstract class AnalyticsTest {
             storageCount.set(storage.getDataSync().count())
         }
         analytics.applyConfiguration {
-            copy(
-                flushQueueSize = 3
-            )
+            flushQueueSize = 3
         }
         while (storage.getDataSync().isNotEmpty()) {
         }
@@ -448,9 +446,8 @@ abstract class AnalyticsTest {
     fun `test messages flushed when sent from different threads based on periodic timeout`() {
         println("running test test messages flushed when sent from different threads based on periodic timeout")
         analytics.applyConfiguration {
-            copy(
-                flushQueueSize = 100, maxFlushInterval = 10000 // so no flush takes place while
-            )
+            flushQueueSize = 100
+            maxFlushInterval = 10000 // so no flush takes place while
         }
         assertThat(analytics.currentConfiguration?.maxFlushInterval, `is`(10000))
 //        val trackedMsgCount = AtomicInteger(0)
@@ -473,9 +470,8 @@ abstract class AnalyticsTest {
             dataStoredCount.set(storage.getDataSync().count())
         }
         analytics.applyConfiguration {
-            copy(
-                flushQueueSize = 100, maxFlushInterval = 100 // so that there is flush called
-            )
+            flushQueueSize = 100
+            maxFlushInterval = 100 // so that there is flush called
         }
         assertThat(analytics.currentConfiguration?.maxFlushInterval, `is`(100))
         val timeNow = System.currentTimeMillis()
@@ -526,9 +522,7 @@ abstract class AnalyticsTest {
         // call shutdown and wait for sometime to check the storage count.
 
         analytics.applyConfiguration {
-            copy(
-                flushQueueSize = 20
-            )
+            flushQueueSize = 20
         }
         val events = (1..10).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
@@ -547,9 +541,9 @@ abstract class AnalyticsTest {
         //we will track few events, less than flush_queue_size,
         // call flush and wait for sometime to check the storage count.
         analytics.applyConfiguration {
-            copy(
-                flushQueueSize = 200, maxFlushInterval = 10_000_00
-            )
+
+            flushQueueSize = 200
+            maxFlushInterval = 10_000_00
         }
 
         val events = (1..10).map {
@@ -574,9 +568,8 @@ abstract class AnalyticsTest {
         properties["property"] = generateDataOfSize(1024 * 30)
 
         analytics.applyConfiguration {
-            copy(
-                flushQueueSize = 500, maxFlushInterval = 10_000_00
-            )
+            flushQueueSize = 500
+            maxFlushInterval = 10_000_00
         }
 
         val events = (1..totalMessages).map {
@@ -648,8 +641,7 @@ abstract class AnalyticsTest {
         println("running test test should verify sdk")
         val spyControlPlane = spy(ConfigDownloadService::class.java)
         Analytics(
-            writeKey, Configuration(
-                jsonAdapter
+            writeKey, jsonAdapter, Configuration(
             ), configDownloadService = spyControlPlane
         ).shutdown()
         verify(spyControlPlane, times(0)).download(
@@ -661,7 +653,8 @@ abstract class AnalyticsTest {
     fun `test flush after shutdown`() {
         println("running test test flush after shutdown")
         analytics.applyConfiguration {
-            copy(flushQueueSize = 100, maxFlushInterval = 10000)
+            flushQueueSize = 100
+            maxFlushInterval = 10000
         }
         val events = (1..5).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
@@ -698,8 +691,7 @@ abstract class AnalyticsTest {
         val spyDataUploadService = spy(DataUploadService::class.java)
 
         analytics = Analytics(
-            writeKey, Configuration(
-                jsonAdapter
+            writeKey, jsonAdapter, Configuration(
             ), storage = storage, initializationListener = { success, message ->
                 assertThat(success, `is`(true))
             }, dataUploadService = spyDataUploadService, configDownloadService = mockedControlPlane
@@ -724,8 +716,8 @@ abstract class AnalyticsTest {
         }
         val someAnalytics = Analytics(
             writeKey,
+            jsonAdapter,
             Configuration(
-                jsonAdapter
             ),
             storage = storage,
             initializationListener = { success, message ->
@@ -833,8 +825,8 @@ abstract class AnalyticsTest {
         }
         analytics = Analytics(
             writeKey,
+            jsonAdapter,
             Configuration(
-                jsonAdapter,
                 maxFlushInterval = 15_000,
                 flushQueueSize = 100,
 
@@ -894,9 +886,7 @@ abstract class AnalyticsTest {
      */
     private fun calculateNumberOfBatches(message: Message?, totalNumberOfMessages: Int): Int {
         val messageJSON = message?.let {
-            analytics.currentConfiguration?.jsonAdapter?.writeToJson(
-                it,
-                object : RudderTypeAdapter<Message>() {})
+            jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Message>() {})
         } ?: return 0
 
         val individualMessageSize = messageJSON.getUTF8Length()

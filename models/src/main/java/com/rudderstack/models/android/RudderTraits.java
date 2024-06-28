@@ -1,6 +1,6 @@
 /*
  * Creator: Debanjan Chatterjee on 15/12/21, 3:22 PM Last modified: 14/12/21, 8:22 PM
- * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
+ * Copyright: All rights reserved 2021 http://rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a

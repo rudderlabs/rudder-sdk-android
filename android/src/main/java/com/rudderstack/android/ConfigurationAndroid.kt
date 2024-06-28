@@ -47,7 +47,6 @@ interface ConfigurationAndroid : Configuration {
      * @constructor
      * TODO
      *
-     * @param jsonAdapter
      * @param options
      * @param flushQueueSize
      * @param maxFlushInterval
@@ -81,7 +80,6 @@ interface ConfigurationAndroid : Configuration {
     companion object {
         operator fun invoke(
             application: Application,
-            jsonAdapter: JsonAdapter,
             anonymousId: String? = null,
             userId: String? = null,
             options: RudderOption = RudderOption(),
@@ -110,7 +108,6 @@ interface ConfigurationAndroid : Configuration {
             sessionTimeoutMillis: Long = Defaults.SESSION_TIMEOUT
         ) = invoke(
             application,
-            jsonAdapter,
             anonymousId,
             userId,
             options,
@@ -141,7 +138,6 @@ interface ConfigurationAndroid : Configuration {
 
         internal operator fun invoke(
             application: Application,
-            jsonAdapter: JsonAdapter,
             anonymousId: String? = null,
             userId: String? = null,
             options: RudderOption = RudderOption(),
@@ -187,7 +183,6 @@ interface ConfigurationAndroid : Configuration {
             override val advertisingIdFetchExecutor: ExecutorService = advertisingIdFetchExecutor
             override val trackAutoSession: Boolean = trackAutoSession
             override val sessionTimeoutMillis: Long = sessionTimeoutMillis
-            override val jsonAdapter: JsonAdapter = jsonAdapter
             override val options: RudderOption = options
             override val flushQueueSize: Int = flushQueueSize
             override val maxFlushInterval: Long = maxFlushInterval
@@ -209,7 +204,7 @@ interface ConfigurationAndroid : Configuration {
         operator fun invoke(
             configuration: Configuration,
             application: Application,
-            anonymousId: String = AndroidUtils.generateAnonymousId(Defaults.COLLECT_DEVICE_ID, application),
+            anonymousId: String? = AndroidUtils.generateAnonymousId(Defaults.COLLECT_DEVICE_ID, application),
             userId: String? = null,
             trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
             recordScreenViews: Boolean = Defaults.RECORD_SCREEN_VIEWS,
@@ -227,7 +222,6 @@ interface ConfigurationAndroid : Configuration {
         ): ConfigurationAndroid =
             invoke(
                 application,
-                configuration.jsonAdapter,
                 anonymousId,
                 userId,
                 configuration.options,
@@ -258,7 +252,6 @@ interface ConfigurationAndroid : Configuration {
     }
 
     override fun copy(
-        jsonAdapter: JsonAdapter,
         options: RudderOption,
         flushQueueSize: Int,
         maxFlushInterval: Long,
@@ -270,48 +263,55 @@ interface ConfigurationAndroid : Configuration {
         rudderLogger: RudderLogger,
         analyticsExecutor: ExecutorService,
         networkExecutor: ExecutorService,
-        base64Generator: Base64Generator,
-    ): Configuration {
-        return copy(
-            jsonAdapter,
-            options,
-            flushQueueSize,
-            maxFlushInterval,
-            shouldVerifySdk,
-            gzipEnabled,
-            sdkVerifyRetryStrategy,
-            dataPlaneUrl,
-            controlPlaneUrl,
-            analyticsExecutor,
-            networkExecutor,
-            base64Generator,
+        base64Generator: Base64Generator
+    ): ConfigurationAndroid {
+        return ConfigurationAndroid(
+            application,
+                    anonymousId,
+                    userId,
+                    options,
+                    flushQueueSize,
+                    maxFlushInterval,
+                    shouldVerifySdk,
+                    gzipEnabled,
+                    sdkVerifyRetryStrategy,
+                    dataPlaneUrl,
+                    controlPlaneUrl,
+                    trackLifecycleEvents,
+                    recordScreenViews,
+                    isPeriodicFlushEnabled,
+                    autoCollectAdvertId,
+                    multiProcessEnabled,
+                    defaultProcessName,
+                    advertisingId,
+                    deviceToken,
+                    this.rudderLogger.also { it.activate(rudderLogger.level) },
+                    analyticsExecutor,
+                    networkExecutor,
+                    collectDeviceId,
+                    advertisingIdFetchExecutor,
+                    base64Generator,
+                    trackAutoSession,
+                    sessionTimeoutMillis,
         )
     }
 
     fun copy(
-        jsonAdapter: JsonAdapter = this.jsonAdapter,
         options: RudderOption = this.options,
         flushQueueSize: Int = this.flushQueueSize,
         maxFlushInterval: Long = this.maxFlushInterval,
-        shouldVerifySdk: Boolean = this.shouldVerifySdk,
         gzipEnabled: Boolean = this.gzipEnabled,
-        sdkVerifyRetryStrategy: RetryStrategy = this.sdkVerifyRetryStrategy,
-        dataPlaneUrl: String = this.dataPlaneUrl,
-        controlPlaneUrl: String? = this.controlPlaneUrl,
         analyticsExecutor: ExecutorService = this.analyticsExecutor,
         networkExecutor: ExecutorService = this.networkExecutor,
-        base64Generator: Base64Generator = this.base64Generator,
         anonymousId: String? = this.anonymousId,
         userId: String? = this.userId,
         advertisingId: String? = this.advertisingId,
-        autoCollectAdvertId: Boolean = this.autoCollectAdvertId,
         deviceToken: String? = this.deviceToken,
         trackAutoSession: Boolean = this.trackAutoSession,
-        sessionTimeoutMillis: Long = this.sessionTimeoutMillis
-    ): ConfigurationAndroid {
+        sessionTimeoutMillis: Long = this.sessionTimeoutMillis,
+    ) : ConfigurationAndroid{
         return ConfigurationAndroid(
             application,
-            jsonAdapter,
             anonymousId,
             userId,
             options,

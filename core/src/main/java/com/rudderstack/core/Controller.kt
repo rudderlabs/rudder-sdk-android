@@ -15,6 +15,7 @@
 package com.rudderstack.core
 
 import com.rudderstack.models.Message
+import com.rudderstack.rudderjsonadapter.JsonAdapter
 
 /**
  * Handles all messages, assorting the plugins, keeping track of cache, to name a few of it's
@@ -28,7 +29,12 @@ interface Controller {
      * @param configurationScope Update the current configuration with this scope to
      * return the updated configuration
      */
-    fun applyConfiguration(configurationScope: Configuration.() -> Configuration)
+    fun applyConfiguration(configurationScope: ConfigurationScope.() -> Unit)
+
+    /**
+     * For internal usage.
+     */
+    fun <T:ConfigurationScope> applyConfigurationInternal(scopedConfig: T, scope: T.() -> Unit)
 
     /**
      * Applies a closure method to all available Plugins
@@ -68,6 +74,8 @@ interface Controller {
 
     val dataUploadService:DataUploadService
     val configDownloadService:ConfigDownloadService?
+
+    val jsonAdapter: JsonAdapter
 
     /**
      * The write key

@@ -8,7 +8,7 @@ import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.Message
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.models.TrackMessage
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf

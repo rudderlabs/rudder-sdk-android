@@ -52,6 +52,8 @@ class GDPRPluginTest {
         val optOutTestChain = CentralPluginChain(message, listOf(gdprPlugin, testPluginForOptOut)
             , originalMessage = message)
         //opted out
+//        gdprPlugin.updateConfiguration(Configuration(
+//            isOptOut = true))
         gdprPlugin.setup(analytics)
         //check for opt out
         val returnedMsg = optOutTestChain.proceed(message)

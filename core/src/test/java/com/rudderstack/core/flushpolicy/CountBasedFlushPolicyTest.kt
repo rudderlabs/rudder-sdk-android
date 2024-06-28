@@ -21,7 +21,7 @@ import com.rudderstack.core.Storage
 import com.rudderstack.core.busyWait
 import com.rudderstack.models.Message
 import com.rudderstack.web.HttpResponse
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.junit.After
@@ -52,8 +52,8 @@ class CountBasedFlushPolicyTest {
         Mockito.`when`(mockUploadService.uploadSync(any<List<Message>>(), anyOrNull())).thenReturn(
             mockedResponse
         )
-        analytics = generateTestAnalytics(
-            Configuration(mock(), shouldVerifySdk = false),
+        analytics = generateTestAnalytics(mock(),
+            Configuration( shouldVerifySdk = false),
             dataUploadService = mockUploadService
         )
         flushPolicy = CountBasedFlushPolicy()

@@ -29,6 +29,7 @@ import com.rudderstack.models.ScreenMessage
 import com.rudderstack.models.ScreenProperties
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.models.TrackProperties
+import com.rudderstack.rudderjsonadapter.JsonAdapter
 
 class Analytics private constructor(
     private val _delegate: AnalyticsDelegate,
@@ -48,7 +49,8 @@ class Analytics private constructor(
      */
     constructor(
         writeKey: String,
-        configuration: Configuration,
+        jsonAdapter: JsonAdapter,
+        configuration: Configuration = Configuration.DEFAULT,
         dataUploadService: DataUploadService? = null,
         configDownloadService: ConfigDownloadService? = null,
         storage: Storage? = null,
@@ -57,17 +59,16 @@ class Analytics private constructor(
         //optional called if shutdown is called
         shutdownHook: (Analytics.() -> Unit)? = null
     ) : this(
-        _delegate = AnalyticsDelegate(
+        _delegate = AnalyticsDelegate( jsonAdapter,
             configuration, storage?:BasicStorageImpl(), writeKey, dataUploadService ?:
             DataUploadServiceImpl(
-                writeKey
+                writeKey, jsonAdapter
             ), configDownloadService ?: ConfigDownloadServiceImpl(
-                writeKey
+                writeKey, jsonAdapter
             ), initializationListener, shutdownHook
 
         )
-    ){}
-
+    )
 
     companion object {
         // default base url or rudder-backend-server

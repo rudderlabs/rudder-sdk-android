@@ -19,7 +19,7 @@ import com.rudderstack.models.Message
 import com.rudderstack.models.MessageContext
 
 interface AndroidStorage : Storage {
-    val v1OptOut: Boolean
+    val v1OptOut: Boolean?
     val anonymousId: String?
     val userId: String?
     val sessionId: Long?

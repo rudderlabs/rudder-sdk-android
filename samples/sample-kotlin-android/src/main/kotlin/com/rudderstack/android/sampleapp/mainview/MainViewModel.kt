@@ -2,7 +2,7 @@ package com.rudderstack.android.sampleapp.mainview
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.rudderstack.android.utilities.applyConfigurationAndroid
+import com.rudderstack.android.applyConfigurationAndroid
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.analytics
 import com.rudderstack.android.utilities.endSession
@@ -128,14 +128,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             AnalyticsState.EnableAutoTracking -> {
                 RudderAnalyticsUtils.analytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = true)
+                    trackAutoSession = true
                 }
                 "Auto tracking enabled"
             }
 
             AnalyticsState.DisableAutoTracking -> {
                 RudderAnalyticsUtils.analytics.applyConfigurationAndroid {
-                    copy(trackAutoSession = false)
+                    trackAutoSession = false
                 }
                 "Auto tracking disabled"
             }

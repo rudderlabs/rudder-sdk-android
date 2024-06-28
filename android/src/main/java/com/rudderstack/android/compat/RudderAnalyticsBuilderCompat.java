@@ -1,6 +1,6 @@
 /*
  * Creator Debanjan Chatterjee on 10/10/22, 528 PM Last modified 10/10/22, 528 PM
- * Copyright All rights reserved Ⓒ 2022 http//rudderstack.com
+ * Copyright All rights reserved 2022 http//rudderstack.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
@@ -15,59 +15,87 @@
 package com.rudderstack.android.compat;
 
 
+import android.app.Application;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.rudderstack.android.ConfigurationAndroid;
+import com.rudderstack.android.ConfigurationAndroidInitializationScope;
+import com.rudderstack.android.ConfigurationAndroidScope;
 import com.rudderstack.android.RudderAnalytics;
 import com.rudderstack.android.storage.AndroidStorage;
 import com.rudderstack.android.storage.AndroidStorageImpl;
 import com.rudderstack.core.Analytics;
 import com.rudderstack.core.ConfigDownloadService;
+import com.rudderstack.core.ConfigurationScope;
 import com.rudderstack.core.DataUploadService;
+import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import java.util.concurrent.Executors;
 
 import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 
 /**
  * To be used by java projects
  */
-public final class RudderAnalyticsBuilderCompat  {
-
-    private @NonNull String writeKey;
-    private @NonNull ConfigurationAndroid configuration;
+public final class RudderAnalyticsBuilderCompat {
+    private final Application application;
+    private final JsonAdapter jsonAdapter;
+    private final @NonNull String writeKey;
     private DataUploadService dataUploadService = null;
     private ConfigDownloadService configDownloadService = null;
     private InitializationListener initializationListener = null;
-    private AndroidStorage storage = new AndroidStorageImpl(configuration.getApplication(),
-            ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER,
-            writeKey,
-            Executors.newSingleThreadExecutor());
+    private AndroidStorage storage;
+    @Nullable
+    private ConfigurationAndroidInitializationScopeCompat configurationAndroidInitializationScopeCompat = null;
 
-    public RudderAnalyticsBuilderCompat(@NonNull String writeKey, @NonNull ConfigurationAndroid configuration) {
+    public RudderAnalyticsBuilderCompat(@NonNull String writeKey,
+                                        @NonNull Application application,
+                                        @NonNull JsonAdapter jsonAdapter){
         this.writeKey = writeKey;
-        this.configuration = configuration;
+        this.application = application;
+        this.jsonAdapter = jsonAdapter;
+        this.storage = new AndroidStorageImpl(application,
+                ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER,
+                writeKey,
+                Executors.newSingleThreadExecutor());
     }
+
     public RudderAnalyticsBuilderCompat withDataUploadService(DataUploadService dataUploadService) {
         this.dataUploadService = dataUploadService;
         return this;
     }
+
     public RudderAnalyticsBuilderCompat withConfigDownloadService(ConfigDownloadService configDownloadService) {
         this.configDownloadService = configDownloadService;
         return this;
     }
+
     public RudderAnalyticsBuilderCompat withInitializationListener(InitializationListener initializationListener) {
         this.initializationListener = initializationListener;
         return this;
     }
-    public Analytics build() {
 
+    public RudderAnalyticsBuilderCompat withConfigurationInitializer(ConfigurationAndroidInitializationScopeCompat configurationAndroidInitializationScopeCompat) {
+        this.configurationAndroidInitializationScopeCompat = configurationAndroidInitializationScopeCompat;
+        return this;
+    }
+
+    public Analytics build() {
         return RudderAnalytics.getInstance(
                 writeKey,
-                configuration,
-                storage,
+                jsonAdapter,
+                application, configurationAndroidScope -> {
+                    if(configurationAndroidInitializationScopeCompat != null){
+                        configurationAndroidInitializationScopeCompat.apply(configurationAndroidScope);
+                    }
+                    return Unit.INSTANCE;
+                },
                 dataUploadService,
                 configDownloadService,
+                storage,
                 (success, message) -> {
                     if (initializationListener != null) {
                         initializationListener.onInitialized(success, message);
@@ -85,5 +113,8 @@ public final class RudderAnalyticsBuilderCompat  {
         this.storage = storage;
         return this;
     }
-
+    @FunctionalInterface
+    public interface ConfigurationAndroidInitializationScopeCompat{
+        void apply(ConfigurationAndroidInitializationScope scope);
+    }
 }

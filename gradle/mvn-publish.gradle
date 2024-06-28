@@ -15,7 +15,7 @@ publishing {
                 artifact("$buildDir/libs/${project.getName()}-${version}.jar")
             }
             artifact sourcesJar
-            artifact javadocJar
+//            artifact javadocJar
 
 
             // Self-explanatory metadata for the most part

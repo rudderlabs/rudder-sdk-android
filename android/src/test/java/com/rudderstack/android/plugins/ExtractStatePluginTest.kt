@@ -28,7 +28,7 @@ import com.rudderstack.models.IdentifyMessage
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.models.traits
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.junit.After
@@ -60,8 +60,8 @@ class ExtractStatePluginTest {
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this);
-        analytics = generateTestAnalytics(ConfigurationAndroid(ApplicationProvider.getApplicationContext(),
-            mock<JsonAdapter>(),
+        analytics = generateTestAnalytics(mock<JsonAdapter>(),
+            ConfigurationAndroid(ApplicationProvider.getApplicationContext(),
             anonymousId = "anonymousId",
             shouldVerifySdk = false,
             logLevel = RudderLogger.LogLevel.DEBUG), storage = mock<AndroidStorage>())

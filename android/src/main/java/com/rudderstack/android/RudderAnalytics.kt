@@ -1,11 +1,31 @@
 package com.rudderstack.android
 
+import android.app.Application
+import android.util.Log
+import com.rudderstack.android.internal.infrastructure.ActivityBroadcasterPlugin
+import com.rudderstack.android.internal.infrastructure.AppInstallUpdateTrackerPlugin
+import com.rudderstack.android.internal.infrastructure.LifecycleObserverPlugin
+import com.rudderstack.android.internal.plugins.ExtractStatePlugin
+import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
+import com.rudderstack.android.internal.plugins.PlatformInputsPlugin
+import com.rudderstack.android.internal.infrastructure.ReinstatePlugin
+import com.rudderstack.android.internal.plugins.SessionPlugin
+import com.rudderstack.android.internal.states.ContextState
+import com.rudderstack.android.internal.states.UserSessionState
+import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.android.utilities.onShutdown
 import com.rudderstack.android.utilities.startup
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.DataUploadService
+import com.rudderstack.core.holder.associateState
+import com.rudderstack.core.holder.retrieveState
+import com.rudderstack.models.MessageContext
+import com.rudderstack.rudderjsonadapter.JsonAdapter
+import com.rudderstack.models.createContext
+import com.rudderstack.models.traits
+import com.rudderstack.models.updateWith
 import com.rudderstack.core.Storage
 
 /**
@@ -35,25 +55,35 @@ class RudderAnalytics private constructor() {
         @JvmOverloads
         fun getInstance(
             writeKey: String,
-            configuration: ConfigurationAndroid,
-            storage: Storage = AndroidStorageImpl(
-                configuration.application,
+            jsonAdapter: JsonAdapter,
+            application: Application,
+            configurationScope: (ConfigurationAndroidInitializationScope.() -> Unit)?= null,
+            dataUploadService: DataUploadService? = null,
+            configDownloadService: ConfigDownloadService? = null,
+            storage: AndroidStorage = AndroidStorageImpl(
+                application,
                 writeKey = writeKey,
                 useContentProvider = ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER
             ),
-            dataUploadService: DataUploadService? = null,
-            configDownloadService: ConfigDownloadService? = null,
-            initializationListener: ((success: Boolean, message: String?) -> Unit)? = null,
+            initializationListener: ((success: Boolean, message: String?) -> Unit)? = null
         ) = instance ?: synchronized(this) {
-            instance ?: Analytics(
-                writeKey = writeKey,
-                configuration = configuration,
-                dataUploadService = dataUploadService,
-                configDownloadService = configDownloadService,
-                storage = storage,
+            instance ?: Analytics(writeKey,
+                jsonAdapter,
+                application.initialConfigurationAndroid(storage).let{
+                    if(configurationScope == null) it
+                    else ConfigurationAndroidInitializationScope(it).let {
+                        it.configurationScope()
+                        Log.e("omg tle", it.trackLifecycleEvents.toString())
+                        it.build()
+                    }
+                },
+                dataUploadService,
+                configDownloadService,
+                storage,
                 initializationListener = initializationListener,
-                shutdownHook = { onShutdown() }
-            ).apply {
+                shutdownHook = {
+                    onShutdown()
+                }).apply {
                 startup()
             }.also {
                 instance = it

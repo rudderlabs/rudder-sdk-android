@@ -24,13 +24,11 @@ import com.rudderstack.core.RetryStrategy;
 import com.rudderstack.core.RudderOption;
 import com.rudderstack.core.RudderUtils;
 import com.rudderstack.core.internal.KotlinLogger;
-import com.rudderstack.rudderjsonadapter.JsonAdapter;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ConfigurationBuilder {
-    private JsonAdapter jsonAdapter;
     private RudderOption options = new RudderOption();
     private int flushQueueSize = FLUSH_QUEUE_SIZE;
     private long maxFlushInterval = MAX_FLUSH_INTERVAL;
@@ -44,8 +42,22 @@ public class ConfigurationBuilder {
     private ExecutorService networkExecutor = Executors.newCachedThreadPool();
     private Base64Generator base64Generator = RudderUtils.INSTANCE.getDefaultBase64Generator();
 
-    public ConfigurationBuilder(JsonAdapter jsonAdapter) {
-        this.jsonAdapter = jsonAdapter;
+    public ConfigurationBuilder() {
+    }
+
+    public ConfigurationBuilder(Configuration configuration) {
+        options = configuration.getOptions();
+        flushQueueSize = configuration.getFlushQueueSize();
+        maxFlushInterval = configuration.getMaxFlushInterval();
+        shouldVerifySdk = configuration.getShouldVerifySdk();
+        gzipEnabled = configuration.getGzipEnabled();
+        sdkVerifyRetryStrategy = configuration.getSdkVerifyRetryStrategy();
+        dataPlaneUrl = configuration.getDataPlaneUrl();
+        controlPlaneUrl = configuration.getControlPlaneUrl();
+        rudderLogger = configuration.getRudderLogger();
+        analyticsExecutor = configuration.getAnalyticsExecutor();
+        networkExecutor = configuration.getNetworkExecutor();
+        base64Generator = configuration.getBase64Generator();
     }
 
     public ConfigurationBuilder withOptions(RudderOption options) {
@@ -110,7 +122,7 @@ public class ConfigurationBuilder {
     }
 
     public Configuration build() {
-        return Configuration.Companion.invoke(jsonAdapter, options, flushQueueSize, maxFlushInterval,
+        return Configuration.Companion.invoke(options, flushQueueSize, maxFlushInterval,
                 shouldVerifySdk, gzipEnabled, sdkVerifyRetryStrategy, dataPlaneUrl,
                 controlPlaneUrl, rudderLogger,
                 analyticsExecutor, networkExecutor, base64Generator);

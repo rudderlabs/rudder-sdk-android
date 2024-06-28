@@ -29,7 +29,7 @@ import com.rudderstack.core.RudderUtils
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.aMapWithSize
@@ -62,10 +62,9 @@ class PlatformInputsPluginTest {
     fun setUp() {
         val app = getApplicationContext<AndroidContextPluginTestApplication>()
         platformInputsPlugin = PlatformInputsPlugin()
-        analytics = generateTestAnalytics(ConfigurationAndroid(app,
-            jsonAdapter, shouldVerifySdk = false,
-            logLevel = RudderLogger.LogLevel.DEBUG,
-            ))
+        analytics = generateTestAnalytics(jsonAdapter, ConfigurationAndroid(app, shouldVerifySdk =
+        false,
+            logLevel = RudderLogger.LogLevel.DEBUG))
         platformInputsPlugin.setup(analytics)
     }
     @After

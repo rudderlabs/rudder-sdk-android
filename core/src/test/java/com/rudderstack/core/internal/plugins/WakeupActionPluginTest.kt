@@ -25,12 +25,13 @@ import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.core.internal.states.DestinationConfigState
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.TrackMessage
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 /**
  * Wake up action plugin forwards only those destination plugins, that have initialized.
@@ -66,7 +67,8 @@ class WakeupActionPluginTest {
     @Before
     fun setup() {
         analytics = generateTestAnalytics(
-            Configuration(jsonAdapter = JacksonAdapter(),
+            mock(),
+            Configuration(
                 shouldVerifySdk = false), storage = storage
         )
         wakeupActionPlugin.setup(analytics)

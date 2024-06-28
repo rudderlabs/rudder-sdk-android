@@ -12,7 +12,7 @@ import com.rudderstack.models.Message
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.models.android.UserSession
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
@@ -78,7 +78,7 @@ class SessionPluginTest {
                 notNullValue(), hasProperty("timestamp", notNullValue()), hasProperty(
                     "context", allOf(
                         notNullValue(), Matchers.aMapWithSize<String, Any?>(5),
-                        hasEntry("sessionId", sessionId.toString()),
+                        hasEntry("sessionId", sessionId),
                         hasEntry("sessionStart", true),
                     )
                 )
@@ -120,7 +120,7 @@ class SessionPluginTest {
                 notNullValue(), hasProperty("timestamp", notNullValue()), hasProperty(
                     "context", allOf(
                         notNullValue(), Matchers.aMapWithSize<String, Any?>(4),
-                        hasEntry("sessionId", sessionId.toString()),
+                        hasEntry("sessionId", sessionId),
                         not(hasKey("sessionStart")),
                     )
                 )
@@ -167,7 +167,7 @@ class SessionPluginTest {
                         hasEntry("traits", mapOf("trait1" to "value1")),
                         hasEntry("externalId", listOf(mapOf("externalId1" to "value1"))),
                         hasEntry("customContextMap", mapOf("customContext1" to "value1")),
-                        hasEntry("sessionId", sessionId.toString()),
+                        hasEntry("sessionId", sessionId),
                         not(hasKey("sessionStart")),
                     )
                 )
@@ -214,7 +214,7 @@ class SessionPluginTest {
                         hasEntry("traits", mapOf("trait1" to "value1")),
                         hasEntry("externalId", listOf(mapOf("externalId1" to "value1"))),
                         hasEntry("customContextMap", mapOf("customContext1" to "value1")),
-                        hasEntry("sessionId", sessionId.toString()),
+                        hasEntry("sessionId", sessionId),
                         hasEntry("sessionStart", true),
                     )
                 )

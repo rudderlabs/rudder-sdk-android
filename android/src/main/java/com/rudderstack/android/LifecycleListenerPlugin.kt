@@ -36,18 +36,22 @@ import com.rudderstack.core.Plugin
  */
 interface LifecycleListenerPlugin {
     /**
-     * Called when at least one activity is started
+     * Called when at least one activity is started.
+     * Called first.
      *
      */
     fun onAppForegrounded(){}
     /**
-     * Called when all activities are stopped
+     * Called when all activities are stopped.
+     * The last callback to be fired.
      *
      */
     fun onAppBackgrounded(){}
 
     /**
-     * Called when an activity is started
+     * Called when an activity is started.
+     * This is called after [setCurrentActivity]
+     *
      *
      * @param activityName The name of the activity that is started
      */
@@ -58,6 +62,7 @@ interface LifecycleListenerPlugin {
      * If using this method, make sure to make it thread safe.
      * Storing the activity as a strong reference might lead to memory leaks.
      * If you're only interested in the name of the activity, use [onActivityStarted] instead.
+     * Called after [onAppForegrounded]
      *
      * @param activity The activity that is started
      */
@@ -65,7 +70,7 @@ interface LifecycleListenerPlugin {
 
     /**
      * Called when an activity is stopped
-     *
+     * Called before [onAppBackgrounded]
      * @param activityName The name of the activity that is stopped
      */
     fun onActivityStopped(activityName: String){}

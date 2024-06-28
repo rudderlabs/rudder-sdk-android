@@ -25,7 +25,7 @@ import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.moshirudderadapter.MoshiAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import junit.framework.TestSuite
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat
@@ -53,15 +53,15 @@ abstract class ConfigDownloadServiceImplTest {
     @Before
     fun setup() {
         dummyWebService = DummyWebService()
-        val config = Configuration(jsonAdapter)
-        analytics = generateTestAnalytics(config)
+        val config = Configuration()
+        analytics = generateTestAnalytics(jsonAdapter, config)
         dummyWebService.nextBody =
             RudderServerConfig(source = RudderServerConfig.RudderServerConfigSource())
 //        ConfigurationsState.update(ConfigurationsState.value ?: Configuration.invoke(jsonAdapter))
         configDownloadServiceImpl = ConfigDownloadServiceImpl(
             Base64.getEncoder().encodeToString(
                 String.format(Locale.US, "%s:", writeKey).toByteArray(charset("UTF-8"))
-            ), dummyWebService
+            ), jsonAdapter, dummyWebService
         )
         configDownloadServiceImpl.setup(analytics)
         configDownloadServiceImpl.updateConfiguration(config)
@@ -123,7 +123,7 @@ abstract class ConfigDownloadServiceImplTest {
         })
         while (!isComplete.get()){}
         isComplete.set(false)
-        configDownloadServiceImpl.updateConfiguration(Configuration(jsonAdapter, sdkVerifyRetryStrategy = RetryStrategy.exponential(0)))
+        configDownloadServiceImpl.updateConfiguration(Configuration(sdkVerifyRetryStrategy = RetryStrategy.exponential(0)))
         dummyWebService.nextStatusCode = 400
         configDownloadServiceImpl.download(callback = { success, rudderServerConfig, lastErrorMsg ->
             isComplete.set(true)

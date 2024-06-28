@@ -29,20 +29,21 @@ object RudderAnalyticsUtils {
         //wen add work manager support to this instance
         _rudderAnalytics = getInstance(
             writeKey = WRITE_KEY,
+            application = application,
+            jsonAdapter = GsonAdapter(),
             initializationListener = { success, message ->
                 listener?.onAnalyticsInitialized(WRITE_KEY, success, message)
             },
-            configuration = ConfigurationAndroid(
-                application = application,
-                GsonAdapter(),
-                dataPlaneUrl = DATA_PLANE_URL,
-                controlPlaneUrl = CONTROL_PLANE_URL,
-                trackLifecycleEvents = true,
-                recordScreenViews = true,
-                isPeriodicFlushEnabled = true,
-                logLevel = RudderLogger.LogLevel.DEBUG,
-                autoCollectAdvertId = true,
-            )
+            configurationScope = {
+                dataPlaneUrl = DATA_PLANE_URL
+                controlPlaneUrl = CONTROL_PLANE_URL
+                trackLifecycleEvents = false
+                recordScreenViews = true
+                isPeriodicFlushEnabled = true
+                autoCollectAdvertisingId = true
+                trackAutoSession = true
+                logLevel = RudderLogger.LogLevel.DEBUG
+            }
         )
         _rudderReporter = DefaultRudderReporter(
             context = application, baseUrl = METRICS_BASE_URL, configuration = Configuration(

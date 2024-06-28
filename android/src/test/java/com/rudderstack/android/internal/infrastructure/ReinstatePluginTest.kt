@@ -17,7 +17,7 @@ import com.rudderstack.models.Message
 import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -66,9 +66,9 @@ class ReinstatePluginTest {
             )
         )
         configurationAndroid = ConfigurationAndroid(
-            context, mock<JsonAdapter>(), shouldVerifySdk = true,
+            context, shouldVerifySdk = true,
             analyticsExecutor = TestExecutor(),
-            logLevel = RudderLogger.LogLevel.DEBUG,
+            logLevel = RudderLogger.LogLevel.DEBUG
         )
         analytics = createAnalyticsInstance()
         `when`(androidStorage.v1VersionName).thenReturn("1.0")
@@ -79,7 +79,7 @@ class ReinstatePluginTest {
         plugin.setup(analytics)
     }
 
-    private fun createAnalyticsInstance() = generateTestAnalytics(
+    private fun createAnalyticsInstance() = generateTestAnalytics( mock(),
         configurationAndroid, storage = androidStorage, configDownloadService = mockControlPlane
     )
 

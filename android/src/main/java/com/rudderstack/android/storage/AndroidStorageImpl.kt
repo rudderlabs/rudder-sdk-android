@@ -17,6 +17,7 @@ package com.rudderstack.android.storage
 import android.app.Application
 import android.os.Build
 import com.rudderstack.android.BuildConfig
+import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.internal.RudderPreferenceManager
 import com.rudderstack.android.repository.Dao
 import com.rudderstack.android.repository.RudderDatabase
@@ -109,11 +110,12 @@ class AndroidStorageImpl(
         rudderDatabase = RudderDatabase(
             application,
             dbName,
-            RudderEntityFactory(analytics.currentConfiguration?.jsonAdapter),
+            RudderEntityFactory(analytics.jsonAdapter),
             useContentProvider,
             DB_VERSION,
             providedExecutorService = storageExecutor
         )
+        jsonAdapter = analytics.jsonAdapter
         messageDao = rudderDatabase?.getDao(MessageEntity::class.java, storageExecutor)
         messageDao?.addDataChangeListener(_messageDataListener)
 
@@ -121,7 +123,6 @@ class AndroidStorageImpl(
 
     override fun updateConfiguration(configuration: Configuration) {
         super.updateConfiguration(configuration)
-        jsonAdapter = configuration.jsonAdapter
         rudderLogger = configuration.rudderLogger
     }
 
@@ -296,8 +297,8 @@ class AndroidStorageImpl(
         get() = _optOutTime.get()
     override val optInTime: Long
         get() = _optInTime.get()
-    override val v1OptOut: Boolean
-        get() = preferenceManager?.v1optOutStatus ?: false
+    override val v1OptOut: Boolean?
+        get() = preferenceManager?.v1optOutStatus
     override val anonymousId: String?
         get() {
             if (_anonymousId == null) {
@@ -335,7 +336,7 @@ class AndroidStorageImpl(
     override val v1AdvertisingId: String?
         get() = preferenceManager?.v1AdvertisingId
     override val trackAutoSession: Boolean
-        get() = preferenceManager?.trackAutoSession?: false
+        get() = preferenceManager?.trackAutoSession?:ConfigurationAndroid.Defaults.AUTO_SESSION_TRACKING
     override val build: Int?
         get() = preferenceManager?.build
     override val v1Build: Int?

@@ -1,9 +1,11 @@
 package com.rudderstack.android.internal.extensions
+import com.rudderstack.core.with
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.Test
 import org.hamcrest.Matchers.hasEntry
 import org.hamcrest.Matchers.hasKey
+import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.nullValue
 import org.hamcrest.Matchers.sameInstance
@@ -21,10 +23,10 @@ class UserSessionExtensionTest {
         val originalContext = mapOf("key" to "value")
 
         // Act
-        val updatedContext = originalContext.withSessionId("123")
-
+        val updatedContext = originalContext.withSessionId(123)
+        println(updatedContext)
         // Assert
-        assertThat(updatedContext, hasEntry(CONTEXT_SESSION_ID_KEY, "123"))
+        assertThat(updatedContext, hasEntry(CONTEXT_SESSION_ID_KEY, 123L))
         assertThat(originalContext, not(sameInstance(updatedContext)))
     }
 
@@ -45,7 +47,7 @@ class UserSessionExtensionTest {
     fun `removeSessionContext should remove sessionId and sessionStart from MessageContext`() {
         // Arrange
         val originalContext = mapOf(
-            CONTEXT_SESSION_ID_KEY to "123",
+            CONTEXT_SESSION_ID_KEY to 123,
             CONTEXT_SESSION_START_KEY to true,
             "key" to "value"
         )
@@ -74,13 +76,13 @@ class UserSessionExtensionTest {
     @Test
     fun `sessionId should return the correct value from MessageContext`() {
         // Arrange
-        val context = mapOf(CONTEXT_SESSION_ID_KEY to "123")
+        val context = mapOf(CONTEXT_SESSION_ID_KEY to 123L)
 
         // Act
         val result = context.sessionId
 
         // Assert
-        assertThat(result, equalTo("123"))
+        assertThat(result, `is`(123L))
     }
 
     @Test

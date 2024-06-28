@@ -29,7 +29,7 @@ import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import junit.framework.TestSuite
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
@@ -64,11 +64,10 @@ abstract class AndroidStorageTest {
             storageExecutor = TestExecutor()
         )
         mockConfig = ConfigurationAndroid(ApplicationProvider.getApplicationContext(),
-            jsonAdapter, shouldVerifySdk = false, analyticsExecutor = TestExecutor(),
+             shouldVerifySdk = false, analyticsExecutor = TestExecutor(),
             networkExecutor = TestExecutor(), flushQueueSize = 200, maxFlushInterval = 1000,
-            logLevel = RudderLogger.LogLevel.DEBUG,
-            )
-        analytics = generateTestAnalytics( mockConfig, storage = storage,
+            logLevel = RudderLogger.LogLevel.DEBUG)
+        analytics = generateTestAnalytics(jsonAdapter, mockConfig, storage = storage,
             dataUploadService = mock(), configDownloadService = mock())
     }
 

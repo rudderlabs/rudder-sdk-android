@@ -12,7 +12,7 @@ import com.rudderstack.core.RudderLogger
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
-import com.vagabond.testcommon.generateTestAnalytics
+import com.rudderstack.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.junit.After
@@ -57,13 +57,13 @@ class AppInstallUpdateTrackerPluginTest {
             storageExecutor = TestExecutor(),
         )
         val mockConfig = ConfigurationAndroid(
-            application, jsonAdapter,
+            application,
             shouldVerifySdk = false,
             analyticsExecutor = TestExecutor(),
             trackLifecycleEvents = trackLifecycleEvents,
             logLevel = RudderLogger.LogLevel.DEBUG,
         )
-        return generateTestAnalytics(mockConfig, storage = this.storage)
+        return generateTestAnalytics(jsonAdapter, mockConfig, storage = this.storage)
     }
 
     /**

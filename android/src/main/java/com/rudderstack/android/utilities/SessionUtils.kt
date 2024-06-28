@@ -14,10 +14,13 @@
 
 package com.rudderstack.android.utilities
 
-import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.applyConfigurationAndroid
+import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.State
 import com.rudderstack.core.holder.retrieveState
+import com.rudderstack.core.holder.store
 import com.rudderstack.models.android.UserSession
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
@@ -28,6 +31,7 @@ private val defaultSessionId
         System.currentTimeMillis()
     )
 private const val SESSION_ID_MIN_LENGTH = 10
+private const val SESSION_LISTENER_IDENTIFIER = "session_listener"
 internal val defaultLastActiveTimestamp
     get() = System.currentTimeMillis()
 internal val Analytics.userSessionState : UserSessionState?
@@ -44,11 +48,8 @@ fun Analytics.startSession(
         return
     }
     if (currentConfigurationAndroid?.trackAutoSession == true) {
-        applyConfiguration {
-            if (this is ConfigurationAndroid) copy(
-                trackAutoSession = false
-            )
-            else this
+        applyConfigurationAndroid {
+            trackAutoSession = false
         }
     }
     updateSessionStart(sessionId)
@@ -59,27 +60,27 @@ private fun isSessionIdValid(sessionId: Long): Boolean {
 }
 
 fun Analytics.endSession() {
-    applyConfiguration {
-        if (this is ConfigurationAndroid) copy(
-            trackAutoSession = false
-        )
-        else this
+    applyConfigurationAndroid {
+        trackAutoSession = false
     }
     updateSessionEnd()
 }
 
+val Analytics.sessionId
+    get() = userSessionState?.value?.sessionId
 
-internal fun Analytics.startSessionIfNeeded() {
-    if (currentConfigurationAndroid?.trackAutoSession != true || currentConfigurationAndroid?.trackLifecycleEvents != true) return
+
+internal fun Analytics.startAutoSessionIfNeeded() : Boolean {
+    if (currentConfigurationAndroid?.trackAutoSession != true) return false
 
     val currentSession = userSessionState?.value
     if (currentSession == null) {
         updateSessionStart(defaultSessionId)
-        return
+        return true
     }
     if (!currentSession.isActive || currentSession.lastActiveTimestamp == -1L) {
         updateSessionStart(defaultSessionId)
-        return
+        return true
     }
     val timeDifference: Long = synchronized(this) {
         abs(System.currentTimeMillis() - currentSession.lastActiveTimestamp)
@@ -88,14 +89,14 @@ internal fun Analytics.startSessionIfNeeded() {
                            ?: 0)
     ) {
         refreshSessionUpdate()
+        return true
     }
+    return false
 }
 
 internal fun Analytics.initializeSessionManagement(savedSessionId: Long? = null,
         lastActiveTimestamp: Long? = null) {
-    if (currentConfigurationAndroid?.trackAutoSession != true
-        || currentConfigurationAndroid?.trackLifecycleEvents != true
-        && androidStorage.trackAutoSession) {
+    if (isAutoTrackingChangedToDisabledInNewSession()) {
         discardAnyPreviousSession()
         return
     }
@@ -109,8 +110,27 @@ internal fun Analytics.initializeSessionManagement(savedSessionId: Long? = null,
             )
         )
     }
-    startSessionIfNeeded()
+    startAutoSessionIfNeeded()
+    updateSessionLastActiveTimestamp()
+
     listenToSessionChanges()
+}
+
+private fun Analytics.isAutoTrackingChangedToDisabledInNewSession() =
+    ((currentConfigurationAndroid?.trackAutoSession != true)
+            && androidStorage.trackAutoSession)
+
+private fun Analytics.updateSessionLastActiveTimestamp() {
+    userSessionState?.apply {
+        value?.let {
+            update(
+            it.copy(
+                lastActiveTimestamp = defaultLastActiveTimestamp
+            )
+        )
+        }
+
+    }
 }
 
 private fun Analytics.discardAnyPreviousSession() {
@@ -118,11 +138,14 @@ private fun Analytics.discardAnyPreviousSession() {
 }
 
 private fun Analytics.listenToSessionChanges() {
-    userSessionState?.subscribe { newState, _ ->
+    val sessionListener = State.Observer<UserSession>{ newState: UserSession?, oldState: UserSession? ->
         newState?.apply {
             applySessionToStorage(this)
         }
     }
+    // this is to ensure the session listener doesn't get garbage collected
+    store(SESSION_LISTENER_IDENTIFIER, sessionListener)
+    userSessionState?.subscribe(sessionListener)
 }
 
 private fun Analytics.applySessionToStorage(
@@ -153,8 +176,9 @@ internal fun Analytics.updateSessionStart(sessionId: Long) {
 }
 
 internal fun Analytics.resetSession() {
+    if((userSessionState?.value?.sessionId ?: -1L) == -1L) return
     updateSessionEnd()
-    startSessionIfNeeded()
+    updateSessionStart(defaultSessionId)
 }
 
 internal fun Analytics.updateSessionEnd() {

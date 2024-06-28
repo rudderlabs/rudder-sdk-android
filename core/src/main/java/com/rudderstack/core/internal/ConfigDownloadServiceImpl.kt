@@ -18,6 +18,7 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
 import com.rudderstack.models.RudderServerConfig
+import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.web.HttpResponse
 import com.rudderstack.web.WebService
 import com.rudderstack.web.WebServiceFactory
@@ -29,7 +30,8 @@ import java.util.concurrent.atomic.AtomicReference
 
 internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
     private val writeKey: String,
-    webService: WebService? = null,
+    private val jsonAdapter: JsonAdapter,
+    webService: WebService? = null
 ) : ConfigDownloadService {
     private val downloadSequence = CopyOnWriteArrayList<Boolean>()
     private var listeners = CopyOnWriteArrayList<ConfigDownloadService.Listener>()
@@ -43,7 +45,8 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
     private fun Configuration.initializeWebServiceIfRequired() {
         if (controlPlaneWebService.get() == null) controlPlaneWebService.set(
             WebServiceFactory.getWebService(
-                controlPlaneUrl, jsonAdapter = jsonAdapter, executor = networkExecutor
+                controlPlaneUrl, jsonAdapter = jsonAdapter, executor =
+                networkExecutor
             )
         )
     }

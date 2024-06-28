@@ -13,7 +13,7 @@
  */
 
 @file:JvmName("TestAnalyticsProvider")
-package com.vagabond.testcommon
+package com.rudderstack.testcommon
 
 import com.rudderstack.android.ruddermetricsreporterandroid.utils.TestExecutor
 import com.rudderstack.core.Analytics
@@ -36,10 +36,10 @@ private val inputVerifyPlugin = Plugin { chain ->
 }
 
 fun generateTestAnalytics(jsonAdapter: JsonAdapter): Analytics {
-    return generateTestAnalytics(Configuration(jsonAdapter,
+    return generateTestAnalytics(jsonAdapter,Configuration(
         shouldVerifySdk = false))
 }
-fun generateTestAnalytics(mockConfiguration: Configuration,
+fun generateTestAnalytics(jsonAdapter: JsonAdapter, mockConfiguration: Configuration,
                           configDownloadService: ConfigDownloadService =
                               MockConfigDownloadService(),
                           storage: Storage = VerificationStorage(),
@@ -50,7 +50,7 @@ fun generateTestAnalytics(mockConfiguration: Configuration,
         analyticsExecutor = TestExecutor()
     )?:mockConfiguration // this is if a mock configuration is passed
     return Analytics(
-        DUMMY_WRITE_KEY, testingConfig, dataUploadService = dataUploadService,
+        DUMMY_WRITE_KEY,jsonAdapter, testingConfig, dataUploadService = dataUploadService,
         configDownloadService = configDownloadService, storage = storage
     ).also {
         it.addPlugin(inputVerifyPlugin)

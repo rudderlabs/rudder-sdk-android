@@ -8,8 +8,12 @@ import com.rudderstack.core.RudderLogger
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
+import org.hamcrest.Matchers.allOf
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.mock
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -21,11 +25,13 @@ class RudderAnalyticsTest {
     @Test
     fun `when writeKey and configuration is passed, then getInstance should return Analytics instance`() {
         val analytics = getInstance(
-            writeKey, ConfigurationAndroid(
-                ApplicationProvider.getApplicationContext(),
-                JacksonAdapter(),
-                logLevel = RudderLogger.LogLevel.DEBUG,
-            )
+            writeKey,  mock(),
+            ApplicationProvider.getApplicationContext(),
+            {
+                trackLifecycleEvents = false
+                logLevel = RudderLogger.LogLevel.DEBUG
+
+            }
         )
 
         MatcherAssert.assertThat(analytics, Matchers.isA(Analytics::class.java))
@@ -35,19 +41,21 @@ class RudderAnalyticsTest {
     fun `given that the SDK supports a singleton instance, when an attempt is made to create multiple instance with the different writeKey, then both instances should remain the same`() {
         val writeKey2 = "writeKey2"
         val analytics = getInstance(
-            writeKey, ConfigurationAndroid(
-                ApplicationProvider.getApplicationContext(),
-                JacksonAdapter(),
-                logLevel = RudderLogger.LogLevel.DEBUG,
-            )
+            writeKey,  mock(),
+            ApplicationProvider.getApplicationContext(),
+            {
+                trackLifecycleEvents = false
+                logLevel = RudderLogger.LogLevel.DEBUG
+            }
         )
 
         val analytics2 = getInstance(
-            writeKey2, ConfigurationAndroid(
-                ApplicationProvider.getApplicationContext(),
-                JacksonAdapter(),
-                logLevel = RudderLogger.LogLevel.DEBUG,
-            )
+            writeKey2,  mock(),
+            ApplicationProvider.getApplicationContext(),
+            {
+                trackLifecycleEvents = false
+                logLevel = RudderLogger.LogLevel.DEBUG
+            }
         )
 
         MatcherAssert.assertThat(analytics, Matchers.isA(Analytics::class.java))
@@ -58,19 +66,21 @@ class RudderAnalyticsTest {
     @Test
     fun `given that the SDK supports a singleton instance, when an attempt is made to create multiple instance with the same writeKey, then both instances should remain the same`() {
         val analytics = getInstance(
-            writeKey, ConfigurationAndroid(
-                ApplicationProvider.getApplicationContext(),
-                JacksonAdapter(),
-                logLevel = RudderLogger.LogLevel.DEBUG,
-            )
+            writeKey, mock(),
+            ApplicationProvider.getApplicationContext(),{
+                trackLifecycleEvents = false
+                logLevel = RudderLogger.LogLevel.DEBUG
+            }
         )
 
         val analytics2 = getInstance(
-            writeKey, ConfigurationAndroid(
-                ApplicationProvider.getApplicationContext(),
-                JacksonAdapter(),
-                logLevel = RudderLogger.LogLevel.DEBUG,
-            )
+            writeKey,  mock(),
+            ApplicationProvider.getApplicationContext(),
+            {
+                trackLifecycleEvents = false
+                logLevel = RudderLogger.LogLevel.DEBUG
+
+            }
         )
 
         MatcherAssert.assertThat(analytics, Matchers.isA(Analytics::class.java))
