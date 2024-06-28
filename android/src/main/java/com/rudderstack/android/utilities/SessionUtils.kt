@@ -18,7 +18,9 @@ import com.rudderstack.android.applyConfigurationAndroid
 import com.rudderstack.android.currentConfigurationAndroid
 import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.core.Analytics
+import com.rudderstack.core.State
 import com.rudderstack.core.holder.retrieveState
+import com.rudderstack.core.holder.store
 import com.rudderstack.models.android.UserSession
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
@@ -29,6 +31,7 @@ private val defaultSessionId
         System.currentTimeMillis()
     )
 private const val SESSION_ID_MIN_LENGTH = 10
+private const val SESSION_LISTENER_IDENTIFIER = "session_listener"
 internal val defaultLastActiveTimestamp
     get() = System.currentTimeMillis()
 internal val Analytics.userSessionState : UserSessionState?
@@ -62,6 +65,9 @@ fun Analytics.endSession() {
     }
     updateSessionEnd()
 }
+
+val Analytics.sessionId
+    get() = userSessionState?.value?.sessionId
 
 
 internal fun Analytics.startAutoSessionIfNeeded() : Boolean {
@@ -132,11 +138,14 @@ private fun Analytics.discardAnyPreviousSession() {
 }
 
 private fun Analytics.listenToSessionChanges() {
-    userSessionState?.subscribe { newState, _ ->
+    val sessionListener = State.Observer<UserSession>{ newState: UserSession?, oldState: UserSession? ->
         newState?.apply {
             applySessionToStorage(this)
         }
     }
+    // this is to ensure the session listener doesn't get garbage collected
+    store(SESSION_LISTENER_IDENTIFIER, sessionListener)
+    userSessionState?.subscribe(sessionListener)
 }
 
 private fun Analytics.applySessionToStorage(
@@ -167,8 +176,9 @@ internal fun Analytics.updateSessionStart(sessionId: Long) {
 }
 
 internal fun Analytics.resetSession() {
+    if((userSessionState?.value?.sessionId ?: -1L) == -1L) return
     updateSessionEnd()
-    startAutoSessionIfNeeded()
+    updateSessionStart(defaultSessionId)
 }
 
 internal fun Analytics.updateSessionEnd() {

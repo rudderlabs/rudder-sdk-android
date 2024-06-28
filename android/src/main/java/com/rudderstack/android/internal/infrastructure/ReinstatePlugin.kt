@@ -27,7 +27,6 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.InfrastructurePlugin
 import com.rudderstack.models.createContext
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * This plugin is used to reinstate the cache data in V2 SDK. In case no
@@ -37,6 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Reinstate user id Initialise session management for the user Reinstate
  * traits and external ids
  */
+const val DEFAULT_OPTOUT = false
 internal class ReinstatePlugin : InfrastructurePlugin {
     private var _analytics: Analytics? = null
     private fun setReinstated(isReinstated: Boolean) {
@@ -189,7 +189,7 @@ internal class ReinstatePlugin : InfrastructurePlugin {
 
 
     private fun Analytics.migrateOptOutFromV1() {
-        val optOut = androidStorage.v1OptOut
+        val optOut = androidStorage.v1OptOut?: DEFAULT_OPTOUT
         if (!optOut || this.androidStorage.isOptedOut) return //only relevant if optout is true
         _analytics?.optOut(true)
         androidStorage.resetV1OptOut()

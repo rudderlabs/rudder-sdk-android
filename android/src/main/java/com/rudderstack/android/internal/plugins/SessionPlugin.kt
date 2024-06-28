@@ -15,6 +15,7 @@
 package com.rudderstack.android.internal.plugins
 
 import com.rudderstack.android.ConfigurationAndroid
+import com.rudderstack.android.LifecycleListenerPlugin
 import com.rudderstack.android.internal.extensions.withSessionId
 import com.rudderstack.android.internal.extensions.withSessionStart
 import com.rudderstack.android.utilities.androidStorage
@@ -29,7 +30,7 @@ import com.rudderstack.core.Plugin
 import com.rudderstack.models.Message
 import com.rudderstack.models.android.UserSession
 
-internal class SessionPlugin : Plugin {
+internal class SessionPlugin : Plugin, LifecycleListenerPlugin {
 
     private var _analytics: Analytics? = null
     private var currentConfiguration: ConfigurationAndroid? = null
@@ -40,9 +41,11 @@ internal class SessionPlugin : Plugin {
 
     override fun updateConfiguration(configuration: Configuration) {
         if (configuration !is ConfigurationAndroid) return
-        if (currentConfiguration?.trackAutoSession == configuration.trackAutoSession) return
+        if ((currentConfiguration?.trackAutoSession
+                ?: _analytics?.androidStorage?.trackAutoSession) == configuration.trackAutoSession
+        ) return
         _analytics?.androidStorage?.setTrackAutoSession(configuration.trackAutoSession)
-        if( !configuration.trackAutoSession) {
+        if (!configuration.trackAutoSession) {
             _analytics?.updateSessionEnd()
             return
         }
@@ -54,12 +57,21 @@ internal class SessionPlugin : Plugin {
         // update last active timestamp
         // if difference between two events is more than session timeout, refresh session
         val message = chain.message()
-        _analytics?.startAutoSessionIfNeeded()
         val newMsg = _analytics?.userSessionState?.value?.takeIf { it.isActive }?.let {
-            updateWithSession(message, it)
+            val msg = updateWithSession(message, it)
+            if(it.sessionStart)
+                it.markSessionAsStarted()
+            msg
         } ?: message
 
         return chain.proceed(newMsg)
+    }
+
+    private fun UserSession.markSessionAsStarted() {
+        val updatedSession = copy(
+            sessionStart = false
+        )
+        _analytics?.userSessionState?.update(updatedSession)
     }
 
     private fun updateWithSession(
@@ -69,12 +81,19 @@ internal class SessionPlugin : Plugin {
         var newContext = context?.withSessionId(it.sessionId)
         if (it.sessionStart) newContext = newContext?.withSessionStart(true)
 
-        updateSessionState(it)
         return message.copy(newContext)
     }
 
-    private fun updateSessionState(it: UserSession) {
-        val updatedSession = it.copy(
+    override fun onAppForegrounded() {
+        _analytics?.startAutoSessionIfNeeded()
+    }
+
+    override fun onAppBackgrounded() {
+        _analytics?.userSessionState?.value?.updateSessionStateWithLatestTimestamp()
+    }
+
+    private fun UserSession.updateSessionStateWithLatestTimestamp() {
+        val updatedSession = copy(
             lastActiveTimestamp = defaultLastActiveTimestamp, sessionStart = false
         )
         _analytics?.userSessionState?.update(updatedSession)
