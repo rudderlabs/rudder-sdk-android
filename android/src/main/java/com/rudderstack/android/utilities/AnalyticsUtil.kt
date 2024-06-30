@@ -85,21 +85,6 @@ fun Analytics.setAnonymousId(anonymousId: String) {
     processNewContext(newContext)
 }
 
-/**
- * Setting the [ConfigurationAndroid.userId] explicitly.
- *
- * @param userId String to be used as userId
- */
-fun Analytics.setUserId(userId: String) {
-    androidStorage.setUserId(userId)
-    applyConfiguration {
-        if (this is ConfigurationAndroid) copy(
-            userId = userId
-        )
-        else this
-    }
-}
-
 private val infrastructurePlugins = arrayOf(
     ReinstatePlugin(),
     AnonymousIdHeaderPlugin(),
@@ -158,3 +143,5 @@ private fun Analytics.attachSavedContextIfAvailable() {
         processNewContext(it)
     }
 }
+
+fun String.Companion.empty(): String = ""
