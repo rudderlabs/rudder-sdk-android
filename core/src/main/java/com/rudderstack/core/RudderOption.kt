@@ -14,6 +14,9 @@
 
 package com.rudderstack.core
 
+private const val TYPE = "type"
+private const val ID = "id"
+
 /**
  * Can be set as global or customised options for each message.
  * If no customised option is set for a message, global options will be used.
@@ -25,25 +28,40 @@ package com.rudderstack.core
  * message will be delivered to all destinations added to Analytics.
  * @property customContexts Custom context elements that are going to be sent with message
  */
-class RudderOption{
+class RudderOption {
     val integrations: Map<String, Boolean>
         get() = _integrations
-    private val _integrations = mutableMapOf<String,Boolean>()
+    private val _integrations = mutableMapOf<String, Boolean>()
     val customContexts: Map<String, Any>
         get() = _customContexts
     private val _customContexts = mutableMapOf<String, Any>()
 
     val externalIds: List<Map<String, String>>
         get() = _externalIds
-    private val _externalIds= mutableListOf<Map<String, String>>()
+    private val _externalIds = mutableListOf<Map<String, String>>()
 
     fun putExternalId(type: String, id: String): RudderOption {
-        _externalIds.add(
-            mapOf("type" to type,
-                "id" to id)
-        )
+        val existingExternalIdIndex =
+            _externalIds.indexOfFirst { it[TYPE]?.equals(type, ignoreCase = true) == true }
+
+        if (existingExternalIdIndex != -1) {
+            // If the type exists, update the id
+            _externalIds[existingExternalIdIndex] =
+                _externalIds[existingExternalIdIndex].toMutableMap().apply {
+                    this[ID] = id
+                }
+        } else {
+            // If the type does not exist, add a new externalId
+            _externalIds.add(
+                mapOf(
+                    TYPE to type,
+                    ID to id
+                )
+            )
+        }
         return this
     }
+
     fun putIntegration(destinationKey: String, enabled: Boolean): RudderOption {
         _integrations[destinationKey] = enabled
         return this

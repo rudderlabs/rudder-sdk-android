@@ -52,8 +52,14 @@ infix fun MessageContext?.optAddContext (context: MessageContext?): MessageConte
     val newCustomContexts = context.customContexts?.let {
         (it - (this.customContexts?.keys ?: setOf()).toSet()) optAdd this.customContexts
     } ?: customContexts
-    val newExternalIds = context.externalIds?.let {
-        it + (this.externalIds?: emptyList())
+    val newExternalIds = context.externalIds?.let { savedExternalIds ->
+        val currentExternalIds = this.externalIds ?: emptyList()
+        val filteredSavedExternalIds = savedExternalIds.filter { savedExternalId ->
+            currentExternalIds.none { currentExternalId ->
+                currentExternalId["type"] == savedExternalId["type"]
+            }
+        }
+        currentExternalIds + filteredSavedExternalIds
     } ?: externalIds
 
     createContext(newTraits, newExternalIds, newCustomContexts).let {
