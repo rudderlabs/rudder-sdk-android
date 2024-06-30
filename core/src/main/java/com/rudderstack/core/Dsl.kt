@@ -72,7 +72,8 @@ class ScreenScope internal constructor() : MessageScope<ScreenMessage>() {
         category = name
     }
     override val message: ScreenMessage
-        get() = ScreenMessage.create(RudderUtils.timeStamp, name = screenName, category = category,
+        get() = ScreenMessage.create(screenName ?: throw IllegalArgumentException("Screen name is not provided for screen event"),
+                RudderUtils.timeStamp, category = category,
             anonymousId = anonymousId,
         properties = screenProperties, userId = userId, destinationProps = destinationProperties)
 

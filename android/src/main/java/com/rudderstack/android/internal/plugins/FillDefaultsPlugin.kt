@@ -14,6 +14,7 @@
 
 package com.rudderstack.android.internal.plugins
 
+import com.rudderstack.android.utilities.androidStorage
 import com.rudderstack.android.utilities.contextState
 import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
@@ -51,7 +52,7 @@ internal class FillDefaultsPlugin : Plugin {
     @Throws(MissingPropertiesException::class)
     private inline fun <reified T : Message> T.withDefaults(): T {
         val anonId = this.anonymousId ?: _analytics?.currentConfigurationAndroid?.anonymousId
-        val userId = this.userId ?: _analytics?.currentConfigurationAndroid?.userId
+        val userId = this.userId ?: _analytics?.androidStorage?.userId
         if (anonId == null && userId == null) {
             val ex = MissingPropertiesException("Either Anonymous Id or User Id must be present");
             _analytics?.currentConfigurationAndroid?.rudderLogger?.error(
@@ -64,7 +65,7 @@ internal class FillDefaultsPlugin : Plugin {
         val newContext =
                 // in case of alias we purposefully remove traits from context
                 _analytics?.contextState?.value?.let {
-                    if (this is AliasMessage && this.userId != _analytics?.currentConfigurationAndroid?.userId) it.updateWith(
+                    if (this is AliasMessage && this.userId != _analytics?.androidStorage?.userId) it.updateWith(
                         traits = mapOf()
                     ) else it
                 } selectiveReplace context.let {

@@ -121,11 +121,11 @@ Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinatio
 @Test
     fun testGenerateContentValuesForScreen() {
         val testMessage = ScreenMessage.create(
+            name = "testScreen",
             RudderUtils.timeStamp,
             "testAnonymousId",
             "testUserId",
             mapOf("dest1" to mapOf("key1" to "value1")),
-            name = "testScreen",
             category = "testCategory",
             mapOf("testKey" to "testValue"),
             mapOf("key2" to mapOf("some_key" to "some_value")),
