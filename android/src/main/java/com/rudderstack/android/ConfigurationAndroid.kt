@@ -33,7 +33,6 @@ interface ConfigurationAndroid : Configuration {
      *
      * @property application
      * @property anonymousId
-     * @property userId
      * @property trackLifecycleEvents
      * @property recordScreenViews
      * @property isPeriodicFlushEnabled
@@ -62,7 +61,6 @@ interface ConfigurationAndroid : Configuration {
      */
     val application: Application
     val anonymousId: String?
-    val userId: String?
     val trackLifecycleEvents: Boolean
     val recordScreenViews: Boolean
     val isPeriodicFlushEnabled: Boolean
@@ -83,7 +81,6 @@ interface ConfigurationAndroid : Configuration {
             application: Application,
             jsonAdapter: JsonAdapter,
             anonymousId: String? = null,
-            userId: String? = null,
             options: RudderOption = RudderOption(),
             flushQueueSize: Int = Defaults.DEFAULT_FLUSH_QUEUE_SIZE,
             maxFlushInterval: Long = Defaults.DEFAULT_MAX_FLUSH_INTERVAL,
@@ -112,7 +109,6 @@ interface ConfigurationAndroid : Configuration {
             application,
             jsonAdapter,
             anonymousId,
-            userId,
             options,
             flushQueueSize,
             maxFlushInterval,
@@ -143,7 +139,6 @@ interface ConfigurationAndroid : Configuration {
             application: Application,
             jsonAdapter: JsonAdapter,
             anonymousId: String? = null,
-            userId: String? = null,
             options: RudderOption = RudderOption(),
             flushQueueSize: Int = Defaults.DEFAULT_FLUSH_QUEUE_SIZE,
             maxFlushInterval: Long = Defaults.DEFAULT_MAX_FLUSH_INTERVAL,
@@ -175,7 +170,6 @@ interface ConfigurationAndroid : Configuration {
         ): ConfigurationAndroid = object : ConfigurationAndroid {
             override val application: Application = application
             override val anonymousId: String? = anonymousId
-            override val userId: String? = userId
             override val trackLifecycleEvents: Boolean = trackLifecycleEvents
             override val recordScreenViews: Boolean = recordScreenViews
             override val isPeriodicFlushEnabled: Boolean = isPeriodicFlushEnabled
@@ -210,7 +204,6 @@ interface ConfigurationAndroid : Configuration {
             configuration: Configuration,
             application: Application,
             anonymousId: String = AndroidUtils.generateAnonymousId(Defaults.COLLECT_DEVICE_ID, application),
-            userId: String? = null,
             trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
             recordScreenViews: Boolean = Defaults.RECORD_SCREEN_VIEWS,
             isPeriodicFlushEnabled: Boolean = Defaults.IS_PERIODIC_FLUSH_ENABLED,
@@ -229,7 +222,6 @@ interface ConfigurationAndroid : Configuration {
                 application,
                 configuration.jsonAdapter,
                 anonymousId,
-                userId,
                 configuration.options,
                 configuration.flushQueueSize,
                 configuration.maxFlushInterval,
@@ -302,7 +294,6 @@ interface ConfigurationAndroid : Configuration {
         networkExecutor: ExecutorService = this.networkExecutor,
         base64Generator: Base64Generator = this.base64Generator,
         anonymousId: String? = this.anonymousId,
-        userId: String? = this.userId,
         advertisingId: String? = this.advertisingId,
         autoCollectAdvertId: Boolean = this.autoCollectAdvertId,
         deviceToken: String? = this.deviceToken,
@@ -313,7 +304,6 @@ interface ConfigurationAndroid : Configuration {
             application,
             jsonAdapter,
             anonymousId,
-            userId,
             options,
             flushQueueSize,
             maxFlushInterval,
