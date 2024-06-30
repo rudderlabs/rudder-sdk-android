@@ -11,6 +11,7 @@ import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.models.RudderServerConfig
+import com.rudderstack.models.ScreenMessage
 import com.rudderstack.models.TrackMessage
 import com.rudderstack.models.TrackProperties
 import com.rudderstack.rudderjsonadapter.JsonAdapter
@@ -168,6 +169,32 @@ abstract class LifecycleObserverPluginTest {
         org.mockito.kotlin.verify(mockControlPlane).download(any())
         plugin.onShutDown()
 
+    }
+
+    @Test
+    fun `given automatic screen event is enabled, when automatic screen event is made, then screen event containing default properties is sent`() {
+        val plugin = LifecycleObserverPlugin()
+        plugin.setup(analytics)
+
+        plugin.onActivityStarted("MainActivity")
+
+        analytics.assertArgument { input, _ ->
+            assertThat(
+                input, allOf(
+                    isA(ScreenMessage::class.java),
+                    hasProperty("eventName", `is`("MainActivity")),
+                    hasProperty(
+                        "properties", allOf<TrackProperties>(
+                            aMapWithSize(2),
+                            hasEntry("automatic", true),
+                            hasEntry("name", "MainActivity"),
+                        )
+                    )
+                )
+            )
+        }
+
+        plugin.onShutDown()
     }
 }
 

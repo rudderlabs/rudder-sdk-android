@@ -31,6 +31,8 @@ const val EVENT_NAME_APPLICATION_OPENED = "Application Opened"
 const val EVENT_NAME_APPLICATION_STOPPED = "Application Backgrounded"
 private const val MAX_CONFIG_DOWNLOAD_INTERVAL = 90 * 60 * 1000 // 90 MINUTES
 
+private const val AUTOMATIC = "automatic"
+
 /**
  * We use a [Plugin] instead of [InfrastructurePlugin] as sending events from Infrastructure plugin might
  * not ensure all plugins to be ready
@@ -126,6 +128,9 @@ internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) 
         withTrackLifeCycleAndRecordScreenViews {
             analytics?.screen {
                 screenName(activityName)
+                screenProperties {
+                    add(AUTOMATIC to true)
+                }
             }
         }
     }
