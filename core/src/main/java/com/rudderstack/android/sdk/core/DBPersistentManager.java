@@ -410,7 +410,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
     private int getCountForCommand(String sql) {
         // initiate count
         int count = -1;
-
+        Cursor cursor = null;
         try {
             // get readable database instance
             if (!persistence.isAccessible()) {
@@ -419,7 +419,6 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             }
 
             RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: getDBRecordCount: countSQL: %s", sql));
-            Cursor cursor;
             synchronized (DB_LOCK) {
                 cursor = persistence.rawQuery(sql, null);
             }
@@ -433,12 +432,14 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             } else {
                 RudderLogger.logInfo("DBPersistentManager: getDBRecordCount: DB is empty");
             }
-            // release cursor
-            cursor.close();
-
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
             ReportManager.reportError(ex);
+        } finally {
+            if (cursor != null) {
+                // release cursor
+                cursor.close();
+            }
         }
 
         return count;
@@ -510,6 +511,7 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             Thread.currentThread().interrupt();
         }
     }
+
     private void waitTillMigrationsAreDone() {
         if(migrationSemaphore.availablePermits() == 1 ){
             return;

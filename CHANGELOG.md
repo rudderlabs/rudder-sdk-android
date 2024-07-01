@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.23.3](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.23.2...v1.23.3) (2024-07-01)
+
+
+### Bug Fixes
+
+* handle CursorWindowAllocationException ([#454](https://github.com/rudderlabs/rudder-sdk-android/issues/454)) ([5ddc570](https://github.com/rudderlabs/rudder-sdk-android/commit/5ddc57054029c5d5a80ee33be0e163928abe95b2))
+
 ### [1.23.2](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.23.1...v1.23.2) (2024-06-25)
 
 
