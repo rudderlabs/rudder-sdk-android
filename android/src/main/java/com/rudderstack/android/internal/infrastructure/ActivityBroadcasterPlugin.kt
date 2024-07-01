@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger
 /** Tracks the Activities in the application and broadcasts the same */
 internal class ActivityBroadcasterPlugin(
 ) : InfrastructurePlugin {
+
     private val application: Application?
         get() = analytics?.currentConfigurationAndroid?.application
     private var analytics: Analytics? = null
@@ -37,10 +38,10 @@ internal class ActivityBroadcasterPlugin(
 
             override fun onActivityStarted(activity: Activity) {
                 incrementActivityCount()
-                broadcastActivityStart(activity)
                 if (activityCount.get() == 1) {
                     broadCastApplicationStart()
                 }
+                broadcastActivityStart(activity)
             }
 
             override fun onActivityResumed(activity: Activity) {
@@ -67,7 +68,6 @@ internal class ActivityBroadcasterPlugin(
             override fun onActivityDestroyed(activity: Activity) {
                 //nothing to implement
             }
-
         }
     }
 
@@ -126,14 +126,10 @@ internal class ActivityBroadcasterPlugin(
 
     override fun setup(analytics: Analytics) {
         this.analytics = analytics
-        if (analytics.currentConfigurationAndroid?.trackLifecycleEvents == true) {
-
-            application?.registerActivityLifecycleCallbacks(lifecycleCallback)
-        }
+        application?.registerActivityLifecycleCallbacks(lifecycleCallback)
     }
 
     override fun shutdown() {
         application?.unregisterActivityLifecycleCallbacks(lifecycleCallback)
     }
-
 }
