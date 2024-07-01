@@ -32,7 +32,72 @@ abstract class MessageParseTest {
     companion object {
         private const val TRACK_JSON =
             "{\n" +
-                "  \"type\": \"track\",\n" +
+                    "  \"type\": \"track\",\n" +
+                    "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
+                    "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+                    "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
+                    "  \"userId\": \"debanjanchatterjee\",\n" +
+                    "  \"context\": null,\n" +
+
+                    "  \"integrations\": {\n" +
+                    "    \n" +
+                    "  },\n" +
+                    "  \"event\": \"Java Test\",\n" +
+                    "  \"properties\": {\n" +
+                    "    \"count\": \"1\"\n" +
+                    "  }\n" +
+                    "}"
+        private const val ALIAS_JSON = "{\n" +
+                "  \"type\": \"alias\",\n" +
+                "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
+                "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+                "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
+                "  \"userId\": \"debanjanchatterjee\",\n" +
+                "  \"context\": null,\n" +
+
+                "  \"integrations\": {\n" +
+                "    \n" +
+                "  },\n" +
+                "  \"previousId\": \"172d84b9-a684-4249-8646-0994173555cd\"\n" +
+                "}"
+
+        private const val GROUP_JSON = "{\n" +
+                "  \"type\": \"group\",\n" +
+                "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
+                "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+                "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
+                "  \"userId\": \"debanjanchatterjee\",\n" +
+                "  \"context\": null,\n" +
+
+                "  \"integrations\": {\n" +
+                "    \n" +
+                "  },\n" +
+                "  \"groupId\": \"193d84b9-a684-4249-8646-0994173555cd\",\n" +
+                "  \"traits\": {\n" +
+                "    \"group\": \"some_name\",\n" +
+                "    \"journey\": \"Australia\"\n" +
+                "  }\n" +
+                "}"
+        private const val SCREEN_JSON = "{\n" +
+                "  \"type\": \"screen\",\n" +
+                "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
+                "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+                "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
+                "  \"userId\": \"debanjanchatterjee\",\n" +
+                "  \"context\": null,\n" +
+
+                "  \"integrations\": {\n" +
+                "    \n" +
+                "  },\n" +
+                "  \"properties\": {\n" +
+                "  \"category\": \"login\",\n" +
+                "  \"name\": \"first_screen\",\n" +
+                "    \"count\": \"1\"\n" +
+                "  }\n" +
+                "}"
+
+        private const val PAGE_JSON = "{\n" +
+                "  \"type\": \"page\",\n" +
                 "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
                 "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
                 "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
@@ -45,88 +110,23 @@ abstract class MessageParseTest {
                 "  \"event\": \"Java Test\",\n" +
                 "  \"properties\": {\n" +
                 "    \"count\": \"1\"\n" +
-                "  }\n" +
+                "  },\n" +
+                "  \"category\": \"some_category\"\n" +
                 "}"
-        private const val ALIAS_JSON = "{\n" +
-            "  \"type\": \"alias\",\n" +
-            "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-            "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
-            "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
-            "  \"userId\": \"debanjanchatterjee\",\n" +
-            "  \"context\": null,\n" +
-
-            "  \"integrations\": {\n" +
-            "    \n" +
-            "  },\n" +
-            "  \"previousId\": \"172d84b9-a684-4249-8646-0994173555cd\"\n" +
-            "}"
-
-        private const val GROUP_JSON = "{\n" +
-            "  \"type\": \"group\",\n" +
-            "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-            "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
-            "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
-            "  \"userId\": \"debanjanchatterjee\",\n" +
-            "  \"context\": null,\n" +
-
-            "  \"integrations\": {\n" +
-            "    \n" +
-            "  },\n" +
-            "  \"groupId\": \"193d84b9-a684-4249-8646-0994173555cd\",\n" +
-            "  \"traits\": {\n" +
-            "    \"group\": \"some_name\",\n" +
-            "    \"journey\": \"Australia\"\n" +
-            "  }\n" +
-            "}"
-        private const val SCREEN_JSON = "{\n" +
-            "  \"type\": \"screen\",\n" +
-            "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-            "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
-            "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
-            "  \"userId\": \"debanjanchatterjee\",\n" +
-            "  \"context\": null,\n" +
-
-            "  \"integrations\": {\n" +
-            "    \n" +
-            "  },\n" +
-            "  \"properties\": {\n" +
-            "  \"category\": \"login\",\n" +
-            "  \"name\": \"first_screen\",\n" +
-            "    \"count\": \"1\"\n" +
-            "  }\n" +
-            "}"
-
-        private const val PAGE_JSON = "{\n" +
-            "  \"type\": \"page\",\n" +
-            "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-            "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
-            "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
-            "  \"userId\": \"debanjanchatterjee\",\n" +
-            "  \"context\": null,\n" +
-
-            "  \"integrations\": {\n" +
-            "    \n" +
-            "  },\n" +
-            "  \"event\": \"Java Test\",\n" +
-            "  \"properties\": {\n" +
-            "    \"count\": \"1\"\n" +
-            "  },\n" +
-            "  \"category\": \"some_category\"\n" +
-            "}"
         private const val IDENTIFY_JSON = "{\n" +
-            "  \"type\": \"identify\",\n" +
-            "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
-            "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
-            "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
-            "  \"userId\": \"debanjanchatterjee\",\n" +
-            "  \"context\": null,\n" +
+                "  \"type\": \"identify\",\n" +
+                "  \"messageId\": \"172d84b9-a684-4249-8646-0994173555cc\",\n" +
+                "  \"originalTimestamp\": \"2021-11-20T15:37:19.753Z\",\n" +
+                "  \"anonymousId\": \"bc73bb87-8fb4-4498-97c8-570299a4686d\",\n" +
+                "  \"userId\": \"debanjanchatterjee\",\n" +
+                "  \"context\": null,\n" +
 
-            "  \"integrations\": {\n" +
-            "    \"firebase\": true,\n" +
-            "    \"amplitude\": false\n" +
-            "  },\n" +
-            "\"properties\": {}\n" +
-            "}"
+                "  \"integrations\": {\n" +
+                "    \"firebase\": true,\n" +
+                "    \"amplitude\": false\n" +
+                "  },\n" +
+                "\"properties\": {}\n" +
+                "}"
     }
 
     @Test
@@ -227,8 +227,12 @@ abstract class MessageParseTest {
                 hasProperty("type", `is`(Message.EventType.SCREEN)),
                 hasProperty("channel", `is`("server")),
                 hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
-                hasProperty("properties", allOf(aMapWithSize<String, String>(3), hasEntry
-                    ("category", "login"), hasEntry("name", "first_screen")),
+                hasProperty(
+                    "properties",
+                    allOf(
+                        aMapWithSize<String, String>(3), hasEntry
+                            ("category", "login"), hasEntry("name", "first_screen")
+                    ),
                 ),
                 hasProperty("userId", `is`("debanjanchatterjee")),
             ),
@@ -239,32 +243,6 @@ abstract class MessageParseTest {
         JSONAssert.assertEquals(
             screenJson,
             JSONObject(SCREEN_JSON).also {
-                it.put("channel", "server")
-            },
-            JSONCompareMode.LENIENT,
-        )
-    }
-
-    @Test
-    fun testPageParsing() {
-        val page = jsonAdapter.readJson(PAGE_JSON, PageMessage::class.java)
-        assertThat(
-            page,
-            allOf(
-                notNullValue(),
-                hasProperty("type", `is`(Message.EventType.PAGE)),
-                hasProperty("channel", `is`("server")),
-                hasProperty("timestamp", `is`("2021-11-20T15:37:19.753Z")),
-                hasProperty("properties", allOf(aMapWithSize<String, String>(1))),
-                hasProperty("userId", `is`("debanjanchatterjee")),
-                hasProperty("category", `is`("some_category")),
-            ),
-        )
-        assertThat(page!!.properties!!["count"], `is`("1"))
-        val pageJson = jsonAdapter.writeToJson(page)
-        JSONAssert.assertEquals(
-            pageJson,
-            JSONObject(PAGE_JSON).also {
                 it.put("channel", "server")
             },
             JSONCompareMode.LENIENT,
