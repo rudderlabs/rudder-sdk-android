@@ -120,8 +120,6 @@ android {
         implementation(project(":jacksonrudderadapter"))
         implementation(project(":repository"))
         implementation(project(":core"))
-        implementation(project(":models"))
-        implementation(project(":web"))
         implementation(project(":rudderreporter"))
         implementation(project(":libs:sync"))
         implementation(project(":libs:navigationplugin"))

@@ -18,7 +18,6 @@ include(
     ":web",
     ":gsonrudderadapter",
     ":repository",
-    ":models",
     ":rudderjsonadapter",
     ":rudderreporter",
     ":jacksonrudderadapter",

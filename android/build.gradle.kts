@@ -53,7 +53,6 @@ android {
 dependencies {
     implementation(libs.android.core.ktx)
     api(project(":core"))
-    api(project(":models"))
     api(project(":repository"))
 
     compileOnly(project(":jacksonrudderadapter"))
