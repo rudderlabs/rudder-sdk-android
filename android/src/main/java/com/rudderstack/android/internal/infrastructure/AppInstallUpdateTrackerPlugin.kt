@@ -67,7 +67,7 @@ class AppInstallUpdateTrackerPlugin : Plugin {
                 packageInfo?.versionCode
             }
         } catch (ex: PackageManager.NameNotFoundException) {
-            analytics.rudderLogger.error(log = "Failed to get app version info: ${ex.message}")
+            analytics.logger.error(log = "Failed to get app version info: ${ex.message}")
         }
 
         return AppVersion(
@@ -100,7 +100,7 @@ class AppInstallUpdateTrackerPlugin : Plugin {
     }
 
     private fun sendApplicationInstalledEvent() {
-        this.analytics?.rudderLogger?.debug(log = "Tracking Application Installed event")
+        this.analytics?.logger?.debug(log = "Tracking Application Installed event")
         val trackProperties = mutableMapOf<String, Any>()
         trackProperties[VERSION] = this.appVersion.currentVersionName
         trackProperties[BUILD] = this.appVersion.currentBuild
@@ -109,7 +109,7 @@ class AppInstallUpdateTrackerPlugin : Plugin {
     }
 
     private fun sendApplicationUpdatedEvent() {
-        this.analytics?.rudderLogger?.debug(log = "Tracking Application Updated event")
+        this.analytics?.logger?.debug(log = "Tracking Application Updated event")
         val trackProperties = mutableMapOf<String, Any>()
         trackProperties[PREVIOUS_VERSION] = this.appVersion.previousVersionName
         trackProperties[PREVIOUS_BUILD] = this.appVersion.previousBuild

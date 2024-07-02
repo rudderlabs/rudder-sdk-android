@@ -19,7 +19,7 @@ import androidx.annotation.RestrictTo
 import com.rudderstack.android.internal.AndroidLogger
 import com.rudderstack.core.Base64Generator
 import com.rudderstack.core.Configuration
-import com.rudderstack.core.RudderLogger
+import com.rudderstack.core.Logger
 import com.rudderstack.core.RetryStrategy
 import com.rudderstack.core.RudderOption
 import com.rudderstack.rudderjsonadapter.JsonAdapter
@@ -97,7 +97,7 @@ interface ConfigurationAndroid : Configuration {
             defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
             advertisingId: String? = null,
             deviceToken: String? = null,
-            logLevel: RudderLogger.LogLevel = RudderLogger.DEFAULT_LOG_LEVEL,
+            logLevel: Logger.LogLevel = Logger.DEFAULT_LOG_LEVEL,
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             collectDeviceId: Boolean = Defaults.COLLECT_DEVICE_ID,
@@ -155,7 +155,7 @@ interface ConfigurationAndroid : Configuration {
             defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
             advertisingId: String? = null,
             deviceToken: String? = null,
-            rudderLogger: RudderLogger = AndroidLogger(),
+            logger: Logger = AndroidLogger(),
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             collectDeviceId: Boolean = Defaults.COLLECT_DEVICE_ID,
@@ -192,7 +192,7 @@ interface ConfigurationAndroid : Configuration {
                 dataPlaneUrl ?: Defaults.DEFAULT_ANDROID_DATAPLANE_URL
             override val controlPlaneUrl: String =
                 controlPlaneUrl ?: Defaults.DEFAULT_ANDROID_CONTROLPLANE_URL
-            override val rudderLogger: RudderLogger = rudderLogger
+            override val logger: Logger = logger
             override val analyticsExecutor: ExecutorService = analyticsExecutor
             override val networkExecutor: ExecutorService = networkExecutor
             override val base64Generator: Base64Generator = base64Generator
@@ -212,7 +212,7 @@ interface ConfigurationAndroid : Configuration {
             defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
             advertisingId: String? = null,
             deviceToken: String? = null,
-            rudderLogger: RudderLogger = AndroidLogger(),
+            logger: Logger = AndroidLogger(),
             collectDeviceId: Boolean = Defaults.COLLECT_DEVICE_ID,
             advertisingIdFetchExecutor: ExecutorService = Executors.newCachedThreadPool(),
             trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
@@ -238,7 +238,7 @@ interface ConfigurationAndroid : Configuration {
                 defaultProcessName,
                 advertisingId,
                 deviceToken,
-                rudderLogger,
+                logger,
                 configuration.analyticsExecutor,
                 configuration.networkExecutor,
                 collectDeviceId,
@@ -259,7 +259,7 @@ interface ConfigurationAndroid : Configuration {
         sdkVerifyRetryStrategy: RetryStrategy,
         dataPlaneUrl: String,
         controlPlaneUrl: String?,
-        rudderLogger: RudderLogger,
+        logger: Logger,
         analyticsExecutor: ExecutorService,
         networkExecutor: ExecutorService,
         base64Generator: Base64Generator,
@@ -320,7 +320,7 @@ interface ConfigurationAndroid : Configuration {
             defaultProcessName,
             advertisingId,
             deviceToken,
-            rudderLogger,
+            logger,
             analyticsExecutor,
             networkExecutor,
             collectDeviceId,

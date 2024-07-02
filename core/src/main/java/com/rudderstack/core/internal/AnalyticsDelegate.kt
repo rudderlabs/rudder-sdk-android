@@ -24,7 +24,7 @@ import com.rudderstack.core.DestinationConfig
 import com.rudderstack.core.DestinationPlugin
 import com.rudderstack.core.InfrastructurePlugin
 import com.rudderstack.core.LifecycleController
-import com.rudderstack.core.RudderLogger
+import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOption
 import com.rudderstack.core.RudderUtils.getUTF8Length
@@ -112,8 +112,8 @@ internal class AnalyticsDelegate(
 
     override val isShutdown
         get() = _isShutDown.get()
-    override val rudderLogger: RudderLogger
-        get() = currentConfiguration?.rudderLogger ?: RudderLogger.Noob
+    override val logger: Logger
+        get() = currentConfiguration?.logger ?: Logger.Noob
 
     override fun clearStorage() {
         storage.clearStorage()
@@ -172,7 +172,7 @@ internal class AnalyticsDelegate(
 
     private fun attachListeners() {
         currentConfigurationState?.subscribe { state, _ ->
-            rudderLogger.debug(log = "Configuration updated: $state")
+            logger.debug(log = "Configuration updated: $state")
             applyInfrastructureClosure {
                 applyConfigurationClosure(this)
             }
@@ -196,7 +196,7 @@ internal class AnalyticsDelegate(
         addInfrastructurePlugin(storage)
         configDownloadService?.let {
             addInfrastructurePlugin(it)
-        } ?: rudderLogger.warn(log = "ConfigDownloadService not set")
+        } ?: logger.warn(log = "ConfigDownloadService not set")
         addInfrastructurePlugin(dataUploadService)
     }
 
@@ -206,7 +206,7 @@ internal class AnalyticsDelegate(
             val newConfiguration = configurationScope(it)
             currentConfigurationState?.update(newConfiguration)
 
-        }?: rudderLogger.error(log = "Configuration not updated, since current configuration is null")
+        }?: logger.error(log = "Configuration not updated, since current configuration is null")
 
     }
 
@@ -236,7 +236,7 @@ internal class AnalyticsDelegate(
         get() = retrieveState<ConfigurationsState>()
     private val currentDestinationConfigurationState: DestinationConfigState?
         get() = retrieveState<DestinationConfigState>().also {
-            if (it == null) rudderLogger.error(log = "DestinationConfigState state not found")
+            if (it == null) logger.error(log = "DestinationConfigState state not found")
         }
     override val currentConfiguration: Configuration?
         get() = currentConfigurationState?.value
@@ -299,7 +299,7 @@ internal class AnalyticsDelegate(
         return plugins.filter {
             when (it) {
                 is ConfigDownloadService -> false.also {
-                    currentConfiguration?.rudderLogger?.warn(
+                    currentConfiguration?.logger?.warn(
                         log = "ConfigDownloadService already set. Dropping plugin $it"
                     )
                 }
@@ -322,7 +322,7 @@ internal class AnalyticsDelegate(
         message: Message, options: RudderOption?, lifecycleController: LifecycleController?
     ) {
         if (isShutdown) {
-            rudderLogger.warn(log = "Analytics has shut down, ignoring message $message")
+            logger.warn(log = "Analytics has shut down, ignoring message $message")
             return
         }
         currentConfiguration?.analyticsExecutor?.execute {
@@ -429,7 +429,7 @@ internal class AnalyticsDelegate(
             totalMessageSize += messageSize
 
             if (totalMessageSize > MAX_BATCH_SIZE) {
-                config.rudderLogger.debug(log = "Maximum batch size reached at $index")
+                config.logger.debug(log = "Maximum batch size reached at $index")
                 break
             }
             index++
@@ -449,7 +449,7 @@ internal class AnalyticsDelegate(
 
     override fun shutdown() {
         if (!_isShutDown.compareAndSet(false, true)) return
-        rudderLogger.info(log = "shutdown")
+        logger.info(log = "shutdown")
         //inform plugins
         shutdownPlugins()
 
@@ -510,7 +510,7 @@ internal class AnalyticsDelegate(
                 storage.clearStartupQueue()
             }
         } else {
-            rudderLogger.warn(log = "plugin ${plugin.name} activation failed")
+            logger.warn(log = "plugin ${plugin.name} activation failed")
             //remove from destination config, else all integrations ready won't be true anytime
 
             val newDestinationConfig = (currentDestinationConfigurationState?.value
@@ -535,7 +535,7 @@ internal class AnalyticsDelegate(
             initializationListener?.invoke(
                 false, "Config download service not set or " + "configuration not available"
             )
-            rudderLogger.error(log = "Config Download Service Not Set or Configuration not available")
+            logger.error(log = "Config Download Service Not Set or Configuration not available")
             shutdown()
             return
         }
@@ -555,10 +555,10 @@ internal class AnalyticsDelegate(
                         initializationListener?.invoke(
                             true, "Downloading failed, using cached context"
                         )
-                        rudderLogger.warn(log = "Downloading failed, using cached context")
+                        logger.warn(log = "Downloading failed, using cached context")
                         handleConfigData(cachedConfig)
                     } else {
-                        rudderLogger.error(log = "SDK Initialization failed due to $lastErrorMsg")
+                        logger.error(log = "SDK Initialization failed due to $lastErrorMsg")
                         initializationListener?.invoke(
                             false, "Downloading failed, Shutting down $lastErrorMsg"
                         )

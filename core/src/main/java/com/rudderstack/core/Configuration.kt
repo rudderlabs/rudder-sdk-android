@@ -47,7 +47,7 @@ interface Configuration {
     val sdkVerifyRetryStrategy: RetryStrategy
     val dataPlaneUrl: String
     val controlPlaneUrl: String
-    val rudderLogger: RudderLogger
+    val logger: Logger
     val analyticsExecutor: ExecutorService
     val networkExecutor: ExecutorService
     val base64Generator: Base64Generator
@@ -69,7 +69,7 @@ interface Configuration {
             sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
             dataPlaneUrl: String? = null, //defaults to https://hosted.rudderlabs.com
             controlPlaneUrl: String? = null, //defaults to https://api.rudderlabs.com/
-            rudderLogger: RudderLogger = KotlinLogger(),
+            logger: Logger = KotlinLogger(),
             analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
             networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
             base64Generator: Base64Generator = RudderUtils.defaultBase64Generator,
@@ -83,7 +83,7 @@ interface Configuration {
             override val sdkVerifyRetryStrategy: RetryStrategy = sdkVerifyRetryStrategy
             override val dataPlaneUrl: String = dataPlaneUrl?:"https://hosted.rudderlabs.com"
             override val controlPlaneUrl: String = controlPlaneUrl?:"https://api.rudderstack.com/"
-            override val rudderLogger: RudderLogger = rudderLogger
+            override val logger: Logger = logger
             override val analyticsExecutor: ExecutorService = analyticsExecutor
             override val networkExecutor: ExecutorService = networkExecutor
             override val base64Generator: Base64Generator = base64Generator
@@ -99,7 +99,7 @@ interface Configuration {
         sdkVerifyRetryStrategy: RetryStrategy = this.sdkVerifyRetryStrategy,
         dataPlaneUrl: String = this.dataPlaneUrl,
         controlPlaneUrl: String?= this.controlPlaneUrl,
-        rudderLogger: RudderLogger = this.rudderLogger,
+        logger: Logger = this.logger,
         analyticsExecutor: ExecutorService = this.analyticsExecutor,
         networkExecutor: ExecutorService = this.networkExecutor,
         base64Generator: Base64Generator = this.base64Generator,
@@ -113,7 +113,7 @@ interface Configuration {
         sdkVerifyRetryStrategy = sdkVerifyRetryStrategy,
         dataPlaneUrl = dataPlaneUrl,
         controlPlaneUrl = controlPlaneUrl,
-        rudderLogger = rudderLogger,
+        logger = logger,
         analyticsExecutor = analyticsExecutor,
         networkExecutor = networkExecutor,
         base64Generator = base64Generator,

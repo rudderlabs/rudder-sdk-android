@@ -20,7 +20,6 @@ import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.MissingPropertiesException
-import com.rudderstack.core.minusWrtKeys
 import com.rudderstack.models.*
 
 /**
@@ -55,7 +54,7 @@ internal class FillDefaultsPlugin : Plugin {
         val userId = this.userId ?: _analytics?.androidStorage?.userId
         if (anonId == null && userId == null) {
             val ex = MissingPropertiesException("Either Anonymous Id or User Id must be present");
-            _analytics?.currentConfigurationAndroid?.rudderLogger?.error(
+            _analytics?.currentConfigurationAndroid?.logger?.error(
                 log = "Missing both anonymous Id and user Id. Use settings to update " + "anonymous id in Analytics constructor",
                 throwable = ex
             )

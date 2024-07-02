@@ -26,7 +26,6 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.InfrastructurePlugin
 import com.rudderstack.models.createContext
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * This plugin is used to reinstate the cache data in V2 SDK. In case no
@@ -151,7 +150,7 @@ internal class ReinstatePlugin : InfrastructurePlugin {
                 ?: AndroidUtils.generateAnonymousId(
                     collectDeviceId, application
                 )).let {
-                rudderLogger.error(log = "Unable to migrate anonymousId from V1. Generating new anonymousId")
+                logger.error(log = "Unable to migrate anonymousId from V1. Generating new anonymousId")
                 _analytics?.setAnonymousId(it)
             }
             androidStorage.resetV1AnonymousId()
