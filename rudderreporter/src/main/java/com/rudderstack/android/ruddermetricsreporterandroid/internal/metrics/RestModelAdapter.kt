@@ -21,9 +21,8 @@ import com.rudderstack.android.ruddermetricsreporterandroid.metrics.MetricType
  *
  */
 internal interface RestModelAdapter {
-    val name:String
-    val type:MetricType
-    val value:Long
+    val name: String
+    val type: MetricType
+    val value: Long
     val labels: Map<String, String>
-
 }

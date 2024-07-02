@@ -37,5 +37,4 @@ object GzipUtils {
         }
         return null
     }
-
 }

@@ -7,7 +7,7 @@ import android.content.Context
  * context if it is the base context.
  */
 internal class ContextModule(
-    appContext: Context
+    appContext: Context,
 ) : DependencyModule() {
 
     val ctx: Context = when (appContext.applicationContext) {

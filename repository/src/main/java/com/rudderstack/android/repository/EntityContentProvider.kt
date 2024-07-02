@@ -21,6 +21,8 @@ import android.database.SQLException
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.net.Uri
+import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
 /**
@@ -29,11 +31,12 @@ import java.util.concurrent.Executors
  */
 internal class EntityContentProvider : ContentProvider() {
 
-
     companion object {
 
+        internal val ECP_NULL_HACK_COLUMN_CODE: String = "null_hack_column"
         internal const val ECP_ENTITY_CODE = "db_entity"
         internal const val ECP_LIMIT_CODE = "query_limit"
+        internal const val ECP_DATABASE_CODE = "db_name"
         internal const val ECP_CONFLICT_RESOLUTION_CODE = "ecp_conflict_resolution"
         private const val ECP_TABLE_URI_MATCHER_CODE = 1
         private const val ECP_TABLE_SUB_QUERY_URI_MATCHER_CODE = 2
@@ -41,84 +44,136 @@ internal class EntityContentProvider : ContentProvider() {
         private var uriMatcher: UriMatcher = UriMatcher(UriMatcher.NO_MATCH)
         private var authority: String? = null
         internal val AUTHORITY
-        get() = authority ?: throw UninitializedPropertyAccessException("onAttachInfo not called yet")
-
-        private var sqLiteOpenHelper: SQLiteOpenHelper? = null
-
+            get() = authority
+                    ?: throw UninitializedPropertyAccessException("onAttachInfo not called yet")
+        private var nameToRudderDatabaseMap =
+            ConcurrentHashMap<String, WeakReference<RudderDatabase>>()
+        private var nameToCreateCommandMap =
+            ConcurrentHashMap<String, MutableList<Array<String>>>()
 
         internal fun getContentUri(tableName: String, context: Context?): Uri {
+            println("authority52: $authority")
             if (context != null && authority == null) {
                 authority = context.packageName + "." + EntityContentProvider::class.java.simpleName
+                println("authority: $authority")
             }
             val contentUri = Uri.parse("content://$authority/$tableName")
             try {
-                //https://developer.android.com/guide/topics/providers/content-provider-creating
+                // https://developer.android.com/guide/topics/providers/content-provider-creating
 
                 uriMatcher.addURI(
                     authority,
                     tableName,
-                    ECP_TABLE_URI_MATCHER_CODE
+                    ECP_TABLE_URI_MATCHER_CODE,
                 )
                 uriMatcher.addURI(
                     authority,
                     "$tableName/*", // *: Matches a string of any valid characters of any length.
-                    ECP_TABLE_SUB_QUERY_URI_MATCHER_CODE
+                    ECP_TABLE_SUB_QUERY_URI_MATCHER_CODE,
                 )
             } catch (e: Exception) {
                 e.printStackTrace()
             }
             return contentUri
         }
+
+        internal fun registerDatabase(database: RudderDatabase) {
+            val ref = reference.get()
+            if (ref != null) with(ref) {
+                database.populateNameToSqliteMapping()
+            }
+            nameToRudderDatabaseMap[database.databaseName] = WeakReference(database)
+        }
+
+        internal fun registerTableCommands(
+            databaseName: String,
+            createTableStatement: String?,
+            createIndexStatement: String?
+        ) {
+            val commands = arrayOf(createTableStatement, createIndexStatement).filterNotNull().toTypedArray()
+            val ref = reference.get()
+            if (ref != null) with(ref) {
+                nameToSqLiteOpenHelperMap[databaseName]?.createTable(
+                    commands
+                )
+            }else{
+                val databaseCommands = nameToCreateCommandMap[databaseName]
+                    ?: mutableListOf<Array<String>>().also { nameToCreateCommandMap[databaseName] = it }
+                databaseCommands.add(commands)
+            }
+        }
+        private fun SQLiteOpenHelper.createTable(commands: Array<String>){
+            commands.forEach {
+                writableDatabase.execSQL(it)
+            }
+        }
+
+        internal fun releaseDatabase(databaseName: String) {
+            nameToRudderDatabaseMap.remove(databaseName)
+            val removedHelper = reference.get()?.nameToSqLiteOpenHelperMap?.remove(databaseName)
+            if(removedHelper != null){
+                try {
+                    removedHelper.close()
+                }catch (ex: Exception){
+                    // ignore
+                }
+            }
+        }
+
+        private var reference = WeakReference<EntityContentProvider>(null)
+
     }
 
-    //we will be using this just to satisfy new Dao creation, however, the calls we make to Dao
-    //should be synchronous.
+    private var nameToSqLiteOpenHelperMap = ConcurrentHashMap<String, SQLiteOpenHelper>()
+
+    // we will be using this just to satisfy new Dao creation, however, the calls we make to Dao
+    // should be synchronous.
     private val _commonExecutor = Executors.newSingleThreadExecutor()
 
     override fun onCreate(): Boolean {
-        RudderDatabase.getDbDetails { name, version, dbUpgradeCb ->
-            sqLiteOpenHelper = object : SQLiteOpenHelper(context, name, null, version) {
+        reference = WeakReference(this)
+        nameToRudderDatabaseMap.forEach {
+            val attachedDatabase = it.value.get()
+            attachedDatabase?.populateNameToSqliteMapping()
+        }
+        nameToCreateCommandMap.forEach {
+            val attachedSQLiteOpenHelper = nameToSqLiteOpenHelperMap[it.key]
+            it.value.forEach {
+                attachedSQLiteOpenHelper?.createTable(it)
+            }
+        }
+        nameToCreateCommandMap.clear()
+        return true
+    }
+
+    private fun RudderDatabase.populateNameToSqliteMapping() {
+        getDbDetails { name, version, dbCreatedCb, dbUpgradeCb ->
+            nameToSqLiteOpenHelperMap[name] = object : SQLiteOpenHelper(context, name, null, version) {
                 init {
-                    //listeners won't be fired else
+                    // listeners won't be fired else
                     writableDatabase
                 }
 
                 override fun onCreate(database: SQLiteDatabase?) {
-                    /**
-                     * empty implementation
-                     */
+                    dbCreatedCb?.invoke(database)
                 }
 
                 override fun onUpgrade(
                     database: SQLiteDatabase?,
                     oldVersion: Int,
-                    newVersion: Int
+                    newVersion: Int,
                 ) {
                     dbUpgradeCb?.invoke(database, oldVersion, newVersion)
                 }
-
             }
+
         }
-        return true
     }
 
     override fun attachInfo(context: Context?, info: ProviderInfo?) {
-        println("on attach info called: $info")
-        authority = info?.authority?:
-            info?.packageName?.let {  it + "." + this@EntityContentProvider::class.java.simpleName}
-
-        /*_uriMatcher?.addURI(
-            _authority,
-            EVENTS_TABLE_NAME,
-            com.rudderstack.android.sdk.core.EventContentProvider.EVENT_CODE
-        )
-        _uriMatcher?.addURI(
-            _authority,
-            EVENTS_TABLE_NAME.toString() + "/#",
-            com.rudderstack.android.sdk.core.EventContentProvider.EVENT_ID_CODE
-        )*/
+        authority = info?.authority
+                    ?: info?.packageName?.let { it + "." + this@EntityContentProvider::class.java.simpleName }
         super.attachInfo(context, info)
-
     }
 
     override fun query(
@@ -126,39 +181,45 @@ internal class EntityContentProvider : ContentProvider() {
         projection: Array<out String>?,
         selection: String?,
         selectionArgs: Array<out String>?,
-        sortOrder: String?
+        sortOrder: String?,
     ): Cursor? {
         if (uriMatcher.match(uri) == -1) return null
 
         val tableName = uri.tableName ?: return null
 
-        return sqLiteOpenHelper?.writableDatabase?.query(tableName, projection, selection,
-            selectionArgs, null, null, sortOrder, uri.limit)
+        return uri.attachedSqliteOpenHelper?.writableDatabase?.query(
+            tableName,
+            projection,
+            selection,
+            selectionArgs,
+            null,
+            null,
+            sortOrder,
+            uri.limit,
+        )
     }
 
     override fun getType(uri: Uri): String? {
-        return null //no mime types allowed
+        return null // no mime types allowed
     }
-
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
         if (uriMatcher.match(uri) == -1) return null
-        val dao = uri.initializedDao ?: return null
-
         val tableName = uri.tableName ?: return null
 
-        val rowID = dao.insertContentValues(
-            sqLiteOpenHelper?.writableDatabase ?: return null,
-            tableName, values ?: return null,
-            null, uri.conflictAlgorithm?:SQLiteDatabase.CONFLICT_REPLACE
-        )
+        val rowID = (uri.attachedSqliteOpenHelper?.writableDatabase?.insertWithOnConflict(
+            tableName,
+            uri.nullHackColumn,
+            values,
+            uri.conflictAlgorithm ?: SQLiteDatabase.CONFLICT_REPLACE,
+        ) ?: -1)
         /**
          * If record is added successfully
          */
         if (rowID > 0) {
             val rowUri = ContentUris.withAppendedId(
                 getContentUri(tableName, context),
-                rowID
+                rowID,
             )
             context?.contentResolver?.notifyChange(rowUri, null)
             return rowUri
@@ -169,25 +230,30 @@ internal class EntityContentProvider : ContentProvider() {
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int {
         if (uriMatcher.match(uri) == -1) return -1
-        val dao = uri.initializedDao ?: return -1
         val tableName = uri.tableName ?: return -1
 
-        return dao.deleteFromDb(sqLiteOpenHelper?.writableDatabase?:return -1,
-           tableName, selection, selectionArgs)
+        return uri.attachedSqliteOpenHelper?.writableDatabase?.delete(
+            tableName,
+            selection,
+            selectionArgs,
+        ) ?: -1
     }
 
     override fun update(
         uri: Uri,
         values: ContentValues?,
         selection: String?,
-        selectionArgs: Array<out String>?
+        selectionArgs: Array<out String>?,
     ): Int {
         if (uriMatcher.match(uri) == -1) return -1
-        val dao = uri.initializedDao ?: return -1
         val tableName = uri.tableName ?: return -1
 
-        return dao.updateSync(sqLiteOpenHelper?.writableDatabase?:return -1,
-            tableName,values, selection, selectionArgs)
+        return uri.attachedSqliteOpenHelper?.writableDatabase?.update(
+            tableName,
+            values,
+            selection,
+            selectionArgs,
+        ) ?: -1
     }
 
     override fun onLowMemory() {
@@ -195,22 +261,26 @@ internal class EntityContentProvider : ContentProvider() {
         super.onLowMemory()
     }
 
-    private val Uri.initializedDao: Dao<out Entity>?
-        get() {
-            val entity = getQueryParameter(ECP_ENTITY_CODE)?.let {
-                Class.forName(it) as? Class<out Entity>
-            }
-            return ((entity ?: return null)).let {
-                RudderDatabase.createNewDao(it, _commonExecutor)
-            }.also { dao ->
-                dao.setDatabase(sqLiteOpenHelper?.writableDatabase)
-            }
-        }
     private val Uri.tableName: String?
         get() = pathSegments[0]
-    private val Uri.limit : String?
-    get() = getQueryParameter(ECP_LIMIT_CODE)
+    private val Uri.attachedSqliteOpenHelper: SQLiteOpenHelper?
+        get() = attachedDatabaseName?.let {
+            nameToSqLiteOpenHelperMap[it] ?: run {
+                attachedDatabase?.populateNameToSqliteMapping()
+                 nameToSqLiteOpenHelperMap[it]
+            }
+        }
+    private val Uri.attachedDatabaseName: String?
+        get() = getQueryParameter(ECP_DATABASE_CODE)
+    private val Uri.attachedDatabase: RudderDatabase?
+        get() = attachedDatabaseName?.let {
+            nameToRudderDatabaseMap[it]?.get()
+        }
+    private val Uri.limit: String?
+        get() = getQueryParameter(ECP_LIMIT_CODE)
+    private val Uri.nullHackColumn: String?
+        get() = getQueryParameter(ECP_NULL_HACK_COLUMN_CODE)
 
-    private val Uri.conflictAlgorithm : Int?
-    get() = getQueryParameter(ECP_CONFLICT_RESOLUTION_CODE)?.toIntOrNull()
+    private val Uri.conflictAlgorithm: Int?
+        get() = getQueryParameter(ECP_CONFLICT_RESOLUTION_CODE)?.toIntOrNull()
 }

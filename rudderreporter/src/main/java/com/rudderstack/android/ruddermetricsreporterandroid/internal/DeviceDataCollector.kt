@@ -32,7 +32,7 @@ internal class DeviceDataCollector(
     private val dataDirectory: File,
     rootDetector: RootDetector,
     private val bgTaskService: BackgroundTaskService,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
 
     private val displayMetrics = resources.displayMetrics
@@ -58,7 +58,7 @@ internal class DeviceDataCollector(
                 TaskType.IO,
                 Callable {
                     rootDetector.isRooted()
-                }
+                },
             )
         } catch (exc: RejectedExecutionException) {
             logger.w("Failed to perform root detection checks", exc)
@@ -72,7 +72,7 @@ internal class DeviceDataCollector(
         checkIsRooted(),
         locale,
         totalMemoryFuture.runCatching { this?.get() }.getOrNull(),
-        runtimeVersions.toMutableMap()
+        runtimeVersions.toMutableMap(),
     )
 
     fun generateDeviceWithState(now: Long) = DeviceWithState(
@@ -84,7 +84,7 @@ internal class DeviceDataCollector(
         calculateFreeDisk(),
         calculateFreeMemory(),
         getOrientationAsString(),
-        Date(now)
+        Date(now),
     )
 
     fun generateInternalDeviceWithState(now: Long) = DeviceWithState(
@@ -96,7 +96,7 @@ internal class DeviceDataCollector(
         calculateFreeDisk(),
         calculateFreeMemory(),
         getOrientationAsString(),
-        Date(now)
+        Date(now),
     )
 
     fun getDeviceMetadata(): Map<String, Any?> {
@@ -198,7 +198,9 @@ internal class DeviceDataCollector(
             appContext.getLocationManager()?.isLocationEnabled == true
         else -> {
             val cr = appContext.contentResolver
-            @Suppress("DEPRECATION") val providersAllowed =
+
+            @Suppress("DEPRECATION")
+            val providersAllowed =
                 Settings.Secure.getString(cr, Settings.Secure.LOCATION_PROVIDERS_ALLOWED)
             providersAllowed != null && providersAllowed.isNotEmpty()
         }
@@ -242,7 +244,7 @@ internal class DeviceDataCollector(
         return runCatching {
             bgTaskService.submitTask(
                 TaskType.IO,
-                Callable { dataDirectory.usableSpace }
+                Callable { dataDirectory.usableSpace },
             ).get()
         }.getOrDefault(0L)
     }
@@ -276,7 +278,7 @@ internal class DeviceDataCollector(
                 TaskType.DEFAULT,
                 Callable {
                     calculateTotalMemory()
-                }
+                },
             )
         } catch (exc: RejectedExecutionException) {
             logger.w("Failed to lookup available device memory", exc)

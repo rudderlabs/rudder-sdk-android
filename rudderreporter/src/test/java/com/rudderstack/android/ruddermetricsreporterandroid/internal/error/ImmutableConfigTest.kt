@@ -19,7 +19,6 @@ import com.rudderstack.android.ruddermetricsreporterandroid.error.BreadcrumbType
 import com.rudderstack.android.ruddermetricsreporterandroid.error.CrashFilter
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.NoopLogger
 import org.junit.Assert.*
-
 import org.junit.Test
 
 class ImmutableConfigTest {
@@ -31,7 +30,9 @@ class ImmutableConfigTest {
         val immutableConfig = ImmutableConfig(
             LibraryMetadata(
                 "test_lib",
-                "1.3.0", "14", "my_write_key"
+                "1.3.0",
+                "14",
+                "my_write_key",
             ),
             listOf("com.rudderstack.android"),
             setOf(BreadcrumbType.ERROR),
@@ -43,17 +44,20 @@ class ImmutableConfigTest {
             null,
             "test",
             null,
-            null
+            null,
         )
         assertFalse(immutableConfig.shouldDiscardError(exception))
     }
+
     @Test
     fun `shouldDiscardError should return false for null crashFilter`() {
         val exception = Exception("test")
         val immutableConfig = ImmutableConfig(
             LibraryMetadata(
                 "test_lib",
-                "1.3.0", "14", "my_write_key"
+                "1.3.0",
+                "14",
+                "my_write_key",
             ),
             listOf("com.rudderstack.android"),
             setOf(BreadcrumbType.ERROR),
@@ -65,10 +69,11 @@ class ImmutableConfigTest {
             null,
             "test",
             null,
-            null
+            null,
         )
         assertFalse(immutableConfig.shouldDiscardError(exception))
     }
+
     @Test
     fun `shouldDiscardError should return true for empty keywords crashFilter`() {
         val crashFilter = CrashFilter.generateWithKeyWords(emptyList())
@@ -76,7 +81,9 @@ class ImmutableConfigTest {
         val immutableConfig = ImmutableConfig(
             LibraryMetadata(
                 "test_lib",
-                "1.3.0", "14", "my_write_key"
+                "1.3.0",
+                "14",
+                "my_write_key",
             ),
             listOf("com.rudderstack.android"),
             setOf(BreadcrumbType.ERROR),
@@ -88,7 +95,7 @@ class ImmutableConfigTest {
             null,
             "test",
             null,
-            null
+            null,
         )
         assertTrue(immutableConfig.shouldDiscardError(exception))
     }

@@ -15,10 +15,10 @@
 package com.rudderstack.jacksonrudderadapter
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
-import com.fasterxml.jackson.databind.DeserializationFeature
 import java.lang.reflect.Type
 
 /**
@@ -56,12 +56,11 @@ class JacksonAdapter : JsonAdapter {
     }
 
     override fun <T : Any> readMap(map: Map<String, Any>, resultClass: Class<T>): T? {
-
         return objectMapper.convertValue(map, resultClass)
     }
 
     override fun <T : Any> readJson(json: String, resultClass: Class<T>): T {
-        //in case T is primitive, json needs to be returned as primitive
+        // in case T is primitive, json needs to be returned as primitive
         return when (resultClass) {
             String::class.java, CharSequence::class.java ->
                 json as T
@@ -70,7 +69,6 @@ class JacksonAdapter : JsonAdapter {
             Float::class.java -> json.toFloat() as T
             Long::class.java -> json.toLong() as T
             else -> objectMapper.readValue(json, resultClass)
-
         }
     }
 }

@@ -14,18 +14,14 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.error
 
-import com.rudderstack.android.ruddermetricsreporterandroid.TEST_ERROR_EVENTS_JSON
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.NoopLogger
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.junit.Test
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 import java.util.TimeZone
 
 class BreadcrumbTest {
@@ -44,7 +40,7 @@ class BreadcrumbTest {
     private val jacksonAdapter = JacksonAdapter()
 
     @Test
-    fun `Breadcrumb serialization test`(){
+    fun `Breadcrumb serialization test`() {
         val breadcrumb = Breadcrumb(
             "test",
             BreadcrumbType.ERROR,
@@ -58,27 +54,31 @@ class BreadcrumbTest {
                 set(Calendar.SECOND, 32)
                 set(Calendar.MILLISECOND, 0)
             }.time,
-            NoopLogger
+            NoopLogger,
         )
         val breadcrumbJson = gsonAdapter.writeToJson(breadcrumb)
         val breadcrumbJsonJackson = jacksonAdapter.writeToJson(breadcrumb)
         val gsonExpected = gsonAdapter.readJson(
             TEST_BREADCRUMB_JSON,
             object : RudderTypeAdapter<Map<String, Any>>() {
-            })
+            },
+        )
         val jacksonExpected = jacksonAdapter.readJson(
             TEST_BREADCRUMB_JSON,
             object : RudderTypeAdapter<Map<String, Any>>() {
-            })
+            },
+        )
         val gsonActual = gsonAdapter.readJson(
             breadcrumbJson!!,
             object : RudderTypeAdapter<Map<String, Any>>() {
-            })
+            },
+        )
         val jacksonActual = jacksonAdapter.readJson(
             breadcrumbJson!!,
             object : RudderTypeAdapter<Map<String, Any>>() {
-            })
-        assertThat(breadcrumbJson, equalTo( breadcrumbJsonJackson))
+            },
+        )
+        assertThat(breadcrumbJson, equalTo(breadcrumbJsonJackson))
         assertThat(gsonActual, equalTo(gsonExpected))
         assertThat(jacksonActual, equalTo(jacksonExpected))
         assertThat(gsonActual, equalTo(jacksonActual))

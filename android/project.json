@@ -6,6 +6,16 @@
   "targets": {
     "build": {
       "executor": "@jnxplus/nx-gradle:build",
+      "dependsOn": [
+        {
+          "projects": [
+            "core",
+            "repository",
+            "rudderreporter"
+          ],
+          "target": "build"
+        }
+      ],
       "outputs": [
         "{projectRoot}/android/build"
       ]

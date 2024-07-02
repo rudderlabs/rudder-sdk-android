@@ -31,8 +31,7 @@ sealed interface Counter<T> {
      * @param value The increment amount. MUST be non-negative.
      * @param attributes A set of attributes to associate with the value.
      */
-    fun add(value: T, attributes: Map<String,String>)
-
+    fun add(value: T, attributes: Map<String, String>)
 }
 
 class LongCounter internal constructor(
@@ -46,10 +45,9 @@ class LongCounter internal constructor(
         }
     }
 
-    override fun add(value: Long, attributes: Map<String,String>) {
+    override fun add(value: Long, attributes: Map<String, String>) {
         with(aggregatorHandler) {
             recordMetric(value, attributes)
         }
     }
-
 }

@@ -18,6 +18,7 @@ import com.rudderstack.android.ruddermetricsreporterandroid.Reservoir
 
 sealed interface Gauge<T> {
     val name: String
+
     /**
      * Records a value.
      *
@@ -32,28 +33,27 @@ sealed interface Gauge<T> {
      * @param value The amount for gauge
      * @param attributes A set of attributes to associate with the value.
      */
-    fun set(value: T, attributes: Map<String,String>?)
+    fun set(value: T, attributes: Map<String, String>?)
 }
 class LongGauge internal constructor(
     override val name: String,
     _aggregatorHandle: AggregatorHandler,
-    _reservoir: Reservoir
+    _reservoir: Reservoir,
 ) : Gauge<Long> {
 
     override fun set(value: Long) {
         TODO("Not yet implemented")
     }
 
-    override fun set(value: Long, attributes: Map<String,String>?) {
+    override fun set(value: Long, attributes: Map<String, String>?) {
         TODO("Not yet implemented")
     }
-
 }
 
 class ShortGauge internal constructor(
     override val name: String,
     _aggregatorHandle: AggregatorHandler,
-    _reservoir: Reservoir
+    _reservoir: Reservoir,
 ) : Gauge<Short> {
     private val aggregatorHandler = _aggregatorHandle
     private val reservoir = _reservoir
@@ -61,7 +61,7 @@ class ShortGauge internal constructor(
         TODO("Not yet implemented")
     }
 
-    override fun set(value: Short, attributes: Map<String,String>?) {
+    override fun set(value: Short, attributes: Map<String, String>?) {
         TODO("Not yet implemented")
     }
 }

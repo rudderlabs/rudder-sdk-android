@@ -1,8 +1,7 @@
 package com.rudderstack.android.ruddermetricsreporterandroid
 
-import org.junit.Test
-
 import org.junit.Assert.*
+import org.junit.Test
 import kotlin.math.ln
 
 /**

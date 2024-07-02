@@ -56,24 +56,26 @@ open class WebApiTest {
     private lateinit var agifyWebService: WebService
     private lateinit var jsonPlaceHolderWebService: WebService
 
-    //public api used
-    //https://api.artic.edu/docs/#quick-start
-    //also test using
-    //https://gorest.co.in
-    //for post testing
-    //https://jsonplaceholder.typicode.com/guide/
-
+    // public api used
+    // https://api.artic.edu/docs/#quick-start
+    // also test using
+    // https://gorest.co.in
+    // for post testing
+    // https://jsonplaceholder.typicode.com/guide/
 
     @Before
     fun init() {
         webService = WebServiceFactory.getWebService(
-            "https://api.artic.edu/api/v1/", jsonAdapter
+            "https://api.artic.edu/api/v1/",
+            jsonAdapter,
         )
         agifyWebService = WebServiceFactory.getWebService(
-            "https://api.agify.io/", jsonAdapter
+            "https://api.agify.io/",
+            jsonAdapter,
         )
         jsonPlaceHolderWebService = WebServiceFactory.getWebService(
-            "https://jsonplaceholder.typicode.com/", jsonAdapter
+            "https://jsonplaceholder.typicode.com/",
+            jsonAdapter,
         )
     }
 
@@ -82,77 +84,92 @@ open class WebApiTest {
         webService.shutdown()
     }
 
-
     @Test
     fun testSimpleGetSync() {
         val response = webService.get(
-            null, mapOf("fields" to "id,title"), "artworks/200154", ArtDataResponse::class.java
+            null,
+            mapOf("fields" to "id,title"),
+            "artworks/200154",
+            ArtDataResponse::class.java,
         ).get().body
 
         MatcherAssert.assertThat(
-            response, Matchers.allOf(
+            response,
+            Matchers.allOf(
                 Matchers.notNullValue(),
                 Matchers.isA(ArtDataResponse::class.java),
                 Matchers.hasProperty(
-                    "data", Matchers.allOf(
+                    "data",
+                    Matchers.allOf(
                         Matchers.notNullValue(),
                         Matchers.isA(Data::class.java),
-                        Matchers.hasProperty("id", Matchers.equalTo(200154))
-                    )
-                )
-            )
+                        Matchers.hasProperty("id", Matchers.equalTo(200154)),
+                    ),
+                ),
+            ),
         )
         assertThat(
-            response?.info?.licenseText, allOf(
-                notNullValue(), not(emptyString())
-            )
+            response?.info?.licenseText,
+            allOf(
+                notNullValue(),
+                not(emptyString()),
+            ),
         )
     }
 
     @Test
     fun testParameterizedGetSync() {
         val response = webService.get(
-            null, mapOf("fields" to "id,title"), "artworks", ArtDataListResponse::class.java
+            null,
+            mapOf("fields" to "id,title"),
+            "artworks",
+            ArtDataListResponse::class.java,
         ).get().body
 
         MatcherAssert.assertThat(
-            response, Matchers.allOf(
+            response,
+            Matchers.allOf(
                 Matchers.notNullValue(),
                 Matchers.isA(ArtDataListResponse::class.java),
                 Matchers.hasProperty(
-                    "data", Matchers.allOf(
+                    "data",
+                    Matchers.allOf(
                         Matchers.notNullValue(),
                         Matchers.isA(List::class.java),
 //                Matchers.not("id",Matchers.equalTo(200154) )
-                    )
-                )
-            )
+                    ),
+                ),
+            ),
         )
         MatcherAssert.assertThat(
-            response?.data, Matchers.allOf(
-                Matchers.notNullValue()
-            )
+            response?.data,
+            Matchers.allOf(
+                Matchers.notNullValue(),
+            ),
         )
         MatcherAssert.assertThat(
-            response?.data?.get(0), Matchers.allOf(
-                Matchers.notNullValue()
-            )
+            response?.data?.get(0),
+            Matchers.allOf(
+                Matchers.notNullValue(),
+            ),
         )
-
     }
 
     @Test
     fun testTypeAdaptedGetSync() {
-        val response = agifyWebService.get(null,
+        val response = agifyWebService.get(
+            null,
             mapOf("name" to "bella"),
             "",
-            object : RudderTypeAdapter<Map<String, String>>() {}).get().body
+            object : RudderTypeAdapter<Map<String, String>>() {},
+        ).get().body
 
         MatcherAssert.assertThat(
-            response, Matchers.allOf(
+            response,
+            Matchers.allOf(
                 Matchers.notNullValue(),
                 Matchers.isA(Map::class.java),
-            )
+            ),
         )
         val age = response?.get("age")
         MatcherAssert.assertThat(age, greaterThan("18"))
@@ -165,21 +182,26 @@ open class WebApiTest {
         val isComplete = AtomicBoolean(false)
         var response: ArtDataResponse? = null
         webService.get(
-            null, mapOf("fields" to "id,title"), "artworks/200154", ArtDataResponse::class.java
+            null,
+            mapOf("fields" to "id,title"),
+            "artworks/200154",
+            ArtDataResponse::class.java,
         ) {
             response = it.body
             MatcherAssert.assertThat(
-                response, Matchers.allOf(
+                response,
+                Matchers.allOf(
                     Matchers.notNullValue(),
                     Matchers.isA(ArtDataResponse::class.java),
                     Matchers.hasProperty(
-                        "data", Matchers.allOf(
+                        "data",
+                        Matchers.allOf(
                             Matchers.notNullValue(),
                             Matchers.isA(Data::class.java),
-                            Matchers.hasProperty("id", Matchers.equalTo(200154))
-                        )
-                    )
-                )
+                            Matchers.hasProperty("id", Matchers.equalTo(200154)),
+                        ),
+                    ),
+                ),
             )
             isComplete.set(true)
         }
@@ -188,7 +210,7 @@ open class WebApiTest {
 
     @Test
     fun testPostSync() {
-        //this will also be success return body
+        // this will also be success return body
         /*"{\n" +
                 "    \"title\": \"foo\",\n" +
                 "    \"body\": \"bar\",\n" +
@@ -198,16 +220,20 @@ open class WebApiTest {
         val postStringedBody =
             jsonAdapter.writeToJson(postBody, object : RudderTypeAdapter<Map<String, String>>() {})
         val response =
-            jsonPlaceHolderWebService.post(mapOf("Content-Type" to "application/json; charset=UTF-8"),
+            jsonPlaceHolderWebService.post(
+                mapOf("Content-Type" to "application/json; charset=UTF-8"),
                 null,
                 postStringedBody,
                 "posts",
-                object : RudderTypeAdapter<Map<String, String>>() {}).get().body
+                object : RudderTypeAdapter<Map<String, String>>() {},
+            ).get().body
 
         MatcherAssert.assertThat(
-            response, Matchers.allOf(
-                Matchers.notNullValue(), Matchers.aMapWithSize(4) //a field "id" is sent alongside
-            )
+            response,
+            Matchers.allOf(
+                Matchers.notNullValue(),
+                Matchers.aMapWithSize(4), // a field "id" is sent alongside
+            ),
         )
         val title = response?.get("title")
         MatcherAssert.assertThat(title, equalTo("foo"))
@@ -219,7 +245,7 @@ open class WebApiTest {
 
     @Test
     fun testPostASync() {
-        //this will also be success return body
+        // this will also be success return body
         /*"{\n" +
                 "    \"title\": \"foo\",\n" +
                 "    \"body\": \"bar\",\n" +
@@ -229,17 +255,20 @@ open class WebApiTest {
         val postBody = mapOf("title" to "foo", "body" to "bar", "userId" to "1")
         val postStringedBody =
             jsonAdapter.writeToJson(postBody, object : RudderTypeAdapter<Map<String, String>>() {})
-        jsonPlaceHolderWebService.post(mapOf("Content-Type" to "application/json; charset=UTF-8"),
+        jsonPlaceHolderWebService.post(
+            mapOf("Content-Type" to "application/json; charset=UTF-8"),
             null,
             postStringedBody,
             "posts",
-            object : RudderTypeAdapter<Map<String, String>>() {}) {
+            object : RudderTypeAdapter<Map<String, String>>() {},
+        ) {
             val response = it.body
             MatcherAssert.assertThat(
-                response, Matchers.allOf(
+                response,
+                Matchers.allOf(
                     Matchers.notNullValue(),
-                    Matchers.aMapWithSize(4) //a field "id" is sent alongside
-                )
+                    Matchers.aMapWithSize(4), // a field "id" is sent alongside
+                ),
             )
             val title = response?.get("title")
             MatcherAssert.assertThat(title, equalTo("foo"))
@@ -260,12 +289,12 @@ open class WebApiTest {
         webService.setInterceptor { _ ->
             object : HttpURLConnection(URL("http://www.dummyurl.com")) {
                 override fun getOutputStream(): OutputStream {
-                    //return simple output stream, which will be gzipped
+                    // return simple output stream, which will be gzipped
                     return baos
                 }
 
                 override fun connect() {
-                    //no-op
+                    // no-op
                 }
 
                 override fun disconnect() {
@@ -281,11 +310,11 @@ open class WebApiTest {
 
                 override fun getInputStream(): InputStream {
                     val bios = ByteArrayInputStream(baos.toByteArray())
-                    //use Gzip input stream to decode, remove this, and the test will fail
+                    // use Gzip input stream to decode, remove this, and the test will fail
                     val result = BufferedReader(InputStreamReader(GZIPInputStream(bios))).lines()
                         .collect(Collectors.joining("\n"))
 //                    val response = HttpResponse(200, result, null)
-                    return ByteArrayInputStream( result.toByteArray())
+                    return ByteArrayInputStream(result.toByteArray())
                 }
             }
         }
@@ -295,19 +324,36 @@ open class WebApiTest {
             testingPayload,
             "test",
             object : RudderTypeAdapter<Map<String, Any>>() {},
-            true
+            true,
         ).get()
-        assertThat(output.body, allOf(notNullValue(), aMapWithSize<String, Any>(3),
-            hasEntry("test", "test"), hasEntry("test2", "test2"),
-            /*hasEntry("test3", allOf(*//*aMapWithSize<String, String>(1)*//*, *//*hasEntry("test4", "test4")*//*))*/))
-        println(output.body!!["test3"]?.javaClass)
-        assertThat(output.body!!["test3"] as Map<String, String>, allOf(notNullValue(),
-            aMapWithSize<String,
-                String>
-            (1), hasEntry
-                ("test4", "test4")))
+        assertThat(
+            output.body,
+            allOf(
+                notNullValue(),
+                aMapWithSize<String, Any>(3),
+                hasEntry("test", "test"),
+                hasEntry("test2", "test2"),
+                /*hasEntry("test3", allOf(*/
+                /*aMapWithSize<String, String>(1)*/
+                /*, */
+                /*hasEntry("test4", "test4")*/
+                /*))*/
+            ),
+        )
+        assertThat(
+            output.body!!["test3"] as Map<String, String>,
+            allOf(
+                notNullValue(),
+                aMapWithSize<
+                    String,
+                    String,
+                    >
+                (1),
+                hasEntry
+                ("test4", "test4"),
+            ),
+        )
     }
-
 }
 
 class WebApiTestJackson : WebApiTest() {

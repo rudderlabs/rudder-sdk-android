@@ -21,6 +21,6 @@ fun interface UploadMediator {
     fun upload(
         metrics: List<MetricModel<out Number>>,
         error: ErrorModel,
-        callback: (success: Boolean) -> Unit
+        callback: (success: Boolean) -> Unit,
     )
 }

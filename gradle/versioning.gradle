@@ -6,7 +6,6 @@ def getVersionName() { // If not release build add SNAPSHOT suffix
     return getVersionName(VERSION_NAME)
 }
 def getVersionName(version) { // If not release build add SNAPSHOT suffix
-    println("versioning call:$version")
     return isReleaseBuild() ? version : version+"-SNAPSHOT"
 }
 

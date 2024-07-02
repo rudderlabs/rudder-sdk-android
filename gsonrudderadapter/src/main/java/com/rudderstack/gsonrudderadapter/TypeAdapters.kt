@@ -15,4 +15,3 @@
  * Custom type adapters to be mentioned here
  */
 package com.rudderstack.gsonrudderadapter
-

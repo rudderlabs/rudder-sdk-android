@@ -40,7 +40,7 @@ data class LibraryMetadata @JvmOverloads constructor(
     @get:JsonProperty("os_version")
     @SerializedName("os_version")
     @Json(name = "os_version")
-    val osVersion: String = Build.VERSION.SDK_INT.toString()
+    val osVersion: String = Build.VERSION.SDK_INT.toString(),
 ) : JSerialize<LibraryMetadata> {
     override fun serialize(jsonAdapter: JsonAdapter): String? {
         return jsonAdapter.writeToJson(this)

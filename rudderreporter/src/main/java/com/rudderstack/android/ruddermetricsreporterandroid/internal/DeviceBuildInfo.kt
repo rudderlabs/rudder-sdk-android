@@ -11,11 +11,12 @@ internal class DeviceBuildInfo(
     val fingerprint: String?,
     val tags: String?,
     val brand: String?,
-    val cpuAbis: Array<String>?
+    val cpuAbis: Array<String>?,
 ) {
     companion object {
         fun defaultInfo(): DeviceBuildInfo {
-            @Suppress("DEPRECATION") val cpuABis = when {
+            @Suppress("DEPRECATION")
+            val cpuABis = when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> Build.SUPPORTED_ABIS
                 else -> arrayOf(Build.CPU_ABI, Build.CPU_ABI2)
             }
@@ -29,7 +30,7 @@ internal class DeviceBuildInfo(
                 Build.FINGERPRINT,
                 Build.TAGS,
                 Build.BRAND,
-                cpuABis
+                cpuABis,
             )
         }
     }

@@ -34,8 +34,8 @@ open class Device internal constructor(
      * A collection of names and their versions of the primary languages, frameworks or
      * runtimes that the application is running on
      */
-    runtimeVersions: MutableMap<String, Any>?
-) : JSerialize<Device>{
+    runtimeVersions: MutableMap<String, Any>?,
+) : JSerialize<Device> {
 
     /**
      * The manufacturer of the device used
@@ -63,13 +63,13 @@ open class Device internal constructor(
         }
 
     private fun sanitizeRuntimeVersions(value: MutableMap<String, Any>?): MutableMap<String, Any> =
-        value?.mapValuesTo(mutableMapOf()) { (_, value) -> value.toString() }?: mutableMapOf()
+        value?.mapValuesTo(mutableMapOf()) { (_, value) -> value.toString() } ?: mutableMapOf()
 
     override fun serialize(jsonAdapter: JsonAdapter): String? {
         return jsonAdapter.writeToJson(this)
     }
 
-    internal open  fun toMap(): Map<String, Any?> = mapOf(
+    internal open fun toMap(): Map<String, Any?> = mapOf(
         "manufacturer" to manufacturer,
         "model" to model,
         "osName" to osName,
@@ -78,6 +78,6 @@ open class Device internal constructor(
         "jailbroken" to jailbroken?.toString(),
         "locale" to locale,
         "totalMemory" to totalMemory.toString(),
-        "runtimeVersions" to runtimeVersions.toMap() as? Map<String, String?>
+        "runtimeVersions" to runtimeVersions.toMap() as? Map<String, String?>,
     )
 }
