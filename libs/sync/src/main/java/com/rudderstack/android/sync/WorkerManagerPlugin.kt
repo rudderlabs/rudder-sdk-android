@@ -28,7 +28,7 @@ abstract class WorkerManagerPlugin : InfrastructurePlugin {
         analyticsIdentifier = analytics.writeKey
         val currentConfig = analytics.currentConfigurationAndroid
         if (currentConfig?.isPeriodicFlushEnabled != true) {
-            currentConfig?.rudderLogger?.error(
+            currentConfig?.logger?.error(
                 log = "Halting Worker manager plugin initialization since isPeriodicFlushEnabled configuration is false"
             )
             return

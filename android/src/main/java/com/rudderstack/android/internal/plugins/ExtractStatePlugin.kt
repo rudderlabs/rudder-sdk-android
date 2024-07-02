@@ -65,7 +65,7 @@ internal class ExtractStatePlugin : Plugin {
             //aforementioned ids
             val newUserId = getUserId(message)
 
-            _analytics?.rudderLogger?.debug(log = "New user id detected: $newUserId")
+            _analytics?.logger?.debug(log = "New user id detected: $newUserId")
             val prevId = _analytics?.androidStorage?.userId ?: _analytics?.currentConfigurationAndroid?.anonymousId ?: String.empty()
             // in case of identify, the stored traits (if any) are replaced by the ones provided
             // if user id is different. else traits are added to it

@@ -24,7 +24,7 @@ import com.rudderstack.android.internal.isCloudModeDone
 import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.EntityFactory
 import com.rudderstack.android.repository.RudderDatabase
-import com.rudderstack.core.RudderLogger
+import com.rudderstack.core.Logger
 import com.rudderstack.models.AliasMessage
 import com.rudderstack.models.GroupMessage
 import com.rudderstack.models.IdentifyMessage
@@ -52,13 +52,13 @@ fun migrateV1MessagesToV2Database(
     context: Context,
     v2Database: RudderDatabase,
     jsonAdapter: JsonAdapter,
-    rudderLogger: RudderLogger? = null,
+    logger: Logger? = null,
     executorService: ExecutorService? = null
 ) : Boolean{
-    rudderLogger?.info(log = "Migrating V1 messages to V2 database")
+    logger?.info(log = "Migrating V1 messages to V2 database")
     synchronized(synchronizeOn) {
         val prevVersion = findPreviousVersion(context).takeIf { it > 0 }?:return false
-        rudderLogger?.debug(log = "Migrating from version: $prevVersion")
+        logger?.debug(log = "Migrating from version: $prevVersion")
         val v1Database = RudderDatabase(
             context,
             V1_DATABASE_NAME,
@@ -78,7 +78,7 @@ fun migrateV1MessagesToV2Database(
             return true
         }
         with(v2Database.getDao(MessageEntity::class.java)) {
-            rudderLogger?.info(log = "Migrating ${v1Messages.size} messages")
+            logger?.info(log = "Migrating ${v1Messages.size} messages")
             v1Messages.insertSync()
         }
         v1Database.delete()

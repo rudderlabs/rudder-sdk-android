@@ -4,7 +4,6 @@ import android.app.Application
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.android.storage.saveObject
-import com.rudderstack.core.RudderLogger
 import com.rudderstack.core.internal.KotlinLogger
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers

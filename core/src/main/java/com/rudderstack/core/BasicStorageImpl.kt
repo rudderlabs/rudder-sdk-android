@@ -38,7 +38,7 @@ class BasicStorageImpl @JvmOverloads constructor(
     private var configurationRef = AtomicReference<Configuration>(null)
 
     private val logger
-        get() = configurationRef.get()?.rudderLogger
+        get() = configurationRef.get()?.logger
     private var backPressureStrategy = Storage.BackPressureStrategy.Drop
 
     private var _storageCapacity = Storage.MAX_STORAGE_CAPACITY

@@ -28,7 +28,7 @@ class EventSizeFilterPlugin : Plugin {
             }
             val messageSize = messageJSON.toString().getUTF8Length()
             if (messageSize > MAX_EVENT_SIZE) {
-                config.rudderLogger.error(log = "Event size exceeds the maximum size of $MAX_EVENT_SIZE bytes. Dropping the event.")
+                config.logger.error(log = "Event size exceeds the maximum size of $MAX_EVENT_SIZE bytes. Dropping the event.")
                 return chain.message()
             }
         }

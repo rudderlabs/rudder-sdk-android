@@ -99,7 +99,7 @@ fun interface RetryStrategy {
             private var lastFuture: WeakReference<Future<*>>? = null
             private val _isDone = AtomicBoolean(false)
             private val logger
-                get() = analytics.currentConfiguration?.rudderLogger
+                get() = analytics.currentConfiguration?.logger
             val isDone: Boolean
                 get() = _isDone.get()
             fun start() {

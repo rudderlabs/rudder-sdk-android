@@ -63,7 +63,7 @@ class RudderSyncWorkerTest {
         every{configuration.defaultProcessName} returns null
         every{configuration.multiProcessEnabled} returns false
         every{configuration.networkExecutor} returns mockk()
-        every{analytics.rudderLogger} returns logger
+        every{analytics.logger} returns logger
         every{analytics.currentConfigurationAndroid} returns configuration
         every{analytics.currentConfiguration} returns configuration
         every { analytics.writeKey } returns "test_write_key"

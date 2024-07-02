@@ -5,7 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.android.AnalyticsRegistry
 import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.RudderAnalytics.Companion.getInstance
-import com.rudderstack.core.RudderLogger
+import com.rudderstack.core.Logger
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
@@ -31,7 +31,7 @@ class AnalyticsUtilTest {
             "testKey", ConfigurationAndroid(
                 ApplicationProvider.getApplicationContext(),
                 JacksonAdapter(),
-                logLevel = RudderLogger.LogLevel.DEBUG,
+                logLevel = Logger.LogLevel.DEBUG,
             )
         )
 

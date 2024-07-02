@@ -6,7 +6,7 @@ import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.internal.states.UserSessionState
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.RudderLogger
+import com.rudderstack.core.Logger
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.removeState
 import com.rudderstack.core.holder.retrieveState
@@ -48,7 +48,7 @@ class SessionUtilsTest {
                 shouldVerifySdk = false,
                 trackLifecycleEvents = true,
                 trackAutoSession = true,
-                logLevel = RudderLogger.LogLevel.DEBUG,
+                logLevel = Logger.LogLevel.DEBUG,
             ),
             storage = mockStorage
         )
@@ -100,7 +100,7 @@ class SessionUtilsTest {
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
-            logLevel = RudderLogger.LogLevel.DEBUG,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         analytics.applyConfiguration {
             mockConfig
@@ -151,7 +151,7 @@ class SessionUtilsTest {
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
-            logLevel = RudderLogger.LogLevel.DEBUG,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         userSessionState?.update(UserSession())
         analytics.applyConfiguration {
@@ -179,7 +179,7 @@ class SessionUtilsTest {
             trackLifecycleEvents = true,
             trackAutoSession = true,
             sessionTimeoutMillis = 10000L,
-            logLevel = RudderLogger.LogLevel.DEBUG,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         val sessionId = 1234567890L
         val lastActiveTimestamp = defaultLastActiveTimestamp
@@ -211,7 +211,7 @@ class SessionUtilsTest {
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
-            logLevel = RudderLogger.LogLevel.DEBUG,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         val sessionId = 1234567890L
         val lastActiveTimestamp = System.currentTimeMillis() - mockConfig.sessionTimeoutMillis
@@ -246,7 +246,7 @@ class SessionUtilsTest {
             trackLifecycleEvents = true,
             trackAutoSession = true,
             sessionTimeoutMillis = 0L,
-            logLevel = RudderLogger.LogLevel.DEBUG,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         val sessionId = 1234567890L
         val lastActiveTimestamp = System.currentTimeMillis() - mockConfig.sessionTimeoutMillis
@@ -283,7 +283,7 @@ class SessionUtilsTest {
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
-            logLevel = RudderLogger.LogLevel.DEBUG,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         analytics.applyConfiguration {
             mockConfig
@@ -313,7 +313,7 @@ class SessionUtilsTest {
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
-            logLevel = RudderLogger.LogLevel.DEBUG,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         analytics.applyConfiguration {
             mockConfig
@@ -344,7 +344,7 @@ class SessionUtilsTest {
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
-            logLevel = RudderLogger.LogLevel.DEBUG,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         analytics.applyConfiguration {
             mockConfig
@@ -369,7 +369,7 @@ class SessionUtilsTest {
             shouldVerifySdk = false,
             trackLifecycleEvents = true,
             trackAutoSession = true,
-            logLevel = RudderLogger.LogLevel.DEBUG,
+            logLevel = Logger.LogLevel.DEBUG,
         )
         analytics.shutdown()
         analytics = generateTestAnalytics(
