@@ -1,5 +1,7 @@
 package com.rudderstack.core
 
+typealias RudderLogLevel = Logger.LogLevel
+
 /**
  * Logger interface.
  * Contains methods for different scenarios
