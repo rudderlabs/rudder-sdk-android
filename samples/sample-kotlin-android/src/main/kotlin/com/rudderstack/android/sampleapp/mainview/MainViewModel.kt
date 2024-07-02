@@ -10,11 +10,11 @@ import com.rudderstack.android.utilities.startSession
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOption
-import com.rudderstack.models.GroupTraits
-import com.rudderstack.models.IdentifyTraits
-import com.rudderstack.models.Message
-import com.rudderstack.models.ScreenProperties
-import com.rudderstack.models.TrackProperties
+import com.rudderstack.core.models.GroupTraits
+import com.rudderstack.core.models.IdentifyTraits
+import com.rudderstack.core.models.Message
+import com.rudderstack.core.models.ScreenProperties
+import com.rudderstack.core.models.TrackProperties
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update

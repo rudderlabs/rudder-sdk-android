@@ -1,17 +1,3 @@
-/*
- * Creator: Debanjan Chatterjee on 28/12/21, 11:53 PM Last modified: 28/12/21, 11:53 PM
- * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.core.internal
 
 import com.rudderstack.core.Analytics
@@ -47,8 +33,8 @@ import com.rudderstack.core.internal.plugins.StoragePlugin
 import com.rudderstack.core.internal.plugins.WakeupActionPlugin
 import com.rudderstack.core.internal.states.ConfigurationsState
 import com.rudderstack.core.internal.states.DestinationConfigState
-import com.rudderstack.models.Message
-import com.rudderstack.models.RudderServerConfig
+import com.rudderstack.core.models.Message
+import com.rudderstack.core.models.RudderServerConfig
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
 import java.util.concurrent.ExecutorService
@@ -476,7 +462,6 @@ internal class AnalyticsDelegate(
     private fun initDestinationPlugin(plugin: DestinationPlugin<*>) {
 
         val destConfig = currentDestinationConfigurationState?.value ?: DestinationConfig()
-
 
         if (!destConfig.isIntegrationReady(plugin.name)) {
 

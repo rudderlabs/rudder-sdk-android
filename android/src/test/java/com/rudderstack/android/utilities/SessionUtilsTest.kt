@@ -11,7 +11,7 @@ import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.removeState
 import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
-import com.rudderstack.models.android.UserSession
+import com.rudderstack.android.models.UserSession
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert

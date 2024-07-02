@@ -1,17 +1,3 @@
-/*
- * Creator: Debanjan Chatterjee on 04/04/22, 1:35 PM Last modified: 04/04/22, 1:35 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.core.internal.plugins
 
 import com.rudderstack.core.BaseDestinationPlugin
@@ -19,21 +5,18 @@ import com.rudderstack.core.DestinationPlugin
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.CentralPluginChain
-import com.rudderstack.models.RudderServerConfig
-import com.rudderstack.models.TrackMessage
+import com.rudderstack.core.models.RudderServerConfig
+import com.rudderstack.core.models.TrackMessage
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.everyItem
+import org.hamcrest.Matchers.isA
+import org.hamcrest.Matchers.iterableWithSize
+import org.hamcrest.Matchers.not
 import org.junit.After
-import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import java.util.Date
 
 /**
  * For testing [DestinationConfigurationPlugin] we will create
@@ -66,10 +49,11 @@ class DestinationConfigurationPluginTest {
     @Before
     fun setup() {
         destinationConfigurationPlugin = DestinationConfigurationPlugin()
-        defaultPluginChain = CentralPluginChain(message,
-            destinations, originalMessage = message/*.toMutableList().also {
-                it.add(0, destinationConfigurationPlugin!!)
-            }*/)
+        defaultPluginChain = CentralPluginChain(
+            message = message,
+            plugins = destinations,
+            originalMessage = message
+        )
     }
 
     @After
@@ -124,9 +108,9 @@ class DestinationConfigurationPluginTest {
             }
         )
         destinationConfigurationPlugin!!.intercept(centralPluginChain)
+    }
 
-
-    }@Test
+    @Test
     fun `test destination filtering with config not set`() {
 
         //adding a assertion plugin
@@ -136,10 +120,11 @@ class DestinationConfigurationPluginTest {
                 it.add(0, Plugin {
                     //after processing the chain should be devoid of d-2
                     assertThat(
-                        it.plugins, allOf(iterableWithSize(1), //the test plugin
-                        //check there should be no destination plugin
+                        it.plugins, allOf(
+                            iterableWithSize(1), //the test plugin
+                            //check there should be no destination plugin
                             everyItem(not(isA(DestinationPlugin::class.java)))
-                             )
+                        )
                     )
                     it.proceed(it.message())
                 })
@@ -147,7 +132,4 @@ class DestinationConfigurationPluginTest {
         )
         destinationConfigurationPlugin!!.intercept(centralPluginChain)
     }
-
-
-
 }

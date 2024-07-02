@@ -3,7 +3,7 @@ package com.rudderstack.core.internal.plugins
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.Storage
-import com.rudderstack.models.Message
+import com.rudderstack.core.models.Message
 
 private const val LIBRARY_KEY = "library"
 
