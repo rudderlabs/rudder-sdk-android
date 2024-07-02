@@ -32,8 +32,6 @@ class CoreInputsPluginTest {
         storage = mock<Storage>()
         whenever(storage.libraryName) doReturn "MyLibrary"
         whenever(storage.libraryVersion) doReturn "1.0"
-//        `when`(storage.libraryName).thenReturn("MyLibrary")
-//        `when`(storage.libraryVersion).thenReturn("1.0")
         analytics = generateTestAnalytics(mock<Configuration>(), storage = storage)
     }
 
@@ -100,9 +98,6 @@ class CoreInputsPluginTest {
         whenever(mockChain.proceed(any())) doAnswer {
             it.getArgument(0)
         }
-//        val existingContext = null
-        /*`when`(mockMessage.context).thenReturn(existingContext)
-        `when`(mockChain.message()).thenReturn(mockMessage)*/
         coreInputsPlugin.setup(analytics)
         // Act
         val result = coreInputsPlugin.intercept(mockChain)
