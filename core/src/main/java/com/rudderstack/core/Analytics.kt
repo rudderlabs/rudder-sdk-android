@@ -1,34 +1,20 @@
-/*
- * Creator: Debanjan Chatterjee on 26/11/21, 12:24 AM Last modified: 26/11/21, 12:24 AM
- * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.core
 
 import com.rudderstack.core.internal.AnalyticsDelegate
 import com.rudderstack.core.internal.ConfigDownloadServiceImpl
 import com.rudderstack.core.internal.DataUploadServiceImpl
-import com.rudderstack.models.AliasMessage
-import com.rudderstack.models.GroupMessage
-import com.rudderstack.models.GroupTraits
-import com.rudderstack.models.IdentifyMessage
-import com.rudderstack.models.IdentifyProperties
-import com.rudderstack.models.IdentifyTraits
-import com.rudderstack.models.MessageContext
-import com.rudderstack.models.MessageDestinationProps
-import com.rudderstack.models.ScreenMessage
-import com.rudderstack.models.ScreenProperties
-import com.rudderstack.models.TrackMessage
-import com.rudderstack.models.TrackProperties
+import com.rudderstack.core.models.AliasMessage
+import com.rudderstack.core.models.GroupMessage
+import com.rudderstack.core.models.GroupTraits
+import com.rudderstack.core.models.IdentifyMessage
+import com.rudderstack.core.models.IdentifyProperties
+import com.rudderstack.core.models.IdentifyTraits
+import com.rudderstack.core.models.MessageContext
+import com.rudderstack.core.models.MessageDestinationProps
+import com.rudderstack.core.models.ScreenMessage
+import com.rudderstack.core.models.ScreenProperties
+import com.rudderstack.core.models.TrackMessage
+import com.rudderstack.core.models.TrackProperties
 
 class Analytics private constructor(
     private val _delegate: AnalyticsDelegate,
@@ -58,15 +44,14 @@ class Analytics private constructor(
         shutdownHook: (Analytics.() -> Unit)? = null
     ) : this(
         _delegate = AnalyticsDelegate(
-            configuration, storage?:BasicStorageImpl(), writeKey, dataUploadService ?:
-            DataUploadServiceImpl(
+            configuration, storage ?: BasicStorageImpl(), writeKey, dataUploadService ?: DataUploadServiceImpl(
                 writeKey
             ), configDownloadService ?: ConfigDownloadServiceImpl(
                 writeKey
             ), initializationListener, shutdownHook
 
         )
-    ){}
+    )
 
 
     companion object {
@@ -235,11 +220,13 @@ class Analytics private constructor(
     ) {
         val completeTraits = mapOf("userId" to newId)
         alias(
-            AliasMessage.create(timestamp = RudderUtils.timeStamp,
+            AliasMessage.create(
+                timestamp = RudderUtils.timeStamp,
                 anonymousId = anonymousId,
-                previousId=previousId,
+                previousId = previousId,
                 destinationProps = destinationProps,
-                userId = newId, traits = completeTraits),
+                userId = newId, traits = completeTraits
+            ),
             options
         )
     }

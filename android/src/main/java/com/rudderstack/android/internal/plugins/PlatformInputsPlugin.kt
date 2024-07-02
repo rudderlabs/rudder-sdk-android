@@ -35,10 +35,11 @@ import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Plugin
+import com.rudderstack.core.models.Message
+import com.rudderstack.core.models.MessageContext
 import com.rudderstack.core.optAdd
-import com.rudderstack.models.Message
-import com.rudderstack.models.MessageContext
-import java.util.*
+import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.atomic.AtomicReference
 
 /**

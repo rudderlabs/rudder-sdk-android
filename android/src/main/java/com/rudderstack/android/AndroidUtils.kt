@@ -1,17 +1,3 @@
-/*
- * Creator: Debanjan Chatterjee on 07/07/22, 4:44 PM Last modified: 07/07/22, 4:44 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.android
 
 import android.app.Application
@@ -25,18 +11,18 @@ import android.text.TextUtils
 import android.util.Base64
 import android.util.DisplayMetrics
 import android.view.WindowManager
+import com.rudderstack.android.models.RudderApp
+import com.rudderstack.android.models.RudderDeviceInfo
+import com.rudderstack.android.models.RudderScreenInfo
 import com.rudderstack.core.Base64Generator
-import com.rudderstack.models.android.RudderApp
-import com.rudderstack.models.android.RudderDeviceInfo
-import com.rudderstack.models.android.RudderScreenInfo
 import java.io.UnsupportedEncodingException
 import java.util.*
 
-
 internal object AndroidUtils {
     fun generateAnonymousId(isCollectDeviceId: Boolean, application: Application): String {
-        return if(! isCollectDeviceId) UUID.randomUUID().toString() else getDeviceId(application)
+        return if (!isCollectDeviceId) UUID.randomUUID().toString() else getDeviceId(application)
     }
+
     internal fun getDeviceId(application: Application): String = run {
 
         val androidId =
@@ -44,7 +30,7 @@ internal object AndroidUtils {
         if (!TextUtils.isEmpty(androidId) && "9774d56d682e549c" != androidId && "unknown" != androidId && "000000000000000" != androidId) {
             return androidId
         }
-        androidId?: UUID.randomUUID().toString()
+        androidId ?: UUID.randomUUID().toString()
     }
 
     fun getWriteKeyFromStrings(context: Context): String? {
@@ -134,17 +120,17 @@ internal object AndroidUtils {
 //            RudderLogger.logError(ex.cause)
             null
         }
-    private val Application.screen : RudderScreenInfo?
+    private val Application.screen: RudderScreenInfo?
         get() = run {
             val manager = getSystemService(Context.WINDOW_SERVICE) as? WindowManager
             return@run if (manager == null) {
                 null
-            }else {
+            } else {
                 val display = manager.defaultDisplay
                 val displayMetrics = DisplayMetrics()
                 display.getMetrics(displayMetrics)
                 RudderScreenInfo(
-                     displayMetrics.densityDpi,
+                    displayMetrics.densityDpi,
                     displayMetrics.widthPixels,
                     displayMetrics.heightPixels
                 )

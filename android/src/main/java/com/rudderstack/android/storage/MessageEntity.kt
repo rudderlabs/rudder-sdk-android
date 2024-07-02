@@ -1,17 +1,3 @@
-/*
- * Creator: Debanjan Chatterjee on 28/04/22, 12:26 AM Last modified: 28/04/22, 12:26 AM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.android.storage
 
 import android.content.ContentValues
@@ -21,13 +7,13 @@ import com.rudderstack.android.repository.Entity
 import com.rudderstack.android.repository.annotation.RudderEntity
 import com.rudderstack.android.repository.annotation.RudderField
 import com.rudderstack.android.storage.MessageEntity.Companion.TABLE_NAME
-import com.rudderstack.models.AliasMessage
-import com.rudderstack.models.GroupMessage
-import com.rudderstack.models.IdentifyMessage
-import com.rudderstack.models.Message
-import com.rudderstack.models.PageMessage
-import com.rudderstack.models.ScreenMessage
-import com.rudderstack.models.TrackMessage
+import com.rudderstack.core.models.AliasMessage
+import com.rudderstack.core.models.GroupMessage
+import com.rudderstack.core.models.IdentifyMessage
+import com.rudderstack.core.models.Message
+import com.rudderstack.core.models.PageMessage
+import com.rudderstack.core.models.ScreenMessage
+import com.rudderstack.core.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 

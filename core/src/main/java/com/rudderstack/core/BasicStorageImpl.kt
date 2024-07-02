@@ -1,22 +1,8 @@
-/*
- * Creator: Debanjan Chatterjee on 11/04/22, 3:59 PM Last modified: 11/04/22, 3:53 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.core
 
-import com.rudderstack.models.IdentifyTraits
-import com.rudderstack.models.Message
-import com.rudderstack.models.RudderServerConfig
+import com.rudderstack.core.models.IdentifyTraits
+import com.rudderstack.core.models.Message
+import com.rudderstack.core.models.RudderServerConfig
 import java.io.*
 import java.lang.ref.WeakReference
 import java.util.*
@@ -28,6 +14,7 @@ private const val LIB_KEY_NAME = "libraryName"
 private const val LIB_KEY_VERSION = "rudderCoreSdkVersion"
 private const val LIB_KEY_PLATFORM = "platform"
 private const val LIB_KEY_OS_VERSION = "os_version"
+
 @Suppress("ThrowableNotThrown")
 class BasicStorageImpl @JvmOverloads constructor(
     /**
@@ -115,20 +102,20 @@ class BasicStorageImpl @JvmOverloads constructor(
                     logger?.warn(log = "Max storage capacity reached, dropping first$excessMessages oldest events")
                     val tobeRemovedList = ArrayList<Message>(excessMessages)
                     var counter = excessMessages
-                        while (counter > 0) {
-                            val item = queue.poll()
-                            if (item != null) {
-                                counter--
-                                tobeRemovedList.add(item)
-                            } else
-                                break
-                        }
+                    while (counter > 0) {
+                        val item = queue.poll()
+                        if (item != null) {
+                            counter--
+                            tobeRemovedList.add(item)
+                        } else
+                            break
+                    }
                     queue.addAll(messages.takeLast(_storageCapacity))
                     //callback
                     tobeRemovedList.run(dataFailBlock)
                 }
             } else {
-                    queue.addAll(messages)
+                queue.addAll(messages)
             }
         }
         onDataChange()
@@ -242,13 +229,12 @@ class BasicStorageImpl @JvmOverloads constructor(
 
 
     override val serverConfig: RudderServerConfig?
-        get() = _serverConfig?:
-            if (serverConfigFile.exists()){
-                val fis = FileInputStream(serverConfigFile)
-                val oos = ObjectInputStream(fis)
-                _serverConfig = oos.readObject() as RudderServerConfig?
-                _serverConfig
-            } else null
+        get() = _serverConfig ?: if (serverConfigFile.exists()) {
+            val fis = FileInputStream(serverConfigFile)
+            val oos = ObjectInputStream(fis)
+            _serverConfig = oos.readObject() as RudderServerConfig?
+            _serverConfig
+        } else null
 
 
     override val startupQueue: List<Message>
@@ -284,6 +270,7 @@ class BasicStorageImpl @JvmOverloads constructor(
     override fun toString(): String {
         return "BasicStorageImpl(queue=$queue, _storageCapacity=$_storageCapacity, _maxFetchLimit=$_maxFetchLimit, _dataChangeListeners=$_dataChangeListeners, _isOptOut=$_isOptOut, _optOutTime=$_optOutTime, _optInTime=$_optInTime, _serverConfig=$_serverConfig, _traits=$_traits, libDetails=$libDetails, serverConfigFile=$serverConfigFile)"
     }
+
     private fun onDataChange() {
         synchronized(this) {
             _dataChangeListeners.forEach {
