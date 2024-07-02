@@ -59,15 +59,30 @@ data class RudderServerConfig(
      * @property destinations
      */
     data class RudderServerConfigSource(
-        @Json(name = "id") @JsonProperty("id") @SerializedName("id") val sourceId: String? = null,
+        @Json(name = "id")
+        @JsonProperty("id")
+        @SerializedName("id")
+        val sourceId: String? = null,
 
-        @Json(name = "name") @JsonProperty("name") @SerializedName("name") val sourceName: String? = null,
+        @Json(name = "name")
+        @JsonProperty("name")
+        @SerializedName("name")
+        val sourceName: String? = null,
 
-        @Json(name = "enabled") @JsonProperty("enabled") @SerializedName("enabled") val isSourceEnabled: Boolean = false,
+        @Json(name = "enabled")
+        @JsonProperty("enabled")
+        @SerializedName("enabled")
+        val isSourceEnabled: Boolean = false,
 
-        @Json(name = "updatedAt") @JsonProperty("updatedAt") @SerializedName("updatedAt") val updatedAt: String? = null,
+        @Json(name = "updatedAt")
+        @JsonProperty("updatedAt")
+        @SerializedName("updatedAt")
+        val updatedAt: String? = null,
 
-        @Json(name = "destinations") @JsonProperty("destinations") @SerializedName("destinations") val destinations: List<RudderServerDestination>? = null,
+        @Json(name = "destinations")
+        @JsonProperty("destinations")
+        @SerializedName("destinations")
+        val destinations: List<RudderServerDestination>? = null,
     ) : Serializable {
         companion object {
             @JvmStatic
@@ -106,18 +121,39 @@ data class RudderServerConfig(
     }
 
     data class RudderServerDestination(
-        @Json(name = "id") @JsonProperty("id") @SerializedName("id") val destinationId: String,
+        @Json(name = "id")
+        @JsonProperty("id")
+        @SerializedName("id")
+        val destinationId: String,
 
-        @Json(name = "name") @JsonProperty("name") @SerializedName("name") val destinationName: String? = null,
+        @Json(name = "name")
+        @JsonProperty("name")
+        @SerializedName("name")
+        val destinationName: String? = null,
 
-        @Json(name = "enabled") @JsonProperty("enabled") @SerializedName("enabled") val isDestinationEnabled: Boolean = false,
+        @Json(name = "enabled")
+        @JsonProperty("enabled")
+        @SerializedName("enabled")
+        val isDestinationEnabled: Boolean = false,
 
-        @Json(name = "updatedAt") @JsonProperty("updatedAt") @SerializedName("updatedAt") val updatedAt: String? = null,
+        @Json(name = "updatedAt")
+        @JsonProperty("updatedAt")
+        @SerializedName("updatedAt")
+        val updatedAt: String? = null,
 
-        @Json(name = "destinationDefinition") @JsonProperty("destinationDefinition") @SerializedName("destinationDefinition") val destinationDefinition: RudderServerDestinationDefinition? = null,
+        @Json(name = "destinationDefinition")
+        @JsonProperty("destinationDefinition")
+        @SerializedName("destinationDefinition")
+        val destinationDefinition: RudderServerDestinationDefinition? = null,
 
-        @Json(name = "config") @JsonProperty("config") @SerializedName("config") val destinationConfig: Map<String, Any>,
-        @JsonProperty("areTransformationsConnected") @Json(name = "areTransformationsConnected") val areTransformationsConnected: Boolean = false,
+        @Json(name = "config")
+        @JsonProperty("config")
+        @SerializedName("config")
+        val destinationConfig: Map<String, Any>,
+
+        @JsonProperty("areTransformationsConnected")
+        @Json(name = "areTransformationsConnected")
+        val areTransformationsConnected: Boolean = false,
     ) : Serializable {
         companion object {
             @JvmStatic
@@ -168,12 +204,20 @@ data class RudderServerConfig(
     }
 
     data class RudderServerDestinationDefinition(
+        @Json(name = "name")
+        @JsonProperty("name")
+        @SerializedName("name")
+        val definitionName: String? = null,
 
-        @Json(name = "name") @JsonProperty("name") @SerializedName("name") val definitionName: String? = null,
+        @Json(name = "displayName")
+        @JsonProperty("displayName")
+        @SerializedName("displayName")
+        val displayName: String? = null,
 
-        @Json(name = "displayName") @JsonProperty("displayName") @SerializedName("displayName") val displayName: String? = null,
-
-        @Json(name = "updatedAt") @JsonProperty("updatedAt") @SerializedName("updatedAt") val updatedAt: String? = null,
+        @Json(name = "updatedAt")
+        @JsonProperty("updatedAt")
+        @SerializedName("updatedAt")
+        val updatedAt: String? = null,
     ) : Serializable {
         companion object {
             @JvmStatic
