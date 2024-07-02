@@ -50,10 +50,9 @@ class DestinationConfigurationPluginTest {
     fun setup() {
         destinationConfigurationPlugin = DestinationConfigurationPlugin()
         defaultPluginChain = CentralPluginChain(
-            message,
-            destinations, originalMessage = message/*.toMutableList().also {
-                it.add(0, destinationConfigurationPlugin!!)
-            }*/
+            message = message,
+            plugins = destinations,
+            originalMessage = message
         )
     }
 
@@ -133,6 +132,4 @@ class DestinationConfigurationPluginTest {
         )
         destinationConfigurationPlugin!!.intercept(centralPluginChain)
     }
-
-
 }
