@@ -4,12 +4,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
-import com.rudderstack.models.GroupMessage
-import com.rudderstack.models.IdentifyMessage
-import com.rudderstack.models.ScreenMessage
-import com.rudderstack.models.TrackMessage
-import com.rudderstack.models.createContext
-import com.rudderstack.moshirudderadapter.MoshiAdapter
+import com.rudderstack.core.models.GroupMessage
+import com.rudderstack.core.models.IdentifyMessage
+import com.rudderstack.core.models.ScreenMessage
+import com.rudderstack.core.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import junit.framework.TestSuite
 import org.hamcrest.MatcherAssert
@@ -22,6 +20,7 @@ import org.robolectric.annotation.Config
 
 abstract class MessageEntityTest {
     abstract val jsonAdapter: JsonAdapter
+
     @Test
     fun testGenerateContentValuesForTrack() {
         val testMessage = TrackMessage.create(
@@ -42,19 +41,22 @@ abstract class MessageEntityTest {
         val regainedEntity = MessageEntity.create(contentValues.keySet().associateWith {
             contentValues.getAsString(it)
         }, jsonAdapter)
-        MatcherAssert.assertThat(regainedEntity?.message, Matchers.allOf(
-            Matchers.notNullValue(),
-            Matchers.instanceOf(TrackMessage::class.java),
-            Matchers.hasProperty("eventName", Matchers.equalTo("testEvent")),
-            Matchers.hasProperty("anonymousId", Matchers.equalTo("testAnonymousId")),
-            Matchers.hasProperty("userId", Matchers.equalTo("testUserId")),
-            Matchers.hasProperty("properties", Matchers.hasEntry("testKey", "testValue")),
-            Matchers.hasProperty("messageId", Matchers.equalTo(testMessage.messageId)),
-Matchers.hasProperty("context", Matchers.equalTo(testMessage.context)),
-Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinationProps)),
+        MatcherAssert.assertThat(
+            regainedEntity?.message, Matchers.allOf(
+                Matchers.notNullValue(),
+                Matchers.instanceOf(TrackMessage::class.java),
+                Matchers.hasProperty("eventName", Matchers.equalTo("testEvent")),
+                Matchers.hasProperty("anonymousId", Matchers.equalTo("testAnonymousId")),
+                Matchers.hasProperty("userId", Matchers.equalTo("testUserId")),
+                Matchers.hasProperty("properties", Matchers.hasEntry("testKey", "testValue")),
+                Matchers.hasProperty("messageId", Matchers.equalTo(testMessage.messageId)),
+                Matchers.hasProperty("context", Matchers.equalTo(testMessage.context)),
+                Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinationProps)),
 
-        ))
+                )
+        )
     }
+
     @Test
     fun testGenerateContentValuesForGroup() {
         val testMessage = GroupMessage.create(
@@ -75,20 +77,23 @@ Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinatio
         val regainedEntity = MessageEntity.create(contentValues.keySet().associateWith {
             contentValues.getAsString(it)
         }, jsonAdapter)
-        MatcherAssert.assertThat(regainedEntity?.message, Matchers.allOf(
-            Matchers.notNullValue(),
-            Matchers.instanceOf(GroupMessage::class.java),
-            Matchers.hasProperty("groupId", Matchers.equalTo(testMessage.groupId)),
-            Matchers.hasProperty("anonymousId", Matchers.equalTo(testMessage.anonymousId)),
-            Matchers.hasProperty("userId", Matchers.equalTo(testMessage.userId)),
-            Matchers.hasProperty("traits", Matchers.hasEntry("testKey", "testValue")),
-            Matchers.hasProperty("messageId", Matchers.equalTo(testMessage.messageId)),
-Matchers.hasProperty("context", Matchers.equalTo(testMessage.context)),
-Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinationProps)),
+        MatcherAssert.assertThat(
+            regainedEntity?.message, Matchers.allOf(
+                Matchers.notNullValue(),
+                Matchers.instanceOf(GroupMessage::class.java),
+                Matchers.hasProperty("groupId", Matchers.equalTo(testMessage.groupId)),
+                Matchers.hasProperty("anonymousId", Matchers.equalTo(testMessage.anonymousId)),
+                Matchers.hasProperty("userId", Matchers.equalTo(testMessage.userId)),
+                Matchers.hasProperty("traits", Matchers.hasEntry("testKey", "testValue")),
+                Matchers.hasProperty("messageId", Matchers.equalTo(testMessage.messageId)),
+                Matchers.hasProperty("context", Matchers.equalTo(testMessage.context)),
+                Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinationProps)),
 
-        ))
+                )
+        )
     }
-@Test
+
+    @Test
     fun testGenerateContentValuesForIdentify() {
         val testMessage = IdentifyMessage.create(
             "testAnonymousId",
@@ -106,19 +111,22 @@ Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinatio
         val regainedEntity = MessageEntity.create(contentValues.keySet().associateWith {
             contentValues.getAsString(it)
         }, jsonAdapter)
-        MatcherAssert.assertThat(regainedEntity?.message, Matchers.allOf(
-            Matchers.notNullValue(),
-            Matchers.instanceOf(IdentifyMessage::class.java),
-            Matchers.hasProperty("anonymousId", Matchers.equalTo(testMessage.anonymousId)),
-            Matchers.hasProperty("userId", Matchers.equalTo(testMessage.userId)),
-            Matchers.hasProperty("properties", Matchers.hasEntry("testKey", "testValue")),
-            Matchers.hasProperty("messageId", Matchers.equalTo(testMessage.messageId)),
-Matchers.hasProperty("context", Matchers.equalTo(testMessage.context)),
-Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinationProps)),
+        MatcherAssert.assertThat(
+            regainedEntity?.message, Matchers.allOf(
+                Matchers.notNullValue(),
+                Matchers.instanceOf(IdentifyMessage::class.java),
+                Matchers.hasProperty("anonymousId", Matchers.equalTo(testMessage.anonymousId)),
+                Matchers.hasProperty("userId", Matchers.equalTo(testMessage.userId)),
+                Matchers.hasProperty("properties", Matchers.hasEntry("testKey", "testValue")),
+                Matchers.hasProperty("messageId", Matchers.equalTo(testMessage.messageId)),
+                Matchers.hasProperty("context", Matchers.equalTo(testMessage.context)),
+                Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinationProps)),
 
-        ))
+                )
+        )
     }
-@Test
+
+    @Test
     fun testGenerateContentValuesForScreen() {
         val testMessage = ScreenMessage.create(
             name = "testScreen",
@@ -138,17 +146,19 @@ Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinatio
         val regainedEntity = MessageEntity.create(contentValues.keySet().associateWith {
             contentValues.getAsString(it)
         }, jsonAdapter)
-        MatcherAssert.assertThat(regainedEntity?.message, Matchers.allOf(
-            Matchers.notNullValue(),
-            Matchers.instanceOf(ScreenMessage::class.java),
-            Matchers.hasProperty("anonymousId", Matchers.equalTo(testMessage.anonymousId)),
-            Matchers.hasProperty("userId", Matchers.equalTo(testMessage.userId)),
-            Matchers.hasProperty("properties", Matchers.hasEntry("testKey", "testValue")),
-            Matchers.hasProperty("messageId", Matchers.equalTo(testMessage.messageId)),
-Matchers.hasProperty("context", Matchers.equalTo(testMessage.context)),
-Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinationProps)),
+        MatcherAssert.assertThat(
+            regainedEntity?.message, Matchers.allOf(
+                Matchers.notNullValue(),
+                Matchers.instanceOf(ScreenMessage::class.java),
+                Matchers.hasProperty("anonymousId", Matchers.equalTo(testMessage.anonymousId)),
+                Matchers.hasProperty("userId", Matchers.equalTo(testMessage.userId)),
+                Matchers.hasProperty("properties", Matchers.hasEntry("testKey", "testValue")),
+                Matchers.hasProperty("messageId", Matchers.equalTo(testMessage.messageId)),
+                Matchers.hasProperty("context", Matchers.equalTo(testMessage.context)),
+                Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinationProps)),
 
-        ))
+                )
+        )
     }
 
     @Test
@@ -169,6 +179,7 @@ Matchers.hasProperty("destinationProps", Matchers.equalTo(testMessage.destinatio
         MatcherAssert.assertThat(primaryKeyValues, Matchers.arrayContaining(testMessage.messageId))
     }
 }
+
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [29])
 class GsonEntityTest : MessageEntityTest() {

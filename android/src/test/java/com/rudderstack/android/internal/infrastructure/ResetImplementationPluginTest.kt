@@ -9,7 +9,7 @@ import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.holder.associateState
-import com.rudderstack.models.createContext
+import com.rudderstack.core.models.createContext
 import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.allOf
@@ -22,8 +22,7 @@ import org.mockito.kotlin.mock
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@RunWith(
-    RobolectricTestRunner::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])
 class ResetImplementationPluginTest{
 
