@@ -1,4 +1,4 @@
-package com.rudderstack.models
+package com.rudderstack.core.models
 
 data class AppVersion(
     val previousBuild: Int,

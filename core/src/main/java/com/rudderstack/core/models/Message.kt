@@ -1,26 +1,13 @@
-/*
- * Creator: Debanjan Chatterjee on 06/12/21, 8:01 PM Last modified: 06/12/21, 8:01 PM
- * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
 @file:Suppress("FunctionName")
 
-package com.rudderstack.models
+package com.rudderstack.core.models
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.annotations.SerializedName
-import com.rudderstack.models.Message.EventType
+import com.rudderstack.core.models.Message.EventType
 import com.squareup.moshi.Json
 import java.util.Locale
 import java.util.UUID
@@ -119,7 +106,7 @@ sealed class Message(
     @SerializedName("sentAt")
     @JsonProperty("sentAt")
     @Json(name = "sentAt")
-    var sentAt: String?= null
+    var sentAt: String? = null
     open fun copy(
         context: MessageContext? = this.context,
         anonymousId: String? = this.anonymousId,
@@ -530,7 +517,7 @@ class ScreenMessage internal constructor(
     @JsonProperty("not_applicable", required = false) // work-around to ignore value param
     // jackson serialisation
     _messageId: String? = null,
-    ) : Message(
+) : Message(
     EventType.SCREEN,
     context,
     anonymousId,
@@ -576,7 +563,7 @@ class ScreenMessage internal constructor(
         category: String? = this.properties?.get("category") as String?,
         properties: ScreenProperties? = this.properties,
         eventName: String? = this.eventName,
-        ) = ScreenMessage(
+    ) = ScreenMessage(
         context, anonymousId, userId, timestamp, destinationProps,
         (properties ?: ScreenProperties()).let {
             if (name != null) it.plus("name" to name) else it
