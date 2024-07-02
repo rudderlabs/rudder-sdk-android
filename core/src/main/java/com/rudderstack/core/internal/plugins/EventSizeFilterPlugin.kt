@@ -4,7 +4,7 @@ import com.rudderstack.core.Configuration
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils.MAX_EVENT_SIZE
 import com.rudderstack.core.RudderUtils.getUTF8Length
-import com.rudderstack.models.Message
+import com.rudderstack.core.models.Message
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import java.util.concurrent.atomic.AtomicReference
 

@@ -19,10 +19,10 @@ import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.retrieveState
-import com.rudderstack.models.MessageContext
-import com.rudderstack.models.createContext
-import com.rudderstack.models.traits
-import com.rudderstack.models.updateWith
+import com.rudderstack.core.models.MessageContext
+import com.rudderstack.core.models.createContext
+import com.rudderstack.core.models.traits
+import com.rudderstack.core.models.updateWith
 
 val Analytics.currentConfigurationAndroid: ConfigurationAndroid?
     get() = (currentConfiguration as? ConfigurationAndroid)

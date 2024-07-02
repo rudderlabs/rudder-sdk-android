@@ -1,37 +1,32 @@
-/*
- * Creator: Debanjan Chatterjee on 18/01/22, 9:59 AM Last modified: 18/01/22, 9:58 AM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.core.internal.plugins
 
-import com.rudderstack.core.*
+import com.rudderstack.core.BaseDestinationPlugin
+import com.rudderstack.core.Plugin
+import com.rudderstack.core.RudderOption
+import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.CentralPluginChain
-import com.rudderstack.models.TrackMessage
+import com.rudderstack.core.models.TrackMessage
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.everyItem
+import org.hamcrest.Matchers.hasItem
+import org.hamcrest.Matchers.hasItems
+import org.hamcrest.Matchers.`in`
+import org.hamcrest.Matchers.iterableWithSize
+import org.hamcrest.Matchers.not
 import org.junit.Test
 
 class RudderOptionPluginTest {
 
     //for test we create 3 destinations
-    private val dest1 = BaseDestinationPlugin<Any>("dest-1"){
+    private val dest1 = BaseDestinationPlugin<Any>("dest-1") {
         return@BaseDestinationPlugin it.proceed(it.message())
     }
 
-    private val dest2 = BaseDestinationPlugin<Any>("dest-2"){
+    private val dest2 = BaseDestinationPlugin<Any>("dest-2") {
         return@BaseDestinationPlugin it.proceed(it.message())
     }
-    private val dest3 = BaseDestinationPlugin<Any>("dest-3"){
+    private val dest3 = BaseDestinationPlugin<Any>("dest-3") {
         return@BaseDestinationPlugin it.proceed(it.message())
     }
     private val message = TrackMessage.create(
@@ -48,81 +43,100 @@ class RudderOptionPluginTest {
     )
 
     @Test
-    fun `test all true for empty integrations`(){
+    fun `test all true for empty integrations`() {
         //assertion plugin
-        val assertPlugin = Plugin{
+        val assertPlugin = Plugin {
             //must contain all plugins
-            assertThat(it.plugins, allOf(
-                iterableWithSize(5),
-                hasItems(dest1,dest2,dest3)
-            ))
+            assertThat(
+                it.plugins, allOf(
+                    iterableWithSize(5),
+                    hasItems(dest1, dest2, dest3)
+                )
+            )
             return@Plugin it.proceed(it.message())
         }
-        val chain = CentralPluginChain(message, listOf(
-            RudderOptionPlugin(RudderOption()),assertPlugin, dest1, dest2, dest3
-        ), originalMessage = message)
+        val chain = CentralPluginChain(
+            message, listOf(
+                RudderOptionPlugin(RudderOption()), assertPlugin, dest1, dest2, dest3
+            ), originalMessage = message
+        )
         chain.proceed(message)
     }
 
     @Test
-    fun `test all false for integrations`(){
+    fun `test all false for integrations`() {
         //assertion plugin
-        val assertPlugin = Plugin{
+        val assertPlugin = Plugin {
             //must contain all plugins
-            assertThat(it.plugins, allOf(
-                iterableWithSize(2),
-                everyItem(not(`in`(arrayOf(dest1,dest2,dest3))))
-            ))
+            assertThat(
+                it.plugins, allOf(
+                    iterableWithSize(2),
+                    everyItem(not(`in`(arrayOf(dest1, dest2, dest3))))
+                )
+            )
             return@Plugin it.proceed(it.message())
         }
-        val chain = CentralPluginChain(message, listOf(
-            RudderOptionPlugin(RudderOption()
-                .putIntegration("All", false)
-                ),assertPlugin, dest1, dest2, dest3
-        ), originalMessage = message)
+        val chain = CentralPluginChain(
+            message, listOf(
+                RudderOptionPlugin(
+                    RudderOption()
+                        .putIntegration("All", false)
+                ), assertPlugin, dest1, dest2, dest3
+            ), originalMessage = message
+        )
         chain.proceed(message)
     }
 
     @Test
-    fun `test custom integrations with false`(){
+    fun `test custom integrations with false`() {
         //assertion plugin
-        val assertPlugin = Plugin{
+        val assertPlugin = Plugin {
             //must contain all plugins
-            assertThat(it.plugins, allOf(
-                iterableWithSize(3),
-                everyItem(not(`in`(arrayOf(dest2,dest3)))),
-                hasItem(dest1)
-            ))
+            assertThat(
+                it.plugins, allOf(
+                    iterableWithSize(3),
+                    everyItem(not(`in`(arrayOf(dest2, dest3)))),
+                    hasItem(dest1)
+                )
+            )
             return@Plugin it.proceed(it.message())
         }
-        val chain = CentralPluginChain(message, listOf(
-            RudderOptionPlugin(RudderOption()
-                .putIntegration("dest-2",false)
-                .putIntegration("dest-3", false))
-            ,assertPlugin, dest1, dest2, dest3
-        ), originalMessage = message)
+        val chain = CentralPluginChain(
+            message, listOf(
+                RudderOptionPlugin(
+                    RudderOption()
+                        .putIntegration("dest-2", false)
+                        .putIntegration("dest-3", false)
+                ), assertPlugin, dest1, dest2, dest3
+            ), originalMessage = message
+        )
         chain.proceed(message)
     }
 
     @Test
-    fun `test custom integrations with true`(){
+    fun `test custom integrations with true`() {
         //assertion plugin
-        val assertPlugin = Plugin{
+        val assertPlugin = Plugin {
             //must contain all plugins
-            assertThat(it.plugins, allOf(
-                iterableWithSize(3),
-                everyItem(not(`in`(arrayOf(dest1,dest3)))),
-                hasItem(dest2)
-            ))
+            assertThat(
+                it.plugins, allOf(
+                    iterableWithSize(3),
+                    everyItem(not(`in`(arrayOf(dest1, dest3)))),
+                    hasItem(dest2)
+                )
+            )
             return@Plugin it.proceed(it.message())
         }
-        val chain = CentralPluginChain(message, listOf(
-            RudderOptionPlugin(RudderOption()
-                .putIntegration("All", false)
-                .putIntegration( "dest-2", true)
-                .putIntegration("dest-3",false))
-                ,assertPlugin, dest1, dest2, dest3
-        ), originalMessage = message)
+        val chain = CentralPluginChain(
+            message, listOf(
+                RudderOptionPlugin(
+                    RudderOption()
+                        .putIntegration("All", false)
+                        .putIntegration("dest-2", true)
+                        .putIntegration("dest-3", false)
+                ), assertPlugin, dest1, dest2, dest3
+            ), originalMessage = message
+        )
         chain.proceed(message)
     }
 

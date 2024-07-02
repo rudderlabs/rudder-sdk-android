@@ -1,25 +1,10 @@
-/*
- * Creator: Debanjan Chatterjee on 09/02/24, 12:35 pm Last modified: 09/02/24, 12:35 pm
- * Copyright: All rights reserved Ⓒ 2024 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.core.flushpolicy
 
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.DataUploadService
-import com.rudderstack.core.Storage
 import com.rudderstack.core.busyWait
-import com.rudderstack.models.Message
+import com.rudderstack.core.models.Message
 import com.rudderstack.web.HttpResponse
 import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert
@@ -53,8 +38,7 @@ class CountBasedFlushPolicyTest {
             mockedResponse
         )
         analytics = generateTestAnalytics(
-            Configuration(mock(), shouldVerifySdk = false),
-            dataUploadService = mockUploadService
+            Configuration(mock(), shouldVerifySdk = false), dataUploadService = mockUploadService
         )
         flushPolicy = CountBasedFlushPolicy()
         analytics.removeAllFlushPolicies()

@@ -1,17 +1,3 @@
-/*
- * Creator: Debanjan Chatterjee on 29/11/23, 5:37 pm Last modified: 21/11/23, 5:14 pm
- * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.android.internal.plugins
 
 import com.rudderstack.android.utilities.androidStorage
@@ -22,13 +8,13 @@ import com.rudderstack.android.utilities.processNewContext
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.optAdd
-import com.rudderstack.models.AliasMessage
-import com.rudderstack.models.IdentifyMessage
-import com.rudderstack.models.Message
-import com.rudderstack.models.MessageContext
-import com.rudderstack.models.optAddContext
-import com.rudderstack.models.traits
-import com.rudderstack.models.updateWith
+import com.rudderstack.core.models.AliasMessage
+import com.rudderstack.core.models.IdentifyMessage
+import com.rudderstack.core.models.Message
+import com.rudderstack.core.models.MessageContext
+import com.rudderstack.core.models.optAddContext
+import com.rudderstack.core.models.traits
+import com.rudderstack.core.models.updateWith
 
 /**
  * Mutates the system state, if required, based on the Event.

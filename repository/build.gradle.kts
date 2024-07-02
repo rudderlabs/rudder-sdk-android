@@ -6,11 +6,11 @@ plugins {
 android {
 
     namespace = "com.rudderstack.android.repository"
-    compileSdk =  RudderstackBuildConfig.Android.TARGET_SDK
+    compileSdk = RudderstackBuildConfig.Android.TARGET_SDK
 
     defaultConfig {
-        minSdk =  RudderstackBuildConfig.Android.MIN_SDK
-        targetSdk =  RudderstackBuildConfig.Android.TARGET_SDK
+        minSdk = RudderstackBuildConfig.Android.MIN_SDK
+        targetSdk = RudderstackBuildConfig.Android.TARGET_SDK
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }

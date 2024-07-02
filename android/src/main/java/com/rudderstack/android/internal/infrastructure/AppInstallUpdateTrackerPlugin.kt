@@ -5,11 +5,11 @@ import android.os.Build
 import com.rudderstack.android.utilities.androidStorage
 import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.android.storage.AndroidStorage
-import com.rudderstack.models.AppVersion
+import com.rudderstack.core.models.AppVersion
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.InfrastructurePlugin
 import com.rudderstack.core.Plugin
-import com.rudderstack.models.Message
+import com.rudderstack.core.models.Message
 
 private const val PREVIOUS_VERSION = "previous_version"
 private const val PREVIOUS_BUILD = "previous_build"

@@ -1,58 +1,40 @@
-/*
- * Creator: Debanjan Chatterjee on 12/01/22, 11:51 AM Last modified: 12/01/22, 11:49 AM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.core.internal
 
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.DataUploadService
 import com.rudderstack.core.dataPlaneUrl
-import com.rudderstack.core.internal.states.ConfigurationsState
-import com.rudderstack.core.writeKey
+import com.rudderstack.core.models.Message
+import com.rudderstack.core.models.TrackMessage
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
-import com.rudderstack.models.Message
-import com.rudderstack.models.TrackMessage
 import com.rudderstack.moshirudderadapter.MoshiAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.web.HttpResponse
 import com.rudderstack.web.WebService
 import junit.framework.TestSuite
-import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.emptyString
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.greaterThanOrEqualTo
+import org.hamcrest.Matchers.hasEntry
+import org.hamcrest.Matchers.lessThan
+import org.hamcrest.Matchers.not
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.kotlin.ArgumentCaptorHolder4
-import org.mockito.kotlin.ArgumentCaptorHolder5
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.then
 import org.mockito.kotlin.verify
 import java.util.Base64
 import java.util.Locale
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class DataServiceUploadImplTest {
     protected abstract val jsonAdapter: JsonAdapter

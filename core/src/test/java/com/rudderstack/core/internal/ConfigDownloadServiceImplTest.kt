@@ -1,17 +1,3 @@
-/*
- * Creator: Debanjan Chatterjee on 04/04/22, 1:28 PM Last modified: 04/04/22, 1:28 PM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.core.internal
 
 import com.rudderstack.core.Analytics
@@ -19,10 +5,10 @@ import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.DummyWebService
 import com.rudderstack.core.RetryStrategy
+import com.rudderstack.core.models.RudderServerConfig
 import com.rudderstack.core.writeKey
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
-import com.rudderstack.models.RudderServerConfig
 import com.rudderstack.moshirudderadapter.MoshiAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.generateTestAnalytics
@@ -30,7 +16,9 @@ import junit.framework.TestSuite
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.notNullValue
+import org.hamcrest.Matchers.nullValue
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -40,7 +28,8 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
-import java.util.*
+import java.util.Base64
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 

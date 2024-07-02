@@ -5,7 +5,7 @@ import com.rudderstack.core.Configuration
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.Storage
-import com.rudderstack.models.TrackMessage
+import com.rudderstack.core.models.TrackMessage
 import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -21,12 +21,13 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
-class CoreInputsPluginTest{
+class CoreInputsPluginTest {
     private lateinit var analytics: Analytics
     private lateinit var storage: Storage
     private lateinit var coreInputsPlugin: CoreInputsPlugin
+
     @Before
-    fun setup(){
+    fun setup() {
         coreInputsPlugin = CoreInputsPlugin()
         storage = mock<Storage>()
         whenever(storage.libraryName) doReturn "MyLibrary"
@@ -35,19 +36,21 @@ class CoreInputsPluginTest{
 //        `when`(storage.libraryVersion).thenReturn("1.0")
         analytics = generateTestAnalytics(mock<Configuration>(), storage = storage)
     }
+
     @After
-    fun shutdown(){
+    fun shutdown() {
         coreInputsPlugin.onShutDown()
         storage.shutdown()
         analytics.shutdown()
     }
+
     @Test
     fun `intercept method proceeds without modification when storage is null`() {
         // Arrange
         val mockChain = mock<Plugin.Chain>()
         val mockMessage = TrackMessage.create("ev_name", RudderUtils.timeStamp)
         `when`(mockChain.message()).thenReturn(mockMessage)
-        whenever(mockChain.proceed(any())) doAnswer{
+        whenever(mockChain.proceed(any())) doAnswer {
             it.getArgument(0)
         }
 
@@ -65,10 +68,12 @@ class CoreInputsPluginTest{
         // Arrange
         val mockChain = mock<Plugin.Chain>()
         val customContextMap = mapOf("existingKey" to "existingValue")
-        val mockMessage = TrackMessage.create("ev_name", RudderUtils.timeStamp,
-            customContextMap = customContextMap)
+        val mockMessage = TrackMessage.create(
+            "ev_name", RudderUtils.timeStamp,
+            customContextMap = customContextMap
+        )
         `when`(mockChain.message()).thenReturn(mockMessage)
-        whenever(mockChain.proceed(any())) doAnswer{
+        whenever(mockChain.proceed(any())) doAnswer {
             it.getArgument(0)
         }
         coreInputsPlugin.setup(analytics)
@@ -76,17 +81,23 @@ class CoreInputsPluginTest{
         val result = coreInputsPlugin.intercept(mockChain)
 
         // Assert
-        val expectedContext = mapOf("customContextMap" to customContextMap) + mapOf("library" to mapOf("name" to "MyLibrary", "version" to "1.0"))
+        val expectedContext = mapOf("customContextMap" to customContextMap) + mapOf(
+            "library" to mapOf(
+                "name" to "MyLibrary",
+                "version" to "1.0"
+            )
+        )
         assertThat(result.context?.filterValues { it != null }, `is`(equalTo(expectedContext)))
         verify(mockChain).proceed(mockMessage.copy(context = result.context))
     }
+
     @Test
     fun `intercept method adds library context to message context when storage is not null context null`() {
         // Arrange
         val mockChain = mock<Plugin.Chain>()
         val mockMessage = TrackMessage.create("ev_name", RudderUtils.timeStamp)
         `when`(mockChain.message()).thenReturn(mockMessage)
-        whenever(mockChain.proceed(any())) doAnswer{
+        whenever(mockChain.proceed(any())) doAnswer {
             it.getArgument(0)
         }
 //        val existingContext = null

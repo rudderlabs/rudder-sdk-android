@@ -9,10 +9,10 @@ import com.rudderstack.core.ConfigDownloadService
 import com.rudderstack.core.internal.KotlinLogger
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
-import com.rudderstack.models.RudderServerConfig
-import com.rudderstack.models.ScreenMessage
-import com.rudderstack.models.TrackMessage
-import com.rudderstack.models.TrackProperties
+import com.rudderstack.core.models.RudderServerConfig
+import com.rudderstack.core.models.ScreenMessage
+import com.rudderstack.core.models.TrackMessage
+import com.rudderstack.core.models.TrackProperties
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.assertArgument
 import com.vagabond.testcommon.generateTestAnalytics

@@ -8,9 +8,9 @@ import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.removeState
 import com.rudderstack.core.holder.retrieveState
-import com.rudderstack.models.Message
-import com.rudderstack.models.TrackMessage
-import com.rudderstack.models.android.UserSession
+import com.rudderstack.core.models.Message
+import com.rudderstack.core.models.TrackMessage
+import com.rudderstack.android.models.UserSession
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert

@@ -1,20 +1,7 @@
-/*
- * Creator: Debanjan Chatterjee on 02/01/22, 11:12 AM Last modified: 02/01/22, 11:12 AM
- * Copyright: All rights reserved Ⓒ 2022 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.core
 
-import com.rudderstack.models.Message
+import com.rudderstack.core.DestinationPlugin.DestinationInterceptor
+import com.rudderstack.core.models.Message
 
 /**
  * Implement [BaseDestinationPlugin] instead to avoid writing boiler plate code
@@ -34,13 +21,13 @@ interface DestinationPlugin<T> : Plugin {
     /**
      * Destination definition name as given in control plane
      */
-    val name : String
+    val name: String
 
     /**
      * Returns whether this plugin is ready to accept events.
      * Closely linked to [onReadyCallbacks]
      */
-    val isReady : Boolean
+    val isReady: Boolean
     val subPlugins: List<DestinationInterceptor>
     val onReadyCallbacks: List<(T?, Boolean) -> Unit>
 //    get() = ArrayList(field)
@@ -62,7 +49,8 @@ interface DestinationPlugin<T> : Plugin {
      * @param callbackOnReady called with the destination specific class object and
      * true or false depending on initialization success or failure
      */
-    fun addIsReadyCallback(callbackOnReady : (T?, isUsable: Boolean) -> Unit)
+    fun addIsReadyCallback(callbackOnReady: (T?, isUsable: Boolean) -> Unit)
+
     /**
      * Marker Interface for sub-plugins that can be added to each individual plugin.
      * This is to discourage developers to intentionally/unintentionally adding main plugins as sub
@@ -78,7 +66,7 @@ interface DestinationPlugin<T> : Plugin {
      * Called when flush is triggered.
      *
      */
-    fun flush(){}
+    fun flush() {}
 }
 
 /**
@@ -90,7 +78,7 @@ interface DestinationPlugin<T> : Plugin {
  * @param T type of destination in [Plugin]
  * @property name Name of plugin, used to filter plugins
  */
-abstract class BaseDestinationPlugin<T>(override val name: String) : DestinationPlugin<T>{
+abstract class BaseDestinationPlugin<T>(override val name: String) : DestinationPlugin<T> {
     private var _isReady = false
     private var _subPlugins = listOf<DestinationPlugin.DestinationInterceptor>()
     private var _onReadyCallbacks = listOf<(T?, Boolean) -> Unit>()
@@ -110,13 +98,13 @@ abstract class BaseDestinationPlugin<T>(override val name: String) : Destination
     }
 
     override fun addIsReadyCallback(callbackOnReady: (T?, isUsable: Boolean) -> Unit) {
-        _onReadyCallbacks = _onReadyCallbacks+ callbackOnReady
+        _onReadyCallbacks = _onReadyCallbacks + callbackOnReady
     }
 
-    fun setReady(isReady : Boolean, destinationInstance : T? = null){
+    fun setReady(isReady: Boolean, destinationInstance: T? = null) {
         _isReady = isReady
         _onReadyCallbacks.forEach {
-            it.invoke( destinationInstance, isReady)
+            it.invoke(destinationInstance, isReady)
         }
     }
 
@@ -135,7 +123,10 @@ abstract class BaseDestinationPlugin<T>(override val name: String) : Destination
          * }
          * ```
          */
-        inline operator fun<T> invoke(name: String,  crossinline block: (chain: Plugin.Chain) -> Message): BaseDestinationPlugin<T> =
+        inline operator fun <T> invoke(
+            name: String,
+            crossinline block: (chain: Plugin.Chain) -> Message
+        ): BaseDestinationPlugin<T> =
             object : BaseDestinationPlugin<T>(name) {
                 override fun intercept(chain: Plugin.Chain): Message {
                     return block(chain)

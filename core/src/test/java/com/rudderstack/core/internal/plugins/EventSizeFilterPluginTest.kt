@@ -7,8 +7,8 @@ import com.rudderstack.core.RudderUtils.MAX_EVENT_SIZE
 import com.rudderstack.core.RudderUtils.getUTF8Length
 import com.rudderstack.core.internal.CentralPluginChain
 import com.rudderstack.gsonrudderadapter.GsonAdapter
-import com.rudderstack.models.Message
-import com.rudderstack.models.TrackMessage
+import com.rudderstack.core.models.Message
+import com.rudderstack.core.models.TrackMessage
 import org.junit.Test
 
 class EventSizeFilterPluginTest {

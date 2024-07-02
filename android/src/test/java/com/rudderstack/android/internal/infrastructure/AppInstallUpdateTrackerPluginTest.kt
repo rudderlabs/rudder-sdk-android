@@ -10,7 +10,7 @@ import com.rudderstack.android.storage.AndroidStorageImpl
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Logger
 import com.rudderstack.gsonrudderadapter.GsonAdapter
-import com.rudderstack.models.TrackMessage
+import com.rudderstack.core.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert
