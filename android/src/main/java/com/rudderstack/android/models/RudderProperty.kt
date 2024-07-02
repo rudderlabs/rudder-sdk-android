@@ -1,8 +1,7 @@
-package com.rudderstack.models.android
-
-import java.util.HashMap
+package com.rudderstack.android.models
 
 abstract class RudderProperty {
+
     private val map: MutableMap<String, Any> = HashMap()
     open fun getMap(): Map<String, Any> {
         return map
@@ -42,6 +41,7 @@ abstract class RudderProperty {
         map["currency"] = currency
     }
 }
+
 data class ScreenProperty(private val screenName: String, private val isAutomatic: Boolean = false) :
     RudderProperty() {
     init {

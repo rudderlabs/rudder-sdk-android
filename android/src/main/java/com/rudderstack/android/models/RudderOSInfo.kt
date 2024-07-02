@@ -1,4 +1,4 @@
-package com.rudderstack.models.android
+package com.rudderstack.android.models
 
 import com.google.gson.annotations.SerializedName
 

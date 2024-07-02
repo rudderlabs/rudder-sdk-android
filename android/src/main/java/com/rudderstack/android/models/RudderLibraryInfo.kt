@@ -1,9 +1,8 @@
-package com.rudderstack.models.android
+package com.rudderstack.android.models
 
 import com.google.gson.annotations.SerializedName
 
 class RudderLibraryInfo(
-    // = BuildConfig.LIBRARY_PACKAGE_NAME
     @SerializedName("name")
     private val name: String? = null,
 

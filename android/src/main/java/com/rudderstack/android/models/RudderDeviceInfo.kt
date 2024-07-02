@@ -1,4 +1,4 @@
-package com.rudderstack.models.android
+package com.rudderstack.android.models
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.annotations.SerializedName
@@ -13,17 +13,20 @@ class RudderDeviceInfo(
     @SerializedName("manufacturer")
     @JsonProperty("manufacturer")
     @Json(name = "manufacturer")
-    private val manufacturer: String /*= Build.MANUFACTURER*/,
+    private val manufacturer: String,
+    /*= Build.MANUFACTURER*/
 
     @SerializedName("model")
     @JsonProperty("model")
     @Json(name = "model")
-    private val model: String /*= Build.MODEL*/,
+    private val model: String,
+    /*= Build.MODEL*/
 
     @SerializedName("name")
     @JsonProperty("name")
     @Json(name = "name")
-    private val name: String /*= Build.DEVICE*/,
+    private val name: String,
+    /*= Build.DEVICE*/
 
     @SerializedName("type")
     @JsonProperty("type")
