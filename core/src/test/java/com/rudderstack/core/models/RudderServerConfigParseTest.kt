@@ -1,4 +1,4 @@
-package com.rudderstack.models
+package com.rudderstack.core.models
 
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import org.hamcrest.MatcherAssert.assertThat

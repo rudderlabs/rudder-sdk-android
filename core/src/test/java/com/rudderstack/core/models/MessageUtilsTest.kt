@@ -1,4 +1,4 @@
-package com.rudderstack.models
+package com.rudderstack.core.models
 
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.allOf

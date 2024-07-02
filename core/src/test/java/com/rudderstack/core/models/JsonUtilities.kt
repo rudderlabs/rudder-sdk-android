@@ -1,11 +1,10 @@
-package com.rudderstack.models
+package com.rudderstack.core.models
 
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import java.io.BufferedReader
 import java.io.IOException
-
 
 object MockResponse {
 
