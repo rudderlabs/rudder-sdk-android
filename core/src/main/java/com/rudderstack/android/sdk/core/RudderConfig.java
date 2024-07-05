@@ -60,6 +60,7 @@ public class RudderConfig {
 
     private DBEncryption dbEncryption = new DBEncryption(Constants.DEFAULT_DB_ENCRYPTION_ENABLED,
             null);
+    private long eventDispatchSleepInterval;
 
 
     RudderConfig() {
@@ -87,7 +88,8 @@ public class RudderConfig {
                 Constants.DATA_RESIDENCY_SERVER,
                 null,
                 Constants.DEFAULT_GZIP_ENABLED,
-                null
+                null,
+                Constants.EVENT_DISPATCH_SLEEP_INTERVAL
         );
     }
 
@@ -115,8 +117,8 @@ public class RudderConfig {
             RudderDataResidencyServer rudderDataResidencyServer,
             @Nullable RudderConsentFilter consentFilter,
             boolean isGzipEnabled,
-            @Nullable DBEncryption dbEncryption
-
+            @Nullable DBEncryption dbEncryption,
+            long eventDispatchSleepInterval
 
     ) {
         RudderLogger.init(logLevel);
@@ -206,6 +208,12 @@ public class RudderConfig {
         this.isGzipEnabled = isGzipEnabled;
         if (dbEncryption != null) {
             this.dbEncryption = dbEncryption;
+        }
+
+        if (eventDispatchSleepInterval <= this.sleepTimeOut) {
+            this.eventDispatchSleepInterval = eventDispatchSleepInterval;
+        } else {
+            this.eventDispatchSleepInterval = Constants.EVENT_DISPATCH_SLEEP_INTERVAL;
         }
     }
 
@@ -381,6 +389,17 @@ public class RudderConfig {
         return sessionTimeout;
     }
 
+    /**
+     * Retrieves the event dispatch sleep interval in milliseconds.
+     * Converts the stored interval value (in seconds) to milliseconds
+     * and returns it.
+     *
+     * @return the event dispatch sleep interval in milliseconds
+     */
+    public long getEventDispatchSleepInterval() {
+        return eventDispatchSleepInterval * 1000;
+    }
+
     @Nullable
     public RudderConsentFilter getConsentFilter() {
         return consentFilter;
@@ -453,6 +472,10 @@ public class RudderConfig {
         this.rudderDataResidencyServer = rudderDataResidencyServer;
     }
 
+    void setEventDispatchSleepInterval(long eventDispatchSleepInterval) {
+        this.eventDispatchSleepInterval = eventDispatchSleepInterval;
+    }
+
     /**
      * @return custom toString implementation for RudderConfig
      */
@@ -473,6 +496,7 @@ public class RudderConfig {
         private @Nullable String dataPlaneUrl = null;
         private boolean isGzipEnabled = Constants.DEFAULT_GZIP_ENABLED;
         private @Nullable DBEncryption dbEncryption = null;
+        private long eventDispatchSleepInterval = Constants.EVENT_DISPATCH_SLEEP_INTERVAL;
 
         /**
          * @param factory : Instance of RudderIntegration.Factory (for more information visit https://docs.rudderstack.com)
@@ -809,6 +833,20 @@ public class RudderConfig {
         }
 
         /**
+         * Sets the sleep interval for the event dispatch thread.
+         * This interval (in seconds) determines how long the thread
+         * will sleep when there are no events to send to the server.
+         * The interval must be less than or equal to the value set by withSleepCount(int sleepCount).
+         *
+         * @param eventDispatchSleepInterval the sleep interval in seconds
+         * @return the updated Builder instance for chaining
+         */
+        public Builder withEventDispatchSleepInterval(int eventDispatchSleepInterval) {
+            this.eventDispatchSleepInterval = eventDispatchSleepInterval;
+            return this;
+        }
+
+        /**
          * Finalize your config building
          *
          * @return RudderConfig
@@ -838,7 +876,8 @@ public class RudderConfig {
                     this.rudderDataResidencyServer,
                     consentFilter,
                     this.isGzipEnabled,
-                    this.dbEncryption
+                    this.dbEncryption,
+                    this.eventDispatchSleepInterval
             );
         }
     }

@@ -36,9 +36,10 @@ class MainApplication : Application(), Configuration.Provider {
                 .withNewLifecycleEvents(true)
                 .withRecordScreenViews(false)
                 .withDbEncryption(RudderConfig.DBEncryption(false, "xyz"))
+                .withSleepCount(6)
+                .withEventDispatchSleepInterval(2)
                 .build()
         )
-
     }
 
 

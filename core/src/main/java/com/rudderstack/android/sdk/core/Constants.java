@@ -48,6 +48,8 @@ class Constants {
     static final boolean COLLECT_DEVICE_ID = true;
     // default residency server
     static final RudderDataResidencyServer DATA_RESIDENCY_SERVER = RudderDataResidencyServer.US;
+    // default for event dispatch sleep interval
+    static final long EVENT_DISPATCH_SLEEP_INTERVAL = 1; // 1 second
 
 
     class Logs {
