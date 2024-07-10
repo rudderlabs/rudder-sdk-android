@@ -34,7 +34,7 @@ object RudderAnalyticsUtils {
             },
             configuration = ConfigurationAndroid(
                 application = application,
-                GsonAdapter(),
+                jsonAdapter = GsonAdapter(),
                 dataPlaneUrl = DATA_PLANE_URL,
                 controlPlaneUrl = CONTROL_PLANE_URL,
                 trackLifecycleEvents = true,
