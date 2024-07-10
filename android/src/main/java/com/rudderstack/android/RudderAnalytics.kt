@@ -39,7 +39,7 @@ class RudderAnalytics private constructor() {
             storage: Storage = AndroidStorageImpl(
                 configuration.application,
                 writeKey = writeKey,
-                useContentProvider = ConfigurationAndroid.Defaults.USE_CONTENT_PROVIDER
+                useContentProvider = ConfigurationAndroid.USE_CONTENT_PROVIDER
             ),
             dataUploadService: DataUploadService? = null,
             configDownloadService: ConfigDownloadService? = null,
