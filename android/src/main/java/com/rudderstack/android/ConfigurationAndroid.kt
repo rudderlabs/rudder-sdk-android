@@ -26,316 +26,54 @@ import com.rudderstack.rudderjsonadapter.JsonAdapter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-
-interface ConfigurationAndroid : Configuration {
-    /**
-     * TODO write documentation
-     *
-     * @property application
-     * @property anonymousId
-     * @property trackLifecycleEvents
-     * @property recordScreenViews
-     * @property isPeriodicFlushEnabled
-     * @property autoCollectAdvertId
-     * @property multiProcessEnabled
-     * @property defaultProcessName
-     * @property useContentProvider
-     * @property advertisingId
-     * @property deviceToken
-     * @property advertisingIdFetchExecutor
-     * @constructor
-     * TODO
-     *
-     * @param jsonAdapter
-     * @param options
-     * @param flushQueueSize
-     * @param maxFlushInterval
-     * @param shouldVerifySdk
-     * @param sdkVerifyRetryStrategy
-     * @param dataPlaneUrl
-     * @param controlPlaneUrl
-     * @param logLevel
-     * @param analyticsExecutor
-     * @param networkExecutor
-     * @param base64Generator
-     */
-    val application: Application
-    val anonymousId: String?
-    val trackLifecycleEvents: Boolean
-    val recordScreenViews: Boolean
-    val isPeriodicFlushEnabled: Boolean
-    val autoCollectAdvertId: Boolean
-    val multiProcessEnabled: Boolean
-    val defaultProcessName: String?
-    val advertisingId: String?
-    val deviceToken: String?
-    val collectDeviceId: Boolean
-    val advertisingIdFetchExecutor: ExecutorService
-    //session
-    val trackAutoSession: Boolean
-    val sessionTimeoutMillis: Long
-
-
+/**
+ * Data class representing the Android-specific configuration for the RudderStack analytics SDK.
+ *
+ */
+data class ConfigurationAndroid @JvmOverloads constructor(
+    val application: Application,
+    val anonymousId: String? = null,
+    val trackLifecycleEvents: Boolean = TRACK_LIFECYCLE_EVENTS,
+    val recordScreenViews: Boolean = RECORD_SCREEN_VIEWS,
+    val isPeriodicFlushEnabled: Boolean = IS_PERIODIC_FLUSH_ENABLED,
+    val autoCollectAdvertId: Boolean = AUTO_COLLECT_ADVERT_ID,
+    val multiProcessEnabled: Boolean = MULTI_PROCESS_ENABLED,
+    val defaultProcessName: String? = DEFAULT_PROCESS_NAME,
+    val advertisingId: String? = null,
+    val deviceToken: String? = null,
+    val logLevel: Logger.LogLevel = Logger.DEFAULT_LOG_LEVEL,
+    val collectDeviceId: Boolean = COLLECT_DEVICE_ID,
+    val advertisingIdFetchExecutor: ExecutorService = Executors.newCachedThreadPool(),
+    val trackAutoSession: Boolean = AUTO_SESSION_TRACKING,
+    val sessionTimeoutMillis: Long = SESSION_TIMEOUT,
+    override val jsonAdapter: JsonAdapter,
+    override val options: RudderOption = RudderOption(),
+    override val flushQueueSize: Int = DEFAULT_FLUSH_QUEUE_SIZE,
+    override val maxFlushInterval: Long = DEFAULT_MAX_FLUSH_INTERVAL,
+    override val shouldVerifySdk: Boolean = SHOULD_VERIFY_SDK,
+    override val gzipEnabled: Boolean = GZIP_ENABLED,
+    override val sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
+    override val dataPlaneUrl: String = DEFAULT_ANDROID_DATAPLANE_URL,
+    override val controlPlaneUrl: String = DEFAULT_ANDROID_CONTROLPLANE_URL,
+    override val analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
+    override val networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
+    override val base64Generator: Base64Generator = AndroidUtils.defaultBase64Generator(),
+) : Configuration (
+    jsonAdapter = jsonAdapter,
+    options = options,
+    flushQueueSize = flushQueueSize,
+    maxFlushInterval = maxFlushInterval,
+    shouldVerifySdk = shouldVerifySdk,
+    gzipEnabled = gzipEnabled,
+    sdkVerifyRetryStrategy = sdkVerifyRetryStrategy,
+    dataPlaneUrl = dataPlaneUrl,
+    controlPlaneUrl = controlPlaneUrl,
+    logger = AndroidLogger(logLevel),
+    analyticsExecutor = analyticsExecutor,
+    networkExecutor = networkExecutor,
+    base64Generator = base64Generator,
+) {
     companion object {
-        operator fun invoke(
-            application: Application,
-            jsonAdapter: JsonAdapter,
-            anonymousId: String? = null,
-            options: RudderOption = RudderOption(),
-            flushQueueSize: Int = Defaults.DEFAULT_FLUSH_QUEUE_SIZE,
-            maxFlushInterval: Long = Defaults.DEFAULT_MAX_FLUSH_INTERVAL,
-            shouldVerifySdk: Boolean = Defaults.SHOULD_VERIFY_SDK,
-            gzipEnabled: Boolean = Defaults.GZIP_ENABLED,
-            sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
-            dataPlaneUrl: String? = null, //defaults to https://hosted.rudderlabs.com
-            controlPlaneUrl: String? = null, //defaults to https://api.rudderlabs.com/
-            trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
-            recordScreenViews: Boolean = Defaults.RECORD_SCREEN_VIEWS,
-            isPeriodicFlushEnabled: Boolean = Defaults.IS_PERIODIC_FLUSH_ENABLED,
-            autoCollectAdvertId: Boolean = Defaults.AUTO_COLLECT_ADVERT_ID,
-            multiProcessEnabled: Boolean = Defaults.MULTI_PROCESS_ENABLED,
-            defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
-            advertisingId: String? = null,
-            deviceToken: String? = null,
-            logLevel: Logger.LogLevel = Logger.DEFAULT_LOG_LEVEL,
-            analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
-            networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
-            collectDeviceId: Boolean = Defaults.COLLECT_DEVICE_ID,
-            advertisingIdFetchExecutor: ExecutorService = Executors.newCachedThreadPool(),
-            base64Generator: Base64Generator = AndroidUtils.defaultBase64Generator(),
-            trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
-            sessionTimeoutMillis: Long = Defaults.SESSION_TIMEOUT
-        ) = invoke(
-            application,
-            jsonAdapter,
-            anonymousId,
-            options,
-            flushQueueSize,
-            maxFlushInterval,
-            shouldVerifySdk,
-            gzipEnabled,
-            sdkVerifyRetryStrategy,
-            dataPlaneUrl,
-            controlPlaneUrl,
-            trackLifecycleEvents,
-            recordScreenViews,
-            isPeriodicFlushEnabled,
-            autoCollectAdvertId,
-            multiProcessEnabled,
-            defaultProcessName,
-            advertisingId,
-            deviceToken,
-            AndroidLogger(logLevel),
-            analyticsExecutor,
-            networkExecutor,
-            collectDeviceId,
-            advertisingIdFetchExecutor,
-            base64Generator,
-            trackAutoSession,
-            sessionTimeoutMillis
-        )
-
-        internal operator fun invoke(
-            application: Application,
-            jsonAdapter: JsonAdapter,
-            anonymousId: String? = null,
-            options: RudderOption = RudderOption(),
-            flushQueueSize: Int = Defaults.DEFAULT_FLUSH_QUEUE_SIZE,
-            maxFlushInterval: Long = Defaults.DEFAULT_MAX_FLUSH_INTERVAL,
-            shouldVerifySdk: Boolean = Defaults.SHOULD_VERIFY_SDK,
-            gzipEnabled: Boolean = Defaults.GZIP_ENABLED,
-            sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
-            dataPlaneUrl: String? = null, //defaults to https://hosted.rudderlabs.com
-            controlPlaneUrl: String? = null, //defaults to https://api.rudderlabs.com/
-            trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
-            recordScreenViews: Boolean = Defaults.RECORD_SCREEN_VIEWS,
-            isPeriodicFlushEnabled: Boolean = Defaults.IS_PERIODIC_FLUSH_ENABLED,
-            autoCollectAdvertId: Boolean = Defaults.AUTO_COLLECT_ADVERT_ID,
-            multiProcessEnabled: Boolean = Defaults.MULTI_PROCESS_ENABLED,
-            defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
-            advertisingId: String? = null,
-            deviceToken: String? = null,
-            logger: Logger = AndroidLogger(),
-            analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
-            networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
-            collectDeviceId: Boolean = Defaults.COLLECT_DEVICE_ID,
-            advertisingIdFetchExecutor: ExecutorService = Executors.newCachedThreadPool(),
-            base64Generator: Base64Generator = AndroidUtils.defaultBase64Generator(),
-            trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
-            sessionTimeoutMillis: Long = Defaults.SESSION_TIMEOUT
-//    val defaultTraits: IdentifyTraits? = null, // will be added by default to each message
-//    val defaultExternalIds: List<Map<String, String>>? = null, // will be added by default to each message
-//    val defaultContextMap: Map<String, Any>? = null, // will be added by default to each message
-//    val contextAddOns: Map<String, Any>? = null // will be added by default to each message
-        ): ConfigurationAndroid = object : ConfigurationAndroid {
-            override val application: Application = application
-            override val anonymousId: String? = anonymousId
-            override val trackLifecycleEvents: Boolean = trackLifecycleEvents
-            override val recordScreenViews: Boolean = recordScreenViews
-            override val isPeriodicFlushEnabled: Boolean = isPeriodicFlushEnabled
-            override val autoCollectAdvertId: Boolean = autoCollectAdvertId
-            override val multiProcessEnabled: Boolean = multiProcessEnabled
-            override val defaultProcessName: String? = defaultProcessName
-            override val advertisingId: String? = advertisingId
-            override val deviceToken: String? = deviceToken
-            override val advertisingIdFetchExecutor: ExecutorService = advertisingIdFetchExecutor
-            override val trackAutoSession: Boolean = trackAutoSession
-            override val sessionTimeoutMillis: Long = sessionTimeoutMillis
-            override val jsonAdapter: JsonAdapter = jsonAdapter
-            override val options: RudderOption = options
-            override val flushQueueSize: Int = flushQueueSize
-            override val maxFlushInterval: Long = maxFlushInterval
-            override val shouldVerifySdk: Boolean = shouldVerifySdk
-            override val gzipEnabled: Boolean = gzipEnabled
-            override val sdkVerifyRetryStrategy: RetryStrategy = sdkVerifyRetryStrategy
-            override val dataPlaneUrl: String =
-                dataPlaneUrl ?: Defaults.DEFAULT_ANDROID_DATAPLANE_URL
-            override val controlPlaneUrl: String =
-                controlPlaneUrl ?: Defaults.DEFAULT_ANDROID_CONTROLPLANE_URL
-            override val logger: Logger = logger
-            override val analyticsExecutor: ExecutorService = analyticsExecutor
-            override val networkExecutor: ExecutorService = networkExecutor
-            override val base64Generator: Base64Generator = base64Generator
-            override val collectDeviceId: Boolean = collectDeviceId
-        }
-
-        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        operator fun invoke(
-            configuration: Configuration,
-            application: Application,
-            anonymousId: String = AndroidUtils.generateAnonymousId(Defaults.COLLECT_DEVICE_ID, application),
-            trackLifecycleEvents: Boolean = Defaults.TRACK_LIFECYCLE_EVENTS,
-            recordScreenViews: Boolean = Defaults.RECORD_SCREEN_VIEWS,
-            isPeriodicFlushEnabled: Boolean = Defaults.IS_PERIODIC_FLUSH_ENABLED,
-            autoCollectAdvertId: Boolean = Defaults.AUTO_COLLECT_ADVERT_ID,
-            multiProcessEnabled: Boolean = Defaults.MULTI_PROCESS_ENABLED,
-            defaultProcessName: String? = Defaults.DEFAULT_PROCESS_NAME,
-            advertisingId: String? = null,
-            deviceToken: String? = null,
-            logger: Logger = AndroidLogger(),
-            collectDeviceId: Boolean = Defaults.COLLECT_DEVICE_ID,
-            advertisingIdFetchExecutor: ExecutorService = Executors.newCachedThreadPool(),
-            trackAutoSession: Boolean = Defaults.AUTO_SESSION_TRACKING,
-            sessionTimeoutMillis: Long = Defaults.SESSION_TIMEOUT
-        ): ConfigurationAndroid =
-            invoke(
-                application,
-                configuration.jsonAdapter,
-                anonymousId,
-                configuration.options,
-                configuration.flushQueueSize,
-                configuration.maxFlushInterval,
-                configuration.shouldVerifySdk,
-                configuration.gzipEnabled,
-                configuration.sdkVerifyRetryStrategy,
-                configuration.dataPlaneUrl,
-                configuration.controlPlaneUrl,
-                trackLifecycleEvents,
-                recordScreenViews,
-                isPeriodicFlushEnabled,
-                autoCollectAdvertId,
-                multiProcessEnabled,
-                defaultProcessName,
-                advertisingId,
-                deviceToken,
-                logger,
-                configuration.analyticsExecutor,
-                configuration.networkExecutor,
-                collectDeviceId,
-                advertisingIdFetchExecutor,
-                configuration.base64Generator,
-                trackAutoSession,
-                sessionTimeoutMillis
-            )
-    }
-
-    override fun copy(
-        jsonAdapter: JsonAdapter,
-        options: RudderOption,
-        flushQueueSize: Int,
-        maxFlushInterval: Long,
-        shouldVerifySdk: Boolean,
-        gzipEnabled: Boolean,
-        sdkVerifyRetryStrategy: RetryStrategy,
-        dataPlaneUrl: String,
-        controlPlaneUrl: String?,
-        logger: Logger,
-        analyticsExecutor: ExecutorService,
-        networkExecutor: ExecutorService,
-        base64Generator: Base64Generator,
-    ): Configuration {
-        return copy(
-            jsonAdapter,
-            options,
-            flushQueueSize,
-            maxFlushInterval,
-            shouldVerifySdk,
-            gzipEnabled,
-            sdkVerifyRetryStrategy,
-            dataPlaneUrl,
-            controlPlaneUrl,
-            analyticsExecutor,
-            networkExecutor,
-            base64Generator,
-        )
-    }
-
-    fun copy(
-        jsonAdapter: JsonAdapter = this.jsonAdapter,
-        options: RudderOption = this.options,
-        flushQueueSize: Int = this.flushQueueSize,
-        maxFlushInterval: Long = this.maxFlushInterval,
-        shouldVerifySdk: Boolean = this.shouldVerifySdk,
-        gzipEnabled: Boolean = this.gzipEnabled,
-        sdkVerifyRetryStrategy: RetryStrategy = this.sdkVerifyRetryStrategy,
-        dataPlaneUrl: String = this.dataPlaneUrl,
-        controlPlaneUrl: String? = this.controlPlaneUrl,
-        analyticsExecutor: ExecutorService = this.analyticsExecutor,
-        networkExecutor: ExecutorService = this.networkExecutor,
-        base64Generator: Base64Generator = this.base64Generator,
-        anonymousId: String? = this.anonymousId,
-        advertisingId: String? = this.advertisingId,
-        autoCollectAdvertId: Boolean = this.autoCollectAdvertId,
-        deviceToken: String? = this.deviceToken,
-        trackAutoSession: Boolean = this.trackAutoSession,
-        sessionTimeoutMillis: Long = this.sessionTimeoutMillis
-    ): ConfigurationAndroid {
-        return ConfigurationAndroid(
-            application,
-            jsonAdapter,
-            anonymousId,
-            options,
-            flushQueueSize,
-            maxFlushInterval,
-            shouldVerifySdk,
-            gzipEnabled,
-            sdkVerifyRetryStrategy,
-            dataPlaneUrl,
-            controlPlaneUrl,
-            trackLifecycleEvents,
-            recordScreenViews,
-            isPeriodicFlushEnabled,
-            autoCollectAdvertId,
-            multiProcessEnabled,
-            defaultProcessName,
-            advertisingId,
-            deviceToken,
-            logger,
-            analyticsExecutor,
-            networkExecutor,
-            collectDeviceId,
-            advertisingIdFetchExecutor,
-            base64Generator,
-            trackAutoSession,
-            sessionTimeoutMillis
-//        defaultTraits,
-//        defaultExternalIds,
-//        defaultContextMap,
-//        contextAddOns
-        )
-    }
-
-    object Defaults {
         const val COLLECT_DEVICE_ID: Boolean = true
         const val DEFAULT_ANDROID_DATAPLANE_URL = "https://hosted.rudderlabs.com"
         const val DEFAULT_ANDROID_CONTROLPLANE_URL = "https://api.rudderlabs.com"
@@ -346,7 +84,8 @@ interface ConfigurationAndroid : Configuration {
         const val IS_PERIODIC_FLUSH_ENABLED = false
         const val AUTO_COLLECT_ADVERT_ID = false
         const val MULTI_PROCESS_ENABLED = false
-        val DEFAULT_PROCESS_NAME: String? = null
+        @JvmField
+        var DEFAULT_PROCESS_NAME: String? = null
         const val USE_CONTENT_PROVIDER = false
         const val DEFAULT_FLUSH_QUEUE_SIZE = 30
         const val DEFAULT_MAX_FLUSH_INTERVAL = 10 * 1000L
