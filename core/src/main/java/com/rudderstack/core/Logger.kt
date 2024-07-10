@@ -7,9 +7,10 @@ typealias RudderLogLevel = Logger.LogLevel
  * Contains methods for different scenarios
  *
  */
+const val DEFAULT_TAG = "Rudder-Analytics"
 interface Logger {
     companion object {
-        const val DEFAULT_TAG = "Rudder-Analytics"
+        @JvmField
         val DEFAULT_LOG_LEVEL = LogLevel.NONE
     }
 
