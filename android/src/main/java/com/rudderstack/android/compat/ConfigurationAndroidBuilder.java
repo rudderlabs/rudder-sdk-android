@@ -1,24 +1,9 @@
-/*
- * Creator: Debanjan Chatterjee on 02/12/23, 5:57 pm Last modified: 02/12/23, 5:57 pm
- * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.android.compat;
 
 import android.app.Application;
 
 import com.rudderstack.android.AndroidUtils;
 import com.rudderstack.android.ConfigurationAndroid;
-import com.rudderstack.android.internal.AndroidLogger;
 import com.rudderstack.core.compat.ConfigurationBuilder;
 import com.rudderstack.rudderjsonadapter.JsonAdapter;
 import com.rudderstack.core.Logger;
@@ -30,19 +15,19 @@ import java.util.concurrent.Executors;
 public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     private final Application application ;
     private String anonymousId;
-    private Boolean trackLifecycleEvents = ConfigurationAndroid.Defaults.TRACK_LIFECYCLE_EVENTS;
-    private Boolean recordScreenViews  = ConfigurationAndroid.Defaults.RECORD_SCREEN_VIEWS;
-    private Boolean isPeriodicFlushEnabled  = ConfigurationAndroid.Defaults.IS_PERIODIC_FLUSH_ENABLED;
-    private Boolean autoCollectAdvertId  = ConfigurationAndroid.Defaults.AUTO_COLLECT_ADVERT_ID;
-    private Boolean multiProcessEnabled  = ConfigurationAndroid.Defaults.MULTI_PROCESS_ENABLED;
-    private String defaultProcessName= ConfigurationAndroid.Defaults.INSTANCE.getDEFAULT_PROCESS_NAME();
+    private Boolean trackLifecycleEvents = ConfigurationAndroid.TRACK_LIFECYCLE_EVENTS;
+    private Boolean recordScreenViews  = ConfigurationAndroid.RECORD_SCREEN_VIEWS;
+    private Boolean isPeriodicFlushEnabled  = ConfigurationAndroid.IS_PERIODIC_FLUSH_ENABLED;
+    private Boolean autoCollectAdvertId  = ConfigurationAndroid.AUTO_COLLECT_ADVERT_ID;
+    private Boolean multiProcessEnabled  = ConfigurationAndroid.MULTI_PROCESS_ENABLED;
+    private String defaultProcessName= ConfigurationAndroid.DEFAULT_PROCESS_NAME;
     private String advertisingId = null;
     private String deviceToken = null;
-    private boolean collectDeviceId = ConfigurationAndroid.Defaults.COLLECT_DEVICE_ID;
+    private boolean collectDeviceId = ConfigurationAndroid.COLLECT_DEVICE_ID;
     private ExecutorService advertisingIdFetchExecutor = Executors.newCachedThreadPool();
-    private boolean trackAutoSession = ConfigurationAndroid.Defaults.AUTO_SESSION_TRACKING;
-    private long sessionTimeoutMillis = ConfigurationAndroid.Defaults.SESSION_TIMEOUT;
-    private Logger logger = new AndroidLogger();
+    private boolean trackAutoSession = ConfigurationAndroid.AUTO_SESSION_TRACKING;
+    private long sessionTimeoutMillis = ConfigurationAndroid.SESSION_TIMEOUT;
+    private Logger.LogLevel logLevel = Logger.DEFAULT_LOG_LEVEL;
 
     public ConfigurationAndroidBuilder(Application application, JsonAdapter jsonAdapter) {
         super(jsonAdapter);
@@ -99,7 +84,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
     }
 
     public ConfigurationBuilder withLogLevel(Logger.LogLevel logLevel) {
-        this.logger = new AndroidLogger(logLevel);
+        this.logLevel = logLevel;
         return this;
     }
 
@@ -110,7 +95,7 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
 
     @Override
     public ConfigurationAndroid build() {
-        return ConfigurationAndroid.Companion.invoke(super.build(),
+        return new ConfigurationAndroid(
                 application,
                 anonymousId,
                 trackLifecycleEvents,
@@ -121,11 +106,12 @@ public class ConfigurationAndroidBuilder extends ConfigurationBuilder {
                 defaultProcessName,
                 advertisingId,
                 deviceToken,
-                logger,
+                logLevel,
                 collectDeviceId,
                 advertisingIdFetchExecutor,
                 trackAutoSession,
-                sessionTimeoutMillis
+                sessionTimeoutMillis,
+                jsonAdapter
         );
     }
 
