@@ -22,8 +22,8 @@ class RudderAnalyticsTest {
     fun `when writeKey and configuration is passed, then getInstance should return Analytics instance`() {
         val analytics = getInstance(
             writeKey, ConfigurationAndroid(
-                ApplicationProvider.getApplicationContext(),
-                JacksonAdapter(),
+                application = ApplicationProvider.getApplicationContext(),
+                jsonAdapter = JacksonAdapter(),
                 logLevel = Logger.LogLevel.DEBUG,
             )
         )
@@ -36,16 +36,16 @@ class RudderAnalyticsTest {
         val writeKey2 = "writeKey2"
         val analytics = getInstance(
             writeKey, ConfigurationAndroid(
-                ApplicationProvider.getApplicationContext(),
-                JacksonAdapter(),
+                application = ApplicationProvider.getApplicationContext(),
+                jsonAdapter = JacksonAdapter(),
                 logLevel = Logger.LogLevel.DEBUG,
             )
         )
 
         val analytics2 = getInstance(
             writeKey2, ConfigurationAndroid(
-                ApplicationProvider.getApplicationContext(),
-                JacksonAdapter(),
+                application = ApplicationProvider.getApplicationContext(),
+                jsonAdapter = JacksonAdapter(),
                 logLevel = Logger.LogLevel.DEBUG,
             )
         )
@@ -59,16 +59,16 @@ class RudderAnalyticsTest {
     fun `given that the SDK supports a singleton instance, when an attempt is made to create multiple instance with the same writeKey, then both instances should remain the same`() {
         val analytics = getInstance(
             writeKey, ConfigurationAndroid(
-                ApplicationProvider.getApplicationContext(),
-                JacksonAdapter(),
+                application = ApplicationProvider.getApplicationContext(),
+                jsonAdapter = JacksonAdapter(),
                 logLevel = Logger.LogLevel.DEBUG,
             )
         )
 
         val analytics2 = getInstance(
             writeKey, ConfigurationAndroid(
-                ApplicationProvider.getApplicationContext(),
-                JacksonAdapter(),
+                application = ApplicationProvider.getApplicationContext(),
+                jsonAdapter = JacksonAdapter(),
                 logLevel = Logger.LogLevel.DEBUG,
             )
         )

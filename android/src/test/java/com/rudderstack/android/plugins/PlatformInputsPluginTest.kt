@@ -12,8 +12,8 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
-import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.core.models.TrackMessage
+import com.rudderstack.jacksonrudderadapter.JacksonAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert.assertThat
@@ -44,21 +44,28 @@ class PlatformInputsPluginTest {
     private lateinit var platformInputsPlugin: PlatformInputsPlugin
     protected var jsonAdapter: JsonAdapter = JacksonAdapter()
     private lateinit var analytics: Analytics
+
     @Before
     fun setUp() {
         val app = getApplicationContext<AndroidContextPluginTestApplication>()
         platformInputsPlugin = PlatformInputsPlugin()
-        analytics = generateTestAnalytics(ConfigurationAndroid(app,
-            jsonAdapter, shouldVerifySdk = false,
-            logLevel = Logger.LogLevel.DEBUG,
-            ))
+        analytics = generateTestAnalytics(
+            ConfigurationAndroid(
+                application = app,
+                jsonAdapter = jsonAdapter,
+                shouldVerifySdk = false,
+                logLevel = Logger.LogLevel.DEBUG,
+            )
+        )
         platformInputsPlugin.setup(analytics)
     }
+
     @After
     fun destroy() {
         platformInputsPlugin.reset()
         analytics.shutdown()
     }
+
     @Test
     fun testInterceptWithMessage() {
 
@@ -73,33 +80,54 @@ class PlatformInputsPluginTest {
             it.arguments[0] as TrackMessage
         }
         val verifyMsg = platformInputsPlugin.intercept(mockChain)
-        assertThat(verifyMsg.context, allOf(Matchers.aMapWithSize(11),
-            hasEntry("traits", mapOf("traitKey" to "traitValue")),//yo
-            hasKey("screen"),
-            hasEntry("timezone", (TimeZone.getDefault().id))
-        ),)
         assertThat(
-            verifyMsg.context!!["app"], `is`(mapOf("name" to AndroidContextPluginTestApplication.PACKAGE_NAME,
-                "build" to "1", "namespace" to AndroidContextPluginTestApplication.PACKAGE_NAME,
-                "version" to "1.0")))
+            verifyMsg.context,
+            allOf(
+                Matchers.aMapWithSize(11),
+                hasEntry("traits", mapOf("traitKey" to "traitValue")),//yo
+                hasKey("screen"),
+                hasEntry("timezone", (TimeZone.getDefault().id))
+            ),
+        )
         assertThat(
-            verifyMsg.context!!["os"] as Map<*, *>, `is`( allOf (aMapWithSize(2), hasEntry
-                ("name", "Android"), hasKey("version"))))
+            verifyMsg.context!!["app"], `is`(
+                mapOf(
+                    "name" to AndroidContextPluginTestApplication.PACKAGE_NAME,
+                    "build" to "1", "namespace" to AndroidContextPluginTestApplication.PACKAGE_NAME,
+                    "version" to "1.0"
+                )
+            )
+        )
         assertThat(
-            verifyMsg.context!!["device"] as Map<*,*>, `is`(allOf(
-                hasKey("id"),
-                hasKey("manufacturer"),
-                hasKey("model"),
-                hasKey("name"),
-                hasKey("type"),
-                hasKey("adTrackingEnabled"),
-            )))
+            verifyMsg.context!!["os"] as Map<*, *>, `is`(
+                allOf(
+                    aMapWithSize(2), hasEntry
+                        ("name", "Android"), hasKey("version")
+                )
+            )
+        )
         assertThat(
-            verifyMsg.context!!["network"] as Map<*,*>, `is`(allOf(
+            verifyMsg.context!!["device"] as Map<*, *>, `is`(
+                allOf(
+                    hasKey("id"),
+                    hasKey("manufacturer"),
+                    hasKey("model"),
+                    hasKey("name"),
+                    hasKey("type"),
+                    hasKey("adTrackingEnabled"),
+                )
+            )
+        )
+        assertThat(
+            verifyMsg.context!!["network"] as Map<*, *>, `is`(
+                allOf(
 //                hasKey("carrier"),
-                hasKey("bluetooth"),
-                hasKey("cellular"),
-                hasKey("wifi"))))
+                    hasKey("bluetooth"),
+                    hasKey("cellular"),
+                    hasKey("wifi")
+                )
+            )
+        )
 
 
     }
@@ -122,6 +150,7 @@ class PlatformInputsPluginTest {
             verifyMsg.context!!["device"] as Map<*, *>, hasEntry("advertisingId", "testAdvertisingId")
         )
     }
+
     @Test
     fun testChannelIsSetToMessages() {
         platformInputsPlugin.setAdvertisingId("testAdvertisingId")
@@ -154,7 +183,7 @@ class PlatformInputsPluginTest {
         }
         val verifyMsg = platformInputsPlugin.intercept(mockChain)
         assertThat(
-            verifyMsg!!.context!!["device"] as Map<*,*>, hasEntry("token", "testDeviceToken")
+            verifyMsg!!.context!!["device"] as Map<*, *>, hasEntry("token", "testDeviceToken")
         )
     }
 

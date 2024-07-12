@@ -3,24 +3,33 @@ package com.rudderstack.android.plugins
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.android.internal.plugins.FillDefaultsPlugin
 import com.rudderstack.android.internal.states.ContextState
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
+import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Logger
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.holder.associateState
 import com.rudderstack.core.holder.retrieveState
+import com.rudderstack.core.models.TrackMessage
+import com.rudderstack.core.models.createContext
+import com.rudderstack.core.models.customContexts
+import com.rudderstack.core.models.externalIds
+import com.rudderstack.core.models.traits
 import com.rudderstack.gsonrudderadapter.GsonAdapter
-import com.rudderstack.core.models.*
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.assertArgument
 import com.vagabond.testcommon.generateTestAnalytics
 import com.vagabond.testcommon.testPlugin
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.aMapWithSize
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.containsInAnyOrder
+import org.hamcrest.Matchers.hasEntry
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.notNullValue
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -29,9 +38,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 
-@RunWith(
-    RobolectricTestRunner::class)
-    @Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])
+@RunWith(RobolectricTestRunner::class)
+@Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])
 class FillDefaultsPluginTest {
 
     private lateinit var analytics: Analytics
@@ -50,7 +58,7 @@ class FillDefaultsPluginTest {
         )
         mockConfig = ConfigurationAndroid(
             application = getApplicationContext(),
-            jsonAdapter,
+            jsonAdapter = jsonAdapter,
             anonymousId = "anon_id",
             shouldVerifySdk = false,
             analyticsExecutor = TestExecutor(),
@@ -61,6 +69,7 @@ class FillDefaultsPluginTest {
         fillDefaultsPlugin.setup(analytics)
         fillDefaultsPlugin.updateConfiguration(mockConfig)
     }
+
     @After
     fun destroy() {
         analytics.storage.clearStorage()
@@ -119,8 +128,10 @@ class FillDefaultsPluginTest {
             // but it should have the context values
             assertThat(
                 output?.context?.externalIds,
-                containsInAnyOrder(mapOf("braze_id" to "b_id"),
-                    mapOf("amp_id" to "a_id"))
+                containsInAnyOrder(
+                    mapOf("braze_id" to "b_id"),
+                    mapOf("amp_id" to "a_id")
+                )
 
             )
         }

@@ -12,26 +12,28 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@RunWith(
-    RobolectricTestRunner::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(manifest = Config.NONE, sdk = [Build.VERSION_CODES.P])
-class V1MigratoryUtilsKtTest{
+class V1MigratoryUtilsKtTest {
     private val context = ApplicationProvider.getApplicationContext<Application>()
+
     @Test
-    fun `test sourceId should not exist`(){
+    fun `test sourceId should not exist`() {
         val isSourceIdExist = context.isV1SavedServerConfigContainsSourceId("fileName", "new_source_id")
         assertThat(isSourceIdExist, Matchers.`is`(false))
     }
+
     @Test
-    fun `test wrong sourceId exists`(){
+    fun `test wrong sourceId exists`() {
         val fileName = "file_name"
         //create a file
         saveObject("dummy", context, fileName, KotlinLogger())
         val isSourceIdExist = context.isV1SavedServerConfigContainsSourceId(fileName, "new_source_id")
         assertThat(isSourceIdExist, Matchers.`is`(false))
     }
+
     @Test
-    fun `test sourceId should exist`(){
+    fun `test sourceId should exist`() {
 
         val sourceId = "i_am_source_id"
         val fileName = "file_name"

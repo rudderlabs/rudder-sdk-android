@@ -1,17 +1,3 @@
-/*
- * Creator: Debanjan Chatterjee on 30/12/21, 1:26 PM Last modified: 29/12/21, 5:30 PM
- * Copyright: All rights reserved Ⓒ 2021 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.core
 
 import com.rudderstack.core.internal.KotlinLogger
@@ -20,37 +6,27 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
- * Settings to be applied to the sdk.
- * To change the settings, create a copy and apply.
- * ```
- * val newSettings = settings.copy(options = settings.options.newBuilder().withExternalIds(mapOf()).build(),
- *  trackLifecycleEvents = true)
- * ```
+ * The `Configuration` class defines the settings and parameters used to configure the RudderStack analytics SDK.
+ * This class is open for inheritance to allow for customization and extension.
  *
- * @property options Global [RudderOption] for all plugins
- * @property flushQueueSize Max elements to be stored before a flush. Once it passes this threshold,
- * flush is triggered
- * @property maxFlushInterval Max time (in millis) to wait for a flush, even if the queue size hasn't
- * passed the threshold
-// * @property trackLifecycleEvents Will track activity lifecycle if set to true, else false
-// * @property recordScreenViews Will record screen views if true.
  */
-interface Configuration {
-    val jsonAdapter: JsonAdapter
-    val options: RudderOption
-    val flushQueueSize: Int
-    val maxFlushInterval: Long
+open class Configuration(
+    open val jsonAdapter: JsonAdapter,
+    open val options: RudderOption = RudderOption(),
+    open val flushQueueSize: Int = FLUSH_QUEUE_SIZE,
+    open val maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
     // changing the value post source config download has no effect
-    val shouldVerifySdk: Boolean
-    val gzipEnabled: Boolean
+    open val shouldVerifySdk: Boolean = false,
+    open val gzipEnabled: Boolean = true,
     // changing the value post source config download has no effect
-    val sdkVerifyRetryStrategy: RetryStrategy
-    val dataPlaneUrl: String
-    val controlPlaneUrl: String
-    val logger: Logger
-    val analyticsExecutor: ExecutorService
-    val networkExecutor: ExecutorService
-    val base64Generator: Base64Generator
+    open val sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
+    open val dataPlaneUrl: String = DATA_PLANE_URL,
+    open val controlPlaneUrl: String = CONTROL_PLANE_URL,
+    open val logger: Logger = KotlinLogger(),
+    open val analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
+    open val networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
+    open val base64Generator: Base64Generator = RudderUtils.defaultBase64Generator,
+) {
     companion object {
         // default flush queue size for the events to be flushed to server
         const val FLUSH_QUEUE_SIZE = 30
@@ -59,70 +35,7 @@ interface Configuration {
         // if events are registered and flushQueueSize is not reached
         // events will be flushed to server after maxFlushInterval millis
         const val MAX_FLUSH_INTERVAL = 10 * 1000L //10 seconds
-        operator fun invoke(
-            jsonAdapter: JsonAdapter,
-            options: RudderOption = RudderOption(),
-            flushQueueSize: Int = FLUSH_QUEUE_SIZE,
-            maxFlushInterval: Long = MAX_FLUSH_INTERVAL,
-            shouldVerifySdk: Boolean = false,
-            gzipEnabled: Boolean = true,
-            sdkVerifyRetryStrategy: RetryStrategy = RetryStrategy.exponential(),
-            dataPlaneUrl: String? = null, //defaults to https://hosted.rudderlabs.com
-            controlPlaneUrl: String? = null, //defaults to https://api.rudderlabs.com/
-            logger: Logger = KotlinLogger(),
-            analyticsExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
-            networkExecutor: ExecutorService = Executors.newCachedThreadPool(),
-            base64Generator: Base64Generator = RudderUtils.defaultBase64Generator,
-        ) = object : Configuration {
-            override val jsonAdapter: JsonAdapter = jsonAdapter
-            override val options: RudderOption = options
-            override val flushQueueSize: Int = flushQueueSize
-            override val maxFlushInterval: Long = maxFlushInterval
-            override val shouldVerifySdk: Boolean = shouldVerifySdk
-            override val gzipEnabled: Boolean = gzipEnabled
-            override val sdkVerifyRetryStrategy: RetryStrategy = sdkVerifyRetryStrategy
-            override val dataPlaneUrl: String = dataPlaneUrl?:"https://hosted.rudderlabs.com"
-            override val controlPlaneUrl: String = controlPlaneUrl?:"https://api.rudderstack.com/"
-            override val logger: Logger = logger
-            override val analyticsExecutor: ExecutorService = analyticsExecutor
-            override val networkExecutor: ExecutorService = networkExecutor
-            override val base64Generator: Base64Generator = base64Generator
-        }
+        const val DATA_PLANE_URL = "https://hosted.rudderlabs.com"
+        const val CONTROL_PLANE_URL = "https://api.rudderstack.com/"
     }
-    fun copy(
-        jsonAdapter: JsonAdapter = this.jsonAdapter,
-        options: RudderOption = this.options,
-        flushQueueSize: Int = this.flushQueueSize,
-        maxFlushInterval: Long = this.maxFlushInterval,
-        shouldVerifySdk: Boolean = this.shouldVerifySdk,
-        gzipEnabled: Boolean = this.gzipEnabled,
-        sdkVerifyRetryStrategy: RetryStrategy = this.sdkVerifyRetryStrategy,
-        dataPlaneUrl: String = this.dataPlaneUrl,
-        controlPlaneUrl: String?= this.controlPlaneUrl,
-        logger: Logger = this.logger,
-        analyticsExecutor: ExecutorService = this.analyticsExecutor,
-        networkExecutor: ExecutorService = this.networkExecutor,
-        base64Generator: Base64Generator = this.base64Generator,
-    ) = Configuration(
-        jsonAdapter = jsonAdapter,
-        options = options,
-        flushQueueSize = flushQueueSize,
-        maxFlushInterval = maxFlushInterval,
-        shouldVerifySdk = shouldVerifySdk,
-        gzipEnabled = gzipEnabled,
-        sdkVerifyRetryStrategy = sdkVerifyRetryStrategy,
-        dataPlaneUrl = dataPlaneUrl,
-        controlPlaneUrl = controlPlaneUrl,
-        logger = logger,
-        analyticsExecutor = analyticsExecutor,
-        networkExecutor = networkExecutor,
-        base64Generator = base64Generator,
-    )
-
 }
-//A copy constructor for Configuration
-
-
-
-//    private val String.formattedUrl
-//        get() = if (this.endsWith('/')) this else "$this/"

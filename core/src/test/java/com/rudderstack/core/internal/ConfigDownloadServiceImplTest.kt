@@ -42,11 +42,12 @@ abstract class ConfigDownloadServiceImplTest {
     @Before
     fun setup() {
         dummyWebService = DummyWebService()
-        val config = Configuration(jsonAdapter)
+        val config = Configuration(
+            jsonAdapter = jsonAdapter,
+            sdkVerifyRetryStrategy = RetryStrategy.exponential(1)
+        )
         analytics = generateTestAnalytics(config)
-        dummyWebService.nextBody =
-            RudderServerConfig(source = RudderServerConfig.RudderServerConfigSource())
-//        ConfigurationsState.update(ConfigurationsState.value ?: Configuration.invoke(jsonAdapter))
+        dummyWebService.nextBody = RudderServerConfig(source = RudderServerConfig.RudderServerConfigSource())
         configDownloadServiceImpl = ConfigDownloadServiceImpl(
             Base64.getEncoder().encodeToString(
                 String.format(Locale.US, "%s:", writeKey).toByteArray(charset("UTF-8"))
@@ -76,9 +77,7 @@ abstract class ConfigDownloadServiceImplTest {
         dummyWebService.nextStatusCode = 400
         dummyWebService.nextBody = null
         dummyWebService.nextErrorBody = "Bad Request"
-        analytics.currentConfiguration?.copy(
-            sdkVerifyRetryStrategy = RetryStrategy.exponential(1)
-        )?.let {
+        analytics.currentConfiguration?.let {
             configDownloadServiceImpl.updateConfiguration(
                 it
             )
@@ -92,48 +91,61 @@ abstract class ConfigDownloadServiceImplTest {
 
         Awaitility.await().atMost(2, TimeUnit.SECONDS).untilTrue(isComplete)
     }
+
     @Test
-    fun `test listener is fired when download is called`(){
+    fun `test listener is fired when download is called`() {
         val mockListener = mock<ConfigDownloadService.Listener>()
         val isComplete = AtomicBoolean(false)
         configDownloadServiceImpl.addListener(mockListener, 0)
         configDownloadServiceImpl.download(callback = { success, rudderServerConfig, lastErrorMsg ->
             isComplete.set(true)
         })
-        while (!isComplete.get()){}
+        while (!isComplete.get()) {
+        }
         verify(mockListener, times(1)).onDownloaded(true)
     }
+
     @Test
-    fun `test listener is fired when download replayed`(){
+    fun `test listener is fired when download replayed`() {
         val mockListener = mock<ConfigDownloadService.Listener>()
         val isComplete = AtomicBoolean(false)
         configDownloadServiceImpl.download(callback = { success, rudderServerConfig, lastErrorMsg ->
             isComplete.set(true)
         })
-        while (!isComplete.get()){}
+        while (!isComplete.get()) {
+        }
         isComplete.set(false)
-        configDownloadServiceImpl.updateConfiguration(Configuration(jsonAdapter, sdkVerifyRetryStrategy = RetryStrategy.exponential(0)))
+        configDownloadServiceImpl.updateConfiguration(
+            Configuration(
+                jsonAdapter = jsonAdapter,
+                sdkVerifyRetryStrategy = RetryStrategy.exponential(0)
+            )
+        )
         dummyWebService.nextStatusCode = 400
         configDownloadServiceImpl.download(callback = { success, rudderServerConfig, lastErrorMsg ->
             isComplete.set(true)
         })
-        while (!isComplete.get()){}
+        while (!isComplete.get()) {
+        }
         configDownloadServiceImpl.addListener(mockListener, 1)
         verify(mockListener, times(1)).onDownloaded(false)
     }
+
     @Test
-    fun `test listener is not fired when attached post download and replay is 0`(){
+    fun `test listener is not fired when attached post download and replay is 0`() {
         val mockListener = mock<ConfigDownloadService.Listener>()
         val isComplete = AtomicBoolean(false)
         configDownloadServiceImpl.download(callback = { success, rudderServerConfig, lastErrorMsg ->
             isComplete.set(true)
         })
-        while (!isComplete.get()){}
+        while (!isComplete.get()) {
+        }
         configDownloadServiceImpl.addListener(mockListener, 0)
         verify(mockListener, never()).onDownloaded(org.mockito.kotlin.any<Boolean>())
     }
+
     @Test
-    fun `test listener removed wont trigger onDownloaded`(){
+    fun `test listener removed wont trigger onDownloaded`() {
         val mockListener = mock<ConfigDownloadService.Listener>()
         val isComplete = AtomicBoolean(false)
         configDownloadServiceImpl.addListener(mockListener, 0)
@@ -141,9 +153,11 @@ abstract class ConfigDownloadServiceImplTest {
         configDownloadServiceImpl.download(callback = { success, rudderServerConfig, lastErrorMsg ->
             isComplete.set(true)
         })
-        while (!isComplete.get()){}
+        while (!isComplete.get()) {
+        }
         verify(mockListener, never()).onDownloaded(org.mockito.kotlin.any<Boolean>())
     }
+
     @After
     fun destroy() {
         configDownloadServiceImpl.shutdown()

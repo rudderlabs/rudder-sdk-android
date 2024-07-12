@@ -3,9 +3,14 @@ package com.rudderstack.core
 import com.rudderstack.core.RudderUtils.getUTF8Length
 import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.core.internal.states.DestinationConfigState
+import com.rudderstack.core.models.AliasMessage
+import com.rudderstack.core.models.IdentifyMessage
+import com.rudderstack.core.models.Message
+import com.rudderstack.core.models.RudderServerConfig
+import com.rudderstack.core.models.TrackMessage
+import com.rudderstack.core.models.externalIds
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
-import com.rudderstack.core.models.*
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpResponse
@@ -15,13 +20,34 @@ import junit.framework.TestSuite
 import org.awaitility.Awaitility
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.aMapWithSize
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.anyOf
+import org.hamcrest.Matchers.containsInAnyOrder
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.everyItem
+import org.hamcrest.Matchers.hasEntry
+import org.hamcrest.Matchers.hasProperty
+import org.hamcrest.Matchers.`in`
+import org.hamcrest.Matchers.instanceOf
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.iterableWithSize
+import org.hamcrest.Matchers.not
+import org.hamcrest.Matchers.notNullValue
+import org.hamcrest.Matchers.nullValue
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
-import org.mockito.Mockito.*
+import org.mockito.Mockito.anyInt
+import org.mockito.Mockito.anyList
+import org.mockito.Mockito.atLeast
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
+import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
@@ -401,7 +427,9 @@ abstract class AnalyticsTest {
     fun `test messages flushed when sent from different threads based on flushQ size`() {
         println("running test test messages flushed when sent from different threads based on flushQ size")
         analytics.applyConfiguration {
-            copy(
+            Configuration(
+                jsonAdapter,
+                shouldVerifySdk = false,
                 flushQueueSize = 300, maxFlushInterval = 10_000
             )
         }
@@ -417,7 +445,9 @@ abstract class AnalyticsTest {
             storageCount.set(storage.getDataSync().count())
         }
         analytics.applyConfiguration {
-            copy(
+            Configuration(
+                jsonAdapter,
+                shouldVerifySdk = false,
                 flushQueueSize = 3
             )
         }
@@ -433,9 +463,13 @@ abstract class AnalyticsTest {
     @Test
     fun `test messages flushed when sent from different threads based on periodic timeout`() {
         println("running test test messages flushed when sent from different threads based on periodic timeout")
+
         analytics.applyConfiguration {
-            copy(
-                flushQueueSize = 100, maxFlushInterval = 10000 // so no flush takes place while
+            Configuration(
+                jsonAdapter,
+                shouldVerifySdk = false,
+                flushQueueSize = 100,
+                maxFlushInterval = 10000 // so no flush takes place while
             )
         }
         assertThat(analytics.currentConfiguration?.maxFlushInterval, `is`(10000))
@@ -459,11 +493,14 @@ abstract class AnalyticsTest {
             dataStoredCount.set(storage.getDataSync().count())
         }
         analytics.applyConfiguration {
-            copy(
-                flushQueueSize = 100, maxFlushInterval = 100 // so that there is flush called
+            Configuration(
+                jsonAdapter,
+                shouldVerifySdk = false,
+                flushQueueSize = 100,
+                maxFlushInterval = 10000 // so no flush takes place while
             )
         }
-        assertThat(analytics.currentConfiguration?.maxFlushInterval, `is`(100))
+        assertThat(analytics.currentConfiguration?.maxFlushInterval, `is`(10000))
         val timeNow = System.currentTimeMillis()
         while (storage.getDataSync().isNotEmpty()) {
             if (System.currentTimeMillis() - timeNow > 10000) break
@@ -510,10 +547,11 @@ abstract class AnalyticsTest {
         //flush should be called prior to shutdown. and data uploaded
         //we will track few events, less than flush_queue_size,
         // call shutdown and wait for sometime to check the storage count.
-
         analytics.applyConfiguration {
-            copy(
-                flushQueueSize = 20
+            Configuration(
+                jsonAdapter,
+                shouldVerifySdk = false,
+                flushQueueSize = 20,
             )
         }
         val events = (1..10).map {
@@ -533,11 +571,13 @@ abstract class AnalyticsTest {
         //we will track few events, less than flush_queue_size,
         // call flush and wait for sometime to check the storage count.
         analytics.applyConfiguration {
-            copy(
-                flushQueueSize = 200, maxFlushInterval = 10_000_00
+            Configuration(
+                jsonAdapter,
+                shouldVerifySdk = false,
+                flushQueueSize = 200,
+                maxFlushInterval = 10_000_00
             )
         }
-
         val events = (1..10).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
         }
@@ -560,11 +600,12 @@ abstract class AnalyticsTest {
         properties["property"] = generateDataOfSize(1024 * 30)
 
         analytics.applyConfiguration {
-            copy(
+            Configuration(
+                jsonAdapter,
+                shouldVerifySdk = false,
                 flushQueueSize = 500, maxFlushInterval = 10_000_00
             )
         }
-
         val events = (1..totalMessages).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp, properties = properties)
         }
@@ -647,7 +688,12 @@ abstract class AnalyticsTest {
     fun `test flush after shutdown`() {
         println("running test test flush after shutdown")
         analytics.applyConfiguration {
-            copy(flushQueueSize = 100, maxFlushInterval = 10000)
+            Configuration(
+                jsonAdapter,
+                shouldVerifySdk = false,
+                flushQueueSize = 100,
+                maxFlushInterval = 10000
+            )
         }
         val events = (1..5).map {
             TrackMessage.create("event:$it", RudderUtils.timeStamp)
