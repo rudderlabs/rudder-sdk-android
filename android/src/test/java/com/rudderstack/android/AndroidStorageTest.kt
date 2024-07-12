@@ -3,17 +3,17 @@ package com.rudderstack.android
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.rudderstack.android.utils.TestExecutor
-import com.rudderstack.android.utils.busyWait
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
+import com.rudderstack.android.utils.TestExecutor
+import com.rudderstack.android.utils.busyWait
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Logger
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.Storage
+import com.rudderstack.core.models.TrackMessage
 import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.jacksonrudderadapter.JacksonAdapter
-import com.rudderstack.core.models.TrackMessage
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.generateTestAnalytics
 import junit.framework.TestSuite
@@ -28,7 +28,7 @@ import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.mock
 import org.robolectric.annotation.Config
-import java.util.*
+import java.util.Date
 
 /**
  * Test class for testing the AndroidStorageImpl class
@@ -49,13 +49,20 @@ abstract class AndroidStorageTest {
             false, writeKey = "test_writeKey",
             storageExecutor = TestExecutor()
         )
-        mockConfig = ConfigurationAndroid(ApplicationProvider.getApplicationContext(),
-            jsonAdapter, shouldVerifySdk = false, analyticsExecutor = TestExecutor(),
-            networkExecutor = TestExecutor(), flushQueueSize = 200, maxFlushInterval = 1000,
+        mockConfig = ConfigurationAndroid(
+            application = ApplicationProvider.getApplicationContext(),
+            jsonAdapter = jsonAdapter,
+            shouldVerifySdk = false,
+            analyticsExecutor = TestExecutor(),
+            networkExecutor = TestExecutor(),
+            flushQueueSize = 200,
+            maxFlushInterval = 1000,
             logLevel = Logger.LogLevel.DEBUG,
-            )
-        analytics = generateTestAnalytics( mockConfig, storage = storage,
-            dataUploadService = mock(), configDownloadService = mock())
+        )
+        analytics = generateTestAnalytics(
+            mockConfig, storage = storage,
+            dataUploadService = mock(), configDownloadService = mock()
+        )
     }
 
     @After
@@ -150,7 +157,7 @@ abstract class AndroidStorageTest {
 
     @Test
     fun `test save and retrieve sessionId`() {
-       val storage = analytics.storage as AndroidStorage
+        val storage = analytics.storage as AndroidStorage
         storage.clearStorage()
         MatcherAssert.assertThat(storage.sessionId, Matchers.nullValue())
         val sessionId = 123456L
@@ -159,8 +166,9 @@ abstract class AndroidStorageTest {
         storage.clearSessionId()
         MatcherAssert.assertThat(storage.sessionId, Matchers.nullValue())
     }
+
     @Test
-    fun `test delete sync`(){
+    fun `test delete sync`() {
         val storage = analytics.storage as AndroidStorage
         storage.clearStorage()
         val events = (1..20).map {

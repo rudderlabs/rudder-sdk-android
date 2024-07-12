@@ -1,20 +1,19 @@
 package com.rudderstack.android.internal.extensions
+
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
-import org.junit.Test
 import org.hamcrest.Matchers.hasEntry
 import org.hamcrest.Matchers.hasKey
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.nullValue
 import org.hamcrest.Matchers.sameInstance
+import org.junit.Test
 
 
 private const val CONTEXT_SESSION_ID_KEY = "sessionId"
 private const val CONTEXT_SESSION_START_KEY = "sessionStart"
+
 class UserSessionExtensionTest {
-
-
-
     @Test
     fun `withSessionId should add sessionId to MessageContext`() {
         // Arrange

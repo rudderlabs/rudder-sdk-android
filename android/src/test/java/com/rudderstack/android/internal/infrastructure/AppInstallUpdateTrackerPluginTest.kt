@@ -4,13 +4,13 @@ import android.app.Application
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.rudderstack.android.ConfigurationAndroid
-import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.storage.AndroidStorageImpl
+import com.rudderstack.android.utils.TestExecutor
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Logger
-import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.core.models.TrackMessage
+import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.rudderjsonadapter.JsonAdapter
 import com.vagabond.testcommon.generateTestAnalytics
 import org.hamcrest.MatcherAssert
@@ -18,7 +18,6 @@ import org.hamcrest.Matchers
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
@@ -57,7 +56,8 @@ class AppInstallUpdateTrackerPluginTest {
             storageExecutor = TestExecutor(),
         )
         val mockConfig = ConfigurationAndroid(
-            application, jsonAdapter,
+            application = application,
+            jsonAdapter = jsonAdapter,
             shouldVerifySdk = false,
             analyticsExecutor = TestExecutor(),
             trackLifecycleEvents = trackLifecycleEvents,

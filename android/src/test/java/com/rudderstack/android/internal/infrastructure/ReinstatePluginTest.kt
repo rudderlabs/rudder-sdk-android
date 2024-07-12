@@ -67,7 +67,9 @@ class ReinstatePluginTest {
             )
         )
         configurationAndroid = ConfigurationAndroid(
-            context, mock<JsonAdapter>(), shouldVerifySdk = true,
+            application = context,
+            jsonAdapter = mock<JsonAdapter>(),
+            shouldVerifySdk = true,
             analyticsExecutor = TestExecutor(),
             logLevel = Logger.LogLevel.DEBUG,
         )
