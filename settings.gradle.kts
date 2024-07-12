@@ -26,4 +26,5 @@ include(
     ":libs:test-common",
     ":libs:sync",
     ":samples:sample-kotlin-android",
+    ":samples:kotlin-jvm-app",
 )
