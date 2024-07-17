@@ -3,7 +3,21 @@ package com.rudderstack.android.storage
 import android.app.Application
 import android.os.Build
 import com.rudderstack.android.BuildConfig
-import com.rudderstack.android.internal.RudderPreferenceManager
+import com.rudderstack.android.internal.prefs.SharedPrefs
+import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_ADVERTISING_ID_KEY
+import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_ANONYMOUS_ID_KEY
+import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_APPLICATION_BUILD_KEY
+import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_APPLICATION_VERSION_KEY
+import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_EXTERNAL_ID_KEY
+import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_OPT_STATUS_KEY
+import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_PREFS
+import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_SESSION_ID_KEY
+import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY
+import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_TRACK_AUTO_SESSION_KEY
+import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_TRAITS_KEY
+import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_USER_ID_KEY
+import com.rudderstack.android.internal.prefs.SharedPrefsRepository
+import com.rudderstack.android.internal.prefs.SharedPrefsStore
 import com.rudderstack.android.repository.Dao
 import com.rudderstack.android.repository.RudderDatabase
 import com.rudderstack.core.Analytics
@@ -37,7 +51,11 @@ class AndroidStorageImpl(
     private val dbName get() = "rs_persistence_$writeKey"
     private var jsonAdapter: JsonAdapter? = null
 
-    private var preferenceManager: RudderPreferenceManager? = null
+    private val String.key: String
+        get() = "$this-$writeKey"
+
+    private var rudderPrefsRepo: SharedPrefsRepository = SharedPrefsStore(application, RUDDER_PREFS.key)
+    private var oldRudderPrefs: SharedPrefsRepository = SharedPrefsStore(application, RUDDER_PREFS)
 
     private val serverConfigFileName
         get() = "$SERVER_CONFIG_FILE_NAME-{$writeKey}"
@@ -242,7 +260,7 @@ class AndroidStorageImpl(
         }
 
     override fun saveOptOut(optOut: Boolean) {
-        preferenceManager?.saveOptStatus(optOut)
+        rudderPrefsRepo.save(RUDDER_OPT_STATUS_KEY, optOut)
         if (optOut) {
             _optOutTime.set(System.currentTimeMillis())
         } else {
@@ -274,136 +292,122 @@ class AndroidStorageImpl(
         }
     }
 
-    override val startupQueue: List<Message>
-        get() = startupQ
-    override val isOptedOut: Boolean
-        get() = preferenceManager?.optStatus?:false
-    override val optOutTime: Long
-        get() = _optOutTime.get()
-    override val optInTime: Long
-        get() = _optInTime.get()
-    override val v1OptOut: Boolean
-        get() = preferenceManager?.v1optOutStatus ?: false
+    override val startupQueue: List<Message> = startupQ
+    override val optOutTime: Long = _optOutTime.get()
+    override val optInTime: Long = _optInTime.get()
     override val anonymousId: String?
         get() {
             if (_anonymousId == null) {
-                _anonymousId = preferenceManager?.anonymousId
+                _anonymousId = rudderPrefsRepo.getString(SharedPrefs.RUDDER_ANONYMOUS_ID_KEY)
             }
             return _anonymousId
         }
     override val userId: String?
         get() {
             if (_userId == null) {
-                _userId = preferenceManager?.userId
+                _userId = rudderPrefsRepo.getString(SharedPrefs.RUDDER_USER_ID_KEY)
             }
             return _userId
         }
-    override val sessionId: Long?
-        get() = preferenceManager?.sessionId?.takeIf { it > -1L }
-    override val lastActiveTimestamp: Long?
-        get() = preferenceManager?.lastActiveTimestamp?.takeIf { it > -1L }
-    override val advertisingId: String?
-        get() = preferenceManager?.advertisingId
-    override val v1AnonymousId: String?
-        get() = preferenceManager?.v1AnonymousId
-    override val v1SessionId: Long?
-        get() = preferenceManager?.v1SessionId?.takeIf { it > -1L }
-    override val v1LastActiveTimestamp: Long?
-        get() = preferenceManager?.v1LastActiveTimestamp?.takeIf { it > -1L }
-    override val v1Traits: Map<String, Any?>?
-        get() = preferenceManager?.v1Traits?.let {
-            jsonAdapter?.readJson(it, object : RudderTypeAdapter<Map<String, Any?>>() {})
-        }
-    override val v1ExternalIds: List<Map<String, String>>?
-        get() = preferenceManager?.v1ExternalIdsJson?.let {
-            jsonAdapter?.readJson(it, object : RudderTypeAdapter<List<Map<String, String>>>() {})
-        }
-    override val v1AdvertisingId: String?
-        get() = preferenceManager?.v1AdvertisingId
-    override val trackAutoSession: Boolean
-        get() = preferenceManager?.trackAutoSession?: false
-    override val build: Int?
-        get() = preferenceManager?.build
-    override val v1Build: Int?
-        get() = preferenceManager?.v1Build
-    override val versionName: String?
-        get() = preferenceManager?.versionName
-    override val v1VersionName: String?
-        get() = preferenceManager?.v1VersionName
+    override val sessionId: Long = rudderPrefsRepo.getLong(RUDDER_SESSION_ID_KEY)
+    override val lastActiveTimestamp: Long = rudderPrefsRepo.getLong(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY)
+    override val advertisingId: String = rudderPrefsRepo.getString(RUDDER_ADVERTISING_ID_KEY)
+    override val trackAutoSession: Boolean = rudderPrefsRepo.getBoolean(RUDDER_TRACK_AUTO_SESSION_KEY)
+    override val build: Int = rudderPrefsRepo.getInt(RUDDER_APPLICATION_BUILD_KEY)
+    override val versionName: String = rudderPrefsRepo.getString(RUDDER_APPLICATION_VERSION_KEY)
+    override val isOptedOut: Boolean = rudderPrefsRepo.getBoolean(RUDDER_OPT_STATUS_KEY)
+
+    override val v1AnonymousId: String = oldRudderPrefs.getString(RUDDER_ANONYMOUS_ID_KEY)
+    override val v1SessionId: Long = oldRudderPrefs.getLong(RUDDER_SESSION_ID_KEY)
+    override val v1LastActiveTimestamp: Long = oldRudderPrefs.getLong(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY)
+    override val v1AdvertisingId: String = oldRudderPrefs.getString(RUDDER_ADVERTISING_ID_KEY)
+    override val v1Build: Int = oldRudderPrefs.getInt(RUDDER_APPLICATION_BUILD_KEY)
+    override val v1VersionName: String = oldRudderPrefs.getString(RUDDER_APPLICATION_VERSION_KEY)
+    override val v1OptOut: Boolean = oldRudderPrefs.getBoolean(RUDDER_OPT_STATUS_KEY)
+    override val v1Traits: Map<String, Any?>? = oldRudderPrefs.getString(RUDDER_TRAITS_KEY).let {
+        jsonAdapter?.readJson(it, object : RudderTypeAdapter<Map<String, Any?>>() {})
+    }
+    override val v1ExternalIds: List<Map<String, String>>? = oldRudderPrefs.getString(RUDDER_EXTERNAL_ID_KEY).let {
+        jsonAdapter?.readJson(it, object : RudderTypeAdapter<List<Map<String, String>>>() {})
+    }
 
     override fun setAnonymousId(anonymousId: String) {
         _anonymousId = anonymousId
-        preferenceManager?.saveAnonymousId(anonymousId)
+        rudderPrefsRepo.save(RUDDER_ANONYMOUS_ID_KEY, anonymousId)
     }
 
     override fun setUserId(userId: String) {
         _userId = userId
-        preferenceManager?.saveUserId(userId)
+        rudderPrefsRepo.save(RUDDER_USER_ID_KEY, userId)
     }
 
     override fun setSessionId(sessionId: Long) {
-        preferenceManager?.saveSessionId(sessionId)
+        rudderPrefsRepo.save(RUDDER_SESSION_ID_KEY, sessionId)
     }
 
     override fun setTrackAutoSession(trackAutoSession: Boolean) {
-        preferenceManager?.saveTrackAutoSession(trackAutoSession)
+        rudderPrefsRepo.save(RUDDER_TRACK_AUTO_SESSION_KEY, trackAutoSession)
     }
 
     override fun saveLastActiveTimestamp(timestamp: Long) {
-        preferenceManager?.saveLastActiveTimestamp(timestamp)
+        rudderPrefsRepo.save(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY, timestamp)
     }
 
     override fun saveAdvertisingId(advertisingId: String) {
-        preferenceManager?.saveAdvertisingId(advertisingId)
+        rudderPrefsRepo.save(RUDDER_ADVERTISING_ID_KEY, advertisingId)
     }
 
     override fun clearSessionId() {
-        preferenceManager?.clearSessionId()
+        rudderPrefsRepo.clear(RUDDER_SESSION_ID_KEY)
     }
 
     override fun clearLastActiveTimestamp() {
-        preferenceManager?.clearLastActiveTimestamp()
+        rudderPrefsRepo.clear(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY)
     }
 
     override fun resetV1AnonymousId() {
-        preferenceManager?.resetV1AnonymousId()
+        oldRudderPrefs.clear(RUDDER_ANONYMOUS_ID_KEY)
     }
 
     override fun resetV1OptOut() {
-        preferenceManager?.resetV1OptOut()
+        oldRudderPrefs.clear(RUDDER_OPT_STATUS_KEY)
     }
 
     override fun resetV1Traits() {
-        preferenceManager?.resetV1Traits()
+        oldRudderPrefs.clear(RUDDER_TRAITS_KEY)
     }
 
     override fun resetV1ExternalIds() {
-        preferenceManager?.resetV1ExternalIds()
+        oldRudderPrefs.clear(RUDDER_EXTERNAL_ID_KEY)
     }
 
     override fun resetV1AdvertisingId() {
-        preferenceManager?.resetV1AdvertisingId()
+        oldRudderPrefs.clear(RUDDER_ADVERTISING_ID_KEY)
     }
 
     override fun resetV1Build() {
-        preferenceManager?.resetV1Build()
+        oldRudderPrefs.clear(RUDDER_APPLICATION_BUILD_KEY)
     }
 
     override fun resetV1Version() {
-        preferenceManager?.resetV1VersionName()
+        oldRudderPrefs.clear(RUDDER_APPLICATION_VERSION_KEY)
     }
 
     override fun resetV1SessionId() {
-        preferenceManager?.resetV1SessionId()
+        oldRudderPrefs.clear(RUDDER_SESSION_ID_KEY)
     }
 
     override fun resetV1SessionLastActiveTimestamp() {
-        preferenceManager?.resetV1LastActiveTimestamp()
+        oldRudderPrefs.clear(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY)
     }
 
     override fun migrateV1StorageToV2Sync(): Boolean {
-        return migrateV1MessagesToV2Database(application, rudderDatabase?:return false,
-            jsonAdapter?:return false, logger)
+        return migrateV1MessagesToV2Database(
+            context = application,
+            v2Database = rudderDatabase ?: return false,
+            jsonAdapter = jsonAdapter ?: return false,
+            logger = logger
+        )
     }
 
     override fun migrateV1StorageToV2(callback: (Boolean) -> Unit) {
@@ -414,7 +418,7 @@ class AndroidStorageImpl(
 
     override fun deleteV1SharedPreferencesFile() {
         storageExecutor.execute {
-            preferenceManager?.deleteV1PreferencesFile()
+            rudderPrefsRepo.deleteSharedPrefs(RUDDER_PREFS)
         }
     }
 
@@ -426,11 +430,11 @@ class AndroidStorageImpl(
     }
 
     override fun setBuild(build: Int) {
-        preferenceManager?.saveBuild(build)
+        rudderPrefsRepo.save(SharedPrefs.RUDDER_APPLICATION_BUILD_KEY, build)
     }
 
     override fun setVersionName(versionName: String) {
-        preferenceManager?.saveVersionName(versionName)
+        rudderPrefsRepo.save(SharedPrefs.RUDDER_APPLICATION_VERSION_KEY, versionName)
     }
 
     override val libraryName: String
@@ -444,7 +448,6 @@ class AndroidStorageImpl(
 
     override fun setup(analytics: Analytics) {
         initDb(analytics)
-        preferenceManager = RudderPreferenceManager(application, writeKey)
     }
 
     private val Iterable<Message>.entities
