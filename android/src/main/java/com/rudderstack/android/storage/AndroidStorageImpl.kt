@@ -3,7 +3,6 @@ package com.rudderstack.android.storage
 import android.app.Application
 import android.os.Build
 import com.rudderstack.android.BuildConfig
-import com.rudderstack.android.internal.prefs.SharedPrefs
 import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_ADVERTISING_ID_KEY
 import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_ANONYMOUS_ID_KEY
 import com.rudderstack.android.internal.prefs.SharedPrefs.RUDDER_APPLICATION_BUILD_KEY
@@ -298,14 +297,14 @@ class AndroidStorageImpl(
     override val anonymousId: String?
         get() {
             if (_anonymousId == null) {
-                _anonymousId = rudderPrefsRepo.getString(SharedPrefs.RUDDER_ANONYMOUS_ID_KEY)
+                _anonymousId = rudderPrefsRepo.getString(RUDDER_ANONYMOUS_ID_KEY)
             }
             return _anonymousId
         }
     override val userId: String?
         get() {
             if (_userId == null) {
-                _userId = rudderPrefsRepo.getString(SharedPrefs.RUDDER_USER_ID_KEY)
+                _userId = rudderPrefsRepo.getString(RUDDER_USER_ID_KEY)
             }
             return _userId
         }
@@ -430,11 +429,11 @@ class AndroidStorageImpl(
     }
 
     override fun setBuild(build: Int) {
-        rudderPrefsRepo.save(SharedPrefs.RUDDER_APPLICATION_BUILD_KEY, build)
+        rudderPrefsRepo.save(RUDDER_APPLICATION_BUILD_KEY, build)
     }
 
     override fun setVersionName(versionName: String) {
-        rudderPrefsRepo.save(SharedPrefs.RUDDER_APPLICATION_VERSION_KEY, versionName)
+        rudderPrefsRepo.save(RUDDER_APPLICATION_VERSION_KEY, versionName)
     }
 
     override val libraryName: String

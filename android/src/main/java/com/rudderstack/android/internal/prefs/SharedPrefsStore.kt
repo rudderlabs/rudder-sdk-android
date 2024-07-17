@@ -8,7 +8,7 @@ import java.io.File
 
 class SharedPrefsStore(
     private val applicationContext: Context,
-    private val prefsName: String,
+    prefsName: String,
 ) : SharedPrefsRepository {
 
     private val preferences: SharedPreferences = applicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
