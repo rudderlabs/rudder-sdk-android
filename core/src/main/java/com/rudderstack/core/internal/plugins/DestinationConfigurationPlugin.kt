@@ -1,5 +1,6 @@
 package com.rudderstack.core.internal.plugins
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.DestinationPlugin
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.models.Message
@@ -18,7 +19,9 @@ import com.rudderstack.core.models.RudderServerConfig
  * plugins that are disabled in destination config are filtered out.
  */
 internal class DestinationConfigurationPlugin : Plugin {
-    private var _notAllowedDestinations : Set<String> = setOf()
+    override lateinit var analytics: Analytics
+
+    private var _notAllowedDestinations: Set<String> = setOf()
     private var _isConfigUpdated = false
     override fun intercept(chain: Plugin.Chain): Message {
         val msg = chain.message()
@@ -26,7 +29,7 @@ internal class DestinationConfigurationPlugin : Plugin {
             //either not a destination plugin or is allowed
             it !is DestinationPlugin<*> || (_isConfigUpdated && it.name !in _notAllowedDestinations)
         }
-        return  if (validPlugins.isNotEmpty()) {
+        return if (validPlugins.isNotEmpty()) {
             return chain.with(validPlugins).proceed(msg)
         } else
             chain.proceed(msg)
@@ -37,7 +40,7 @@ internal class DestinationConfigurationPlugin : Plugin {
         _notAllowedDestinations = config.source?.destinations?.filter {
             !it.isDestinationEnabled
         }?.map {
-            it.destinationDefinition?.definitionName?:it.destinationName?: ""
-        }?.toHashSet()?: setOf()
+            it.destinationDefinition?.definitionName ?: it.destinationName ?: ""
+        }?.toHashSet() ?: setOf()
     }
 }
