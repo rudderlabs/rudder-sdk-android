@@ -106,8 +106,6 @@ class IdentifyScope internal constructor() : MessageScope<IdentifyMessage>() {
 class AliasScope internal constructor() : MessageScope<AliasMessage>() {
     private var newID: String? = null
 
-    private var traits: Map<String, Any?>? = null
-
     fun newId(scope: StringScope.() -> Unit) {
         val titleScope = StringScope()
         titleScope.scope()
@@ -118,18 +116,10 @@ class AliasScope internal constructor() : MessageScope<AliasMessage>() {
         newID = newId
     }
 
-    fun traits(scope: MapScope<String, Any?>.() -> Unit) {
-        val traitsScope = MapScope(traits)
-        traitsScope.scope()
-        traits = traitsScope.map
-    }
-
     override val message: AliasMessage
         get() = AliasMessage.create(
             timestamp = RudderUtils.timeStamp,
             userId = newID,
-            anonymousId = anonymousId,
-            traits = traits,
         )
 }
 
