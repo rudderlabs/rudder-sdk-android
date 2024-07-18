@@ -1,17 +1,3 @@
-/*
- * Creator: Debanjan Chatterjee on 20/11/23, 3:48 pm Last modified: 20/11/23, 3:48 pm
- * Copyright: All rights reserved Ⓒ 2023 http://rudderstack.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain a
- * copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
 package com.rudderstack.android.internal.infrastructure
 
 import android.app.Activity
@@ -24,13 +10,19 @@ import com.rudderstack.core.InfrastructurePlugin
 import java.util.concurrent.atomic.AtomicInteger
 
 /** Tracks the Activities in the application and broadcasts the same */
-internal class ActivityBroadcasterPlugin(
-) : InfrastructurePlugin {
+internal class ActivityBroadcasterPlugin : InfrastructurePlugin {
 
+    override lateinit var analytics: Analytics
     private val application: Application?
-        get() = analytics?.currentConfigurationAndroid?.application
-    private var analytics: Analytics? = null
+        get() = analytics.currentConfigurationAndroid?.application
+
     private val activityCount = AtomicInteger()
+
+    override fun setup(analytics: Analytics) {
+        super.setup(analytics)
+        application?.registerActivityLifecycleCallbacks(lifecycleCallback)
+    }
+
     private val lifecycleCallback by lazy {
         object : Application.ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
@@ -53,7 +45,7 @@ internal class ActivityBroadcasterPlugin(
             }
 
             override fun onActivityStopped(activity: Activity) {
-                if (analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true) {
+                if (analytics.currentConfigurationAndroid?.trackLifecycleEvents == true) {
                     decrementActivityCount()
                     if (activityCount.get() == 0) {
                         broadCastApplicationStop()
@@ -72,13 +64,13 @@ internal class ActivityBroadcasterPlugin(
     }
 
     private fun broadcastActivityStart(activity: Activity) {
-        analytics?.applyInfrastructureClosure {
+        analytics.applyInfrastructureClosure {
             if (this is LifecycleListenerPlugin) {
                 setCurrentActivity(activity)
                 onActivityStarted(activity.localClassName)
             }
         }
-        analytics?.applyMessageClosure {
+        analytics.applyMessageClosure {
             if (this is LifecycleListenerPlugin) {
                 setCurrentActivity(activity)
                 onActivityStarted(activity.localClassName)
@@ -96,12 +88,12 @@ internal class ActivityBroadcasterPlugin(
 
 
     private fun broadCastApplicationStart() {
-        analytics?.applyInfrastructureClosure {
+        analytics.applyInfrastructureClosure {
             if (this is LifecycleListenerPlugin) {
                 this.onAppForegrounded()
             }
         }
-        analytics?.applyMessageClosure {
+        analytics.applyMessageClosure {
             if (this is LifecycleListenerPlugin) {
                 this.onAppForegrounded()
             }
@@ -109,24 +101,19 @@ internal class ActivityBroadcasterPlugin(
     }
 
     private fun broadCastApplicationStop() {
-        analytics?.applyInfrastructureClosure {
+        analytics.applyInfrastructureClosure {
             if (this is LifecycleListenerPlugin) {
                 setCurrentActivity(null)
                 this.onAppBackgrounded()
             }
         }
-        analytics?.applyMessageClosure {
+        analytics.applyMessageClosure {
 
             if (this is LifecycleListenerPlugin) {
                 setCurrentActivity(null)
                 this.onAppBackgrounded()
             }
         }
-    }
-
-    override fun setup(analytics: Analytics) {
-        this.analytics = analytics
-        application?.registerActivityLifecycleCallbacks(lifecycleCallback)
     }
 
     override fun shutdown() {
