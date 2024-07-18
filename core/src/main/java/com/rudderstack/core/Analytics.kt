@@ -195,19 +195,14 @@ class Analytics private constructor(
     @JvmOverloads
     fun alias(
         newId: String,
-        anonymousId: String? = null,
         options: RudderOption? = null,
-        destinationProps: MessageDestinationProps? = null,
-        previousId: String? = null,
     ) {
         val completeTraits = mapOf("userId" to newId)
         alias(
             AliasMessage.create(
+                userId = newId,
+                traits = completeTraits,
                 timestamp = RudderUtils.timeStamp,
-                anonymousId = anonymousId,
-                previousId = previousId,
-                destinationProps = destinationProps,
-                userId = newId, traits = completeTraits
             ),
             options
         )
