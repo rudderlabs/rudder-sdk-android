@@ -25,13 +25,15 @@ private const val AUTOMATIC = "automatic"
  *
  * @property currentMillisGenerator
  */
-internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) = { SystemClock.uptimeMillis() }) :
-    Plugin, LifecycleListenerPlugin {
+internal class LifecycleObserverPlugin(
+    val currentMillisGenerator: (() -> Long) = { SystemClock.uptimeMillis() }
+) : Plugin, LifecycleListenerPlugin {
+
+    override lateinit var analytics: Analytics
 
     private var _isFirstLaunch = AtomicBoolean(true)
 
     private var _lastSuccessfulDownloadTimeInMillis = AtomicLong(-1L)
-    private var analytics: Analytics? = null
     private var currentActivityName: String? = null
     private val listener = ConfigDownloadService.Listener {
         if (it) {
@@ -39,9 +41,18 @@ internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) 
         }
     }
 
+    override fun setup(analytics: Analytics) {
+        super.setup(analytics)
+        analytics.applyInfrastructureClosure {
+            if (this is ConfigDownloadService) {
+                addListener(listener, 1)
+            }
+        }
+    }
+
     private fun sendLifecycleStart() {
         withTrackLifeCycle {
-            analytics?.also { analytics ->
+            analytics.also { analytics ->
                 analytics.track {
                     event(EVENT_NAME_APPLICATION_OPENED)
                     trackProperties {
@@ -58,7 +69,7 @@ internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) 
 
     private fun sendLifecycleStop() {
         withTrackLifeCycle {
-            analytics?.track {
+            analytics.track {
                 event(EVENT_NAME_APPLICATION_STOPPED)
             }
         }
@@ -68,23 +79,13 @@ internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) 
         return chain.proceed(chain.message())
     }
 
-    override fun setup(analytics: Analytics) {
-        this.analytics = analytics
-        analytics.applyInfrastructureClosure {
-            if (this is ConfigDownloadService) {
-                addListener(listener, 1)
-            }
-        }
-    }
-
     override fun onShutDown() {
         _lastSuccessfulDownloadTimeInMillis.set(0)
-        analytics?.applyInfrastructureClosure {
+        analytics.applyInfrastructureClosure {
             if (this is ConfigDownloadService) {
                 removeListener(listener)
             }
         }
-        analytics = null
     }
 
     override fun updateConfiguration(configuration: Configuration) {
@@ -97,22 +98,22 @@ internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) 
     }
 
     private fun checkAndDownloadSourceConfig() {
-        analytics?.takeIf { it.currentConfiguration?.shouldVerifySdk == true }?.apply {
+        analytics.takeIf { it.currentConfiguration?.shouldVerifySdk == true }?.apply {
             if (currentMillisGenerator() - (_lastSuccessfulDownloadTimeInMillis.get()) >= MAX_CONFIG_DOWNLOAD_INTERVAL) {
-                analytics?.updateSourceConfig()
+                analytics.updateSourceConfig()
             }
         }
     }
 
     override fun onAppBackgrounded() {
         sendLifecycleStop()
-        analytics?.flush()
+        analytics.flush()
     }
 
     override fun onActivityStarted(activityName: String) {
         currentActivityName = activityName
         withRecordScreenViews {
-            analytics?.screen {
+            analytics.screen {
                 screenName(activityName)
                 screenProperties {
                     add(AUTOMATIC to true)
@@ -128,7 +129,7 @@ internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) 
     override fun onScreenChange(name: String, arguments: Map<String, Any>?) {
         val activityName = currentActivityName ?: ""
         withRecordScreenViews {
-            analytics?.screen {
+            analytics.screen {
                 screenName(activityName)
                 this.category(name)
                 this.screenProperties {
@@ -139,13 +140,13 @@ internal class LifecycleObserverPlugin(val currentMillisGenerator: (() -> Long) 
     }
 
     private fun withTrackLifeCycle(body: () -> Unit) {
-        if (analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true) {
+        if (analytics.currentConfigurationAndroid?.trackLifecycleEvents == true) {
             body()
         }
     }
 
     private fun withRecordScreenViews(body: () -> Unit) {
-        if (analytics?.currentConfigurationAndroid?.recordScreenViews == true) {
+        if (analytics.currentConfigurationAndroid?.recordScreenViews == true) {
             body()
         }
     }
