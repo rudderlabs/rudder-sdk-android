@@ -9,8 +9,14 @@ import com.rudderstack.core.models.RudderServerConfig
  *
  */
 interface InfrastructurePlugin {
-    fun setup(analytics: Analytics)
-    fun shutdown()
+
+    var analytics: Analytics
+
+    fun setup(analytics: Analytics) {
+        this.analytics = analytics
+    }
+
+    fun shutdown() {}
     fun updateConfiguration(configuration: Configuration) {
         //optional method
     }
