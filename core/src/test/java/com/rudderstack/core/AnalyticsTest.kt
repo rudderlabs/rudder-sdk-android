@@ -318,14 +318,12 @@ abstract class AnalyticsTest {
         val chainCaptor = argumentCaptor<Plugin.Chain>()
         analytics.track(
             eventName = "track",
-            userId = "user_id",
             trackProperties = mapOf("prop-1" to "p-1", "prop-2" to "p-2")
         )
         busyWait(100)//since it is submitted to executor
 
         verify(laterInitDestPlugin).intercept(chainCaptor.capture())
         val message = chainCaptor.firstValue.message()
-        assertThat(message.userId, `is`("user_id"))
         assertThat(
             message, hasProperty(
                 "properties", allOf(
