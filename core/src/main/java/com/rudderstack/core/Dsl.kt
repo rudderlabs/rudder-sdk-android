@@ -66,7 +66,8 @@ class ScreenScope internal constructor() : MessageScope<ScreenMessage>() {
 
     override val message: ScreenMessage
         get() = ScreenMessage.create(
-            name = screenName ?: throw IllegalArgumentException("Screen name is not provided for screen event"),
+            name = screenName
+                ?: throw IllegalArgumentException("Screen name is not provided for screen event"),
             timestamp = RudderUtils.timeStamp,
             category = category,
             properties = screenProperties
@@ -75,7 +76,17 @@ class ScreenScope internal constructor() : MessageScope<ScreenMessage>() {
 
 class IdentifyScope internal constructor() : MessageScope<IdentifyMessage>() {
     private var traits: IdentifyTraits? = null
-    private var userID: String? = null
+    private var userId: String? = null
+
+    fun userId(scope: StringScope.() -> Unit) {
+        val titleScope = StringScope()
+        titleScope.scope()
+        this.userId = titleScope.value
+    }
+
+    fun userId(userId: String) {
+        this.userId = userId
+    }
 
     fun traits(scope: MapScope<String, Any?>.() -> Unit) {
         val traitsScope = MapScope(traits)
@@ -85,7 +96,7 @@ class IdentifyScope internal constructor() : MessageScope<IdentifyMessage>() {
 
     override val message: IdentifyMessage
         get() = IdentifyMessage.create(
-            userId = userID,
+            userId = userId,
             anonymousId = anonymousId,
             timestamp = RudderUtils.timeStamp,
             traits = traits,
@@ -115,9 +126,10 @@ class AliasScope internal constructor() : MessageScope<AliasMessage>() {
 
     override val message: AliasMessage
         get() = AliasMessage.create(
-            timestamp = RudderUtils.timeStamp, userId = newID,
+            timestamp = RudderUtils.timeStamp,
+            userId = newID,
             anonymousId = anonymousId,
-            previousId = userId ?: anonymousId, traits = traits,
+            traits = traits,
         )
 }
 
@@ -142,9 +154,10 @@ class GroupScope internal constructor() : MessageScope<GroupMessage>() {
 
     override val message: GroupMessage
         get() = GroupMessage.create(
-            timestamp = RudderUtils.timeStamp, userId = userId,
+            timestamp = RudderUtils.timeStamp,
             anonymousId = anonymousId,
-            groupId = groupId, groupTraits = traits,
+            groupId = groupId,
+            groupTraits = traits,
         )
 }
 
@@ -153,23 +166,12 @@ abstract class MessageScope<T : Message> internal constructor(/*private val anal
     private var _options: RudderOption? = null
     internal val options
         get() = _options
-
     protected var anonymousId: String? = null
-    protected var userId: String? = null
+
     fun rudderOptions(scope: RudderOptionsScope.() -> Unit) {
         val optionsScope = RudderOptionsScope()
         optionsScope.scope()
         _options = optionsScope.rudderOption
-    }
-
-    fun userId(scope: StringScope.() -> Unit) {
-        val titleScope = StringScope()
-        titleScope.scope()
-        userId = titleScope.value
-    }
-
-    fun userId(userId: String) {
-        this.userId = userId
     }
 
     fun anonymousId(scope: StringScope.() -> Unit) {
