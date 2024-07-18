@@ -221,20 +221,14 @@ class Analytics private constructor(
     @JvmOverloads
     fun group(
         groupId: String?,
-        options: RudderOption? = null,
-        userId: String? = null,
-        anonymousId: String? = null,
         groupTraits: GroupTraits?,
-        destinationProps: MessageDestinationProps? = null,
+        options: RudderOption? = null,
     ) {
         group(
             GroupMessage.create(
-                timestamp = RudderUtils.timeStamp,
-                userId = userId,
                 groupId = groupId,
                 groupTraits = groupTraits,
-                anonymousId = anonymousId,
-                destinationProps = destinationProps,
+                timestamp = RudderUtils.timeStamp,
             ), options
         )
     }
