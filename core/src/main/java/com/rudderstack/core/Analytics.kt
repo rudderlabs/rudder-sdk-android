@@ -143,23 +143,15 @@ class Analytics private constructor(
     fun screen(
         screenName: String,
         category: String? = null,
-        options: RudderOption? = null,
         screenProperties: ScreenProperties,
-        anonymousId: String? = null,
-        userId: String? = null,
-        destinationProps: MessageDestinationProps? = null,
-        traits: Map<String, Any?>? = null,
+        options: RudderOption? = null,
     ) {
         screen(
             ScreenMessage.create(
-                userId = userId,
-                anonymousId = anonymousId,
-                destinationProps = destinationProps,
-                traits = traits,
-                timestamp = RudderUtils.timeStamp,
-                category = category,
                 name = screenName,
-                properties = screenProperties
+                category = category,
+                properties = screenProperties,
+                timestamp = RudderUtils.timeStamp,
             ), options
         )
     }
