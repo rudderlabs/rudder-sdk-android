@@ -7,10 +7,8 @@ import com.rudderstack.core.models.AliasMessage
 import com.rudderstack.core.models.GroupMessage
 import com.rudderstack.core.models.GroupTraits
 import com.rudderstack.core.models.IdentifyMessage
-import com.rudderstack.core.models.IdentifyProperties
 import com.rudderstack.core.models.IdentifyTraits
 import com.rudderstack.core.models.MessageContext
-import com.rudderstack.core.models.MessageDestinationProps
 import com.rudderstack.core.models.ScreenMessage
 import com.rudderstack.core.models.ScreenProperties
 import com.rudderstack.core.models.TrackMessage
