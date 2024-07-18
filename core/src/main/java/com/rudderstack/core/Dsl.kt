@@ -124,11 +124,11 @@ class AliasScope internal constructor() : MessageScope<AliasMessage>() {
 
 class GroupScope internal constructor() : MessageScope<GroupMessage>() {
     private var groupId: String? = null
-    private var groupTraits: GroupTraits? = null
-    fun groupTraits(scope: MapScope<String, Any>.() -> Unit) {
-        val groupScope = MapScope(groupTraits)
+    private var traits: GroupTraits? = null
+    fun traits(scope: MapScope<String, Any>.() -> Unit) {
+        val groupScope = MapScope(traits)
         groupScope.scope()
-        groupTraits = groupScope.map
+        traits = groupScope.map
     }
 
     fun groupId(scope: StringScope.() -> Unit) {
@@ -145,7 +145,7 @@ class GroupScope internal constructor() : MessageScope<GroupMessage>() {
         get() = GroupMessage.create(
             timestamp = RudderUtils.timeStamp,
             groupId = groupId,
-            groupTraits = groupTraits,
+            groupTraits = traits,
         )
 }
 
