@@ -44,15 +44,19 @@ class Analytics private constructor(
         shutdownHook: (Analytics.() -> Unit)? = null
     ) : this(
         _delegate = AnalyticsDelegate(
-            configuration, storage ?: BasicStorageImpl(), writeKey, dataUploadService ?: DataUploadServiceImpl(
+            configuration = configuration,
+            storage = storage ?: BasicStorageImpl(),
+            writeKey = writeKey,
+            dataUploadService = dataUploadService ?: DataUploadServiceImpl(
                 writeKey
-            ), configDownloadService ?: ConfigDownloadServiceImpl(
+            ),
+            configDownloadService = configDownloadService ?: ConfigDownloadServiceImpl(
                 writeKey
-            ), initializationListener, shutdownHook
-
+            ),
+            initializationListener = initializationListener,
+            shutdownHook = shutdownHook,
         )
     )
-
 
     companion object {
         // default base url or rudder-backend-server
@@ -99,7 +103,6 @@ class Analytics private constructor(
                 userId = userId
             ), options
         )
-
     }
 
     /**
@@ -267,5 +270,4 @@ class Analytics private constructor(
         groupScope.scope()
         group(groupScope.message, groupScope.options)
     }
-
 }
