@@ -9,6 +9,9 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 class CountBasedFlushPolicy : FlushPolicy {
+
+    override lateinit var analytics: Analytics
+
     private var storage: Storage? = null
         set(value) {
             synchronized(this) {
@@ -19,8 +22,6 @@ class CountBasedFlushPolicy : FlushPolicy {
             field
         }
     private var flushCall: AtomicReference<Analytics.() -> Unit> = AtomicReference({})
-
-    private var _analyticsRef = AtomicReference<Analytics>(null)
     private val flushQSizeThreshold = AtomicInteger(-1)
     private val _isShutDown = AtomicBoolean(false)
     private val onDataChange = object : Storage.DataListener {
@@ -28,7 +29,6 @@ class CountBasedFlushPolicy : FlushPolicy {
             if (_isShutDown.get()) return
             flushIfNeeded()
         }
-
         override fun onDataDropped(messages: List<Message>, error: Throwable) {
             /**
              * We won't be considering dropped events here
@@ -36,13 +36,18 @@ class CountBasedFlushPolicy : FlushPolicy {
         }
     }
 
+    override fun setup(analytics: Analytics) {
+        super.setup(analytics)
+        if (storage == analytics.storage) return
+        storage = analytics.storage
+        storage?.addMessageDataListener(onDataChange)
+    }
+
     private fun flushIfNeeded() {
         storage?.getCount {
             val threshold = flushQSizeThreshold.get()
             if (!_isShutDown.get() && threshold in 1..it) {
-                _analyticsRef.get()?.let {
-                    flushCall.get()(it)
-                }
+                flushCall.get()(analytics)
             }
         }
     }
@@ -56,16 +61,8 @@ class CountBasedFlushPolicy : FlushPolicy {
     }
 
     override fun onRemoved() {
-        _analyticsRef.set(null)
         storage?.removeMessageDataListener(onDataChange)
         storage = null
-    }
-
-    override fun setup(analytics: Analytics) {
-        _analyticsRef.set(analytics)
-        if (storage == analytics.storage) return
-        storage = analytics.storage
-        storage?.addMessageDataListener(onDataChange)
     }
 
     override fun updateConfiguration(configuration: Configuration) {
