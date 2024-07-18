@@ -168,21 +168,16 @@ class Analytics private constructor(
 
     @JvmOverloads
     fun identify(
-        userId: String, traits: IdentifyTraits? = null,
-        anonymousId: String? = null,
+        userId: String,
+        traits: IdentifyTraits? = null,
         options: RudderOption? = null,
-        properties: IdentifyProperties? = null,
-        destinationProps: MessageDestinationProps? = null,
     ) {
         val completeTraits = mapOf("userId" to userId) optAdd traits
         identify(
             IdentifyMessage.create(
                 userId = userId,
-                anonymousId = anonymousId,
-                destinationProps = destinationProps,
-                timestamp = RudderUtils.timeStamp,
                 traits = completeTraits,
-                properties = properties,
+                timestamp = RudderUtils.timeStamp,
             ), options
         )
     }
