@@ -2,7 +2,6 @@ package com.rudderstack.core
 
 import com.rudderstack.core.models.GroupTraits
 import com.rudderstack.core.models.IdentifyTraits
-import com.rudderstack.core.models.MessageDestinationProps
 import com.rudderstack.core.models.TrackProperties
 import com.rudderstack.core.models.*
 
@@ -39,7 +38,6 @@ class TrackScope internal constructor() : MessageScope<TrackMessage>() {
             RudderUtils.timeStamp,
             properties,
             userId = userId,
-            destinationProps = destinationProperties
         )
 }
 
@@ -80,7 +78,7 @@ class ScreenScope internal constructor() : MessageScope<ScreenMessage>() {
                 ?: throw IllegalArgumentException("Screen name is not provided for screen event"),
             RudderUtils.timeStamp, category = category,
             anonymousId = anonymousId,
-            properties = screenProperties, userId = userId, destinationProps = destinationProperties
+            properties = screenProperties, userId = userId,
         )
 }
 
@@ -100,7 +98,6 @@ class IdentifyScope internal constructor() : MessageScope<IdentifyMessage>() {
             anonymousId = anonymousId,
             timestamp = RudderUtils.timeStamp,
             traits = traits,
-            destinationProps = destinationProperties
         )
 }
 
@@ -130,8 +127,6 @@ class AliasScope internal constructor() : MessageScope<AliasMessage>() {
             timestamp = RudderUtils.timeStamp, userId = newID,
             anonymousId = anonymousId,
             previousId = userId ?: anonymousId, traits = traits,
-            destinationProps =
-            destinationProperties,
         )
 }
 
@@ -158,7 +153,7 @@ class GroupScope internal constructor() : MessageScope<GroupMessage>() {
         get() = GroupMessage.create(
             timestamp = RudderUtils.timeStamp, userId = userId,
             anonymousId = anonymousId,
-            groupId = groupId, groupTraits = traits, destinationProps = destinationProperties
+            groupId = groupId, groupTraits = traits,
         )
 }
 
@@ -168,21 +163,12 @@ abstract class MessageScope<T : Message> internal constructor(/*private val anal
     internal val options
         get() = _options
 
-    private var _destinationProperties: MessageDestinationProps? = null
-    protected val destinationProperties
-        get() = _destinationProperties
     protected var anonymousId: String? = null
     protected var userId: String? = null
     fun rudderOptions(scope: RudderOptionsScope.() -> Unit) {
         val optionsScope = RudderOptionsScope()
         optionsScope.scope()
         _options = optionsScope.rudderOption
-    }
-
-    fun destinationProperties(scope: MapScope<String, Map<*, *>>.() -> Unit) {
-        val destinationPropsScope = MapScope(_destinationProperties)
-        destinationPropsScope.scope()
-        _destinationProperties = destinationPropsScope.map
     }
 
     fun userId(scope: StringScope.() -> Unit) {
