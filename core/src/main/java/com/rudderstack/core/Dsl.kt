@@ -97,7 +97,6 @@ class IdentifyScope internal constructor() : MessageScope<IdentifyMessage>() {
     override val message: IdentifyMessage
         get() = IdentifyMessage.create(
             userId = userId,
-            anonymousId = anonymousId,
             timestamp = RudderUtils.timeStamp,
             traits = traits,
         )
@@ -155,22 +154,11 @@ abstract class MessageScope<T : Message> internal constructor(/*private val anal
     private var _options: RudderOption? = null
     internal val options
         get() = _options
-    protected var anonymousId: String? = null
 
     fun rudderOptions(scope: RudderOptionsScope.() -> Unit) {
         val optionsScope = RudderOptionsScope()
         optionsScope.scope()
         _options = optionsScope.rudderOption
-    }
-
-    fun anonymousId(scope: StringScope.() -> Unit) {
-        val anonymousIdScope = StringScope()
-        anonymousIdScope.scope()
-        anonymousId = anonymousIdScope.value
-    }
-
-    fun anonymousId(id: String) {
-        anonymousId = id
     }
 
     internal abstract val message: T
@@ -258,9 +246,6 @@ internal constructor(private var _map: Map<K, V>?) {
 
 @DslMarker
 annotation class MessageScopeDslMarker
-
-@DslMarker
-annotation class PropertyScopeDslMarker
 
 @DslMarker
 annotation class OptionsScopeDslMarker
