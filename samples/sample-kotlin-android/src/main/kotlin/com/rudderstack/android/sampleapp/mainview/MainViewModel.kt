@@ -68,9 +68,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     eventName = "Track at ${Date()}",
                     trackProperties = TrackProperties("key1" to "prop1", "key2" to "prop2"),
                     options = RudderOption().putIntegration("firebase", false)
-                        .putExternalId(
-                            "fb_id","1234"
-                        )
                 )
                 "Track message sent"
             }
@@ -79,7 +76,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 RudderAnalyticsUtils.analytics.identify(
                     userId = "some_user_id", traits = IdentifyTraits("trait1" to "some_trait"),
                     options = RudderOption().putExternalId("test_ext_id_key_$extCount", "test_val_$extCount")
-
                 )
                 ++ extCount
                 "Identify called"
