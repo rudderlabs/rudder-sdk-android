@@ -85,22 +85,14 @@ class Analytics private constructor(
     @JvmOverloads
     fun track(
         eventName: String,
-        options: RudderOption? = null,
-        userId: String? = null,
-        anonymousId: String? = null,
         trackProperties: TrackProperties? = null,
-        traits: Map<String, Any?>? = null,
-        destinationProps: MessageDestinationProps? = null,
+        options: RudderOption? = null,
     ) {
         track(
             TrackMessage.create(
-                anonymousId = anonymousId,
-                traits = traits,
-                destinationProps = destinationProps,
-                timestamp = RudderUtils.timeStamp,
                 eventName = eventName,
                 properties = trackProperties,
-                userId = userId
+                timestamp = RudderUtils.timeStamp,
             ), options
         )
     }
