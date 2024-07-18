@@ -101,6 +101,5 @@ fun makeAllEventsDirectlyUsingAndroidCompatibleEventsAPI() {
 
     analytics.alias(
         newId = "New Alias UserID",
-        previousId = "Old Alias UserID",
     )
 }
