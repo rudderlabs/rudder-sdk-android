@@ -98,33 +98,24 @@ class Analytics private constructor(
     /**
      * DSL format for track call
      *
+     * ```kotlin
      * analytics.track {
-     *   event { +"event" }
-     *   //or event("event")
-     *   trackProperties {
-     *       //use any of these
-     *       +("property1" to "value1")
-     *       +mapOf("property2" to "value2")
-     *       add("property3" to "value3")
-     *       add(mapOf("property4" to "value4"))
-     *  }
-     *  userId("user_id")
-     *  rudderOptions {
-     *       customContexts {
-     *          +("cc1" to "cp1")
-     *          +("cc2" to "cp2")
-     *       }
-     *       externalIds {
-     *          +(mapOf("ext-1" to "ex1"))
-     *          +(mapOf("ext-2" to "ex2"))
-     *          +listOf(mapOf("ext-3" to "ex3"))
-     *       }
-     *       integrations {
-     *          +("firebase" to true)
-     *          +("amplitude" to false)
-     *       }
-     *    }
+     *     event { +"event" }
+     *     // or event("event")
+     *     trackProperties {
+     *         // use any of these
+     *         +("property1" to "value1")
+     *         +mapOf("property2" to "value2")
+     *         add("property3" to "value3")
+     *         add(mapOf("property4" to "value4"))
+     *     }
+     *     rudderOptions {
+     *         customContexts("cc1", mapOf("cc_1_1" to "ccv"))
+     *         integration("firebase", true)
+     *     }
      * }
+     * ```
+     *
      * @param scope
      */
     fun track(scope: TrackScope.() -> Unit) {

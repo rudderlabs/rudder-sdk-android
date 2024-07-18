@@ -8,7 +8,6 @@ import com.rudderstack.core.models.*
 class TrackScope internal constructor() : MessageScope<TrackMessage>() {
     private var eventName: String? = null
     private var properties: TrackProperties? = null
-    private var traits: Map<String, Any?>? = null
 
     fun trackProperties(scope: MapScope<String, Any>.() -> Unit) {
         val propertiesScope = MapScope(properties)
@@ -26,18 +25,11 @@ class TrackScope internal constructor() : MessageScope<TrackMessage>() {
         eventName = name
     }
 
-    fun traits(scope: MapScope<String, Any?>.() -> Unit) {
-        val traitsScope = MapScope(traits)
-        traitsScope.scope()
-        traits = traitsScope.map
-    }
-
     override val message: TrackMessage
         get() = TrackMessage.create(
-            eventName ?: throw IllegalArgumentException("No event name for track"),
-            RudderUtils.timeStamp,
-            properties,
-            userId = userId,
+            eventName = eventName ?: throw IllegalArgumentException("No event name for track"),
+            timestamp = RudderUtils.timeStamp,
+            properties = properties,
         )
 }
 
