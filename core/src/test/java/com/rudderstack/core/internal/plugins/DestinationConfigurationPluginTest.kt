@@ -1,10 +1,12 @@
 package com.rudderstack.core.internal.plugins
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.BaseDestinationPlugin
 import com.rudderstack.core.DestinationPlugin
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.CentralPluginChain
+import com.rudderstack.core.models.Message
 import com.rudderstack.core.models.RudderServerConfig
 import com.rudderstack.core.models.TrackMessage
 import org.hamcrest.MatcherAssert.assertThat
@@ -91,19 +93,18 @@ class DestinationConfigurationPluginTest {
         val centralPluginChain = defaultPluginChain!!.copy(
             plugins = defaultPluginChain!!.plugins.toMutableList().also {
                 //after destination config plugin
-                it.add(0, Plugin {
-                    //after processing the chain should be devoid of d-2
-                    assertThat(
-                        it.plugins, allOf(
-                            Matchers.hasItems(*(destinations.toMutableList().also {
-                                it.removeIf {
-                                    it is DestinationPlugin<*> && it.name == "d-2"
-                                }
-                            }.toTypedArray())),
-                            everyItem(not(destinations[1]/*isIn(shouldNotBeInList)*/))
+                it.add(0, object : Plugin {
+                    override lateinit var analytics: Analytics
+                    override fun intercept(chain: Plugin.Chain): Message {
+                        assertThat(
+                            chain.plugins, allOf(
+                                Matchers.hasItems(*(destinations.toMutableList().also {
+                                    it.removeIf { it is DestinationPlugin<*> && it.name == "d-2" }
+                                }.toTypedArray())), everyItem(not(destinations[1]/*isIn(shouldNotBeInList)*/))
+                            )
                         )
-                    )
-                    it.proceed(it.message())
+                        return chain.proceed(chain.message())
+                    }
                 })
             }
         )
@@ -117,16 +118,17 @@ class DestinationConfigurationPluginTest {
         val centralPluginChain = defaultPluginChain!!.copy(
             plugins = defaultPluginChain!!.plugins.toMutableList().also {
                 //after destination config plugin
-                it.add(0, Plugin {
-                    //after processing the chain should be devoid of d-2
-                    assertThat(
-                        it.plugins, allOf(
-                            iterableWithSize(1), //the test plugin
-                            //check there should be no destination plugin
-                            everyItem(not(isA(DestinationPlugin::class.java)))
+                it.add(0, object : Plugin {
+                    override lateinit var analytics: Analytics
+                    override fun intercept(chain: Plugin.Chain): Message {
+                        assertThat(
+                            chain.plugins, allOf(
+                                iterableWithSize(1),
+                                everyItem(not(isA(DestinationPlugin::class.java)))
+                            )
                         )
-                    )
-                    it.proceed(it.message())
+                        return chain.proceed(chain.message())
+                    }
                 })
             }
         )
