@@ -23,23 +23,20 @@ import com.rudderstack.core.Analytics
 import com.rudderstack.core.InfrastructurePlugin
 import com.rudderstack.core.State
 
-internal class NavigationPlugin(private val navControllerState: State<Collection<NavController>>) :
-    InfrastructurePlugin, NavController.OnDestinationChangedListener {
-    private var analytics: Analytics? = null
+internal class NavigationPlugin(
+    private val navControllerState: State<Collection<NavController>>
+) : InfrastructurePlugin, NavController.OnDestinationChangedListener {
+
+    override lateinit var analytics: Analytics
+
     private var currentNavControllers: Collection<NavController>? = null
     private val currentConfig
-    get() = analytics?.currentConfigurationAndroid
+        get() = analytics?.currentConfigurationAndroid
 
     override fun setup(analytics: Analytics) {
-        this.analytics = analytics
-        if (currentConfig?.trackLifecycleEvents == true
-            && currentConfig?.recordScreenViews == true)
-            subscribeToNavControllerState()
-    }
-
-    private fun subscribeToNavControllerState() {
-        navControllerState.subscribe { newValue, _ ->
-            updateNavControllers(newValue)
+        super.setup(analytics)
+        if (currentConfig?.trackLifecycleEvents == true && currentConfig?.recordScreenViews == true) {
+            navControllerState.subscribe { newValue, _ -> updateNavControllers(newValue) }
         }
     }
 
@@ -76,10 +73,11 @@ internal class NavigationPlugin(private val navControllerState: State<Collection
         updateNavControllers(listOf())
     }
 
-
     @Synchronized
     override fun onDestinationChanged(
-        controller: NavController, destination: NavDestination, arguments: Bundle?
+        controller: NavController,
+        destination: NavDestination,
+        arguments: Bundle?
     ) {
         when (destination.navigatorName) {
             "fragment" -> {
@@ -92,14 +90,17 @@ internal class NavigationPlugin(private val navControllerState: State<Collection
         }
     }
 
-    private fun trackComposableScreenView(destination: NavDestination, arguments: Bundle?) {
-        if(currentConfig?.trackLifecycleEvents != true || currentConfig?.recordScreenViews != true) return
+    private fun trackComposableScreenView(
+        destination: NavDestination,
+        arguments: Bundle?
+    ) {
+        if (currentConfig?.trackLifecycleEvents != true || currentConfig?.recordScreenViews != true) return
         val argumentKeys = destination.arguments.keys
         val screenName = destination.route?.let {
             if (argumentKeys.isEmpty()) it
             else {
                 val argumentsIndex = it.indexOf('/')
-                if (argumentsIndex == -1)  it
+                if (argumentsIndex == -1) it
                 else it.substring(0, argumentsIndex)
             }
         }.toString()
@@ -107,7 +108,7 @@ internal class NavigationPlugin(private val navControllerState: State<Collection
     }
 
     private fun trackFragmentScreenView(destination: NavDestination, arguments: Bundle?) {
-        if(currentConfig?.trackLifecycleEvents != true || currentConfig?.recordScreenViews != true) return
+        if (currentConfig?.trackLifecycleEvents != true || currentConfig?.recordScreenViews != true) return
         val screenName = destination.label.toString()
         val properties = getProperties(arguments, destination.arguments.keys)
         broadcastScreenChange(screenName, properties)
@@ -116,18 +117,19 @@ internal class NavigationPlugin(private val navControllerState: State<Collection
     private fun getProperties(
         arguments: Bundle?, argumentKeys: Set<String>
     ): Map<String, Any> = arguments?.let { bundle ->
-            argumentKeys.associateWith { bundle.get(it) }
-        }?.filter { it.value != null }?.mapValues { it.value!! } ?: mapOf()
+        argumentKeys.associateWith { bundle.get(it) }
+    }?.filter { it.value != null }?.mapValues { it.value!! } ?: mapOf()
 
     private fun broadcastScreenChange(
-        screenName: String, properties: Map<String, Any>?
+        screenName: String,
+        properties: Map<String, Any>?
     ) {
-        analytics?.applyInfrastructureClosure {
+        analytics.applyInfrastructureClosure {
             if (this is LifecycleListenerPlugin) {
                 this.onScreenChange(screenName, properties)
             }
         }
-        analytics?.applyMessageClosure {
+        analytics.applyMessageClosure {
             if (this is LifecycleListenerPlugin) {
                 this.onScreenChange(screenName, properties)
             }
