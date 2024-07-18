@@ -33,6 +33,8 @@ class AndroidStorageImpl(
     private val storageExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 ) : AndroidStorage {
 
+    override lateinit var analytics: Analytics
+
     private var logger: Logger? = null
     private val dbName get() = "rs_persistence_$writeKey"
     private var jsonAdapter: JsonAdapter? = null
@@ -70,6 +72,12 @@ class AndroidStorageImpl(
     private var _cachedContext: MessageContext? = null
 
     private var rudderDatabase: RudderDatabase? = null
+
+    override fun setup(analytics: Analytics) {
+        super.setup(analytics)
+        initDb(analytics)
+        preferenceManager = RudderPreferenceManager(application, writeKey)
+    }
 
     //message table listener
     private val _messageDataListener = object : Dao.DataChangeListener<MessageEntity> {
@@ -277,7 +285,7 @@ class AndroidStorageImpl(
     override val startupQueue: List<Message>
         get() = startupQ
     override val isOptedOut: Boolean
-        get() = preferenceManager?.optStatus?:false
+        get() = preferenceManager?.optStatus ?: false
     override val optOutTime: Long
         get() = _optOutTime.get()
     override val optInTime: Long
@@ -321,7 +329,7 @@ class AndroidStorageImpl(
     override val v1AdvertisingId: String?
         get() = preferenceManager?.v1AdvertisingId
     override val trackAutoSession: Boolean
-        get() = preferenceManager?.trackAutoSession?: false
+        get() = preferenceManager?.trackAutoSession ?: false
     override val build: Int?
         get() = preferenceManager?.build
     override val v1Build: Int?
@@ -402,8 +410,12 @@ class AndroidStorageImpl(
     }
 
     override fun migrateV1StorageToV2Sync(): Boolean {
-        return migrateV1MessagesToV2Database(application, rudderDatabase?:return false,
-            jsonAdapter?:return false, logger)
+        return migrateV1MessagesToV2Database(
+            application,
+            rudderDatabase ?: return false,
+            jsonAdapter ?: return false,
+            logger
+        )
     }
 
     override fun migrateV1StorageToV2(callback: (Boolean) -> Unit) {
@@ -441,11 +453,6 @@ class AndroidStorageImpl(
         get() = "Android"
     override val libraryOsVersion: String
         get() = Build.VERSION.SDK_INT.toString()
-
-    override fun setup(analytics: Analytics) {
-        initDb(analytics)
-        preferenceManager = RudderPreferenceManager(application, writeKey)
-    }
 
     private val Iterable<Message>.entities
         get() = map {
