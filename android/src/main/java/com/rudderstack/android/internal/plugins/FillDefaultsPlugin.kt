@@ -61,7 +61,7 @@ internal class FillDefaultsPlugin : Plugin {
         return (this.copy(
             context = newContext,
             anonymousId = anonId,
-            userId = userId
+            userId = userId.ifEmpty { null }
         ) as T)
     }
 
