@@ -19,14 +19,10 @@ import java.io.UnsupportedEncodingException
 import java.util.*
 
 internal object AndroidUtils {
-    fun generateAnonymousId(isCollectDeviceId: Boolean, application: Application): String {
-        return if (!isCollectDeviceId) UUID.randomUUID().toString() else getDeviceId(application)
-    }
+    fun generateAnonymousId() = UUID.randomUUID().toString()
 
-    internal fun getDeviceId(application: Application): String = run {
-
-        val androidId =
-            Settings.System.getString(application.contentResolver, Settings.Secure.ANDROID_ID)
+    fun getDeviceId(application: Application): String = run {
+        val androidId = Settings.System.getString(application.contentResolver, Settings.Secure.ANDROID_ID)
         if (!TextUtils.isEmpty(androidId) && "9774d56d682e549c" != androidId && "unknown" != androidId && "000000000000000" != androidId) {
             return androidId
         }
