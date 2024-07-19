@@ -139,7 +139,6 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     private fun Analytics.migrateV1Build() {
         if (androidStorage.v1Build != -1) {
             androidStorage.setBuild(androidStorage.v1Build)
-        } else {
             androidStorage.resetV1Build()
         }
     }
@@ -150,9 +149,11 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     }
 
     private fun Analytics.migrateV1Version() {
-        if (androidStorage.v1VersionName.isEmpty()) {
+        if (androidStorage.v1VersionName.isNotEmpty()) {
             androidStorage.setVersionName(androidStorage.v1VersionName)
-        } else {
+        }
+        if (androidStorage.v1VersionName.isNotEmpty()) {
+            androidStorage.setVersionName(androidStorage.v1VersionName)
             androidStorage.resetV1Version()
         }
     }

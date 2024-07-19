@@ -49,7 +49,6 @@ internal class ExtractStatePlugin : Plugin {
             val prevId = analytics.androidStorage.userId.ifEmpty {
                 analytics.currentConfigurationAndroid?.anonymousId
             }
-            // val prevId = analytics.androidStorage.userId ?: analytics.currentConfigurationAndroid?.anonymousId ?: String
             // in case of identify, the stored traits (if any) are replaced by the ones provided
             // if user id is different. else traits are added to it
             val msg = when (message) {
