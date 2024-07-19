@@ -3,7 +3,6 @@ package com.rudderstack.android.internal.plugins
 import com.rudderstack.android.utilities.androidStorage
 import com.rudderstack.android.utilities.contextState
 import com.rudderstack.android.utilities.currentConfigurationAndroid
-import com.rudderstack.android.utilities.empty
 import com.rudderstack.android.utilities.processNewContext
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Plugin
@@ -46,9 +45,11 @@ internal class ExtractStatePlugin : Plugin {
             //user id can be retrieved if put directly in context or context.traits with the
             //aforementioned ids
             val newUserId = getUserId(message)
-
             analytics.logger.debug(log = "New user id detected: $newUserId")
-            val prevId = analytics.androidStorage.userId ?: analytics.currentConfigurationAndroid?.anonymousId ?: String.empty()
+            val prevId = analytics.androidStorage.userId.ifEmpty {
+                analytics.currentConfigurationAndroid?.anonymousId
+            }
+            // val prevId = analytics.androidStorage.userId ?: analytics.currentConfigurationAndroid?.anonymousId ?: String
             // in case of identify, the stored traits (if any) are replaced by the ones provided
             // if user id is different. else traits are added to it
             val msg = when (message) {
