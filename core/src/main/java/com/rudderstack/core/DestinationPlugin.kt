@@ -60,7 +60,7 @@ interface DestinationPlugin<T> : Plugin {
      * These plugins only act on the main-plugin that it is added to.
      *
      */
-    fun interface DestinationInterceptor : Plugin
+    interface DestinationInterceptor : Plugin
 
     /**
      * Called when flush is triggered.
@@ -128,6 +128,7 @@ abstract class BaseDestinationPlugin<T>(override val name: String) : Destination
             crossinline block: (chain: Plugin.Chain) -> Message
         ): BaseDestinationPlugin<T> =
             object : BaseDestinationPlugin<T>(name) {
+                override lateinit var analytics: Analytics
                 override fun intercept(chain: Plugin.Chain): Message {
                     return block(chain)
                 }

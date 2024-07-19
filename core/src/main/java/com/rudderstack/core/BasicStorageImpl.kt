@@ -3,9 +3,16 @@ package com.rudderstack.core
 import com.rudderstack.core.models.IdentifyTraits
 import com.rudderstack.core.models.Message
 import com.rudderstack.core.models.RudderServerConfig
-import java.io.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.lang.ref.WeakReference
-import java.util.*
+import java.util.LinkedList
+import java.util.Properties
+import java.util.Queue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicReference
 
@@ -22,6 +29,8 @@ class BasicStorageImpl @JvmOverloads constructor(
      */
     private val queue: Queue<Message> = LinkedBlockingQueue(),
 ) : Storage {
+
+    override lateinit var analytics: Analytics
     private var configurationRef = AtomicReference<Configuration>(null)
 
     private val logger
@@ -259,10 +268,6 @@ class BasicStorageImpl @JvmOverloads constructor(
     override val libraryOsVersion: String
         get() = libDetails[LIB_KEY_OS_VERSION] ?: ""
 
-    override fun setup(analytics: Analytics) {
-        //no-op
-    }
-
     override fun updateConfiguration(configuration: Configuration) {
         configurationRef.set(configuration)
     }
@@ -278,7 +283,5 @@ class BasicStorageImpl @JvmOverloads constructor(
             }
 
         }
-
     }
-
 }

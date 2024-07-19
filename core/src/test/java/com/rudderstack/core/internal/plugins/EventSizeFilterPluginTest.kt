@@ -1,14 +1,15 @@
 package com.rudderstack.core.internal.plugins
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.RudderUtils.MAX_EVENT_SIZE
 import com.rudderstack.core.RudderUtils.getUTF8Length
 import com.rudderstack.core.internal.CentralPluginChain
-import com.rudderstack.gsonrudderadapter.GsonAdapter
 import com.rudderstack.core.models.Message
 import com.rudderstack.core.models.TrackMessage
+import com.rudderstack.gsonrudderadapter.GsonAdapter
 import org.junit.Test
 
 class EventSizeFilterPluginTest {
@@ -19,9 +20,12 @@ class EventSizeFilterPluginTest {
     @Test
     fun `given event size does not exceed the maximum size, then the next plugin in the chain should be called`() {
         var isCalled = false
-        val testPlugin = Plugin {
-            isCalled = true
-            it.proceed(it.message())
+        val testPlugin = object : Plugin {
+            override lateinit var analytics: Analytics
+            override fun intercept(chain: Plugin.Chain): Message {
+                isCalled = true
+                return chain.proceed(chain.message())
+            }
         }
         val message = getMessageUnderMaxSize()
         val eventSizeFilterTestChain = CentralPluginChain(
@@ -39,9 +43,12 @@ class EventSizeFilterPluginTest {
     @Test
     fun `given event size exceeds the maximum size, then the next plugin in the chain should not be called`() {
         var isCalled = false
-        val testPlugin = Plugin {
-            isCalled = true
-            it.proceed(it.message())
+        val testPlugin = object : Plugin {
+            override lateinit var analytics: Analytics
+            override fun intercept(chain: Plugin.Chain): Message {
+                isCalled = true
+                return chain.proceed(chain.message())
+            }
         }
         val message = getMessageOverMaxSize()
         val eventSizeFilterTestChain = CentralPluginChain(

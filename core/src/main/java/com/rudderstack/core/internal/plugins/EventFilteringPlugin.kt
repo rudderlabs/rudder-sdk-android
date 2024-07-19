@@ -1,5 +1,6 @@
 package com.rudderstack.core.internal.plugins
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.DestinationPlugin
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.models.Message
@@ -17,8 +18,10 @@ private const val WHITELISTED_EVENTS = "whitelistedEvents"
 private const val BLACKLISTED_EVENTS = "blacklistedEvents"
 private const val EVENT_FILTERING_OPTION = "eventFilteringOption"
 private const val EVENT_NAME = "eventName"
+
 class EventFilteringPlugin : Plugin {
 
+    override lateinit var analytics: Analytics
 
     //map of (destination definition name, DestinationEventFilteringConfig)
     private var filteredEventsMap = ConcurrentHashMap<String, DestinationEventFilteringConfig>()

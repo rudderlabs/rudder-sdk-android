@@ -43,25 +43,6 @@ class CoreInputsPluginTest {
     }
 
     @Test
-    fun `intercept method proceeds without modification when storage is null`() {
-        // Arrange
-        val mockChain = mock<Plugin.Chain>()
-        val mockMessage = TrackMessage.create("ev_name", RudderUtils.timeStamp)
-        `when`(mockChain.message()).thenReturn(mockMessage)
-        whenever(mockChain.proceed(any())) doAnswer {
-            it.getArgument(0)
-        }
-
-        // Act
-        val result = coreInputsPlugin.intercept(mockChain)
-
-        // Assert
-        assertThat(result, `is`(mockMessage))
-        verify(mockChain).proceed(mockMessage)
-    }
-
-
-    @Test
     fun `intercept method adds library context to message context when storage is not null`() {
         // Arrange
         val mockChain = mock<Plugin.Chain>()

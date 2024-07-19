@@ -2,9 +2,9 @@ package com.rudderstack.android.sampleapp.mainview
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.rudderstack.android.utilities.applyConfigurationAndroid
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils
 import com.rudderstack.android.sampleapp.analytics.RudderAnalyticsUtils.analytics
+import com.rudderstack.android.utilities.applyConfigurationAndroid
 import com.rudderstack.android.utilities.endSession
 import com.rudderstack.android.utilities.startSession
 import com.rudderstack.core.Analytics
@@ -27,33 +27,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private var _rudderReporter = RudderAnalyticsUtils.reporter
 
-    private val _loggingInterceptor by lazy {
-        object : Plugin {
-            private var _writeKey: String? = null
-            override fun setup(analytics: Analytics) {
-                _writeKey = analytics.writeKey
-            }
-            private var logsName: String = "Sample app-$_writeKey"
+    private val _loggingInterceptor = object : Plugin{
+        override lateinit var analytics: Analytics
 
-            override fun intercept(chain: Plugin.Chain): Message {
-                val msg = chain.message()
-                _state.update { state ->
-                    state.copy(
-                        logDataList = state.logDataList + LogData(
-                            Date(), "from $logsName, msg: $msg"
-                        )
+        override fun setup(analytics: Analytics) {
+            this.analytics = analytics
+        }
+        override fun intercept(chain: Plugin.Chain): Message {
+            val msg = chain.message()
+            _state.update { state ->
+                state.copy(
+                    logDataList = state.logDataList + LogData(
+                        Date(), "from ${"Sample app-${analytics.writeKey}"}, msg: $msg"
                     )
-                }
-                return chain.proceed(msg)
+                )
             }
-
-
+            return chain.proceed(msg)
         }
     }
 
     init {
         analytics.addPlugin(_loggingInterceptor)
     }
+
     private var extCount = 1
 
     internal fun onEventClicked(analytics: AnalyticsState) {
@@ -69,7 +65,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     trackProperties = TrackProperties("key1" to "prop1", "key2" to "prop2"),
                     options = RudderOption().putIntegration("firebase", false)
                         .putExternalId(
-                            "fb_id","1234"
+                            "fb_id", "1234"
                         )
                 )
                 "Track message sent"
@@ -81,7 +77,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     options = RudderOption().putExternalId("test_ext_id_key_$extCount", "test_val_$extCount")
 
                 )
-                ++ extCount
+                ++extCount
                 "Identify called"
             }
 
@@ -149,6 +145,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 RudderAnalyticsUtils.analytics.endSession()
                 "Session Ended"
             }
+
             AnalyticsState.SendError -> {
                 _rudderReporter?.errorClient?.leaveBreadcrumb("Error BC")
                 _rudderReporter?.errorClient?.addMetadata("Error MD", "md_key", "md_value")

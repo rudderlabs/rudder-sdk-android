@@ -51,15 +51,16 @@ import java.util.concurrent.atomic.AtomicReference
 private const val CHANNEL = "mobile"
 
 internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
-    //if true collects advertising id automatically
+
+    override lateinit var analytics: Analytics
     private val application
-        get() = _analytics?.currentConfigurationAndroid?.application
+        get() = analytics.currentConfigurationAndroid?.application
 
     private var autoCollectAdvertisingId = false
         set(value) {
             field = value
             if (value && _advertisingId.isNullOrEmpty()) application?.collectAdvertisingId()
-            else if(!value) synchronized(this) {
+            else if (!value) synchronized(this) {
                 _advertisingId = null
             }
         }
@@ -77,7 +78,6 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     private var _advertisingId: String? = null
     private var _deviceToken: String? = null
 
-    private var _analytics: Analytics? = null
     private val _currentActivity: AtomicReference<Activity?> = AtomicReference()
     private val currentActivity: Activity?
         get() = _currentActivity.get()
@@ -93,7 +93,6 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
 
     override fun setup(analytics: Analytics) {
         super.setup(analytics)
-        _analytics = analytics
         analytics.currentConfigurationAndroid?.updateAdvertisingValues()
     }
 
@@ -104,7 +103,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     }
 
     private fun ConfigurationAndroid.updateAdvertisingValues() {
-        if(!advertisingId.isNullOrEmpty()) {
+        if (!advertisingId.isNullOrEmpty()) {
             synchronized(this) {
                 if (_advertisingId != advertisingId)
                     _advertisingId = advertisingId
@@ -135,26 +134,29 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
     }
 
     private fun Application.collectAdvertisingId() {
-        if(!isOnClassPath("com.google.android.gms.ads.identifier.AdvertisingIdClient")){
-            _analytics?.currentConfiguration?.logger?.debug(log = "Not collecting advertising ID because "
-                    + "com.google.android.gms.ads.identifier.AdvertisingIdClient "
-                    + "was not found on the classpath."
+        if (!isOnClassPath("com.google.android.gms.ads.identifier.AdvertisingIdClient")) {
+            analytics.currentConfiguration?.logger?.debug(
+                log = "Not collecting advertising ID because "
+                        + "com.google.android.gms.ads.identifier.AdvertisingIdClient "
+                        + "was not found on the classpath."
             )
             return
         }
-        _analytics?.currentConfigurationAndroid?.advertisingIdFetchExecutor?.submit {
+        analytics.currentConfigurationAndroid?.advertisingIdFetchExecutor?.submit {
             val adId = try {
                 getGooglePlayServicesAdvertisingID()
             } catch (ex: Exception) {
-                _analytics?.currentConfiguration?.logger?.error(log = "Error collecting play services ad id", throwable = ex)
+                analytics.currentConfiguration?.logger?.error(log = "Error collecting play services ad id", throwable = ex)
                 null
-            } ?: try { getAmazonFireAdvertisingID() } catch (ex: Exception){
-                _analytics?.currentConfiguration?.logger?.error(log = "Error collecting amazon fire ad id", throwable = ex)
+            } ?: try {
+                getAmazonFireAdvertisingID()
+            } catch (ex: Exception) {
+                analytics.currentConfiguration?.logger?.error(log = "Error collecting amazon fire ad id", throwable = ex)
                 null
             }
-            _analytics?.currentConfiguration?.logger?.info(log = "Ad id collected is $adId")
+            analytics.currentConfiguration?.logger?.info(log = "Ad id collected is $adId")
             if (adId != null) {
-                _analytics?.applyConfigurationAndroid {
+                analytics.applyConfigurationAndroid {
                     copy(advertisingId = adId)
                 }
             }
@@ -167,19 +169,16 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         }
     }
 
-
     @Throws(Exception::class)
     private fun Application.getGooglePlayServicesAdvertisingID(): String? {
-
-        val advertisingInfo =
-            Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient")
-                .getMethod("getAdvertisingIdInfo", Context::class.java).invoke(null, this)
-                ?: return null
+        val advertisingInfo = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient")
+            .getMethod("getAdvertisingIdInfo", Context::class.java).invoke(null, this)
+            ?: return null
         val isLimitAdTrackingEnabled =
             advertisingInfo.javaClass.getMethod("isLimitAdTrackingEnabled")
                 .invoke(advertisingInfo) as? Boolean
         if (isLimitAdTrackingEnabled == true) {
-            _analytics?.logger?.debug(log = "Not collecting advertising ID because isLimitAdTrackingEnabled (Google Play Services) is true.")
+            analytics.logger.debug(log = "Not collecting advertising ID because isLimitAdTrackingEnabled (Google Play Services) is true.")
             return null
         }
         return advertisingInfo.javaClass.getMethod("getId").invoke(advertisingInfo) as? String
@@ -191,7 +190,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         val contentResolver: ContentResolver = contentResolver
         val limitAdTracking = Settings.Secure.getInt(contentResolver, "limit_ad_tracking") != 0
         if (limitAdTracking) {
-            _analytics?.logger?.debug(log = "Not collecting advertising ID because limit_ad_tracking (Amazon Fire OS) is true.")
+            analytics.logger.debug(log = "Not collecting advertising ID because limit_ad_tracking (Amazon Fire OS) is true.")
             return null
         }
         return Settings.Secure.getString(
@@ -233,7 +232,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
                 "version" to packageInfo.versionName
             )
         } catch (ex: PackageManager.NameNotFoundException) {
-            _analytics?.currentConfiguration?.logger?.error(
+            analytics.currentConfiguration?.logger?.error(
                 log = "Package Name Not Found",
                 throwable = ex
             )
@@ -280,9 +279,9 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
         // wifi enabled
         val isWifiEnabled =
             try {
-                (this.getSystemService(Context.WIFI_SERVICE) as? WifiManager)?.isWifiEnabled?:false
+                (this.getSystemService(Context.WIFI_SERVICE) as? WifiManager)?.isWifiEnabled ?: false
             } catch (ex: Exception) {
-                _analytics?.currentConfiguration?.logger?.error(log = "Cannot detect wifi. Wifi Permission not available")
+                analytics.currentConfiguration?.logger?.error(log = "Cannot detect wifi. Wifi Permission not available")
                 false
             }
 
@@ -328,8 +327,7 @@ internal class PlatformInputsPlugin : Plugin, LifecycleListenerPlugin {
 
     override fun onShutDown() {
         super.onShutDown()
-        _analytics?.currentConfigurationAndroid?.advertisingIdFetchExecutor?.shutdownNow()
-        _analytics = null
+        analytics.currentConfigurationAndroid?.advertisingIdFetchExecutor?.shutdownNow()
     }
 
 }

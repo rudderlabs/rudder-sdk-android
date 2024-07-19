@@ -12,6 +12,7 @@ class MockConfigDownloadService(
     )
 ) : ConfigDownloadService {
 
+    override lateinit var analytics: Analytics
 
     override fun download(callback: (success: Boolean, RudderServerConfig?, lastErrorMsg: String?) -> Unit) {
         callback(mockConfigDownloadSuccess, mockConfig, mockLastErrorMsg)
@@ -22,10 +23,6 @@ class MockConfigDownloadService(
     }
 
     override fun removeListener(listener: ConfigDownloadService.Listener) {
-        // Not-required
-    }
-
-    override fun setup(analytics: Analytics) {
         // Not-required
     }
 
