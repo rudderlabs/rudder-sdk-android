@@ -151,9 +151,6 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     private fun Analytics.migrateV1Version() {
         if (androidStorage.v1VersionName.isNotEmpty()) {
             androidStorage.setVersionName(androidStorage.v1VersionName)
-        }
-        if (androidStorage.v1VersionName.isNotEmpty()) {
-            androidStorage.setVersionName(androidStorage.v1VersionName)
             androidStorage.resetV1Version()
         }
     }
