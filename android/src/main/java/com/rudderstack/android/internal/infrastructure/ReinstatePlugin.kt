@@ -62,34 +62,30 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     }
 
     private fun ConfigurationAndroid.fillDefaults() {
-        analytics?.setAnonymousId(AndroidUtils.generateAnonymousId(collectDeviceId, application))
-        analytics?.initializeSessionManagement(
-            analytics?.androidStorage?.sessionId,
-            analytics?.androidStorage?.lastActiveTimestamp
+        analytics.setAnonymousId(AndroidUtils.generateAnonymousId())
+        analytics.initializeSessionManagement(
+            analytics.androidStorage.sessionId,
+            analytics.androidStorage.lastActiveTimestamp
         )
     }
 
     private fun reinstateV2FromCache() {
-        val anonId = analytics.androidStorage.anonymousId ?: analytics.currentConfigurationAndroid?.let {
-            AndroidUtils.generateAnonymousId(
-                it.collectDeviceId,
-                it.application
-            )
+        analytics.androidStorage.context?.let {
+            analytics.processNewContext(it)
         }
-        val context = analytics.androidStorage.context
-        context?.let {
-            analytics.processNewContext(context)
+        val anonId = analytics.androidStorage.anonymousId.ifEmpty {
+            AndroidUtils.generateAnonymousId()
         }
-        if (anonId != null)
-            analytics.setAnonymousId(anonId)
+        analytics.setAnonymousId(anonId)
         analytics.initializeSessionManagement(
-            analytics.androidStorage.sessionId, analytics.androidStorage.lastActiveTimestamp
+            savedSessionId = analytics.androidStorage.sessionId,
+            lastActiveTimestamp = analytics.androidStorage.lastActiveTimestamp
         )
     }
 
     private fun isV2DataAvailable(): Boolean {
-        return !analytics.androidStorage.anonymousId.isNullOrEmpty() ||
-                !analytics.androidStorage.userId.isNullOrEmpty() ||
+        return analytics.androidStorage.anonymousId.isNotEmpty() ||
+                analytics.androidStorage.userId.isNotEmpty() ||
                 !analytics.contextState?.value.isNullOrEmpty()
     }
 
@@ -126,20 +122,16 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     private fun Analytics.setUserIdFromV1() {
         val traits = androidStorage.v1Traits
         val userId = traits?.get("userId") as? String ?: traits?.get("id") as? String
-        if (userId.isNullOrEmpty() || !this.androidStorage.userId.isNullOrEmpty()) return
+        if (userId.isNullOrEmpty() || this.androidStorage.userId.isNotEmpty()) return
         androidStorage.setUserId(userId)
     }
 
     private fun Analytics.migrateAnonymousIdFromV1() {
+        val v1AnonymousId = androidStorage.v1AnonymousId.ifEmpty {
+            getV1AnonymousIdFromTraits() ?: AndroidUtils.generateAnonymousId()
+        }
         currentConfigurationAndroid?.apply {
-            (androidStorage.v1AnonymousId
-                ?: getV1AnonymousIdFromTraits()
-                ?: AndroidUtils.generateAnonymousId(
-                    collectDeviceId, application
-                )).let {
-                logger.error(log = "Unable to migrate anonymousId from V1. Generating new anonymousId")
-                analytics.setAnonymousId(it)
-            }
+            analytics.setAnonymousId(v1AnonymousId)
             androidStorage.resetV1AnonymousId()
         }
     }
@@ -150,10 +142,11 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     }
 
     private fun Analytics.migrateV1Build() {
-        androidStorage.v1Build?.let {
-            androidStorage.setBuild(it)
+        if (androidStorage.v1Build != -1) {
+            androidStorage.setBuild(androidStorage.v1Build)
+        } else {
+            androidStorage.resetV1Build()
         }
-        androidStorage.resetV1Build()
     }
 
     private fun Analytics.resetV1SessionValues() {
@@ -162,12 +155,12 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     }
 
     private fun Analytics.migrateV1Version() {
-        androidStorage.v1VersionName?.let {
-            androidStorage.setVersionName(it)
+        if (androidStorage.v1VersionName.isEmpty()) {
+            androidStorage.setVersionName(androidStorage.v1VersionName)
+        } else {
+            androidStorage.resetV1Version()
         }
-        androidStorage.resetV1Version()
     }
-
 
     private fun Analytics.migrateOptOutFromV1() {
         val optOut = androidStorage.v1OptOut
