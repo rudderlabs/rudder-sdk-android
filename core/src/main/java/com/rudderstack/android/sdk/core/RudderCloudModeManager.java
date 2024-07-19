@@ -7,7 +7,9 @@ import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
 
 import com.rudderstack.android.sdk.core.gson.RudderGson;
+import com.rudderstack.android.sdk.core.util.ExponentialBackOff;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
+import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +42,7 @@ public class RudderCloudModeManager {
                 Result result = null;
                 final ArrayList<Integer> messageIds = new ArrayList<>();
                 final ArrayList<String> messages = new ArrayList<>();
+                final ExponentialBackOff exponentialBackOff = new ExponentialBackOff(5 * 60); // 5 minutes
                 while (true) {
                     // clear lists for reuse
                     messageIds.clear();
@@ -62,6 +65,7 @@ public class RudderCloudModeManager {
                                     dbManager.markCloudModeDone(messageIds);
                                     dbManager.runGcForEvents();
                                     sleepCount = 0;
+                                    exponentialBackOff.resetBackOff();
                                 } else {
                                     incrementCloudModeUploadRetryCounter(1);
                                 }
@@ -84,9 +88,13 @@ public class RudderCloudModeManager {
                                 deleteEventsWithoutAnonymousId(messages, messageIds);
                                 break;
                             case ERROR:
+                                long sleepIntervalInMillis = exponentialBackOff.nextDelayInMillis();
+                                RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in " + Utils.getTimeInReadableFormat(sleepIntervalInMillis));
+                                Thread.sleep(sleepIntervalInMillis);
+                                break;
                             case NETWORK_UNAVAILABLE:
-                                RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in " + Math.abs(sleepCount - config.getSleepTimeOut()) + "s");
-                                Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000L);
+                                RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in 1s");
+                                Thread.sleep(1000);
                                 break;
                             default:
                                 RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in 1s");
