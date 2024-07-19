@@ -8,21 +8,18 @@ import com.rudderstack.core.models.createContext
 import com.rudderstack.core.models.updateWith
 
 class ResetImplementationPlugin : InfrastructurePlugin {
-    private var _analytics: Analytics? = null
-    override fun setup(analytics: Analytics) {
-        _analytics = analytics
-    }
+
+    override lateinit var analytics: Analytics
+
     private val contextState
-    get() =_analytics?.contextState
+        get() = analytics.contextState
+
     override fun reset() {
-
-        _analytics?.processNewContext(contextState?.value?.updateWith(traits = mapOf(),
-            externalIds = listOf()
-        ) ?: createContext())
+        analytics.processNewContext(
+            contextState?.value?.updateWith(
+                traits = mapOf(),
+                externalIds = listOf()
+            ) ?: createContext()
+        )
     }
-
-    override fun shutdown() {
-        //nothing to implement
-    }
-
 }

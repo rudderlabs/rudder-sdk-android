@@ -13,8 +13,8 @@ import com.rudderstack.core.LifecycleController
 import com.rudderstack.core.Logger
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOption
-import com.rudderstack.core.RudderUtils.getUTF8Length
 import com.rudderstack.core.RudderUtils.MAX_BATCH_SIZE
+import com.rudderstack.core.RudderUtils.getUTF8Length
 import com.rudderstack.core.Storage
 import com.rudderstack.core.flushpolicy.CountBasedFlushPolicy
 import com.rudderstack.core.flushpolicy.IntervalBasedFlushPolicy
@@ -26,8 +26,8 @@ import com.rudderstack.core.holder.retrieveState
 import com.rudderstack.core.internal.plugins.CoreInputsPlugin
 import com.rudderstack.core.internal.plugins.DestinationConfigurationPlugin
 import com.rudderstack.core.internal.plugins.EventFilteringPlugin
-import com.rudderstack.core.internal.plugins.GDPRPlugin
 import com.rudderstack.core.internal.plugins.EventSizeFilterPlugin
+import com.rudderstack.core.internal.plugins.GDPRPlugin
 import com.rudderstack.core.internal.plugins.RudderOptionPlugin
 import com.rudderstack.core.internal.plugins.StoragePlugin
 import com.rudderstack.core.internal.plugins.WakeupActionPlugin
@@ -192,7 +192,7 @@ internal class AnalyticsDelegate(
             val newConfiguration = configurationScope(it)
             currentConfigurationState?.update(newConfiguration)
 
-        }?: logger.error(log = "Configuration not updated, since current configuration is null")
+        } ?: logger.error(log = "Configuration not updated, since current configuration is null")
 
     }
 
@@ -233,16 +233,18 @@ internal class AnalyticsDelegate(
             if (plugins.isEmpty()) return
             plugins.forEach {
                 if (it is DestinationPlugin<*>) {
-                    _destinationPlugins +=  it
-                    val newDestinationConfig =
-                        currentDestinationConfigurationState?.value?.withIntegration(
-                            it.name, it.isReady
-                        ) ?: DestinationConfig(mapOf(it.name to it.isReady))
+                    _destinationPlugins += it
+                    val newDestinationConfig = currentDestinationConfigurationState?.value?.withIntegration(
+                        it.name, it.isReady
+                    ) ?: DestinationConfig(mapOf(it.name to it.isReady))
                     currentDestinationConfigurationState?.update(newDestinationConfig)
                     initDestinationPlugin(it)
                 } else _customPlugins = _customPlugins + it
+
                 //startup
                 _analytics?.apply {
+                    _analytics?.logger?.debug(log = "========= setting plugin up $it =========")
+                    Logger.LogLevel.DEBUG
                     it.setup(this)
                 }
                 applyUpdateClosures(it)
@@ -323,7 +325,7 @@ internal class AnalyticsDelegate(
     private fun generatePluginsWithOptions(options: RudderOption?): List<Plugin> {
         return synchronized(PLUGIN_LOCK) {
             _internalPreMessagePlugins + (options ?: currentConfiguration?.options
-                                          ?: RudderOption()).createPlugin() + _customPlugins + _internalPostCustomPlugins + _destinationPlugins
+            ?: RudderOption()).createPlugin() + _customPlugins + _internalPostCustomPlugins + _destinationPlugins
         }.toList()
     }
 
@@ -364,11 +366,12 @@ internal class AnalyticsDelegate(
             }
         }
     }
+
     private val _isFlushing = AtomicBoolean(false)
     override fun blockingFlush(
     ): Boolean {
         if (_isShutDown.get()) return false
-        if(!_isFlushing.compareAndSet(false, true)) return false
+        if (!_isFlushing.compareAndSet(false, true)) return false
         //inform plugins
         broadcastFlush()
 
@@ -473,6 +476,7 @@ internal class AnalyticsDelegate(
             onDestinationReady(true, plugin)
         }
     }
+
     private fun onDestinationReady(isReady: Boolean, plugin: DestinationPlugin<*>) {
         if (isReady) {
             storage.startupQueue?.forEach {
@@ -486,7 +490,7 @@ internal class AnalyticsDelegate(
                 )
             }
             val newDestinationConfig = (currentDestinationConfigurationState?.value
-                                        ?: DestinationConfig()).withIntegration(
+                ?: DestinationConfig()).withIntegration(
                 plugin.name, isReady
             )
             currentDestinationConfigurationState?.update(newDestinationConfig)
@@ -499,7 +503,7 @@ internal class AnalyticsDelegate(
             //remove from destination config, else all integrations ready won't be true anytime
 
             val newDestinationConfig = (currentDestinationConfigurationState?.value
-                                        ?: DestinationConfig()).removeIntegration(plugin.name)
+                ?: DestinationConfig()).removeIntegration(plugin.name)
             currentDestinationConfigurationState?.update(newDestinationConfig)
 
         }

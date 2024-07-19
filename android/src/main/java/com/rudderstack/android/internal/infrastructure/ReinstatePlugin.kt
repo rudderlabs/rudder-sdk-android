@@ -22,27 +22,29 @@ import com.rudderstack.core.models.createContext
  * traits and external ids
  */
 internal class ReinstatePlugin : InfrastructurePlugin {
-    private var _analytics: Analytics? = null
+
+    override lateinit var analytics: Analytics
+
+    override fun setup(analytics: Analytics) {
+        super.setup(analytics)
+        setReinstated(false)
+        reinstate()
+    }
+
     private fun setReinstated(isReinstated: Boolean) {
         synchronized(this) {
             if (isReinstated) {
-                _analytics?.applyInfrastructureClosure {
+                analytics.applyInfrastructureClosure {
                     if (this is DataUploadService)
                         this.resume()
                 }
             } else {
-                _analytics?.applyInfrastructureClosure {
+                analytics.applyInfrastructureClosure {
                     if (this is DataUploadService)
                         this.pause()
                 }
             }
         }
-    }
-
-    override fun setup(analytics: Analytics) {
-        _analytics = analytics
-        setReinstated(false)
-        reinstate()
     }
 
     private fun reinstate() {
@@ -52,61 +54,60 @@ internal class ReinstatePlugin : InfrastructurePlugin {
             return
         }
         migrateV1DataIfAvailable()
-        if (_analytics?.currentConfigurationAndroid?.anonymousId == null) {
-            _analytics?.currentConfigurationAndroid?.fillDefaults()
+        if (analytics.currentConfigurationAndroid?.anonymousId == null) {
+            analytics.currentConfigurationAndroid?.fillDefaults()
             setReinstated(true)
             return
         }
     }
 
     private fun ConfigurationAndroid.fillDefaults() {
-        _analytics?.setAnonymousId(AndroidUtils.generateAnonymousId(collectDeviceId, application))
-        _analytics?.initializeSessionManagement(
-            _analytics?.androidStorage?.sessionId,
-            _analytics?.androidStorage?.lastActiveTimestamp
+        analytics?.setAnonymousId(AndroidUtils.generateAnonymousId(collectDeviceId, application))
+        analytics?.initializeSessionManagement(
+            analytics?.androidStorage?.sessionId,
+            analytics?.androidStorage?.lastActiveTimestamp
         )
     }
 
     private fun reinstateV2FromCache() {
-        val anonId = _analytics?.androidStorage?.anonymousId
-            ?: _analytics?.currentConfigurationAndroid?.let {
-                AndroidUtils.generateAnonymousId(
-                    it.collectDeviceId,
-                    it.application
-                )
-            }
-        val context = _analytics?.androidStorage?.context
+        val anonId = analytics.androidStorage.anonymousId ?: analytics.currentConfigurationAndroid?.let {
+            AndroidUtils.generateAnonymousId(
+                it.collectDeviceId,
+                it.application
+            )
+        }
+        val context = analytics.androidStorage.context
         context?.let {
-            _analytics?.processNewContext(context)
+            analytics.processNewContext(context)
         }
         if (anonId != null)
-            _analytics?.setAnonymousId(anonId)
-        _analytics?.initializeSessionManagement(
-            _analytics?.androidStorage?.sessionId, _analytics?.androidStorage?.lastActiveTimestamp
+            analytics.setAnonymousId(anonId)
+        analytics.initializeSessionManagement(
+            analytics.androidStorage.sessionId, analytics.androidStorage.lastActiveTimestamp
         )
     }
 
     private fun isV2DataAvailable(): Boolean {
-        return !_analytics?.androidStorage?.anonymousId.isNullOrEmpty() ||
-                !_analytics?.androidStorage?.userId.isNullOrEmpty() ||
-                !_analytics?.contextState?.value.isNullOrEmpty()
+        return !analytics.androidStorage.anonymousId.isNullOrEmpty() ||
+                !analytics.androidStorage.userId.isNullOrEmpty() ||
+                !analytics.contextState?.value.isNullOrEmpty()
     }
 
     private fun migrateV1DataIfAvailable() {
         // migrate user id/ anon id
-        _analytics?.setUserIdFromV1()
-        _analytics?.migrateAnonymousIdFromV1()
-        _analytics?.migrateOptOutFromV1()
-        _analytics?.migrateContextFromV1()
+        analytics.setUserIdFromV1()
+        analytics.migrateAnonymousIdFromV1()
+        analytics.migrateOptOutFromV1()
+        analytics.migrateContextFromV1()
         //we do not store v1 advertising id
-        _analytics?.androidStorage?.resetV1AdvertisingId()
-        _analytics?.migrateSession()
-        _analytics?.migrateV1LifecycleProperties()
-        _analytics?.androidStorage?.migrateV1StorageToV2 {
+        analytics.androidStorage.resetV1AdvertisingId()
+        analytics.migrateSession()
+        analytics.migrateV1LifecycleProperties()
+        analytics.androidStorage.migrateV1StorageToV2 {
             setReinstated(true)
         }
-        _analytics?.androidStorage?.deleteV1SharedPreferencesFile()
-        _analytics?.androidStorage?.deleteV1ConfigFiles()
+        analytics.androidStorage.deleteV1SharedPreferencesFile()
+        analytics.androidStorage.deleteV1ConfigFiles()
     }
 
     private fun Analytics.migrateSession() {
@@ -137,7 +138,7 @@ internal class ReinstatePlugin : InfrastructurePlugin {
                     collectDeviceId, application
                 )).let {
                 logger.error(log = "Unable to migrate anonymousId from V1. Generating new anonymousId")
-                _analytics?.setAnonymousId(it)
+                analytics.setAnonymousId(it)
             }
             androidStorage.resetV1AnonymousId()
         }
@@ -171,7 +172,7 @@ internal class ReinstatePlugin : InfrastructurePlugin {
     private fun Analytics.migrateOptOutFromV1() {
         val optOut = androidStorage.v1OptOut
         if (!optOut || this.androidStorage.isOptedOut) return //only relevant if optout is true
-        _analytics?.optOut(true)
+        analytics.optOut(true)
         androidStorage.resetV1OptOut()
     }
 
@@ -184,9 +185,4 @@ internal class ReinstatePlugin : InfrastructurePlugin {
             androidStorage.resetV1ExternalIds()
         }
     }
-
-    override fun shutdown() {
-        _analytics = null
-    }
-
 }

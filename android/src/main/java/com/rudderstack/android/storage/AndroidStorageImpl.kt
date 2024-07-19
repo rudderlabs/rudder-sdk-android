@@ -46,6 +46,8 @@ class AndroidStorageImpl(
     private val storageExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 ) : AndroidStorage {
 
+    override lateinit var analytics: Analytics
+
     private var logger: Logger? = null
     private val dbName get() = "rs_persistence_$writeKey"
     private var jsonAdapter: JsonAdapter? = null
@@ -87,6 +89,11 @@ class AndroidStorageImpl(
     private var _cachedContext: MessageContext? = null
 
     private var rudderDatabase: RudderDatabase? = null
+
+    override fun setup(analytics: Analytics) {
+        super.setup(analytics)
+        initDb(analytics)
+    }
 
     //message table listener
     private val _messageDataListener = object : Dao.DataChangeListener<MessageEntity> {
@@ -444,10 +451,6 @@ class AndroidStorageImpl(
         get() = "Android"
     override val libraryOsVersion: String
         get() = Build.VERSION.SDK_INT.toString()
-
-    override fun setup(analytics: Analytics) {
-        initDb(analytics)
-    }
 
     private val Iterable<Message>.entities
         get() = map {

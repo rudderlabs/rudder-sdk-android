@@ -7,7 +7,6 @@ import com.rudderstack.core.models.RudderServerConfig
 import com.rudderstack.web.HttpResponse
 import com.rudderstack.web.WebService
 import com.rudderstack.web.WebServiceFactory
-import java.lang.ref.WeakReference
 import java.util.Locale
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Future
@@ -17,6 +16,9 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
     private val writeKey: String,
     webService: WebService? = null,
 ) : ConfigDownloadService {
+
+    override lateinit var analytics: Analytics
+
     private val downloadSequence = CopyOnWriteArrayList<Boolean>()
     private var listeners = CopyOnWriteArrayList<ConfigDownloadService.Listener>()
     private val controlPlaneWebService: AtomicReference<WebService?> =
@@ -34,20 +36,17 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
         )
     }
 
-    private var analyticsRef: WeakReference<Analytics>? = null
-
     private var ongoingConfigFuture: Future<HttpResponse<RudderServerConfig>>? = null
     private var lastRudderServerConfig: RudderServerConfig? = null
     private var lastErrorMsg: String? = null
+
     override fun download(
-        callback: (
-            success: Boolean, RudderServerConfig?, lastErrorMsg: String?
-        ) -> Unit
+        callback: (success: Boolean, RudderServerConfig?, lastErrorMsg: String?) -> Unit
     ) {
         currentConfiguration?.apply {
             networkExecutor.submit {
                 with(sdkVerifyRetryStrategy) {
-                    analyticsRef?.get()?.perform({
+                    analytics.perform({
                         ongoingConfigFuture = controlPlaneWebService.get()?.get(
                             mapOf(
                                 "Content-Type" to "application/json",
@@ -57,16 +56,16 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
                                     encodedWriteKey
                                 )
                             ), mapOf(
-                                "p" to storage.libraryPlatform,
-                                "v" to storage.libraryVersion,
-                                "bv" to storage.libraryOsVersion
+                                "p" to this.storage.libraryPlatform,
+                                "v" to this.storage.libraryVersion,
+                                "bv" to this.storage.libraryOsVersion
                             ), "sourceConfig", RudderServerConfig::class.java
                         )
                         val response = ongoingConfigFuture?.get()
                         lastRudderServerConfig = response?.body
                         lastErrorMsg = response?.errorBody ?: response?.error?.message
                         return@perform (ongoingConfigFuture?.get()?.status ?: -1) == 200 //TODO -
-                    // if the status is excluded from retry 429 or 500-599
+                        // if the status is excluded from retry 429 or 500-599
                     }) {
                         listeners.forEach { listener ->
                             listener.onDownloaded(it)
@@ -114,16 +113,8 @@ internal class ConfigDownloadServiceImpl @JvmOverloads constructor(
         encodedWriteKey.set(null)
         try {
             ongoingConfigFuture?.cancel(true)
-
         } catch (ex: Exception) {
             // Ignore the exception
         }
-        analyticsRef = WeakReference(null)
     }
-
-    override fun setup(analytics: Analytics) {
-        analyticsRef = WeakReference(analytics)
-    }
-
-
 }

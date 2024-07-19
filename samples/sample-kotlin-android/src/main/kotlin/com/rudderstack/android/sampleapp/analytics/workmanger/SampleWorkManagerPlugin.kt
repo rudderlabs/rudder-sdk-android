@@ -16,8 +16,12 @@ package com.rudderstack.android.sampleapp.analytics.workmanger
 
 import com.rudderstack.android.sync.WorkManagerAnalyticsFactory
 import com.rudderstack.android.sync.WorkerManagerPlugin
+import com.rudderstack.core.Analytics
 
 class SampleWorkManagerPlugin: WorkerManagerPlugin() {
+
+    override lateinit var analytics: Analytics
+
     override val workManagerAnalyticsFactoryClassName: Class<out WorkManagerAnalyticsFactory>
         get() = SampleWorkManagerAnalyticsFactory::class.java
 }

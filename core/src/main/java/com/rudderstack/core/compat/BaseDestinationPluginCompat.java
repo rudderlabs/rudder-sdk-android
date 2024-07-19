@@ -74,5 +74,15 @@ public abstract class BaseDestinationPluginCompat<T> extends BaseDestinationPlug
         public void reset() {
         }
 
+        @NotNull
+        @Override
+        public Analytics getAnalytics() {
+            return null; //we will figure this out later
+        }
+
+        @Override
+        public void setAnalytics(@NotNull Analytics analytics) {
+
+        }
     }
 }

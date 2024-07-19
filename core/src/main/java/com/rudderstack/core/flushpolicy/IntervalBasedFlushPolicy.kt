@@ -16,7 +16,6 @@ package com.rudderstack.core.flushpolicy
 
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
-import java.lang.ref.WeakReference
 import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.atomic.AtomicBoolean
@@ -24,22 +23,32 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
 class IntervalBasedFlushPolicy : FlushPolicy {
+
+    override lateinit var analytics: Analytics
+
     private var thresholdCountDownTimer: Timer? = null
-    private var _analyticsRef = AtomicReference<Analytics>(null)
-    private var flushCall : AtomicReference<Analytics.() -> Unit> = AtomicReference({})
+
+    private var flushCall: AtomicReference<Analytics.() -> Unit> = AtomicReference({})
 
     private val _isShutDown = AtomicBoolean(false)
     private var _currentFlushIntervalAtomic = AtomicLong(0L)
     private val _currentFlushInterval
         get() = _currentFlushIntervalAtomic.get()
     private var periodicTaskScheduler: TimerTask? = null
+
+    override fun setup(analytics: Analytics) {
+        super.setup(analytics)
+        _isShutDown.set(false)
+        thresholdCountDownTimer = Timer(analytics.writeKey + "-IntervalBasedFlushPolicy")
+
+    }
+
     override fun reschedule() {
         if (_isShutDown.get()) return
         rescheduleTimer()
     }
 
     override fun onRemoved() {
-        _analyticsRef.set(null)
         periodicTaskScheduler?.cancel()
         thresholdCountDownTimer?.purge()
         periodicTaskScheduler = null
@@ -55,12 +64,6 @@ class IntervalBasedFlushPolicy : FlushPolicy {
             updateMaxFlush(configuration.maxFlushInterval)
             rescheduleTimer()
         }
-    }
-
-    override fun setup(analytics: Analytics) {
-        _isShutDown.set(false)
-        thresholdCountDownTimer = Timer(analytics.writeKey + "-IntervalBasedFlushPolicy")
-        _analyticsRef.set(analytics)
     }
 
     private fun updateMaxFlush(maxFlushInterval: Long) {
@@ -90,10 +93,8 @@ class IntervalBasedFlushPolicy : FlushPolicy {
     private fun createFlushTimerTask() = object : TimerTask() {
         override fun run() {
             synchronized(this@IntervalBasedFlushPolicy) {
-                if(!_isShutDown.get())
-                    _analyticsRef.get()?.let {
-                        flushCall.get()(it)
-                    }
+                if (!_isShutDown.get())
+                    flushCall.get()(analytics)
             }
         }
     }

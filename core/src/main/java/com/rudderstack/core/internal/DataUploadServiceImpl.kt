@@ -1,21 +1,26 @@
-
 package com.rudderstack.core.internal
 
-import com.rudderstack.core.*
+import com.rudderstack.core.Analytics
+import com.rudderstack.core.Configuration
+import com.rudderstack.core.DataUploadService
+import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.models.Message
 import com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 import com.rudderstack.web.HttpInterceptor
 import com.rudderstack.web.HttpResponse
 import com.rudderstack.web.WebService
 import com.rudderstack.web.WebServiceFactory
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 internal class DataUploadServiceImpl @JvmOverloads constructor(
     private val writeKey: String,
-    webService: WebService? = null
+    webService: WebService? = null,
 ) : DataUploadService {
+
+    override lateinit var analytics: Analytics
+
     private val encodedWriteKey: AtomicReference<String?> = AtomicReference()
     private val webService: AtomicReference<WebService?> = AtomicReference(webService)
     private val currentConfigurationAtomic = AtomicReference<Configuration?>()
@@ -78,10 +83,7 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
     }
 
 
-
-    override fun uploadSync(
-        data: List<Message>, extraInfo: Map<String, String>?
-    ): HttpResponse<out Any>? {
+    override fun uploadSync(data: List<Message>, extraInfo: Map<String, String>?): HttpResponse<out Any>? {
         if (_isPaused.get()) return null
         return currentConfiguration?.let { config ->
             val batchBody = config.createBatchBody(data, extraInfo)
@@ -94,12 +96,13 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
             )?.get()
         }
     }
+
     private fun Configuration.createBatchBody(
         data: List<Message>,
         extraInfo: Map<String, String>?
-    ) : String?{
+    ): String? {
         val sentAt = RudderUtils.timeStamp
-        return mapOf<String, Any>(
+        return mapOf(
             "sentAt" to sentAt, "batch" to data.map {
                 it.sentAt = sentAt
                 it
@@ -109,9 +112,6 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
         }.let {
             jsonAdapter.writeToJson(it, object : RudderTypeAdapter<Map<String, Any>>() {})
         }
-    }
-    override fun setup(analytics: Analytics) {
-        // No-op
     }
 
     override fun updateConfiguration(configuration: Configuration) {
@@ -126,7 +126,6 @@ internal class DataUploadServiceImpl @JvmOverloads constructor(
 
     override fun resume() {
         _isPaused.set(false)
-
     }
 
     override fun shutdown() {

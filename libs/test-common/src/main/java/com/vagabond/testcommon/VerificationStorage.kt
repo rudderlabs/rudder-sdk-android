@@ -7,6 +7,7 @@ import com.rudderstack.core.models.RudderServerConfig
 
 class VerificationStorage : Storage {
 
+    override lateinit var analytics: Analytics
     private var storageQ = mutableListOf<Message>()
     private var _serverConfig: RudderServerConfig? = null
     override fun setStorageCapacity(storageCapacity: Int) {
@@ -98,9 +99,5 @@ class VerificationStorage : Storage {
         get() = "Android"
     override val libraryOsVersion: String
         get() = "13"
-
-    override fun setup(analytics: Analytics) {
-        /* No-op . */
-    }
 
 }
