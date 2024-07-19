@@ -1,7 +1,6 @@
 package com.rudderstack.android.internal.infrastructure
 
 import com.rudderstack.android.AndroidUtils
-import com.rudderstack.android.ConfigurationAndroid
 import com.rudderstack.android.utilities.androidStorage
 import com.rudderstack.android.utilities.contextState
 import com.rudderstack.android.utilities.currentConfigurationAndroid
@@ -55,18 +54,14 @@ internal class ReinstatePlugin : InfrastructurePlugin {
         }
         migrateV1DataIfAvailable()
         if (analytics.currentConfigurationAndroid?.anonymousId == null) {
-            analytics.currentConfigurationAndroid?.fillDefaults()
+            analytics.setAnonymousId(AndroidUtils.generateAnonymousId())
+            analytics.initializeSessionManagement(
+                analytics.androidStorage.sessionId,
+                analytics.androidStorage.lastActiveTimestamp
+            )
             setReinstated(true)
             return
         }
-    }
-
-    private fun ConfigurationAndroid.fillDefaults() {
-        analytics.setAnonymousId(AndroidUtils.generateAnonymousId())
-        analytics.initializeSessionManagement(
-            analytics.androidStorage.sessionId,
-            analytics.androidStorage.lastActiveTimestamp
-        )
     }
 
     private fun reinstateV2FromCache() {
