@@ -301,20 +301,8 @@ class AndroidStorageImpl(
     override val startupQueue: List<Message> = startupQ
     override val optOutTime: Long = _optOutTime.get()
     override val optInTime: Long = _optInTime.get()
-    override val anonymousId: String?
-        get() {
-            if (_anonymousId == null) {
-                _anonymousId = rudderPrefsRepo.getString(RUDDER_ANONYMOUS_ID_KEY)
-            }
-            return _anonymousId
-        }
-    override val userId: String?
-        get() {
-            if (_userId == null) {
-                _userId = rudderPrefsRepo.getString(RUDDER_USER_ID_KEY)
-            }
-            return _userId
-        }
+    override val anonymousId: String = rudderPrefsRepo.getString(RUDDER_ANONYMOUS_ID_KEY)
+    override val userId: String = rudderPrefsRepo.getString(RUDDER_USER_ID_KEY)
     override val sessionId: Long = rudderPrefsRepo.getLong(RUDDER_SESSION_ID_KEY)
     override val lastActiveTimestamp: Long = rudderPrefsRepo.getLong(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY)
     override val advertisingId: String = rudderPrefsRepo.getString(RUDDER_ADVERTISING_ID_KEY)
