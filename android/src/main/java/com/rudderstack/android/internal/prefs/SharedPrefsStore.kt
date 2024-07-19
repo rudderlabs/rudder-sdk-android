@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
 import androidx.core.content.edit
+import com.rudderstack.android.utilities.empty
 import java.io.File
 
 class SharedPrefsStore(
