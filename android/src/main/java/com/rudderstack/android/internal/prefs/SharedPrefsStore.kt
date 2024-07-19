@@ -15,7 +15,7 @@ class SharedPrefsStore(
     private val preferences: SharedPreferences = applicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
 
     override fun getInt(key: String): Int {
-        return preferences.getInt(key, 0)
+        return preferences.getInt(key, -1)
     }
 
     override fun getBoolean(key: String): Boolean {
