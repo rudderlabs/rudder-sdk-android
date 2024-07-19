@@ -48,8 +48,16 @@ class AppInstallUpdateTrackerPlugin : Plugin {
     }
 
     private fun getAppVersion(analytics: Analytics): AppVersion {
-        val previousBuild: Int? = analytics.androidStorage.build
-        val previousVersionName: String? = analytics.androidStorage.versionName
+        val previousBuild: Int = if (analytics.androidStorage.build != -1) {
+            analytics.androidStorage.build
+        } else {
+            DEFAULT_BUILD
+        }
+        val previousVersionName: String = if (analytics.androidStorage.versionName.isEmpty()) {
+            analytics.androidStorage.versionName
+        } else {
+            DEFAULT_VERSION_NAME
+        }
         var currentBuild: Int? = null
         var currentVersionName: String? = null
 
@@ -71,8 +79,8 @@ class AppInstallUpdateTrackerPlugin : Plugin {
         }
 
         return AppVersion(
-            previousBuild = previousBuild ?: DEFAULT_BUILD,
-            previousVersionName = previousVersionName ?: DEFAULT_VERSION_NAME,
+            previousBuild = previousBuild,
+            previousVersionName = previousVersionName,
             currentBuild = currentBuild ?: DEFAULT_BUILD,
             currentVersionName = currentVersionName ?: DEFAULT_VERSION_NAME,
         )
