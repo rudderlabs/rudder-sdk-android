@@ -6,22 +6,22 @@ import com.rudderstack.core.models.MessageContext
 
 interface AndroidStorage : Storage {
     val v1OptOut: Boolean
-    val anonymousId: String?
-    val userId: String?
-    val sessionId: Long?
-    val lastActiveTimestamp: Long?
-    val advertisingId: String?
-    val v1AnonymousId: String?
-    val v1SessionId: Long?
-    val v1LastActiveTimestamp: Long?
+    val anonymousId: String
+    val userId: String
+    val sessionId: Long
+    val lastActiveTimestamp: Long
+    val advertisingId: String
+    val v1AnonymousId: String
+    val v1SessionId: Long
+    val v1LastActiveTimestamp: Long
     val v1Traits: Map<String, Any?>?
     val v1ExternalIds: List<Map<String, String>>?
-    val v1AdvertisingId: String?
+    val v1AdvertisingId: String
     val trackAutoSession: Boolean
-    val build: Int?
-    val v1Build: Int?
-    val versionName: String?
-    val v1VersionName: String?
+    val build: Int
+    val v1Build: Int
+    val versionName: String
+    val v1VersionName: String
     /**
      * Platform specific implementation of caching context. This can be done locally too.
      *
