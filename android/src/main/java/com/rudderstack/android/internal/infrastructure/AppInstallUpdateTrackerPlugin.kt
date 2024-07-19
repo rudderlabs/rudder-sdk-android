@@ -53,9 +53,7 @@ class AppInstallUpdateTrackerPlugin : Plugin {
         } else {
             DEFAULT_BUILD
         }
-        val previousVersionName: String = if (analytics.androidStorage.versionName.isEmpty()) {
-            analytics.androidStorage.versionName
-        } else {
+        val previousVersionName: String = analytics.androidStorage.versionName.ifEmpty {
             DEFAULT_VERSION_NAME
         }
         var currentBuild: Int? = null
