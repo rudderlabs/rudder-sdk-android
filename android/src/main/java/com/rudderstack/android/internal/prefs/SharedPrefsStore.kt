@@ -22,7 +22,7 @@ class SharedPrefsStore(
     }
 
     override fun getString(key: String): String {
-        return preferences.getString(key, "") ?: ""
+        return preferences.getString(key, String.empty()) ?: String.empty()
     }
 
     override fun getLong(key: String): Long {
