@@ -298,30 +298,51 @@ class AndroidStorageImpl(
         }
     }
 
-    override val startupQueue: List<Message> = startupQ
-    override val optOutTime: Long = _optOutTime.get()
-    override val optInTime: Long = _optInTime.get()
-    override val anonymousId: String = rudderPrefsRepo.getString(RUDDER_ANONYMOUS_ID_KEY)
-    override val userId: String = rudderPrefsRepo.getString(RUDDER_USER_ID_KEY)
-    override val sessionId: Long = rudderPrefsRepo.getLong(RUDDER_SESSION_ID_KEY)
-    override val lastActiveTimestamp: Long = rudderPrefsRepo.getLong(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY)
-    override val advertisingId: String = rudderPrefsRepo.getString(RUDDER_ADVERTISING_ID_KEY)
-    override val trackAutoSession: Boolean = rudderPrefsRepo.getBoolean(RUDDER_TRACK_AUTO_SESSION_KEY)
-    override val build: Int = rudderPrefsRepo.getInt(RUDDER_APPLICATION_BUILD_KEY)
-    override val versionName: String = rudderPrefsRepo.getString(RUDDER_APPLICATION_VERSION_KEY)
-    override val isOptedOut: Boolean = rudderPrefsRepo.getBoolean(RUDDER_OPT_STATUS_KEY)
+    override val startupQueue: List<Message>
+        get() = startupQ
+    override val optOutTime: Long
+        get() = _optOutTime.get()
+    override val optInTime: Long
+        get() = _optInTime.get()
+    override val anonymousId: String
+        get() = rudderPrefsRepo.getString(RUDDER_ANONYMOUS_ID_KEY)
+    override val userId: String
+        get() = rudderPrefsRepo.getString(RUDDER_USER_ID_KEY)
+    override val sessionId: Long
+        get() = rudderPrefsRepo.getLong(RUDDER_SESSION_ID_KEY)
+    override val lastActiveTimestamp: Long
+        get() = rudderPrefsRepo.getLong(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY)
+    override val advertisingId: String
+        get() = rudderPrefsRepo.getString(RUDDER_ADVERTISING_ID_KEY)
+    override val trackAutoSession: Boolean
+        get() = rudderPrefsRepo.getBoolean(RUDDER_TRACK_AUTO_SESSION_KEY)
+    override val build: Int
+        get() = rudderPrefsRepo.getInt(RUDDER_APPLICATION_BUILD_KEY)
+    override val versionName: String
+        get() = rudderPrefsRepo.getString(RUDDER_APPLICATION_VERSION_KEY)
+    override val isOptedOut: Boolean
+        get() = rudderPrefsRepo.getBoolean(RUDDER_OPT_STATUS_KEY)
 
-    override val v1AnonymousId: String = oldRudderPrefs.getString(RUDDER_ANONYMOUS_ID_KEY)
-    override val v1SessionId: Long = oldRudderPrefs.getLong(RUDDER_SESSION_ID_KEY)
-    override val v1LastActiveTimestamp: Long = oldRudderPrefs.getLong(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY)
-    override val v1AdvertisingId: String = oldRudderPrefs.getString(RUDDER_ADVERTISING_ID_KEY)
-    override val v1Build: Int = oldRudderPrefs.getInt(RUDDER_APPLICATION_BUILD_KEY)
-    override val v1VersionName: String = oldRudderPrefs.getString(RUDDER_APPLICATION_VERSION_KEY)
-    override val v1OptOut: Boolean = oldRudderPrefs.getBoolean(RUDDER_OPT_STATUS_KEY)
-    override val v1Traits: Map<String, Any?>? = oldRudderPrefs.getString(RUDDER_TRAITS_KEY).let {
+    override val v1AnonymousId: String
+        get() = oldRudderPrefs.getString(RUDDER_ANONYMOUS_ID_KEY)
+    override val v1SessionId: Long
+        get() = oldRudderPrefs.getLong(RUDDER_SESSION_ID_KEY)
+    override val v1LastActiveTimestamp: Long
+        get() = oldRudderPrefs.getLong(RUDDER_SESSION_LAST_ACTIVE_TIMESTAMP_KEY)
+    override val v1AdvertisingId: String
+        get() = oldRudderPrefs.getString(RUDDER_ADVERTISING_ID_KEY)
+    override val v1Build: Int
+        get() = oldRudderPrefs.getInt(RUDDER_APPLICATION_BUILD_KEY)
+    override val v1VersionName: String
+        get() = oldRudderPrefs.getString(RUDDER_APPLICATION_VERSION_KEY)
+    override val v1OptOut: Boolean
+        get() = oldRudderPrefs.getBoolean(RUDDER_OPT_STATUS_KEY)
+    override val v1Traits: Map<String, Any?>?
+        get() = oldRudderPrefs.getString(RUDDER_TRAITS_KEY).let {
         jsonAdapter?.readJson(it, object : RudderTypeAdapter<Map<String, Any?>>() {})
     }
-    override val v1ExternalIds: List<Map<String, String>>? = oldRudderPrefs.getString(RUDDER_EXTERNAL_ID_KEY).let {
+    override val v1ExternalIds: List<Map<String, String>>?
+        get() = oldRudderPrefs.getString(RUDDER_EXTERNAL_ID_KEY).let {
         jsonAdapter?.readJson(it, object : RudderTypeAdapter<List<Map<String, String>>>() {})
     }
 

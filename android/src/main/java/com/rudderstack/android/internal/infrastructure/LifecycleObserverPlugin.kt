@@ -59,7 +59,7 @@ internal class LifecycleObserverPlugin(
                         _isFirstLaunch.getAndSet(false).also { isFirstLaunch ->
                             add("from_background" to !isFirstLaunch)
                         }.takeIf { it }?.let {
-                            add("version" to (analytics.androidStorage.versionName ?: ""))
+                            add("version" to (analytics.androidStorage.versionName))
                         }
                     }
                 }
