@@ -39,9 +39,8 @@ class CustomDateAdapterMoshi : JsonAdapter<Date>() {
     override fun toJson(writer: JsonWriter, value: Date?) {
         if (value != null) {
             synchronized(this) {
-                writer.value(DateUtils.toIso8601(value) )
+                writer.value(DateUtils.toIso8601(value))
             }
         }
     }
-
 }

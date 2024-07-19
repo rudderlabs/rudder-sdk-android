@@ -69,8 +69,7 @@ internal class ManifestConfigLoader {
      */
     @VisibleForTesting
     internal fun load(data: Bundle?): Configuration {
-
-        val config = Configuration(LibraryMetadata("","","", ""))
+        val config = Configuration(LibraryMetadata("", "", "", ""))
 
         if (data != null) {
             loadAppConfig(config, data)
@@ -83,15 +82,15 @@ internal class ManifestConfigLoader {
                 maxReportedThreads = data.getInt(MAX_REPORTED_THREADS, maxReportedThreads)
                 launchDurationMillis = data.getInt(
                     LAUNCH_CRASH_THRESHOLD_MS,
-                    launchDurationMillis.toInt()
+                    launchDurationMillis.toInt(),
                 ).toLong()
                 launchDurationMillis = data.getInt(
                     LAUNCH_DURATION_MILLIS,
-                    launchDurationMillis.toInt()
+                    launchDurationMillis.toInt(),
                 ).toLong()
                 sendLaunchCrashesSynchronously = data.getBoolean(
                     SEND_LAUNCH_CRASHES_SYNCHRONOUSLY,
-                    sendLaunchCrashesSynchronously
+                    sendLaunchCrashesSynchronously,
                 )
 //                isAttemptDeliveryOnCrash = data.getBoolean(
 //                    ATTEMPT_DELIVERY_ON_CRASH,
@@ -123,7 +122,7 @@ internal class ManifestConfigLoader {
     private fun getStrArray(
         data: Bundle,
         key: String,
-        default: Set<String>?
+        default: Set<String>?,
     ): Set<String>? {
         val delimitedStr = data.getString(key)
 

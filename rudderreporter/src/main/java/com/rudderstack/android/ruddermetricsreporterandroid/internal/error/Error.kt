@@ -20,8 +20,8 @@ class Error @JvmOverloads internal constructor(
     var errorClass: String,
     var errorMessage: String?,
     stacktrace: Stacktrace,
-    var type: ErrorType = ErrorType.ANDROID
-){
+    var type: ErrorType = ErrorType.ANDROID,
+) {
 
     internal val stacktrace: List<Stackframe> = stacktrace.trace
     internal companion object {
@@ -31,8 +31,11 @@ class Error @JvmOverloads internal constructor(
                     // Somehow it's possible for stackTrace to be null in rare cases
                     val stacktrace = currentEx.stackTrace ?: arrayOf<StackTraceElement>()
                     val trace = Stacktrace(stacktrace, projectPackages, logger)
-                     return@mapTo Error(currentEx.javaClass.name, currentEx.localizedMessage,
-                         trace)
+                    return@mapTo Error(
+                        currentEx.javaClass.name,
+                        currentEx.localizedMessage,
+                        trace,
+                    )
                 }
         }
     }
@@ -40,12 +43,12 @@ class Error @JvmOverloads internal constructor(
     override fun toString(): String {
         return "Error(errorClass='$errorClass', errorMessage=$errorMessage, stacktrace=$stacktrace, type=$type)"
     }
-internal fun toMap(): Map<String, Any?> {
+    internal fun toMap(): Map<String, Any?> {
         return mapOf(
             "errorClass" to errorClass,
             "message" to errorMessage,
             "stacktrace" to stacktrace.map { it.toMap() },
-            "type" to type.toString()
+            "type" to type.toString(),
         )
     }
 }

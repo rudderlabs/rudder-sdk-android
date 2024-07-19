@@ -16,7 +16,6 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid.error
 
-import com.rudderstack.android.ruddermetricsreporterandroid.JSerialize
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.MetadataAware
 import java.util.concurrent.ConcurrentHashMap
 
@@ -26,9 +25,9 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * Diagnostic information is presented on your Bugsnag dashboard in tabs.
  */
-data class Metadata @JvmOverloads constructor (
-    internal val store: MutableMap<String, MutableMap<String, Any>> = ConcurrentHashMap()
-) : MetadataAware{
+data class Metadata @JvmOverloads constructor(
+    internal val store: MutableMap<String, MutableMap<String, Any>> = ConcurrentHashMap(),
+) : MetadataAware {
 
     override fun addMetadata(section: String, value: Map<String, Any?>) {
         value.entries.forEach {
@@ -111,7 +110,7 @@ data class Metadata @JvmOverloads constructor (
         private fun getMergeValue(
             result: MutableMap<String, Any>,
             key: String,
-            map: Map<String, Any>
+            map: Map<String, Any>,
         ) {
             val baseValue = result[key]
             val overridesValue = map[key]
@@ -134,9 +133,7 @@ data class Metadata @JvmOverloads constructor (
     }
     fun copy(): Metadata {
         return this.copy(store = toMap())
-
     }
-
 
 //    fun trimMetadataStringsTo(maxStringLength: Int): TrimMetrics {
 //        var stringCount = 0

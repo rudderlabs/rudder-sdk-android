@@ -12,19 +12,11 @@
  * permissions and limitations under the License.
  */
 
-package com.rudderstack.web
+package com.rudderstack.web.models
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.Json
-import junit.framework.TestSuite
-import org.junit.runner.RunWith
-import org.junit.runners.Suite
-
-@RunWith(Suite::class)
-@Suite.SuiteClasses(WebApiTestJackson::class, WebApiTestGson::class, WebApiTestMoshi::class)
-class WebApiTestSuite : TestSuite() {
-}
 
 data class Info(
     @Json(name = "license_links")
@@ -38,5 +30,5 @@ data class Info(
     @Json(name = "version")
     @JsonProperty("version")
     @SerializedName("version")
-    val version: String
+    val version: String,
 )

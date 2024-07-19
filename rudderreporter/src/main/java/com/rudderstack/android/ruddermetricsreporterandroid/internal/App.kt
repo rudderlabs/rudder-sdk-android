@@ -2,7 +2,6 @@ package com.rudderstack.android.ruddermetricsreporterandroid.internal
 
 import com.rudderstack.android.ruddermetricsreporterandroid.internal.error.ImmutableConfig
 
-
 /**
  * Stateless information set by the notifier about your app can be found on this class. These values
  * can be accessed and amended if necessary.
@@ -33,11 +32,10 @@ open class App internal constructor(
      */
     var codeBundleId: String?,
 
-
     /**
      * The version code of the application set in [Configuration.versionCode]
      */
-    var versionCode: String?
+    var versionCode: String?,
 ) {
 
     internal constructor(
@@ -46,13 +44,13 @@ open class App internal constructor(
         id: String?,
         releaseStage: String?,
         version: String?,
-        codeBundleId: String?
+        codeBundleId: String?,
     ) : this(
         binaryArch,
         id,
         releaseStage,
         version,
         codeBundleId,
-        config.libraryMetadata.versionCode
+        config.libraryMetadata.versionCode,
     )
 }

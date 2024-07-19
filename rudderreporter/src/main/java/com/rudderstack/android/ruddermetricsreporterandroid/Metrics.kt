@@ -14,14 +14,14 @@
 
 package com.rudderstack.android.ruddermetricsreporterandroid
 
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.Counter
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter
 import com.rudderstack.android.ruddermetricsreporterandroid.metrics.Meter
 
 interface Metrics {
     fun getMeter(): Meter
+
     @Deprecated("Use [RudderReporter.syncer] instead")
-    fun getSyncer():Syncer
+    fun getSyncer(): Syncer
 
     /**
      * Enables or disables recording of metrics. However unless shut down, already recorded

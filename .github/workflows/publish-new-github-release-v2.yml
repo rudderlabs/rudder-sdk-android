@@ -77,7 +77,7 @@ jobs:
           github_token: ${{ secrets.PAT }}
           pr_title: 'chore(release): pulling master-v2 into develop-v2 post release v${{ steps.extract-version-v2.outputs.release_version }}'
           pr_body: ':crown: *An automated PR*'
-          pr_reviewer: 'itsdebs'
+          pr_reviewer: '@rudderlabs/sdk-android'
 
       - name: Delete hotfix release branch v2
         uses: koj-co/delete-merged-action@master

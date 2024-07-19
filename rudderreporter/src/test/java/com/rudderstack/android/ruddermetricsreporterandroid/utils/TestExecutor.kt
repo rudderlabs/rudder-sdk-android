@@ -20,16 +20,16 @@ import java.util.concurrent.TimeUnit
 class TestExecutor : AbstractExecutorService() {
     private var _isShutdown = false
     override fun execute(command: Runnable?) {
-command?.run()
+        command?.run()
     }
 
     override fun shutdown() {
-        //No op
+        // No op
         _isShutdown = true
     }
 
     override fun shutdownNow(): MutableList<Runnable> {
-            // No op
+        // No op
         shutdown()
         return mutableListOf()
     }

@@ -36,7 +36,7 @@ data class SampleEntity(
     val count: Int,
     val items: List<String>,
 ) : Entity {
-    companion object{
+    companion object {
         const val TABLE_NAME = "sample"
         const val FIELD_NAME = "name"
         const val FIELD_COUNT = "count"
