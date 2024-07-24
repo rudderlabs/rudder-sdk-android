@@ -31,7 +31,8 @@ public class ExponentialBackOff {
      */
     public long nextDelayInMillis() {
         int base = 2;
-        long delayInSecs = (long) Math.pow(base, attempt++);
+        int initialDelayInSecs = 3;
+        long delayInSecs = (long) (initialDelayInSecs * Math.pow(base, attempt++));
         long exponentialIntervalInSecs = Math.min(maxDelayInSecs, withJitter(delayInSecs));
 
         // Reset the backoff if the delay reaches or exceeds the maximum limit
