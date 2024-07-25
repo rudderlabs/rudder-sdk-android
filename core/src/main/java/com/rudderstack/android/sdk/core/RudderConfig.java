@@ -210,7 +210,7 @@ public class RudderConfig {
             this.dbEncryption = dbEncryption;
         }
 
-        if (eventDispatchSleepInterval <= this.sleepTimeOut) {
+        if (eventDispatchSleepInterval <= this.sleepTimeOut && eventDispatchSleepInterval >= Utils.MIN_SLEEP_TIMEOUT) {
             this.eventDispatchSleepInterval = eventDispatchSleepInterval;
         } else {
             this.eventDispatchSleepInterval = Constants.EVENT_DISPATCH_SLEEP_INTERVAL;
