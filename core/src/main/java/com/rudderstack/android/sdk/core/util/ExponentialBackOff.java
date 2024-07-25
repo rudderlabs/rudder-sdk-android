@@ -2,7 +2,7 @@ package com.rudderstack.android.sdk.core.util;
 
 import androidx.annotation.VisibleForTesting;
 
-import java.util.Random;
+import java.security.SecureRandom;
 
 /**
  * This class implements an exponential backoff strategy with jitter for handling retries.
@@ -14,7 +14,7 @@ import java.util.Random;
 public class ExponentialBackOff {
     private int attempt = 0;
     private final int maxDelayInSecs;
-    private final Random random;
+    private final SecureRandom random;
 
     /**
      * Constructor to initialize the ExponentialBackOff with a maximum delay.
@@ -23,7 +23,7 @@ public class ExponentialBackOff {
      */
     public ExponentialBackOff(int maxDelayInSecs) {
         this.maxDelayInSecs = maxDelayInSecs;
-        this.random = new Random();
+        this.random = new SecureRandom();
     }
 
     /**
