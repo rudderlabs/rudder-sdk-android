@@ -1,5 +1,7 @@
 package com.rudderstack.android.sdk.core.util;
 
+import androidx.annotation.VisibleForTesting;
+
 import java.util.Random;
 
 /**
@@ -7,7 +9,7 @@ import java.util.Random;
  * It allows for configurable maximum delay and includes methods to calculate the next delay
  * with jitter and reset the backoff attempts.
  * When the calculated delay reaches or exceeds the maximum delay limit, the backoff resets
- * and starts again from 1 second.
+ * and starts again from beginning.
  */
 public class ExponentialBackOff {
     private int attempt = 0;
@@ -43,7 +45,8 @@ public class ExponentialBackOff {
         return exponentialIntervalInSecs * 1000;
     }
 
-    private long withJitter(long delayInSecs) {
+    @VisibleForTesting
+    protected long withJitter(long delayInSecs) {
         long jitter = random.nextInt((int) delayInSecs);
         return delayInSecs + jitter;
     }
