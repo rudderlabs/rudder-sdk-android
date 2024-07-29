@@ -10,6 +10,7 @@ import android.net.ParseException;
 import android.net.Uri;
 import android.os.BadParcelableException;
 import android.os.Build;
+import android.os.SystemClock;
 import android.text.TextUtils;
 
 import com.google.gson.reflect.TypeToken;
@@ -62,6 +63,14 @@ public class Utils {
 
     public static Long getCurrentTimeInSecondsLong() {
         return new Long(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+    }
+
+    public static long getUpTimeInMillis() {
+        return SystemClock.uptimeMillis();
+    }
+
+    public static long getSleepDurationInSecond(long startTime, long endTime) {
+        return (endTime - startTime)/1000;
     }
 
     public static String getCurrentTimeSeconds() {

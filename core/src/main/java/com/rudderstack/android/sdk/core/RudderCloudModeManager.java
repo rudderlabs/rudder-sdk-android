@@ -38,7 +38,7 @@ public class RudderCloudModeManager {
             @Override
             public void run() {
                 super.run();
-                int sleepCount = 0;
+                long upTimeInMillis = Utils.getUpTimeInMillis();
                 Result result = null;
                 final ArrayList<Integer> messageIds = new ArrayList<>();
                 final ArrayList<String> messages = new ArrayList<>();
@@ -49,6 +49,7 @@ public class RudderCloudModeManager {
                     messages.clear();
                     result = null;
                     maintainDBThreshold();
+                    long sleepCount = Utils.getSleepDurationInSecond(upTimeInMillis, Utils.getUpTimeInMillis());
                     RudderLogger.logDebug("CloudModeManager: cloudModeProcessor: Fetching events to flush to server");
                     synchronized (MessageUploadLock.UPLOAD_LOCK) {
                         dbManager.fetchCloudModeEventsFromDB(messageIds, messages, config.getFlushQueueSize());
@@ -64,19 +65,20 @@ public class RudderCloudModeManager {
                                     ReportManager.incrementCloudModeUploadSuccessCounter(messageIds.size());
                                     dbManager.markCloudModeDone(messageIds);
                                     dbManager.runGcForEvents();
-                                    sleepCount = 0;
-                                    exponentialBackOff.resetBackOff();
+                                    exponentialBackOff.resetBackOff();                                  
+                                    upTimeInMillis = Utils.getUpTimeInMillis();
+                                    sleepCount = Utils.getSleepDurationInSecond(upTimeInMillis, Utils.getUpTimeInMillis());
                                 } else {
                                     incrementCloudModeUploadRetryCounter(1);
                                 }
                             }
                         }
                     }
-                    sleepCount += 1;
                     RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: SleepCount: %d", sleepCount));
                     try {
                         if (result == null) {
-                            Thread.sleep(1000);
+                            RudderLogger.logDebug("CloudModeManager: cloudModeProcessor: Sleeping for next: " + config.getEventDispatchSleepInterval() + "ms");
+                            Thread.sleep(config.getEventDispatchSleepInterval());
                             continue;
                         }
                         switch (result.status) {
