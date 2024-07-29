@@ -515,20 +515,21 @@ abstract class AnalyticsTest {
         }
         val isDone = AtomicBoolean(false)
         var msgCounter = 1
-        val assertionPlugin = Plugin {
-            val msg = it.message()
-            assertThat(
-                msg, allOf(
-                    Matchers.isA(TrackMessage::class.java),
-                    hasProperty("eventName", `is`("event:${msgCounter++}"))
+        val assertPlugin = object : Plugin {
+            override lateinit var analytics: Analytics
+            override fun intercept(chain: Plugin.Chain): Message {
+                assertThat(
+                    chain.message(), allOf(
+                        Matchers.isA(TrackMessage::class.java),
+                        hasProperty("eventName", `is`("event:${msgCounter++}"))
+                    )
                 )
-            )
-            Thread.sleep(20L) //a minor delay
-            if (events.size < msgCounter) isDone.set(true)
-            it.proceed(it.message())
+                Thread.sleep(20L) //a minor delay
+                if (events.size < msgCounter) isDone.set(true)
+                return chain.proceed(chain.message())
+            }
         }
-
-        analytics.addPlugin(assertionPlugin)
+        analytics.addPlugin(assertPlugin)
         for (i in events) {
             analytics.track(i)
         }
@@ -778,11 +779,15 @@ abstract class AnalyticsTest {
     fun `test custom plugin`() {
         println("running test test custom plugin")
         val isDone = AtomicBoolean(false)
-        val customPlugin = Plugin {
-            println("inside custom plugin")
-            isDone.set(true)
-            it.proceed(it.message())
+        val customPlugin = object : Plugin {
+            override lateinit var analytics: Analytics
+            override fun intercept(chain: Plugin.Chain): Message {
+                println("inside custom plugin")
+                isDone.set(true)
+                return chain.proceed(chain.message())
+            }
         }
+
         val waitUntil = AtomicBoolean(false)
         analytics.addCallback(object : Callback {
             override fun success(message: Message?) {

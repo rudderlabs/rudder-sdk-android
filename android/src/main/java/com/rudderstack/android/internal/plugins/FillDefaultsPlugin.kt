@@ -4,10 +4,8 @@ import com.rudderstack.android.utilities.androidStorage
 import com.rudderstack.android.utilities.contextState
 import com.rudderstack.android.utilities.currentConfigurationAndroid
 import com.rudderstack.core.Analytics
-import com.rudderstack.core.Plugin
 import com.rudderstack.core.MissingPropertiesException
-import com.rudderstack.core.models.updateWith
-import com.rudderstack.core.models.withExternalIdsRemoved
+import com.rudderstack.core.Plugin
 import com.rudderstack.core.models.*
 
 /**
@@ -26,11 +24,8 @@ import com.rudderstack.core.models.*
  */
 internal class FillDefaultsPlugin : Plugin {
 
-    private var _analytics: Analytics? = null
-    override fun setup(analytics: Analytics) {
-        super.setup(analytics)
-        _analytics = analytics
-    }
+    override lateinit var analytics: Analytics
+
     /**
      * Fill default details for [Message]
      * If message contains context, this will replace the ones present
@@ -38,11 +33,11 @@ internal class FillDefaultsPlugin : Plugin {
      */
     @Throws(MissingPropertiesException::class)
     private inline fun <reified T : Message> T.withDefaults(): T {
-        val anonId = this.anonymousId ?: _analytics?.currentConfigurationAndroid?.anonymousId
-        val userId = this.userId ?: _analytics?.androidStorage?.userId
+        val anonId = this.anonymousId ?: analytics.currentConfigurationAndroid?.anonymousId
+        val userId = this.userId ?: analytics.androidStorage.userId
         if (anonId == null && userId == null) {
             val ex = MissingPropertiesException("Either Anonymous Id or User Id must be present");
-            _analytics?.currentConfigurationAndroid?.logger?.error(
+            analytics.currentConfigurationAndroid?.logger?.error(
                 log = "Missing both anonymous Id and user Id. Use settings to update " + "anonymous id in Analytics constructor",
                 throwable = ex
             )
@@ -50,22 +45,24 @@ internal class FillDefaultsPlugin : Plugin {
         }
         //copying top level context to message context
         val newContext =
-                // in case of alias we purposefully remove traits from context
-                _analytics?.contextState?.value?.let {
-                    if (this is AliasMessage && this.userId != _analytics?.androidStorage?.userId) it.updateWith(
-                        traits = mapOf()
-                    ) else it
-                } selectiveReplace context.let {
-                    if (this !is IdentifyMessage) {
-                        // remove any external ids present in the message
-                        // this is in accordance to v1
-                        it?.withExternalIdsRemoved()
-                    } else it
-                }
+            // in case of alias we purposefully remove traits from context
+            analytics.contextState?.value?.let {
+                if (this is AliasMessage && this.userId != analytics.androidStorage.userId) it.updateWith(
+                    traits = mapOf()
+                ) else it
+            } selectiveReplace context.let {
+                if (this !is IdentifyMessage) {
+                    // remove any external ids present in the message
+                    // this is in accordance to v1
+                    it?.withExternalIdsRemoved()
+                } else it
+            }
 
-        return (this.copy(context = newContext,
+        return (this.copy(
+            context = newContext,
             anonymousId = anonId,
-            userId = userId) as T)
+            userId = userId
+        ) as T)
     }
 
     private infix fun MessageContext?.selectiveReplace(context: MessageContext?): MessageContext? {

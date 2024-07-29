@@ -1,10 +1,13 @@
 package com.rudderstack.core.internal.plugins
 
-import com.rudderstack.core.models.*
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.DestinationPlugin
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOption
 import com.rudderstack.core.minusWrtKeys
+import com.rudderstack.core.models.Message
+import com.rudderstack.core.models.MessageContext
+import com.rudderstack.core.models.externalIds
 import com.rudderstack.core.models.updateWith
 
 /**
@@ -21,6 +24,8 @@ import com.rudderstack.core.models.updateWith
  * @param options
  */
 internal class RudderOptionPlugin(private val options: RudderOption) : Plugin {
+
+    override lateinit var analytics: Analytics
 
     override fun intercept(chain: Plugin.Chain): Message {
         val msg = chain.message().let { oldMsg ->
@@ -62,7 +67,6 @@ internal class RudderOptionPlugin(private val options: RudderOption) : Plugin {
 
     private fun validIntegrations(): Map<String, Boolean> {
         return options.integrations.ifEmpty { mapOf("All" to true) }
-
     }
 
     private fun Message.updateContext(options: RudderOption): MessageContext? {

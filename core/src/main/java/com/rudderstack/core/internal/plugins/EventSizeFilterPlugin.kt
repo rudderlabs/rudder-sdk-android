@@ -1,5 +1,6 @@
 package com.rudderstack.core.internal.plugins
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.Configuration
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderUtils.MAX_EVENT_SIZE
@@ -12,6 +13,8 @@ import java.util.concurrent.atomic.AtomicReference
  * A plugin to filter out events that exceed the maximum size limit.
  */
 class EventSizeFilterPlugin : Plugin {
+    
+    override lateinit var analytics: Analytics
 
     private val currentConfigurationAtomic = AtomicReference<Configuration?>()
     private val currentConfiguration

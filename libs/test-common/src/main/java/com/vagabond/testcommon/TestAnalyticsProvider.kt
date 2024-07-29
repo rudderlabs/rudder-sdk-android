@@ -14,10 +14,13 @@ import com.rudderstack.rudderjsonadapter.JsonAdapter
 private const val DUMMY_WRITE_KEY = "DUMMY_WRITE_KEY"
 private var currentTestPlugin: Plugin? = null
 private var inputs = listOf<Message>()
-val inputVerifyPlugin = Plugin { chain ->
-    chain.proceed(chain.message().also {
-        inputs += it.copy()
-    })
+val inputVerifyPlugin = object : Plugin {
+    override lateinit var analytics: Analytics
+    override fun intercept(chain: Plugin.Chain): Message {
+        return chain.proceed(chain.message().also {
+            inputs += it.copy()
+        })
+    }
 }
 
 fun generateTestAnalytics(jsonAdapter: JsonAdapter): Analytics {

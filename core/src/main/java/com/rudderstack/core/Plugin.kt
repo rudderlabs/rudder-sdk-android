@@ -8,7 +8,14 @@ import com.rudderstack.core.models.RudderServerConfig
  * responses coming back in. Typically plugins transforms or logs the data sent over to destinations.
  *
  */
-fun interface Plugin {
+interface Plugin {
+
+    var analytics: Analytics
+
+    fun setup(analytics: Analytics) {
+        this.analytics = analytics
+    }
+
     /**
      * Joins ("chains") the plugins for a particular message
      *
@@ -84,13 +91,6 @@ fun interface Plugin {
     fun intercept(chain: Chain): Message
 
     /**
-     * Setup code for this plugin
-     * Helps in changing settings, etc.
-     * @param analytics The analytics object this plugin is added to.
-     */
-    fun setup(analytics: Analytics) {}
-
-    /**
      * Called when settings is updated
      *
      * @param configuration [Configuration] globally set for the sdk
@@ -110,6 +110,4 @@ fun interface Plugin {
      *
      */
     fun reset() {}
-
-
 }

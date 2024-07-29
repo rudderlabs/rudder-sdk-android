@@ -2,13 +2,13 @@ package com.rudderstack.android.internal.infrastructure
 
 import android.content.pm.PackageManager
 import android.os.Build
+import com.rudderstack.android.storage.AndroidStorage
 import com.rudderstack.android.utilities.androidStorage
 import com.rudderstack.android.utilities.currentConfigurationAndroid
-import com.rudderstack.android.storage.AndroidStorage
-import com.rudderstack.core.models.AppVersion
 import com.rudderstack.core.Analytics
 import com.rudderstack.core.InfrastructurePlugin
 import com.rudderstack.core.Plugin
+import com.rudderstack.core.models.AppVersion
 import com.rudderstack.core.models.Message
 
 private const val PREVIOUS_VERSION = "previous_version"
@@ -31,7 +31,7 @@ private const val DEFAULT_VERSION_NAME = ""
  * * */
 class AppInstallUpdateTrackerPlugin : Plugin {
 
-    private var analytics: Analytics? = null
+    override lateinit var analytics: Analytics
     private lateinit var appVersion: AppVersion
     override fun intercept(chain: Plugin.Chain): Message {
         // no change made to message
@@ -39,10 +39,10 @@ class AppInstallUpdateTrackerPlugin : Plugin {
     }
 
     override fun setup(analytics: Analytics) {
-        this.analytics = analytics
+        super.setup(analytics)
         this.appVersion = getAppVersion(analytics)
         storeVersionNameAndBuild(analytics.androidStorage)
-        if (this.analytics?.currentConfigurationAndroid?.trackLifecycleEvents == true) {
+        if (this.analytics.currentConfigurationAndroid?.trackLifecycleEvents == true) {
             trackApplicationStatus()
         }
     }
@@ -100,7 +100,7 @@ class AppInstallUpdateTrackerPlugin : Plugin {
     }
 
     private fun sendApplicationInstalledEvent() {
-        this.analytics?.logger?.debug(log = "Tracking Application Installed event")
+        this.analytics.logger.debug(log = "Tracking Application Installed event")
         val trackProperties = mutableMapOf<String, Any>()
         trackProperties[VERSION] = this.appVersion.currentVersionName
         trackProperties[BUILD] = this.appVersion.currentBuild
@@ -109,26 +109,21 @@ class AppInstallUpdateTrackerPlugin : Plugin {
     }
 
     private fun sendApplicationUpdatedEvent() {
-        this.analytics?.logger?.debug(log = "Tracking Application Updated event")
+        this.analytics.logger.debug(log = "Tracking Application Updated event")
         val trackProperties = mutableMapOf<String, Any>()
         trackProperties[PREVIOUS_VERSION] = this.appVersion.previousVersionName
         trackProperties[PREVIOUS_BUILD] = this.appVersion.previousBuild
         trackProperties[VERSION] = this.appVersion.currentVersionName
         trackProperties[BUILD] = this.appVersion.currentBuild
-
         sendEvent(EVENT_NAME_APPLICATION_UPDATED, trackProperties)
     }
 
     private fun sendEvent(eventName: String, properties: Map<String, Any>) {
-        analytics?.track {
+        analytics.track {
             event(eventName)
             trackProperties {
                 add(properties)
             }
         }
-    }
-
-    override fun onShutDown() {
-        analytics = null
     }
 }

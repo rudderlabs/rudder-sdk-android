@@ -1,10 +1,12 @@
 package com.rudderstack.core.internal.plugins
 
+import com.rudderstack.core.Analytics
 import com.rudderstack.core.BaseDestinationPlugin
 import com.rudderstack.core.Plugin
 import com.rudderstack.core.RudderOption
 import com.rudderstack.core.RudderUtils
 import com.rudderstack.core.internal.CentralPluginChain
+import com.rudderstack.core.models.Message
 import com.rudderstack.core.models.TrackMessage
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.allOf
@@ -45,16 +47,14 @@ class RudderOptionPluginTest {
     @Test
     fun `test all true for empty integrations`() {
         //assertion plugin
-        val assertPlugin = Plugin {
-            //must contain all plugins
-            assertThat(
-                it.plugins, allOf(
-                    iterableWithSize(5),
-                    hasItems(dest1, dest2, dest3)
-                )
-            )
-            return@Plugin it.proceed(it.message())
+        val assertPlugin = object : Plugin {
+            override lateinit var analytics: Analytics
+            override fun intercept(chain: Plugin.Chain): Message {
+                assertThat(chain.plugins, allOf(iterableWithSize(5), hasItems(dest1, dest2, dest3)))
+                return chain.proceed(chain.message())
+            }
         }
+
         val chain = CentralPluginChain(
             message, listOf(
                 RudderOptionPlugin(RudderOption()), assertPlugin, dest1, dest2, dest3
@@ -66,15 +66,12 @@ class RudderOptionPluginTest {
     @Test
     fun `test all false for integrations`() {
         //assertion plugin
-        val assertPlugin = Plugin {
-            //must contain all plugins
-            assertThat(
-                it.plugins, allOf(
-                    iterableWithSize(2),
-                    everyItem(not(`in`(arrayOf(dest1, dest2, dest3))))
-                )
-            )
-            return@Plugin it.proceed(it.message())
+        val assertPlugin = object : Plugin {
+            override lateinit var analytics: Analytics
+            override fun intercept(chain: Plugin.Chain): Message {
+                assertThat(chain.plugins, allOf(iterableWithSize(2), everyItem(not(`in`(arrayOf(dest1, dest2, dest3))))))
+                return chain.proceed(chain.message())
+            }
         }
         val chain = CentralPluginChain(
             message, listOf(
@@ -90,16 +87,18 @@ class RudderOptionPluginTest {
     @Test
     fun `test custom integrations with false`() {
         //assertion plugin
-        val assertPlugin = Plugin {
-            //must contain all plugins
-            assertThat(
-                it.plugins, allOf(
-                    iterableWithSize(3),
-                    everyItem(not(`in`(arrayOf(dest2, dest3)))),
-                    hasItem(dest1)
+        val assertPlugin = object : Plugin {
+            override lateinit var analytics: Analytics
+            override fun intercept(chain: Plugin.Chain): Message {
+                assertThat(
+                    chain.plugins, allOf(
+                        iterableWithSize(3),
+                        everyItem(not(`in`(arrayOf(dest2, dest3)))),
+                        hasItem(dest1)
+                    )
                 )
-            )
-            return@Plugin it.proceed(it.message())
+                return chain.proceed(chain.message())
+            }
         }
         val chain = CentralPluginChain(
             message, listOf(
@@ -116,16 +115,14 @@ class RudderOptionPluginTest {
     @Test
     fun `test custom integrations with true`() {
         //assertion plugin
-        val assertPlugin = Plugin {
-            //must contain all plugins
-            assertThat(
-                it.plugins, allOf(
-                    iterableWithSize(3),
-                    everyItem(not(`in`(arrayOf(dest1, dest3)))),
-                    hasItem(dest2)
+        val assertPlugin = object : Plugin {
+            override lateinit var analytics: Analytics
+            override fun intercept(chain: Plugin.Chain): Message {
+                assertThat(
+                    chain.plugins, allOf(iterableWithSize(3), everyItem(not(`in`(arrayOf(dest1, dest3)))), hasItem(dest2))
                 )
-            )
-            return@Plugin it.proceed(it.message())
+                return chain.proceed(chain.message())
+            }
         }
         val chain = CentralPluginChain(
             message, listOf(
