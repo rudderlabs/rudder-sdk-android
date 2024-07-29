@@ -7,10 +7,8 @@ import com.rudderstack.core.models.AliasMessage
 import com.rudderstack.core.models.GroupMessage
 import com.rudderstack.core.models.GroupTraits
 import com.rudderstack.core.models.IdentifyMessage
-import com.rudderstack.core.models.IdentifyProperties
 import com.rudderstack.core.models.IdentifyTraits
 import com.rudderstack.core.models.MessageContext
-import com.rudderstack.core.models.MessageDestinationProps
 import com.rudderstack.core.models.ScreenMessage
 import com.rudderstack.core.models.ScreenProperties
 import com.rudderstack.core.models.TrackMessage
@@ -44,15 +42,19 @@ class Analytics private constructor(
         shutdownHook: (Analytics.() -> Unit)? = null
     ) : this(
         _delegate = AnalyticsDelegate(
-            configuration, storage ?: BasicStorageImpl(), writeKey, dataUploadService ?: DataUploadServiceImpl(
+            configuration = configuration,
+            storage = storage ?: BasicStorageImpl(),
+            writeKey = writeKey,
+            dataUploadService = dataUploadService ?: DataUploadServiceImpl(
                 writeKey
-            ), configDownloadService ?: ConfigDownloadServiceImpl(
+            ),
+            configDownloadService = configDownloadService ?: ConfigDownloadServiceImpl(
                 writeKey
-            ), initializationListener, shutdownHook
-
+            ),
+            initializationListener = initializationListener,
+            shutdownHook = shutdownHook,
         )
     )
-
 
     companion object {
         // default base url or rudder-backend-server
@@ -81,57 +83,39 @@ class Analytics private constructor(
     @JvmOverloads
     fun track(
         eventName: String,
-        options: RudderOption? = null,
-        userId: String? = null,
-        anonymousId: String? = null,
         trackProperties: TrackProperties? = null,
-        traits: Map<String, Any?>? = null,
-        destinationProps: MessageDestinationProps? = null,
+        options: RudderOption? = null,
     ) {
         track(
             TrackMessage.create(
-                anonymousId = anonymousId,
-                traits = traits,
-                destinationProps = destinationProps,
-                timestamp = RudderUtils.timeStamp,
                 eventName = eventName,
                 properties = trackProperties,
-                userId = userId
+                timestamp = RudderUtils.timeStamp,
             ), options
         )
-
     }
 
     /**
      * DSL format for track call
      *
+     * ```kotlin
      * analytics.track {
-     *   event { +"event" }
-     *   //or event("event")
-     *   trackProperties {
-     *       //use any of these
-     *       +("property1" to "value1")
-     *       +mapOf("property2" to "value2")
-     *       add("property3" to "value3")
-     *       add(mapOf("property4" to "value4"))
-     *  }
-     *  userId("user_id")
-     *  rudderOptions {
-     *       customContexts {
-     *          +("cc1" to "cp1")
-     *          +("cc2" to "cp2")
-     *       }
-     *       externalIds {
-     *          +(mapOf("ext-1" to "ex1"))
-     *          +(mapOf("ext-2" to "ex2"))
-     *          +listOf(mapOf("ext-3" to "ex3"))
-     *       }
-     *       integrations {
-     *          +("firebase" to true)
-     *          +("amplitude" to false)
-     *       }
-     *    }
+     *     event { +"event" }
+     *     // or event("event")
+     *     trackProperties {
+     *         // use any of these
+     *         +("property1" to "value1")
+     *         +mapOf("property2" to "value2")
+     *         add("property3" to "value3")
+     *         add(mapOf("property4" to "value4"))
+     *     }
+     *     rudderOptions {
+     *         customContexts("cc1", mapOf("cc_1_1" to "ccv"))
+     *         integration("firebase", true)
+     *     }
      * }
+     * ```
+     *
      * @param scope
      */
     fun track(scope: TrackScope.() -> Unit) {
@@ -148,23 +132,15 @@ class Analytics private constructor(
     fun screen(
         screenName: String,
         category: String? = null,
-        options: RudderOption? = null,
         screenProperties: ScreenProperties,
-        anonymousId: String? = null,
-        userId: String? = null,
-        destinationProps: MessageDestinationProps? = null,
-        traits: Map<String, Any?>? = null,
+        options: RudderOption? = null,
     ) {
         screen(
             ScreenMessage.create(
-                userId = userId,
-                anonymousId = anonymousId,
-                destinationProps = destinationProps,
-                traits = traits,
-                timestamp = RudderUtils.timeStamp,
-                category = category,
                 name = screenName,
-                properties = screenProperties
+                category = category,
+                properties = screenProperties,
+                timestamp = RudderUtils.timeStamp,
             ), options
         )
     }
@@ -181,21 +157,16 @@ class Analytics private constructor(
 
     @JvmOverloads
     fun identify(
-        userId: String, traits: IdentifyTraits? = null,
-        anonymousId: String? = null,
+        userId: String,
+        traits: IdentifyTraits? = null,
         options: RudderOption? = null,
-        properties: IdentifyProperties? = null,
-        destinationProps: MessageDestinationProps? = null,
     ) {
         val completeTraits = mapOf("userId" to userId) optAdd traits
         identify(
             IdentifyMessage.create(
                 userId = userId,
-                anonymousId = anonymousId,
-                destinationProps = destinationProps,
-                timestamp = RudderUtils.timeStamp,
                 traits = completeTraits,
-                properties = properties,
+                timestamp = RudderUtils.timeStamp,
             ), options
         )
     }
@@ -213,19 +184,14 @@ class Analytics private constructor(
     @JvmOverloads
     fun alias(
         newId: String,
-        anonymousId: String? = null,
         options: RudderOption? = null,
-        destinationProps: MessageDestinationProps? = null,
-        previousId: String? = null,
     ) {
         val completeTraits = mapOf("userId" to newId)
         alias(
             AliasMessage.create(
+                userId = newId,
+                traits = completeTraits,
                 timestamp = RudderUtils.timeStamp,
-                anonymousId = anonymousId,
-                previousId = previousId,
-                destinationProps = destinationProps,
-                userId = newId, traits = completeTraits
             ),
             options
         )
@@ -244,20 +210,14 @@ class Analytics private constructor(
     @JvmOverloads
     fun group(
         groupId: String?,
-        options: RudderOption? = null,
-        userId: String? = null,
-        anonymousId: String? = null,
         groupTraits: GroupTraits?,
-        destinationProps: MessageDestinationProps? = null,
+        options: RudderOption? = null,
     ) {
         group(
             GroupMessage.create(
-                timestamp = RudderUtils.timeStamp,
-                userId = userId,
                 groupId = groupId,
                 groupTraits = groupTraits,
-                anonymousId = anonymousId,
-                destinationProps = destinationProps,
+                timestamp = RudderUtils.timeStamp,
             ), options
         )
     }
@@ -267,5 +227,4 @@ class Analytics private constructor(
         groupScope.scope()
         group(groupScope.message, groupScope.options)
     }
-
 }

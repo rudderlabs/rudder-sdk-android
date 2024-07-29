@@ -2,144 +2,151 @@ package com.rudderstack.core
 
 import com.rudderstack.core.models.GroupTraits
 import com.rudderstack.core.models.IdentifyTraits
-import com.rudderstack.core.models.MessageDestinationProps
 import com.rudderstack.core.models.TrackProperties
 import com.rudderstack.core.models.*
 
 class TrackScope internal constructor() : MessageScope<TrackMessage>() {
-    private var eventName : String? = null
+    private var eventName: String? = null
     private var properties: TrackProperties? = null
-    private var traits: Map<String, Any?>? = null
 
-    fun trackProperties(scope: MapScope<String,Any>.() -> Unit){
+    fun trackProperties(scope: MapScope<String, Any>.() -> Unit) {
         val propertiesScope = MapScope(properties)
         propertiesScope.scope()
         properties = propertiesScope.map
     }
-    fun event(scope: StringScope.() -> Unit){
+
+    fun event(scope: StringScope.() -> Unit) {
         val eventScope = StringScope()
         eventScope.scope()
         eventName = eventScope.value
     }
-    fun event(name: String){
+
+    fun event(name: String) {
         eventName = name
     }
 
-    fun traits(scope: MapScope<String,Any?>.() -> Unit){
-        val traitsScope = MapScope(traits)
-        traitsScope.scope()
-        traits = traitsScope.map
-    }
     override val message: TrackMessage
-        get() = TrackMessage.create(eventName?: throw IllegalArgumentException("No event name for track"),
-        RudderUtils.timeStamp, properties, userId = userId, destinationProps = destinationProperties)
-
+        get() = TrackMessage.create(
+            eventName = eventName ?: throw IllegalArgumentException("No event name for track"),
+            timestamp = RudderUtils.timeStamp,
+            properties = properties,
+        )
 }
+
 class ScreenScope internal constructor() : MessageScope<ScreenMessage>() {
-    private var screenName : String? = null
-    private var category : String? = null
+    private var screenName: String? = null
+    private var category: String? = null
     private var screenProperties: TrackProperties? = null
 
-    fun screenProperties(scope: MapScope<String,Any>.() -> Unit){
+    fun screenProperties(scope: MapScope<String, Any>.() -> Unit) {
         val propertiesScope = MapScope(screenProperties)
         propertiesScope.scope()
         screenProperties = propertiesScope.map
     }
-    fun screenName(scope: StringScope.() -> Unit){
+
+    fun screenName(scope: StringScope.() -> Unit) {
         val eventScope = StringScope()
         eventScope.scope()
         screenName = eventScope.value
     }
-    fun screenName(name: String){
+
+    fun screenName(name: String) {
         screenName = name
     }
-    fun category(scope: StringScope.() -> Unit){
+
+    fun category(scope: StringScope.() -> Unit) {
         val eventScope = StringScope()
         eventScope.scope()
         category = eventScope.value
     }
-    fun category(name: String){
+
+    fun category(name: String) {
         category = name
     }
-    override val message: ScreenMessage
-        get() = ScreenMessage.create(screenName ?: throw IllegalArgumentException("Screen name is not provided for screen event"),
-                RudderUtils.timeStamp, category = category,
-            anonymousId = anonymousId,
-        properties = screenProperties, userId = userId, destinationProps = destinationProperties)
 
+    override val message: ScreenMessage
+        get() = ScreenMessage.create(
+            name = screenName
+                ?: throw IllegalArgumentException("Screen name is not provided for screen event"),
+            timestamp = RudderUtils.timeStamp,
+            category = category,
+            properties = screenProperties
+        )
 }
+
 class IdentifyScope internal constructor() : MessageScope<IdentifyMessage>() {
     private var traits: IdentifyTraits? = null
-    private var userID: String? = null
+    private var userId: String? = null
 
-    fun traits(scope: MapScope<String,Any?>.() -> Unit){
+    fun userId(scope: StringScope.() -> Unit) {
+        val titleScope = StringScope()
+        titleScope.scope()
+        this.userId = titleScope.value
+    }
+
+    fun userId(userId: String) {
+        this.userId = userId
+    }
+
+    fun traits(scope: MapScope<String, Any?>.() -> Unit) {
         val traitsScope = MapScope(traits)
         traitsScope.scope()
         traits = traitsScope.map
     }
+
     override val message: IdentifyMessage
         get() = IdentifyMessage.create(
-            userId = userID,
-            anonymousId = anonymousId,
+            userId = userId,
             timestamp = RudderUtils.timeStamp,
             traits = traits,
-         destinationProps = destinationProperties)
-
+        )
 }
+
 class AliasScope internal constructor() : MessageScope<AliasMessage>() {
     private var newID: String? = null
 
-    private var traits: Map<String, Any?>? = null
-
-    fun newId(scope: StringScope.() -> Unit){
+    fun newId(scope: StringScope.() -> Unit) {
         val titleScope = StringScope()
         titleScope.scope()
         newID = titleScope.value
     }
-    fun newId(newId : String){
+
+    fun newId(newId: String) {
         newID = newId
     }
 
-    fun traits(scope: MapScope<String,Any?>.() -> Unit){
-        val traitsScope = MapScope(traits)
-        traitsScope.scope()
-        traits = traitsScope.map
-    }
-
     override val message: AliasMessage
-        get() = AliasMessage.create(timestamp = RudderUtils.timeStamp, userId = newID,
-            anonymousId = anonymousId,
-            previousId = userId?:anonymousId, traits = traits, destinationProps =
-    destinationProperties,
-         )
-
+        get() = AliasMessage.create(
+            timestamp = RudderUtils.timeStamp,
+            userId = newID,
+        )
 }
+
 class GroupScope internal constructor() : MessageScope<GroupMessage>() {
-    private var groupId : String? = null
+    private var groupId: String? = null
     private var traits: GroupTraits? = null
-    fun traits(scope: MapScope<String,Any>.() -> Unit){
+    fun traits(scope: MapScope<String, Any>.() -> Unit) {
         val groupScope = MapScope(traits)
         groupScope.scope()
         traits = groupScope.map
     }
 
-
-    fun groupId(scope: StringScope.() -> Unit){
+    fun groupId(scope: StringScope.() -> Unit) {
         val groupScope = StringScope()
         groupScope.scope()
         groupId = groupScope.value
     }
-    fun groupId(id: String){
+
+    fun groupId(id: String) {
         groupId = id
     }
 
     override val message: GroupMessage
         get() = GroupMessage.create(
-            timestamp = RudderUtils.timeStamp, userId = userId,
-            anonymousId = anonymousId,
-            groupId = groupId, groupTraits = traits
-            , destinationProps = destinationProperties)
-
+            timestamp = RudderUtils.timeStamp,
+            groupId = groupId,
+            groupTraits = traits,
+        )
 }
 
 @MessageScopeDslMarker
@@ -148,63 +155,34 @@ abstract class MessageScope<T : Message> internal constructor(/*private val anal
     internal val options
         get() = _options
 
-    private var _destinationProperties: MessageDestinationProps? = null
-    protected val destinationProperties
-    get() = _destinationProperties
-    protected var anonymousId: String? = null
-    protected var userId: String? = null
     fun rudderOptions(scope: RudderOptionsScope.() -> Unit) {
         val optionsScope = RudderOptionsScope()
         optionsScope.scope()
         _options = optionsScope.rudderOption
     }
 
-    fun destinationProperties(scope: MapScope<String, Map<*, *>>.() -> Unit){
-        val destinationPropsScope = MapScope(_destinationProperties)
-        destinationPropsScope.scope()
-        _destinationProperties = destinationPropsScope.map
-    }
-    fun userId(scope: StringScope.() -> Unit){
-        val titleScope = StringScope()
-        titleScope.scope()
-        userId = titleScope.value
-    }
-    fun userId(userId : String){
-        this.userId = userId
-    }
-    fun anonymousId(scope: StringScope.() -> Unit){
-        val anonymousIdScope = StringScope()
-        anonymousIdScope.scope()
-        anonymousId = anonymousIdScope.value
-    }
-    fun anonymousId(id: String){
-        anonymousId = id
-    }
     internal abstract val message: T
-    /*internal fun send(){
-        analytics.processMessage(message, options)
-    }*/
-
 }
 
-class StringScope internal constructor(){
-    private var _value : String? = null
+class StringScope internal constructor() {
+    private var _value: String? = null
     val value
-    get() = _value
+        get() = _value
 
-    operator fun String.unaryPlus(){
+    operator fun String.unaryPlus() {
         _value = this
     }
 }
+
 @OptionsScopeDslMarker
 class RudderOptionsScope internal constructor() {
-
     //    private var rudderOptionsBuilder: RudderOptions.Builder = RudderOptions.Builder()
     internal val rudderOption: RudderOption
         get() = _rudderOption
     private val _rudderOption: RudderOption by lazy {
         RudderOption()
     }
+
     fun externalId(type: String, id: String) {
         _rudderOption.putExternalId(type, id)
     }
@@ -220,8 +198,6 @@ class RudderOptionsScope internal constructor() {
     fun customContexts(key: String, context: Map<String?, Any?>) {
         _rudderOption.putCustomContext(key, context)
     }
-
-
 }
 
 class CollectionsScope<E>
@@ -268,12 +244,8 @@ internal constructor(private var _map: Map<K, V>?) {
         get() = _map
 }
 
-
 @DslMarker
 annotation class MessageScopeDslMarker
-
-@DslMarker
-annotation class PropertyScopeDslMarker
 
 @DslMarker
 annotation class OptionsScopeDslMarker

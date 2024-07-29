@@ -248,7 +248,6 @@ abstract class AnalyticsTest {
         analytics = generateTestAnalytics(Configuration(jsonAdapter))
         analytics.track {
             event("event-1")
-            userId("user_id")
             trackProperties {
                 add("prop-1" to "p-1")
                 add("prop-2" to "p-2")
@@ -261,7 +260,6 @@ abstract class AnalyticsTest {
                 output, allOf(
                     notNullValue(),
                     instanceOf(TrackMessage::class.java),
-                    hasProperty("userId", `is`("user_id")),
                     hasProperty(
                         "properties", allOf(
                             aMapWithSize<String, Any>(3),
@@ -281,7 +279,6 @@ abstract class AnalyticsTest {
         analytics.shutdown()
         analytics = generateTestAnalytics(Configuration(jsonAdapter))
         analytics.alias {
-            userId("user_id")
             newId("new_id")
         }
         analytics.assertArgument { input, output ->
@@ -291,7 +288,6 @@ abstract class AnalyticsTest {
                     notNullValue(),
                     instanceOf(AliasMessage::class.java),
                     hasProperty("userId", `is`("new_id")),
-                    hasProperty("previousId", `is`("user_id")),
                 )
             )
         }
@@ -318,14 +314,12 @@ abstract class AnalyticsTest {
         val chainCaptor = argumentCaptor<Plugin.Chain>()
         analytics.track(
             eventName = "track",
-            userId = "user_id",
             trackProperties = mapOf("prop-1" to "p-1", "prop-2" to "p-2")
         )
         busyWait(100)//since it is submitted to executor
 
         verify(laterInitDestPlugin).intercept(chainCaptor.capture())
         val message = chainCaptor.firstValue.message()
-        assertThat(message.userId, `is`("user_id"))
         assertThat(
             message, hasProperty(
                 "properties", allOf(
@@ -817,7 +811,6 @@ abstract class AnalyticsTest {
                 add("property3" to "value3")
                 add(mapOf("property4" to "value4"))
             }
-            userId("user_id")
             rudderOptions {
                 customContexts("cc1", mapOf("cc_1_1" to "ccv"))
                 customContexts("cc2", mapOf("cc_2_1" to "ccv2"))
