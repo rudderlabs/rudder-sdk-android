@@ -327,4 +327,24 @@ public class Utils {
     public static boolean isEmpty(@Nullable List value) {
         return (value == null || value.isEmpty());
     }
+
+    /**
+     * Converts time in milliseconds to a readable format of minutes and seconds.
+     *
+     * @param timeInMillis The time in milliseconds to be converted.
+     * @return A string representing the time in minutes and seconds.
+     */
+    public static String getTimeInReadableFormat(long timeInMillis) {
+        long totalSeconds = timeInMillis / 1000;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+
+        StringBuilder timeInReadableFormat = new StringBuilder();
+        if (minutes > 0) {
+            timeInReadableFormat.append(minutes).append("min ");
+        }
+        timeInReadableFormat.append(seconds).append("sec");
+
+        return timeInReadableFormat.toString();
+    }
 }
