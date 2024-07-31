@@ -7,7 +7,9 @@ import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
 
 import com.rudderstack.android.sdk.core.gson.RudderGson;
+import com.rudderstack.android.sdk.core.util.ExponentialBackOff;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
+import com.rudderstack.android.sdk.core.util.Utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,16 +38,18 @@ public class RudderCloudModeManager {
             @Override
             public void run() {
                 super.run();
-                int sleepCount = 0;
+                long upTimeInMillis = Utils.getUpTimeInMillis();
                 Result result = null;
                 final ArrayList<Integer> messageIds = new ArrayList<>();
                 final ArrayList<String> messages = new ArrayList<>();
+                final ExponentialBackOff exponentialBackOff = new ExponentialBackOff(5 * 60); // 5 minutes
                 while (true) {
                     // clear lists for reuse
                     messageIds.clear();
                     messages.clear();
                     result = null;
                     maintainDBThreshold();
+                    long sleepCount = Utils.getSleepDurationInSecond(upTimeInMillis, Utils.getUpTimeInMillis());
                     RudderLogger.logDebug("CloudModeManager: cloudModeProcessor: Fetching events to flush to server");
                     synchronized (MessageUploadLock.UPLOAD_LOCK) {
                         dbManager.fetchCloudModeEventsFromDB(messageIds, messages, config.getFlushQueueSize());
@@ -61,18 +65,20 @@ public class RudderCloudModeManager {
                                     ReportManager.incrementCloudModeUploadSuccessCounter(messageIds.size());
                                     dbManager.markCloudModeDone(messageIds);
                                     dbManager.runGcForEvents();
-                                    sleepCount = 0;
+                                    exponentialBackOff.resetBackOff();                                  
+                                    upTimeInMillis = Utils.getUpTimeInMillis();
+                                    sleepCount = Utils.getSleepDurationInSecond(upTimeInMillis, Utils.getUpTimeInMillis());
                                 } else {
                                     incrementCloudModeUploadRetryCounter(1);
                                 }
                             }
                         }
                     }
-                    sleepCount += 1;
                     RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: SleepCount: %d", sleepCount));
                     try {
                         if (result == null) {
-                            Thread.sleep(1000);
+                            RudderLogger.logDebug("CloudModeManager: cloudModeProcessor: Sleeping for next: " + config.getEventDispatchSleepInterval() + "ms");
+                            Thread.sleep(config.getEventDispatchSleepInterval());
                             continue;
                         }
                         switch (result.status) {
@@ -84,9 +90,13 @@ public class RudderCloudModeManager {
                                 deleteEventsWithoutAnonymousId(messages, messageIds);
                                 break;
                             case ERROR:
+                                long sleepIntervalInMillis = exponentialBackOff.nextDelayInMillis();
+                                RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in " + Utils.getTimeInReadableFormat(sleepIntervalInMillis));
+                                Thread.sleep(sleepIntervalInMillis);
+                                break;
                             case NETWORK_UNAVAILABLE:
-                                RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in " + Math.abs(sleepCount - config.getSleepTimeOut()) + "s");
-                                Thread.sleep(Math.abs(sleepCount - config.getSleepTimeOut()) * 1000L);
+                                RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in 1s");
+                                Thread.sleep(1000);
                                 break;
                             default:
                                 RudderLogger.logWarn("CloudModeManager: cloudModeProcessor: Retrying in 1s");

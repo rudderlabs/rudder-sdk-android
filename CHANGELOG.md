@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.24.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.23.3...v1.24.0) (2024-07-31)
+
+
+### Features
+
+* add a configurable setting to put the CloudModeProcessor to sleep for a specified interval ([#460](https://github.com/rudderlabs/rudder-sdk-android/issues/460)) ([0711b37](https://github.com/rudderlabs/rudder-sdk-android/commit/0711b37625758f3fa791dd93124c8bcd5492a519))
+* implement exponential retry mechanism for handling network errors ([#468](https://github.com/rudderlabs/rudder-sdk-android/issues/468)) ([e07e2cf](https://github.com/rudderlabs/rudder-sdk-android/commit/e07e2cf10126cbc3dcef7324111bac5c9f8a15d8))
+
 ### [1.23.3](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.23.2...v1.23.3) (2024-07-01)
 
 

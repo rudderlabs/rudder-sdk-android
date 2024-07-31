@@ -10,6 +10,7 @@ import android.net.ParseException;
 import android.net.Uri;
 import android.os.BadParcelableException;
 import android.os.Build;
+import android.os.SystemClock;
 import android.text.TextUtils;
 
 import com.google.gson.reflect.TypeToken;
@@ -62,6 +63,14 @@ public class Utils {
 
     public static Long getCurrentTimeInSecondsLong() {
         return new Long(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+    }
+
+    public static long getUpTimeInMillis() {
+        return SystemClock.uptimeMillis();
+    }
+
+    public static long getSleepDurationInSecond(long startTime, long endTime) {
+        return (endTime - startTime)/1000;
     }
 
     public static String getCurrentTimeSeconds() {
@@ -317,5 +326,25 @@ public class Utils {
 
     public static boolean isEmpty(@Nullable List value) {
         return (value == null || value.isEmpty());
+    }
+
+    /**
+     * Converts time in milliseconds to a readable format of minutes and seconds.
+     *
+     * @param timeInMillis The time in milliseconds to be converted.
+     * @return A string representing the time in minutes and seconds.
+     */
+    public static String getTimeInReadableFormat(long timeInMillis) {
+        long totalSeconds = timeInMillis / 1000;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+
+        StringBuilder timeInReadableFormat = new StringBuilder();
+        if (minutes > 0) {
+            timeInReadableFormat.append(minutes).append("min ");
+        }
+        timeInReadableFormat.append(seconds).append("sec");
+
+        return timeInReadableFormat.toString();
     }
 }
