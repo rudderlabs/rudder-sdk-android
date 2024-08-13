@@ -100,8 +100,6 @@ public class ReportManager {
     private static final String FLUSH_WORKER_INIT_COUNTER_TAG = "flush_worker_init";
     private static final String ENCRYPTED_DB_COUNTER_TAG = "db_encrypt";
 
-    private static final String METRICS_URL_DEV = "https://sdk-metrics.dev-rudder.rudderlabs.com/";
-    private static final String METRICS_URL_PROD = "https://sdk-metrics.rudderstack.com/";
     private static Metrics metrics = null;
     private static ErrorClient errorStatsClient = null;
 
@@ -161,7 +159,7 @@ public class ReportManager {
 
     @SuppressWarnings("ConstantConditions")
     static void enableStatsCollection(Application application, String writeKey,
-                                      @NonNull SourceConfiguration.StatsCollection statsCollection) {
+                                      @NonNull SourceConfiguration.StatsCollection statsCollection, String dataPlaneUrl) {
         if (!isStatsReporterAvailable()) {
             if (!(statsCollection.getMetrics().isEnabled() || statsCollection.getErrors().isEnabled())) {
                 RudderLogger.logDebug("EventRepository: Stats collection is not enabled");
@@ -169,7 +167,7 @@ public class ReportManager {
             }
             RudderLogger.logDebug("EventRepository: Creating Stats Reporter");
             initiateRudderReporter(application, writeKey, statsCollection.getMetrics().isEnabled(),
-                    statsCollection.getErrors().isEnabled());
+                    statsCollection.getErrors().isEnabled(), dataPlaneUrl);
             RudderLogger.logDebug("EventRepository: Metrics collection is not initialized");
             return;
         }
@@ -211,10 +209,10 @@ public class ReportManager {
     }
 
     private static void initiateRudderReporter(Context context, @Nullable String writeKey,
-                                               boolean isMetricsEnabled, boolean isErrorsEnabled) {
+                                               boolean isMetricsEnabled, boolean isErrorsEnabled, String dataPlaneUrl) {
         RudderLogger.logDebug("EventRepository: Creating RudderReporter isMetricsEnabled: " + isMetricsEnabled + " isErrorsEnabled: " + isErrorsEnabled);
         if (rudderReporter == null) {
-            rudderReporter = new DefaultRudderReporter(context, METRICS_URL_PROD,
+            rudderReporter = new DefaultRudderReporter(context, dataPlaneUrl,
                     getStatsConfig(writeKey), new GsonAdapter(), isMetricsEnabled, isErrorsEnabled);
             rudderReporter.getSyncer().startScheduledSyncs(METRICS_UPLOAD_INTERVAL,
                     true, METRICS_FLUSH_COUNT);
