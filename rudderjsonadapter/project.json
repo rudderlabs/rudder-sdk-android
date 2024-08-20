@@ -71,7 +71,7 @@
       ],
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'rudderjsonadapter-snapshot' && cd rudderjsonadapter && sh ../gradlew generatePomFileForReleasePublication && ../gradlew publishToSonatype && cd .."
+        "command": "echo 'rudderjsonadapter-snapshot' && sh ./gradlew generatePomFileForReleasePublication -p rudderjsonadapter && ./gradlew publishToSonatype -p rudderjsonadapter"
       }
     }
   },
