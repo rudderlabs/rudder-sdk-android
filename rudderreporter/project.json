@@ -12,6 +12,7 @@
             "jacksonrudderadapter",
             "moshirudderadapter",
             "repository",
+            "rudderjsonadapter",
             "web"
           ],
           "target": "build"
