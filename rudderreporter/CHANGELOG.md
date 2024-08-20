@@ -2,6 +2,13 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.6.0](https://github.com/rudderlabs/rudder-sdk-android/compare/rudderreporter@0.5.0...rudderreporter@0.6.0) (2024-08-20)
+
+
+### Features
+
+* change the metrics endpoint to `rsaMetrics` ([#472](https://github.com/rudderlabs/rudder-sdk-android/issues/472)) ([8b879d5](https://github.com/rudderlabs/rudder-sdk-android/commit/8b879d5a8d91d0e49075047f394f19aa6cc86ecf))
+
 ## [0.4.0](https://github.com/rudderlabs/rudder-sdk-android/compare/rudderreporter@0.3.1...rudderreporter@0.4.0) (2023-10-31)
 
 
