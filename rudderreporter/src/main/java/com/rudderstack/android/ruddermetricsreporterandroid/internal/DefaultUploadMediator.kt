@@ -74,6 +74,6 @@ internal class DefaultUploadMediator(
         private const val METRICS_KEY = "metrics"
         private const val ERROR_KEY = "errors"
         private const val VERSION_KEY = "version"
-        private const val METRICS_ENDPOINT = "sdkmetrics"
+        private const val METRICS_ENDPOINT = "rsaMetrics"
     }
 }
