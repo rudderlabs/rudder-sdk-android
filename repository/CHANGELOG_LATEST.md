@@ -1,7 +1,7 @@
-## [0.2.2](https://github.com/rudderlabs/rudder-sdk-android/compare/repository@0.2.1...repository@0.2.2) (2023-10-31)
+## [0.3.0](https://github.com/rudderlabs/rudder-sdk-android/compare/repository@0.2.2...repository@0.3.0) (2024-08-20)
 
 
-### Bug Fixes
+### Features
 
-* added discard policy ([#347](https://github.com/rudderlabs/rudder-sdk-android/issues/347)) ([94714ab](https://github.com/rudderlabs/rudder-sdk-android/commit/94714ab35195a609746d639e20a121a705216ca1))
+* change the metrics endpoint to `rsaMetrics` ([#472](https://github.com/rudderlabs/rudder-sdk-android/issues/472)) ([8b879d5](https://github.com/rudderlabs/rudder-sdk-android/commit/8b879d5a8d91d0e49075047f394f19aa6cc86ecf))
 

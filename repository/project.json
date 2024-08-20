@@ -5,7 +5,10 @@
   "sourceRoot": "./repository/src",
   "targets": {
     "build": {
-      "executor": "@jnxplus/nx-gradle:build",
+      "executor": "@jnxplus/nx-gradle:run-task",
+      "options": {
+        "task": "build"
+      },
       "outputs": [
         "{projectRoot}/repository/build"
       ]
@@ -23,7 +26,10 @@
       "dependsOn": [
         "build"
       ],
-      "executor": "@jnxplus/nx-gradle:test"
+      "executor": "@jnxplus/nx-gradle:run-task",
+      "options": {
+        "task": "test"
+      }
     },
     "ktformat": {
       "executor": "@jnxplus/nx-gradle:ktformat"
@@ -45,8 +51,8 @@
     "github": {
       "executor": "@jscutlery/semver:github",
       "options": {
-        "title": "repository@0.2.2",
-        "tag": "repository@0.2.2",
+        "title": "repository@0.3.0",
+        "tag": "repository@0.3.0",
         "notesFile": "./repository/CHANGELOG_LATEST.md"
       }
     },

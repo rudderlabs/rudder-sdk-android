@@ -13,7 +13,10 @@
           "target": "build"
         }
       ],
-      "executor": "@jnxplus/nx-gradle:build",
+      "executor": "@jnxplus/nx-gradle:run-task",
+      "options": {
+        "task": "build"
+      },
       "outputs": [
         "{projectRoot}/moshirudderadapter/build"
       ]
@@ -25,7 +28,10 @@
       }
     },
     "test": {
-      "executor": "@jnxplus/nx-gradle:test"
+      "executor": "@jnxplus/nx-gradle:run-task",
+      "options": {
+        "task": "test"
+      }
     },
     "ktformat": {
       "executor": "@jnxplus/nx-gradle:ktformat"
