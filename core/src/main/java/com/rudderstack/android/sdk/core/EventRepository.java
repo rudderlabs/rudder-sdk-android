@@ -161,7 +161,7 @@ class EventRepository {
             if (serverConfig != null && serverConfig.source != null
                     && serverConfig.source.sourceConfiguration != null) {
                 RudderLogger.logDebug("EventRepository: constructor: Prefetched source serverConfig is available");
-                enableStatsCollection(application, writeKey, serverConfig.source.sourceConfiguration.getStatsCollection());
+                enableStatsCollection(application, writeKey, serverConfig.source.sourceConfiguration.getStatsCollection(), dataResidencyManager.getDataPlaneUrl());
             } else {
                 RudderLogger.logDebug("EventRepository: constructor: Prefetched source serverConfig is not available");
             }
@@ -271,8 +271,6 @@ class EventRepository {
                     if (serverConfig != null) {
                         isSDKEnabled = serverConfig.source.isSourceEnabled;
                         if (isSDKEnabled) {
-                            if (serverConfig.source.sourceConfiguration != null)
-                                enableStatsCollection(application, writeKey, serverConfig.source.sourceConfiguration.getStatsCollection());
                             dataResidencyManager.setDataResidencyUrls(serverConfig);
                             dataPlaneUrl = dataResidencyManager.getDataPlaneUrl();
                             if (dataPlaneUrl == null) {
@@ -281,6 +279,8 @@ class EventRepository {
                                         Collections.singletonMap(LABEL_TYPE, LABEL_TYPE_DATA_PLANE_URL_INVALID));
                                 return;
                             }
+                            if (serverConfig.source.sourceConfiguration != null)
+                                enableStatsCollection(application, writeKey, serverConfig.source.sourceConfiguration.getStatsCollection(), dataPlaneUrl);
                             if (consentFilter != null)
                                 this.consentFilterHandler = new ConsentFilterHandler(serverConfig.source, consentFilter);
                             cloudModeManager.startCloudModeProcessor();
