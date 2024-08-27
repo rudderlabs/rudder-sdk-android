@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.25.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.24.0...v1.25.0) (2024-08-27)
+
+
+### Features
+
+* add option to configure `dataPlaneUrl` as the metrics url ([#471](https://github.com/rudderlabs/rudder-sdk-android/issues/471)) ([f0d3ef1](https://github.com/rudderlabs/rudder-sdk-android/commit/f0d3ef130fa75dff0a1162792f04279ba78055b1))
+
 ## [1.24.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.23.3...v1.24.0) (2024-07-31)
 
 
