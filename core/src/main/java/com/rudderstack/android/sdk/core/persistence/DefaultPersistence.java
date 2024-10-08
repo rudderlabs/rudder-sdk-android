@@ -262,7 +262,7 @@ public class DefaultPersistence extends SQLiteOpenHelper implements Persistence 
          try {
              return getWritableDatabase().isOpen();
          }  catch (SQLiteCantOpenDatabaseException ex) {
-             RudderLogger.logError("DBPersistentManager: isDBAccessible: Exception while checking the accessibility of the database due to " + ex);
+             RudderLogger.logError("DefaultPersistence: isAccessible: Exception while checking the accessibility of the database due to " + ex);
              return false;
          }
     }
