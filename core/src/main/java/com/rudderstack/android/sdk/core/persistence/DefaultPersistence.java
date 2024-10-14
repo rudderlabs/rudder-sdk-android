@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteCantOpenDatabaseException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
@@ -258,7 +259,12 @@ public class DefaultPersistence extends SQLiteOpenHelper implements Persistence 
 
     @Override
     public boolean isAccessible() {
-        return getWritableDatabase().isOpen();
+         try {
+             return getWritableDatabase().isOpen();
+         }  catch (SQLiteCantOpenDatabaseException ex) {
+             RudderLogger.logError("DefaultPersistence: isAccessible: Exception while checking the accessibility of the database due to " + ex);
+             return false;
+         }
     }
     static class DbParams {
         final String dbName;
