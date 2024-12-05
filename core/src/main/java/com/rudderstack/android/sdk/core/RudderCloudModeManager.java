@@ -63,8 +63,7 @@ public class RudderCloudModeManager {
                                 RudderLogger.logInfo(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: ServerResponse: %d", result.statusCode));
                                 if (result.status == NetworkResponses.SUCCESS) {
                                     ReportManager.incrementCloudModeUploadSuccessCounter(messageIds.size());
-                                    dbManager.markCloudModeDone(messageIds);
-                                    dbManager.runGcForEvents();
+                                    cleanUpEvents(messageIds);
                                     exponentialBackOff.resetBackOff();                                  
                                     upTimeInMillis = Utils.getUpTimeInMillis();
                                     sleepCount = Utils.getSleepDurationInSecond(upTimeInMillis, Utils.getUpTimeInMillis());
