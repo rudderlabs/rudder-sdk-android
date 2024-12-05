@@ -162,6 +162,7 @@ class FlushUtils {
                 String message = messages.get(index);
                 // strip last ending object character
                 message = message.substring(0, message.length() - 1);
+                // Handle Invalid Message whose length is 0
                 if (message.isEmpty()) {
                     continue;
                 }
