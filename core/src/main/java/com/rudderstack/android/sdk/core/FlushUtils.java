@@ -13,6 +13,7 @@ import static com.rudderstack.android.sdk.core.RudderNetworkManager.addEndPoint;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
 import static com.rudderstack.android.sdk.core.util.Utils.getBatch;
 import static com.rudderstack.android.sdk.core.util.Utils.getNumberOfBatches;
+import androidx.annotation.Nullable;
 
 import android.text.TextUtils;
 
@@ -88,6 +89,7 @@ class FlushUtils {
 
                     } else {
                         lastErrorMessage = ReportManager.LABEL_TYPE_PAYLOAD_NULL;
+                        dbManager.markCloudModeDone(batchMessageIds);
                     }
                     RudderLogger.logWarn(String.format(Locale.US, "EventRepository: flush: Failed to send batch %d/%d retrying again, %d retries left", i, numberOfBatches, retries));
                 }
@@ -132,6 +134,7 @@ class FlushUtils {
      * of deserialization and forming the payload object and creating the json string
      * again from the object
      * */
+    @Nullable
     static String getPayloadFromMessages(List<Integer> messageIds, List<String> messages) {
         if (messageIds.isEmpty() || messages.isEmpty()) {
             RudderLogger.logWarn("FlushUtils: getPayloadFromMessages: Payload Construction failed: no messages to send");
@@ -159,6 +162,9 @@ class FlushUtils {
                 String message = messages.get(index);
                 // strip last ending object character
                 message = message.substring(0, message.length() - 1);
+                if (message.isEmpty()) {
+                    continue;
+                }
                 // add sentAt time stamp
                 message = String.format("%s,\"sentAt\":\"%s\"},", message, sentAtTimestamp);
                 // add message size to batch size
@@ -175,6 +181,8 @@ class FlushUtils {
                 // add message to batch ArrayLists
                 batchMessageIds.add(messageIds.get(index));
             }
+            // If the batchMessagesBuilder is empty, return null
+            if (batchMessagesBuilder.length() == 0) return null;
             if (batchMessagesBuilder.charAt(batchMessagesBuilder.length() - 1) == ',') {
                 // remove trailing ','
                 batchMessagesBuilder.deleteCharAt(batchMessagesBuilder.length() - 1);

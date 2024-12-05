@@ -71,6 +71,8 @@ public class RudderCloudModeManager {
                                 } else {
                                     incrementCloudModeUploadRetryCounter(1);
                                 }
+                            } else {
+                                cleanUpEvents(messageIds);
                             }
                         }
                     }
@@ -110,6 +112,11 @@ public class RudderCloudModeManager {
                 }
             }
         }.start();
+    }
+
+    private void cleanUpEvents(List<Integer> messageIds) {
+        dbManager.markCloudModeDone(messageIds);
+        dbManager.runGcForEvents();
     }
 
     private void deleteEventsWithoutAnonymousId(ArrayList<String> messages, ArrayList<Integer> messageIds) {
