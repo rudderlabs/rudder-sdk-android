@@ -63,14 +63,15 @@ public class RudderCloudModeManager {
                                 RudderLogger.logInfo(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: ServerResponse: %d", result.statusCode));
                                 if (result.status == NetworkResponses.SUCCESS) {
                                     ReportManager.incrementCloudModeUploadSuccessCounter(messageIds.size());
-                                    dbManager.markCloudModeDone(messageIds);
-                                    dbManager.runGcForEvents();
+                                    cleanUpEvents(messageIds);
                                     exponentialBackOff.resetBackOff();                                  
                                     upTimeInMillis = Utils.getUpTimeInMillis();
                                     sleepCount = Utils.getSleepDurationInSecond(upTimeInMillis, Utils.getUpTimeInMillis());
                                 } else {
                                     incrementCloudModeUploadRetryCounter(1);
                                 }
+                            } else {
+                                cleanUpEvents(messageIds);
                             }
                         }
                     }
@@ -110,6 +111,11 @@ public class RudderCloudModeManager {
                 }
             }
         }.start();
+    }
+
+    private void cleanUpEvents(List<Integer> messageIds) {
+        dbManager.markCloudModeDone(messageIds);
+        dbManager.runGcForEvents();
     }
 
     private void deleteEventsWithoutAnonymousId(ArrayList<String> messages, ArrayList<Integer> messageIds) {
