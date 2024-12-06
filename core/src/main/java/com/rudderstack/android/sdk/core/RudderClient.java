@@ -467,7 +467,11 @@ public class RudderClient {
      * @param newId New userId for the user
      */
     public void alias(String newId) {
-        alias(newId, null);
+        alias(newId, null, null);
+    }
+
+    public void alias(@NonNull String newId, @Nullable RudderOption option) {
+        alias(newId, option, null);
     }
 
     /**
@@ -478,7 +482,7 @@ public class RudderClient {
      * @param newId  New userId for the user
      * @param option RudderOptions for this event
      */
-    public void alias(@NonNull String newId, @Nullable RudderOption option) {
+    public void alias(@NonNull String newId, @Nullable RudderOption option, @Nullable String previousId) {
         RudderContext context = getRudderContext();
         Map<String, Object> traits = null;
         if (context != null) {
@@ -488,12 +492,16 @@ public class RudderClient {
             return;
         String prevUserId = null;
 
-        if (traits.containsKey("userId")) {
-            prevUserId = (String) traits.get("userId");
-        } else if (traits.containsKey("id")) {
-            prevUserId = (String) traits.get("id");
+        if (previousId != null) {
+            prevUserId = previousId;
         } else {
-            prevUserId = RudderContext.getAnonymousId();
+            if (traits.containsKey("userId")) {
+                prevUserId = (String) traits.get("userId");
+            } else if (traits.containsKey("id")) {
+                prevUserId = (String) traits.get("id");
+            } else {
+                prevUserId = RudderContext.getAnonymousId();
+            }
         }
 
         traits.put("userId", newId);
