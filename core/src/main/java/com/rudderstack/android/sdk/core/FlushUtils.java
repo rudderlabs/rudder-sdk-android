@@ -163,22 +163,21 @@ class FlushUtils {
                 // strip last ending object character
                 message = message.substring(0, message.length() - 1);
                 // Handle Invalid Message whose length is 0
-                if (message.isEmpty()) {
-                    continue;
+                if (!message.isEmpty()) {
+                    // add sentAt time stamp
+                    message = String.format("%s,\"sentAt\":\"%s\"},", message, sentAtTimestamp);
+                    // add message size to batch size
+                    messageSize = Utils.getUTF8Length(message);
+                    totalBatchSize += messageSize;
+                    // check batch size
+                    if (totalBatchSize >= Utils.MAX_BATCH_SIZE) {
+                        RudderLogger.logDebug(String.format(Locale.US, "FlushUtils: getPayloadFromMessages: MAX_BATCH_SIZE reached at index: %d | Total: %d", index, totalBatchSize));
+                        incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_BATCH_SIZE_INVALID));
+                        break;
+                    }
+                    // finally add message string to builder
+                    batchMessagesBuilder.append(message);
                 }
-                // add sentAt time stamp
-                message = String.format("%s,\"sentAt\":\"%s\"},", message, sentAtTimestamp);
-                // add message size to batch size
-                messageSize = Utils.getUTF8Length(message);
-                totalBatchSize += messageSize;
-                // check batch size
-                if (totalBatchSize >= Utils.MAX_BATCH_SIZE) {
-                    RudderLogger.logDebug(String.format(Locale.US, "FlushUtils: getPayloadFromMessages: MAX_BATCH_SIZE reached at index: %d | Total: %d", index, totalBatchSize));
-                    incrementDiscardedCounter(1, Collections.singletonMap(LABEL_TYPE, ReportManager.LABEL_TYPE_BATCH_SIZE_INVALID));
-                    break;
-                }
-                // finally add message string to builder
-                batchMessagesBuilder.append(message);
                 // add message to batch ArrayLists
                 batchMessageIds.add(messageIds.get(index));
             }
