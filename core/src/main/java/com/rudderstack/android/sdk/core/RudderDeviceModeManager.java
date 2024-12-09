@@ -246,6 +246,8 @@ public class RudderDeviceModeManager {
                     RudderMessage message = RudderGson.deserialize(messages.get(i), RudderMessage.class);
                     if (message != null) {
                         processMessage(message, messageIds.get(i), true);
+                    } else {
+                        markDeviceModeTransformationDone(messageIds.get(i));
                     }
                 } catch (Exception e) {
                     ReportManager.reportError(e);

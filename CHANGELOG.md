@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.26.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.25.0...v1.26.0) (2024-12-09)
+
+
+### Features
+
+* add alias api with previousId support ([#485](https://github.com/rudderlabs/rudder-sdk-android/issues/485)) ([179c262](https://github.com/rudderlabs/rudder-sdk-android/commit/179c26276d9c875d9ebeec6d8ed8d3c105bc805a))
+
+
+### Bug Fixes
+
+* catch OutOfMemoryError in RudderCloudModeManager ([#487](https://github.com/rudderlabs/rudder-sdk-android/issues/487)) ([0b3759e](https://github.com/rudderlabs/rudder-sdk-android/commit/0b3759e66ab93894932d0b20f14d848d50030d81))
+* handle invalid json issue ([#486](https://github.com/rudderlabs/rudder-sdk-android/issues/486)) ([4579fc2](https://github.com/rudderlabs/rudder-sdk-android/commit/4579fc2e936957ece459e6541c290a2bc2a9c6ac))
+
 ### [1.25.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.25.0...v1.25.1) (2024-10-14)
 
 
