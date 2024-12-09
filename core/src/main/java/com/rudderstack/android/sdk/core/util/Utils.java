@@ -347,4 +347,13 @@ public class Utils {
 
         return timeInReadableFormat.toString();
     }
+
+    public static void sleep(long timeInMillis) {
+        try {
+            Thread.sleep(timeInMillis);
+        } catch (InterruptedException ex) {
+            ReportManager.reportError(ex);
+            Thread.currentThread().interrupt();
+        }
+    }
 }
