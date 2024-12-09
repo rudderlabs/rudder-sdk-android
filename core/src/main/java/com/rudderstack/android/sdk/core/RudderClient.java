@@ -471,7 +471,7 @@ public class RudderClient {
     }
 
     public void alias(@NonNull String newId, @Nullable RudderOption option) {
-        alias(newId, option, null);
+        alias(newId, null, option);
     }
 
     /**
@@ -482,7 +482,7 @@ public class RudderClient {
      * @param newId  New userId for the user
      * @param option RudderOptions for this event
      */
-    public void alias(@NonNull String newId, @Nullable RudderOption option, @Nullable String previousId) {
+    public void alias(@NonNull String newId, @Nullable String previousId, @Nullable RudderOption option) {
         RudderContext context = getRudderContext();
         Map<String, Object> traits = null;
         if (context != null) {
