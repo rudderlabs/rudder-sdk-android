@@ -477,9 +477,8 @@ public class RudderClient {
     /**
      * Alias call
      *
-     * <b>Segment compatible API</b>
-     *
      * @param newId  New userId for the user
+     * @param previousId Previous userId for the user
      * @param option RudderOptions for this event
      */
     public void alias(@NonNull String newId, @Nullable String previousId, @Nullable RudderOption option) {
