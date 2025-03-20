@@ -10,12 +10,12 @@ jobs:
     if: startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/hotfix/') || startsWith(github.ref, 'refs/heads/develop-mpx') || startsWith(github.ref, 'refs/heads/hotfix-mpx')
     steps:
       - name: Checkout source branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set Node 16
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 16
 
@@ -75,7 +75,7 @@ jobs:
           git push --follow-tags
 
       - name: Create pull request into main
-        uses: repo-sync/pull-request@v2
+        uses: repo-sync/pull-request@7e79a9f5dc3ad0ce53138f01df2fad14a04831c5 # v2
         with:
           source_branch: ${{ steps.create-release.outputs.branch_name }}
           destination_branch: ${{ steps.create-release.outputs.main_branch }}

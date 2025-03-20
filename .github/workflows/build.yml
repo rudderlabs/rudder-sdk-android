@@ -13,7 +13,7 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: styfle/cancel-workflow-action@0.11.0
+      - uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa #v0.12.1
         with:
           workflow_id: ${{ github.event.workflow.id }}
 
@@ -22,15 +22,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           distribution: 'temurin' # See 'Supported distributions' for available options
           java-version: '11'
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: cache gradle dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -58,7 +58,7 @@ jobs:
 #    runs-on: ubuntu-latest
 #
 #    steps:
-#      - uses: actions/checkout@v3
+#      - uses: actions/checkout@v4
 #      - name: Grant execute permission for gradlew
 #        run: chmod +x gradlew
 #      - name: cache gradle dependencies
@@ -82,7 +82,7 @@ jobs:
 #    runs-on: ubuntu-latest
 #
 #    steps:
-#      - uses: actions/checkout@v3
+#      - uses: actions/checkout@v4
 #      - name: Grant execute permission for gradlew
 #        run: chmod +x gradlew
 #      - name: Snyk

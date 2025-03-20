@@ -498,7 +498,10 @@ public class RudderDeviceModeManager {
      */
     private boolean isEventAllowed(RudderMessage message, String destinationName) {
         Boolean isDestinationEnabledForMessage = isDestinationEnabled(destinationName, message);
-        Boolean isEventAllowedForDestination = rudderEventFilteringPlugin.isEventAllowed(destinationName, message);
+        boolean isEventAllowedForDestination = true;
+        if (rudderEventFilteringPlugin != null) {
+            isEventAllowedForDestination = rudderEventFilteringPlugin.isEventAllowed(destinationName, message);
+        }
         return isDestinationEnabledForMessage && isEventAllowedForDestination;
     }
 

@@ -23,12 +23,12 @@ jobs:
           
           echo "release_version=$VERSION" >> $GITHUB_OUTPUT
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 16
 
@@ -41,7 +41,7 @@ jobs:
           npx conventional-github-releaser -p angular
 
       - name: Create pull request into develop
-        uses: repo-sync/pull-request@v2
+        uses: repo-sync/pull-request@7e79a9f5dc3ad0ce53138f01df2fad14a04831c5 # v2
         if: (startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release/'))
         with:
           source_branch: 'master'
@@ -51,7 +51,7 @@ jobs:
           pr_body: ':crown: *An automated PR*'
           pr_reviewer: '@rudderlabs/sdk-android'
       - name: Create pull request into develop-mpx
-        uses: repo-sync/pull-request@v2
+        uses: repo-sync/pull-request@7e79a9f5dc3ad0ce53138f01df2fad14a04831c5 # v2
         if: (startsWith(github.event.pull_request.head.ref, 'release-mpx/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/'))
         with:
           source_branch: 'master'
