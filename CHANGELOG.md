@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.27.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.26.0...v1.27.0) (2025-03-20)
+
+
+### Features
+
+* increase MAX_EVENT_SIZE from 32 KB to 64 KB ([#493](https://github.com/rudderlabs/rudder-sdk-android/issues/493)) ([540cee2](https://github.com/rudderlabs/rudder-sdk-android/commit/540cee2969c155568cf053bf541a5727897f8a3d))
+
+
+### Bug Fixes
+
+* resolve NPE issue in the custom factory feature ([#499](https://github.com/rudderlabs/rudder-sdk-android/issues/499)) ([b74ab7a](https://github.com/rudderlabs/rudder-sdk-android/commit/b74ab7a0d19bb3034f8ce4ea08afef76f8ddd435))
+
 ## [1.26.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.25.0...v1.26.0) (2024-12-09)
 
 
