@@ -33,16 +33,13 @@ class RudderUserSession {
         RudderLogger.logDebug(String.format(Locale.US, "Starting new session with id: %s", sessionId));
     }
 
-
-    public void startSessionIfNeeded() {
+    public synchronized void startSessionIfNeeded() {
         if (this.lastActiveTimestamp == null) {
             this.startSession();
             return;
         }
         final long timeDifference;
-        synchronized (this) {
-            timeDifference = Math.abs((Utils.getCurrentTimeInMilliSeconds() - this.lastActiveTimestamp));
-        }
+        timeDifference = Math.abs((Utils.getCurrentTimeInMilliSeconds() - this.lastActiveTimestamp));
         if (timeDifference > this.config.getSessionTimeout()) {
             refreshSession();
         }
