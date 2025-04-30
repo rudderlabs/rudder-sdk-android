@@ -15,6 +15,7 @@ import static com.rudderstack.android.sdk.core.util.Utils.getBatch;
 import static com.rudderstack.android.sdk.core.util.Utils.getNumberOfBatches;
 import androidx.annotation.Nullable;
 
+import android.database.sqlite.SQLiteFullException;
 import android.text.TextUtils;
 
 import java.io.BufferedInputStream;
@@ -52,55 +53,61 @@ class FlushUtils {
         final ArrayList<String> messages = new ArrayList<>();
         RudderLogger.logDebug("FlushUtils: flush: Fetching events to flush to server");
         synchronized (MessageUploadLock.UPLOAD_LOCK) {
-            dbManager.fetchAllCloudModeEventsFromDB(messageIds, messages);
-            int numberOfBatches = getNumberOfBatches(messages.size(), flushQueueSize);
-            RudderLogger.logDebug(String.format(Locale.US, "FlushUtils: flush: %d batches of events to be flushed", numberOfBatches));
-            boolean lastBatchFailed;
-            String lastErrorMessage = "";
-            for (int i = 1; i <= numberOfBatches; i++) {
-                lastBatchFailed = true;
-                int retries = 3;
-                while (retries-- > 0) {
+            try {
+                dbManager.fetchAllCloudModeEventsFromDB(messageIds, messages);
+                int numberOfBatches = getNumberOfBatches(messages.size(), flushQueueSize);
+                RudderLogger.logDebug(String.format(Locale.US, "FlushUtils: flush: %d batches of events to be flushed", numberOfBatches));
+                boolean lastBatchFailed;
+                String lastErrorMessage = "";
+                for (int i = 1; i <= numberOfBatches; i++) {
+                    lastBatchFailed = true;
+                    int retries = 3;
+                    while (retries-- > 0) {
 
-                    List<Integer> batchMessageIds = getBatch(messageIds, flushQueueSize);
-                    List<String> batchMessages = getBatch(messages, flushQueueSize);
-                    String payload = getPayloadFromMessages(batchMessageIds, batchMessages);
-                    RudderLogger.logDebug(String.format(Locale.US, "FlushUtils: flush: payload: %s", payload));
-                    RudderLogger.logInfo(String.format(Locale.US, "FlushUtils: flush: EventCount: %d", batchMessages.size()));
+                        List<Integer> batchMessageIds = getBatch(messageIds, flushQueueSize);
+                        List<String> batchMessages = getBatch(messages, flushQueueSize);
+                        String payload = getPayloadFromMessages(batchMessageIds, batchMessages);
+                        RudderLogger.logDebug(String.format(Locale.US, "FlushUtils: flush: payload: %s", payload));
+                        RudderLogger.logInfo(String.format(Locale.US, "FlushUtils: flush: EventCount: %d", batchMessages.size()));
 
-                    if (payload != null) {
-                        // send payload to server if it is not null
-                        networkResponse = networkManager.sendNetworkRequest(payload, addEndPoint(dataPlaneUrl, RudderCloudModeManager.BATCH_ENDPOINT), RequestMethod.POST, true);
-                        RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: ServerResponse: %d", networkResponse.statusCode));
-                        // if success received from server
-                        if (networkResponse.status == NetworkResponses.SUCCESS) {
-                            ReportManager.incrementCloudModeUploadSuccessCounter(batchMessageIds.size());
-                            // remove events from DB
-                            RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: Successfully sent batch %d/%d ", i, numberOfBatches));
-                            RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: clearingEvents of batch %d from DB: %s", i, networkResponse));
+                        if (payload != null) {
+                            // send payload to server if it is not null
+                            networkResponse = networkManager.sendNetworkRequest(payload, addEndPoint(dataPlaneUrl, RudderCloudModeManager.BATCH_ENDPOINT), RequestMethod.POST, true);
+                            RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: ServerResponse: %d", networkResponse.statusCode));
+                            // if success received from server
+                            if (networkResponse.status == NetworkResponses.SUCCESS) {
+                                ReportManager.incrementCloudModeUploadSuccessCounter(batchMessageIds.size());
+                                // remove events from DB
+                                RudderLogger.logDebug(String.format(Locale.US, "EventRepository: flush: Successfully sent batch %d/%d ", i, numberOfBatches));
+                                RudderLogger.logInfo(String.format(Locale.US, "EventRepository: flush: clearingEvents of batch %d from DB: %s", i, networkResponse));
+                                dbManager.markCloudModeDone(batchMessageIds);
+                                messageIds.removeAll(batchMessageIds);
+                                messages.removeAll(batchMessages);
+                                lastBatchFailed = false;
+                                break;
+                            }
+                            ReportManager.incrementCloudModeUploadRetryCounter(1);
+                            lastErrorMessage = getLastErrorMessage(networkResponse);
+
+                        } else {
+                            lastErrorMessage = ReportManager.LABEL_TYPE_PAYLOAD_NULL;
                             dbManager.markCloudModeDone(batchMessageIds);
-                            messageIds.removeAll(batchMessageIds);
-                            messages.removeAll(batchMessages);
-                            lastBatchFailed = false;
-                            break;
                         }
-                        ReportManager.incrementCloudModeUploadRetryCounter(1);
-                        lastErrorMessage = getLastErrorMessage(networkResponse);
-
-                    } else {
-                        lastErrorMessage = ReportManager.LABEL_TYPE_PAYLOAD_NULL;
-                        dbManager.markCloudModeDone(batchMessageIds);
+                        RudderLogger.logWarn(String.format(Locale.US, "EventRepository: flush: Failed to send batch %d/%d retrying again, %d retries left", i, numberOfBatches, retries));
                     }
-                    RudderLogger.logWarn(String.format(Locale.US, "EventRepository: flush: Failed to send batch %d/%d retrying again, %d retries left", i, numberOfBatches, retries));
+                    if (lastBatchFailed) {
+                        ReportManager.incrementCloudModeUploadAbortCounter(1, Collections.singletonMap(LABEL_TYPE, lastErrorMessage));
+                        RudderLogger.logWarn(String.format(Locale.US, "EventRepository: flush: Failed to send batch %d/%d after 3 retries , dropping the remaining batches as well", i, numberOfBatches));
+                        return false;
+                    }
                 }
-                if (lastBatchFailed) {
-                    ReportManager.incrementCloudModeUploadAbortCounter(1, Collections.singletonMap(LABEL_TYPE, lastErrorMessage));
-                    RudderLogger.logWarn(String.format(Locale.US, "EventRepository: flush: Failed to send batch %d/%d after 3 retries , dropping the remaining batches as well", i, numberOfBatches));
-                    return false;
-                }
+                reportBatchesAndMessages(numberOfBatches, messages.size());
+                return true;
+            } catch (SQLiteFullException e) {
+                RudderLogger.logError("FlushUtils: flush: SQLiteFullException: " + e);
+                ReportManager.reportError(e);
+                return false;
             }
-            reportBatchesAndMessages(numberOfBatches, messages.size());
-            return true;
         }
     }
 
