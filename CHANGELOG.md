@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.27.2](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.27.1...v1.27.2) (2025-05-05)
+
+
+### Bug Fixes
+
+* handle SQLiteFullException in event saving and flushing logic ([#510](https://github.com/rudderlabs/rudder-sdk-android/issues/510)) ([8e3fec1](https://github.com/rudderlabs/rudder-sdk-android/commit/8e3fec1f39f2bf621d8e7008efb9fd05cc9e5034))
+
 ### [1.27.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.27.0...v1.27.1) (2025-04-02)
 
 
