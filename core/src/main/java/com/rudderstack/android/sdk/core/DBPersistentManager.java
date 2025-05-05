@@ -6,6 +6,7 @@ import android.app.Application;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabaseCorruptException;
+import android.database.sqlite.SQLiteFullException;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -680,19 +681,24 @@ class DBInsertionHandlerThread extends HandlerThread {
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
             if (this.persistence.isAccessible()) {
-                EventInsertionCallback callback = (EventInsertionCallback) msg.obj;
-                Bundle msgBundle = msg.getData();
-                String messageJson = msgBundle.getString(DBPersistentManager.EVENT);
-                long updatedTime = System.currentTimeMillis();
-                RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: " +
-                                "saveEvent: Inserting Message %s into table %s as Updated at %d",
-                        messageJson.replace("'", BACKSLASH), DBPersistentManager.EVENTS_TABLE_NAME, updatedTime));
-                ContentValues insertValues = new ContentValues();
-                insertValues.put(DBPersistentManager.MESSAGE_COL, messageJson.replace("'", BACKSLASH));
-                insertValues.put(DBPersistentManager.UPDATED_COL, updatedTime);
-                long rowId = persistence.insert(DBPersistentManager.EVENTS_TABLE_NAME, null, insertValues); //rowId will used
-                callback.onInsertion((int) rowId);
-                RudderLogger.logInfo("DBPersistentManager: saveEvent: Event saved to DB");
+                try {
+                    EventInsertionCallback callback = (EventInsertionCallback) msg.obj;
+                    Bundle msgBundle = msg.getData();
+                    String messageJson = msgBundle.getString(DBPersistentManager.EVENT);
+                    long updatedTime = System.currentTimeMillis();
+                    RudderLogger.logDebug(String.format(Locale.US, "DBPersistentManager: " +
+                                    "saveEvent: Inserting Message %s into table %s as Updated at %d",
+                            messageJson.replace("'", BACKSLASH), DBPersistentManager.EVENTS_TABLE_NAME, updatedTime));
+                    ContentValues insertValues = new ContentValues();
+                    insertValues.put(DBPersistentManager.MESSAGE_COL, messageJson.replace("'", BACKSLASH));
+                    insertValues.put(DBPersistentManager.UPDATED_COL, updatedTime);
+                    long rowId = persistence.insert(DBPersistentManager.EVENTS_TABLE_NAME, null, insertValues); //rowId will used
+                    callback.onInsertion((int) rowId);
+                    RudderLogger.logInfo("DBPersistentManager: saveEvent: Event saved to DB");
+                } catch (SQLiteFullException e) {
+                    RudderLogger.logError("DBPersistentManager: saveEvent: SQLiteFullException: " + e);
+                    ReportManager.reportError(e);
+                }
             } else {
                 RudderLogger.logError("DBPersistentManager: saveEvent: database is not writable");
             }
