@@ -107,6 +107,7 @@ public class RudderCloudModeManager {
                         ReportManager.reportError(ex);
                         RudderLogger.logError(String.format("CloudModeManager: cloudModeProcessor: Exception while trying to send events to Data plane URL %s due to %s", config.getDataPlaneUrl(), ex.getLocalizedMessage()));
                         Thread.currentThread().interrupt();
+                        Utils.sleep(1000);
                     } catch (OutOfMemoryError e) {
                         RudderLogger.logError(String.format("CloudModeManager: cloudModeProcessor: Out of memory error: %s occurred while trying to send events to Data plane URL: %s", e.getLocalizedMessage(), config.getDataPlaneUrl()));
                         // sleeping the thread for 1s to avoid continuous loop after OOM.
