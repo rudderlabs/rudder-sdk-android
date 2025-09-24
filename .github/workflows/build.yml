@@ -26,7 +26,7 @@ jobs:
         with:
           distribution: 'temurin' # See 'Supported distributions' for available options
           java-version: '11'
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: cache gradle dependencies
@@ -58,7 +58,7 @@ jobs:
 #    runs-on: ubuntu-latest
 #
 #    steps:
-#      - uses: actions/checkout@v4
+#      - uses: actions/checkout@v5
 #      - name: Grant execute permission for gradlew
 #        run: chmod +x gradlew
 #      - name: cache gradle dependencies
@@ -82,7 +82,7 @@ jobs:
 #    runs-on: ubuntu-latest
 #
 #    steps:
-#      - uses: actions/checkout@v4
+#      - uses: actions/checkout@v5
 #      - name: Grant execute permission for gradlew
 #        run: chmod +x gradlew
 #      - name: Snyk
