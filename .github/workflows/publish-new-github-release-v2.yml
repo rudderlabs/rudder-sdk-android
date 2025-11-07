@@ -29,7 +29,7 @@ jobs:
           echo "release_version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           fetch-depth: 0
 
@@ -43,7 +43,7 @@ jobs:
           echo "previous_version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Setup Node v2
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -85,7 +85,7 @@ jobs:
           npm run release:github -- --base=$last_version --head=$current_version
 
       - name: Create pull request into develop v2
-        uses: repo-sync/pull-request@v2
+        uses: repo-sync/pull-request@7e79a9f5dc3ad0ce53138f01df2fad14a04831c5 # v2.12.1
         with:
           source_branch: 'master-v2'
           destination_branch: 'develop-v2'
@@ -95,7 +95,7 @@ jobs:
           pr_reviewer: '@rudderlabs/sdk-android'
 
       - name: Delete hotfix release branch v2
-        uses: koj-co/delete-merged-action@master
+        uses: koj-co/delete-merged-action@63a03c35810a8a7d4840d18793c0f68ff8b59450 # master
         if: startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/')
         with:
           branches: 'hotfix-release-v2/*'
@@ -103,7 +103,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Delete release branch v2
-        uses: koj-co/delete-merged-action@master
+        uses: koj-co/delete-merged-action@63a03c35810a8a7d4840d18793c0f68ff8b59450 # master
         if: startsWith(github.event.pull_request.head.ref, 'release-v2/')
         with:
           branches: 'release-v2/*'
@@ -112,7 +112,7 @@ jobs:
 
       - name: Send message to Slack channel
         id: slack
-        uses: slackapi/slack-github-action@v2.0.0
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           PROJECT_NAME: 'Rudderstack Kotlin SDK v2 monorepo'
