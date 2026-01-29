@@ -11,7 +11,7 @@ permissions:
 jobs:
   draft-new-release-v2:
     permissions:
-      contents: write  # for Git to git push
+      contents: read # to read repository contents
     name: Draft a new release for v2
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/develop-v2') || startsWith(github.ref, 'refs/heads/hotfix-v2/')
@@ -20,6 +20,15 @@ jobs:
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           egress-policy: audit
+
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
+          permission-contents: write # to create commits, tags, and releases
+          permission-pull-requests: write # to create and update PRs
 
       - name: Checkout source branch
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
@@ -89,6 +98,8 @@ jobs:
           git commit -m "chore: sync versions and generate release logs"
 
       - name: Push new versions in release branch
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           git push --follow-tags
 
@@ -97,7 +108,7 @@ jobs:
         with:
           source_branch: ${{ steps.create-release.outputs.branch_name }}
           destination_branch: 'master-v2'
-          github_token: ${{ secrets.PAT }}
+          github_token: ${{ steps.generate-token.outputs.token }}
           pr_title: 'chore(release): pulling ${{ steps.create-release.outputs.branch_name }} into master-v2'
           pr_body: ':crown: *An automated PR*'
           pr_reviewer: '@rudderlabs/sdk-android'
