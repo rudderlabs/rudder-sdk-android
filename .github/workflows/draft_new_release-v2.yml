@@ -55,6 +55,8 @@ jobs:
       # Calculate the next release version based on conventional semantic release
       - name: Create release branch
         id: create-release
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           source_branch_name=${GITHUB_REF##*/}
           release_type=release-v2
@@ -83,7 +85,7 @@ jobs:
           echo "CURRENT_VERSION_VALUE=$current_version" >> $GITHUB_ENV
           echo "NEW_VERSION_VALUE=$new_version" >> $GITHUB_ENV
 
-      - name: Update changelog & bump version
+      - name: Update changelog & bump version (skip commit)
         id: finish-release
         # We need main history that contains all previous tags commit reference
         run: |
@@ -94,14 +96,21 @@ jobs:
           ./scripts/sync-tags-in-nx-projects.sh
           ./scripts/generate-last-release-changelog.sh
           npm run bump-version:monorepo
-          git add .
-          git commit -m "chore: sync versions and generate release logs"
 
-      - name: Push new versions in release branch
+      - name: Create verified commit and tag via API
+        uses: ryancyq/github-signed-commit@e9f3b28c80da7be66d24b8f501a5abe82a6b855f # v1.2.0
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-        run: |
-          git push --follow-tags
+        with:
+          branch-name: ${{ steps.create-release.outputs.branch_name }}
+          commit-message: 'chore: sync versions and generate release logs'
+          files: |
+            CHANGELOG.md
+            packages/*/CHANGELOG.md
+            package.json
+            packages/*/package.json
+            package-lock.json
+          tag: 'v${{ steps.create-release.outputs.new_version }}'
 
       - name: Create pull request into master-v2
         uses: repo-sync/pull-request@7e79a9f5dc3ad0ce53138f01df2fad14a04831c5 # v2.12.1

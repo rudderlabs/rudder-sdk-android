@@ -32,8 +32,9 @@ jobs:
 
       - name: Extract version from branch name (for release branches)
         id: extract-version-v2
+        env:
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
         run: |
-          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           VERSION=${BRANCH_NAME#hotfix-}
           VERSION=${VERSION#release-v2/}
 
@@ -75,8 +76,8 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
-          git tag -a v${{ steps.extract-version.outputs.release_version }} -m "chore: release v${{ steps.extract-version.outputs.release_version }}"
-          git push origin refs/tags/v${{ steps.extract-version.outputs.release_version }}
+          git tag -a v${{ steps.extract-version-v2.outputs.release_version }} -m "chore: release v${{ steps.extract-version-v2.outputs.release_version }}"
+          git push origin refs/tags/v${{ steps.extract-version-v2.outputs.release_version }}
 
       - name: Get the two latest versions
         run: |
@@ -103,7 +104,7 @@ jobs:
           source_branch: 'master-v2'
           destination_branch: 'develop-v2'
           github_token: ${{ steps.generate-token.outputs.token }}
-          pr_title: 'chore(release): pulling master-v2 into develop-v2 post release v${{ steps.extract-version.outputs.release_version }}'
+          pr_title: 'chore(release): pulling master-v2 into develop-v2 post release v${{ steps.extract-version-v2.outputs.release_version }}'
           pr_body: ':crown: *An automated PR*'
           pr_reviewer: '@rudderlabs/sdk-android'
 
@@ -149,7 +150,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Release: <${{env.RELEASES_URL}}${{ steps.extract-previous-version.outputs.previous_version }}...v${{ steps.extract-version.outputs.release_version }}|v${{ steps.extract-version.outputs.release_version }}>*\n${{ env.DATE }}"
+                    "text": "*Release: <${{env.RELEASES_URL}}${{ steps.extract-previous-version-v2.outputs.previous_version }}...v${{ steps.extract-version-v2.outputs.release_version }}|v${{ steps.extract-version-v2.outputs.release_version }}>*\n${{ env.DATE }}"
                   }
                 }
               ]
