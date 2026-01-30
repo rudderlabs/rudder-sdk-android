@@ -73,11 +73,14 @@ jobs:
 
       - name: Create Monorepo Release Tag v2
         id: create_monorepo_release_v2
+        uses: ryancyq/github-signed-commit@e9f3b28c80da7be66d24b8f501a5abe82a6b855f # v1.2.0
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-        run: |
-          git tag -a v${{ steps.extract-version-v2.outputs.release_version }} -m "chore: release v${{ steps.extract-version-v2.outputs.release_version }}"
-          git push origin refs/tags/v${{ steps.extract-version-v2.outputs.release_version }}
+        with:
+          branch-name: master-v2
+          commit-message: 'chore: release v${{ steps.extract-version-v2.outputs.release_version }}'
+          tag: 'v${{ steps.extract-version-v2.outputs.release_version }}'
+          files: ''
 
       - name: Get the two latest versions
         run: |
