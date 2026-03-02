@@ -74,12 +74,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.error).setOnClickListener {
-//            try {
-                val error = Exception("Test Error-" + Date())
-                ReportManager.reportError(error)
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            }
+            // Error reporting has been removed - this button is now a no-op
+            val error = Exception("Test Error-" + Date())
+            Log.e("MainActivity", "Test error created (reporting removed)", error)
         }
         findViewById<Button>(R.id.crash).setOnClickListener {
             throw RuntimeException("Test Crash")

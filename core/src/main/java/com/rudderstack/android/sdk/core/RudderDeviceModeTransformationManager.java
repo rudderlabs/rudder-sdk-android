@@ -9,7 +9,6 @@ import com.rudderstack.android.sdk.core.gson.RudderGson;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -106,8 +105,7 @@ public class RudderDeviceModeTransformationManager {
     }
 
     private void reportMessageSubmittedMetric(RudderMessage message) {
-        ReportManager.incrementDMTSubmittedCounter(1,
-                Collections.singletonMap(ReportManager.LABEL_TYPE, message.getType()));
+        // No-op: metrics reporting removed
     }
 
     private boolean handleTransformationResponse(Result result, TransformationRequest transformationRequest) {
@@ -134,18 +132,15 @@ public class RudderDeviceModeTransformationManager {
     }
 
     private void reportResourceNotFoundMetric() {
-        ReportManager.incrementDMTErrorCounter(1,
-                Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_FAIL_RESOURCE_NOT_FOUND));
+        // No-op: metrics reporting removed
     }
 
     private void reportBadRequestMetric() {
-        ReportManager.incrementDMTErrorCounter(1,
-                Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_FAIL_BAD_REQUEST));
+        // No-op: metrics reporting removed
     }
 
     private void reportWriteKeyErrorMetric() {
-        ReportManager.incrementDMTErrorCounter(1,
-                Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_FAIL_WRITE_KEY));
+        // No-op: metrics reporting removed
     }
 
     private void handleError(TransformationRequest transformationRequest) {
@@ -160,7 +155,6 @@ public class RudderDeviceModeTransformationManager {
             try {
                 Thread.sleep(delay);
             } catch (Exception e) {
-                ReportManager.reportError(e);
                 RudderLogger.logError(e);
                 Thread.currentThread().interrupt();
             }
@@ -168,12 +162,11 @@ public class RudderDeviceModeTransformationManager {
     }
 
     private void reportMaxRetryExceededMetric() {
-        ReportManager.incrementDMTErrorCounter(1,
-                Collections.singletonMap(ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_FAIL_MAX_RETRY));
+        // No-op: metrics reporting removed
     }
 
     private void incrementRetryCountMetric() {
-        ReportManager.incrementDMTRetryCounter(1);
+        // No-op: metrics reporting removed
     }
 
     private void sendOriginalEvents(TransformationRequest transformationRequest) {
@@ -200,29 +193,12 @@ public class RudderDeviceModeTransformationManager {
             rudderDeviceModeManager.sendTransformedEvents(transformationResponse);
             completeDeviceModeEventProcessing();
         } catch (Exception e) {
-            ReportManager.reportError(e);
             RudderLogger.logError("DeviceModeTransformationManager: handleSuccess: Error encountered during transformed response deserialization to TransformationResponse schema: " + e);
         }
     }
 
     private void incrementDmtSuccessMetric(TransformationResponse transformationResponse) {
-        if (transformationResponse == null || transformationResponse.transformedBatch == null) {
-            return;
-        }
-        for (TransformationResponse.TransformedDestination transformedDestination : transformationResponse.transformedBatch) {
-            if (transformedDestination.payload == null) {
-                continue;
-            }
-            for (TransformationResponse.TransformedEvent transformedEvent :
-                    transformedDestination.payload) {
-                if (transformedEvent.event == null) {
-                    continue;
-                }
-                ReportManager.incrementDMTEventSuccessResponseCounter(1,
-                        Collections.singletonMap(ReportManager.LABEL_TYPE, transformedEvent.event.getType()));
-            }
-
-        }
+        // No-op: metrics reporting removed
     }
 
     private void completeDeviceModeEventProcessing() {

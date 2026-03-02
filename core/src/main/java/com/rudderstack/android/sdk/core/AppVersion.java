@@ -35,7 +35,6 @@ class AppVersion {
             RudderLogger.logDebug("Current Installed Version: " + currentVersion);
             RudderLogger.logDebug("Current Installed Build: " + currentBuild);
         } catch (PackageManager.NameNotFoundException ex) {
-            ReportManager.reportError(ex);
             RudderLogger.logError(ex);
         }
     }

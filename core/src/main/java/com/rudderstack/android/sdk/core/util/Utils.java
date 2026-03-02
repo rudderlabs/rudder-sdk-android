@@ -14,7 +14,6 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 
 import com.google.gson.reflect.TypeToken;
-import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderLogger;
 import com.rudderstack.android.sdk.core.gson.RudderGson;
 
@@ -170,7 +169,6 @@ public class Utils {
         try {
             utf8Length = message.getBytes("UTF-8").length;
         } catch (UnsupportedEncodingException ex) {
-            ReportManager.reportError(ex);
             RudderLogger.logError(ex);
             utf8Length = -1;
         }
@@ -223,7 +221,6 @@ public class Utils {
                     return Uri.parse(referrerName).toString();
                 }
             } catch (BadParcelableException | ParseException e) {
-                ReportManager.reportError(e);
                 return null;
             }
         }
@@ -352,7 +349,6 @@ public class Utils {
         try {
             Thread.sleep(timeInMillis);
         } catch (InterruptedException ex) {
-            ReportManager.reportError(ex);
             Thread.currentThread().interrupt();
         }
     }
