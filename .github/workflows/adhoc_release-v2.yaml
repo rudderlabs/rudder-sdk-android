@@ -11,12 +11,10 @@ on:
           - core
           - android
           - rudderjsonadapter
-          - gsonrudderadapter
           - jacksonrudderadapter
           - moshirudderadapter
           - models
           - repository
-          - rudderreporter
           - web
 permissions:
   contents: read

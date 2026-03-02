@@ -1,6 +1,5 @@
 package com.rudderstack.android.sdk.core;
 
-import com.rudderstack.android.ruddermetricsreporterandroid.metrics.LongCounter;
 import com.rudderstack.android.sdk.core.util.MessageUploadLock;
 import com.rudderstack.android.sdk.core.util.Utils;
 
