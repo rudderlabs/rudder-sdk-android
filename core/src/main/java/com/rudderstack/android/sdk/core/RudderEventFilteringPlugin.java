@@ -92,16 +92,10 @@ class RudderEventFilteringPlugin {
                 isEventAllowed = !getBlacklistEvents(destinationName).contains(message.getEventName().trim());
             }
             handleLogMessage(isEventAllowed, destinationName, message.getEventName().trim());
-            if (!isEventAllowed) {
-                eventFilteredMetrics(destinationName);
-            }
+
             return isEventAllowed;
         }
         return true;
-    }
-
-    private static void eventFilteredMetrics(@NonNull String destinationName) {
-        // No-op: metrics reporting removed
     }
 
     /**
