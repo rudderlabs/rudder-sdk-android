@@ -99,31 +99,23 @@ public class RudderDeviceModeTransformationManager {
                 RudderLogger.logError("DeviceModeTransformationManager: createMessageIdTransformationRequestMap: Error in deserializing message");
                 continue;
             }
-            reportMessageSubmittedMetric(message);
             messageIdTransformationRequestMap.put(messageIds.get(i), message);
         }
     }
 
-    private void reportMessageSubmittedMetric(RudderMessage message) {
-        // No-op: metrics reporting removed
-    }
-
     private boolean handleTransformationResponse(Result result, TransformationRequest transformationRequest) {
         if (result.status == NetworkResponses.WRITE_KEY_ERROR) {
-            reportWriteKeyErrorMetric();
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Wrong WriteKey. Aborting");
             return true;
         } else if (result.status == NetworkResponses.NETWORK_UNAVAILABLE) {
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Network unavailable. Aborting");
             return true;
         } else if (result.status == NetworkResponses.BAD_REQUEST) {
-            reportBadRequestMetric();
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Bad request, sending back the original events to the factories");
             sendOriginalEvents(transformationRequest);
         } else if (result.status == NetworkResponses.ERROR) {
             handleError(transformationRequest);
         } else if (result.status == NetworkResponses.RESOURCE_NOT_FOUND) { // sending back the original messages itself to the factories as transformation feature is not enabled
-            reportResourceNotFoundMetric();
             handleResourceNotFound(transformationRequest);
         } else {
             handleSuccess(result);
@@ -131,26 +123,12 @@ public class RudderDeviceModeTransformationManager {
         return false;
     }
 
-    private void reportResourceNotFoundMetric() {
-        // No-op: metrics reporting removed
-    }
-
-    private void reportBadRequestMetric() {
-        // No-op: metrics reporting removed
-    }
-
-    private void reportWriteKeyErrorMetric() {
-        // No-op: metrics reporting removed
-    }
-
     private void handleError(TransformationRequest transformationRequest) {
         int delay = Math.min((1 << retryCount) * 500, MAX_DELAY); // Exponential backoff
         if (retryCount++ == MAX_RETRIES) {
             retryCount = 0;
-            reportMaxRetryExceededMetric();
             sendOriginalEvents(transformationRequest);
         } else {
-            incrementRetryCountMetric();
             RudderLogger.logDebug("DeviceModeTransformationManager: TransformationProcessor: Retrying in " + delay + "s");
             try {
                 Thread.sleep(delay);
@@ -159,14 +137,6 @@ public class RudderDeviceModeTransformationManager {
                 Thread.currentThread().interrupt();
             }
         }
-    }
-
-    private void reportMaxRetryExceededMetric() {
-        // No-op: metrics reporting removed
-    }
-
-    private void incrementRetryCountMetric() {
-        // No-op: metrics reporting removed
     }
 
     private void sendOriginalEvents(TransformationRequest transformationRequest) {
