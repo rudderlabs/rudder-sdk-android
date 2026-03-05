@@ -1,6 +1,5 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.ReportManager.incrementDeviceModeEventCounter;
 import static com.rudderstack.android.sdk.core.util.Utils.getBooleanFromMap;
 import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedEvent;
 import static com.rudderstack.android.sdk.core.TransformationResponse.TransformedDestination;
@@ -99,19 +98,7 @@ public class RudderDeviceModeManager {
     }
 
     private static void collectDissentedMetrics(List<RudderServerDestination> destinations, List<RudderServerDestination> consentedDestinations) {
-        List<RudderServerDestination> destinationsCopy = new ArrayList<>(destinations);
-        destinationsCopy.removeAll(consentedDestinations);
-        for (RudderServerDestination destination : destinationsCopy) {
-            reportDiscardedDestinationWithType(destination.getDestinationDefinition().displayName, ReportManager.LABEL_TYPE_DESTINATION_DISSENTED);
-        }
-
-    }
-
-    private static void reportDiscardedDestinationWithType(String destinationName, String type) {
-        Map<String, String> labelsMap = new HashMap<>();
-        labelsMap.put(ReportManager.LABEL_TYPE, type);
-        labelsMap.put(ReportManager.LABEL_INTEGRATION, destinationName);
-        ReportManager.incrementDeviceModeDiscardedCounter(1, labelsMap);
+        // No-op: metrics collection removed
     }
 
     // The sourceConfig will be used to generate two lists: one containing destinations with enabled transformations,
@@ -168,7 +155,6 @@ public class RudderDeviceModeManager {
                 integrationOperationsMap.put(key, nativeOp);
                 handleCallBacks(key, nativeOp);
             } catch (Exception e) {
-                ReportManager.reportError(e);
                 RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: initiateCustomFactories: Failed to initiate %s native SDK Factory due to %s", key, e.getLocalizedMessage()));
             }
         }
@@ -195,8 +181,6 @@ public class RudderDeviceModeManager {
                     integrationOperationsMap.put(key, nativeOp);
                     handleCallBacks(key, nativeOp);
                 } else {
-                    reportDiscardedDestinationWithType(destination == null ? key : destination.destinationDefinition.displayName
-                            , ReportManager.LABEL_TYPE_DESTINATION_DISABLED);
                     RudderLogger.logDebug(String.format(Locale.US, "EventRepository: initiateFactories: destination was null or not enabled for %s", key));
                 }
             } else {
@@ -250,7 +234,6 @@ public class RudderDeviceModeManager {
                         markDeviceModeTransformationDone(messageIds.get(i));
                     }
                 } catch (Exception e) {
-                    ReportManager.reportError(e);
                     RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: replayMessageQueue: Exception in replaying message %s due to %s", messages.get(i), e.getMessage()));
                 }
             }
@@ -309,21 +292,12 @@ public class RudderDeviceModeManager {
                 try {
                     RudderLogger.logDebug(String.format(Locale.US, "RudderDeviceModeManager: %s: sending event %s for %s", logTag, message.getEventName(), destinationName));
                     RudderLogger.logVerbose(String.format(Locale.US, "RudderDeviceModeManager: sending: %s", RudderGson.serialize(message)));
-                    addDeviceModeCounter(message.getType(), destinationName);
                     integration.dump(message);
                 } catch (Exception e) {
-                    ReportManager.reportError(e);
                     RudderLogger.logError(String.format(Locale.US, "RudderDeviceModeManager: %s: Exception in sending message %s to %s factory %s", logTag, message.getEventName(), destinationName, e.getMessage()));
                 }
             }
         }
-    }
-
-    private void addDeviceModeCounter(String type, String destinationName) {
-        Map<String, String> labelMap = new HashMap<>();
-        labelMap.put(ReportManager.LABEL_TYPE, type);
-        labelMap.put(ReportManager.LABEL_INTEGRATION, destinationName);
-        incrementDeviceModeEventCounter(1, labelMap);
     }
 
     void sendOriginalEvents(TransformationRequest transformationRequest, boolean onTransformationError) {
