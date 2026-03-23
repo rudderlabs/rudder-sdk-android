@@ -10,7 +10,7 @@
   <a href="https://search.maven.org/search?q=g:%22com.rudderstack.android.sdk%22%20AND%20a:%22core%22">
     <img src="https://img.shields.io/maven-central/v/com.rudderstack.android.sdk/core.svg?label=Maven%20Central">
     </a>
-</p>
+</p>te
 
 <p align="center">
   <b>
