@@ -54,8 +54,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-core-
       - name: Set env MODULE_NAME
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-          BRANCH="${{ github.event.pull_request.head.ref }}"
+          BRANCH="$PR_HEAD_REF"
           if [[ $BRANCH == 'master-mpx' || $BRANCH == 'develop-mpx' ]]; then
               echo "MODULE_NAME=core-mpx" >> "$GITHUB_ENV"
           else
