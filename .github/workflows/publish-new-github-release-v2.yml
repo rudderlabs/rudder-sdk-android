@@ -82,6 +82,9 @@ jobs:
           tag: 'v${{ steps.extract-version-v2.outputs.release_version }}'
           files: ''
 
+      - name: Fetch remote tags
+        run: git fetch --tags
+
       - name: Get the two latest versions
         run: |
           CURRENT_VERSION=$(git tag -l "v*" --sort=-version:refname | head -n 1)
