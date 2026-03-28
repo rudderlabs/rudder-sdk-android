@@ -8,6 +8,9 @@ on:
       - closed
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+permissions:
+  contents: read
+
 jobs:
   release-v2:
     name: Publish new release for v2
