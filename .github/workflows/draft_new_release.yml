@@ -77,7 +77,7 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
-          BASE_SHA=$(git rev-parse origin/${{ steps.create-release.outputs.main_branch }})
+          BASE_SHA=$(git rev-parse HEAD)
           gh api repos/${{ github.repository }}/git/refs \
             --method POST \
             -f ref="refs/heads/${{ steps.create-release.outputs.branch_name }}" \
@@ -99,6 +99,7 @@ jobs:
           files: |
             CHANGELOG.md
             gradle.properties
+            package.json
           tag: 'v${{ steps.create-release.outputs.new_version }}'
 
       - name: Create pull request into main
