@@ -39,6 +39,11 @@ jobs:
         with:
           node-version: 16
 
+      - name: Initialize mandatory git config
+        run: |
+          git config user.name "GitHub actions"
+          git config user.email noreply@github.com
+
       # Calculate the next release version based on conventional semantic release
       - name: Calculate release version
         id: create-release
