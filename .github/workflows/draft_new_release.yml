@@ -81,6 +81,21 @@ jobs:
             -f ref="refs/heads/${{ steps.create-release.outputs.branch_name }}" \
             -f sha="$BASE_SHA"
 
+      - name: Merge main into release branch via API
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          gh api repos/${{ github.repository }}/merges \
+            --method POST \
+            -f base="${{ steps.create-release.outputs.branch_name }}" \
+            -f head="${{ steps.create-release.outputs.main_branch }}" \
+            -f commit_message="Merge ${{ steps.create-release.outputs.main_branch }} into ${{ steps.create-release.outputs.branch_name }}"
+
+      - name: Checkout release branch
+        run: |
+          git fetch origin "${{ steps.create-release.outputs.branch_name }}"
+          git checkout "${{ steps.create-release.outputs.branch_name }}"
+
       - name: Update changelog & bump version (skip commit)
         id: finish-release
         run: |
