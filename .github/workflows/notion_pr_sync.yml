@@ -46,6 +46,8 @@ on:
 jobs:
   request:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read # to read PR metadata for Notion sync
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
@@ -57,4 +59,4 @@ jobs:
         with:
           notionKey: ${{ secrets.NOTION_BOT_KEY }}
           notionDatabaseId: ${{ secrets.NOTION_PR_DB_ID }}
-          githubKey: ${{ secrets.PAT }}
+          githubKey: ${{ secrets.GITHUB_TOKEN }}

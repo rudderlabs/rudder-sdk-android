@@ -12,12 +12,23 @@ jobs:
   release-v2:
     name: Publish new release for v2
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # to read repository contents
     if: (startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/')) && github.event.pull_request.merged == true # only merged pull requests must trigger this job
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
           egress-policy: audit
+
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
+          permission-contents: write # to create commits, tags, and releases
+          permission-pull-requests: write # to create and update PRs
 
       - name: Extract version from branch name (for release branches)
         id: extract-version-v2
@@ -63,9 +74,17 @@ jobs:
 
       - name: Create Monorepo Release Tag v2
         id: create_monorepo_release_v2
-        run: |
-          git tag -a v${{ steps.extract-version.outputs.release_version }} -m "chore: release v${{ steps.extract-version.outputs.release_version }}"
-          git push origin refs/tags/v${{ steps.extract-version.outputs.release_version }}
+        uses: ryancyq/github-signed-commit@e9f3b28c80da7be66d24b8f501a5abe82a6b855f # v1.2.0
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        with:
+          branch-name: master-v2
+          commit-message: 'chore: release v${{ steps.extract-version-v2.outputs.release_version }}'
+          tag: 'v${{ steps.extract-version-v2.outputs.release_version }}'
+          files: ''
+
+      - name: Fetch remote tags
+        run: git fetch --tags
 
       - name: Get the two latest versions
         run: |
@@ -91,8 +110,8 @@ jobs:
         with:
           source_branch: 'master-v2'
           destination_branch: 'develop-v2'
-          github_token: ${{ secrets.PAT }}
-          pr_title: 'chore(release): pulling master-v2 into develop-v2 post release v${{ steps.extract-version.outputs.release_version }}'
+          github_token: ${{ steps.generate-token.outputs.token }}
+          pr_title: 'chore(release): pulling master-v2 into develop-v2 post release v${{ steps.extract-version-v2.outputs.release_version }}'
           pr_body: ':crown: *An automated PR*'
           pr_reviewer: '@rudderlabs/sdk-android'
 
@@ -138,7 +157,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Release: <${{env.RELEASES_URL}}${{ steps.extract-previous-version.outputs.previous_version }}...v${{ steps.extract-version.outputs.release_version }}|v${{ steps.extract-version.outputs.release_version }}>*\n${{ env.DATE }}"
+                    "text": "*Release: <${{env.RELEASES_URL}}${{ steps.extract-previous-version-v2.outputs.previous_version }}...v${{ steps.extract-version-v2.outputs.release_version }}|v${{ steps.extract-version-v2.outputs.release_version }}>*\n${{ env.DATE }}"
                   }
                 }
               ]
