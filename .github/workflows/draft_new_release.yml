@@ -39,6 +39,14 @@ jobs:
         with:
           node-version: 16
 
+
+      # In order to make a commit, we need to initialize a user.
+      # You may choose to write something less generic here if you want, it doesn't matter functionality wise.
+      - name: Initialize mandatory git config
+        run: |
+          git config user.name "GitHub actions"
+          git config user.email noreply@github.com
+
       # Calculate the next release version based on conventional semantic release
       - name: Calculate release version
         id: create-release
