@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.28.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.27.2...v1.28.0) (2026-04-02)
+
+
+### Features
+
+* remove rudderreporter and gsonrudderadapter ([#529](https://github.com/rudderlabs/rudder-sdk-android/issues/529)) ([f980525](https://github.com/rudderlabs/rudder-sdk-android/commit/f980525bcd56b45de5619e050615bfcdf9cee68d))
+
+
+### Bug Fixes
+
+* **vuln:** remediate GHA script injection ([#534](https://github.com/rudderlabs/rudder-sdk-android/issues/534)) ([d274d89](https://github.com/rudderlabs/rudder-sdk-android/commit/d274d893622419c52330c5ed1a274d95b69d9727))
+
 ### [1.27.2](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.27.1...v1.27.2) (2025-05-05)
 
 
