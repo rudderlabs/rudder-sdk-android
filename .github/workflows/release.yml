@@ -4,20 +4,28 @@ on:
   workflow_dispatch:
   release:
     types: [created]
+permissions:
+  contents: read
+
 jobs:
   release:
     runs-on: ubuntu-latest
     environment: deployment
     steps:
-      - uses: actions/setup-java@v4
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: 'temurin' # See 'Supported distributions' for available options
           java-version: '11'
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: cache gradle dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             ~/.gradle/caches

@@ -6,7 +6,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.internal.bind.TypeAdapters;
-import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderContext;
 import com.rudderstack.android.sdk.core.RudderLogger;
 import com.rudderstack.android.sdk.core.RudderTraits;
@@ -47,7 +46,6 @@ public class RudderGson {
             return gson.toJson(object);
         } catch (Exception e) {
             RudderLogger.logError("RudderGson: serialize: Exception: " + e.getMessage());
-            ReportManager.reportError(e);
         }
         return null;
     }
@@ -58,7 +56,6 @@ public class RudderGson {
             return gson.fromJson(json, classOfT);
         } catch (Exception e) {
             RudderLogger.logError(RUDDER_GSON_DESERIALIZE_EXCEPTION + e.getMessage());
-            ReportManager.reportError(e);
         }
         return null;
     }
@@ -69,7 +66,6 @@ public class RudderGson {
             return gson.fromJson(json, typeOfT);
         } catch (Exception e) {
             RudderLogger.logError(RUDDER_GSON_DESERIALIZE_EXCEPTION + e.getMessage());
-            ReportManager.reportError(e);
         }
         return null;
     }
@@ -80,7 +76,6 @@ public class RudderGson {
             return gson.fromJson(element, classOfT);
         } catch (Exception e) {
             RudderLogger.logError(RUDDER_GSON_DESERIALIZE_EXCEPTION + e.getMessage());
-            ReportManager.reportError(e);
         }
         return null;
     }
@@ -91,7 +86,6 @@ public class RudderGson {
             return gson.fromJson(element, typeOfT);
         } catch (Exception e) {
             RudderLogger.logError(RUDDER_GSON_DESERIALIZE_EXCEPTION + e.getMessage());
-            ReportManager.reportError(e);
         }
         return null;
     }

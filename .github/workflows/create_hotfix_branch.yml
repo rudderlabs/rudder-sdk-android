@@ -14,8 +14,10 @@ jobs:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/master-mpx'
     steps:
       - name: Set env BRANCH_NAME
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-              BRANCH="${{ github.event.pull_request.head.ref }}"
+              BRANCH="$PR_HEAD_REF"
               if [[ BRANCH == 'master-mpx' || $BRANCH == 'develop-mpx' ]]; then
                   echo "BRANCH_NAME=hotfix-mpx" >> "$GITHUB_ENV"
               else

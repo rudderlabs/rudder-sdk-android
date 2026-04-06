@@ -12,19 +12,37 @@ jobs:
   release-v2:
     name: Publish new release for v2
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # to read repository contents
     if: (startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/')) && github.event.pull_request.merged == true # only merged pull requests must trigger this job
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
+          permission-contents: write # to create commits, tags, and releases
+          permission-pull-requests: write # to create and update PRs
+
       - name: Extract version from branch name (for release branches)
         id: extract-version-v2
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          BRANCH_NAME="$PR_HEAD_REF"
           VERSION=${BRANCH_NAME#hotfix-}
           VERSION=${VERSION#release-v2/}
 
           echo "release_version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           fetch-depth: 0
 
@@ -38,7 +56,7 @@ jobs:
           echo "previous_version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Setup Node v2
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -56,9 +74,17 @@ jobs:
 
       - name: Create Monorepo Release Tag v2
         id: create_monorepo_release_v2
-        run: |
-          git tag -a v${{ steps.extract-version.outputs.release_version }} -m "chore: release v${{ steps.extract-version.outputs.release_version }}"
-          git push origin refs/tags/v${{ steps.extract-version.outputs.release_version }}
+        uses: ryancyq/github-signed-commit@e9f3b28c80da7be66d24b8f501a5abe82a6b855f # v1.2.0
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        with:
+          branch-name: master-v2
+          commit-message: 'chore: release v${{ steps.extract-version-v2.outputs.release_version }}'
+          tag: 'v${{ steps.extract-version-v2.outputs.release_version }}'
+          files: ''
+
+      - name: Fetch remote tags
+        run: git fetch --tags
 
       - name: Get the two latest versions
         run: |
@@ -80,17 +106,17 @@ jobs:
           npm run release:github -- --base=$last_version --head=$current_version
 
       - name: Create pull request into develop v2
-        uses: repo-sync/pull-request@v2
+        uses: repo-sync/pull-request@7e79a9f5dc3ad0ce53138f01df2fad14a04831c5 # v2.12.1
         with:
           source_branch: 'master-v2'
           destination_branch: 'develop-v2'
-          github_token: ${{ secrets.PAT }}
-          pr_title: 'chore(release): pulling master-v2 into develop-v2 post release v${{ steps.extract-version.outputs.release_version }}'
+          github_token: ${{ steps.generate-token.outputs.token }}
+          pr_title: 'chore(release): pulling master-v2 into develop-v2 post release v${{ steps.extract-version-v2.outputs.release_version }}'
           pr_body: ':crown: *An automated PR*'
           pr_reviewer: '@rudderlabs/sdk-android'
 
       - name: Delete hotfix release branch v2
-        uses: koj-co/delete-merged-action@master
+        uses: koj-co/delete-merged-action@63a03c35810a8a7d4840d18793c0f68ff8b59450 # master
         if: startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/')
         with:
           branches: 'hotfix-release-v2/*'
@@ -98,7 +124,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Delete release branch v2
-        uses: koj-co/delete-merged-action@master
+        uses: koj-co/delete-merged-action@63a03c35810a8a7d4840d18793c0f68ff8b59450 # master
         if: startsWith(github.event.pull_request.head.ref, 'release-v2/')
         with:
           branches: 'release-v2/*'
@@ -107,7 +133,7 @@ jobs:
 
       - name: Send message to Slack channel
         id: slack
-        uses: slackapi/slack-github-action@v2.0.0
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           PROJECT_NAME: 'Rudderstack Kotlin SDK v2 monorepo'
@@ -131,7 +157,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Release: <${{env.RELEASES_URL}}${{ steps.extract-previous-version.outputs.previous_version }}...v${{ steps.extract-version.outputs.release_version }}|v${{ steps.extract-version.outputs.release_version }}>*\n${{ env.DATE }}"
+                    "text": "*Release: <${{env.RELEASES_URL}}${{ steps.extract-previous-version-v2.outputs.previous_version }}...v${{ steps.extract-version-v2.outputs.release_version }}|v${{ steps.extract-version-v2.outputs.release_version }}>*\n${{ env.DATE }}"
                   }
                 }
               ]

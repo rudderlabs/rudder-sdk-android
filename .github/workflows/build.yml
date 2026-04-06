@@ -8,11 +8,21 @@ on:
     types: [ 'opened', 'reopened', 'edited', 'synchronize' ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   cancel_previous:
 
+    permissions:
+      actions: write  # for styfle/cancel-workflow-action to cancel/stop running workflows
     runs-on: ubuntu-latest
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
       - uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa #v0.12.1
         with:
           workflow_id: ${{ github.event.workflow.id }}
@@ -22,15 +32,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/setup-java@v4
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: 'temurin' # See 'Supported distributions' for available options
           java-version: '11'
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: cache gradle dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             ~/.gradle/caches
@@ -39,8 +54,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-core-
       - name: Set env MODULE_NAME
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-          BRANCH="${{ github.event.pull_request.head.ref }}"
+          BRANCH="$PR_HEAD_REF"
           if [[ $BRANCH == 'master-mpx' || $BRANCH == 'develop-mpx' ]]; then
               echo "MODULE_NAME=core-mpx" >> "$GITHUB_ENV"
           else
@@ -58,7 +75,7 @@ jobs:
 #    runs-on: ubuntu-latest
 #
 #    steps:
-#      - uses: actions/checkout@v4
+#      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 #      - name: Grant execute permission for gradlew
 #        run: chmod +x gradlew
 #      - name: cache gradle dependencies
@@ -82,7 +99,7 @@ jobs:
 #    runs-on: ubuntu-latest
 #
 #    steps:
-#      - uses: actions/checkout@v4
+#      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 #      - name: Grant execute permission for gradlew
 #        run: chmod +x gradlew
 #      - name: Snyk
