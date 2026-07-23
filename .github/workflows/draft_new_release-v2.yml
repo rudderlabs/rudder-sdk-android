@@ -120,4 +120,4 @@ jobs:
           github_token: ${{ steps.generate-token.outputs.token }}
           pr_title: 'chore(release): pulling ${{ steps.create-release.outputs.branch_name }} into master-v2'
           pr_body: ':crown: *An automated PR*'
-          pr_reviewer: '@rudderlabs/sdk-android'
+          pr_reviewer: '@rudderlabs/sdk_team'
