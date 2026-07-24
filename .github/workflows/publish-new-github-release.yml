@@ -67,7 +67,7 @@ jobs:
           github_token: ${{ steps.generate-token.outputs.token }}
           pr_title: "chore(release): pulling main into develop post release v${{ steps.extract-version.outputs.release_version }}"
           pr_body: ':crown: *An automated PR*'
-          pr_reviewer: '@rudderlabs/sdk-android'
+          pr_reviewer: '@rudderlabs/sdk_team'
       - name: Create pull request into develop-mpx
         uses: repo-sync/pull-request@7e79a9f5dc3ad0ce53138f01df2fad14a04831c5 # v2
         if: (startsWith(github.event.pull_request.head.ref, 'release-mpx/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/'))
@@ -77,7 +77,7 @@ jobs:
           github_token: ${{ steps.generate-token.outputs.token }}
           pr_title: "chore(release): pulling main into develop post release v${{ steps.extract-version.outputs.release_version }}"
           pr_body: ':crown: *An automated PR*'
-          pr_reviewer: '@rudderlabs/sdk-android'
+          pr_reviewer: '@rudderlabs/sdk_team'
 
       - name: Delete hotfix release branch
         uses: koj-co/delete-merged-action@63a03c35810a8a7d4840d18793c0f68ff8b59450 # master
