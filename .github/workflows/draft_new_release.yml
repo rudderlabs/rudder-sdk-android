@@ -102,18 +102,26 @@ jobs:
           npm ci
           npx standard-version --skip.commit --skip.tag
 
+          # Re-read the version from disk: this run sees the merged main branch,
+          # so it can differ from the version calculated before the merge.
+          new_version=$(cat gradle.properties | grep "VERSION_NAME" | cut -d'=' -f2)
+
+          echo "Version after merging main is $new_version"
+
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
       - name: Create verified commit and tag via API
         uses: ryancyq/github-signed-commit@e9f3b28c80da7be66d24b8f501a5abe82a6b855f # v1.2.0
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         with:
           branch-name: ${{ steps.create-release.outputs.branch_name }}
-          commit-message: 'chore(release): v${{ steps.create-release.outputs.new_version }}'
+          commit-message: 'chore(release): v${{ steps.finish-release.outputs.new_version }}'
           files: |
             CHANGELOG.md
             gradle.properties
             package.json
-          tag: 'v${{ steps.create-release.outputs.new_version }}'
+          tag: 'v${{ steps.finish-release.outputs.new_version }}'
 
       - name: Create pull request into main
         uses: repo-sync/pull-request@7e79a9f5dc3ad0ce53138f01df2fad14a04831c5 # v2
