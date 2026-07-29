@@ -26,7 +26,22 @@
 
 # Required for the serialization of SourceConfig once it is downloaded.
 -keep class com.google.gson.internal.LinkedTreeMap { *; }
--keep class * implements java.io.Serializable { *; }
+# Scoped to the object graphs actually written via ObjectOutputStream:
+#   RudderServerConfigManager -> RudderServerConfig
+#   RudderFlushWorkManager    -> RudderFlushConfig
+# Field names, field types and nested/enum types all feed Java serialization,
+# so the whole reachable graph must be kept - including the nested classes of
+# SourceConfiguration and the RudderDataResidencyServer enum, which a plain
+# outer-class keep does not cover.
+-keep class com.rudderstack.android.sdk.core.RudderServerConfig { *; }
+-keep class com.rudderstack.android.sdk.core.RudderServerConfigSource { *; }
+-keep class com.rudderstack.android.sdk.core.RudderServerDestination { *; }
+-keep class com.rudderstack.android.sdk.core.RudderServerDestinationDefinition { *; }
+-keep class com.rudderstack.android.sdk.core.RudderDataResidencyUrls { *; }
+-keep class com.rudderstack.android.sdk.core.RudderDataResidencyServer { *; }
+-keep class com.rudderstack.android.sdk.core.SourceConfiguration { *; }
+-keep class com.rudderstack.android.sdk.core.SourceConfiguration$* { *; }
+-keep class com.rudderstack.android.sdk.core.RudderFlushConfig { *; }
 -keep class com.rudderstack.rudderjsonadapter.RudderTypeAdapter { *; }
 -keep class * extends com.rudderstack.rudderjsonadapter.RudderTypeAdapter
 
