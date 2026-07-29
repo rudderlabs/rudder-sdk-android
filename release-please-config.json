@@ -1,0 +1,34 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "last-release-sha": "7078df8184bb73b9a090b2283341fdb4c2093aeb",
+  "release-type": "node",
+  "include-component-in-tag": false,
+  "include-v-in-tag": true,
+  "pull-request-title-pattern": "chore: release ${version}",
+  "always-update": true,
+  "changelog-sections": [
+    { "type": "feat", "section": "Features", "hidden": false },
+    { "type": "fix", "section": "Bug Fixes", "hidden": false },
+    { "type": "perf", "section": "Performance Improvements", "hidden": false },
+    { "type": "deps", "section": "Dependencies", "hidden": false },
+    { "type": "revert", "section": "Reverts", "hidden": false },
+    { "type": "chore", "section": "Miscellaneous", "hidden": false },
+    { "type": "ci", "section": "Miscellaneous", "hidden": false },
+    { "type": "build", "section": "Miscellaneous", "hidden": false },
+    { "type": "refactor", "section": "Miscellaneous", "hidden": false },
+    { "type": "test", "section": "Miscellaneous", "hidden": false },
+    { "type": "docs", "section": "Documentation", "hidden": false }
+  ],
+  "packages": {
+    ".": {
+      "package-name": "rudder-sdk-android",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "gradle.properties"
+        }
+      ]
+    }
+  }
+}

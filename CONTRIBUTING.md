@@ -23,7 +23,20 @@ For more information on the different ways in which you can contribute to Rudder
 
 ## Committing
 
-We prefer squash or rebase commits so that all changes from a branch are committed to master as a single commit. All pull requests are squashed when merged, but rebasing prior to merge gives you better control over the commit message.
+The active v1 SDK uses `develop` as its integration branch and `master` as its
+release branch. Normal pull requests target `develop` and use Conventional
+Commit titles because release-please derives versions and changelog entries
+from the commits promoted to `master`.
+
+To release v1, run **Promote Release Candidate** from `develop` or a `hotfix/*`
+branch and merge the resulting promotion pull request into `master`.
+Release-please then creates or updates a separate semantic-version/changelog
+pull request. Merging that pull request creates the `v`-prefixed tag and GitHub
+release, which triggers Maven Central publication and the `master` to `develop`
+back-merge.
+
+The v2 workflows are separate and are not driven by this v1 release-please
+configuration.
 
 ## Installing and setting up RudderStack
 

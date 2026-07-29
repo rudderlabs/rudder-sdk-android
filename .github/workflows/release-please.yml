@@ -1,0 +1,101 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    name: Create or update release PR
+    runs-on: ubuntu-latest
+    environment: deployment
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Generate GitHub App token
+        id: generate-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          target-branch: master
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      # VERSION_CODE is a repository-specific monotonic counter rather than a
+      # semantic version. release-please updates VERSION_NAME; this idempotent
+      # follow-up keeps VERSION_CODE exactly one above the released master value.
+      - name: Read release PR branch
+        id: release-pr
+        if: steps.release.outputs.prs_created == 'true'
+        env:
+          RELEASE_PR_JSON: ${{ steps.release.outputs.pr }}
+        run: |
+          branch_name=$(jq -r '.headBranchName // empty' <<< "$RELEASE_PR_JSON")
+          if [[ "$branch_name" != release-please--branches--master* ]]; then
+            echo "Unexpected release-please branch: $branch_name"
+            exit 1
+          fi
+
+          echo "branch_name=$branch_name" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout release PR branch
+        if: steps.release.outputs.prs_created == 'true'
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          ref: ${{ steps.release-pr.outputs.branch_name }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Increment Android version code
+        id: version-code
+        if: steps.release.outputs.prs_created == 'true'
+        run: |
+          git fetch --no-tags origin master
+
+          released_code=$(git show origin/master:gradle.properties | awk -F= '$1 == "VERSION_CODE" { print $2 }')
+          release_pr_code=$(awk -F= '$1 == "VERSION_CODE" { print $2 }' gradle.properties)
+
+          if [[ ! "$released_code" =~ ^[0-9]+$ || ! "$release_pr_code" =~ ^[0-9]+$ ]]; then
+            echo "VERSION_CODE must be a decimal integer."
+            exit 1
+          fi
+
+          expected_code=$((released_code + 1))
+          if [[ "$release_pr_code" -eq "$expected_code" ]]; then
+            echo "VERSION_CODE is already $expected_code."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          sed -i.bak "s/^VERSION_CODE=.*/VERSION_CODE=${expected_code}/" gradle.properties
+          rm gradle.properties.bak
+          echo "Updated VERSION_CODE from $release_pr_code to $expected_code."
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit Android version code
+        if: steps.version-code.outputs.changed == 'true'
+        uses: ryancyq/github-signed-commit@e9f3b28c80da7be66d24b8f501a5abe82a6b855f # v1.2.0
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        with:
+          branch-name: ${{ steps.release-pr.outputs.branch_name }}
+          commit-message: "chore(release): increment Android version code"
+          files: gradle.properties
