@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.28.1](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.28.0...v1.28.1) (2026-07-29)
+
+
+### Bug Fixes
+
+* **core:** scope Serializable consumer proguard rule to config classes ([#555](https://github.com/rudderlabs/rudder-sdk-android/issues/555)) ([47810e0](https://github.com/rudderlabs/rudder-sdk-android/commit/47810e0563547148dd0e5c648a43db9e9cdc6c7d))
+* **vuln:** pin and bump action refs (SEC-171) ([a02319b](https://github.com/rudderlabs/rudder-sdk-android/commit/a02319b014ddb42af04f2fe783992b536ee4baef))
+
 ## [1.28.0](https://github.com/rudderlabs/rudder-sdk-android/compare/v1.27.2...v1.28.0) (2026-04-02)
 
 
