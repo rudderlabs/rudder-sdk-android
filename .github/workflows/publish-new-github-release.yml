@@ -16,7 +16,7 @@ jobs:
     if: startsWith(github.ref, 'refs/heads/master') || ((startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'release-mpx/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/')) && github.event.pull_request.merged == true) # only merged pull requests must trigger this job
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
         with:
           egress-policy: audit
 
@@ -28,6 +28,7 @@ jobs:
           private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
           permission-contents: write # to create commits, tags, and releases
           permission-pull-requests: write # to create and update PRs
+          permission-members: read # to resolve org team reviewers
 
       - name: Extract version from branch name (for release branches)
         id: extract-version
@@ -67,7 +68,7 @@ jobs:
           github_token: ${{ steps.generate-token.outputs.token }}
           pr_title: "chore(release): pulling main into develop post release v${{ steps.extract-version.outputs.release_version }}"
           pr_body: ':crown: *An automated PR*'
-          pr_reviewer: '@rudderlabs/sdk-android'
+          pr_reviewer: '@rudderlabs/sdk_team'
       - name: Create pull request into develop-mpx
         uses: repo-sync/pull-request@7e79a9f5dc3ad0ce53138f01df2fad14a04831c5 # v2
         if: (startsWith(github.event.pull_request.head.ref, 'release-mpx/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/'))
@@ -77,7 +78,7 @@ jobs:
           github_token: ${{ steps.generate-token.outputs.token }}
           pr_title: "chore(release): pulling main into develop post release v${{ steps.extract-version.outputs.release_version }}"
           pr_body: ':crown: *An automated PR*'
-          pr_reviewer: '@rudderlabs/sdk-android'
+          pr_reviewer: '@rudderlabs/sdk_team'
 
       - name: Delete hotfix release branch
         uses: koj-co/delete-merged-action@63a03c35810a8a7d4840d18793c0f68ff8b59450 # master

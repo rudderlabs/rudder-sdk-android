@@ -15,7 +15,7 @@ jobs:
     if: startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/hotfix/') || startsWith(github.ref, 'refs/heads/develop-mpx') || startsWith(github.ref, 'refs/heads/hotfix-mpx')
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
         with:
           egress-policy: audit
 
@@ -111,4 +111,4 @@ jobs:
           github_token: ${{ steps.generate-token.outputs.token }}
           pr_title: "chore(release): pulling ${{ steps.create-release.outputs.branch_name }} into ${{ steps.create-release.outputs.main_branch }}"
           pr_body:  ":crown: *An automated PR*"
-          pr_reviewer: '@rudderlabs/sdk-android'
+          pr_reviewer: '@rudderlabs/sdk_team'
