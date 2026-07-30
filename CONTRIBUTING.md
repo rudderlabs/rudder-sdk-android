@@ -35,7 +35,9 @@ Conventional Commits to determine the correct version and changelog.
 Release-please then creates or updates a separate semantic-version/changelog
 pull request. Merging that pull request creates the `v`-prefixed tag and GitHub
 release, which triggers Maven Central publication and the `master` to `develop`
-back-merge.
+back-merge. Merge the back-merge pull request with a merge commit; do not squash
+or rebase it. `master` must remain an ancestor of `develop` for the next release
+promotion.
 
 The v2 workflows are separate and are not driven by this v1 release-please
 configuration.

@@ -30,6 +30,7 @@ jobs:
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
           permission-pull-requests: write
+          permission-members: read
 
       - name: Checkout master
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
@@ -75,4 +76,5 @@ jobs:
             --base develop \
             --head master \
             --title "chore(release): pulling master into develop post release $VERSION" \
-            --body "Automated back-merge of active v1 release $VERSION from \`master\` into \`develop\`."
+            --reviewer rudderlabs/sdk_team \
+            --body "Automated back-merge of active v1 release $VERSION from \`master\` into \`develop\`. Merge this PR with a merge commit; do not squash it, so \`master\` remains an ancestor of \`develop\` for the next release."
