@@ -43,20 +43,34 @@ jobs:
       # follow-up keeps VERSION_CODE exactly one above the released master value.
       - name: Read release PR branch
         id: release-pr
-        if: steps.release.outputs.prs_created == 'true'
         env:
-          RELEASE_PR_JSON: ${{ steps.release.outputs.pr }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
-          branch_name=$(jq -r '.headBranchName // empty' <<< "$RELEASE_PR_JSON")
-          if [[ "$branch_name" != release-please--branches--master* ]]; then
-            echo "Unexpected release-please branch: $branch_name"
+          release_pr_branches=$(gh pr list \
+            --base master \
+            --state open \
+            --limit 100 \
+            --json headRefName \
+            --jq '[.[] | select(.headRefName | startswith("release-please--branches--master")) | .headRefName]')
+          release_pr_count=$(jq 'length' <<< "$release_pr_branches")
+
+          if [[ "$release_pr_count" -eq 0 ]]; then
+            echo "No open release-please pull request."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$release_pr_count" -gt 1 ]]; then
+            echo "Found multiple open release-please pull requests for master."
             exit 1
           fi
 
+          branch_name=$(jq -r '.[0]' <<< "$release_pr_branches")
+          echo "found=true" >> "$GITHUB_OUTPUT"
           echo "branch_name=$branch_name" >> "$GITHUB_OUTPUT"
 
       - name: Checkout release PR branch
-        if: steps.release.outputs.prs_created == 'true'
+        if: steps.release-pr.outputs.found == 'true'
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         with:
           token: ${{ steps.generate-token.outputs.token }}
@@ -66,7 +80,7 @@ jobs:
 
       - name: Increment Android version code
         id: version-code
-        if: steps.release.outputs.prs_created == 'true'
+        if: steps.release-pr.outputs.found == 'true'
         run: |
           git fetch --no-tags origin master
 
