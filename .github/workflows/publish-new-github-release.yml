@@ -41,10 +41,17 @@ jobs:
           persist-credentials: false
 
       - name: Validate release branch and tag
+        id: release
         env:
           TAG: ${{ github.event.release.tag_name }}
         run: |
-          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+          if [[ ! "$TAG" =~ ^v1\. ]]; then
+            echo "Release tag $TAG is not an active v1 release; skipping."
+            echo "active=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ ! "$TAG" =~ ^v1\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
             echo "Release tag $TAG does not follow the active v1 Android SDK convention."
             exit 1
           fi
@@ -55,7 +62,10 @@ jobs:
             exit 1
           fi
 
+          echo "active=true" >> "$GITHUB_OUTPUT"
+
       - name: Raise back-merge pull request
+        if: steps.release.outputs.active == 'true'
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
           VERSION: ${{ github.event.release.tag_name }}
