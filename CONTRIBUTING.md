@@ -29,7 +29,9 @@ Commit titles because release-please derives versions and changelog entries
 from the commits promoted to `master`.
 
 To release v1, run **Promote Release Candidate** from `develop` or a `hotfix/*`
-branch and merge the resulting promotion pull request into `master`.
+branch. Merge the resulting promotion pull request into `master` with a merge
+commit; do not squash or rebase it. Release-please must retain the individual
+Conventional Commits to determine the correct version and changelog.
 Release-please then creates or updates a separate semantic-version/changelog
 pull request. Merging that pull request creates the `v`-prefixed tag and GitHub
 release, which triggers Maven Central publication and the `master` to `develop`

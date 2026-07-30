@@ -36,6 +36,7 @@ jobs:
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
           permission-pull-requests: write
+          permission-members: read
 
       - name: Checkout source branch
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
@@ -114,4 +115,5 @@ jobs:
             --base master \
             --head "$BRANCH_NAME" \
             --title "chore(release): promote ${GITHUB_REF_NAME} to master" \
-            --body "Promotes the releasable v1 state from \`${GITHUB_REF_NAME}\` to \`master\`. After this PR is merged, release-please will create or update the semantic version and changelog release PR."
+            --reviewer rudderlabs/sdk_team \
+            --body "Promotes the releasable v1 state from \`${GITHUB_REF_NAME}\` to \`master\`. Merge this PR with a merge commit; do not squash it, because release-please must retain the individual Conventional Commits. After this PR is merged, release-please will create or update the semantic version and changelog release PR."
