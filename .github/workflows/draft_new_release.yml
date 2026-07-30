@@ -19,7 +19,6 @@ jobs:
   promote-release-candidate:
     name: Promote release candidate to master
     runs-on: ubuntu-latest
-    environment: deployment
     if: startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/hotfix/')
     steps:
       - name: Harden the runner (Audit all outbound calls)
