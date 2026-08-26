@@ -93,16 +93,3 @@ jobs:
 #        run: ./gradlew android:codeCoverageReport
 #      - name: Upload coverage to Codecov
 #        uses: codecov/codecov-action@v2
-
-#  security:
-#    needs: cancel_previous
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
-#      - name: Grant execute permission for gradlew
-#        run: chmod +x gradlew
-#      - name: Snyk
-#        run: ./gradlew snyk-test
-#        env:
-#          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
