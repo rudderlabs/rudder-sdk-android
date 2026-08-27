@@ -14,7 +14,7 @@ plugins {
     id 'kotlin-android'
 }
 android {
-    compileSdkVersion 34
+    compileSdkVersion 33
     buildToolsVersion "34.0.0"
 
     defaultConfig {
