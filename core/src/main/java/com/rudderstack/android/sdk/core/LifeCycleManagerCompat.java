@@ -101,7 +101,6 @@ public class LifeCycleManagerCompat implements ActivityLifecycleCallbacks {
             message.setType(MessageType.TRACK);
             repository.processMessage(message);
         } catch (Exception e) {
-            ReportManager.reportError(e);
             RudderLogger.logError("ApplicationLifeCycleManager: trackDeepLinks: Error occurred while tracking deep link" + e);
         }
     }
@@ -116,7 +115,6 @@ public class LifeCycleManagerCompat implements ActivityLifecycleCallbacks {
                     }
                 }
             } catch (Exception e) {
-                ReportManager.reportError(e);
                 RudderLogger.logError("ApplicationLifeCycleManager: trackDeepLinks: Failed to get uri query parameters: " + e);
             }
             rudderProperty.putValue("url", uri.toString());

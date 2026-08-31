@@ -19,11 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
         with:
           egress-policy: audit
 
-      - uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa #v0.12.1
+      - uses: styfle/cancel-workflow-action@85880fa0301c86cca9da44039ee3bb12d3bedbfa # 0.12.1
         with:
           workflow_id: ${{ github.event.workflow.id }}
 
@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
         with:
           egress-policy: audit
 
@@ -54,8 +54,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-core-
       - name: Set env MODULE_NAME
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-          BRANCH="${{ github.event.pull_request.head.ref }}"
+          BRANCH="$PR_HEAD_REF"
           if [[ $BRANCH == 'master-mpx' || $BRANCH == 'develop-mpx' ]]; then
               echo "MODULE_NAME=core-mpx" >> "$GITHUB_ENV"
           else
@@ -91,16 +93,3 @@ jobs:
 #        run: ./gradlew android:codeCoverageReport
 #      - name: Upload coverage to Codecov
 #        uses: codecov/codecov-action@v2
-
-#  security:
-#    needs: cancel_previous
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-#      - name: Grant execute permission for gradlew
-#        run: chmod +x gradlew
-#      - name: Snyk
-#        run: ./gradlew snyk-test
-#        env:
-#          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

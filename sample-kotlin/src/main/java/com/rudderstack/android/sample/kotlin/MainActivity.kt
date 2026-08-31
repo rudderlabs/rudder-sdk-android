@@ -13,7 +13,6 @@ import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
 import com.rudderstack.android.sdk.core.*
 import java.lang.reflect.Field
-import java.util.Date
 import javax.net.ssl.SSLContext
 
 
@@ -73,14 +72,6 @@ class MainActivity : AppCompatActivity() {
             MainApplication.rudderClient!!.alias("new user $userCount");
         }
 
-        findViewById<Button>(R.id.error).setOnClickListener {
-//            try {
-                val error = Exception("Test Error-" + Date())
-                ReportManager.reportError(error)
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            }
-        }
         findViewById<Button>(R.id.crash).setOnClickListener {
             throw RuntimeException("Test Crash")
         }
