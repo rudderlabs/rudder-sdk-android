@@ -136,15 +136,18 @@ jobs:
 
       - name: Send message to Slack channel
         id: slack
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           PROJECT_NAME: 'Rudderstack Kotlin SDK v2 monorepo'
           RELEASES_URL: 'https://github.com/rudderlabs/rudder-sdk-android/compare/'
         with:
-          channel-id: ${{ secrets.SLACK_RELEASE_CHANNEL_ID }}
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          errors: true
           payload: |
             {
+              "channel": "${{ secrets.SLACK_RELEASE_CHANNEL_ID }}",
+              "text": "New release: ${{ env.PROJECT_NAME }} v${{ steps.extract-version-v2.outputs.release_version }} - ${{ env.RELEASES_URL }}${{ steps.extract-previous-version-v2.outputs.previous_version }}...v${{ steps.extract-version-v2.outputs.release_version }}",
               "blocks": [
                 {
                   "type": "header",
