@@ -165,7 +165,6 @@ public class RudderContext {
                 }
             }
         } catch (NullPointerException ex) {
-            ReportManager.reportError(ex);
             RudderLogger.logError(ex);
         }
     }
@@ -216,7 +215,6 @@ public class RudderContext {
                         RudderLogger.logDebug("Unable to collect advertising ID from Amazon Fire OS and Google Play Services.");
                     }
                 } catch (Exception e) {
-                    ReportManager.reportError(e);
                     RudderLogger.logError("Unable to collect advertising ID from Google Play Services or Amazon Fire OS.");
                 }
             }).start();
@@ -350,7 +348,6 @@ public class RudderContext {
                 preferenceManger.saveExternalIds(RudderGson.serialize(this.externalIds));
             }
         } catch (NullPointerException ex) {
-            ReportManager.reportError(ex);
             RudderLogger.logError(ex);
         }
     }
@@ -364,7 +361,6 @@ public class RudderContext {
                 preferenceManger.clearExternalIds();
             }
         } catch (NullPointerException ex) {
-            ReportManager.reportError(ex);
             RudderLogger.logError(ex);
         }
     }

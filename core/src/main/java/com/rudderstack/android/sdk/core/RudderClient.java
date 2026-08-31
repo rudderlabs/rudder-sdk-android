@@ -1,8 +1,5 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.ReportManager.incrementDiscardedCounter;
-import static com.rudderstack.android.sdk.core.ReportManager.incrementMessageCounter;
-
 import android.app.Application;
 import android.content.Context;
 import android.text.TextUtils;
@@ -544,12 +541,8 @@ public class RudderClient {
 
     private void processMessage(@NonNull RudderMessage message) {
         if (getOptOutStatus()) {
-            incrementDiscardedCounter(1, Collections.singletonMap(ReportManager.LABEL_TYPE,
-                    ReportManager.LABEL_TYPE_OPT_OUT));
             return;
         }
-        incrementMessageCounter(1, Collections.singletonMap(ReportManager.LABEL_TYPE,
-                message.getType()));
         if (repository != null) {
             repository.processMessage(message);
         }

@@ -157,7 +157,6 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             return factory;
         } catch (Exception e) {
             RudderLogger.logError("DBPersistentManager: createPersistenceFactory: Failed to instantiate class: " + params.persistenceProviderFactoryClassName);
-            ReportManager.reportError(e);
         }
         return null;
 
@@ -246,7 +245,6 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             }
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
-            ReportManager.reportError(ex);
         }
     }
 
@@ -278,7 +276,6 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             }
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
-            ReportManager.reportError(ex);
         }
     }
 
@@ -333,7 +330,6 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
 
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
-            ReportManager.reportError(ex);
         }
     }
 
@@ -435,7 +431,6 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
             }
         } catch (SQLiteDatabaseCorruptException ex) {
             RudderLogger.logError(ex);
-            ReportManager.reportError(ex);
         } finally {
             if (cursor != null) {
                 // release cursor
@@ -508,7 +503,6 @@ class DBPersistentManager/* extends SQLiteOpenHelper*/ {
         try {
             migrationSemaphore.acquire();
         } catch (InterruptedException e) {
-            ReportManager.reportError(e);
             Thread.currentThread().interrupt();
         }
     }
@@ -697,7 +691,6 @@ class DBInsertionHandlerThread extends HandlerThread {
                     RudderLogger.logInfo("DBPersistentManager: saveEvent: Event saved to DB");
                 } catch (SQLiteFullException e) {
                     RudderLogger.logError("DBPersistentManager: saveEvent: SQLiteFullException: " + e);
-                    ReportManager.reportError(e);
                 }
             } else {
                 RudderLogger.logError("DBPersistentManager: saveEvent: database is not writable");

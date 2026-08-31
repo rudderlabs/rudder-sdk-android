@@ -1,1 +1,15 @@
+pluginManagement {
+    buildscript {
+        repositories {
+            google()
+            mavenCentral()
+        }
+        dependencies {
+            // AGP 7.4.2's R8 crashes on unnamed parameters in Commons Lang 3.18.0 debug builds.
+            // Remove this override when AGP includes the fix: https://issuetracker.google.com/issues/281536562
+            classpath 'com.android.tools:r8:8.3.37'
+        }
+    }
+}
+
 include ':sample-cdn', ':sample-kotlin', ':core', ':sample-segment-java', ':sample-kotlin-integration', ':dummy-impl', ':android-tv'
