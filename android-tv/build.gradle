@@ -14,7 +14,8 @@ plugins {
     id 'kotlin-android'
 }
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
+    buildToolsVersion "34.0.0"
 
     defaultConfig {
         applicationId "com.rudderstack.android_tv"
