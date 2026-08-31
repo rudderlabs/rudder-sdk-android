@@ -7,7 +7,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.internal.bind.TypeAdapters;
-import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderContext;
 
 import java.lang.reflect.Type;
@@ -37,7 +36,6 @@ public class RudderContextTypeAdapter implements JsonSerializer<RudderContext> {
             }
             return outputContext;
         } catch (Exception e) {
-            ReportManager.reportError(e);
             return null;
         }
     }

@@ -13,7 +13,7 @@ jobs:
     environment: deployment
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
         with:
           egress-policy: audit
 
@@ -50,7 +50,6 @@ jobs:
 #          with:
 #            source_branch: 'main'
 #            destination_branch: 'develop'
-#            github_token: ${{ secrets.PAT }}
 #            pr_title: "chore(release): pulling main into develop post release v${{ steps.extract-version.outputs.release_version }}"
 #            pr_body: ':crown: *An automated PR*'
 #            pr_reviewer: 'itsdebs'

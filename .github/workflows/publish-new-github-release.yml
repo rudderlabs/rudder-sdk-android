@@ -1,98 +1,90 @@
-name: Publish new github release
+# release-please creates the v-prefixed tag and GitHub release from master.
+# This workflow preserves the active v1 post-release back-merge.
+
+name: Post Release
 
 on:
-  workflow_dispatch:
-  pull_request:
-    branches: [ 'master', 'master-mpx' ]
-    types:
-      - closed
+  release:
+    types: [published]
+
+permissions:
+  contents: read
 
 jobs:
-  release:
-    name: Publish new release
+  post-release:
+    name: Back-merge master into develop
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/heads/master') || ((startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'release-mpx/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/')) && github.event.pull_request.merged == true) # only merged pull requests must trigger this job
+    environment: deployment
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
-      - name: Extract version from branch name (for release branches)
-        id: extract-version
-        run: |
-          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
-          VERSION=${BRANCH_NAME#hotfix-}
-          VERSION=${VERSION#release-mpx/}
-          VERSION=${VERSION#release/}
-          
-          echo "release_version=$VERSION" >> $GITHUB_OUTPUT
-      - name: Checkout
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+      - name: Generate GitHub App token
+        id: generate-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-members: read
+
+      - name: Checkout master
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          ref: master
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: 16
-
-      - name: Create Github Release
-        id: create_release
+      - name: Validate release branch and tag
+        id: release
         env:
-          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
-          CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.PAT }}
+          TAG: ${{ github.event.release.tag_name }}
         run: |
-          npx conventional-github-releaser -p angular
+          if [[ ! "$TAG" =~ ^v1\. ]]; then
+            echo "Release tag $TAG is not an active v1 release; skipping."
+            echo "active=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-      - name: Create pull request into develop
-        uses: repo-sync/pull-request@7e79a9f5dc3ad0ce53138f01df2fad14a04831c5 # v2
-        if: (startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release/'))
-        with:
-          source_branch: 'master'
-          destination_branch: 'develop'
-          github_token: ${{ secrets.PAT }}
-          pr_title: "chore(release): pulling main into develop post release v${{ steps.extract-version.outputs.release_version }}"
-          pr_body: ':crown: *An automated PR*'
-          pr_reviewer: '@rudderlabs/sdk-android'
-      - name: Create pull request into develop-mpx
-        uses: repo-sync/pull-request@7e79a9f5dc3ad0ce53138f01df2fad14a04831c5 # v2
-        if: (startsWith(github.event.pull_request.head.ref, 'release-mpx/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/'))
-        with:
-          source_branch: 'master'
-          destination_branch: 'develop'
-          github_token: ${{ secrets.PAT }}
-          pr_title: "chore(release): pulling main into develop post release v${{ steps.extract-version.outputs.release_version }}"
-          pr_body: ':crown: *An automated PR*'
-          pr_reviewer: '@rudderlabs/sdk-android'
+          if [[ ! "$TAG" =~ ^v1\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Release tag $TAG does not follow the active v1 Android SDK convention."
+            exit 1
+          fi
 
-      - name: Delete hotfix release branch
-        uses: koj-co/delete-merged-action@63a03c35810a8a7d4840d18793c0f68ff8b59450 # master
-        if: startsWith(github.event.pull_request.head.ref, 'hotfix-release/')
-        with:
-          branches: 'hotfix-release/*'
-        env:
-          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
+          git fetch --force origin "refs/tags/${TAG}:refs/tags/${TAG}"
+          if ! git merge-base --is-ancestor "${TAG}^{commit}" HEAD; then
+            echo "Release tag $TAG does not point to a commit on master."
+            exit 1
+          fi
 
-      - name: Delete release branch
-        uses: koj-co/delete-merged-action@63a03c35810a8a7d4840d18793c0f68ff8b59450 # master
-        if: startsWith(github.event.pull_request.head.ref, 'release/')
-        with:
-          branches: 'release/*'
-        env:
-          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
-      - name: Delete hotfix release branch -mpx
-        uses: koj-co/delete-merged-action@63a03c35810a8a7d4840d18793c0f68ff8b59450 # master
-        if: startsWith(github.event.pull_request.head.ref, 'hotfix-release-mpx/')
-        with:
-          branches: 'hotfix-release/*'
-        env:
-          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
+          echo "active=true" >> "$GITHUB_OUTPUT"
 
-      - name: Delete release branch -mpx
-        uses: koj-co/delete-merged-action@63a03c35810a8a7d4840d18793c0f68ff8b59450 # master
-        if: startsWith(github.event.pull_request.head.ref, 'release-mpx/')
-        with:
-          branches: 'release/*'
+      - name: Raise back-merge pull request
+        if: steps.release.outputs.active == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          VERSION: ${{ github.event.release.tag_name }}
+        run: |
+          existing_pr=$(gh pr list \
+            --base develop \
+            --head master \
+            --state open \
+            --json url \
+            --jq '.[0].url // empty')
+
+          if [[ -n "$existing_pr" ]]; then
+            echo "Back-merge pull request already exists: $existing_pr"
+            exit 0
+          fi
+
+          gh pr create \
+            --base develop \
+            --head master \
+            --title "chore(release): pulling master into develop post release $VERSION" \
+            --reviewer rudderlabs/sdk_team \
+            --body "Automated back-merge of active v1 release $VERSION from \`master\` into \`develop\`. Merge this PR with a merge commit; do not squash it, so \`master\` remains an ancestor of \`develop\` for the next release."

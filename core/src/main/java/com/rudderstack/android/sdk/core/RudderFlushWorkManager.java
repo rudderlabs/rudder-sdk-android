@@ -36,7 +36,6 @@ public class RudderFlushWorkManager {
              ObjectOutputStream os = new ObjectOutputStream(fos)) {
             os.writeObject(rudderFlushConfig);
         } catch (Exception e) {
-            ReportManager.reportError(e);
             RudderLogger.logError("RudderServerConfigManager: saveRudderFlushConfig: Exception while saving RudderServerConfig Object to File");
             e.printStackTrace();
         }
@@ -51,7 +50,6 @@ public class RudderFlushWorkManager {
                 rudderFlushConfig = (RudderFlushConfig) is.readObject();
 
             } catch (Exception e) {
-                ReportManager.reportError(e);
                 RudderLogger.logError("RudderServerConfigManager: getRudderFlushConfig: Failed to read RudderServerConfig Object from File");
                 e.printStackTrace();
             }

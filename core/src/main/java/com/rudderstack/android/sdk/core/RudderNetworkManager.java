@@ -69,7 +69,6 @@ public class RudderNetworkManager {
         try {
             this.anonymousIdHeaderString = Base64.encodeToString(RudderContext.getAnonymousId().getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
         } catch (Exception ex) {
-            ReportManager.reportError(ex);
             RudderLogger.logError(ex.getCause());
         }
     }
@@ -82,7 +81,6 @@ public class RudderNetworkManager {
         try {
             this.dmtAuthorisationString = dmtCustomToken;
         } catch (Exception ex) {
-            ReportManager.reportError(ex);
             RudderLogger.logError(ex.getCause());
         }
     }
@@ -119,12 +117,10 @@ public class RudderNetworkManager {
             }
             return getResult(httpConnection);
         } catch (SocketTimeoutException ex) {
-            ReportManager.reportError(ex);
             RudderLogger.logError("RudderNetworkManager: sendNetworkRequest: Exception occurred while sending the request to " + requestURL + ex.getLocalizedMessage());
 
             return new Result(NetworkResponses.ERROR, -1, null, "Request Timed Out");
         } catch (IOException ex) {
-//            ReportManager.reportError(ex);
             RudderLogger.logError(ex);
             RudderLogger.logError("RudderNetworkManager: sendNetworkRequest: Exception occurred while sending the request to " + requestURL + ex.getLocalizedMessage());
             return new Result(NetworkResponses.ERROR, -1, null, "Invalid Url");
@@ -163,7 +159,6 @@ public class RudderNetworkManager {
                 networkResponse = NetworkResponses.ERROR;
             return new Result(networkResponse, responseCode, responsePayload, errorPayload);
         } catch (Exception ex) {
-            ReportManager.reportError(ex);
             RudderLogger.logError("RudderNetworkManager: sendNetworkRequest: Exception occurred while getting the response from the request to " + httpConnection.getURL() + ex.getLocalizedMessage());
             return new Result(NetworkResponses.ERROR, responseCode, responsePayload, ex.getLocalizedMessage());
         } finally {
@@ -188,7 +183,6 @@ public class RudderNetworkManager {
             return updateHttpConnection(httpConnection, requestMethod, requestPayload, isDMTRequest,
                     null, null);
         } catch (Exception ex) {
-//            ReportManager.reportError(ex);
             RudderLogger.logError("RudderNetworkManager: sendNetworkRequest: Exception occurred while creating HttpURLConnection" + ex.getLocalizedMessage());
             return null;
         }
@@ -212,7 +206,6 @@ public class RudderNetworkManager {
         try {
             httpConnection.setRequestMethod("GET");
         } catch (Exception ex) {
-            ReportManager.reportError(ex);
             RudderLogger.logError("RudderNetworkManager: updateHttpConnection: Error while updating the http connection" + ex.getLocalizedMessage());
             return null;
         }
@@ -241,7 +234,6 @@ public class RudderNetworkManager {
             osw.flush();
             return httpConnection;
         } catch (Exception ex) {
-//            ReportManager.reportError(ex);
             RudderLogger.logError("RudderNetworkManager: updateHttpConnection: Error while updating the http connection" + ex.getLocalizedMessage());
             return null;
         }
@@ -267,7 +259,6 @@ public class RudderNetworkManager {
             }
             return baos.toString();
         } catch (Exception ex) {
-            ReportManager.reportError(ex);
             RudderLogger.logError("RudderNetworkManager: getResponse: Exception occurred while reading response" + ex.getLocalizedMessage());
             return null;
         }
