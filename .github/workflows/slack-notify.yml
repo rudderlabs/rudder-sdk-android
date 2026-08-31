@@ -21,12 +21,15 @@ jobs:
         id: slack
         uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           PROJECT_NAME: "Android SDK"
         with:
-          channel-id: "${{ secrets.SLACK_RELEASE_CHANNEL_ID }}"
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          errors: true
           payload: |
             {
+              "channel": "${{ secrets.SLACK_RELEASE_CHANNEL_ID }}",
+              "text": "New release: ${{ env.PROJECT_NAME }} ${{ github.event.release.tag_name }} - ${{ github.event.release.html_url }}",
               "blocks": [
                 {
                   "type": "header",
