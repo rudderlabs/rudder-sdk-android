@@ -8,6 +8,9 @@ on:
       - closed
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+permissions:
+  contents: read
+
 jobs:
   release-v2:
     name: Publish new release for v2
@@ -42,7 +45,7 @@ jobs:
           echo "release_version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Checkout
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
 
@@ -56,7 +59,7 @@ jobs:
           echo "previous_version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Setup Node v2
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -133,15 +136,18 @@ jobs:
 
       - name: Send message to Slack channel
         id: slack
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           PROJECT_NAME: 'Rudderstack Kotlin SDK v2 monorepo'
           RELEASES_URL: 'https://github.com/rudderlabs/rudder-sdk-android/compare/'
         with:
-          channel-id: ${{ secrets.SLACK_RELEASE_CHANNEL_ID }}
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          errors: true
           payload: |
             {
+              "channel": "${{ secrets.SLACK_RELEASE_CHANNEL_ID }}",
+              "text": "New release: ${{ env.PROJECT_NAME }} v${{ steps.extract-version-v2.outputs.release_version }} - ${{ env.RELEASES_URL }}${{ steps.extract-previous-version-v2.outputs.previous_version }}...v${{ steps.extract-version-v2.outputs.release_version }}",
               "blocks": [
                 {
                   "type": "header",

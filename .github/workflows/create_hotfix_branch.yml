@@ -13,19 +13,26 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/master-mpx'
     steps:
+      - name: Generate GitHub App token
+        id: generate-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+
       - name: Set env BRANCH_NAME
-        env:
-          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-              BRANCH="$PR_HEAD_REF"
-              if [[ BRANCH == 'master-mpx' || $BRANCH == 'develop-mpx' ]]; then
-                  echo "BRANCH_NAME=hotfix-mpx" >> "$GITHUB_ENV"
-              else
-                  echo "BRANCH_NAME=hotfix" >> "$GITHUB_ENV"
-              fi
+          if [[ "$GITHUB_REF_NAME" == 'master-mpx' ]]; then
+            echo "BRANCH_NAME=hotfix-mpx" >> "$GITHUB_ENV"
+          else
+            echo "BRANCH_NAME=hotfix" >> "$GITHUB_ENV"
+          fi
+
       - name: Create branch
         uses: peterjgrainger/action-create-branch@v3.0.0
         env:
-          GITHUB_TOKEN: ${{ secrets.AUTH_GITHUB_TOKEN }}
-          with:
-            branch: '${{ BRANCH_NAME }}/${{ github.event.inputs.hotfix_name }}'
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        with:
+          branch: '${{ env.BRANCH_NAME }}/${{ github.event.inputs.hotfix_name }}'
