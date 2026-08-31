@@ -90,7 +90,6 @@ class RudderServerConfigManager {
                 } catch (Exception e) {
                     isDone = false;
                     retryCount += 1;
-                    ReportManager.reportError(e);
                     RudderLogger.logError("RudderServerConfigManager: downloadConfig: Failed to parse RudderServerConfig Object, retrying in " + retryCount + "s");
                     e.printStackTrace();
                     sleep(retryCount);
@@ -118,7 +117,6 @@ class RudderServerConfigManager {
 
             os.writeObject(rudderServerConfig);
         } catch (Exception e) {
-            ReportManager.reportError(e);
             RudderLogger.logError("RudderServerConfigManager: saveRudderServerConfig: Exception while saving RudderServerConfig Object to File");
             e.printStackTrace();
         }
@@ -158,7 +156,6 @@ class RudderServerConfigManager {
         try {
             Thread.sleep(retryCount * 1000L);
         } catch (InterruptedException ex) {
-            ReportManager.reportError(ex);
             RudderLogger.logError(String.format(Locale.US, "RudderServerConfigManager: Sleep: Exception while the thread is in sleep %s", ex.getLocalizedMessage()));
             Thread.currentThread().interrupt();
         }

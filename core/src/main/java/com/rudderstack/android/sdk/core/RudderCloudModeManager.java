@@ -1,6 +1,5 @@
 package com.rudderstack.android.sdk.core;
 
-import static com.rudderstack.android.sdk.core.ReportManager.incrementCloudModeUploadRetryCounter;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.NetworkResponses;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.RequestMethod;
 import static com.rudderstack.android.sdk.core.RudderNetworkManager.Result;
@@ -63,13 +62,10 @@ public class RudderCloudModeManager {
                                     result = networkManager.sendNetworkRequest(payload, addEndPoint(dataResidencyManager.getDataPlaneUrl(), BATCH_ENDPOINT), RequestMethod.POST, true);
                                     RudderLogger.logInfo(String.format(Locale.US, "CloudModeManager: cloudModeProcessor: ServerResponse: %d", result.statusCode));
                                     if (result.status == NetworkResponses.SUCCESS) {
-                                        ReportManager.incrementCloudModeUploadSuccessCounter(messageIds.size());
                                         cleanUpEvents(messageIds);
                                         exponentialBackOff.resetBackOff();
                                         upTimeInMillis = Utils.getUpTimeInMillis();
                                         sleepCount = Utils.getSleepDurationInSecond(upTimeInMillis, Utils.getUpTimeInMillis());
-                                    } else {
-                                        incrementCloudModeUploadRetryCounter(1);
                                     }
                                 } else {
                                     cleanUpEvents(messageIds);
@@ -104,7 +100,6 @@ public class RudderCloudModeManager {
                                 Thread.sleep(1000);
                         }
                     } catch (Exception ex) {
-                        ReportManager.reportError(ex);
                         RudderLogger.logError(String.format("CloudModeManager: cloudModeProcessor: Exception while trying to send events to Data plane URL %s due to %s", config.getDataPlaneUrl(), ex.getLocalizedMessage()));
                         Thread.currentThread().interrupt();
                         Utils.sleep(1000);
@@ -149,7 +144,7 @@ public class RudderCloudModeManager {
         // Added RuntimeException in order to catch CursorWindowAllocationException (this requires API level 33 and above).
         catch (RuntimeException ex) {
             RudderLogger.logError("CloudModeManager: maintainDBThreshold: Exception while fetching count from DB due to: " + Arrays.toString(ex.getStackTrace()));
-            ReportManager.reportError(ex);
+
         }
         RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: getPayloadFromMessages: DBRecordCount: %d", recordCount));
         // if record count exceeds threshold count, remove older events
@@ -158,9 +153,6 @@ public class RudderCloudModeManager {
             RudderLogger.logDebug(String.format(Locale.US, "CloudModeManager: getPayloadFromMessages: OldRecordCount: %d", (recordCount - config.getDbCountThreshold())));
             int toDelete = recordCount - config.getDbCountThreshold();
             dbManager.deleteFirstEvents(toDelete);
-            ReportManager.incrementDiscardedCounter(toDelete, Collections.singletonMap(
-                    ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_OUT_OF_MEMORY
-            ));
         }
     }
 }

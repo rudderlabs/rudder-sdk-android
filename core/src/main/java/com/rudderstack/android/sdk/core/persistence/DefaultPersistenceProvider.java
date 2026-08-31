@@ -7,14 +7,11 @@ import android.database.sqlite.SQLiteException;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.rudderstack.android.sdk.core.ReportManager;
 import com.rudderstack.android.sdk.core.RudderLogger;
-
 
 import net.zetetic.database.sqlcipher.SQLiteDatabase;
 
 import java.io.File;
-import java.util.Collections;
 
 
 public class DefaultPersistenceProvider implements PersistenceProvider {
@@ -50,15 +47,8 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
     public Persistence get(Persistence.DbCreateListener dbCreateListener) {
         if (!params.isEncrypted
                 || params.encryptionKey == null || params.encryptedDbName == null) {
-            ReportManager.leaveBreadcrumb(ReportManager.METADATA_SECTION_PERSISTENCE, ReportManager.METADATA_PERSISTENCE_KEY_IS_ENCRYPTED,
-                    true);
             return getDefaultPersistence(dbCreateListener);
         } else {
-            ReportManager.incrementDbEncryptionCounter(1, Collections.singletonMap(
-                    ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_CREATED
-            ));
-            ReportManager.leaveBreadcrumb(ReportManager.METADATA_SECTION_PERSISTENCE, ReportManager.METADATA_PERSISTENCE_KEY_IS_ENCRYPTED,
-                    false);
             return getEncryptedPersistence(dbCreateListener);
         }
     }
@@ -93,7 +83,6 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
             cursor.close();
             return true;
         } catch (SQLiteException e) {
-            ReportManager.reportError(e);
             RudderLogger.logError("Encryption key is invalid: Dumping the database and constructing a new one");
         }
         return false;
@@ -108,7 +97,6 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
             try {
                 migrateToDefaultDatabase(application.getDatabasePath(params.dbName));
             } catch (Exception e) {
-                ReportManager.reportError(e);
                 RudderLogger.logError("Encryption key is invalid: Dumping the database and constructing a new unencrypted one");
                 deleteEncryptedDb();
             }
@@ -134,10 +122,6 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
     }
 
     private void migrateToDefaultDatabase(File databasePath) {
-        ReportManager.incrementDbEncryptionCounter(1, Collections.singletonMap(
-                ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_MIGRATE_TO_DECRYPT
-        ));
-
         File encryptedDb = application.getDatabasePath(params.encryptedDbName);
         String encryptedPath = encryptedDb.getAbsolutePath();
         SQLiteDatabase database = SQLiteDatabase.openDatabase(encryptedPath, params.encryptionKey, null, SQLiteDatabase.OPEN_READWRITE, null);
@@ -159,10 +143,6 @@ public class DefaultPersistenceProvider implements PersistenceProvider {
 
 
     private void migrateToEncryptedDatabase(File encryptedDbPath) {
-        ReportManager.incrementDbEncryptionCounter(1, Collections.singletonMap(
-                ReportManager.LABEL_TYPE, ReportManager.LABEL_TYPE_MIGRATE_TO_ENCRYPT
-        ));
-
         SQLiteDatabase database = SQLiteDatabase.openOrCreateDatabase(encryptedDbPath.getAbsolutePath(), params.encryptionKey,null, null);
         database.close();
         File decryptedDb = application.getDatabasePath(params.dbName);

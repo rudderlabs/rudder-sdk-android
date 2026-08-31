@@ -1,7 +1,8 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdk 33
+    compileSdk 34
+    buildToolsVersion "34.0.0"
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 33
@@ -42,10 +43,6 @@ dependencies {
 
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'androidx.annotation:annotation:1.6.0'
-
-
-    implementation 'com.rudderstack.android.sdk:rudderreporter:0.6.0'
-    implementation 'com.rudderstack.kotlin.sdk:gsonrudderadapter:0.2.0'
 
     // required for new life cycle methods
     compileOnly 'androidx.lifecycle:lifecycle-process:2.6.1'
