@@ -14,8 +14,10 @@ jobs:
     if: github.ref == 'refs/heads/master-v2'
     steps:
       - name: Set env BRANCH_NAME
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-              BRANCH="${{ github.event.pull_request.head.ref }}"
+              BRANCH="$PR_HEAD_REF"
               echo "BRANCH_NAME=hotfix-v2" >> "$GITHUB_ENV"
 
       - name: Create branch

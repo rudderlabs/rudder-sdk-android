@@ -20,7 +20,7 @@ jobs:
     if: (startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/')) && github.event.pull_request.merged == true # only merged pull requests must trigger this job
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
         with:
           egress-policy: audit
 
@@ -36,8 +36,9 @@ jobs:
       - name: Extract version from branch name (for release branches)
         id: extract-version-v2
         env:
-          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
+          BRANCH_NAME="$PR_HEAD_REF"
           VERSION=${BRANCH_NAME#hotfix-}
           VERSION=${VERSION#release-v2/}
 
@@ -115,7 +116,7 @@ jobs:
           github_token: ${{ steps.generate-token.outputs.token }}
           pr_title: 'chore(release): pulling master-v2 into develop-v2 post release v${{ steps.extract-version-v2.outputs.release_version }}'
           pr_body: ':crown: *An automated PR*'
-          pr_reviewer: '@rudderlabs/sdk-android'
+          pr_reviewer: '@rudderlabs/sdk_team'
 
       - name: Delete hotfix release branch v2
         uses: koj-co/delete-merged-action@63a03c35810a8a7d4840d18793c0f68ff8b59450 # master
