@@ -80,12 +80,6 @@ dependencies {
 
     // Amplitude Device Mode
     implementation 'com.rudderstack.android.integration:amplitude:1.+'
-    implementation('org.apache.commons:commons-lang3') {
-        version {
-            strictly '3.17.0'
-        }
-        because 'AGP 7.4.2 R8 cannot process commons-lang3 3.18.0'
-    }
     implementation 'com.amplitude:android-sdk:2.25.2'
     implementation 'com.squareup.okhttp3:okhttp:4.9.2'
     implementation 'com.google.android.gms:play-services-ads:22.1.0'
