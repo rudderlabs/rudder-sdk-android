@@ -13,6 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/master-mpx'
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
       - name: Generate GitHub App token
         id: generate-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -31,7 +36,7 @@ jobs:
           fi
 
       - name: Create branch
-        uses: peterjgrainger/action-create-branch@v3.0.0
+        uses: peterjgrainger/action-create-branch@10c7d268152480ae859347db45dc69086cef1d9c # v3.0.0
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         with:
