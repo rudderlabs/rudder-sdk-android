@@ -4,4 +4,23 @@ updates:
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
-      interval: 'weekly'
+      interval: 'monthly'
+    open-pull-requests-limit: 0
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: 'gradle'
+    directory: '/'
+    schedule:
+      interval: 'monthly'
+    open-pull-requests-limit: 0
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: 'gradle'
+    directory: '/sample-js-integration/RudderAndroidJS'
+    schedule:
+      interval: 'monthly'
+    open-pull-requests-limit: 0
+    cooldown:
+      default-days: 7
