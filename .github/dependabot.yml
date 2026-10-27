@@ -8,8 +8,6 @@ updates:
     open-pull-requests-limit: 0
     cooldown:
       default-days: 7
-      exclude:
-        - 'rudderlabs/*'
 
   - package-ecosystem: 'gradle'
     directory: '/'
@@ -18,8 +16,6 @@ updates:
     open-pull-requests-limit: 0
     cooldown:
       default-days: 7
-      exclude:
-        - 'com.rudderstack.*'
 
   - package-ecosystem: 'gradle'
     directory: '/sample-js-integration/RudderAndroidJS'
@@ -28,5 +24,3 @@ updates:
     open-pull-requests-limit: 0
     cooldown:
       default-days: 7
-      exclude:
-        - 'com.rudderstack.*'
