@@ -12,6 +12,7 @@ on:
       - 'gradle/**'
       - 'gradlew*'
       - 'scripts/**'
+      - '.github/gradle/**'
       - '**/gradle/**'
       - '**/gradlew*'
       - '.github/workflows/dependency-submission.yml'
@@ -25,6 +26,7 @@ on:
       - 'gradle/**'
       - 'gradlew*'
       - 'scripts/**'
+      - '.github/gradle/**'
       - '**/gradle/**'
       - '**/gradlew*'
       - '.github/workflows/dependency-submission.yml'
@@ -86,7 +88,9 @@ jobs:
           artifact-retention-days: 7
           cache-provider: basic
           validate-wrappers: true
-          additional-arguments: --no-configure-on-demand --no-daemon
+          additional-arguments: >-
+            --no-configure-on-demand --no-daemon
+            --init-script ${{ github.workspace }}/.github/gradle/verify-dependency-resolution.init.gradle
 
       - name: Check dependency inventory
         shell: python

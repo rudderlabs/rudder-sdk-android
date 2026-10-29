@@ -1,0 +1,43 @@
+import org.gradle.api.artifacts.result.UnresolvedDependencyResult
+import org.gradle.api.artifacts.component.ProjectComponentSelector
+
+// Check the same project configurations that the submission plugin resolves.
+gradle.beforeProject { project ->
+    project.tasks.configureEach { task ->
+        if (task.name == 'ForceDependencyResolutionPlugin_resolveProjectDependencies') {
+            task.doLast {
+                def safelyResolvable = null
+                try {
+                    safelyResolvable = Class.forName('org.gradle.internal.deprecation.DeprecatableConfiguration')
+                        .getMethod('canSafelyBeResolved')
+                } catch (ReflectiveOperationException ignored) {
+                    // Match the plugin's fallback on older Gradle versions.
+                }
+                def failures = []
+                project.configurations.each { configuration ->
+                    def canResolve = safelyResolvable == null ? configuration.canBeResolved : safelyResolvable.invoke(configuration)
+                    if (canResolve) {
+                        configuration.incoming.resolutionResult.allDependencies.each { dependency ->
+                            if (dependency instanceof UnresolvedDependencyResult) {
+                                // Kotlin metadata cannot select a local Android build variant.
+                                // The core project's runtime/test configurations are checked separately.
+                                def knownMetadataMismatch = (project.path in [':android-tv', ':sample-kotlin', ':sample-kotlin-integration'] &&
+                                    configuration.name == 'implementationDependenciesMetadata' &&
+                                    dependency.attempted instanceof ProjectComponentSelector &&
+                                    dependency.attempted.projectPath == ':core' &&
+                                    dependency.failure.cause?.class?.name == 'org.gradle.internal.component.AmbiguousConfigurationSelectionException' &&
+                                    dependency.failure.cause?.message?.contains('cannot choose between the following variants of project :core'))
+                                if (!knownMetadataMismatch) {
+                                    failures << "${project.path}:${configuration.name}: ${dependency.attempted} (${dependency.failure.message})"
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!failures.empty) {
+                    throw new GradleException('Dependency graph resolution is incomplete:\n' + failures.join('\n'))
+                }
+            }
+        }
+    }
+}
