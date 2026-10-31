@@ -34,8 +34,7 @@ on:
     - cron: '23 6 * * 1' # Weekly refresh for dependencies with version ranges.
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -58,6 +57,8 @@ jobs:
       # Keep test/build dependencies in the graph, with development scope.
       DEPENDENCY_GRAPH_RUNTIME_INCLUDE_CONFIGURATIONS: '.*[Rr]untimeClasspath'
       DEPENDENCY_GRAPH_RUNTIME_EXCLUDE_CONFIGURATIONS: '.*[Tt]est.*'
+    permissions:
+      contents: read # actions/checkout
     steps:
       - name: Harden the runner
         uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
@@ -123,7 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write
+      contents: write # dependency-submission posts the graph to the dependency submission API
     steps:
       - name: Harden the runner
         uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
