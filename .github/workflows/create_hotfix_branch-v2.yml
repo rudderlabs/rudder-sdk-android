@@ -13,6 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master-v2'
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
       - name: Set env BRANCH_NAME
         run: |
           echo "BRANCH_NAME=hotfix-v2" >> "$GITHUB_ENV"
