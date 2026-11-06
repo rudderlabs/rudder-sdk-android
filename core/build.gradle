@@ -28,6 +28,13 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
         unitTests.all {
+            // PowerMock reflects on these JDK classes in unit tests.
+            jvmArgs '--add-opens=java.base/java.io=ALL-UNNAMED',
+                    '--add-opens=java.base/java.lang=ALL-UNNAMED',
+                    '--add-opens=java.base/java.util=ALL-UNNAMED',
+                    '--add-opens=java.base/java.text=ALL-UNNAMED',
+                    '--add-opens=java.base/java.util.concurrent=ALL-UNNAMED',
+                    '--add-opens=java.base/java.util.concurrent.locks=ALL-UNNAMED'
             systemProperty 'robolectric.invokedynamic.enable', 'false'
         }
     }
