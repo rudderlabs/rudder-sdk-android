@@ -24,7 +24,7 @@ android {
     defaultConfig {
         applicationId "com.example.testapp1mg"
         minSdkVersion 21
-        targetSdkVersion 32
+        targetSdkVersion 33
         multiDexEnabled true
         versionCode 4
         versionName "1.0"
