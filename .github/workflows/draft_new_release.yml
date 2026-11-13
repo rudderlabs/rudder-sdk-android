@@ -12,14 +12,14 @@ name: Promote Release Candidate
 
 on: workflow_dispatch
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   promote-release-candidate:
     name: Promote release candidate to master
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/hotfix/')
+    permissions: {} # the release App token does every read and write
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0

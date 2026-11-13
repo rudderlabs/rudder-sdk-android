@@ -6,14 +6,15 @@ on:
       - master-v2
     types:
       - closed
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   release-v2:
     if: (startsWith(github.event.pull_request.head.ref, 'release-v2/') || startsWith(github.event.pull_request.head.ref, 'hotfix-release-v2/')) && github.event.pull_request.merged == true # only merged pull requests must trigger this job
     runs-on: ubuntu-latest
     environment: deployment
+    permissions:
+      contents: read # actions/checkout
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
@@ -23,6 +24,7 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

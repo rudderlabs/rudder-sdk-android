@@ -8,8 +8,7 @@ on:
     types: [ 'opened', 'reopened', 'edited', 'synchronize' ]
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   cancel_previous:
@@ -31,6 +30,8 @@ jobs:
     needs: cancel_previous
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read # actions/checkout
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
@@ -42,6 +43,8 @@ jobs:
           distribution: 'temurin' # See 'Supported distributions' for available options
           java-version: '11'
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: cache gradle dependencies
