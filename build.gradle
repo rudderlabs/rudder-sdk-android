@@ -5,8 +5,8 @@ buildscript {
         maven { url "https://appboy.github.io/appboy-android-sdk/sdk" }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10'
+        classpath 'com.android.tools.build:gradle:8.5.2'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.21'
         classpath 'com.google.gms:google-services:4.3.10'
     }
 }
@@ -16,6 +16,9 @@ plugins {
 }
 
 subprojects {
+    plugins.withId('org.jetbrains.kotlin.android') {
+        kotlin.compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+    }
     tasks.withType(Javadoc).all { enabled = false }
 }
 

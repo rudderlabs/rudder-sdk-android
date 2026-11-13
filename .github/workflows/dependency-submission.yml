@@ -48,8 +48,10 @@ jobs:
       matrix:
         include:
           - context: sdk
+            java: 17
             root: .
           - context: javascript-sample
+            java: 11
             root: sample-js-integration/RudderAndroidJS
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -70,10 +72,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up JDK 11
+      - name: Set up JDK
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
-          java-version: '11'
+          java-version: ${{ matrix.java }}
           distribution: temurin
 
       - name: Grant execute permission for gradlew
